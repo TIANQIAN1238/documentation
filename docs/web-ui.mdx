@@ -2,7 +2,7 @@
 id: web-ui
 title: Temporal Web UI
 sidebar_label: Web UI
-description: The Temporal Web UI offers comprehensive Workflow management, debugging tools, and metadata access.
+description: Temporal Web UI 提供全面的 Workflow 管理、调试工具和元数据访问功能。
 toc_max_heading_level: 4
 keywords:
   - web-ui
@@ -12,233 +12,200 @@ tags:
 
 import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
 
-The Temporal Web UI provides users with Workflow Execution state and metadata for debugging purposes. It ships with
-every [Temporal CLI](/cli) release and is available with [Temporal Cloud](/cloud).
+Temporal Web UI 为用户提供 Workflow Execution 状态和元数据，用于调试目的。它随每个 [Temporal CLI](/cli) 版本一起发布，也可在 [Temporal Cloud](/cloud) 中使用。
 
-You can configure the Temporal Web UI to work in your own environment. See the
-[UI configuration reference](/references/web-ui-configuration).
+您可以配置 Temporal Web UI 以在自己的环境中运行。请参阅
+[UI 配置参考](/references/web-ui-configuration)。
 
-Web UI open source repos:
+Web UI 开源仓库：
 
 - [temporalio/ui](https://github.com/temporalio/ui)
 - [temporalio/ui-server](https://github.com/temporalio/ui-server)
 
 ## Namespaces
 
-All Namespaces in your self-hosted Temporal Service or Temporal Cloud account are listed under **Namespaces** in the
-left section of the window. You can also switch Namespaces from the Workflows view by selecting from the Namespace
-switcher at the top right corner of the window. After you select a Namespace, the Web UI shows the Recent Workflows page
-for that Namespace. In Temporal Cloud, users can access only the Namespaces that they have been granted access to. For
-details, see [Namespace-level permissions](/cloud/manage-access/roles-and-permissions#namespace-level-permissions).
+您的自托管 Temporal Service 或 Temporal Cloud 账户中的所有 Namespace 都列在窗口左侧的 **Namespaces** 下。您也可以在 Workflows 视图中，通过窗口右上角的 Namespace 切换器来切换 Namespace。选择一个 Namespace 后，Web UI 会显示该 Namespace 的最近 Workflows 页面。在 Temporal Cloud 中，用户只能访问已被授权访问的 Namespace。详情请参阅 [Namespace 级别权限](/cloud/manage-access/roles-and-permissions#namespace-level-permissions)。
 
 ## Workflows
 
-The main Workflows page displays a table of all Workflow Executions within the retention period.
+主 Workflows 页面显示保留期内所有 Workflow Execution 的表格。
 
-Users can list Workflow Executions by any of the following:
+用户可以按以下任意条件列出 Workflow Execution：
 
-- [Status](/workflow-execution#workflow-execution-status)
+- [状态](/workflow-execution#workflow-execution-status)
 - [Workflow ID](/workflow-execution/workflowid-runid#workflow-id)
 - [Workflow Type](/workflow-definition#workflow-type)
-- Start time
-- End time
-- Any other Default or Custom [Search Attribute](/search-attribute) that uses [List Filter](/list-filter)
+- 开始时间
+- 结束时间
+- 使用 [List Filter](/list-filter) 的任何默认或自定义 [Search Attribute](/search-attribute)
 
-For start time and end time, users can set their preferred date and time format as one of the following:
+对于开始时间和结束时间，用户可以将首选日期和时间格式设置为以下之一：
 
 - UTC
-- Local
-- Relative
+- 本地时间
+- 相对时间
 
-Select a Workflow Execution to view the Workflow Execution's History, Workers, Relationships, pending Activities and
-Nexus Operations, Queries, and Metadata.
+选择一个 Workflow Execution 可查看该 Workflow Execution 的历史记录、Worker、关系、待处理的 Activity 和 Nexus 操作、Query 以及元数据。
 
-### Saved Views {#saved-views}
+### 已保存的视图 {#saved-views}
 
-Saved Views let you save and reuse your frequently used visibility queries in the Temporal Web UI. Instead of recreating
-complex filters every time, you can save them once and apply them with a single click.
+已保存的视图（Saved Views）让您可以在 Temporal Web UI 中保存并重复使用常用的可视化查询。您无需每次都重新创建复杂的过滤条件，只需保存一次即可一键应用。
 
-Saved Views are stored locally in your browser and are available to you whenever you use the Temporal Web UI in this
-browser. Each user will have their own private collection.
+已保存的视图存储在浏览器本地，每当您在此浏览器中使用 Temporal Web UI 时都可使用。每位用户拥有自己的私有集合。
 
-#### Apply a Saved View
+#### 应用已保存的视图
 
-By default, The Workflows page has several default Saved Views. You can also create your own Saved Views.
+默认情况下，Workflows 页面有几个默认的已保存视图。您也可以创建自己的已保存视图。
 
-Click the name of a Saved View in the list to display the corresponding Workflows that match the query.
+点击列表中某个已保存视图的名称，即可显示与该查询匹配的相应 Workflow。
 
-The Workflow List page will refresh with the results of the Saved View.
+Workflow 列表页面将刷新并显示已保存视图的结果。
 
-#### Create a Saved View
+#### 创建已保存的视图
 
-You can create a new Saved View from the Workflows page.
+您可以从 Workflows 页面创建新的已保存视图。
 
-1. Create a Saved View by using the filter UI to build your criteria, or you can use the raw query editor to write
-   custom query strings.
-1. Your new view will appear in the Custom Views list as New View. Click the Save as New button to bring up the Save as
-   View window. Name your Saved View. Names must be unique to each user and can contain a max of 255 characters.
-1. Click Save. Your new view will appear in the Custom Views list
+1. 使用过滤器 UI 构建查询条件来创建已保存视图，或者使用原始查询编辑器编写自定义查询字符串。
+1. 您的新视图将以"New View"的名称出现在自定义视图列表中。点击"Save as New"按钮弹出"Save as View"窗口。为您的已保存视图命名。名称对每位用户必须唯一，最多可包含 255 个字符。
+1. 点击保存。您的新视图将出现在自定义视图列表中。
 
-You can create up to 20 Saved Views. When you reach this limit, you'll need to delete some Saved Views before you can
-save new ones.
+您最多可以创建 20 个已保存的视图。达到此限制后，需要删除一些已保存视图才能保存新的视图。
 
-#### Make Temporary Changes to a Saved View query
+#### 临时修改已保存视图的查询
 
-You can modify a Saved View temporarily without changing the saved criteria.
+您可以临时修改已保存视图而不更改已保存的条件。
 
-1. Select the Saved View you want to change.
-1. Adjust the UI filters as needed.
-1. The Workflows page will refresh with the results of the new query, without changing the Saved View.
-1. If you want to keep your temporary changes, you can:
-   - Click Save, which will replace the original Saved View with your modifications.
-   - Click Edit, modify the name, and click Save, which will replace the original Saved View with your modifications and
-     change the name.
-   - Click Edit, modify the name, and click Create New, which will create a new Saved View with your new settings and a
-     new name.
+1. 选择要更改的已保存视图。
+1. 根据需要调整 UI 过滤器。
+1. Workflows 页面将以新查询的结果刷新，但不会更改已保存的视图。
+1. 如果要保留临时更改，您可以：
+   - 点击"保存"，这将用您的修改替换原始的已保存视图。
+   - 点击"编辑"，修改名称，然后点击"保存"，这将用您的修改替换原始的已保存视图并更改名称。
+   - 点击"编辑"，修改名称，然后点击"Create New"，这将以您的新设置和新名称创建一个新的已保存视图。
 
-#### Rename a Saved View Query
+#### 重命名已保存的视图查询
 
-You can rename an existing Saved View from the Workflows page.
+您可以从 Workflows 页面重命名现有的已保存视图。
 
-1. Select the Saved View you want to change.
-1. Click Edit.
-1. In the Edit View dialog box, enter a new name for the Saved View.
-1. Click Save to apply your changes and rename the existing Saved View, or click Create Copy to create a new Saved View
-   with the new name.
+1. 选择要更改的已保存视图。
+1. 点击"编辑"。
+1. 在"Edit View"对话框中，为已保存视图输入新名称。
+1. 点击"保存"以应用更改并重命名现有的已保存视图，或点击"Create Copy"以使用新名称创建新的已保存视图。
 
-#### Deleting Saved Views
+#### 删除已保存的视图
 
-You can delete a Saved View from the Workflows page, because it is no longer useful, or to create room for new Saved
-Views.
+您可以从 Workflows 页面删除已保存的视图，因为它不再有用，或为新的已保存视图腾出空间。
 
-1. Select the Saved View you want to delete. You can only delete queries you’ve created; you cannot delete the system
-   defaults.
-1. Click “Edit” and then "Delete this Saved View".
+1. 选择要删除的已保存视图。您只能删除自己创建的查询；无法删除系统默认的视图。
+1. 点击"Edit"，然后点击"Delete this Saved View"。
 
-:::note Deleting Saved Views is permanent
+:::note 删除已保存的视图是永久性的
 
-Deleted queries cannot be recovered, so make sure you won't need them again. If you accidentally delete a Saved List,
-you will need to recreate it.
+已删除的查询无法恢复，请确保您不再需要它们。如果意外删除了已保存的列表，您需要重新创建它。
 
 :::
 
-#### Share a Saved View
+#### 分享已保存的视图
 
-You can share a Saved View as a URL.
+您可以将已保存的视图作为 URL 分享。
 
-1. Select the Saved View you want to share.
-1. Click the “Share” button to copy the URL for this Saved View to the clipboard. You can also copy the URL directly
-   from the browser.
+1. 选择要分享的已保存视图。
+1. 点击"Share"按钮将此已保存视图的 URL 复制到剪贴板。您也可以直接从浏览器复制 URL。
 
-:::note Saved Views and time
+:::note 已保存视图与时间
 
-Saved Views that use relative times will be shared with absolute time.
+使用相对时间的已保存视图在分享时将以绝对时间显示。
 
 :::
 
-## Task Failures View {#task-failures-view}
+## Task 失败视图 {#task-failures-view}
 
-The Task Failures view is a pre-defined Saved View that displays Workflows that have a Workflow Task failure.
-These Workflows are still running, but one of their Tasks has failed or timed out. 
+Task 失败视图是一个预定义的已保存视图，显示发生 Workflow Task 失败的 Workflow。这些 Workflow 仍在运行，但其中某个 Task 已失败或超时。
 
-The details of the Task Failures view displays the Workflow's ID, the Run ID, and the Workflow type. 
-Clicking on any of the links in the details opens the Workflow page for that Workflow. 
-On this page, you will find more information about the Task that failed and remaining pending tasks.
-You can also cancel the Workflow by clicking the Request Cancellation button on this page.
+Task 失败视图的详情显示 Workflow 的 ID、Run ID 和 Workflow 类型。点击详情中的任意链接将打开该 Workflow 的 Workflow 页面。在此页面上，您可以找到有关失败 Task 和剩余待处理 Task 的更多信息。您也可以点击此页面上的"Request Cancellation"按钮来取消 Workflow。
 
-Our system monitors Workflow task execution patterns in real-time. When a Workflow experiences five consecutive task failures or timeouts, it gets automatically flagged. The moment the Workflow recovers with a successful task, the flag clears. This smart threshold filters out minor glitches while surfacing Workflows with genuine problems.
+我们的系统实时监控 Workflow Task 执行模式。当一个 Workflow 连续发生五次 Task 失败或超时时，它会被自动标记。一旦 Workflow 通过成功的 Task 恢复，标记就会清除。这个智能阈值能过滤掉轻微故障，同时显示真正存在问题的 Workflow。
 
-### Activating Task Failures View {#activate-task-failures-view}
+### 激活 Task 失败视图 {#activate-task-failures-view}
 
-This is enabled by default for Temporal Cloud users. If you're self-hosting Temporal, you'll need to update the `system.numConsecutiveWorkflowTaskProblemsToTriggerSearchAttribute` [dynamic config](/references/dynamic-configuration).
+对于 Temporal Cloud 用户，此功能默认启用。如果您是自托管 Temporal，您需要更新 `system.numConsecutiveWorkflowTaskProblemsToTriggerSearchAttribute` [动态配置](/references/dynamic-configuration)。
 
-Here's an example of how to make the config update for the dev server:
+以下是如何为开发服务器进行配置更新的示例：
 
 ```command
 temporal server start-dev \
  --dynamic-config-value system.numConsecutiveWorkflowTaskProblemsToTriggerSearchAttribute=5
 ```
 
-`numConsecutiveWorkflowTaskProblemsToTriggerSearchAttribute` is the number of consecutive Workflow Task Failures required to trigger the `TemporalReportedProblems` search attribute. The default value is 5. If adding this search attribute causes strain on the visibility system, consider increasing this number.
+`numConsecutiveWorkflowTaskProblemsToTriggerSearchAttribute` 是触发 `TemporalReportedProblems` Search Attribute 所需的连续 Workflow Task 失败次数。默认值为 5。如果添加此 Search Attribute 给可视化系统带来压力，可以考虑增大此数值。
 
-To turn off the feature for a Namespace, set `numConsecutiveWorkflowTaskProblemsToTriggerSearchAttribute` to 0.
+要为某个 Namespace 关闭此功能，请将 `numConsecutiveWorkflowTaskProblemsToTriggerSearchAttribute` 设置为 0。
 
-## History
+## 历史记录
 
-A Workflow Execution History is a view of the [Events](/workflow-execution/event#event) and Event fields within the
-Workflow Execution. Approximately [40 different Events](/references/events) can appear in a Workflow Execution's Event
-History.
+Workflow Execution 历史记录是 Workflow Execution 中 [Event](/workflow-execution/event#event) 和 Event 字段的视图。大约有 [40 种不同的 Event](/references/events) 可能出现在 Workflow Execution 的 Event 历史记录中。
 
-The top of the page lists the following execution metadata:
+页面顶部列出了以下执行元数据：
 
-- Start Time, Close Time and Duration
+- 开始时间、关闭时间和持续时间
 - [Run Id](/workflow-execution/workflowid-runid#run-id)
 - [Workflow Type](/workflow-definition#workflow-type)
 - [Task Queue](/task-queue)
-- Parent and Parent ID
+- Parent 和 Parent ID
 - SDK
 - [State Transitions](/workflow-execution#state-transition)
-- [Billable Actions Count](/cloud/actions#actions-in-workflows) (Temporal Cloud only)
+- [可计费操作数量](/cloud/actions#actions-in-workflows)（仅 Temporal Cloud）
 
-The Input and Results section displays the function arguments and return values for debugging purposes. Results are not
-available until the Workflow finishes.
+"输入和结果"部分显示函数参数和返回值，用于调试目的。在 Workflow 完成之前，结果不可用。
 
-The History tab has the following views:
+历史记录标签页有以下视图：
 
-- Timeline: A chronological or reverse-chronological order of events with a summary. Clicking into an Event displays all
-  details for that Event.
-- All: View all History Events.
-- Compact: A logical grouping of Activities, Signals and Timers.
-- JSON: The full JSON code for the workflow.
+- 时间线：按时间正序或倒序排列的 Event 摘要。点击某个 Event 可显示该 Event 的所有详情。
+- 全部：查看所有历史 Event。
+- 紧凑：Activity、Signal 和 Timer 的逻辑分组。
+- JSON：Workflow 的完整 JSON 代码。
 
-### Download Event History
+### 下载 Event 历史记录
 
-The entire Workflow Execution Event History, in JSON format, can be downloaded from this section.
+可以从此部分下载整个 Workflow Execution 的 Event 历史记录（JSON 格式）。
 
-### Workflow Actions
+### Workflow 操作
 
-Workflow Executions can request a Cancellation, send a Signal or Update, or Reset and Terminate directly from the UI.
-Start a new Workflow Execution with pre-filled values with the Start Workflow Like This One button.
+Workflow Execution 可以直接从 UI 请求取消、发送 Signal 或 Update，或者进行 Reset 和终止。使用"Start Workflow Like This One"按钮以预填充值启动新的 Workflow Execution。
 
-### Relationships
+### 关系
 
-Displays the full hierarchy of a Workflow Execution with all parent and child nodes displayed in a tree.
+显示 Workflow Execution 的完整层级结构，所有父节点和子节点均以树形显示。
 
-### Workers
+### Worker
 
-Displays the Workers currently polling on the Workflow Task Queue with a count. If no Workers are polling, an error
-displays.
+显示当前正在 Workflow Task Queue 上轮询的 Worker 及其数量。如果没有 Worker 在轮询，则显示错误。
 
-### Pending Activities
+### 待处理的 Activity
 
-Displays a summary of recently active and/or pending Activity Executions. Clicking a pending Activity directs the user
-to the Pending Activities tab to view details.
+显示最近活跃和/或待处理的 Activity Execution 摘要。点击待处理的 Activity 会将用户引导至"Pending Activities"标签页以查看详情。
 
-### Call Stack
+### 调用栈
 
-The screen shows the captured result from the [\_\_stack_trace](/sending-messages#stack-trace-query) Query. The Query is
-performed when the tab is selected. It works only if a Worker is running and available to return the call stack. The
-call stack shows each location where Workflow code is waiting.
+屏幕显示 [\_\_stack_trace](/sending-messages#stack-trace-query) Query 的捕获结果。该 Query 在选择标签页时执行。仅当 Worker 正在运行且可以返回调用栈时才有效。调用栈显示 Workflow 代码正在等待的每个位置。
 
-### Queries
+### Query
 
-Lists all Queries sent to the Workflow Execution.
+列出发送到 Workflow Execution 的所有 Query。
 
-### Metadata
+### 元数据
 
-Displays User Metadata including static Workflow Summary and Details and dynamic Current Details. Lists all Events with
-User Metadata data to give you a human-readable log of what's happening in your Workflow.
+显示用户元数据，包括静态的 Workflow 摘要和详情以及动态的当前详情。列出所有带有用户元数据的 Event，为您提供 Workflow 中正在发生的事情的可读日志。
 
-## Schedules
+## Schedule
 
-On Temporal Cloud and self-hosted Temporal Service Web UI, the Schedules page lists all the [Schedules](/schedule)
-created on the selected Namespace.
+在 Temporal Cloud 和自托管 Temporal Service Web UI 上，Schedule 页面列出了在所选 Namespace 上创建的所有 [Schedule](/schedule)。
 
-Click a Schedule to see details, such as configured frequency, start and end times, and recent and upcoming runs.
+点击某个 Schedule 可查看详情，例如配置的频率、开始和结束时间以及最近和即将到来的运行记录。
 
-:::tip Setting Schedules with Strings
+:::tip 使用字符串设置 Schedule
 
-Temporal Workflow Schedule Cron strings follow this format:
+Temporal Workflow Schedule Cron 字符串遵循以下格式：
 
 ```
 ┌───────────── minute (0 - 59)
@@ -252,46 +219,39 @@ Temporal Workflow Schedule Cron strings follow this format:
 
 :::
 
-To read more about Schedules, explore these links:
+要了解更多关于 Schedule 的信息，请探索以下链接：
 
 <RelatedReadContainer>
-  <RelatedReadItem path="/develop/go/workflows/schedules" text="Schedules using the Go SDK" archetype="feature-guide" />
-  <RelatedReadItem path="/develop/java/workflows/schedules" text="Schedules using the Java SDK" archetype="feature-guide" />
-  <RelatedReadItem path="/develop/php/workflows/schedules" text="Schedules using the PHP SDK" archetype="feature-guide" />
-  <RelatedReadItem path="/develop/python/workflows/schedules" text="Schedules using the Python SDK" archetype="feature-guide" />
+  <RelatedReadItem path="/develop/go/workflows/schedules" text="使用 Go SDK 的 Schedule" archetype="feature-guide" />
+  <RelatedReadItem path="/develop/java/workflows/schedules" text="使用 Java SDK 的 Schedule" archetype="feature-guide" />
+  <RelatedReadItem path="/develop/php/workflows/schedules" text="使用 PHP SDK 的 Schedule" archetype="feature-guide" />
+  <RelatedReadItem path="/develop/python/workflows/schedules" text="使用 Python SDK 的 Schedule" archetype="feature-guide" />
   <RelatedReadItem
     path="/develop/typescript/workflows/schedules"
-    text="Schedules using the TypeScript SDK"
+    text="使用 TypeScript SDK 的 Schedule"
     archetype="feature-guide"
   />
-  <RelatedReadItem path="/develop/dotnet/workflows/schedules" text="Schedules using the .NET SDK" archetype="feature-guide" />
+  <RelatedReadItem path="/develop/dotnet/workflows/schedules" text="使用 .NET SDK 的 Schedule" archetype="feature-guide" />
 </RelatedReadContainer>
 
-### Settings
+### 设置
 
-On Temporal Cloud, **Settings** is visible only to Account Owner and Global Admin
-[roles](/cloud/manage-access/roles-and-permissions#account-level-roles).
+在 Temporal Cloud 上，**设置**仅对账户所有者和全局管理员[角色](/cloud/manage-access/roles-and-permissions#account-level-roles)可见。
 
-Click **Settings** to see and manage the list of users in your account and to set up integrations such as
-[Observability](/cloud/metrics) and [Audit logging](/cloud/audit-logs).
+点击**设置**可以查看和管理账户中的用户列表，并设置集成，例如[可观测性](/cloud/metrics)和[审计日志](/cloud/audit-logs)。
 
-On a self-hosted Temporal Service, manage your users, metrics, and logging in your
-[server configuration](/references/configuration).
+在自托管 Temporal Service 上，在您的[服务器配置](/references/configuration)中管理用户、指标和日志。
 
-### Archive
+### 归档
 
-On a self-hosted Temporal Service, Archive shows [Archived](/temporal-service/archival) data of your Workflow Executions
-on the Namespace.
+在自托管 Temporal Service 上，Archive 显示 Namespace 上 Workflow Execution 的[已归档](/temporal-service/archival)数据。
 
-To see data in your self-hosted Temporal Service, you must have
-[Archival set up and configured](/self-hosted-guide/archival).
+要在自托管 Temporal Service 中查看数据，您必须已[设置并配置归档](/self-hosted-guide/archival)。
 
-For information and details on the Archive feature in Temporal Cloud, contact your Temporal representative.
+有关 Temporal Cloud 中归档功能的信息和详情，请联系您的 Temporal 代表。
 
 ### Codec Server
 
-The Web UI can use a [Codec Server](/codec-server) with a custom Data Converter to decode inputs and return values. For
-details, see [Securing your data](/production-deployment/data-encryption).
+Web UI 可以使用带有自定义 Data Converter 的 [Codec Server](/codec-server) 来解码输入和返回值。详情请参阅[保护您的数据](/production-deployment/data-encryption)。
 
-The UI supports a [Codec Server endpoint](/production-deployment/data-encryption#web-ui). For details on setting the
-Codec Server endpoint, see [Codec Server setup](/production-deployment/data-encryption#codec-server-setup).
+UI 支持 [Codec Server 端点](/production-deployment/data-encryption#web-ui)。有关设置 Codec Server 端点的详情，请参阅 [Codec Server 设置](/production-deployment/data-encryption#codec-server-setup)。

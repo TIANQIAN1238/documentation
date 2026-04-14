@@ -1,8 +1,8 @@
 ---
 id: multi-tenant-patterns
-title: Multi-tenant application patterns
-sidebar_label: Multi-tenant patterns
-description: Learn how to build multi-tenant applications using Temporal with task queue isolation patterns, worker design, and best practices.
+title: "多租户应用模式"
+sidebar_label: "多租户模式"
+description: "了解如何使用 Temporal 和 Task Queue 隔离模式、Worker 设计和最佳实践来构建多租户应用程序。"
 slug: /production-deployment/multi-tenant-patterns
 toc_max_heading_level: 4
 keywords:
@@ -17,95 +17,102 @@ tags:
 
 import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
 
-Many SaaS providers and large enterprise platform teams use a single Temporal [Namespace](/namespaces) with [per-tenant Task Queues](#1-task-queues-per-tenant-recommended) to power their multi-tenant applications. This approach maximizes resource efficiency while maintaining logical separation between tenants.
+许多 SaaS 提供商和大型企业平台团队使用单个 Temporal [Namespace](/namespaces) 和 [相关租户 Task Queues](#1-task-queues-per-tenant-recommended) 来为其多租户应用程序提供支持。这种方法最大限度地提高了资源效率，同时保持租户之间的逻辑分离。
 
-This guide covers architectural patterns, design considerations, and practical examples for building multi-tenant applications with Temporal.
+本指南涵盖了使用 Temporal 构建多租户应用程序的架构模式、设计注意事项和实际示例。
 
-## Architectural principles
+<a id="architectural-principles"></a>
+## 架构原则 {#architectural-principles}
 
-When designing a multi-tenant Temporal application, follow these principles:
+设计多租户 Temporal 应用程序时，请遵循以下原则：
 
-- **Define your tenant model** - Determine what constitutes a tenant in your business (customers, pricing tiers, teams, etc.)
-- **Prefer simplicity** - Start with the simplest pattern that meets your needs
-- **Understand Temporal limits** - Design within the constraints of your Temporal deployment
-- **Test at scale** - Performance testing must drive your capacity decisions
-- **Plan for growth** - Consider how you'll onboard new tenants and scale workers
+- **定义您的租户模型** - 确定您企业中租户的构成（客户、定价层、团队等）
+- **喜欢简单** - 从满足您需求的最简单的模式开始
+- **了解 Temporal 限制** - 在 Temporal 部署的限制范围内进行设计
+- **大规模测试** - 性能测试必须推动您的容量决策
+- **增长计划** - 考虑如何吸引新租户并扩展 Worker
 
-## Architectural patterns
+<a id="architectural-patterns"></a>
+## 架构模式 {#architectural-patterns}
 
-There are three main patterns for multi-tenant applications in Temporal, listed from most to least recommended:
+Temporal 中的多租户应用程序有三种主要模式，从最推荐到最不推荐列出：
 
-### 1. Task queues per tenant (Recommended)
+<a id="1-task-queues-per-tenant-recommended"></a>
+### 1. 每个租户 Task Queue（推荐） {#1-task-queues-per-tenant-recommended}
 
-**Use different [Task Queues](/task-queue) for each tenant's [Workflows](/workflows) and [Activities](/activities).**
+**对每个租户的 [Workflows](/task-queue) 和 [活动](/workflows) 使用不同的 [Task Queues](/activities)。**
 
-This is the recommended pattern for most use cases. Each tenant gets dedicated Task Queue(s), with [Workers](/workers) polling multiple tenant Task Queues in a single process.
+这是大多数用例的推荐模式。每个租户都有专用的 Task Queue，[Workers](/workers) 在单个进程中轮询多个租户 Task Queue。
 
-**Pros:**
-- Strong isolation between tenants
-- Efficient resource utilization
-- Flexible worker scaling
-- Easy to add new tenants
-- Can handle thousands of tenants per [Namespace](/namespaces)
+**优点：**
+- 租户之间严格隔离
+- 资源高效利用
+- 灵活的Worker缩放
+- 轻松添加新租户
+- 每个 [Namespace](/namespaces) 可以处理数千个租户
 
-**Cons:**
-- Requires worker configuration management
-- Potential for uneven resource distribution
-- Need to prevent "noisy neighbor" issues at the worker level
+**缺点：**
+- 需要Worker配置管理
+- 资源分配不均的可能性
+- 需要在 Worker 级别防止“吵闹的邻居”问题
 
 <RelatedReadContainer>
   <RelatedReadItem path="#task-queue-isolation-pattern" text="Task Queue Isolation Pattern Details" archetype="feature-guide" />
 </RelatedReadContainer>
 
-### 2. Shared Workflow Task Queues, separate Activity Task Queues
+<a id="2-shared-workflow-task-queues-separate-activity-task-queues"></a>
+### 2. 共享 Workflow Task Queue，单独的 Activity Task Queue {#2-shared-workflow-task-queues-separate-activity-task-queues}
 
-**Share [Workflow Task Queues](/task-queue) but use different [Activity Task Queues](/task-queue) per tenant.**
+**共享 [Workflow Task Queues](/task-queue)，但每个租户使用不同的 [Activity Task Queues](/task-queue)。**
 
-Use this pattern when [Workflows](/workflows) are lightweight but [Activities](/activities) have heavy resource requirements or external dependencies that need isolation.
+当 [Workflows](/workflows) 是轻量级的但 [活动](/activities) 具有大量资源需求或需要隔离的外部依赖项时，请使用此模式。
 
-**Pros:**
-- Easier worker management than full isolation
-- Activity-level tenant isolation
-- Good for compute-intensive Activities
+**优点：**
+- Worker 管理比完全隔离更容易
+- Activity级租户隔离
+- 适合计算密集型活动
 
-**Cons:**
-- Less isolation than pattern #1
-- Workflow visibility is shared
-- More complex to reason about
+**缺点：**
+- 比模式#1 更少的隔离
+- Workflow Visibility 已共享
+- 推理起来更复杂
 
-### 3. Namespace per tenant
+<a id="3-namespace-per-tenant"></a>
+### 3. 每个租户 Namespace {#3-namespace-per-tenant}
 
-**Use a separate [Namespace](/namespaces) for each tenant.**
+**为每个租户使用单独的 [Namespace](/namespaces)。**
 
-Only practical for a small number (< 50) of high-value tenants due to operational overhead.
+由于运营开销，仅适用于少数（< 50）高价值租户。
 
-**Pros:**
-- Complete isolation between tenants
-- Per-tenant rate limiting
-- Maximum security
+**优点：**
+- 租户之间完全隔离
+- 每个租户的速率限制
+- 最大程度的安全性
 
-**Cons:**
-- Higher operational overhead
-- Credential and connectivity management per [Namespace](/namespaces)
-- Requires more [Workers](/workers) (minimum 2 per Namespace for high availability)
-- Expensive at scale
+**缺点：**
+- 更高的运营开销
+- 根据 [Namespace](/namespaces) 的凭证和连接管理
+- 需要更多 [Workers](/workers)（每个 Namespace 至少 2 个以实现高可用性）
+- 规模昂贵
 
 <RelatedReadContainer>
   <RelatedReadItem path="/evaluate/development-production-features/multi-tenancy#namespace-isolation" text="Namespace Isolation in Temporal Cloud" archetype="cloud-guide" />
 </RelatedReadContainer>
 
-## Task Queue isolation pattern
+<a id="task-queue-isolation-pattern"></a>
+## Task Queue 隔离模式 {#task-queue-isolation-pattern}
 
-This section details the recommended pattern for most multi-tenant applications.
+本节详细介绍了大多数多租户应用程序的推荐模式。
 
-### Worker design
+<a id="worker-design"></a>
+### Worker 设计 {#worker-design}
 
-When a [Worker](/workers) starts up:
+当 [Worker](/workers) 启动时：
 
-1. **Load tenant configuration** - Retrieve the list of tenants this Worker should handle (from config file, API, or database)
-2. **Create [Task Queues](/task-queue)** - For each tenant, generate a unique Task Queue name (e.g., `customer-{tenant-id}`)
-3. **Register [Workflows](/workflows) and [Activities](/activities)** - Register your Workflow and Activity implementations once, passing the tenant-specific Task Queue name
-4. **Poll multiple Task Queues** - A single Worker process polls all assigned tenant Task Queues
+1. **加载租户配置** - 检索此 Worker 应处理的租户列表（从配置文件、API 或数据库）
+2. **创建 [Task Queues](/task-queue)** - 为每个租户生成唯一的 Task Queue 名称（例如，`customer-{tenant-id}`）
+3. **注册 [Workflows](/workflows) 和 [活动](/activities)** - 注册您的 Workflow 和 Activity 实现一次，传递租户特定的 Task Queue 名称
+4. **轮询多个 Task Queue** - 单个 Worker 进程轮询所有分配的租户 Task Queue
 
 ```go
 // Example: Go worker polling multiple tenant Task Queues
@@ -118,9 +125,10 @@ for _, tenant := range assignedTenants {
 }
 ```
 
-### Routing requests to Task Queues
+<a id="routing-requests-to-task-queues"></a>
+### 将请求路由到 Task Queues {#routing-requests-to-task-queues}
 
-Your application needs to route [Workflow](/workflows) starts and other operations to the correct tenant [Task Queue](/task-queue):
+您的应用程序需要将 [Workflow](/workflows) 启动和其他操作路由到正确的租户 [Task Queue](/task-queue)：
 
 ```go
 // Example: Starting a Workflow for a specific tenant
@@ -131,136 +139,146 @@ workflowOptions := client.StartWorkflowOptions{
 }
 ```
 
-Consider creating an API or service that:
-- Maps tenant IDs to Task Queue names
-- Tracks which [Workers](/workers) are handling which tenants
-- Allows both your application and Workers to read the mappings of:
-    1. Tenant IDs to Task Queues 
-    1. Workers to tenants
+考虑创建一个 API 或服务：
+- 将租户 ID 映射到 Task Queue 名称
+- 跟踪 [Workers](/workers) 正在处理哪些租户
+- 允许您的应用程序和 Worker 读取以下映射：
+    1. 租户 ID 为 Task Queue 
+    1. Worker 给租户
 
-### Capacity planning
+<a id="capacity-planning"></a>
+### 容量规划 {#capacity-planning}
 
-Key questions to answer through performance testing:
+通过性能测试要回答的关键问题：
 
-**[Namespace](/namespaces) capacity:**
-- How many concurrent [Task Queue](/task-queue) pollers can your Namespace support?
-- What are your [Actions Per Second (APS)](/cloud/limits#actions-per-second) limits?
-- What are your [Operations Per Second (OPS)](/references/operation-list) limits?
+**[Namespace](/namespaces) 容量：**
+- 您的 Namespace 可以支持多少个并发 [Task Queue](/task-queue) 轮询器？
+- 您的 [每秒操作数 (APS)](/cloud/limits#actions-per-second) 限制是多少？
+- 您的 [每秒操作数 (OPS)](/references/operation-list) 限制是多少？
 
-**[Worker](/workers) capacity:**
-- How many tenants can a single Worker process handle?
-- What are the CPU and memory requirements per tenant?
-- How many concurrent [Workflow](/workflows) executions per tenant?
-- How many concurrent [Activity](/activities) executions per tenant?
+**[Worker](/workers) 容量：**
+- 单个 Worker 进程可以处理多少个租户？
+- 每个租户的 CPU 和内存要求是多少？
+- 每个租户有多少个并发 [Workflow](/workflows) 执行？
+- 每个租户有多少个并发 [Activity](/activities) 执行？
 
-**SDK configuration to tune:**
+**要调整的 SDK 配置：**
 - `MaxConcurrentWorkflowTaskExecutionSize`
 - `MaxConcurrentActivityExecutionSize`
 - `MaxConcurrentWorkflowTaskPollers`
 - `MaxConcurrentActivityTaskPollers`
-- Worker replicas (in Kubernetes deployments)
+- Worker 副本（在 Kubernetes 部署中）
 
-### Provisioning new tenants
+<a id="provisioning-new-tenants"></a>
+### 配置新租户 {#provisioning-new-tenants}
 
-Automate tenant onboarding with a Temporal [Workflow](/workflows):
+使用 Temporal [Workflow](/workflows) 自动进行租户入职：
 
-1. Create a tenant onboarding Workflow that:
-   - Validates tenant information
-   - Provisions infrastructure
-   - Deploys/updates [Worker](/workers) configuration
-   - Triggers Worker restarts or scaling
-   - Verifies the tenant is operational
+1. 创建一个入职租户 Workflow：
+   - 验证租户信息
+   - 供应基础设施
+   - 部署/Updates [Worker](/workers) 配置
+   - 触发Worker重启或缩放
+   - 验证租户是否正常运营
 
-2. Store tenant-to-Worker mappings in a database or configuration service
+2. 将租户到 Worker 的映射存储在数据库或配置服务中
 
-3. Update Worker deployments to pick up new tenant assignments
+3. Update Worker 部署以获取新租户分配
 
-## Practical example
+<a id="practical-example"></a>
+## 实际例子 {#practical-example}
 
-**Scenario:** A SaaS company has 1,000 customers and expects to grow to 5,000 customers over 3 years. They have 2 [Workflows](/workflows) and ~25 [Activities](/activities) per Workflow. All customers are on the same tier (no segmentation yet).
+**场景：** 一家 SaaS 公司拥有 1,000 名客户，预计在 3 年内增加到 5,000 名客户。每个 Workflow 有 2 个 [Workflows](/workflows) 和约 25 个 [活动](/activities)。所有客户都位于同一层（尚未细分）。
 
-### Assumptions
+<a id="assumptions"></a>
+### 假设 {#assumptions}
 
-| Item | Value |
+| 物品 | 价值 |
 |------|-------|
-| Current customers | 1,000 |
-| Workflow Task Queues per customer | 1 |
-| Activity Task Queues per customer | 1 |
-| Max Task Queue pollers per Namespace | 5,000 |
-| SDK concurrent Workflow task pollers | 5 |
-| SDK concurrent Activity task pollers | 5 |
-| Max concurrent Workflow executions | 200 |
-| Max concurrent Activity executions | 200 |
+| 当前客户 | 1,000 |
+| 每个客户的 Workflow Task Queue | 1 |
+| 每个客户的 Activity Task Queue | 1 |
+| 每个 Namespace 的最大 Task Queue 轮询数 | 5,000 |
+| SDK并发Workflow任务轮询器 | 5 |
+| SDK并发Activity任务轮询器 | 5 |
+| 最大并发数 Workflow Execution | 200 |
+| 最大并发执行数 Activity | 200 |
 
-### Capacity calculations
+<a id="capacity-calculations"></a>
+### 容量计算 {#capacity-calculations}
 
-**[Task Queue](/task-queue) poller limits:**
-- Each [Worker](/workers) uses 10 pollers per tenant (5 Workflow + 5 Activity)
-- Maximum Workers in [Namespace](/namespaces): 5,000 pollers ÷ 10 = **500 Workers**
+**[Task Queue](/task-queue) 轮询器限制：**
+- 每个 [Worker](/workers) 每个租户使用 10 个轮询器（5 Workflow + 5 Activity）
+- [Namespace](/namespaces) 中的最大 Worker：5,000 个轮询器 ÷ 10 = **500 个 Worker**
 
-**Worker capacity:**
-- Each Worker can theoretically handle 200 [Workflows](/workflows) and 200 [Activities](/activities) concurrently
-- Conservative estimate: **250 tenants per Worker** (accounting for overhead)
-- For 1,000 customers: **4 Workers minimum** (plus replicas for HA)
-- For 5,000 customers: **20 Workers minimum** (plus replicas for HA)
+**Worker 容量：**
+- 每个Worker理论上可以同时处理200个[Workflows](/workflows)和200个[活动](/activities)
+- 保守估计：**每个 Worker 250 个租户**（考虑管理费用）
+- 对于 1,000 个客户：**至少 4 个 Worker**（加上 HA 的副本）
+- 对于 5,000 个客户：**至少 20 个 Worker**（加上 HA 的副本）
 
-**Namespace capacity:**
-- At 250 tenants per Worker, need 2 Workers per group of tenants (for HA)
-- Maximum tenants in Namespace: (500 Workers ÷ 2) × 250 = **62,500 tenants**
+**Namespace 容量：**
+- 每个 Worker 有 250 个租户，每组租户需要 2 个 Worker（用于 HA）
+- Namespace 的最大租户数：(500 Worker ÷ 2) × 250 = **62,500 个租户**
 
 :::note
-These are theoretical calculations based on SDK defaults. **Always perform load testing** to determine actual capacity for your specific workload. Monitor CPU, memory, and Temporal metrics during testing.
+这些是基于 SDK 默认值的理论计算。 **始终执行负载测试**以确定特定工作负载的实际容量。在测试期间监视 CPU、内存和 Temporal 指标。
 
-While testing, also pay attention to your [metrics capacity and cardinality](/cloud/metrics/openmetrics/api-reference#managing-high-cardinality).
+测试时，还要注意您的 [度量容量和基数](/cloud/metrics/openmetrics/api-reference#managing-high-cardinality)。
 :::
 
-### Worker assignment strategies
+<a id="worker-assignment-strategies"></a>
+### Worker 分配策略 {#worker-assignment-strategies}
 
-**Option 1: Static configuration**
-- Each [Worker](/workers) reads a config file listing assigned tenant IDs
-- Simple to implement
-- Requires deployment to add tenants
+**选项 1：静态配置**
+- 每个 [Worker](/workers) 读取列出分配的租户 ID 的配置文件
+- 易于实施
+- 需要部署才能添加租户
 
-**Option 2: Dynamic API**
-- Workers call an API on startup to get assigned tenants
-- Workers identified by static ID (1 to N)
-- API returns tenant list based on Worker ID
-- More flexible, no deployment needed for new tenants
+**选项 2：动态 API**
+- Workers 在启动时调用 API 来获取分配的租户
+- Worker 由静态 ID 标识（1 到 N）
+- API根据Worker ID返回租户列表
+- 更灵活，新租户无需部署
 
-## Best practices
+<a id="best-practices"></a>
+## 最佳实践 {#best-practices}
 
-### Monitoring
+<a id="monitoring"></a>
+### 监控 {#monitoring}
 
-Track these [metrics](/references/sdk-metrics) per tenant:
-- [Workflow completion](/cloud/metrics/openmetrics/metrics-reference#workflow-completion-metrics) rates
-- [Activity execution](/cloud/metrics/openmetrics/metrics-reference#task-queue-metrics) rates
-- [Task Queue backlog](/cloud/metrics/openmetrics/metrics-reference#task-queue-metrics)
-- [Worker resource utilization](/references/sdk-metrics#worker_task_slots_used)
-- [Workflow failure rates](/encyclopedia/detecting-workflow-failures)
+跟踪每个租户的这些 [指标](/references/sdk-metrics)：
+- [Workflow 完成](/cloud/metrics/openmetrics/metrics-reference#workflow-completion-metrics) 费率
+- [Activity 执行](/cloud/metrics/openmetrics/metrics-reference#task-queue-metrics) 费率
+- [Task Queue积压](/cloud/metrics/openmetrics/metrics-reference#task-queue-metrics)
+- [Worker 资源利用](/references/sdk-metrics#worker_task_slots_used)
+- [Workflow 故障率](/encyclopedia/detecting-workflow-failures)
 
-### Handling noisy neighbors
+<a id="handling-noisy-neighbors"></a>
+### 处理吵闹的邻居 {#handling-noisy-neighbors}
 
-Even with [Task Queue](/task-queue) isolation, monitor for tenants that:
-- Generate excessive load
-- Have high failure rates
-- Cause [Worker](/workers) resource exhaustion
+即使使用 [Task Queue](/task-queue) 隔离，也要监控以下租户：
+- 产生过多的负载
+- 故障率高
+- 导致[Worker](/workers)资源耗尽
 
-Strategies:
-- Implement per-tenant rate limiting in your application
-- Move problematic tenants to dedicated Workers
-- Use [Workflow](/workflows)/[Activity](/activities) timeouts aggressively
+策略：
+- 在您的应用程序中实施每个租户的速率限制
+- 将有问题的租户移至专用的 Worker
+- 积极使用 [Workflow](/workflows)/[Activity](/activities) 超时
 
-### Tenant lifecycle
+<a id="tenant-lifecycle"></a>
+### 租户生命周期 {#tenant-lifecycle}
 
-Plan for:
-- **Onboarding** - Automated provisioning [Workflow](/workflows)
-- **Scaling** - When to add new [Workers](/workers) for growing tenants
-- **Offboarding** - Graceful tenant removal and data cleanup
-- **Rebalancing** - Redistributing tenants across Workers
+计划：
+- **入门** - 自动配置 [Workflow](/workflows)
+- **扩展** - 何时为不断增长的租户添加新的 [Workers](/workers)
+- **卸载** - 优雅的租户删除和数据清理
+- **重新平衡** - 在 Worker 之间重新分配租户
 
 ### Search Attributes
 
-Use [Search Attributes](/search-attribute) to enable tenant-scoped queries:
+使用 [Search Attributes](/search-attribute) 启用租户范围的查询：
 ```go
 // Add tenant ID as a Search Attribute
 searchAttributes := map[string]interface{}{
@@ -268,12 +286,13 @@ searchAttributes := map[string]interface{}{
 }
 ```
 
-This allows filtering [Workflows](/workflows) by tenant in the UI and SDK:
+这允许在 UI 和 SDK 中按租户过滤 [Workflows](/workflows)：
 ```sql
 TenantId = 'customer-123' AND ExecutionStatus = 'Running'
 ```
 
-## Related resources
+<a id="related-resources"></a>
+## 相关资源 {#related-resources}
 
 <RelatedReadContainer>
   <RelatedReadItem path="/evaluate/development-production-features/multi-tenancy" text="Multi-tenancy Overview" archetype="feature-guide" />

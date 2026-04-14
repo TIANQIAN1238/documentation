@@ -1,7 +1,7 @@
 ---
 id: user-group
-title: tcld user group command reference
-sidebar_label: user-group
+title: "tcld 用户组命令参考"
+sidebar_label: "用户组"
 slug: /cloud/tcld/user-group/
 toc_max_heading_level: 4
 keywords:
@@ -13,152 +13,173 @@ tags:
   - User groups
 ---
 
-The `tcld user-group` commands manage user groups in Temporal Cloud.
+`tcld user-group` 命令管理 Temporal Cloud 中的用户组。
 
-Alias: `ug`
+别名：`ug`
 
-- [tcld user-group add-users](#add-users)
-- [tcld user-group create](#create)
-- [tcld user-group delete](#delete)
-- [tcld user-group get](#get)
-- [tcld user-group list](#list)
-- [tcld user-group list-members](#list-members)
-- [tcld user-group remove-users](#remove-users)
-- [tcld user-group set-access](#set-access)
+- [tcld 用户组添加用户](#add-users)
+- [tcld 用户组创建](#create)
+- [tcld 用户组删除](#delete)
+- [tcld 用户组获取](#get)
+- [tcld 用户组列表](#list)
+- [tcld 用户组列表成员](#list-members)
+- [tcld 用户组删除用户](#remove-users)
+- [tcld 用户组设置访问](#set-access)
 
-## add-users
+<a id="add-users"></a>
+## 添加用户 {#add-users}
 
-The `tcld user-group add-users` command adds users to the specified user group in Temporal Cloud.
-You must set `--group-id` to specify the group to add users to.
+`tcld user-group add-users` 命令将用户添加到 Temporal Cloud 中指定的用户组。
+您必须设置 `--group-id` 来指定要将用户添加到的组。
 
-Alias: `au`
+别名：`au`
 
-The following flags control the behavior of the command.
+以下标志控制命令的行为。
 
-#### --group-id (-id)
+<a id="group-id--id"></a>
+#### --组 ID (-id) {#group-id--id}
 
-Specify the ID of the group to add users to.
+指定要添加用户的组的 ID。
 
-#### --user-email (-e)
+<a id="user-email--e"></a>
+#### --用户电子邮件 (-e) {#user-email--e}
 
-Specify the email of the user to add. This flag can be specified multiple times to add
-multiple users in one command
+指定要添加的用户的电子邮件。该标志可以多次指定以添加
+一个命令中有多个用户
 
 
-## create
+## 创造 {#create}
 
-Creates a user group.
+创建用户组。
 
-Alias: `c`
+别名：`c`
 
-The following flags control the behavior of the command.
+以下标志控制命令的行为。
 
-#### --display-name
+<a id="create"></a>
+#### --显示名称 {#display-name}
 
-The display name of the group.
+组的显示名称。
 
-#### --account-role
+<a id="display-name"></a>
+#### --账户角色 {#account-role}
 
-The account role that the group should have. One of `admin`, `read`, `developer`, `owner`, `financeadmin`, `none`.
+该组应具有的帐户角色。 `admin`、`read`、`developer`、`owner`、`financeadmin`、`none` 之一。
 
-#### --namespace-role (-nr)
+<a id="account-role"></a>
+#### --Namespace-角色 (-nr) {#namespace-role--nr}
 
-Specifies a namespace role that the group should have. Can be repeated multiple times to add
-multiple namespace roles to the group. Value is the form of `<namespaceid>-<role>` where the namespace ID is the full ID of the namespace and role is one of `admin`, `read`, or `write`. Example: `mynamespace.abc123-read` adds the read role for the `mynamespace.abc123` namespace.
+指定该组应具有的 Namespace 角色。可以重复多次添加
+组中有多个 Namespace 角色。值的形式为 `<Namespaceid>-<role>`，其中 Namespace ID 是 Namespace 的完整 ID，角色为 `admin`、`read` 或 `write` 之一。示例：`myNamespace.abc123-read` 为 `myNamespace.abc123` Namespace 添加读取角色。
 
-## delete
+## 删除 {#delete}
 
-Deletes the user group.
+删除用户组。
 
-Alias: `d`
+别名：`d`
 
-The following flags control the behavior of the command.
+以下标志控制命令的行为。
 
-#### --group-id (-id)
+<a id="namespace-role--nr"></a>
+#### --组 ID (-id) {#group-id--id}
 
-Specify the ID of the group to delete.
+指定要删除的组的 ID。
 
-## get
+## 得到 {#get}
 
-Gets the user group details.
+获取用户组详细信息。
 
-Alias: `g`
+别名：`g`
 
-The following flags control the behavior of the command.
+以下标志控制命令的行为。
 
-#### --group-id (-id)
+<a id="delete"></a>
+#### --组 ID (-id) {#group-id--id}
 
-Specify the ID of the group to list.
+指定要列出的组的 ID。
 
-## list
+## 列表 {#list}
 
-List the user groups in your Temporal Cloud account.
+列出您的 Temporal Cloud 帐户中的用户组。
 
-Alias: `l`
+别名：`l`
 
-The following flags control the behavior of the command.
+以下标志控制命令的行为。
 
-#### --page-size (-s)
+<a id="group-id--id"></a>
+#### --页面大小 (-s) {#page-size--s}
 
-The number of groups to list per page. Defaults to 10.
+每页列出的组数。默认为 10。
 
-#### --page-token (-p)
+<a id="get"></a>
+#### --页面标记 (-p) {#page-token--p}
 
-The page token used when paginating through result pages.
+对结果页面进行分页时使用的页面标记。
 
-## list-members
+<a id="group-id--id"></a>
+## 列表成员 {#list-members}
 
-Lists all of the members of a group.
+列出组的所有成员。
 
-Alias: `lm`
+别名：`lm`
 
-The following flags control the behavior of the command.
+以下标志控制命令的行为。
 
-#### --group-id (-id)
+<a id="list"></a>
+#### --组 ID (-id) {#group-id--id}
 
-Specify the ID of the group to list.
+指定要列出的组的 ID。
 
-## remove-users
+<a id="page-size--s"></a>
+## 删除用户 {#remove-users}
 
-Removes one or more users as members of the group.
+删除作为组成员的一名或多名用户。
 
-Alias: `ru`
+别名：`ru`
 
-The following flags control the behavior of the command.
+以下标志控制命令的行为。
 
-#### --group-id (-id)
+<a id="page-token--p"></a>
+#### --组 ID (-id) {#group-id--id}
 
-Specify the ID of the group to remove users from.
+指定要从中删除用户的组的 ID。
 
-#### --user-email (-e)
+<a id="list-members"></a>
+#### --用户电子邮件 (-e) {#user-email--e}
 
-The email address of the user to remove from the group. This flag can be specified multiple times in order to remove multiple users with one command.
+要从组中删除的用户的电子邮件地址。可以多次指定此标志，以便使用一个命令删除多个用户。
 
-## set-access
+<a id="group-id--id"></a>
+## 设置访问 {#set-access}
 
-This command sets the access roles that for a group. It follows the same conventions as the [create](#create) command by specifying an optional account role and 0 or more namespace roles.
+此命令设置组的访问角色。它遵循与 [创造](#create) 命令相同的约定，指定一个可选帐户角色和 0 个或多个 Namespace 角色。
 
-Alias: `sa`
+别名：`sa`
 
-#### --group-id (-id)
+<a id="remove-users"></a>
+#### --组 ID (-id) {#group-id--id}
 
-Specify the ID of the group to set access.
+指定要设置访问权限的组 ID。
 
-#### --account-role
+<a id="group-id--id"></a>
+#### --账户角色 {#account-role}
 
-The account role that the group should have. One of `admin`, `read`, `developer`, `owner`, `financeadmin`, `none`.
+该组应具有的帐户角色。 `admin`、`read`、`developer`、`owner`、`financeadmin`、`none` 之一。
 
-#### --namespace-role (-nr)
+<a id="user-email--e"></a>
+#### --Namespace-角色 (-nr) {#namespace-role--nr}
 
-Specifies a namespace role that the group should have. Can be repeated multiple times to add
-multiple namespace roles to the group. Value is the form of `<namespaceid>-<role>` where the namespace ID is the full ID of the namespace and role is one of `admin`, `read`, or `write`. Example: `mynamespace.abc123-read` adds the read role for the `mynamespace.abc123` namespace.
+指定该组应具有的 Namespace 角色。可以重复多次添加
+组中有多个 Namespace 角色。值的形式为 `<Namespaceid>-<role>`，其中 Namespace ID 是 Namespace 的完整 ID，角色为 `admin`、`read` 或 `write` 之一。示例：`myNamespace.abc123-read` 为 `myNamespace.abc123` Namespace 添加读取角色。
 
-#### --append (-a)
+<a id="set-access"></a>
+#### --追加 (-a) {#append--a}
 
-Will append namespace roles instead of replacing all existing roles already assigned. This allows namespace roles to be added without knowing what roles are already assigned to the group.
+将追加 Namespace 角色，而不是替换已分配的所有现有角色。这允许在不知道已分配给组的角色的情况下添加 Namespace 角色。
 
-#### --remove (-r)
+<a id="group-id--id"></a>
+#### --删除 (-r) {#remove--r}
 
-Will remove the given namespace roles instead of replacing all existing roles already assigned. This allows namespace roles to be removed without knowing what roles are already assigned to the group.
+将删除给定的 Namespace 角色，而不是替换已分配的所有现有角色。这允许在不知道已分配给组的角色的情况下删除 Namespace 角色。
 
 

@@ -1,7 +1,7 @@
 ---
 id: asynchronous-activity
-title: Asynchronous Activity completion - Go SDK
-sidebar_label: Asynchronous Activity Completion
+title: "异步 Activity 完成 - Go SDK"
+sidebar_label: "异步 Activity 完成"
 toc_max_heading_level: 4
 keywords:
   - asynchronous activity completion
@@ -9,20 +9,20 @@ tags:
   - Activities
   - Go SDK
   - Temporal SDKs
-description: Asynchronous Activity Completion lets the Activity Function return without finishing Activity Execution. Use Task Tokens and Temporal Client to complete the Activity externally.
+description: "异步 Activity 完成让 Activity 函数返回而不完成 Activity 执行。使用任务令牌和 Temporal CLIent 在外部完成 Activity。"
 ---
 
-[Asynchronous Activity Completion](/activity-execution#asynchronous-activity-completion) enables the Activity Function to return without the Activity Execution completing.
+[异步 Activity 完成](/activity-execution#asynchronous-activity-completion) 使 Activity 函数能够在 Activity 执行未完成的情况下返回。
 
-There are three steps to follow:
+需要遵循三个步骤：
 
-1. The Activity provides the external system with identifying information needed to complete the Activity Execution.
-   Identifying information can be a [Task Token](/activity-execution#task-token), or a combination of Namespace, Workflow Id, and Activity Id.
-2. The Activity Function completes in a way that identifies it as waiting to be completed by an external system.
-3. The Temporal Client is used to Heartbeat and complete the Activity.
+1. Activity 向外部系统提供完成 Activity 执行所需的识别信息。
+   标识信息可以是 [任务令牌](/activity-execution#task-token)，也可以是 Namespace、Workflow Id 和 Activity Id 的组合。
+2. Activity 函数以将其标识为等待外部系统完成的方式完成。
+3. Temporal CLIent 用于心跳并完成 Activity。
 
-**Step 1: Provide the external system with a Task Token to complete the Activity Execution.**
-   To do this, use the `GetInfo()` API from the `go.temporal.io/sdk/activity` package.
+**步骤 1：向外部系统提供任务令牌以完成 Activity 执行。**
+   为此，请使用 `go.Temporal.io/sdk/Activity` 包中的 `GetInfo()` API。
 
 ```go
 // Retrieve the Activity information needed to asynchronously complete the Activity.
@@ -31,13 +31,13 @@ taskToken := activityInfo.TaskToken
 // Send the taskToken to the external service that will complete the Activity.
 ```
 
-**Step 2: Return an `activity.ErrResultPending` error to indicate that the Activity is completing asynchronously.**
+**步骤 2：返回 `Activity.ErrResultPending` 错误，指示 Activity 正在异步完成。**
 
 ```go
 return "", activity.ErrResultPending
 ```
 
-**Step 3: Use the Temporal Client to complete the Activity using the Task Token.**
+**步骤 3：使用 Temporal CLIent 使用任务令牌完成 Activity。**
 
 ```go
 // Instantiate a Temporal service client.
@@ -49,17 +49,17 @@ temporalClient, err := client.Dial(client.Options{})
 temporalClient.CompleteActivity(context.Background(), taskToken, result, nil)
 ```
 
-The following are the parameters of the `CompleteActivity` function:
+以下是`CompleteActivity`函数的参数：
 
-- `taskToken`: The value of the binary `TaskToken` field of the `ActivityInfo` struct retrieved inside
-  the Activity.
-- `result`: The return value to record for the Activity. The type of this value must match the type
-  of the return value declared by the Activity function.
-- `err`: The error code to return if the Activity terminates with an error.
+- `taskToken`：内部检索的 `ActivityInfo` 结构的二进制 `TaskToken` 字段的值
+  Activity。
+- `result`：为 Activity 记录的返回值。该值的类型必须与类型匹配
+  Activity 函数声明的返回值。
+- `err`：如果 Activity 因错误而终止，则返回错误代码。
 
-If `err` is not null, the value of the `result` field is ignored.
+如果 `err` 不为空，则忽略 `result` 字段的值。
 
-To fail the Activity, you would do the following:
+要使 Activity 失败，您将执行以下操作：
 
 ```go
 // Fail the Activity.

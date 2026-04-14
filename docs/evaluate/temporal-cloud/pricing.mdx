@@ -1,8 +1,8 @@
 ---
 id: pricing
-title: Temporal Cloud pricing
-sidebar_label: Pricing
-description: Temporal Cloud offers flexible, predictable pricing for Workflows, Activities, Workers, and Storage. Pay for what you use with volume discounts and credit savings.
+title: "Temporal Cloud 定价"
+sidebar_label: "定价"
+description: "Temporal Cloud 为 Workflow、活动、Worker 和存储提供灵活、可预测的定价。通过批量折扣和信用节省来支付您使用的费用。"
 slug: /cloud/pricing
 toc_max_heading_level: 4
 keywords:
@@ -23,119 +23,119 @@ tags:
 
 import { DiscoverableDisclosure } from '@site/src/components';
 
-Temporal Cloud is a consumption-based service.
-You pay only for what you use.
-Our pricing reflects your use of [_Actions_](#action), [_Storage_](#storage), and [_Support_](/cloud/support#support).
-It is flexible, transparent, and predictable, so you know your costs.
+Temporal Cloud 是一项基于消费的服务。
+您只需为您使用的内容付费。
+我们的定价反映了您对 [_行动_](#action)、[_贮存_](#storage) 和 [_支持_](/cloud/support#support) 的使用情况。
+它灵活、透明且可预测，因此您可以了解自己的成本。
 
-This page describes the elements of Temporal Cloud pricing.
-It gives you the information you need to understand and estimate costs for your implementation.
-For more exact estimates, please reach out to [our team](https://pages.temporal.io/ask-an-expert).
+本页介绍了 Temporal Cloud 定价的要素。
+它为您提供了解和估算实施成本所需的信息。
+如需更准确的估算，请联系 [我们的团队](https://pages.temporal.io/ask-an-expert)。
 
-Billing and cost information is available directly in the Temporal Cloud UI.
-For more information, visit the [Billing and Cost](/cloud/billing-and-cost) page.
+账单和成本信息可直接在 Temporal Cloud UI 中获取。
+欲了解更多信息，请访问 [计费和成本](/cloud/billing-and-cost) 页面。
 
-## Temporal Cloud pricing model {#pricing-model}
+## Temporal Cloud 定价模型 {#pricing-model}
 
-This section explains the basis of the Temporal Cloud pricing model and how it works.
-Your total invoice each calendar month is the combination of Temporal Cloud consumption ([Actions](#action) and [Storage](#storage)), and a [Temporal Cloud Plan](#base_plans) that includes [Support](/cloud/support#support).
+本节介绍 Temporal Cloud 定价模型的基础及其工作原理。
+每个日历月的发票总额是 Temporal Cloud 消费（[行动](#action) 和 [贮存](#storage)）以及包含 [支持](#base_plans) 的 [Temporal Cloud计划](/cloud/support#support) 的组合。
 
-### Temporal Cloud Plans {#base_plans}
+### Temporal Cloud 计划 {#base_plans}
 
-**How plans work**
+**计划如何运作**
 
 
-Each Temporal Cloud account includes a plan with Support, Actions, Active Storage, Retained Storage and platform features.
-Base allocations help you get started with the Temporal platform, so you can better estimate costs.
+每个 Temporal Cloud 帐户都包含一个包含支持、操作、活动存储、保留存储和平台功能的计划。
+基本分配可帮助您开始使用 Temporal 平台，以便您可以更好地估算成本。
 
-- Temporal Cloud Plans are charged monthly.
-- Action and Storage allocations are reset each calendar month.
+- Temporal Cloud 计划按月收费。
+- 操作和存储分配每个日历月都会重置。
 
-Temporal offers four plans: Essentials, Business, Enterprise, Mission Critical.
-Prices are outlined in the following table:
+Temporal 提供四种计划：Essentials、Business、Enterprise、Mission Critical。
+价格如下表所示：
 
-|                   | Essentials                                                                     | Business                                                                                                                          | Enterprise                                                                                                                                                 | Mission Critical                                                                                                                                           |
+|                   | 必需品                                                                     | 商业                                                                                                                          | 企业                                                                                                                                                 | 关键任务                                                                                                                                           |
 | ----------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Support Targeting | Basic use                                                                      | Production deployments<br />that scale                                                                                            | Enterprise deployments<br/>w/ stringent uptime demands                                                                                                     | Mission-critical applications<br />w/ the highest support needs                                                                                            |
-| Support Features  | Access to Support                                                              | <li>P0 Response Times</li>                                                                                                        | <li>P0: \<30 Min, 24/7</li><li>Private Slack</li>                                                                                                          | <li>P0: \<15 Min, 24/7</li><li>Private Slack</li><li>Dedicated DSE</li>                                                                                    |
-| Product Features  | <li>1M Actions</li><li>1 GB Active Storage</li><li>40 GB Retained Storage</li> | <li>Commit discounts</li><li>SAML included</li><li>SCIM (Add-on)</li><li>2.5M Actions</li><li>2.5 GB Active Storage</li><li>100 GB Retained Storage</li> | <li>Commit discounts</li><li>SAML included</li><li>SCIM included</li><li>10M Actions</li><li>10 GB Active Storage</li><li>400 GB Retained Storage</li> | <li>Commit discounts</li><li>SAML included</li><li>SCIM included</li><li>10M Actions</li><li>10 GB Active Storage</li><li>400 GB Retained Storage</li> |
-| Plan Pricing      | Greater of<li>&#36;100/mo or</li><li>5% of Usage Spend</li>                    | Greater of<li>&#36;500/mo or</li><li>10% of Usage Spend</li>                                                                      | Priced annually:<br /> [contact Sales](mailto:sales@temporal.io) for details                                                                               | Priced annually:<br /> [contact Sales](mailto:sales@temporal.io) for details                                                                               |
-| Usage Pricing     | [Pay-As-You-Go](#payg) Pricing                                                 | Choose from <br /> [Pay-As-You-Go](#payg) or [Commitment Pricing](#commitment-pricing)                                            | Choose from <br /> [Pay-As-You-Go](#payg) or [Commitment Pricing](#commitment-pricing)                                                                     | Choose from <br /> [Pay-As-You-Go](#payg) or [Commitment Pricing](#commitment-pricing)                                                                     |
+| 支持定位 | 基本使用                                                                      | 规模化生产部署<br />                                                                                            | 企业部署<br/>w/严格的正常运行时间要求                                                                                                     | 关键任务应用<br />w/最高的支持需求                                                                                            |
+| 支持功能  | 获得支持                                                              | <li>P0 响应时间</li>                                                                                                        | <li>P0: \<30 Min, 24/7</li><li>私人 Slack</li>                                                                                                          | <li>P0: \<15 Min, 24/7</li><li>私人 Slack</li><li>专用 DSE</li>                                                                                    |
+| 产品特点  | <li>1M 操作</li><li>1 GB 活动存储</li><li>40 GB 保留存储</li> | <li>承诺折扣</li><li>SAML 包括</li><li>SCIM（附加）</li><li>2.5M 操作</li><li>2.5 GB 活动存储</li><li>100 GB 保留存储</li> | <li>提交折扣</li><li>SAML 包含</li><li>SCIM 包含</li><li>10M 操作</li><li>10 GB 活动存储</li><li>400 GB 保留存储</li> | <li>提交折扣</li><li>SAML 包含</li><li>SCIM 包含</li><li>10M 操作</li><li>10 GB 活动存储</li><li>400 GB 保留存储</li> |
+| 计划定价      | <li>$100/月或</li><li>使用支出的5%</li>中的较高者                    | <li>$500/月或</li><li>使用支出</li>的10%中的较高者                                                                      | 按年定价：<br /> [联系销售人员](mailto:sales@temporal.io) 了解详情                                                                               | 按年定价：<br /> [联系销售人员](mailto:sales@temporal.io) 了解详情                                                                               |
+| 使用定价     | [按量付费](#payg) 定价                                                 | 从 <br /> [按量付费](#payg) 或 [承诺定价](#commitment-pricing) 中选择                                            | 从 <br /> [按量付费](#payg) 或 [承诺定价](#commitment-pricing) 中选择                                                                     | 从 <br /> [按量付费](#payg) 或 [承诺定价](#commitment-pricing) 中选择                                                                     |
 
-Please note, partial months are prorated to the day.
-Find a complete description of Support offerings and response times in our [Support](/cloud/support) documentation.
+请注意，部分月份按比例计算。
+在我们的 [支持](/cloud/support) 文档中查找支持服务和响应时间的完整说明。
 
 :::note Converting GB to GBH
 
-Active and Retained Storage allocations are translated into GBh at a rate of 1GB equals 744GBh.
+活动和保留存储分配按 1GB 等于 744GBh 的比率转换为 GBh。
 
 :::
 
-### Actions {#action}
+### 动作 {#action}
 
-**What are Temporal Actions?**
+**什么是 Temporal 操作？**
 
-Actions are the primary unit of consumption-based pricing for Temporal Cloud.
-They track billable operations within the Temporal Cloud Service, such as starting Workflows, recording a Heartbeat or sending messages.
-**Specific Billable Actions are discussed on the [Actions](/cloud/actions) page.**
+操作是 Temporal Cloud 基于消耗的定价的主要单位。
+它们跟踪 Temporal Cloud 服务中的计费操作，例如启动 Workflow、记录心跳或发送消息。
+**具体的计费操作在 [行动](/cloud/actions) 页面上讨论。**
 
-[Reach out](https://pages.temporal.io/contact-us) to our team for more information or to help size your number of Actions.
+[伸出手](https://pages.temporal.io/contact-us) 联系我们的团队以获取更多信息或帮助确定您的操作数量。
 
-### Storage {#storage}
+### 存储 {#storage}
 
-**How Workflow Storage works**
+**Workflow 存储的工作原理**
 
-A Workflow's execution might exist for a few seconds, a day, month, or even forever.
-The Temporal Service stores the Workflow Execution's [Event History](/workflow-execution/event#event-history).
-Under this framework, a Workflow Execution has only two states, open (Active Storage) or closed (Retained Storage).
+Workflow 的执行可能存在几秒钟、一天、一个月甚至永远。
+Temporal 服务存储 Workflow Execution 的 [Event History](/workflow-execution/event#event-history)。
+在此框架下，Workflow Execution 只有两种状态，打开（活动存储）或关闭（保留存储）。
 
-- _Active Storage_ measures the amount of storage used by active Workflows.
+- _活动存储_ 测量活动 Workflow 使用的存储量。
 
-- When the execution of a Workflow finishes, Temporal Cloud stores Event History for a defined [Retention Period](/temporal-service/temporal-server#retention-period), which is set by the user per Namespace.
-  This is _Retained Storage_.
-  Typical uses of Retained Storage include compliance, debugging, workload refresh, and business analytics.
-  When closed Workflow Histories need to be retained for more than the 90-day maximum period on Temporal Cloud, we recommend using our [**Export**](/cloud/export) feature.
+- 当Workflow的执行完成时，Temporal Cloud将Event History存储为定义的[保留期限](/temporal-service/temporal-server#retention-period)，这是由用户根据Namespace设置的。
+  这是_保留存储_。
+  保留存储的典型用途包括合规性、调试、工作负载刷新和业务分析。
+  当关闭 Workflow 历史记录需要保留超过 Temporal Cloud 的最长期限 90 天时，我们建议使用我们的 [**出口**](/cloud/export) 功能。
 
-Storage costs are measured in gigabyte-hours (GBh).
+存储成本以千兆字节小时 (GBh) 为单位。
 
-### Pricing options {#pricing-options}
+### 定价选项 {#pricing-options}
 
-**How to Pay for Temporal Cloud**
+**如何支付Temporal Cloud**
 
-After you exceed your Actions and Storage allocations in your base tier, Temporal Cloud offers two payment options: Pay-As-You-Go and Commitments.
-Both models meter and bill for three primary components: [Actions](#action), [Storage](#storage), and [your Temporal Cloud Plan](/cloud/support#support).
+当您超出基本层中的操作和存储分配后，Temporal Cloud 提供两种付款选项：即用即付和承诺。
+两种型号均对三个主要组件进行计量和计费：[行动](#action)、[贮存](#storage) 和 [您的 Temporal Cloud 计划](/cloud/support#support)。
 
-- With Pay-As-You-Go, you are invoiced each calendar month based on your consumption.
-  Pay-As-You-Go pricing automatically applies volume prices as your Actions scale.
-- With Commitments, you pre-purchase your Temporal Cloud spend with Temporal Credits.
-  Temporal Credits pay for your Temporal Cloud consumption, including Temporal Cloud Plan charges.
+- 使用即用即付方式，我们会根据您的消费情况每个日历月向您开具发票。
+  即用即付定价会根据您的操作规模自动应用批量价格。
+- 通过承诺，您可以使用 Temporal 积分预购买您的 Temporal Cloud 支出。
+  Temporal 积分用于支付您的 Temporal Cloud 消费，包括 Temporal Cloud 计划费用。
 
-## Pay-As-You-Go {#payg}
+## 即用即付 {#payg}
 
-**How does Pay-As-You-Go pricing work?**
+**即用即付定价如何运作？**
 
-Pay-As-You-Go pricing is based on consumption.
-This section explains how you're billed each calendar month and gives examples.
+即用即付定价基于消费量。
+本部分介绍每个日历月的计费方式并提供示例。
 
-### Action pricing {#payg-action-pricing}
+### 行动定价 {#payg-action-pricing}
 
-Actions pricing starts at &#36;50 per million Actions (&#36;0.00005 per Action).
-You gain progressive volume discounts as you scale.
-Discounts are based on your account's total usage, metered and billed for each calendar month:
+操作定价起价为每百万个操作 50 美元（每个操作 0.00005 美元）。
+随着规模的扩大，您将获得渐进的批量折扣。
+折扣基于您帐户的总使用量，按每个日历月计量和计费：
 
-| Actions               | Price per Million Actions                                                                 |
+| 行动               | 每百万次操作的价格                                                                 |
 | --------------------- | ----------------------------------------------------------------------------------------- |
-| First 5M              | &#36;50                                                                                   |
-| Next 5M, up to 10M    | &#36;45                                                                                   |
-| Next 10M, up to 20M   | &#36;40                                                                                   |
-| Next 30M, up to 50M   | &#36;35                                                                                   |
-| Next 50M, up to 100M  | &#36;30                                                                                   |
-| Next 100M, up to 200M | &#36;25                                                                                   |
-| Over 200M             | Contact [Sales](mailto:sales@temporal.io) for info<br /> _More discounts, helpful humans_ |
+| 前5M              | 50 美元                                                                                   |
+| 接下来 5M，最多 10M    | 45 美元                                                                                   |
+| 下一个 10M，上一个 20M   | 40 美元                                                                                   |
+| 下30M，上50M   | 35 美元                                                                                   |
+| 下50M，上100M  | 30 美元                                                                                   |
+| 下100M，上200M | 25 美元                                                                                   |
+| 超过200M             | 联系[销售量](mailto:sales@temporal.io)获取信息<br />_更多折扣，乐于助人_ |
 
-**Example**
+**例子**
 
-If you consume 11.25M Actions in excess of your Temporal Cloud Plan allocation in one calendar month, your bill for Actions will be:
+如果您在一个日历月内消耗的 1125 万个操作超出了您的 Temporal Cloud 计划分配，则您的操作账单将为：
 
 ```
 5M Actions ⨉ $50 Per Million Actions = $250
@@ -145,27 +145,27 @@ Actions
 $250 (First Tier) + $225 (Second Tier) + $50 (Third Tier) = $525
 ```
 
-### Storage pricing {#payg-storage-pricing}
+### 存储定价 {#payg-storage-pricing}
 
-Most accounts’ storage needs are met by our Temporal Cloud Plans.
-For additional storage within a calendar month, you are billed for Active and Retained Storage as follows:
-| **Storage** | **Price per GBh (USD)** |
+我们的 Temporal Cloud 计划可以满足大多数帐户的存储需求。
+对于一个日历月内的额外存储，您需要支付活动存储和保留存储的费用，如下所示：
+| **贮存** | **每 GBh 价格（美元）** |
 | ----------- | ----------------------- |
-| Retained | &#36;0.00105 |
-| Active | &#36;0.042 |
+| 保留 | $0.00105 |
+| 积极的 | 0.042 美元 |
 
 :::tip Storage costs are also affected by Temporal System Workflows that back features such as:
 
-- [Schedules](https://docs.temporal.io/schedule): Each Scheduled Workflow contributes to storage usage. Supplied inputs, outputs, and failures all account for the storage usage incurred from Scheduled Workflows.
-- [Batch jobs](https://docs.temporal.io/cli/batch): Batch Workflow executions also consume storage.
+- [Schedules](https://docs.temporal.io/schedule)：每个 Scheduled Workflow 都有助于存储使用。提供的输入、输出和故障均涉及 Scheduled Workflow 产生的存储使用情况。
+- [批量作业](https://docs.temporal.io/cli/batch)：批次 Workflow Execution 也会消耗存储空间。
 
-These Workflow executions contribute to overall active and retained storage consumption.
+这些 Workflow Execution 会影响总体活动存储和保留存储消耗。
 
 :::
 
-**Example**
+**例子**
 
-If you have 720 GBh of Active Storage and 3,600 GBh of Retained Storage in excess of your Base Tier allocations in one calendar month, your bill will be:
+如果您在一个日历月内拥有超过基本层分配的 720 GBh 活动存储和 3,600 GBh 保留存储，则您的账单将为：
 
 ```
 720 GBh Active Storage ⨉ $0.042 per GBh = $30.24
@@ -173,316 +173,319 @@ If you have 720 GBh of Active Storage and 3,600 GBh of Retained Storage in exces
 Total Storage Bill: $30.24 Active Storage + $3.78 Retained Storage = $34.02
 ```
 
-## Temporal Cloud Plan pricing
+<a id="temporal-cloud-plan-pricing"></a>
+## Temporal Cloud 计划定价 {#temporal-cloud-plan-pricing}
 
-Your Temporal Cloud Plan pricing is the greater of the minimum monthly price or a percent (%) of your consumption spend:
+您的 Temporal Cloud 计划定价是每月最低价格或消费支出的百分比 (%) 中的较高者：
 
-- The Essentials tier is priced at the greater of &#36;100/month or 5% of your Temporal Cloud consumption.
-- The Business tier is priced at the greater of &#36;500/month or 10% of Temporal Cloud consumption.
-- The Enterprise and Mission Critical Support plans must be paid annually. Contact [Sales](mailto:sales@temporal.io) to discuss your needs.
+- Essentials 级别的定价为每月 100 美元或 Temporal Cloud 消费的 5%，以较高者为准。
+- 商务层的定价为 500 美元/月或 Temporal Cloud 消费的 10%，以较高者为准。
+- 企业和关键任务支持计划必须每年支付。请联系 [销售量](mailto:sales@temporal.io) 讨论您的需求。
 
-Your Temporal Cloud consumption combines the costs of Actions and Storage.
+您的 Temporal Cloud 消耗结合了操作和存储的成本。
 
-**Example**
+**例子**
 
-If you are signed up for Essentials, with &#36;3,000 of monthly spend, your bill will be:
+如果您注册了 Essentials，每月支出为 3,000 美元，您的账单将是：
 
 ```
 Greater of $100 or 5% ⨉ $3,000 = $150, so $150.
 ```
 
-## Commitment Pricing {#commitment-pricing}
+## 承诺定价 {#commitment-pricing}
 
-**Commitments with Temporal Credits**
+**使用 Temporal 积分的承诺**
 
-Temporal Cloud offers the option to commit to a minimum spend over a given timeframe.
-In exchange for this commitment you receive additional discounts.
-Key discount levers include:
+Temporal Cloud 提供在给定时间范围内承诺最低支出的选项。
+作为这一承诺的交换，您将获得额外的折扣。
+主要折扣杠杆包括：
 
-- Account Action volume over 200M Actions
-- Duration of your commitment (1, 2, or 3 years)
+- 账户操作量超过 200M 操作
+- 您的承诺期限（1、2 或 3 年）
 
-Meet your commitments with any Temporal Cloud spend, including Actions, Storage and your Temporal Cloud Plan.
-After making a commitment, Temporal locks in your Actions price based on your expected volume and discounts your Active Storage costs.
-This price is used to bill your Actions and Active Storage across your account for the timeframe specified in your commitment.
+通过任何 Temporal Cloud 支出履行您的承诺，包括操作、存储和您的 Temporal Cloud 计划。
+做出承诺后，Temporal 会根据您的预期数量锁定您的 Actions 价格，并折扣您的 Active Storage 成本。
+此价格用于在您的承诺中指定的时间范围内对您帐户中的操作和活动存储进行计费。
 
-Commitments must be paid for with Temporal Credits.
-Temporal Credits are used to pay your Temporal Cloud consumption, including Temporal Cloud Plan charges.
-A Temporal Credit is equivalent to &#36;1 USD.
-For example, a credit purchase of &#36;20,000 results in 20,000 Temporal Credits.
-A minimum credit purchase equivalent to the first year of your commitment is required.
-For multi-year deals please contact [Sales](mailto:sales@temporal.io) for the most accurate pricing.
+承诺必须用 Temporal 积分支付。
+Temporal 积分用于支付您的 Temporal Cloud 消费，包括 Temporal Cloud 计划费用。
+Temporal 积分相当于 1 美元。
+例如，购买 20,000 美元的积分可得到 20,000 个 Temporal 积分。
+最低信用购买量需要相当于您承诺的第一年。
+对于多年优惠，请联系 [销售量](mailto:sales@temporal.io) 以获取最准确的定价。
 
-### Commitment Pricing Q&A
+<a id="commitment-pricing-qa"></a>
+### 承诺定价问答 {#commitment-pricing-qa}
 
-**How do multi-year commitments work?**
+**多年承诺如何发挥作用？**
 
-Our sales team works with you to match annual credit purchases in line with your expected spend.
-This aligns your payments to annual terms rather than one up-front expense.
+我们的销售团队与您合作，根据您的预期支出匹配年度信用购买。
+这使您的付款符合年度条款，而不是一笔预付费用。
 
-**What happens if I exhaust my commitment-based Temporal Credits before the end of my term?**
+**如果我在任期结束前用完基于承诺的 Temporal 积分，会发生什么情况？**
 
-You continue to receive the negotiated discounted prices for the remainder of your term.
-You'll be invoiced for another credit purchase based on your most recent calendar month's spend.
-This amount is multiplied by the months remaining in the annual portion of your term.
-If your previous month spend was &#36;5,000, and you're 10 months through your annual term, you'll be invoiced for 10,000 Temporal Credits to cover the remaining two months.
+在剩余期限内，您将继续获得协商的折扣价格。
+您将根据您最近日历月的支出收到另一笔信用购买的发票。
+该金额乘以您任期的年度部分中剩余的月份。
+如果您上个月的支出为 5,000 美元，并且您的年度期限还有 10 个月，您将收到 10,000 个 Temporal 积分的发票，以支付剩余两个月的费用。
 
-**What happens if I have unused Temporal Credits at the end of my term?**
+**如果我在学期结束时还有未使用的 Temporal 积分会怎样？**
 
-Commitments can be difficult to estimate.
-Temporal Cloud offers two ways to roll-over unused credits:
+承诺可能很难估计。
+Temporal Cloud 提供两种方式来延续未使用的积分：
 
-- When you renew a commitment for the same or larger amount, Temporal Cloud rolls over any unused credits into your new commitment.
-- Should you need to downsize your commitment, Temporal Cloud rolls over up to 10% of your initial credit purchase amount into the new commitment.
+- 当您续订相同或更大金额的承诺时，Temporal Cloud 会将任何未使用的积分转入您的新承诺。
+- 如果您需要缩小承诺规模，Temporal Cloud 会将您初始信用购买金额的最多 10% 转入新承诺。
 
-**How do I make a commitment and purchase Temporal Credits?**
+**我如何做出承诺并购买 Temporal 积分？**
 
-Contact our team at [sales@temporal.io](mailto:sales@temporal.io) or reach out to your dedicated account manager.
-You can also purchase Temporal Cloud commitments credits through [AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-xx2x66m6fp2lo).
+请通过 [销售@Temporal.io](mailto:sales@temporal.io) 联系我们的团队或联系您的专属客户经理。
+您还可以通过 [AWS 市场](https://aws.amazon.com/marketplace/pp/prodview-xx2x66m6fp2lo) 购买 Temporal Cloud 承诺积分。
 
-### Credit Balance
+<a id="credit-balance"></a>
+### 信用余额 {#credit-balance}
 
-Your Credit Balance is adjusted each calendar month based on your Credit Usage.
+您的信用余额每个日历月都会根据您的信用使用情况进行调整。
 
-**Example**
+**例子**
 
-An account has purchased credits with an annual spend commitment of &#36;72,000.
-In the first calendar month, the account is billed &#36;500 for a Business plan, &#36;5,000 for Actions, &#36;250 for Active Storage and &#36;50 for Retained Storage, a total of &#36;5800.
-Their invoice would state:
+一个帐户购买了年度支出承诺为 72,000 美元的积分。
+在第一个日历月，该帐户的商业计划费用为 500 美元，操作费用为 5,000 美元，活动存储费用为 250 美元，保留存储费用为 50 美元，总计 5800 美元。
+他们的发票上会注明：
 
 ```
 Beginning credit balance of 72,000 - 5800 credits used = 66,200, Temporal Credits remaining.
 ```
 
-If you have additional questions about credits and volume-based pricing, please contact [sales](mailto:sales@temporal.io) or, if you're already a Temporal Cloud customer, reach out to your dedicated account executive.
+如果您对积分和基于数量的定价有其他疑问，请联系 [销售量](mailto:sales@temporal.io)，或者，如果您已经是 Temporal Cloud 客户，请联系您的专属客户经理。
 
-## Other pricing {#other-pricing}
+## 其他定价 {#other-pricing}
 
-Temporal Cloud has additional pricing for other elements of the platform.
+Temporal Cloud 对该平台的其他元素有额外的定价。
 
-### Capacity Modes {#capacity-modes-pricing}
+### 容量模式 {#capacity-modes-pricing}
 
-**What are Capacity Modes?** 
+**什么是容量模式？**
 
-Temporal offers On-Demand and Provisioned Capacity modes. 
-On-Demand capacity is automatically adjusted based on past usage. 
-Provisioned Capacity modes lets you define the capacity that is needed by your Workflow and is useful to handle traffic outside of the standard on-demand limits.
-See details on how capacity is set and the associated limits at [Capacity Modes](/cloud/capacity-modes).
+Temporal 提供按需和预配置容量模式。 
+按需容量会根据过去的使用情况自动调整。 
+预配置容量模式允许您定义 Workflow 所需的容量，并且对于处理超出标准按需限制的流量非常有用。
+有关如何设置容量以及相关限制的详细信息，请参阅 [容量模式](/cloud/capacity-modes)。
 
 :::tip Support, stability, and dependency info
 
-Provisioned Capacity is currently in [Public Preview](/evaluate/development-production-features/release-stages#public-preview).
+预配置容量当前为 [公开预览](/evaluate/development-production-features/release-stages#public-preview)。
 
 :::
 
-**How does pricing for Capacity Modes work?**
+**容量模式的定价如何运作？**
 
-The number of Actions accrued can be impacted by your capacity mode. 
-For On-Demand Capacity Mode, Actions are accrued as usual. 
-For Provisioned Capacity there is a minimum number of Actions that must be used per calendar hour for each [Temporal Resource Unit (TRU)](/cloud/capacity-modes) that is provisioned.
-If Action volume in a calendar hour does not exceed the minimum allocation, Actions of the subtype `ns_capacity:tru` will be recorded to the required volume. 
-The minimum requirement for the first TRU is 0 Actions as it aligns with the default rate limits on Temporal. 
-For each additional TRU, there is a minimum hourly requirement of 360,000 Actions Per Hour. 
-360,000 Actions per hour represents a 20% utilization of requested resources. 
-This can be calculated as 500 APS Per TRU * 3600 Seconds (1 Hour) * 20%= 360,000 Actions. 
+累积的操作数可能会受到容量模式的影响。 
+对于按需容量模式，操作会照常累积。 
+对于预配置容量，每个日历小时必须为预配置的每个 [Temporal 资源单元 (TRU)](/cloud/capacity-modes) 使用最少数量的操作。
+如果一个日历小时内的Action量没有超过最小分配量，子类型`ns_capacity:tru`的Action将被记录到所需的量。 
+第一个 TRU 的最低要求是 0 个操作，因为它与 Temporal 上的默认速率限制一致。 
+对于每个额外的 TRU，每小时的最低要求为 360,000 次操作。 
+每小时 360,000 个操作表示所请求资源的利用率为 20%。 
+这可以计算为每个 TRU 500 APS * 3600 秒（1 小时）* 20%= 360,000 个操作。
 
-For example: 
+例如：
 
-If you have a namespace that requests 4 TRUs (ie 2,000 APS) for 4 hours and have usage as follows:
-* Hour 1: 2,000,000 Actions
-* Hour 2: 5,000,000 Actions
-* Hour 3: 4,000,000 Actions
-* Hour 4: 500,000 Actions
-Then the cost of Provisioned Capacity would be calculated as:
+如果您有一个 Namespace，请求 4 个 TRU（即 2,000 APS）4 小时，并且使用情况如下：
+* 第 1 小时：2,000,000 次操作
+* 第 2 小时：5,000,000 次操作
+* 第 3 小时：4,000,000 个操作
+* 第 4 小时：500,000 次操作
+那么预配置容量的成本将计算如下：
 
-4 TRUs Requested - 1 Default TRU included = 3 TRUs with a minimum usage requirement
-3 TRUs * 360,000 Actions per Hour= 1,080,000 minimum Actions per Hour
-* Hour 1: 2,000,000 Actions > 1,080,000 minimum Actions = No additional Actions accrued
-* Hour 2: 5,000,000 Actions > 1,080,000 minimum Actions = No additional Actions accrued
-* Hour 3: 4,000,000 Actions > 1,080,000 minimum Actions = No additional Actions accrued
-* Hour 4: 500,000 Actions < 1,080,000 minimum Actions so 1,080,000-500,000 Actions = 580,000 additional actions will be added to the hour
-Total for 4 hours: 2,000,000+5,000,000+4,000,000+1,080,000=12,080,000 Actions
+请求 4 个 TRU - 包含 1 个默认 TRU = 具有最低使用要求的 3 个 TRU
+3 个 TRU * 每小时 360,000 个操作= 每小时最少 1,080,000 个操作
+* 第 1 小时：2,000,000 次操作 > 最少 1,080,000 次操作 = 不产生额外操作
+* 第 2 小时：5,000,000 次操作 > 最少 1,080,000 次操作 = 不产生额外操作
+* 第 3 小时：4,000,000 次操作 > 最少 1,080,000 次操作 = 不产生额外操作
+* 第 4 小时：500,000 个操作 < 1,080,000 个最小操作，因此 1,080,000-500,000 个操作 = 580,000 个额外操作将添加到该小时中
+4 小时总计：2,000,000+5,000,000+4,000,000+1,080,000=12,080,000 次操作
 
-If TRUs are changed multiple times within an hour, the highest value within that hour will be used to calculate the minimum actions required.
+如果 TRU 在一个小时内多次更改，则该小时内的最高值将用于计算所需的最少操作。
 
-Temporal’s approach to pricing Provisioned Capacity aligns with our goal to only charge for what you use. 
-The minimum hourly allocation will have no impact on your price if you utilize the requested capacity above your default by 20% or more, and will only incur an additional charge if the requested capacity is not used. 
-To avoid being charged for provisioned capacity it is advised to "return" capacity to the pool and switch back to the On-demand mode when usage is stable. 
+Temporal 的预配置容量定价方法符合我们的目标，即仅按您使用的量收费。 
+如果您使用的请求容量超出默认值 20% 或更多，则最低每小时分配不会对您的价格产生影响，并且仅在未使用请求的容量时才会产生额外费用。 
+为了避免对预配置容量收取费用，建议将容量“返回”到池中，并在使用情况稳定时切换回按需模式。
 
 
 
-### High Availability feature pricing {#high-availability-features}
+### 高可用性功能定价 {#high-availability-features}
 
-**How does the pricing for High Availability (HA) features work?**
+**高可用性 (HA) 功能的定价如何运作？**
 
-For workloads with stringent high availability requirements, Temporal Cloud provides same-region, multi-region, and multi-cloud replicas, which add a failover capability.
-Enabling HA features for Namespace automatically replicates Workflow Execution data and metadata to a replica in the same region or in a different region.
-This allows for a near-seamless failover when incidents or outages occur.
+对于具有严格高可用性要求的工作负载，Temporal Cloud 提供同区域、多区域和多云副本，从而增加了故障转移功能。
+为 Namespace 启用 HA 功能会自动将 Workflow Execution 数据和元数据复制到同一区域或不同区域的副本。
+这允许在发生事件或中断时实现近乎无缝的故障转移。
 
-The pricing for High Availability features aligns with the volume of your workloads.
-Actions and Storage in your Namespace contribute to your Actions and Storage consumption.
-To estimate costs for this deployment model, apply a 2x multiplier to the Actions and Storage in the Namespace you are replicating and include this scaling in your account's consumption.
-For pre-existing Namespaces that add a replica, the 2x multiplier only applies to Actions and Storage after the replica is active.
-Storage used and Actions completed before the replica's creation, or while it was being created but not yet in the 'active' status, do not incur the additional charges.
+高可用性功能的定价与您的工作负载量一致。
+Namespace 中的操作和存储会影响您的操作和存储消耗。
+要估算此部署模型的成本，请将 2 倍乘数应用于您正在复制的 Namespace 中的操作和存储，并将此扩展包含在您的账户消耗中。
+对于添加副本的预先存在的 Namespace，2 倍乘数仅适用于副本处于活动状态后的操作和存储。
+在创建副本之前或在创建副本但尚未处于“活动”状态时使用的存储和完成的操作不会产生额外费用。
 
 :::tip Future Pricing Update
 
-In the future, for Namespaces that incur high volumes of cross-cloud data transfer, Temporal will charge extra to cover the cost of egress charged by the cloud providers.
-All Namespaces will receive a generous amount of network transfer for free, so the vast majority of Namespaces will have no charge.
+未来，对于需要进行大量跨云数据传输的 Namespace，Temporal 将收取额外费用，以覆盖云提供商收取的出口费用。
+所有Namespace都将免费获得大量的网络转账，因此绝大多数Namespace将不收取任何费用。
 
 :::
 
-When upgrading an existing Namespace, some points to consider:
+升级现有 Namespace 时，需要考虑以下几点：
 
-- Temporal won't charge for historical Actions completed prior to upgrading to a Namespace with High Availability features.
-  Only ongoing (in-flight) and new Workflow Executions will generate consumption.
-- Temporal charges for all Actions of existing (ongoing) and new Workflows from the point of adding a replica.
-- Temporal charges for Replicated Storage of retained (historical), running (ongoing), and new Workflow Executions from the point of adding a new replica.
+- Temporal 不会对升级到具有高可用性功能的 Namespace 之前完成的历史操作收费。
+  只有正在进行的（飞行中）和新的 Workflow Execution 才会产生消耗。
+- Temporal 从添加副本开始对现有（正在进行的）和新 Workflow 的所有操作进行收费。
+- Temporal 从添加新副本开始对保留（历史）、运行（持续）和新 Workflow Execution 的复制存储进行收费。
 
-### Fairness pricing {#fairness-pricing}
+### 公平定价 {#fairness-pricing}
 
-**How does pricing for Fairness work?**
+**公平定价如何运作？**
 
-When [Fairness](/develop/task-queue-priority-fairness#task-queue-fairness) is enabled on a Namespace, an additional `0.1` Action is charged per Action in that Namespace for each hour the feature is on, regardless of whether individual Workflows or Activities use fairness keys.
+当在 Namespace 上启用 [公平性](/develop/task-queue-priority-fairness#task-queue-fairness) 时，无论单个 Workflow 或活动是否使用公平密钥，该 Namespace 中的每个操作都会在功能启用的每个小时内收取额外的 `0.1` 操作费用。
 
-The examples below use a Namespace, `your-namespace`, that normally generates 10,000 Actions per hour.
+下面的示例使用 Namespace、`your-Namespace`，通常每小时生成 10,000 个操作。
 
-**Fairness enabled, but no fairness keys in use**
+**启用公平性，但未使用公平性密钥**
 
-If Fairness is enabled but no Workflows or Activities send `fairness_key` metadata, all Tasks continue to route as before. Fairness Actions are still applied: billing is determined by whether Fairness is enabled on the Namespace.
+如果启用了公平性，但没有 Workflow 或活动发送 `fairness_key` 元数据，则所有任务将继续像以前一样路由。公平操作仍然适用：计费取决于 Namespace 上是否启用公平性。
 
-| Hour          | Actions in Namespace | Fairness enabled? | Fairness Actions | Total billed Actions |
+| 小时          | Namespace 中的操作 | 启用公平性？ | 公平行动 | 总计费操作数 |
 |---------------|----------------------|-------------------|--------------------|----------------------|
-| 2:00–3:00 PM  | 10,000               | Yes               | +1,000             | 11,000               |
+| 下午 2:00–3:00  | 10,000               | 是的               | +1,000             | 11,000               |
 
-**Mix of Workflows with and without fairness keys**
+**带有和不带有公平键的 Workflow 的混合**
 
-Suppose `your-namespace` has two Task Queues:
-- `payment-queue`, where Workflows pass `fairness_key = "customer-id"`
-- `notification-queue`, where Workflows have no fairness keys and behave exactly as before
+假设 `your-Namespace` 有两个 Task Queue：
+- `payment-queue`，其中 Workflow 传递 `fairness_key = "customer-id"`
+- `notification-queue`，其中 Workflow 没有公平键并且行为与以前完全相同
 
-If each queue generates 5,000 Actions in a given hour (10,000 total), Fairness Actions apply to the full 10,000, not only to the 5,000 from `payment-queue`.
+如果每个队列在给定小时内生成 5,000 个操作（总共 10,000 个），则公平操作适用于全部 10,000 个操作，而不仅仅是 `payment-queue` 中的 5,000 个操作。
 
-| Hour          | Actions from payment-queue | Actions from notification-queue | Total Namespace Actions | Fairness | Total billed Actions |
+| 小时          | 支付队列中的操作 | 通知队列中的操作 | Namespace 操作总数 | 公平性 | 总计费操作数 |
 |---------------|----------------------------|---------------------------------|-------------------------|-----------------|----------------------|
-| 2:00–3:00 PM  | 5,000                      | 5,000                           | 10,000                  | +1,000          | 11,000               |
+| 下午 2:00–3:00  | 5,000                      | 5,000                           | 10,000                  | +1,000          | 11,000               |
 
-### SCIM and SSO via SAML pricing {#sso-and-saml}
+### SCIM 和 SSO 通过 SAML 定价 {#sso-and-saml}
 
-**What costs are associated with SSO/SAML use?**
+**使用 SSO/SAML 会产生哪些成本？**
 
-Single sign-on (SSO) integration using SAML is included for all customers on the Business, Enterprise, and Mission Critical Plans.
+商业、企业和关键任务计划的所有客户都包含使用 SAML 的单点登录 (SSO) 集成。
 
-**What costs are associated with SCIM?**
+**与 SCIM 相关的费用有哪些？**
 
-To enable SCIM (System for Cross-domain Identity Management), you need an Enterprise or Mission Critical plan or an add-on for the Business plan (+$500/month in addition to the Business plan).
-Please note that you must configure SSO via SAML to use SCIM.
+要启用 SCIM（跨域身份管理系统），您需要企业或关键任务计划或业务计划的附加组件（除业务计划外，每月还需+ 500 美元）。
+请注意，您必须通过 SAML 配置 SSO 才能使用 SCIM。
 
-### Use case cost estimates {#pricing-estimates}
+### 用例成本估算 {#pricing-estimates}
 
-Temporal Cloud uses a consumption-based pricing model based primarily on [Actions](#action) and [Storage](#storage).
-Each workload is different.
-You can estimate the cost of a specific Workflow by running it at a low volume.
-Use the resulting Storage and compute measurements to project your production scale cost.
+Temporal Cloud 使用主要基于 [行动](#action) 和 [贮存](#storage) 的基于消耗的定价模型。
+每个工作量都不同。
+您可以通过小批量运行来估算特定 Workflow 的成本。
+使用生成的存储和计算测量结果来预测您的生产规模成本。
 
-The examples below provide general estimates based on workload size.
-You can also use our calculator on the pricing page to build your estimate.
-Our team is always happy to [help you estimate costs](https://pages.temporal.io/contact-us) for your specific workloads and requirements.
+下面的示例提供了基于工作负载大小的一般估计。
+您还可以使用定价页面上的计算器来进行估算。
+我们的团队始终乐意为您的特定工作负载和要求提供 [帮助您估算成本](https://pages.temporal.io/contact-us)。
 
-| Workload size | Cost (monthly) | Characteristics                            | Actions                                            | Typical use cases                                                                                             |
+| 工作负载大小 | 费用（每月） | 特征                            | 行动                                            | 典型用例                                                                                             |
 | ------------- | -------------- | ------------------------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Small         | < &#36;50.00   | Modest / transient throughput              | < 1M / month  <br /> _(< 0.38 actions per second)_ | General automation <br /> Human dependent processes <br /> Data pipelines <br /> Nightly batch processes      |
-| Medium        | < &#36;2K      | Steady or burst throughput                 | < 40M / month <br /> _(< 15 actions per second)_   | Transaction & order systems <br /> Infrastructure automation <br /> Payment Processing <br /> Batch processes |
-| Large         | < &#36;15K     | Sustained throughput or multiple use cases | < 400M / month <br /> _(< 150 actions per second)_ | Data processing / sync <br /> Retail order system <br /> KYC & fraud detection                                |
-| Web Scale     | &#36;20K+      | "Web scale" and / or numerous use cases    | 1B+ / month <br /> _(400+ actions per second)_     | Social media application <br /> SaaS application service                                                      |
+| 小的         | < $50.00   | 适度/瞬时吞吐量              | < 1M / month  <br /> _(< 每秒 0.38 次操作)_ | 通用自动化 <br /> 人类相关流程 <br /> 数据管道 <br /> 每晚批处理      |
+| 中等的        | < 2000 美元      | 稳定或突发吞吐量                 | < 40M / month <br /> _(< 每秒 15 次操作)_   | 交易和订单系统 <br /> 基础设施自动化 <br /> 支付处理 <br /> 批处理 |
+| 大的         | < 15,000 美元     | 持续吞吐量或多个用例 | < 400M / month <br /> _(< 每秒 150 次操作)_ | 数据处理/同步 <br /> 零售订单系统 <br /> KYC 和欺诈检测                                |
+| 网络规模     | 2万美元以上      | “网络规模”和/或众多用例    | 1B+ / 月 <br /> _（每秒 400+ 操作）_     | 社交媒体应用 <br /> SaaS 应用服务                                                      |
 
-## Billing Questions FAQs {#pricing-faq}
+## 计费问题常见问题解答 {#pricing-faq}
 
-**What payment methods does Temporal accept?**
+**Temporal 接受哪些付款方式？**
 
-You can pay with a credit card, ACH, or wire transfer.
-To pay for Temporal Cloud with an AWS Account, sign up for [Temporal Cloud Pay-As-You-Go](https://aws.amazon.com/marketplace/pp/prodview-xx2x66m6fp2lo) on the AWS Marketplace.
+您可以使用信用卡、ACH 或电汇付款。
+要使用 AWS 账户支付 Temporal Cloud，请在 AWS Marketplace 上注册 [Temporal Cloud 即用即付](https://aws.amazon.com/marketplace/pp/prodview-xx2x66m6fp2lo)。
 
-**How often will I be billed?**
+**我多久需要付费一次？**
 
-Temporal Cloud issues invoices for the previous month’s usage and costs.
-Invoices are issued on the 3rd of the month for the previous month.
-For example, invoices for May will be issued at midnight UTC on June 3rd.
+Temporal Cloud 开具上个月的使用量和费用的发票。
+上个月的发票于当月 3 号开具。
+例如，5 月份的发票将于 6 月 3 日午夜（世界标准时间）开具。
 
-**Where can I view my usage and billing information?**
+**我在哪里可以查看我的使用情况和账单信息？**
 
-Account Owners and Finance Admins can view their detailed billing data at any time.
-Visit the [Usage and Billing dashboards](/cloud/billing-and-cost) in Temporal Cloud.
+账户所有者和财务管理员可以随时查看其详细的账单数据。
+访问 Temporal Cloud 中的 [使用情况和计费仪表板](/cloud/billing-and-cost)。
 
-**How do I purchase Temporal Cloud credits?**
+**如何购买 Temporal Cloud 积分？**
 
-You can purchase Temporal Cloud credits by contacting our team at [sales@temporal.io](mailto:sales@temporal.io).
+您可以通过 [销售@Temporal.io](mailto:sales@temporal.io) 联系我们的团队来购买 Temporal Cloud 积分。
 
-**What's the minimum cost to run Temporal Cloud?**
+**运行 Temporal Cloud 的最低成本是多少？**
 
-The Essentials plan starts at &#36;100/month.
-Consumption in excess of your plan's allocations are billed on a consumption basis.
+Essentials 计划起价为 100 美元/月。
+超出计划分配的消耗按消耗量计费。
 
-**Can I purchase Temporal Cloud through my Amazon, Azure, or Google Cloud Platform Marketplace?**
+**我可以通过 Amazon、Azure 或 Google Cloud Platform Marketplace 购买 Temporal Cloud 吗？**
 
-There are two ways to purchase Temporal Cloud through AWS Marketplace:
+通过 AWS Marketplace 购买 Temporal Cloud 有两种方法：
 
-- Pay-As-You-Go available [here](https://aws.amazon.com/marketplace/pp/prodview-xx2x66m6fp2lo)
-- Credits: available via private offer, please contact our team at [sales@temporal.io](mailto:sales@temporal.io)
+- 可用即付即用 [这里](https://aws.amazon.com/marketplace/pp/prodview-xx2x66m6fp2lo)
+- 积分：通过私人优惠提供，请通过 [销售@Temporal.io](mailto:sales@temporal.io) 联系我们的团队
 
-To purchase Temporal Cloud on the Google Cloud Marketplace, please contact our team at [sales@temporal.io](mailto:sales@temporal.io).
+要在 Google Cloud Marketplace 上购买 Temporal Cloud，请通过 [销售@Temporal.io](mailto:sales@temporal.io) 联系我们的团队。
 
-**How do I see how many Temporal Cloud credits are remaining?**
+**如何查看剩余多少 Temporal Cloud 积分？**
 
-To view remaining Temporal Cloud credits, Account Owners and Finance Admins can log in to Temporal Cloud and go to Settings > Billing.
-You need appropriate administrative permissions to access this section.
+要查看剩余的 Temporal Cloud 积分，账户所有者和财务管理员可以登录 Temporal Cloud 并转至“设置”>“账单”。
+您需要适当的管理权限才能访问此部分。
 
-**What happens if I exceed my available credits under a promotion such as the startup program?**
+**如果我超出了启动计划等促销活动中的可用积分，会发生什么情况？**
 
-Customers with free credits from the startup program or from a promotion are invoiced once their credit balance is exhausted at the end of that month.
+对于从启动计划或促销活动中获得免费积分的客户，一旦其积分余额在该月底用完，就会向其开具发票。
 
-**Do promotional credits expire?**
+**促销积分会过期吗？**
 
-Credits received through the startup program or an offer have an expiry date.
-This date is stated as part of the sign-up process.
+通过启动计划或优惠获得的积分有一个到期日。
+该日期是注册过程的一部分。
 
-**How do I update my payment information?**
+**如何获取 Update 我的付款信息？**
 
-Account Owners and Finance Admins can update payment information at any time on the Temporal Cloud [Billing](https://cloud.temporal.io/billing) page under the Plan tab.
-You need appropriate administrative permissions to access this section.
-Select the "Manage Payment Method" button.
+账户所有者和财务管理员可以随时在计划选项卡下的 Temporal Cloud [计费](https://cloud.temporal.io/billing) 页面上查看 Update 付款信息。
+您需要适当的管理权限才能访问此部分。
+选择“管理付款方式”按钮。
 
-See [this overview](/cloud/billing-and-cost) for more details.
+有关详细信息，请参阅 [本概述](/cloud/billing-and-cost)。
 
-**What happens if my payment fails?**
+**如果我的付款失败会怎样？**
 
-Temporal will periodically send you email reminders to complete the payment.
+Temporal将定期向您发送电子邮件提醒您完成付款。
 
-**How do I view my invoices and billing history?**
+**如何查看我的发票和账单历史记录？**
 
-Invoices are emailed to Account Owners or the designated billing contacts.
-Account Owners and Finance Admins can view their [detailed billing information](https://cloud.temporal.io/billing) at any time.
-See our [billing and cost](/cloud/billing-and-cost) page for details.
-You need appropriate administrative permissions to access this section.
-Alternatively, to view invoices and billing history, contact Temporal Finance at [ar@temporal.io](mailto: ar@temporal.io).
+发票通过电子邮件发送给帐户所有者或指定的帐单联系人。
+帐户所有者和财务管理员可以随时查看他们的 [详细的账单信息](https://cloud.temporal.io/billing)。
+有关详细信息，请参阅我们的 [计费和成本](/cloud/billing-and-cost) 页面。
+您需要适当的管理权限才能访问此部分。
+或者，要查看发票和账单历史记录，请通过 [ar@Temporal.io](mailto: ar@temporal.io) 联系 Temporal 财务部。
 
-**Does Temporal charge sales tax/VAT?**
+**Temporal 收取销售税/增值税吗？**
 
-We charge applicable sales tax in US jurisdictions as required.
+我们根据要求在美国司法管辖区收取适用的销售税。
 
-**How do I cancel my account?**
+**我如何取消我的帐户？**
 
-Account Owners can delete their account and cancel their subscription in the Plans tab in the billing center.
-See the [billing and cost](/cloud/billing-and-cost) page for details on how to access the billing center.
+帐户所有者可以在计费中心的“计划”选项卡中删除其帐户并取消其订阅。
+有关如何访问计费中心的详细信息，请参阅 [计费和成本](/cloud/billing-and-cost) 页面。
 
-**Will I lose access immediately if I cancel my account?**
+**如果我取消帐户，我会立即失去访问权限吗？**
 
-Customers lose access to Temporal Cloud once Temporal completes the off-boarding process.
-Billing is independent of this process.
+一旦 Temporal 完成下线流程，客户将失去对 Temporal Cloud 的访问权限。
+计费独立于此过程。
 
-**Can I reactivate my account after cancellation?**
+**取消后我可以重新激活我的帐户吗？**
 
-No.
-When your account is canceled, your account data is deleted and cannot be restored.
-To return to Temporal Cloud, you must sign up again.
-We will assign you a new Temporal account and consider you as a new customer.
+不。
+当您的帐户被取消时，您的帐户数据将被删除且无法恢复。
+要返回 Temporal Cloud，您必须重新注册。
+我们将为您分配一个新的 Temporal 帐户，并将您视为新客户。

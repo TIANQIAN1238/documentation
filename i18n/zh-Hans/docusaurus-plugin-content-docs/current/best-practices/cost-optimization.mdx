@@ -1,0 +1,280 @@
+---
+title: XPROT017X 命令选项参考
+sidebar_label: 成本优化
+description: 优化与 Temporal Cloud 上运行的工作负载相关的成本的策略，同时保持 Workflow 的可靠性和可观察性。
+toc_max_heading_level: 4
+keywords:
+  - cost optimization
+  - actions
+  - storage
+  - pricing
+  - best practices
+tags:
+  - Best Practices
+  - Temporal Cloud
+---
+
+本指南提供了优化与 Temporal Cloud 上运行的工作负载相关的成本的策略，同时保持 Workflow 的可靠性和可观察性。
+
+＃＃ 概述
+
+Temporal Cloud 使用基于消耗的定价，其中包含两个主要成本组成部分：[操作和存储](/cloud/pricing#action)。
+根据您的工作负载特征，优化机会存在很大差异 - 具有高 Signal 容量的 Workflow 与具有大负载的长时间运行的 Workflow 面临着不同的成本驱动因素。
+
+:::important
+首先按照最佳实践构建 Workflow，然后根据观察到的成本进行优化。
+过早的优化可能会损害可观测性并带来运营挑战。
+:::
+
+每次优化都涉及权衡。
+本指南可帮助您根据您的具体要求就优化位置和方式做出明智的决策。
+
+如果您需要有关 Workflow 设计注意事项的更多指导，请联系 Temporal 解决方案架构师。
+
+## 常见的反模式
+
+避免这些模式，这些模式要么不必要地增加成本，要么通过积极的优化产生问题：
+
+### 过早的 Activity 整合
+
+在了解故障模式之前组合活动会降低可观察性和重试控制。
+应根据故障边界和重试要求来划分活动，而不仅仅是成本优化。
+有关决策框架，请参阅[我的 Temporal Workflow 中应该使用多少个活动](https://Temporal.io/blog/how-many-activities-should-i-use-in-my-Temporal-Workflow)。
+
+### 不当使用本地活动
+
+将本地活动用于所有操作，而不了解其故障语义和限制。
+本地活动不提供 Worker 级别的隔离，并且具有不同的重试行为。
+请参阅[本地活动](/local-Activity) 获取指导。
+
+### 缺少 Continue-As-New
+
+未实现 Continue-As-New 的长期运行的 Workflow 会积累大量事件历史记录，从而增加存储成本并影响性能。
+Workflow 运行数天或数周或处理数千个事件需要 [Continue-As-New](/Workflow-execution/Continue-As-New)。
+
+### Activity 重试次数较多
+
+一般来说，[Activity 重试](/encyclopedia/retry-policies) 的默认值相当不错。
+然而，过多的 Activity 重试通常表明存在潜在问题，例如超时太短或活动频繁失败。
+检测 Activity 重试频率，如果较高，请考虑在发生故障之前增加重试间隔或 Activity 超时。
+有关重试默认值和模式的指导，请参阅[幽灵故事：令人心寒的 Temporal 反模式](https://Temporal.io/blog/spooky-stories-chilling-Temporal-anti-patterns-part-2#2-hiding-behind-the-chainsaws)。
+
+### Workflow 历史中的大有效负载
+
+当外部存储（S3、blob 存储）更合适时，通过 Workflow 传递多兆字节的有效负载。
+对于大数据，请使用[压缩](/troubleshooting/blob-size-limit-error#why-does-this-error-occurr)或[声明检查模式](https://dataengineering.wiki/Concepts/Software+Engineering/Claim+Check+Pattern)。
+
+### 以牺牲可观察性为代价的过度优化
+
+积极优化成本，而无需维护足够的 Visibility 来满足调试和操作需求。
+平衡成本降低与团队的可观察性要求。
+
+例如，将五个单独的活动（验证输入、调用支付 API、Update 数据库、发送通知、生成收据）合并到单个“processOrder”Activity 中，操作数从 5 个减少到 1 个，但会丢失 Temporal UI 中每步骤的 Visibility。
+当通知步骤失败时，您无法看到五个步骤中哪一个失败，您将失去独立的重试控制（通知失败会重试包括付款调用在内的整个流程），并且您无法按失败阶段过滤 Workflow。
+
+同样，从长时间运行的数据处理 Activity 中删除 [Heartbeats](/encyclopedia/Detecting-Activity-failures#Activity-heartbeat) 可以节省操作，但意味着您无法检测到卡住的 Worker，直到完整的 Activity 超时到期并且您失去进度跟踪（例如，“已处理 1,000 个中的 500 个”）记录”）。
+
+### Activity 心跳过多
+
+每一次心跳都算作一次行动。
+仅将心跳用于需要检测 Worker 故障并跟踪进度的长时间运行的活动（10 分钟以上）。
+在几秒钟或几分钟内完成的短期运行活动不需要心跳。
+请参阅 [Activity 心跳文档](/encyclopedia/Detecting-Activity-failures#which-activities-should-heartbeat) 获取指导。
+
+## 了解成本驱动因素
+
+Temporal Cloud 定价由操作、存储和支持组成。
+如果您是 Temporal Cloud 的新手，请参阅[定价文档](/cloud/pricing#action) 了解更多信息并熟悉 Temporal Cloud 中的[计费操作的结果](/cloud/actions)。
+
+### 成本分配
+
+对于大多数工作负载，操作占总成本的大部分，而存储通常占每月账单的 10% 或更少。
+将优化工作重点放在特定工作负载的成本驱动因素上：
+
+**高行动成本通常表明**：
+
+- [每个 Workflow 的许多活动](https://Temporal.io/blog/how-many-activities-should-i-use-in-my-Temporal-Workflow)
+- 频繁的 [Signal、查询或 Update](/encyclopedia/Workflow-message-passing#choosing-messages)
+- 使用 [Heartbeats] 进行长时间运行的活动(/cloud/Worker-health#manage-Worker-heartbeating)
+- 高[Activity重试率](/develop/Activity-retry-simulator)
+- Query 的广泛使用
+
+**高存储成本通常表明**：
+
+- Workflow 输入、输出或 Activity 结果中的大有效负载
+- Workflow 容量高，保留时间长
+- 长时间运行的 Workflow，无需 Continue-As-New
+- Workflows 积累大量事件历史记录
+
+### 优化优先级
+
+1. **行动优化**：通常提供最大的成本降低机会
+2. **主动存储优化**：与长时间运行的 Workflow 或大负载相关
+3. **保留存储优化**：与高容量和长保留期相关
+
+## 测量
+
+在优化之前建立[基线指标](https://docs.Temporal.io/cloud/metrics/reference)，并确保在实施后验证影响。
+具体来说：
+
+- 操作消耗（每 Workflow，每天/月，由 Namespace）
+- 存储消耗（活动和保留）
+- 每月费用（总计，每 Namespace，每 Workflow Type）
+- 可观察性指标（调试时间、事件检测）
+
+## 动作优化
+
+[操作](https://docs.Temporal.io/cloud/actions) 包含 Workflow 操作、Activity 执行、Signal、查询以及与 Temporal 的其他交互。
+每个代表一个消耗单位。
+
+### Activity 粒度
+
+Activity 粒度是一项基本架构决策，会影响成本和可观察性。
+更多活动提供更好的 Visibility 和重试控制，但会增加操作计数。
+较少的活动降低了成本，但限制了可观察性。
+
+有关此权衡的详细讨论，请参阅[我的 Temporal Workflow 中应该使用多少个活动？](https://Temporal.io/blog/how-many-activities-should-i-use-in-my-Temporal-Workflow)
+
+### Child Workflows 与活动对比
+
+[Child Workflow 需要 2 个操作](/cloud/actions#child-Workflows) 相比，Activity 需要 1 个操作。
+请参阅 [Child Workflows 文档](/child-Workflows) 了解功能和用例的详细比较。
+
+### 重试策略
+
+每次 Activity 重试均算作一次操作。
+默认的[重试策略](/encyclopedia/retry-policies) 可以是激进的，这适用于大多数操作，但对于昂贵的外部操作来说成本高昂。
+
+例如，考虑调用第三方支付 API 的 Activity。
+使用 Temporal 的默认 Retry Policy（1 秒初始间隔，2.0 退避系数，无限最大尝试次数），如果该 API 关闭 30 分钟，Activity 在达到 100 秒最大间隔上限之前会重试大约 20 次，然后继续每 100 秒重试一次。
+每次重试算作 1 个操作。
+1,000 个并发 Workflow 遇到相同的中断，仅重试就会产生 20,000 多个额外操作。
+
+对于像这样昂贵的外部操作，请考虑：
+
+- 设置“MaximumAttempts”以限制总重试次数
+- 增加“InitialInterval”（例如，增加到 10 秒）以减少重试频率
+- 将错误类型添加到“NonRetryableErrorTypes”，以解决重试时无法解决的错误（例如 4xx HTTP 状态代码）
+- 使用[下一次重试延迟](/encyclopedia/retry-policies#per-error-next-retry-delay)根据故障类型动态控制重试时间（例如，遵守速率限制标头）
+- 实施 [Activity 暂停模式](/cli/Activity#pause) 以等待手动干预而不是自动重试
+
+使用 [Activity 重试模拟器](/develop/Activity-retry-simulator) 可视化不同的 Retry Policy 配置如何影响重试行为和操作消耗。
+
+请参阅这篇关于[掌握弹性应用程序的 Workflow 重试逻辑](https://Temporal.io/blog/failure-handling-in-practice) 的博客文章以获取更多指导。
+
+### 当地活动
+
+[Local Activity](/local-Activity#local-Activity) 是一个 Activity 执行，与生成它的 Workflow Execution 在同一进程中执行。
+因此，连续运行的多个本地活动仅[计为单个计费操作](/cloud/actions#activities)，而每个常规 Activity 计为一个计费操作。
+然而，将常规活动转换为本地活动需要权衡。
+例如，如果特定的本地 Activity 失败，*所有*它们将一起重试。
+查看[文档](/local-Activity) 或联系您的客户团队以了解更多信息。
+
+#### 何时坚持常规活动
+
+如果您需要以下任何一项，请使用常规活动而不是本地活动：
+
+- 活动可能需要 10 秒以上才能完成
+- 每个 Activity 的独立重试控制
+- 当不相关的活动失败时需要避免重新运行昂贵的活动
+- 执行期间立即处理 Signal/Update
+- 每个 Activity 的单独资源管理（如速率限制）
+
+### 批处理操作
+
+#### Search Attributes
+
+1. Workflow 启动时提供的 [Search Attributes](/search-attribute#custom-search-attribute) 不算作计费操作。
+   如果在启动 Workflow 之前已知 Search Attribute 值，请在 Workflow 启动时提供这些值，以完全消除这些成本。
+2. 对于在 Workflow Execution 期间必须为 Updated 的 Search Attribute，每个 `UpsertSearchAttributes` 调用都计为 1 个操作，无论有多少个属性是 Updated。
+   将多个相关属性 Update 批处理为单个操作，以减少消耗的操作。
+
+有关详细信息，请参阅 [Temporal Cloud 操作文档](/cloud/actions#Workflows)。
+
+#### Signal 处理
+
+在可行的情况下，在客户端实施重复数据删除逻辑或将数据聚合到更少的 Signal 中。
+使用 Signal 启动 Workflow 时，使用“SignalWithStart”而不是单独的“StartWorkflow”和“SignalWorkflow”调用。
+
+## 存储优化
+
+[存储成本](/cloud/pricing#storage) 分为活动存储（开放 Workflow）和保留存储（保留期内关闭 Workflow 历史记录）。
+活动存储比保留存储昂贵得多。
+
+### 主动存储
+
+Active Storage 适用于开放的 Workflow 及其事件历史记录。
+以下部分详细介绍了 Active Storage 的优化机会。
+
+#### Continue-As-New
+
+对于长时间运行且睡眠/等​​待时间较长的 Workflow，在睡眠前调用 Continue-As-New 会关闭当前执行（移至更便宜的保留存储），并在工作恢复时重新开始，从而降低活动存储成本。
+请参阅 [Continue-As-New 文档](/Workflow-execution/Continue-As-New) 了解更多信息。
+
+＃＃＃＃ 压缩
+
+大有效负载会增加 Active Storage 成本。
+实施自定义 Data Converter，并针对中等大的有效负载 (100KB-1MB) 进行压缩。
+请参阅 [Data Converter 文档](/default-custom-data-converters#custom-data-converter) 了解更多信息。
+
+#### 声明检查模式
+
+对于非常大的有效负载或二进制数据，请在外部存储数据（S3 或 GCS）并通过 Workflow 传递引用。
+
+### 保留存储
+
+保留存储适用于保留期内关闭的 Workflow 历史记录。
+以下部分详细介绍了保留存储的优化机会。
+
+#### 保留期限
+
+默认 Namespace 保留期为 30 天（可在 1 到 90 天之间配置）。
+根据运营和合规要求进行调整。
+
+**注意事项**：
+
+- 较短的保留时间可降低成本，但限制历史分析
+- 在缩短保留时间之前审核调查模式
+- 确保满足合规要求
+
+有关配置详细信息，请参阅 [Namespace 保留文档](/Temporal-service/Temporal-server#retention-period)。
+
+#### Workflow 导出
+
+Temporal Cloud 支持将 Workflow 历史记录导出到外部存储以确保合规性，同时保持更短的保留期。
+请注意，Workflow 导出每次导出需要执行一次操作。
+
+有关更多详细信息，请参阅 [Workflow 历史导出文档](/cloud/export)。
+或者，如果您希望对封闭的 Workflow Execution 进行分析，[查看此博客文章以了解如何从导出的 Workflow 历史记录中获取见解](https://Temporal.io/blog/get-insights-from-Workflow-histories-export-on-Temporal-cloud)。
+
+＃＃ 验证
+
+### 验证方法
+
+1. **非生产测试**：在生产部署之前验证功能正确性
+2. **全面监控**：利用云UI中的[使用情况仪表板](/cloud/actions#usage)来跟踪优化后对操作和存储的影响
+3. **渐进式部署**：部署到一小部分，验证，然后扩展。查看 [Worker 版本控制文档](/生产部署/Worker-deployments/Worker-versioning) 以了解如何对 Workflow 进行更改
+4. **持续审查**：随着系统的发展，每季度重新评估优化效果
+
+### 成功标准
+
+- 在不增加平均修复时间 (MTTR) 的情况下降低成本
+- Workflow 成功率保持或提高
+- 降低可观测性并不会增加平均事件检测时间 (MTTD)
+
+＃＃＃ 工具
+
+- Temporal Cloud 用于操作和存储指标的使用情况仪表板
+- Workflow 每个 Workflow 计费操作估计的历史记录
+- 将指标导出到可观察平台（Datadog、Grafana 等）以进行自定义监控
+
+## 何时寻求帮助
+
+当遇到以下情况时，请让 Temporal 团队进行 Workflow 审核：
+
+- 复杂的 Workflow 模式，优化路径不明确
+- 合规性要求限制了优化选项
+- 需要自定义数据转换器或高级模式
+- 渴望专家验证优化策略
+
+请联系您的 Temporal 客户代表或 [Temporal 支持](http://support.Temporal.io) 讨论优化服务。

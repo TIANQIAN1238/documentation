@@ -1,8 +1,8 @@
 ---
 id: worker-versioning-legacy
-title: Worker versioning (legacy)
-sidebar_label: Worker versioning (legacy)
-description: Remember how to use the now-deprecated pre-release version of Worker Versioning
+title: "Worker 版本控制（旧版）"
+sidebar_label: "Worker 版本控制（旧版）"
+description: "记住如何使用现已弃用的 Worker 版本控制的预发行版本"
 toc_max_heading_level: 4
 tags:
   - Concepts
@@ -12,228 +12,236 @@ tags:
 
 :::tip Support, stability, and dependency info
 
-- This document refers to the 2023 draft of Worker Versioning, which was deprecated
-- It was not made available in Temporal Cloud
-- The 2024 draft was available in Cloud on an opt-in basis, and is documented in this [Pre-release README.md](https://github.com/temporalio/temporal/blob/main/docs/worker-versioning.md).
+- 本文档参考Worker Versioning 2023草案，已弃用
+- 它在 Temporal Cloud 中不可用
+- 2024 年草案可在云端以选择加入的方式提供，并记录在此 [预发布 README.md](https://github.com/temporalio/temporal/blob/main/docs/worker-versioning.md) 中。
 
-For newer revisions of this feature set, please see [Worker Versioning](/production-deployment/worker-deployments/worker-versioning) instead.
+有关此功能集的较新版本，请参阅 [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning)。
 
 :::
 
-Worker Versioning simplifies the process of deploying changes to [Workflow Definitions](/workflow-definition).
-It does this by letting you define sets of versions that are compatible with each other, and then assigning a Build ID to the code that defines a Worker.
-The Temporal Server uses the Build ID to determine which versions of a Workflow Definition a Worker can process.
+Worker 版本控制简化了部署 [Workflow Definitions](/workflow-definition) 更改的过程。
+它通过让您定义相互兼容的版本集，然后将构建 ID 分配给定义 Worker 的代码来实现此目的。
+Temporal Server 使用构建 ID 来确定 Worker 可以处理 Workflow Definition 的哪些版本。
 
-We recommend that you read about Workflow Definitions before proceeding, because Workflow Versioning is largely concerned with helping to manage nondeterministic changes to those definitions.
+我们建议您在继续之前阅读 Workflow Definition，因为 Workflow 版本控制主要涉及帮助管理对这些定义的不确定性更改。
 
-Worker Versioning helps manage nondeterministic changes by providing a convenient way to ensure that [Workers](/workers) with different Workflow and Activity Definitions operating on the same Task Queue don't attempt to process [Workflow Tasks](/tasks#workflow-task) and [Activity Tasks](/tasks#activity-task-execution) that they can't successfully process, according to sets of versions associated with that Task Queue that you've defined.
+Worker 版本控制通过提供一种便捷的方法来帮助管理非确定性更改，以确保在同一 Task Queue 上运行的具有不同 Workflow 和 Activity Definition 的 [Workers](/workers) 不会尝试处理它们无法成功处理的 [Workflow 任务](/tasks#workflow-task) 和 [Activity 任务](/tasks#activity-task-execution)（根据与该 Task Queue 关联的版本集）你已经定义了。
 
-Accomplish this goal by assigning a Build ID (a free-form string) to the code that defines a Worker, and specifying which Build IDs are compatible with each other by updating the version sets associated with the Task Queue, stored by the Temporal Server.
+通过将构建 ID（自由格式字符串）分配给定义 Worker 的代码，并通过更新由 Temporal Server 存储的与 Task Queue 关联的版本集来指定哪些构建 ID 彼此兼容，可以实现此目标。
 
-### When and why you should use Worker Versioning
+<a id="when-and-why-you-should-use-worker-versioning"></a>
+### 何时以及为何应使用 Worker 版本控制 {#when-and-why-you-should-use-worker-versioning}
 
 :::caution
 
-This section is for a deprecated Worker Versioning API. Please redirect your attention to [Worker Versioning](/production-deployment/worker-deployments/worker-versioning).
+本节适用于已弃用的 Worker 版本控制 API。请将您的注意力转向[Worker 版本控制](/production-deployment/worker-deployments/worker-versioning)。
 
 :::
 
-The main reason to use this feature is to deploy incompatible changes to short-lived [Workflows](/workflows).
-On Task Queues using this feature, the Workflow starter doesn't have to know about the introduction of new versions.
+使用此功能的主要原因是将不兼容的更改部署到短暂的 [Workflows](/workflows)。
+在使用此功能的 Task Queue 上，Workflow 入门者不必了解新版本的引入。
 
-The new code in the newly deployed Workers executes new [Workflow Executions](/workflow-execution), while only Workers with an appropriate version process old Workflow Executions.
+新部署的 Worker 中的新代码执行新的 [Workflow Executions](/workflow-execution)，而只有具有适当版本的 Worker 才处理旧的 Workflow Execution。
 
-#### Decommission old Workers
+<a id="decommission-old-workers"></a>
+#### 退役旧的 Worker {#decommission-old-workers}
 
-You can decommission old Workers after you archive all open Workflows using their version.
-If you have no need to query closed Workflows, you can decommission them when no open Workflows remain at that version.
+使用旧的 Worker 版本归档所有打开的 Workflow 后，您可以停用旧的 Worker。
+如果您不需要 Query 关闭 Workflow，则可以在该版本没有打开的 Workflow 时停用它们。
 
-For example, if you have a Workflow that completes within a day, a good strategy is to assign a new Build ID to every new Worker build and add it as the new overall default in the version sets.
+例如，如果您有一个在一天内完成的 Workflow，一个好的策略是为每个新的 Worker 构建分配一个新的构建 ID，并将其添加为版本集中新的总体默认值。
 
-Because your Workflow completes in a day, you know that you won't need to keep older Workers running for more than a day after you deploy the new version (assuming availability).
-You can apply this technique to longer-lived Workflows too; however, you might need to run multiple Worker versions simultaneously while open Workflows complete.
+由于 Workflow 在一天内完成，因此您知道在部署新版本（假设可用）后，您不需要让旧的 Worker 运行超过一天。
+您也可以将此技术应用于寿命较长的 Workflow；但是，您可能需要在打开 Workflow 完成时同时运行多个 Worker 版本。
 
-Version sets have a maximum size limit, which defaults to 100 Build IDs across all sets.
-Operations to add new Build IDs to the sets will fail if they exceed this limit.
-There is also a limit on the number of Version Sets, which defaults to 10.
-A version can only be garbage collected after a Workflow Execution is deleted.
+版本集有最大大小限制，所有集默认为 100 个构建 ID。
+如果超出此限制，将新构建 ID 添加到集合的操作将会失败。
+版本集的数量也有限制，默认为 10 个。
+只有在删除 Workflow Execution 后才能对版本进行垃圾回收。
 
-#### Deploy code changes to Workers
+<a id="deploy-code-changes-to-workers"></a>
+#### 将代码更改部署到 Workers {#deploy-code-changes-to-workers}
 
-The feature also lets you implement compatible changes to or prevent a buggy code path from executing on currently open Workflows.
-You can achieve this by adding a new version to an existing set and defining it as _compatible_ with an existing version, which shouldn't execute any future Workflow Tasks.
-Because the new version processes existing [Event Histories](/workflow-execution/event#event-history), it must adhere to the usual [deterministic constraints](/workflow-definition#deterministic-constraints), and you might need to use one of the [versioning APIs](/workflow-definition#workflow-versioning).
+该功能还允许您对当前打开的 Workflow 执行兼容的更改或防止有错误的代码路径执行。
+您可以通过向现有集合添加新版本并将其定义为与现有版本_兼容_来实现此目的，该版本不应执行任何未来的 Workflow 任务。
+由于新版本处理现有的 [事件历史](/workflow-execution/event#event-history)，因此它必须遵循通常的 [确定性约束](/workflow-definition#deterministic-constraints)，并且您可能需要使用 [版本控制 API](/workflow-definition#workflow-versioning) 之一。
 
-Moreover, this feature lets you make incompatible changes to Activity Definitions in conjunction with incompatible changes to Workflow Definitions that use those Activities.
-This functionality works because any Activity that a Workflow schedules on the same Task Queue gets dispatched by default only to Workers compatible with the Workflow that scheduled it.
-If you want to change an Activity Definition's type signature while creating a new incompatible Build ID for a Worker, you can do so without worrying about the Activity failing to execute on some other Worker with an incompatible definition.
-The same principle applies to Child Workflows.
-For both Activities and Child Workflows, you can override the default behavior and run the Activity or Child Workflow on latest default version.
+此外，此功能允许您对 Activity Definition 进行不兼容的更改，同时对使用这些活动的 Workflow Definition 进行不兼容的更改。
+此功能之所以有效，是因为同一 Task Queue 上的 Workflow Schedule 默认情况下仅将任何 Activity 分派到与 Schedule 上的 Workflow 兼容的 Worker。
+如果您想在为 Worker 创建新的不兼容构建 ID 时更改 Activity Definition 的类型签名，则可以这样做，而不必担心 Activity 无法在具有不兼容定义的其他 Worker 上执行。
+同样的原理也适用于 Child Workflow。
+对于 Activity 和 Child Workflow，您可以覆盖默认行为并在最新默认版本上运行 Activity 或 Child Workflow。
 
 :::tip
 
-Public-facing Workflows on a versioned Task Queue shouldn't change their signatures because doing so contradicts the purpose of Workflow-launching Clients remaining unaware of changes in the Workflow Definition.
-If you need to change a Workflow's signature, use a different Workflow Type or a completely new Task Queue.
+版本化 Task Queue 上面向公众的 Workflow 不应更改其签名，因为这样做与启动 Workflow 的目的相矛盾，客户端仍然不知道 Workflow Definition 中的更改。
+如果您需要更改 Workflow 的签名，请使用不同的 Workflow 类型或全新的 Task Queue。
 
 :::
 
 :::note
 
-If you schedule an Activity or a Child Workflow on _a different_ Task Queue from the one the Workflow runs on, the system doesn't assign a specific version.
-This means if the target queue is versioned, they run on the latest default, and if it's unversioned, they operate as they would have without this feature.
+如果您在不同于运行 Workflow 的 Task Queue 上运行 Schedule、Activity 或 Child Workflow，则系统不会分配特定版本。
+这意味着如果目标队列已版本化，它们将在最新的默认版本上运行，如果目标队列未版本化，它们将按照没有此功能的方式运行。
 
 :::
 
-**Continue-As-New and Worker Versioning**
+**Continue-As-New 和 Worker 版本控制**
 
-By default, a versioned Task Queue's Continue-as-New function starts the continued Workflow on the same compatible set as the original Workflow.
+默认情况下，版本化的 Task Queue 的 Continue-As-New 函数在与原始 Workflow 相同的兼容集上启动后续的 Workflow。
 
-If you continue-as-new onto a different Task Queue, the system doesn't assign any particular version.
-You also have the option to specify that the continued Workflow should start using the Task Queue's latest default version.
+如果您将 Continue-As-New 转移到不同的 Task Queue 上，系统不会分配任何特定版本。
+您还可以选择指定后续的 Workflow 应开始使用 Task Queue 的最新默认版本。
 
-### How to use Worker Versioning
+<a id="how-to-use-worker-versioning"></a>
+### 如何使用 Worker 版本控制 {#how-to-use-worker-versioning}
 
 :::caution
 
-This section is for a deprecated Worker Versioning API. See [Worker Versioning](/production-deployment/worker-deployments/worker-versioning).
+本节适用于已弃用的 Worker 版本控制 API。参见 [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning)。
 
 :::
 
-To use Worker Versioning, follow these steps:
+要使用 Worker 版本控制，请按照下列步骤操作：
 
-1. Define Worker build-identifier version sets for the Task Queue.
-   You can use either the Temporal CLI or your choice of SDK.
-2. Enable the feature on your Worker by specifying a Build ID.
+1. 为 Task Queue 定义 Worker 构建标识符版本集。
+   您可以使用 Temporal CLI 或您选择的 SDK。
+2. 通过指定构建 ID 在 Worker 上启用该功能。
 
-#### Defining the version sets
+<a id="defining-the-version-sets"></a>
+#### 定义版本集 {#defining-the-version-sets}
 
-Whether you use [Temporal CLI](/cli/) or an SDK, updating the version sets feels the same.
-You specify the Task Queue that you're targeting, the Build ID that you're adding (or promoting), whether it becomes the new default version, and any existing versions it should be considered compatible with.
+无论您使用 [Temporal CLI](/cli/) 还是 SDK，更新版本集的感觉都是一样的。
+您指定要定位的 Task Queue、要添加（或升级）的内部版本 ID、它是否成为新的默认版本以及应被视为兼容的任何现有版本。
 
-The rest of this section uses updates to one Task Queue's version sets as examples.
+本节的其余部分使用 Update 到 Task Queue 的版本集作为示例。
 
-By default, both Task Queues and Workers are in an unversioned state.
-[Unversioned Worker](#unversioned-workers) can poll unversioned Task Queues and receive tasks.
-To use this feature, both the Task Queue and the Worker must be associated with Build IDs.
+默认情况下，Task Queue 和 Worker 均处于未版本化状态。
+[未版本 Worker](#unversioned-workers) 可以轮询未版本化的 Task Queue 并接收任务。
+要使用此功能，Task Queue 和 Worker 都必须与构建 ID 关联。
 
-If you run a Worker using versioning against a Task Queue that has not been set up to use versioning (or is missing that Worker's Build ID), it won't get any tasks.
-Likewise, an unversioned Worker polling a Task Queue with versioning won't work either.
+如果您针对尚未设置为使用版本控制（或缺少 Worker 的构建 ID）的 Task Queue 使用版本控制运行 Worker，则它将不会获得任何任务。
+同样，未版本化的 Worker 轮询具有版本控制的 Task Queue 也不起作用。
 
 :::note Versions don't need to follow semver or any other semantic versioning scheme!
 
-The versions in the following examples look like semver versions for clarity, but they don't need to be.
-Versions can be any arbitrary string.
+为了清楚起见，以下示例中的版本看起来像 semver 版本，但其实并不需要如此。
+版本可以是任意字符串。
 
 :::
 
-First, add a version `1.0` to the Task Queue as the new default.
-Your version sets now look like this:
+首先，将版本 `1.0` 添加到 Task Queue 作为新的默认值。
+您的版本集现在如下所示：
 
-| set 1 (default) |
+| 设置 1（默认） |
 | --------------- |
-| 1.0 (default)   |
+| 1.0（默认）   |
 
-All new Workflows started on the Task Queue have their first tasks assigned to version `1.0`.
-Workers with their Build ID set to `1.0` receive these Tasks.
+在 Task Queue 上启动的所有新 Workflow 都将其第​​一个任务分配给版本 `1.0`。
+构建 ID 设置为 `1.0` 的 Worker 接收这些任务。
 
-If Workflows that don't have an assigned version are still running on the Task Queue, Workers without a version take those tasks.
-So ensure that such Workers are still operational if any Workflows were open when you added the first version.
-If you deployed any Workers with a _different_ version, those Workers receive no Tasks.
+如果没有分配版本的 Workflow 仍在 Task Queue 上运行，则没有版本的 Worker 将承担这些任务。
+因此，如果您在添加第一个版本时打开了任何 Workflow，请确保此类 Worker 仍然可以运行。
+如果您部署了具有_不同_版本的任何 Worker，则这些 Worker 不会收到任何任务。
 
-Now, imagine you need to change the Workflow for some reason.
+现在，假设您由于某种原因需要更改 Workflow。
 
-Add `2.0` to the sets as the new default:
+将 `2.0` 添加到集合中作为新的默认值：
 
-| set 1         | set 2 (default) |
+| 套装 1         | 设置 2（默认） |
 | ------------- | --------------- |
-| 1.0 (default) | 2.0 (default)   |
+| 1.0（默认） | 2.0（默认）   |
 
-All new Workflows started on the Task Queue have their first tasks assigned to version `2.0`.
-Existing `1.0` Workflows keep generating tasks targeting `1.0`.
-Each deployment of Workers receives their respective Tasks.
-This same concept carries forward for each new incompatible version.
+在 Task Queue 上启动的所有新 Workflow 都将其第​​一个任务分配给版本 `2.0`。
+现有的 `1.0` Workflow 不断生成针对 `1.0` 的任务。
+Worker 的每次部署都会收到各自的任务。
+每个新的不兼容版本都采用相同的概念。
 
-Maybe you have a bug in `2.0`, and you want to make sure all open `2.0` Workflows switch to some new code as fast as possible.
-So, you add `2.1` to the sets, marking it as compatible with `2.0`.
-Now your sets look like this:
+也许您在 `2.0` 中存在错误，并且您希望确保所有打开的 `2.0` Workflow 尽快切换到某些新代码。
+因此，您将 `2.1` 添加到集合中，将其标记为与 `2.0` 兼容。
+现在你的集合看起来像这样：
 
-| set 1         | set 2 (default) |
+| 套装 1         | 设置 2（默认） |
 | ------------- | --------------- |
-| 1.0 (default) | 2.0             |
-|               | 2.1 (default)   |
+| 1.0（默认） | 2.0             |
+|               | 2.1（默认）   |
 
-All new Workflow Tasks that are generated for Workflows whose last Workflow Task completion was on version `2.0` are now assigned to version `2.1`.
-Because you specified that `2.1` is compatible with `2.0`, Temporal Server assumes that Workers with this version can process the existing Event Histories successfully.
+为上次 Workflow 任务完成在版本 `2.0` 上的 Workflow 生成的所有新 Workflow 任务现在都分配给版本 `2.1`。
+由于您指定 `2.1` 与 `2.0` 兼容，因此 Temporal Server 假定具有此版本的 Worker 可以成功处理现有事件历史记录。
 
-Continue with your normal development cycle, adding a `3.0` version.
-Nothing new here:
+继续正常的开发周期，添加 `3.0` 版本。
+这里没有什么新内容：
 
-| set 1         | set 2         | set 3 (default) |
+| 套装 1         | 套装2         | 设置 3（默认） |
 | ------------- | ------------- | --------------- |
-| 1.0 (default) | 2.0           | 3.0 (default)   |
-|               | 2.1 (default) |                 |
+| 1.0（默认） | 2.0           | 3.0（默认）   |
+|               | 2.1（默认） |                 |
 
-Now imagine that version `3.0` doesn't have an explicit bug, but something about the business logic
-is less than ideal.
-You are okay with existing `3.0` Workflows running to completion, but you want new Workflows to use the old `2.x` branch.
-This operation is supported by performing an update targeting `2.1` (or `2.0`) and setting its set as the current default, which results in these sets:
+现在假设版本 `3.0` 没有明显的错误，但有一些关于业务逻辑的问题
+不太理想。
+您可以让现有的 `3.0` Workflow 运行完成，但您希望新的 Workflow 使用旧的 `2.x` 分支。
+通过执行针对 `2.1`（或 `2.0`）的 Update 并将其集设置为当前默认值来支持此操作，这会产生以下集：
 
-| set 1         | set 3         | set 2 (default) |
+| 套装 1         | 套装 3         | 设置 2（默认） |
 | ------------- | ------------- | --------------- |
-| 1.0 (default) | 3.0 (default) | 2.0             |
-|               |               | 2.1 (default)   |
+| 1.0（默认） | 3.0（默认） | 2.0             |
+|               |               | 2.1（默认）   |
 
-Now new Workflows start on `2.1`.
+现在，新的 Workflow 在 `2.1` 上启动。
 
-#### Permitted and forbidden operations on version sets
+<a id="permitted-and-forbidden-operations-on-version-sets"></a>
+#### 版本集上允许和禁止的操作 {#permitted-and-forbidden-operations-on-version-sets}
 
-A request to change the sets can do one of the following:
+更改集合的请求可以执行以下操作之一：
 
-- Add a version to the sets as the new default version in a new overall-default compatible set.
-- Add a version to an existing set that's compatible with an existing version.
-  - Optionally making it the default for that set.
-  - Optionally making that set the overall-default set.
-- Promote a version within an existing set to become the default for that set.
-- Promote a set to become the overall-default set.
+- 将一个版本添加到集合中作为新的整体默认兼容集合中的新默认版本。
+- 将与现有版本兼容的版本添加到现有集。
+  - 可以选择将其设置为该集的默认值。
+  - 可以选择将该设置设置为整体默认设置。
+- 提升现有集合中的版本以成为该集合的默认版本。
+- 将一个集合提升为整体默认集合。
 
-You can't explicitly delete versions. This helps you avoid the situation in which Workflows accidentally become stuck with no means of making progress because the version they're associated with no longer exists.
+您无法显式删除版本。这可以帮助您避免 Workflow 意外陷入无法取得进展的情况，因为它们关联的版本不再存在。
 
-However, sometimes you might want to do this intentionally.
-If you _want_ to make sure that all Workflows currently being processed by, say, `2.0` stop (even if you don't yet have a new version ready), you can add a new version `2.1` to the sets marked as compatible with `2.0`.
-New tasks will target `2.1`, but because you haven't deployed any `2.1` Workers, they won't make any progress.
+但是，有时您可能想有意这样做。
+如果您想要确保当前正在处理的所有 Workflow（例如 `2.0`）停止（即使您尚未准备好新版本），您可以将新版本 `2.1` 添加到标记为与 `2.0` 兼容的集合中。
+新任务将针对 `2.1`，但由于您尚未部署任何 `2.1` Worker，因此它们不会取得任何进展。
 
-#### Set constraints
+<a id="set-constraints"></a>
+#### 设置约束 {#set-constraints}
 
-The sets have a maximum size limit, which defaults to 100 build IDs across all sets.
-This limit is configurable on Temporal Server via the `limit.versionBuildIdLimitPerQueue` dynamic config property.
-Operations to add new Build IDs to the sets fail if the limit would be exceeded.
+这些集有最大大小限制，所有集默认为 100 个构建 ID。
+此限制可通过 `limit.versionBuildIdLimitPerQueue` 动态配置属性在 Temporal Server 上进行配置。
+如果超出限制，向集合添加新构建 ID 的操作将会失败。
 
-There is also a limit on the number of sets, which defaults to 10.
-This limit is configurable via the `limit.versionCompatibleSetLimitPerQueue` dynamic config property.
+组数也有限制，默认为 10 组。
+此限制可通过 `limit.versionCompatibleSetLimitPerQueue` 动态配置属性进行配置。
 
-In practice, these limits should rarely be a concern because a version is no longer needed after no open Workflows are using that version, and a background process will delete IDs and sets that are no longer needed.
+实际上，这些限制很少会成为问题，因为在没有打开的 Workflow 使用某个版本后，就不再需要该版本，并且后台进程将删除不再需要的 ID 和集。
 
-There is also a limit on the size of each Build ID or version string, which defaults to 255 characters.
-This limit is configurable on the server via the `limit.workerBuildIdSize` dynamic config property.
+每个构建 ID 或版本字符串的大小也有限制，默认为 255 个字符。
+此限制可通过 `limit.WorkerBuildIdSize` 动态配置属性在服务器上进行配置。
 
-### Build ID reachability
+<a id="build-id-reachability"></a>
+### 构建 ID 可达性 {#build-id-reachability}
 
 :::caution
 
-This section is for a deprecated Worker Versioning API. See [Worker Versioning](/production-deployment/worker-deployments/worker-versioning).
+本节适用于已弃用的 Worker 版本控制 API。参见 [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning)。
 
 :::
 
-Eventually, you'll want to know whether you can retire the old Worker versions.
-Temporal provides functionality to help you determine whether a version is still in use by open or closed Workflows.
-You can use the Temporal CLI to do this with the following command:
+最终，您会想知道是否可以停用旧的 Worker 版本。
+Temporal 提供的功能可帮助您确定打开或关闭的 Workflow 是否仍在使用某个版本。
+您可以使用 Temporal CLI 通过以下命令来执行此操作：
 
 ```command
 temporal task-queue get-build-id-reachability
 ```
 
-The command determines, for each Task Queue, whether the Build ID in question is unreachable, only reachable by closed Workflows, or reachable by open and new Workflows.
-For example, this "2.0" Build ID is shown here by the Temporal CLI to be reachable by both new Workflows and some existing Workflows:
+对于每个 Task Queue，该命令确定相关构建 ID 是否无法访问、只能通过关闭的 Workflow 访问、或者可以通过打开的新 Workflow 访问。
+例如，此“2.0”构建 ID 在此处由 Temporal CLI 显示，新的 Workflow 和一些现有的 Workflow 都可以访问：
 
 ```command
 temporal task-queue get-build-id-reachability --build-id "2.0"
@@ -245,15 +253,16 @@ BuildId                         TaskQueue                                   Reac
                                                                    ExistingWorkflows]
 ```
 
-For more information, see the [CLI documentation](/cli/) or help output.
+有关详细信息，请参阅 [CLI 文档](/cli/) 或帮助输出。
 
-You can also use this API `GetWorkerTaskReachability` directly from within language SDKs.
+您还可以直接从语言 SDK 中使用此 API `GetWorkerTaskReachability`。
 
-### Unversioned Workers
+<a id="unversioned-workers"></a>
+### 未版本化的 Worker {#unversioned-workers}
 
-Unversioned Workers refer to Workers that have not opted into the Worker Versioning feature in their configuration.
-They receive tasks only from Task Queues that do not have any version sets defined on them, or that have open Workflows that began executing before versions were added to the queue.
+无版本化的 Worker 是指在其配置中未选择加入 Worker 版本控制功能的 Worker。
+它们仅接收来自没有定义任何版本集的 Task Queue 的任务，或者具有在版本添加到队列之前开始执行的打开的 Workflow 的任务。
 
-To migrate from an unversioned Task Queue, add a new default Build ID to the Task Queue.
-From there, deploy Workers with the same Build ID.
-Unversioned Workers will continue processing open Workflows, while Workers with the new Build ID will process new Workflow Executions.
+要从未版本化的 Task Queue 迁移，请将新的默认构建 ID 添加到 Task Queue。
+从那里，使用相同的构建 ID 部署 Worker。
+未版本化的 Worker 将继续处理打开的 Workflow，而具有新构建 ID 的 Worker 将处理新的 Workflow Execution。

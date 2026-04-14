@@ -1,8 +1,8 @@
 ---
 id: server
-title: Temporal CLI server command reference
-sidebar_label: server
-description: Manage your Temporal Server easily with CLI commands. Start a local server using `temporal server start-dev` and access the Web UI at http://localhost:8233. Customize with multiple options.
+title: "Temporal CLI 服务器命令参考"
+sidebar_label: "服务器"
+description: "使用 CLI 命令轻松管理您的 Temporal Server。使用 `Temporal Server start-dev` 启动本地服务器并通过 http://localhost:8233. 访问 Web UI 使用多个选项进行自定义。"
 toc_max_heading_level: 4
 keywords:
   - cli reference
@@ -16,13 +16,14 @@ tags:
 ---
 
 {/* NOTE: This is an auto-generated file. Any edit to this file will be overwritten.
-This file is generated from https://github.com/temporalio/cli/blob/main/internal/commandsgen/commands.yml via internal/cmd/gen-docs */}
+该文件是通过内部/cmd/gen-docs 从 https://github.com/temporalio/cli/blob/main/internal/commandsgen/commands.yml 生成的 */}
 
-This page provides a reference for the `temporal` CLI `server` command. The flags applicable to each subcommand are presented in a table within the heading for the subcommand. Refer to [Global Flags](#global-flags) for flags that you can use with every subcommand.
+本页提供 `Temporal` CLI `server` 命令的参考。适用于每个子命令的标志显示在子命令标题内的表格中。请参阅 [全球旗帜](#global-flags) 了解可与每个子命令一起使用的标志。
 
-## start-dev
+<a id="start-dev"></a>
+## 启动开发 {#start-dev}
 
-Run a development Temporal Server on your local system.
+在本地系统上运行开发 Temporal Server。
 
 ```
 +------------------------------------------------------------------------+
@@ -34,91 +35,92 @@ Run a development Temporal Server on your local system.
 +------------------------------------------------------------------------+
 ```
 
-View the Web UI for the default configuration at: http://localhost:8233
+查看默认配置的 Web UI：http://localhost:8233
 
 ```
 temporal server start-dev
 ```
 
-Add persistence for Workflow Executions across runs:
+跨运行添加 Workflow Execution 的持久性：
 
 ```
 temporal server start-dev \
     --db-filename path-to-your-local-persistent-store
 ```
 
-Set the port from the front-end gRPC Service (7233 default):
+从前端gRPC服务设置端口（默认7233）：
 
 ```
 temporal server start-dev \
     --port 7000
 ```
 
-Use a custom port for the Web UI. The default is the gRPC port (7233 default)
-plus 1000 (8233):
+使用 Web UI 的自定义端口。默认是gRPC端口（默认7233）
+加 1000 (8233)：
 
 ```
 temporal server start-dev \
     --ui-port 3000
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--db-filename`, `-f` | No | **string** Path to file for persistent Temporal state store. By default, Workflow Executions are lost when the server process dies. |
-| `--dynamic-config-value` | No | **string[]** Dynamic configuration value using `KEY=VALUE` pairs. Keys must be identifiers, and values must be JSON values. For example: `YourKey="YourString"` Can be passed multiple times. |
-| `--headless` | No | **bool** Disable the Web UI. |
-| `--http-port` | No | **int** Port for the HTTP API service. Defaults to a random free port. |
-| `--ip` | No | **string** IP address bound to the front-end Service. |
-| `--log-config` | No | **bool** Log the server config to stderr. |
-| `--metrics-port` | No | **int** Port for the '/metrics' HTTP endpoint. Defaults to a random free port. |
-| `--namespace`, `-n` | No | **string[]** Namespaces to be created at launch. The "default" Namespace is always created automatically. |
-| `--port`, `-p` | No | **int** Port for the front-end gRPC Service. |
-| `--search-attribute` | No | **string[]** Search attributes to register using `KEY=VALUE` pairs. Keys must be identifiers, and values must be the search attribute type, which is one of the following: Text, Keyword, Int, Double, Bool, Datetime, KeywordList. |
-| `--sqlite-pragma` | No | **string[]** SQLite pragma statements in "PRAGMA=VALUE" format. |
-| `--ui-asset-path` | No | **string** UI custom assets path. |
-| `--ui-codec-endpoint` | No | **string** UI remote codec HTTP endpoint. |
-| `--ui-ip` | No | **string** IP address bound to the Web UI. Defaults to same as '--ip' value. |
-| `--ui-port` | No | **int** Port for the Web UI. Defaults to '--port' value + 1000. |
-| `--ui-public-path` | No | **string** The public base path for the Web UI. Defaults to `/`. |
+| `--db-filename`、`-f` | 不 | **字符串** 持久 Temporal 状态存储的文件路径。默认情况下，当服务器进程终止时，Workflow Execution 会丢失。 |
+| `--dynamic-config-value` | 不 | **字符串[]** 使用 `KEY=VALUE` 对的动态配置值。键必须是标识符，值必须是 JSON 值。例如：`YourKey="YourString"` 可以多次传递。 |
+| `--headless` | 不 | **布尔** 禁用 Web UI。 |
+| `--http-port` | 不 | **int** HTTP API 服务的端口。默认为随机空闲端口。 |
+| `--ip` | 不 | **字符串** 前端Service绑定的IP地址。 |
+| `--log-config` | 不 | **bool** 将服务器配置记录到 stderr。 |
+| `--metrics-port` | 不 | **int** “/metrics”HTTP 端点的端口。默认为随机空闲端口。 |
+| `--Namespace`、`-n` | 不 | **字符串[]** Namespace 在启动时创建。 “默认”Namespace 始终是自动创建的。 |
+| `--port`、`-p` | 不 | **int** 前端 gRPC 服务的端口。 |
+| `--search-attribute` | 不 | **字符串[]** Search Attribute 使用 `KEY=VALUE` 对进行注册。键必须是标识符，值必须是 Search Attribute 类型，它是以下类型之一：Text、Keyword、Int、Double、Bool、Datetime、KeywordList。 |
+| `--sqlite-pragma` | 不 | **字符串[]** “PRAGMA=VALUE”格式的 SQLite pragma 语句。 |
+| `--ui-asset-path` | 不 | **字符串** UI 自定义资源路径。 |
+| `--ui-codec-endpoint` | 不 | **字符串** UI 远程编解码器 HTTP 端点。 |
+| `--ui-ip` | 不 | **字符串** 绑定到 Web UI 的 IP 地址。默认与“--ip”值相同。 |
+| `--ui-port` | 不 | **int** Web UI 的端口。默认为“--port”值 + 1000。 |
+| `--ui-public-path` | 不 | **字符串** Web UI 的公共基本路径。默认为 `/`。 |
 
-## Global Flags
+<a id="global-flags"></a>
+## 全局标志 {#global-flags}
 
-The following options can be used with any command.
+以下选项可与任何命令一起使用。
 
-| Flag | Required | Description | Default |
+| 旗帜 | 必需的 | 描述 | 默认 |
 |------|----------|-------------|--------|
-| `--address` | No | **string** Temporal Service gRPC endpoint. | `localhost:7233` |
-| `--api-key` | No | **string** API key for request. |  |
-| `--client-authority` | No | **string** Temporal gRPC client :authority pseudoheader. |  |
-| `--client-connect-timeout` | No | **duration** The client connection timeout. 0s means no timeout. |  |
-| `--codec-auth` | No | **string** Authorization header for Codec Server requests. |  |
-| `--codec-endpoint` | No | **string** Remote Codec Server endpoint. |  |
-| `--codec-header` | No | **string[]** HTTP headers for requests to codec server. Format as a `KEY=VALUE` pair. May be passed multiple times to set multiple headers. |  |
-| `--color` | No | **string-enum** Output coloring. Accepted values: always, never, auto. | `auto` |
-| `--command-timeout` | No | **duration** The command execution timeout. 0s means no timeout. |  |
-| `--config-file` | No | **string** File path to read TOML config from, defaults to `$CONFIG_PATH/temporalio/temporal.toml` where `$CONFIG_PATH` is defined as `$HOME/.config` on Unix, `$HOME/Library/Application Support` on macOS, and `%AppData%` on Windows. _(Experimental)_ |  |
-| `--disable-config-env` | No | **bool** If set, disables loading environment config from environment variables. _(Experimental)_ |  |
-| `--disable-config-file` | No | **bool** If set, disables loading environment config from config file. _(Experimental)_ |  |
-| `--env` | No | **string** Active environment name (`ENV`). | `default` |
-| `--env-file` | No | **string** Path to environment settings file. Defaults to `$HOME/.config/temporalio/temporal.yaml`. |  |
-| `--grpc-meta` | No | **string[]** HTTP headers for requests. Format as a `KEY=VALUE` pair. May be passed multiple times to set multiple headers. Can also be made available via environment variable as `TEMPORAL_GRPC_META_[name]`. |  |
-| `--identity` | No | **string** The identity of the user or client submitting this request. Defaults to "temporal-cli:$USER@$HOST". |  |
-| `--log-format` | No | **string-enum** Log format. Accepted values: text, json. | `text` |
-| `--log-level` | No | **string-enum** Log level. Default is "info" for most commands and "warn" for "server start-dev". Accepted values: debug, info, warn, error, never. | `info` |
-| `--namespace`, `-n` | No | **string** Temporal Service Namespace. | `default` |
-| `--no-json-shorthand-payloads` | No | **bool** Raw payload output, even if the JSON option was used. |  |
-| `--output`, `-o` | No | **string-enum** Non-logging data output format. Accepted values: text, json, jsonl, none. | `text` |
-| `--profile` | No | **string** Profile to use for config file. _(Experimental)_ |  |
-| `--time-format` | No | **string-enum** Time format. Accepted values: relative, iso, raw. | `relative` |
-| `--tls` | No | **bool** Enable base TLS encryption. Does not have additional options like mTLS or client certs. This is defaulted to true if api-key or any other TLS options are present. Use --tls=false to explicitly disable. |  |
-| `--tls-ca-data` | No | **string** Data for server CA certificate. Can't be used with --tls-ca-path. |  |
-| `--tls-ca-path` | No | **string** Path to server CA certificate. Can't be used with --tls-ca-data. |  |
-| `--tls-cert-data` | No | **string** Data for x509 certificate. Can't be used with --tls-cert-path. |  |
-| `--tls-cert-path` | No | **string** Path to x509 certificate. Can't be used with --tls-cert-data. |  |
-| `--tls-disable-host-verification` | No | **bool** Disable TLS host-name verification. |  |
-| `--tls-key-data` | No | **string** Private certificate key data. Can't be used with --tls-key-path. |  |
-| `--tls-key-path` | No | **string** Path to x509 private key. Can't be used with --tls-key-data. |  |
-| `--tls-server-name` | No | **string** Override target TLS server name. |  |
+| `--address` | 不 | **字符串** Temporal 服务 gRPC 端点。 | `localhost:7233` |
+| `--api-key` | 不 | **字符串** 请求的 API 密钥。 |  |
+| `--client-authority` | 不 | **字符串** Temporal gRPC 客户端：权限伪标头。 |  |
+| `--client-connect-timeout` | 不 | **持续时间** 客户端连接超时。 0s表示没有超时。 |  |
+| `--codec-auth` | 不 | **字符串** Codec Server 请求的授权标头。 |  |
+| `--codec-endpoint` | 不 | **字符串** 远程 Codec Server 端点。 |  |
+| `--codec-header` | 不 | **string[]** 向 Codec Server 发出请求的 HTTP 标头。格式为 `KEY=VALUE` 对。可以多次传递以设置多个标头。 |  |
+| `--color` | 不 | **字符串枚举** 输出着色。接受的值：始终、从不、自动。 | `auto` |
+| `--command-timeout` | 不 | **持续时间** 命令执行超时。 0s表示没有超时。 |  |
+| `--config-file` | 不 | **字符串** 从中读取 TOML 配置的文件路径，默认为 `$CONFIG_PATH/temporalio/temporal.toml`，其中 `$CONFIG_PATH` 在 Unix 上定义为 `$HOME/.config`，在 macOS 上定义为 `$HOME/Library/Application Support`，在 Windows 上定义为 `%AppData%`。 _（实验性）_ |  |
+| `--disable-config-env` | 不 | **bool** 如果设置，则禁用从环境变量加载环境配置。 _（实验性）_ |  |
+| `--disable-config-file` | 不 | **bool** 如果设置，则禁用从配置文件加载环境配置。 _（实验性）_ |  |
+| `--env` | 不 | **字符串** 活动环境名称 (`ENV`)。 | `default` |
+| `--env-file` | 不 | **字符串** 环境设置文件的路径。默认为 `$HOME/.config/temporalio/temporal.yaml`。 |  |
+| `--gRPC-meta` | 不 | **string[]** 请求的 HTTP 标头。格式为 `KEY=VALUE` 对。可以多次传递以设置多个标头。也可以通过环境变量 `Temporal_gRPC_META_[name]` 提供。 |  |
+| `--identity` | 不 | **字符串** 提交此请求的用户或客户端的身份。默认为“Temporal-cli:$USER@$HOST”。 |  |
+| `--log-format` | 不 | **字符串枚举** 日志格式。接受的值：文本、json。 | `text` |
+| `--log-level` | 不 | **字符串枚举** 日志级别。大多数命令的默认值为“info”，“server start-dev”的默认值为“warn”。接受的值：调试、信息、警告、错误、从不。 | `info` |
+| `--Namespace`、`-n` | 不 | **字符串** Temporal 服务 Namespace。 | `default` |
+| `--no-json-shorthand-payloads` | 不 | **bool** 原始负载输出，即使使用了 JSON 选项。 |  |
+| `--output`、`-o` | 不 | **字符串枚举** 非日志数据输出格式。接受的值：text、json、jsonl、none。 | `text` |
+| `--profile` | 不 | **字符串** 用于配置文件的配置文件。 _（实验性）_ |  |
+| `--time-format` | 不 | **字符串枚举** 时间格式。接受的值：relative、iso、raw。 | `relative` |
+| `--tls` | 不 | **布尔** 启用基本 TLS 加密。没有 mTLS 或客户端证书等附加选项。如果存在 api-key 或任何其他 TLS 选项，则默认为 true。使用 --tls=false 显式禁用。 |  |
+| `--tls-ca-data` | 不 | **字符串** 服务器 CA 证书的数据。不能与 --tls-ca-path 一起使用。 |  |
+| `--tls-ca-path` | 不 | **字符串** 服务器 CA 证书的路径。不能与 --tls-ca-data 一起使用。 |  |
+| `--tls-cert-data` | 不 | **字符串** x509 证书的数据。不能与 --tls-cert-path 一起使用。 |  |
+| `--tls-cert-path` | 不 | **字符串** x509 证书的路径。不能与 --tls-cert-data 一起使用。 |  |
+| `--tls-disable-host-verification` | 不 | **bool** 禁用 TLS 主机名验证。 |  |
+| `--tls-key-data` | 不 | **字符串** 私有证书密钥数据。不能与 --tls-key-path 一起使用。 |  |
+| `--tls-key-path` | 不 | **字符串** x509 私钥的路径。不能与 --tls-key-data 一起使用。 |  |
+| `--tls-server-name` | 不 | **字符串** 覆盖目标 TLS 服务器名称。 |  |
 

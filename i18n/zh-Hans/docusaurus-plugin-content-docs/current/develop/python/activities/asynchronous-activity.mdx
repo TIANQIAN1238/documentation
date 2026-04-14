@@ -1,0 +1,51 @@
+---
+id: asynchronous-activity
+title: 异步 Activity 完成 - Python SDK
+sidebar_label: 异步Activity完成
+description: 使用 Temporal Python SDK 异步完成 Activity。按照三个步骤完成 Activity 并使用 Temporal CLIent for Heartbeat 和 Update。
+toc_max_heading_level: 2
+keywords:
+  - asynchronous activity completion
+  - temporal python activities
+  - async activity execution
+  - temporal task token
+  - temporal activity heartbeat
+  - async activity updates
+  - temporal client for activities
+  - activity function async completion
+tags:
+  - Activities
+  - Python SDK
+  - Temporal SDKs
+---
+
+**如何使用 Temporal Python SDK 异步完成 Activity。**
+
+[异步 Activity 完成](/Activity-execution#asynchronous-Activity-completion) 使 Activity 函数能够在 Activity 执行完成的情况下返回。
+
+需要遵循三个步骤：
+
+1. Activity 向外部系统提供完成 Activity 执行所需的识别信息。
+   标识信息可以是[任务令牌](/Activity-execution#task-token)，也可以是 Namespace、Workflow Id 和 Activity Id 的组合。
+2. Activity 函数以将其标识为等待外部系统完成的方式完成。
+3. Temporal CLIent用于Heartbeat并完成Activity。
+
+要将 Activity 标记为异步完成，请在 Activity 内执行以下操作。
+
+```python
+# Capture token for later completion
+captured_token = activity.info().task_token
+activity.raise_complete_async()
+```
+
+对于 Activity 之外的 Update 和 Activity，请使用 [get_async_Activity_handle()](https://python.Temporal.io/Temporalio.client.Client.html#get_async_Activity_handle) 方法获取 Activity 的句柄。
+
+```python
+handle = my_client.get_async_activity_handle(task_token=captured_token)
+```
+
+然后，在该句柄上，您可以将 Activity、“heartbeat”、“complete”、“fail”或“report_cancellation”方法的结果调用到 Update 和 Activity。
+
+```python
+await handle.complete("Completion value.")
+```

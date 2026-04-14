@@ -1,8 +1,8 @@
 ---
 id: workflow-schedule
-title: Schedule
-sidebar_label: Schedule
-description: A Schedule contains instructions for starting a Workflow Execution at specific times. Schedules provide a more flexible and user-friendly approach than Temporal Cron Jobs. 
+title: "Schedule"
+sidebar_label: "Schedule"
+description: "Schedule 包含在特定时间启动 Workflow Execution 的指令。 Schedule 提供比 Temporal Cron 作业更灵活、用户友好的方法。"
 slug: /schedule
 toc_max_heading_level: 4
 keywords:
@@ -13,51 +13,53 @@ tags:
 
 ---
 
-This page discusses [Schedule](#schedule).
+本页讨论 [Schedule](#schedule)。
 
-## What is a Schedule? {#schedule}
+<a id="schedule"></a>
+## 什么是 Schedule？ {#schedule}
 
-A Schedule contains instructions for starting a [Workflow Execution](/workflow-execution) at specific times.
-Schedules provide a more flexible and user-friendly approach than [Temporal Cron Jobs](/cron-job).
+Schedule 包含在特定时间启动 [Workflow Execution](/workflow-execution) 的指令。
+Schedule 提供比 [Temporal 计划任务](/cron-job) 更灵活、更用户友好的方法。
 
-- [How to enable Schedules](#limitations)
-- [How to operate Schedules using the Temporal CLI](/cli/schedule)
+- [如何启用 Schedule](#limitations)
+- [如何使用 Temporal CLI 操作 Schedule](/cli/schedule)
 
-A Schedule has an identity and is independent of a Workflow Execution.
-This differs from a Temporal Cron Job, which relies on a cron schedule as a property of the Workflow Execution.
+Schedule 具有身份并且独立于 Workflow Execution。
+这与 Temporal Cron 作业不同，Temporal Cron 作业依赖于 cron Schedule 作为 Workflow Execution 的属性。
 
 :::info
 
-For triggering a Workflow Execution at a specific one-time future point rather than on a recurring schedule, the [Start Delay](/workflow-execution/timers-delays#delay-workflow-execution) option should be used instead of a Schedule.
+要在特定的一次性未来点而不是在重复的 Schedule 上触发 Workflow Execution，应使用 [启动延迟](/workflow-execution/timers-delays#delay-workflow-execution) 选项而不是 Schedule。
 
 :::
 
-### Action
+＃＃＃ 行动
 
-The Action of a Schedule is where the Workflow Execution properties are established, such as Workflow Type, Task Queue, parameters, and timeouts.
+Schedule 的操作是建立 Workflow Execution 属性的地方，例如 Workflow 类型、Task Queue、参数和超时。
 
-Workflow Executions started by a Schedule have the following additional properties:
+由 Schedule 启动的 Workflow Execution 具有以下附加属性：
 
-- The Action's timestamp is appended to the Workflow Id.
-- The `TemporalScheduledStartTime` [Search Attribute](/search-attribute) is added to the Workflow Execution.
-  The value is the Action's timestamp.
-- The `TemporalScheduledById` Search Attribute is added to the Workflow Execution.
-  The value is the Schedule Id.
+- 操作的时间戳附加到 Workflow Id。
+- `TemporalScheduledStartTime` [Search Attribute](/search-attribute) 已添加到 Workflow Execution 中。
+  该值是操作的时间戳。
+- `TemporalScheduledById` Search Attribute 已添加到 Workflow Execution 中。
+  该值为 Schedule Id。
 
-### Spec
+<a id="action"></a>
+### 规格 {#action}
 
-The Schedule Spec defines when the Action should be taken.
-Unless many Schedules have Actions scheduled at the same time, Actions should generally start within 1 second of the specified time.
-There are two kinds of Schedule Spec:
+Schedule 规范定义了何时应采取操作。
+除非许多 Schedule 同时有操作 Scheduled，否则操作通常应在指定时间的 1 秒内启动。
+Schedule规格有两种：
 
-- A simple interval, like "every 30 minutes" (aligned to start at the Unix epoch, and optionally including a phase offset).
-- A calendar-based expression, similar to the "cron expressions" supported by lots of software, including the older Temporal Cron feature.
+- 一个简单的间隔，例如“每 30 分钟”（与 Unix 纪元开始对齐，并且可以选择包括相位偏移）。
+- 基于日历的表达式，类似于许多软件支持的“cron 表达式”，包括较旧的 Temporal Cron 功能。
 
-These two kinds have multiple representations, depending on the interface or SDK you're using, but they all support the same features.
+这两种类型有多种表示形式，具体取决于您使用的接口或 SDK，但它们都支持相同的功能。
 
-In the Temporal CLI, for example, an interval is specified as a string like `45m` to mean every 45 minutes, or `6h/5h` to mean every 6 hours but at the start of the fifth hour within each period.
+例如，在 Temporal CLI 中，间隔被指定为字符串，如 `45m` 表示每 45 分钟一次，或 `6h/5h` 表示每 6 小时一次，但在每个时间段内的第五个小时开始。
 
-In the Temporal CLI, a calendar expression can be specified as either a traditional cron string with five (or six or seven) positional fields, or as JSON with named fields:
+在 Temporal CLI 中，日历表达式可以指定为具有五个（或六个或七个）位置字段的传统 cron 字符串，也可以指定为具有命名字段的 JSON：
 
 ```json
 {
@@ -68,7 +70,7 @@ In the Temporal CLI, a calendar expression can be specified as either a traditio
 }
 ```
 
-The following calendar JSON fields are available:
+以下日历 JSON 字段可用：
 
 - `year`
 - `month`
@@ -79,153 +81,162 @@ The following calendar JSON fields are available:
 - `second`
 - `comment`
 
-Each field can contain a comma-separated list of ranges (or the `*` wildcard), and each range can include a slash followed by a skip value.
-The `hour`, `minute`, and `second` fields default to `0` while the others default to `*`, so you can describe many useful specs with only a few fields.
+每个字段可以包含以逗号分隔的范围列表（或 `*` 通配符），并且每个范围可以包含一个斜杠，后跟一个跳过值。
+`hour`、`minute` 和 `second` 字段默认为 `0`，而其他字段默认为 `*`，因此您只需几个字段即可描述许多有用的规格。
 
-For `month`, names of months may be used instead of integers (case-insensitive, abbreviations permitted).
-For `dayOfWeek`, day-of-week names may be used.
+对于 `month`，可以使用月份名称代替整数（不区分大小写，允许缩写）。
+对于 `dayOfWeek`，可以使用星期几名称。
 
-The `comment` field is optional and can be used to include a free-form description of the intent of the calendar spec, useful for complicated specs.
+`comment` 字段是可选的，可用于包含日历规范意图的自由格式描述，这对于复杂的规范很有用。
 
-No matter which form you supply, calendar and interval specs are converted to canonical representations.
-What you see when you "describe" or "list" a Schedule might not look exactly like what you entered, but it has the same meaning.
+无论您提供哪种形式，日历和间隔规范都会转换为规范表示。
+当您“描述”或“列出”Schedule 时看到的内容可能与您输入的内容不完全一样，但它具有相同的含义。
 
-#### Phase offset
+<a id="spec"></a>
+#### 相位偏移 {#spec}
 
-By default, intervals align to the Unix epoch (January 1, 1970 at midnight UTC), so without a phase offset, a 7-day interval would fire every Thursday at whatever time midnight UTC equates to in your local time, which may not be convenient for your use case.
+默认情况下，间隔与 Unix 纪元（1970 年 1 月 1 日午夜 UTC）对齐，因此如果没有相位偏移，7 天的间隔将在每周四午夜 UTC 等于您当地时间的任何时间触发，这对您的用例来说可能不方便。
 
-Use a phase offset when you need your recurring Schedule to fire at a specific, human-meaningful time like every 10 days at 5pm UTC on a particular date, rather than accepting the arbitrary time the epoch alignment produces.
+当您需要重复出现的 Schedule 在特定的、对人类有意义的时间（例如每隔 10 天在 UTC 的特定日期下午 5 点）触发时，请使用相位偏移，而不是接受纪元对齐产生的任意时间。
 
-There is an `offset` parameter you can set so an `interval` spec fires exactly at a pre-determined date and time. Here's an example of how you can calculate the `offset` and apply it to your Schedules.
+您可以设置 `offset` 参数，以便 `interval` 规范在预定的日期和时间准确触发。以下示例说明了如何计算 `offset` 并将其应用于您的 Schedule。
 
-Timestamps are measured with UNIX time. That means 7 days is 604,800 seconds (7 * 24 * 60 * 60), 5 days is 432,000 (5 * 24 * 60 * 60), etc. The Schedule fires when the following condition is true:
+时间戳是用 UNIX 时间测量的。这意味着 7 天是 604,800 秒 (7 * 24 * 60 * 60)，5 天是 432,000 (5 * 24 * 60 * 60)，等等。当以下条件成立时，Schedule 会触发：
 
 ```
 ((currentTimestampUTC - phase offset) % interval) == 0
 ```
 
-So using an interval of 7 days and a phase offset of 0, that means the Schedule fires on `December 28th 2023, at midnight UTC`:
+因此，使用 7 天的间隔和 0 的相位偏移，这意味着 Schedule 在 `December 28th 2023, at midnight UTC` 上触发：
 
 ```
 ((1703721600 - 0) % 604800) = 0
 ```
 
-For an interval of 5 days and a phase offset of 0, the Schedule fires on `December 29th 2023`
+对于 5 天的间隔和 0 的相位偏移，Schedule 在 `December 29th 2023` 上触发
 
 ```
 ((1703808000 - 0) % 432000) = 0
 ```
 
-You can calculate the phase offset you need for any interval. Take the UNIX timestamp of any date and time you want your Schedule to execute, then calculate the following:
+您可以计算任何间隔所需的相位偏移。获取您希望 Schedule 执行的任何日期和时间的 UNIX 时间戳，然后计算以下内容：
 
 ```
 phase offset = referenceTimestampUTC % interval
 ```
 
-For example, if you want a Schedule that will fire every 10 days, including Jun 19th 2024 at 5pm UTC, you need to calculate the UNIX timestamp:
+例如，如果您希望 Schedule 每 10 天触发一次，包括 UTC 时间 2024 年 6 月 19 日下午 5 点，您需要计算 UNIX 时间戳：
 
 ```
 UNIX Timestamp of 2024-06-19T17:00:00 UTC = 1718816400
 ```
 
-Then you need to calculate the number of seconds for your interval:
+然后您需要计算间隔的秒数：
 
 ```
 Interval of 10 days = (10 * 24 * 60 * 60) = 864000
 ```
 
-Finally, you can calculate the phase offset you need:
+最后，您可以计算所需的相位偏移：
 
 ```
 phase offset = 1718816400 % 864000 = 320400
 ```
 
-So you will set your Schedule interval to `864000s` (10 days) and phase to `320400s` and you get exactly every 10 days at 5pm UTC.
+因此，您将 Schedule 间隔设置为 `864000s`（10 天），并将阶段设置为 `320400s`，并且您将在 UTC 下午 5 点精确地每 10 天获得一次。
 
-#### Other Spec features
+<a id="phase-offset"></a>
+#### 其他规格功能 {#phase-offset}
 
-**Multiple intervals/calendar expressions:** A Spec can have combinations of multiple intervals and/or calendar expressions to define a specific Schedule.
+**多个间隔/日历表达式：** 规范可以具有多个间隔和/或日历表达式的组合来定义特定的 Schedule。
 
-**Time bounds:** Provide an absolute start or end time (or both) with a Spec to ensure that no actions are taken before the start time or after the end time.
+**时间范围：** 通过规范提供绝对开始或结束时间（或两者），以确保在开始时间之前或结束时间之后不采取任何操作。
 
-**Exclusions:** A Spec can contain exclusions in the form of zero or more calendar expressions.
-This can be used to express scheduling like "each Monday at noon except for holidays".
-You'll have to provide your own set of exclusions and include it in each schedule; there are no pre-defined sets.
-(This feature isn't currently exposed in the Temporal CLI or the Temporal Web UI.)
+**排除：** 规范可以包含零个或多个日历表达式形式的排除。
+这可以用来表达日程安排，例如“除节假日外每周一中午”。
+您必须提供自己的排除集并将其包含在每个 Schedule 中；没有预定义的集合。
+（此功能当前未在 Temporal CLI 或 Temporal Web UI 中公开。）
 
-**Jitter:** If given, a random offset between zero and the maximum jitter is added to each Action time (but bounded by the time until the next scheduled Action).
+**抖动：** 如果给定，则将零和最大抖动之间的随机偏移添加到每个操作时间（但受下一个 Scheduled 操作之前的时间限制）。
 
-**Time zones:** By default, calendar-based expressions are interpreted in UTC.
-Temporal recommends using UTC to avoid various surprising properties of time zones.
-If you don't want to use UTC, you can provide the name of a time zone.
-The time zone definition is loaded on the Temporal Server Worker Service from either disk or the fallback embedded in the binary.
+**时区：** 默认情况下，基于日历的表达式以 UTC 进行解释。
+Temporal 建议使用 UTC 以避免时区的各种令人惊讶的特性。
+如果您不想使用 UTC，则可以提供时区名称。
+时区定义从磁盘或二进制文件中嵌入的回退加载到 Temporal Server Worker 服务上。
 
-For more operational control, embed the contents of the time zone database file in the Schedule Spec itself.
-(Note: this isn't currently exposed in the Temporal CLI or the web UI.)
+为了获得更多操作控制，请将时区数据库文件的内容嵌入到 Schedule 规范本身中。
+（注意：当前未在 Temporal CLI 或 Web UI 中公开。）
 
-### Pause
+＃＃＃ 暂停
 
-A Schedule can be Paused.
-When a Schedule is Paused, the Spec has no effect.
-However, you can still force manual actions by using the [temporal schedule trigger](/cli/schedule#trigger) command.
+Schedule 可以暂停。
+当 Schedule 暂停时，规范不起作用。
+但是，您仍然可以使用 [Temporal Schedule 触发器](/cli/schedule#trigger) 命令强制执行手动操作。
 
-To assist communication among developers and operators, a “notes” field can be updated on pause or resume to store an explanation for the current state.
+为了帮助开发人员和操作人员之间的沟通，可以在暂停或恢复时使用“注释”字段 Updated 来存储当前状态的说明。
 
-### Backfill
+<a id="other-spec-features"></a>
+### 回填 {#other-spec-features}
 
-A Schedule can be Backfilled.
-When a Schedule is Backfilled, all the Actions that would have been taken over a specified time period are taken now (in parallel if the `AllowAll` [Overlap Policy](#overlap-policy) is used; sequentially if `BufferAll` is used).
-You might use this to fill in runs from a time period when the Schedule was paused due to an external condition that's now resolved, or a period before the Schedule was created.
+Schedule 可以回填。
+当 Schedule 回填时，现在将执行在指定时间段内执行的所有操作（如果使用 `AllowAll` [重叠政策](#overlap-policy)，则并行执行；如果使用 `BufferAll`，则按顺序执行）。
+您可以使用它来填充 Schedule 由于现已解决的外部条件而暂停的时间段或创建 Schedule 之前的时间段的运行。
 
-### Limit number of Actions
+<a id="pause"></a>
+### 限制操作数量 {#pause}
 
-A Schedule can be limited to a certain number of scheduled Actions (that is, not trigger immediately).
-After that it will act as if it were paused.
+一个 Schedule 可以被限制为一定数量的 Scheduled 操作（即不立即触发）。
+之后，它将表现得好像暂停了一样。
 
-### Policies
+<a id="backfill"></a>
+### 政策 {#backfill}
 
-A Schedule supports a set of Policies that enable customizing behavior.
+Schedule 支持一组启用自定义行为的策略。
 
-#### Overlap Policy
+<a id="limit-number-of-actions"></a>
+#### 重叠政策 {#limit-number-of-actions}
 
-The Overlap Policy controls what happens when it is time to start a Workflow Execution but a previously started Workflow Execution is still running.
-The following options are available:
+重叠策略控制当需要启动 Workflow Execution 但之前启动的 Workflow Execution 仍在运行时会发生什么情况。
+可以使用以下选项：
 
-- `Skip`: **Default**.
-  Nothing happens; the Workflow Execution is not started.
-- `BufferOne`: Starts the Workflow Execution as soon as the current one completes.
-  The buffer is limited to one.
-  If another Workflow Execution is supposed to start, but one is already in the buffer, only the one in the buffer eventually starts.
-- `BufferAll`: Allows an unlimited number of Workflows to buffer.
-  They are started sequentially.
-- `CancelOther`: Cancels the running Workflow Execution, and then starts the new one after the old one completes cancellation.
-- `TerminateOther`: Terminates the running Workflow Execution and starts the new one immediately.
-- `AllowAll` Starts any number of concurrent Workflow Executions.
-  With this policy (and only this policy), more than one Workflow Execution, started by the Schedule, can run simultaneously.
+- `Skip`：**默认**。
+  什么也没有发生； Workflow Execution 未启动。
+- `BufferOne`：当前 Workflow Execution 完成后立即启动。
+  缓冲区仅限于一个。
+  如果另一个 Workflow Execution 应该启动，但其中一个已经在缓冲区中，则只有缓冲区中的一个最终启动。
+- `BufferAll`：允许缓冲无限数量的 Workflow。
+  它们按顺序启动。
+- `CancelOther`：取消正在运行的Workflow Execution，待旧的Workflow Execution取消完成后，再启动新的Workflow Execution。
+- `TerminateOther`：终止正在运行的 Workflow Execution 并立即启动新的 Workflow Execution。
+- `AllowAll` 启动任意数量的并发 Workflow Execution。
+  通过此策略（且仅此策略），由 Schedule 启动的多个 Workflow Execution 可以同时运行。
 
-#### Catchup Window
+<a id="policies"></a>
+#### 追赶窗口 {#policies}
 
-The Temporal Service might be down or unavailable at the time when a Schedule should take an Action.
-When it comes back up, the Catchup Window controls which missed Actions should be taken at that point.
-The default is one year, meaning Actions will be taken unless over one year late.
-If your Actions are more time-sensitive, you can set the Catchup Window to a smaller value (minimum ten seconds), accepting that an outage longer than the window could lead to missed Actions.
-(But you can always [Backfill](#backfill).)
+当 Schedule 应采取操作时，Temporal 服务可能已关闭或不可用。
+当它恢复时，追赶窗口控制此时应采取哪些错过的操作。
+默认值为一年，这意味着除非晚了一年以上，否则将采取行动。
+如果您的操作对时间更加敏感，您可以将追赶窗口设置为较小的值（最少十秒），接受超过窗口时间的中断可能会导致错过操作。
+（但您始终可以 [回填](#backfill)。）
 
-#### Pause-on-failure
+<a id="overlap-policy"></a>
+#### 失败时暂停 {#overlap-policy}
 
-If this policy is set, a Workflow Execution started by a Schedule that ends with a failure or timeout (but not Cancellation or Termination) causes the Schedule to automatically pause.
+如果设置此策略，则由 Schedule 启动并以失败或超时（但不是取消或终止）结束的 Workflow Execution 会导致 Schedule 自动暂停。
 
-Note that with the `AllowAll` Overlap Policy, this pause might not apply to the next Workflow Execution, because the next Workflow Execution might have started before the failed one finished.
-It applies only to Workflow Executions that were scheduled to start after the failed one finished.
+请注意，对于 `AllowAll` 重叠策略，此暂停可能不适用于下一个 Workflow Execution，因为下一个 Workflow Execution 可能在失败的 Workflow Execution 完成之前就开始了。
+它仅适用于在失败的 Scheduled 完成后启动的 Workflow Execution。
 
-### Last completion result
+<a id="catchup-window"></a>
+### 最后完成结果 {#catchup-window}
 
-A Workflow started by a Schedule can obtain the completion result from the most recent successful run.
-(How you do this depends on the SDK you're using.)
+由Schedule启动的Workflow可以获得最近一次成功运行的完成结果。
+（如何执行此操作取决于您使用的 SDK。）
 
-For overlap policies that don't allow overlap, “the most recent successful run” is straightforward to define.
-For the `AllowAll` policy, it refers to the run that completed most recently, at the time that the run in question is started.
-Consider the following overlapping runs:
+对于不允许重叠的重叠策略，“最近成功的运行”很容易定义。
+对于 `AllowAll` 策略，它指的是在相关运行开始时最近完成的运行。
+考虑以下重叠运行：
 
 ```
 time -------------------------------------------->
@@ -235,37 +246,39 @@ time -------------------------------------------->
  D                                |--------------T
 ```
 
-If D asks for the last completion result at time T, it gets the result of A.
-Not B, even though B started more recently, because A completed later.
-And not C, even though C completed after A, because the result for D is captured when D is started, not when it's queried.
+如果D在时间T询问最后的完成结果，它得到A的结果。
+不是 B，尽管 B 开始得更晚，因为 A 完成得更晚。
+而不是 C，即使 C 在 A 之后完成，因为 D 的结果是在 D 启动时捕获的，而不是在查询时捕获的。
 
-Failures and timeouts do not affect the last completion result.
+失败和超时不会影响最后的完成结果。
 
 :::note
 
-When a Schedule triggers a Workflow that completes successfully and yields a result, the result from the initial Schedule execution can be accessed by the subsequent scheduled execution through `LastCompletionResult`.
+当 Schedule 触发成功完成并产生结果的 Workflow 时，后续 Scheduled 执行可以通过 `LastCompletionResult` 访问初始 Schedule 执行的结果。
 
-Be aware that if, during the subsequent run, the Workflow employs the [Continue-As-New](/workflow-execution/continue-as-new) feature, `LastCompletionResult` won't be accessible for this new Workflow iteration.
+请注意，如果在后续运行期间，Workflow 使用 [Continue-As-New](/workflow-execution/continue-as-new) 功能，则此新的 Workflow 迭代将无法访问 `LastCompletionResult`。
 
-It is important to note that the [status](/workflow-execution#workflow-execution-status) of the subsequent run is marked as `Continued-As-New` and not as `Completed`.
+需要注意的是，后续运行的 [地位](/workflow-execution#workflow-execution-status) 被标记为 `Continued-As-New`，而不是 `Completed`。
 
 :::
 
 :::caution
 
-A scheduled Workflow Execution may complete with a result up to the maximum blob size (2 MiB by default).
-However, due to internal limitations, results that are within 1 KiB of this limit cannot be passed to the next execution.
-So, for example, a Workflow Execution that returns a result of size 2,096,640 bytes (which is above 2MiB - 1KiB limit)
-will be allowed to complete successfully, but that value will not be available as a last completion result.
-This limitation may be lifted in the future.
+Scheduled Workflow Execution 可能会完成最大 Blob 大小（默认为 2 MiB）的结果。
+但是，由于内部限制，在此限制的 1 KiB 以内的结果无法传递到下一次执行。
+例如，Workflow Execution 返回大小为 2,096,640 字节的结果（高于 2MiB - 1KiB 限制）
+将允许成功完成，但该值将不能作为最后的完成结果。
+此限制将来可能会取消。
 
 :::
 
-### Last failure
+<a id="pause-on-failure"></a>
+### 最后一次失败 {#pause-on-failure}
 
-A Workflow started by a Schedule can obtain the details of the failure of the most recent run that ended at the time when the Workflow in question was started. Unlike last completion result, a _successful_ run _does_ reset the last failure.
+由 Schedule 启动的 Workflow 可以获得在启动相关 Workflow 时结束的最近一次运行的失败详细信息。与上次完成结果不同，_成功_运行_确实_重置上次失败。
 
-### Limitations
+<a id="last-completion-result"></a>
+### 限制 {#last-completion-result}
 
-Internally, a Schedule is implemented as a Workflow.
-If you're using Elasticsearch, these Workflow Executions are hidden from normal views.
+在内部，Schedule 被实现为 Workflow。
+如果您使用 Elasticsearch，这些 Workflow Execution 在普通视图中是隐藏的。

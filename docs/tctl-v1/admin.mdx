@@ -1,8 +1,8 @@
 ---
 id: admin
-title: tctl v1.17 admin command reference
-sidebar_label: admin
-description: Experience the new Temporal CLI public preview, offering enhanced admin operations for Clusters, Workflows, and Databases. Provide feedback before tctl’s deprecation after v1.0 release.
+title: "tctl v1.17 管理命令参考"
+sidebar_label: "行政"
+description: "体验新的 Temporal CLI 公共预览版，为集群、Workflow 和数据库提供增强的管理操作。在 v1.0 发布后 tctl 弃用之前提供反馈。"
 toc_max_heading_level: 4
 keywords:
   - cli
@@ -17,1066 +17,1216 @@ keywords:
 
 :::info tctl is deprecated
 
-The tctl command line utility has been deprecated and is no longer actively supported.
-We recommend transitioning to [Temporal CLI](/cli) for continued use and access to new features.
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议过渡到 [Temporal CLI](/cli) 以继续使用和访问新功能。
 
-Thank you for being a valued part of the Temporal community.
+感谢您成为 Temporal 社区的重要组成部分。
 
 :::
 
-A `tctl admin` command allows the user to run admin operations.
+`tctl admin` 命令允许用户运行管理操作。
 
-Modifiers:
+修饰符：
 
-#### --help
+#### - 帮助 {#help}
 
 `tctl admin [--help | -h]`
 
-## cluster
+## 簇 {#cluster}
 
-The `tctl admin cluster` command runs the administrator-level operations on a given Cluster.
+`tctl admin cluster` 命令在给定集群上运行管理员级别的操作。
 
 `tctl admin cluster command [command modifiers] [arguments...]`
 
-- [add_search_attributes](#add_search_attributes)
-- [remove_search_attributes](#remove_search_attributes)
-- [get_search_attributes](#get_search_attributes)
-- [describe](#describe)
-- [list](#list)
+- [添加搜索属性](#add_search_attributes)
+- [删除搜索属性](#remove_search_attributes)
+- [获取搜索属性](#get_search_attributes)
+- [描述](#describe)
+- [列表](#list)
 - [upsert_remote_cluster](#upsert_remote_cluster)
-- [remove_remote_cluster](#upsert_remote_cluster)
+- [删除远程集群](#upsert_remote_cluster)
 
-### add_search_attributes
+<a id="help"></a>
+### 添加搜索属性 {#addsearchattributes}
 
-The `tctl admin cluster add-search-attributes` command allows Search Attributes to be added to a Cluster.
-Custom Search Attributes can be used to make a Cluster more identifiable.
+`tctl admin cluster add-search-attributes` 命令允许将 Search Attribute 添加到集群。
+自定义 Search Attribute 可用于使集群更易于识别。
 
 :::note
-Due to Elasticsearch limitations, you can only add new custom Search Attributes. Existing Search Attributes cannot be renamed or removed from the Elasticsearch index.
+由于 Elasticsearch 限制，您只能添加新的自定义 Search Attribute。现有的 Search Attribute 无法重命名或从 Elasticsearch 索引中删除。
 :::
 
-Use this command to add custom Search Attributes to your Temporal Cluster:
+使用此命令将自定义 Search Attribute 添加到 Temporal 集群：
 
 ```bash
 tctl admin cluster add-search-attributes --name <SearchAttributeName> --type <SearchAttributeValueType>
 ```
 
 :::note
-If you are adding custom Search Attributes to a Cluster running from the `docker-compose-es.yml` file in the [temporalio/docker-compose](https://github.com/temporalio/docker-compose) repo, make sure to increase the Docker memory to more than 6 GB.
+如果要将自定义 Search Attribute 添加到从 [Temporalio/docker-compose](https://github.com/temporalio/docker-compose) 存储库中的 `docker-compose-es.yml` 文件运行的集群，请确保将 Docker 内存增加到 6 GB 以上。
 :::
 
-#### --skip_schema_update
+<a id="cluster"></a>
+#### --skip_schema_Update {#skipschemaupdate}
 
-Allows the user to skip the Elasticsearch index schema update.
+允许用户跳过 Elasticsearch 索引架构 Update。
 
 :::note
-This will only register in metadata.
+这只会在元数据中注册。
 :::
 
-#### --name
+#### - 姓名 {#name}
 
-The name of the Search Attribute to add. Names can have multiple values.
+要添加的 Search Attribute 的名称。名称可以有多个值。
 
-Search Attribute names are case sensitive.
+Search Attribute 名称区分大小写。
 
-#### --type
+#### - 类型 {#type}
 
-The type of Search Attribute to add.
-Multiple values can be added at once.
+要添加的 Search Attribute 类型。
+可以一次添加多个值。
 
-Values: Text, Keyword, Int, Double, Bool, Datetime
+值：文本、关键字、Int、Double、Bool、日期时间
 
-### describe
+### 描述 {#describe}
 
-The `tctl admin cluster describe` command provides information for the current Cluster.
+`tctl admin cluster describe` 命令提供当前集群的信息。
 
-The following modifier changes the behavior of the command:
+以下修饰符更改命令的行为：
 
-#### --cluster_value
+<a id="addsearchattributes"></a>
+#### --cluster_value {#clustervalue}
 
-The name of the remote Cluster within the current Cluster.
+当前集群中远程集群的名称。
 
-This modifier is optional, and can default to the return of current Cluster information.
+该修饰符是可选的，并且可以默认返回当前集群信息。
 
-### get_search_attributes
+<a id="skipschemaupdate"></a>
+### 获取搜索属性 {#getsearchattributes}
 
-The `tctl admin cluster get_search_attributes` command retrieves existing Search Attributes for a given Cluster.
+`tctl admin cluster get_search_attributes` 命令检索给定集群的现有 Search Attribute。
 
-The following modifier will change the behavior of the command:
+以下修饰符将更改命令的行为：
 
-#### --print_json
+<a id="name"></a>
+#### --print_json {#printjson}
 
-Prints the existing search attributes in JSON format.
+以 JSON 格式打印现有的 Search Attribute。
 
-### list
+### 列表 {#list}
 
-The `tctl admin cluster list` command lists Cluster information on the given Cluster.
+`tctl admin cluster list` 命令列出给定集群上的集群信息。
 
-Default: 100
+默认值：100
 
-The modifier below changes the behavior of the command:
+下面的修饰符更改命令的行为：
 
-#### --pagesize
+<a id="type"></a>
+#### --页面大小 {#pagesize}
 
-The size of the page that the list is printed on.
+打印列表的页面的大小。
 
-### remove_remote_cluster
+<a id="describe"></a>
+### 删除远程集群 {#removeremotecluster}
 
-The `tctl admin cluster remove_remote_cluster` command removes remote Cluster information on the given Cluster.
+`tctl admin cluster remove_remote_cluster` 命令删除给定集群上的远程集群信息。
 
-The modifier below changes the behavior of the operation:
+下面的修饰符更改操作的行为：
 
-#### --cluster
+#### - 簇 {#cluster}
 
-The name of the remote Cluster to remove.
+要删除的远程集群的名称。
 
-### remove_search_attributes
+<a id="clustervalue"></a>
+### 删除搜索属性 {#removesearchattributes}
 
-> The Temporal tctl documentation covers version 1.17 of the Temporal CLI.
+> Temporal tctl 文档涵盖 Temporal CLI 版本 1.17。
 
-The `tctl admin cluster remove-search-attributes` command removes custom Search Attribute metadata from a Cluster.
-This operation has no effect on Elasticsearch index schema.
+`tctl admin cluster remove-search-attributes` 命令从集群中删除自定义 Search Attribute 元数据。
+此操作对 Elasticsearch 索引架构没有影响。
 
-Use the following command to remove a [Search Attribute](/search-attribute) from a Cluster's metadata:
+使用以下命令从集群的元数据中删除 [Search Attribute](/search-attribute)：
 
 ```bash
 tctl admin cluster remove-search-attributes --name <SearchAttributeKey>
 ```
 
-Only custom Search Attributes can be removed from a Cluster's metadata.
-Default Search Attributes cannot be removed.
+只能从集群的元数据中删除自定义 Search Attribute。
+默认的 Search Attribute 无法删除。
 
-Removing a Search Attribute removes it from the Cluster's metadata but does not remove it from the Elasticsearch index.
-This means that the Search Attribute can be added back later as the same type.
-After a Search Attribute has been added to the Elasticsearch index, it cannot be changed.
+删除 Search Attribute 会将其从集群的元数据中删除，但不会将其从 Elasticsearch 索引中删除。
+这意味着 Search Attribute 可以稍后作为相同类型添加回来。
+Search Attribute 添加到 Elasticsearch 索引后就无法更改。
 
-The following modifier changes the behavior of the operation:
+以下修饰符更改操作的行为：
 
-#### --name
+#### - 姓名 {#name}
 
-Name of the Search Attribute to remove.
+要删除的 Search Attribute 的名称。
 
-### upsert_remote_cluster
+<a id="getsearchattributes"></a>
+### upsert_remote_cluster {#upsertremotecluster}
 
-The `tctl admin cluster upsert_remote_cluster` command adds or updates remote Cluster information in the current Cluster.
+`tctl admin cluster upsert_remote_cluster` 命令在当前集群中添加或 Update 远程集群信息。
 
-#### --frontend_address
+<a id="printjson"></a>
+#### --前端地址 {#frontendaddress}
 
-The remote Cluster frontend address.
+远程集群前端地址。
 
-#### --enable_connection
+<a id="list"></a>
+#### --启用连接 {#enableconnection}
 
-Enables remote Cluster connection.
+启用远程集群连接。
 
-## db
+<a id="pagesize"></a>
+## 数据库 {#db}
 
-The `tctl admin db` command runs administrator-level operations on a given database.
+`tctl admin db` 命令在给定数据库上运行管理员级别的操作。
 
-### Usage
+### 用法 {#usage}
 
 `tctl admin db command [command modifiers] [arguments...]`
 
-### Commands
+<a id="removeremotecluster"></a>
+### 命令 {#commands}
 
-- [tctl admin db scan](#scan)
-- [tctl admin db clean](#clean)
+- [tctl 管理员数据库扫描](#scan)
+- [tctl 管理员数据库清理](#clean)
 
-### clean
+### 干净的 {#clean}
 
-The `tctl admin db clean` command cleans corrupted [Workflow Executions](/workflow-execution) from the targeted database.
+`tctl admin db clean` 命令从目标数据库中清除损坏的 [Workflow Executions](/workflow-execution)。
 
-The modifiers below change the behavior of the command.
+下面的修饰符更改命令的行为。
 
-#### --db_engine
+<a id="cluster"></a>
+#### --db_engine {#dbengine}
 
-Type of DB engine to use
+要使用的数据库引擎的类型
 
-Default: `cassandra`
-Value: `cassandra` | `mysql` | `postgres`
+默认值：`cassandra`
+值：`cassandra` | `mysql` | `postgres`
 
-#### --db_address
+<a id="removesearchattributes"></a>
+#### --db_地址 {#dbaddress}
 
-Persistence address for the database.
+数据库的持久地址。
 
-Default: 127.0.0.1
+默认值：127.0.0.1
 
-#### --db_port
+<a id="name"></a>
+#### --db_port {#dbport}
 
-Persistence port for the DB.
+DB 的持久性端口。
 
-Default: 9042
+默认值：9042
 
-#### --username
+<a id="upsertremotecluster"></a>
+#### --用户名 {#username}
 
-Database username.
+数据库用户名。
 
-#### --password
+#### - 密码 {#password}
 
-Database password.
+数据库密码。
 
-#### --keyspace
+<a id="frontendaddress"></a>
+#### --键空间 {#keyspace}
 
-Database keyspace
+数据库键空间
 
-Default: "temporal"
+默认值：“Temporal”
 
-#### --input_directory
+<a id="enableconnection"></a>
+#### --输入目录 {#inputdirectory}
 
-The directory which contains the corrupted [Workflow Execution](/workflow-execution) files from running [`scan`](#scan).
+包含运行 [`scan`](/workflow-execution) 时损坏的 [Workflow Execution](#scan) 文件的目录。
 
-#### --lower_shard_bound
+<a id="db"></a>
+#### --lower_shard_bound {#lowershardbound}
 
-The minimum amount (inclusive) of corrupt shards to handle.
+要处理的损坏碎片的最小数量（含）。
 
-Default: 0
+默认值：0
 
-#### --upper_shard_bound
+<a id="usage"></a>
+#### --upper_shard_bound {#uppershardbound}
 
-The maximum amount (exclusive) of corrupt shards to handle.
+要处理的损坏分片的最大数量（不包括）。
 
-Default: 16384
+默认值：16384
 
-#### --starting_rps
+<a id="commands"></a>
+#### --starting_rps {#startingrps}
 
-starting rps of database queries.
+启动数据库查询的 rps。
 
-Default: 100
+默认值：100
 
-#### --rps
+<a id="clean"></a>
+#### --rps {#rps}
 
-Target rps of database queries.
+数据库查询的目标 rps。
 
-Default: 7000
+默认值：7000
 
-#### --concurrency
+<a id="dbengine"></a>
+#### --并发 {#concurrency}
 
-Number of threads to handle a scan.
+处理扫描的线程数。
 
-Default: 1000
+默认值：1000
 
-#### --report_rate
+<a id="dbaddress"></a>
+#### --报告率 {#reportrate}
 
-The number of shards handled between each emittance of progress.
+每次进度发射之间处理的分片数量。
 
-Default: 10
+默认值：10
 
 :::note
 
-Enable `--tls` before using any of the following modifiers.
+在使用以下任何修饰符之前启用 `--tls`。
 
 :::
 
-#### --tls_cert_path
+<a id="dbport"></a>
+#### --tls_cert_path {#tlscertpath}
 
-Where the tls client cert is located.
+tls 客户端证书所在的位置。
 
-#### --tls_key_path
+<a id="username"></a>
+#### --tls_key_path {#tlskeypath}
 
-Where the tls key is located.
+tls 密钥所在的位置。
 
-#### --tls_ca_path
+<a id="password"></a>
+#### --tls_ca_path {#tlscapath}
 
-Where the tls ca is located.
+tls ca 所在的位置。
 
-#### --tls_server_name
+<a id="keyspace"></a>
+#### --tls_服务器_名称 {#tlsservername}
 
-The name of the Db tls server.
+Db tls 服务器的名称。
 
-#### --tls_disable_host_verification
+<a id="inputdirectory"></a>
+#### --tls_disable_host_verification {#tlsdisablehostverification}
 
-Disables verification of the DB tls hostname and server cert.
+禁用 DB tls 主机名和服务器证书的验证。
 
-### scan
+### 扫描 {#scan}
 
-The `tctl admin db scan` command scans concrete Workflow Executions in a given database, and detects corrupted ones.
+`tctl admin db scan` 命令扫描给定数据库中的具体 Workflow Execution，并检测损坏的 Workflow Execution。
 
-#### --db_engine
+<a id="lowershardbound"></a>
+#### --db_engine {#dbengine}
 
-Type of DB engine to use
+要使用的数据库引擎的类型
 
-Default: `cassandra`
-Value: `cassandra` | `mysql` | `postgres`
+默认值：`cassandra`
+值：`cassandra` | `mysql` | `postgres`
 
-#### --db_address
+<a id="uppershardbound"></a>
+#### --db_地址 {#dbaddress}
 
-Persistence address for the DB.
+DB 的持久地址。
 
-Default: 127.0.0.1
+默认值：127.0.0.1
 
-#### --db_port
+<a id="startingrps"></a>
+#### --db_port {#dbport}
 
-Persistence port for the DB.
+DB 的持久性端口。
 
-Default: 9042
+默认值：9042
 
-#### --username
+<a id="rps"></a>
+#### --用户名 {#username}
 
-DB username.
+数据库用户名。
 
-#### --password
+#### - 密码 {#password}
 
-DB password.
+数据库密码。
 
-#### --keyspace
+<a id="concurrency"></a>
+#### --键空间 {#keyspace}
 
-DB keyspace
+数据库键空间
 
-Default: "temporal"
+默认值：“Temporal”
 
-#### --lower_shard_bound value
+<a id="reportrate"></a>
+#### --lower_shard_bound 值 {#lowershardbound-value}
 
-The minimum amount (inclusive) of corrupt shards to handle.
+要处理的损坏碎片的最小数量（含）。
 
-Default: 0
+默认值：0
 
-#### --upper_shard_bound
+<a id="tlscertpath"></a>
+#### --upper_shard_bound {#uppershardbound}
 
-The maximum amount (exclusive) of corrupt shards to handle.
+要处理的损坏分片的最大数量（不包括）。
 
-Default: 16384
+默认值：16384
 
-#### --starting_rps
+<a id="tlskeypath"></a>
+#### --starting_rps {#startingrps}
 
-starting rps of database queries.
+启动数据库查询的 rps。
 
-Default: 100
+默认值：100
 
-#### --rps value
+<a id="tlscapath"></a>
+#### --rps 值 {#rps-value}
 
-Target rps of database queries.
+数据库查询的目标 rps。
 
-Default: 7000
+默认值：7000
 
-#### --pagesize
+<a id="tlsservername"></a>
+#### --页面大小 {#pagesize}
 
-The size of the page used to query database executions.
+用于 Query 数据库执行的页面大小。
 
-Default: 500
+默认值：500
 
-#### --concurrency
+<a id="tlsdisablehostverification"></a>
+#### --并发 {#concurrency}
 
-Number of threads to handle a scan.
+处理扫描的线程数。
 
-Default: 1000
+默认值：1000
 
-#### --report_rate
+<a id="scan"></a>
+#### --报告率 {#reportrate}
 
-The number of shards handled between each emittance of progress.
+每次进度发射之间处理的分片数量。
 
-Default: 10
+默认值：10
 
-#### --tls
+<a id="dbengine"></a>
+#### --tls {#tls}
 
-Enable TLS over the DB connection.
+通过数据库连接启用 TLS。
 
 :::note
 
-Enable `--tls` before using any of the following modifiers.
+在使用以下任何修饰符之前启用 `--tls`。
 
 :::
 
-#### --tls_cert_path
+<a id="dbaddress"></a>
+#### --tls_cert_path {#tlscertpath}
 
-Where the tls client cert is located.
+tls 客户端证书所在的位置。
 
-#### --tls_key_path
+<a id="dbport"></a>
+#### --tls_key_path {#tlskeypath}
 
-Where the tls key is located.
+tls 密钥所在的位置。
 
-#### --tls_ca_path
+<a id="username"></a>
+#### --tls_ca_path {#tlscapath}
 
-Where the tls ca is located.
+tls ca 所在的位置。
 
-#### --tls_server_name
+<a id="password"></a>
+#### --tls_服务器_名称 {#tlsservername}
 
-The name of the Db tls server.
+Db tls 服务器的名称。
 
-#### --tls_disable_host_verification
+<a id="keyspace"></a>
+#### --tls_disable_host_verification {#tlsdisablehostverification}
 
-Disables verification of the DB tls hostname and server cert.
+禁用 DB tls 主机名和服务器证书的验证。
 
-## decode
+<a id="lowershardbound-value"></a>
+## 解码 {#decode}
 
-The `tctl admin decode` command allows the user to decode payloads sent and received from executed Activities.
+`tctl admin decode` 命令允许用户解码从执行的活动发送和接收的有效负载。
 
 `tctl admin decode command [command modifiers] [arguments...]`
 
-- [proto](#proto)
-- [base64](#base64)
+- [原型](#proto)
+- [64位基数](#base64)
 
-### base64
+<a id="uppershardbound"></a>
+### base64 {#base64}
 
-The `tctl admin decode base64` command decodes base64 Payloads.
+`tctl admin decode base64` 命令解码 base64 有效负载。
 
-#### --base64_data
+<a id="startingrps"></a>
+#### --base64_data {#base64data}
 
-Decoded data in base64 format.
+Base64 格式的解码数据。
 
-#### --base64_file
+<a id="rps-value"></a>
+#### --base64_文件 {#base64file}
 
-Creates a file with data in base64 format.
+创建一个包含 Base64 格式数据的文件。
 
-### proto
+<a id="pagesize"></a>
+### 原型 {#proto}
 
-The `tctl admin decode proto` command decodes the Payload to proto format.
+`tctl admin decode proto` 命令将有效负载解码为原始格式。
 
-#### --type
+#### - 类型 {#type}
 
-The full name of the proto type to decode the Payload to.
+将有效负载解码为的原型类型的全名。
 
-#### --hex_data
+<a id="concurrency"></a>
+#### --十六进制数据 {#hexdata}
 
-Decodes the data to hex format.
+将数据解码为十六进制格式。
 
-#### --hex_file
+<a id="reportrate"></a>
+#### --十六进制文件 {#hexfile}
 
-Creates a file with the decoded hex data.
+使用解码的十六进制数据创建一个文件。
 
-#### --binary_file
+<a id="tls"></a>
+#### --二进制文件 {#binaryfile}
 
-Creates a file with the decoded binary data.
+使用解码的二进制数据创建一个文件。
 
-## dlq
+<a id="tlscertpath"></a>
+## dlq {#dlq}
 
-The `tctl admin dlq` commands run admin operations on a given dead-letter queue (DLQ).
+`tctl admin dlq` 命令对给定的死信队列 (DLQ) 运行管理操作。
 
 `tctl admin dlq command [command modifiers] [arguments...]`
 
-- [tctl admin dlq read](#read)
-- [tctl admin dlq purge](#purge)
-- [tctl admin dlq merge](#merge)
+- [tctl 管理员 dlq 读取](#read)
+- [tctl 管理员 dlq 清除](#purge)
+- [tctl 管理员 dlq 合并](#merge)
 
-### merge
+<a id="tlskeypath"></a>
+### 合并 {#merge}
 
-The `tctl admin dlq merge` command allows dead-letter queue (DLQ) messages to be merged.
+`tctl admin dlq merge` 命令允许合并死信队列 (DLQ) 消息。
 
-The messages must have TaskIds with an equal or lesser value than the given TaskId.
+消息的 TaskId 值必须等于或小于给定的 TaskId。
 
-#### --dlq_type
+<a id="tlscapath"></a>
+#### --dlq_type {#dlqtype}
 
-The type of DLQ to manage.
+要管理的 DLQ 类型。
 
-Options: namespace, history
+选项：Namespace、历史记录
 
-#### --cluster
+#### - 簇 {#cluster}
 
-Source cluster for the DLQ.
+DLQ 的源集群。
 
-#### --shard_id
+<a id="tlsservername"></a>
+#### --shard_id {#shardid}
 
-ShardId provided for the command.
+为命令提供的 ShardId。
 
-#### --last_message_id
+<a id="tlsdisablehostverification"></a>
+#### --last_message_id {#lastmessageid}
 
-Identifies the last read message.
+标识最后阅读的消息。
 
-Default: 0
+默认值：0
 
-### purge
+<a id="decode"></a>
+### 清除 {#purge}
 
-The `tctl admin dlq purge` command deletes DLQ messages that have a Task Id equal to or less than the provided Task Id.
+`tctl admin dlq purge` 命令删除任务 ID 等于或小于提供的任务 ID 的 DLQ 消息。
 
-#### --dlq_type
+<a id="base64"></a>
+#### --dlq_type {#dlqtype}
 
-The type of DLQ to manage.
+要管理的 DLQ 类型。
 
-Options: namespace, history
+选项：Namespace、历史记录
 
-#### --cluster
+#### - 簇 {#cluster}
 
-Source cluster for the DLQ.
+DLQ 的源集群。
 
-#### --shard_id
+<a id="base64data"></a>
+#### --shard_id {#shardid}
 
-ShardId provided for the command.
+为命令提供的 ShardId。
 
-#### --last_message_id
+<a id="base64file"></a>
+#### --last_message_id {#lastmessageid}
 
-Identifies the last read message.
+标识最后阅读的消息。
 
-Default: 0
+默认值：0
 
-### read
+### 读 {#read}
 
-The `tctl admin dlq read` command reads out messages from the dead-letter queue (DLQ).
+`tctl admin dlq read` 命令从死信队列 (DLQ) 中读取消息。
 
 ---
 
-#### --dlq_type
+<a id="proto"></a>
+#### --dlq_type {#dlqtype}
 
-The type of DLQ to manage.
+要管理的 DLQ 类型。
 
-Options: namespace, history
+选项：Namespace、历史记录
 
-#### --cluster
+#### - 簇 {#cluster}
 
-Source cluster for the DLQ.
+DLQ 的源集群。
 
-#### --shard_id
+<a id="type"></a>
+#### --shard_id {#shardid}
 
-ShardId provided for the command.
+为命令提供的 ShardId。
 
-#### --max_message_count
+<a id="hexdata"></a>
+#### --max_message_count {#maxmessagecount}
 
-The maximum number of messages to fetch.
+要获取的最大消息数。
 
-Default: 0
+默认值：0
 
-#### --last_message_id
+<a id="hexfile"></a>
+#### --last_message_id {#lastmessageid}
 
-Identifies the last read message.
+标识最后阅读的消息。
 
-Default: 0
+默认值：0
 
-#### --output_filename
+<a id="binaryfile"></a>
+#### --输出文件名 {#outputfilename}
 
-Provides a file to write output to.
+提供一个用于写入输出的文件。
 
-Output is written to stdout on default.
+默认情况下，输出写入 stdout。
 
-## history_host
+<a id="dlq"></a>
+## 历史主机 {#historyhost}
 
-The `tctl admin history_host` command runs an admin-level operation on the history host.
+`tctl admin history_host` 命令在历史主机上运行管理员级别的操作。
 
-## Usage
+## 用法 {#usage}
 
 `tctl admin history_host command [command options] [arguments...]`
 
-## Commands
+<a id="merge"></a>
+## 命令 {#commands}
 
-- [tctl admin history_host describe](#describe)
-- [tctl admin history_host get_shardid](#get_shardid)
+- [tctl 管理历史主机描述](#describe)
+- [tctl 管理history_host get_shardid](#get_shardid)
 
-### describe
+### 描述 {#describe}
 
-The `tctl admin history_host describe` command describes the internal information of history host.
+`tctl admin history_host describe`命令描述了历史主机的内部信息。
 
-The following modifiers change the behavior of the command.
+以下修饰符更改命令的行为。
 
-#### --workflow_id
+<a id="dlqtype"></a>
+#### --Workflow_id {#workflowid}
 
-Alias: `-w`
+别名：`-w`
 
-The WorkflowId of the Workflow whose history host is to be described.
+要描述其历史主机的Workflow的WorkflowId。
 
-#### --history_address
+<a id="cluster"></a>
+#### --历史地址 {#historyaddress}
 
-The history address of the history host.
+历史主机的历史地址。
 
-#### --shard_id
+#### --shard_id {#shardid}
 
-The Id of the shard that belongs to the history host.
+属于历史主机的分片的Id。
 
-#### --print_full
+<a id="lastmessageid"></a>
+#### --print_full {#printfull}
 
-Print a full and detailed summary of the history host.
+打印历史主机的完整详细摘要。
 
-### get_shardid
+<a id="purge"></a>
+### 获取_shardid {#getshardid}
 
-The `tctl admin history_host get_shardid` command gets the `shardId` for a given `namespaceId` and `workflowId`.
+`tctl admin history_host get_shardid` 命令获取给定 `NamespaceId` 和 `WorkflowId` 的 `shardId`。
 
-The following modifiers change the behavior of this command.
+以下修饰符更改此命令的行为。
 
-#### --namespace_id
+<a id="dlqtype"></a>
+#### --Namespace_id {#namespaceid}
 
-The `namespaceId` of the history host where we're getting the `shardId`.
+我们获得 `shardId` 的历史主机的 `NamespaceId`。
 
-#### --workflow_id
+<a id="cluster"></a>
+#### --Workflow_id {#workflowid}
 
-Alias: `-w`
+别名：`-w`
 
-The WorkflowId of the history host where we're getting the shardId.
+我们获取 shardId 的历史主机的 WorkflowId。
 
-#### --number_of_shards
+<a id="shardid"></a>
+#### --分片数量 {#numberofshards}
 
-The total amount of shards for the Temporal Cluster.
+Temporal 集群的分片总量。
 
-Default: 0
+默认值：0
 
-## membership
+<a id="lastmessageid"></a>
+## 会员资格 {#membership}
 
-The `tctl admin membership` command allows admin operations to be run on membership items.
+`tctl admin membership` 命令允许对成员资格项目运行管理操作。
 
-### Usage
+### 用法 {#usage}
 
 `tctl admin membership command [command modifiers] [arguments...]`
 
-### Commands
+<a id="read"></a>
+### 命令 {#commands}
 
-- [list_gossip](#list_gossip)
-- [list_db](#list_db)
+- [八卦列表](#list_gossip)
+- [列表数据库](#list_db)
 
-### list_db
+<a id="dlqtype"></a>
+### 列表数据库 {#listdb}
 
-The `tctl admin membership list_db` command lists the Cluster items in a targeted membership.
+`tctl admin membership list_db` 命令列出目标成员资格中的集群项目。
 
-The following modifiers change the behavior of the command.
+以下修饰符更改命令的行为。
 
-#### --heartbeated_within
+<a id="cluster"></a>
+#### --heartbeated_within {#heartbeatedwithin}
 
-Filters the list by last Heartbeat time.
+按上次心跳时间过滤列表。
 
 {/* todo: add supported format list */}
 
-#### --role
+#### - 角色 {#role}
 
-Filters the results by membership role.
+按成员角色过滤结果。
 
-Default: all
-Values: all, frontend, history, matching, worker
+默认值：全部
+值：全部、前端、历史、匹配、Worker
 
-### list_gossip
+<a id="shardid"></a>
+### 八卦列表 {#listgossip}
 
-The `tctl admin membership list_gossip` command lists the ringpop membership items present on the targeted membership.
+`tctl admin membership list_gossip` 命令列出目标成员资格上存在的 Ringpop 成员资格项目。
 
-The following modifier changes the behavior of the command:
+以下修饰符更改命令的行为：
 
-#### --role value
+<a id="maxmessagecount"></a>
+#### --角色值 {#role-value}
 
-Filters the results by membership role
+按成员角色过滤结果
 
-Default: all
-Values: all, frontend, history, matching, worker
+默认值：全部
+值：全部、前端、历史、匹配、Worker
 
-## shard
+<a id="lastmessageid"></a>
+## 分片 {#shard}
 
-The `tctl admin shard` commands enable admin-level operations on a specified shard.
+`tctl admin shard` 命令启用指定分片上的管理级操作。
 
-#### tctl admin shard commands
+<a id="outputfilename"></a>
+#### tctl 管理分片命令 {#tctl-admin-shard-commands}
 
-- [describe](#describe)
-- [describe_task](#describe_task)
-- [list_tasks](#list_tasks)
-- [close_shard](#close_shard)
-- [remove_task](#remove_task)
+- [描述](#describe)
+- [描述任务](#describe_task)
+- [列表任务](#list_tasks)
+- [关闭分片](#close_shard)
+- [删除任务](#remove_task)
 
-### close_shard
+<a id="historyhost"></a>
+### close_shard {#closeshard}
 
-The `tctl admin shard close_shard` command closes a shard with an Id that corresponds to the value given in the command.
+`tctl admin shard close_shard` 命令关闭其 Id 与命令中给定值相对应的分片。
 
 `tctl admin shard close_shard [command options] [arguments...]`
 
-The modifier below will change the behavior and output of the command.
+下面的修饰符将更改命令的行为和输出。
 
-#### --shard_id value
+<a id="usage"></a>
+#### --shard_id 值 {#shardid-value}
 
-ShardId managed by the Temporal Cluster.
+ShardId 由 Temporal 集群管理。
 
-### describe_task
+<a id="commands"></a>
+### 描述任务 {#describetask}
 
-The `tctl admin shard describe_task` command describes a specified Task's Task Id, Task type, shard Id, and task visibility timestamp.
+`tctl admin shard describe_task` 命令描述了指定任务的任务 ID、任务类型、分片 ID 和任务 Visibility 时间戳。
 
-The modifiers below control the output and behavior of the command. Enter all modifiers after the command as such:
+下面的修饰符控制命令的输出和行为。在命令后输入所有修饰符，如下所示：
 
 `tctl admin shard describe_task <modifiers>`
 
-#### --db_engine
+<a id="describe"></a>
+#### --db_engine {#dbengine}
 
-The type of database (DB) engine for the shard to use.
+分片使用的数据库 (DB) 引擎的类型。
 
-Default: "cassandra"
+默认值：“卡桑德拉”
 
-Values: "cassandra", "mysql", "postgres"
+值：“cassandra”、“mysql”、“postgres”
 
 {/* todo: examples */}
 
-#### --db_address
+<a id="workflowid"></a>
+#### --db_地址 {#dbaddress}
 
-Persistence address for the database.
+数据库的持久地址。
 
-Default: 127.0.0.1
+默认值：127.0.0.1
 
-#### --db_port
+<a id="historyaddress"></a>
+#### --db_port {#dbport}
 
-Persistence port for the database.
+数据库的持久性端口。
 
-Default: 9042
+默认值：9042
 
-#### --username
+<a id="shardid"></a>
+#### --用户名 {#username}
 
-Username entered into the database.
+输入到数据库中的用户名。
 
-#### --password
+#### - 密码 {#password}
 
-Password entered into the database.
+密码输入数据库。
 
-#### --keyspace
+<a id="printfull"></a>
+#### --键空间 {#keyspace}
 
-Keyspace for the database.
+数据库的键空间。
 
-default: "temporal"
+默认值：“Temporal”
 
-#### --tls
+<a id="getshardid"></a>
+#### --tls {#tls}
 
-Enables TLS over the database connection.
+通过数据库连接启用 TLS。
 
-#### --tls_cert_path
+<a id="namespaceid"></a>
+#### --tls_cert_path {#tlscertpath}
 
-DB tls client cert path.
+DB tls 客户端证书路径。
 
-Note: tls must be enabled
+注意：必须启用tls
 
-#### --tls_server_name
+<a id="workflowid"></a>
+#### --tls_服务器_名称 {#tlsservername}
 
-DB tls server name
+数据库 tls 服务器名称
 
-Note: tls must be enabled
+注意：必须启用tls
 
-#### --tls_disable_host_verification
+<a id="numberofshards"></a>
+#### --tls_disable_host_verification {#tlsdisablehostverification}
 
-DB tls verify hostname and server cert
+DB tls 验证主机名和服务器证书
 
-Note: tls must be enabled
+注意：必须启用tls
 
-#### --shard_id
+<a id="membership"></a>
+#### --shard_id {#shardid}
 
-Identifies the specified shard.
+标识指定的分片。
 
-Default: 0
+默认值：0
 
-#### --task_id
+<a id="usage"></a>
+#### --task_id {#taskid}
 
-Describes the task.
+描述任务。
 
-Default: 0
+默认值：0
 
-#### --task_type
+<a id="commands"></a>
+#### --任务类型 {#tasktype}
 
-The kind of Task that is targeted within a shard.
+以分片为目标的任务类型。
 
-Default: transfer
+默认：传输
 
-Values: transfer, timer, replication
+值：传输、Timer、复制
 
-#### --task_timestamp
+<a id="listdb"></a>
+#### --任务时间戳 {#tasktimestamp}
 
-Task visibility timestamp in nanoseconds
+任务 Visibility 时间戳（以纳秒为单位）
 
-Default: 0
+默认值：0
 
-#### --target_cluster
+<a id="heartbeatedwithin"></a>
+#### --目标集群 {#targetcluster}
 
-Temporal cluster for the shard to use.
+Temporal 集群供分片使用。
 
-Default: "active"
+默认值：“活动”
 
-### describe
+### 描述 {#describe}
 
-The `tctl admin shard describe` command shows the Id for the specified shard.
+`tctl admin shard describe` 命令显示指定分片的 Id。
 
-The modifier below controls the behavior of the command.
+下面的修饰符控制命令的行为。
 
-#### --shard_id value
+<a id="role"></a>
+#### --shard_id 值 {#shardid-value}
 
-The Id of the shard to describe
+要描述的分片的 ID
 
-Default: 0
+默认值：0
 
-### list_tasks
+<a id="listgossip"></a>
+### 列表任务 {#listtasks}
 
-The `tctl admin shard list_tasks` command will list the Tasks available for a given shard Id and Task type.
+`tctl admin shard list_tasks` 命令将列出给定分片 ID 和任务类型可用的任务。
 
-The modifiers below affect the output and behavior of the command.
+以下修饰符会影响命令的输出和行为。
 
-#### --more
+#### - 更多的 {#more}
 
-Lists more pages of list tasks.
-The default setting is to list one page of 10 list tasks.
+列出更多页面的列表任务。
+默认设置是列出一页，共 10 个列表任务。
 
-#### --pagesize value
+<a id="role-value"></a>
+#### --页面大小值 {#pagesize-value}
 
-The size of the result page.
-Default: 10
+结果页面的大小。
+默认值：10
 
-#### --target_cluster value
+<a id="shard"></a>
+#### --target_cluster 值 {#targetcluster-value}
 
-Temporal cluster to use.
-Default: "active"
+要使用的 Temporal 集群。
+默认值：“活动”
 
-#### --shard_id value
+<a id="tctl-admin-shard-commands"></a>
+#### --shard_id 值 {#shardid-value}
 
-The ID of the shard
+分片的 ID
 
-Default: 0
+默认值：0
 
-#### --task_type value
+<a id="closeshard"></a>
+#### --task_type 值 {#tasktype-value}
 
-The type of Task.
+任务的类型。
 
-Default: transfer
-Values: transfer, timer, replication, visibility
+默认：传输
+值：传输、Timer、复制、Visibility
 
-#### --min_visibility_ts value
+<a id="shardid-value"></a>
+#### --min_Visibility_ts 值 {#minvisibilityts-value}
 
-The minimum value that can be set as a Task Visibility timestamp.
+可以设置为任务 Visibility 时间戳的最小值。
 
-Supported formats include:
+支持的格式包括：
 
 - '2006-01-02T15:04:05+07:00'
-- Raw UnixNano
-- Time range (N-duration), where 0 < N < 1000000 and duration (full-notation/short-notation) can be:
-  - second/s
-  - minute/m
-  - week/w
-  - month/m
-  - year/y
+- 原始 UnixNano
+- 时间范围（N 持续时间），其中 0 < N < 1000000 和持续时间（完整表示法/简短表示法）可以是：
+  - 秒/秒
+  - 分钟/米
+  - 周/周
+  - 月/米
+  - 年/年
 
-#### --max_visibility_ts value
+<a id="describetask"></a>
+#### --max_Visibility_ts 值 {#maxvisibilityts-value}
 
-The maximum value that can be set as a Task Visibility timestamp.
+可以设置为任务 Visibility 时间戳的最大值。
 
-Supported formats:
+支持的格式：
 
 - '2006-01-02T15:04:05+07:00'
-- Raw UnixNano
-- Time range (N-duration), where 0 < N < 1000000 and duration (full-notation/short-notation) can be:
-  - second/s
-  - minute/m
-  - week/w
-  - month/m
-  - year/y
+- 原始 UnixNano
+- 时间范围（N 持续时间），其中 0 < N < 1000000 和持续时间（完整表示法/简短表示法）可以是：
+  - 秒/秒
+  - 分钟/米
+  - 周/周
+  - 月/米
+  - 年/年
 
-### remove_task
+<a id="dbengine"></a>
+### 删除任务 {#removetask}
 
-The `tctl admin shard remove_task` command removes a Task from the shard.
+`tctl admin shard remove_task` 命令从分片中删除任务。
 
 `tctl admin shard remove_task [command options] [arguments...]`
 
-The Task removed must have values that matches what is given in the command line.
+删除的任务的值必须与命令行中给出的值匹配。
 
-The modifiers below change the behavior of the command.
+下面的修饰符更改命令的行为。
 
-#### --shard_id value
+<a id="dbaddress"></a>
+#### --shard_id 值 {#shardid-value}
 
-The shardId for the Task to be removed.
+要删除的任务的 shardId。
 
-Default: 0
+默认值：0
 
-#### --task_id value
+<a id="dbport"></a>
+#### --task_id 值 {#taskid-value}
 
-The taskId for the Task to be removed.
+要删除的任务的任务 ID。
 
-Default: 0
+默认值：0
 
-#### --task_type value
+<a id="username"></a>
+#### --task_type 值 {#tasktype-value}
 
-The type of Task to remove.
+要删除的任务的类型。
 
-Default: transfer
+默认：传输
 
-Values: transfer, timer, replication
+值：传输、Timer、复制
 
-#### --task_timestamp value
+<a id="password"></a>
+#### --task_timestamp 值 {#tasktimestamp-value}
 
-The task visibility timestamp, given in nanoseconds.
+任务 Visibility 时间戳，以纳秒为单位。
 
-Default: 0
+默认值：0
 
-## workflow
+<a id="keyspace"></a>
+## Workflow {#workflow}
 
-The `tctl admin workflow` commands enable administrator-level operations on Workflow Executions.
+`tctl admin Workflow` 命令启用 Workflow Execution 上的管理员级别操作。
 
-`tctl admin workflow command [modifiers] [arguments...]`
+`tctl admin Workflow command [modifiers] [arguments...]`
 
-- [show](#show)
+- [展示](#show)
 
-- [describe](#describe)
+- [描述](#describe)
 
-- [refresh_tasks](#refresh_tasks)
+- [刷新任务](#refresh_tasks)
 
-- [delete](#delete)
+- [删除](#delete)
 
-### delete
+### 删除 {#delete}
 
-The `tctl admin workflow delete` command deletes the current [Workflow Execution](/workflow-execution) and the mutableState record.
+`tctl admin Workflow delete` 命令删除当前的 [Workflow Execution](/workflow-execution) 和 mutableState 记录。
 
-#### --db_engine value
+<a id="tls"></a>
+#### --db_engine 值 {#dbengine-value}
 
-The type of database (DB) engine to use.
+要使用的数据库 (DB) 引擎的类型。
 
-Default: "cassandra"
-Values: "cassandra", "mysql", "postgres"
+默认值：“卡桑德拉”
+值：“cassandra”、“mysql”、“postgres”
 
-#### --db_address value
+<a id="tlscertpath"></a>
+#### --db_address 值 {#dbaddress-value}
 
-Persistence address for the database.
+数据库的持久地址。
 
-Default: 127.0.0.1
+默认值：127.0.0.1
 
-#### --db_port value
+<a id="tlsservername"></a>
+#### --db_port 值 {#dbport-value}
 
-Persistence port for the database.
+数据库的持久性端口。
 
-Default: 9042
+默认值：9042
 
-#### --username value
+<a id="tlsdisablehostverification"></a>
+#### --用户名值 {#username-value}
 
-Username entered into the database.
+输入到数据库中的用户名。
 
-#### --password value
+<a id="shardid"></a>
+#### --密码值 {#password-value}
 
-Password entered into the database.
+密码输入数据库。
 
-#### --keyspace value
+<a id="taskid"></a>
+#### --键空间值 {#keyspace-value}
 
-Keyspace for the database.
+数据库的键空间。
 
-default: "temporal"
+默认值：“Temporal”
 
-#### --url value
+<a id="tasktype"></a>
+#### --url 值 {#url-value}
 
-URL of the Elasticsearch cluster.
+Elasticsearch 集群的 URL。
 
-Default: "http://127.0.0.1:9200"
+默认值：“http://127.0.0.1:9200"
 
-#### --es-username value
+<a id="tasktimestamp"></a>
+#### --es-用户名值 {#es-username-value}
 
-Username for the Elasticsearch cluster.
+Elasticsearch 集群的用户名。
 
-#### --es-password value
+<a id="targetcluster"></a>
+#### --es-密码值 {#es-password-value}
 
-Password for the Elasticsearch cluster.
+Elasticsearch 集群的密码。
 
-#### --version value
+<a id="describe"></a>
+#### --版本值 {#version-value}
 
-The version of the Elasticsearch cluster for the Workflow.
+Workflow 的 Elasticsearch 集群版本。
 
-Default: v7
+默认：v7
 
-Values: v6, v7
+值：v6、v7
 
-#### --index value
+<a id="shardid-value"></a>
+#### --索引值 {#index-value}
 
-Elasticsearch index name.
+Elasticsearch 索引名称。
 
-#### --workflow_id value
+<a id="listtasks"></a>
+#### --Workflow_id 值 {#workflowid-value}
 
-Alias: `-w`
+别名：`-w`
 
-The Id of the current Workflow.
+当前 Workflow 的 Id。
 
-#### --run_id value
+<a id="more"></a>
+#### --run_id 值 {#runid-value}
 
-Alias: `-r`
+别名：`-r`
 
-The Id of the current run.
+当前运行的 ID。
 
-#### --skip_errors
+<a id="pagesize-value"></a>
+#### --跳过错误 {#skiperrors}
 
-Skip any errors that occur in the Workflow Execution.
+跳过 Workflow Execution 中发生的任何错误。
 
-#### --tls
+<a id="targetcluster-value"></a>
+#### --tls {#tls}
 
-Enables TLS over the database connection.
+通过数据库连接启用 TLS。
 
 :::note
 
-TLS must be enabled to use the following modifiers.
+必须启用 TLS 才能使用以下修饰符。
 
 :::
 
-#### --tls_cert_path value
+<a id="shardid-value"></a>
+#### --tls_cert_path 值 {#tlscertpath-value}
 
-DB tls client cert path.
+DB tls 客户端证书路径。
 
-Note: tls must be enabled
+注意：必须启用tls
 
-#### --tls_key_path value
+<a id="tasktype-value"></a>
+#### --tls_key_path 值 {#tlskeypath-value}
 
-DB tls client key path
+DB tls 客户端密钥路径
 
-Note: tls must be enabled
+注意：必须启用tls
 
-#### --tls_ca_path value
+<a id="minvisibilityts-value"></a>
+#### --tls_ca_path 值 {#tlscapath-value}
 
-DB tls client ca path
+DB tls 客户端 ca 路径
 
-Note: tls must be enabled
+注意：必须启用tls
 
-#### --tls_server_name value
+<a id="maxvisibilityts-value"></a>
+#### --tls_server_name 值 {#tlsservername-value}
 
-DB tls server name
+数据库 tls 服务器名称
 
-Note: tls must be enabled
+注意：必须启用tls
 
-#### --tls_disable_host_verification
+<a id="removetask"></a>
+#### --tls_disable_host_verification {#tlsdisablehostverification}
 
-DB tls verify hostname and server cert
+DB tls 验证主机名和服务器证书
 
-Note: tls must be enabled
+注意：必须启用tls
 
-## describe
+## 描述 {#describe}
 
-The `tctl admin workflow describe` command describes internal information of the current [Workflow Execution](/workflow-execution).
+`tctl admin Workflow describe`命令描述当前[Workflow Execution](/workflow-execution)的内部信息。
 
-#### --workflow_id value
+<a id="shardid-value"></a>
+#### --Workflow_id 值 {#workflowid-value}
 
-Alias: `-w`
+别名：`-w`
 
-The Id of the current Workflow.
+当前 Workflow 的 Id。
 
-#### --run_id value
+<a id="taskid-value"></a>
+#### --run_id 值 {#runid-value}
 
-Alias: `-r`
+别名：`-r`
 
-The Id of the current run.
+当前运行的 ID。
 
-## refresh_tasks
+<a id="tasktype-value"></a>
+## 刷新任务 {#refreshtasks}
 
-The `tctl admin workflow refresh_tasks` command updates all [Tasks](/tasks#task) in a [Workflow](/workflows), provided that the command can fetch new information for Tasks.
+`tctl admin Workflow refresh_tasks` 命令 Update 会删除 [Workflow](/tasks#task) 中的所有 [任务](/workflows)，前提是该命令可以获取任务的新信息。
 
-#### --workflow_id value
+<a id="tasktimestamp-value"></a>
+#### --Workflow_id 值 {#workflowid-value}
 
-Alias: `-w`
+别名：`-w`
 
-The Id of the current Workflow.
+当前 Workflow 的 Id。
 
-#### --run_id value
+<a id="workflow"></a>
+#### --run_id 值 {#runid-value}
 
-Alias: `-r`
+别名：`-r`
 
-The Id of the current run.
+当前运行的 ID。
 
-## show
+## 展示 {#show}
 
-The `tctl admin workflow show` command displays Workflow history from the database.
+`tctl admin Workflow show` 命令显示数据库中的 Workflow 历史记录。
 
-#### --workflow_id value
+<a id="delete"></a>
+#### --Workflow_id 值 {#workflowid-value}
 
-Alias: `-w`
+别名：`-w`
 
-The current Workflow.
+当前的Workflow。
 
-#### --run_id value
+<a id="dbengine-value"></a>
+#### --run_id 值 {#runid-value}
 
-Alias: `-r`
+别名：`-r`
 
-The current RunId.
+当前的 RunId。
 
-#### --min_event_id value
+<a id="dbaddress-value"></a>
+#### --min_event_id 值 {#mineventid-value}
 
-The minimum Event Id to include in the history.
+要包含在历史记录中的最小事件 ID。
 
-Default: 0
+默认值：0
 
-#### --max_event_id value
+<a id="dbport-value"></a>
+#### --max_event_id 值 {#maxeventid-value}
 
-The maximum Event Id to include in the history.
+要包含在历史记录中的最大事件 ID。
 
-Default: 0
+默认值：0
 
-#### --min_event_version value
+<a id="username-value"></a>
+#### --min_event_version 值 {#mineventversion-value}
 
-The start Event version to be included in the history.
+要包含在历史记录中的起始事件版本。
 
-Default: 0
+默认值：0
 
-#### --max_event_version value
+<a id="password-value"></a>
+#### --max_event_version 值 {#maxeventversion-value}
 
-The end Event version to be included in the history.
+要包含在历史记录中的结束事件版本。
 
-Default: 0
+默认值：0
 
-#### --output_filename value
+<a id="keyspace-value"></a>
+#### --output_filename 值 {#outputfilename-value}
 
-The file where the output is sent to.
+输出发送到的文件。

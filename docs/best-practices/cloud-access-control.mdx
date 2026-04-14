@@ -1,8 +1,8 @@
 ---
 id: cloud-access-control
-title: Managing Temporal Cloud access control
-sidebar_label: Managing Cloud access control
-description: Best practices for managing access control, permissions, and user management in Temporal Cloud.
+title: "管理 Temporal Cloud 访问控制"
+sidebar_label: "管理云访问控制"
+description: "Temporal Cloud 中管理访问控制、权限和用户管理的最佳实践。"
 toc_max_heading_level: 4
 keywords:
   - temporal cloud
@@ -16,46 +16,49 @@ tags:
   - Security
 ---
 
-Temporal Cloud supports two secure authentication methods for Workers:
-- **mTLS Certificates**
-- **API Keys** (configured via the UI when creating a namespace)
+Temporal Cloud 支持 Worker 的两种安全身份验证方法：
+- **mTLS 证书**
+- **API密钥**（通过UI配置创建Namespace时）
 
-Both options help secure communication between workers and Temporal Cloud. Choosing the right method and managing it properly is key to maintaining security and minimizing downtime. 
+这两个选项都有助于保护 Worker 和 Temporal Cloud 之间的通信。选择正确的方法并正确管理它是维护安全和最大限度减少时间的关键。
 
-The high-level end-to-end rotation process is:
+高层端到端轮换流程为：
 
-1. **Generate new credentials**: Create new certificates or API keys in Temporal Cloud before the current ones expire
-2. **Support dual credentials**: Update Temporal Cloud to support both old and new credentials
-3. **Migrate Workers**: Transition Worker applications from old credentials to new credentials
-4. **Validate connectivity**: Confirm all Workers can authenticate, and business processes operate normally with new credentials
-5. **Remove old credentials**: Remove old certificates and API keys from your secrets provider after confirming successful migration 
+1. **生成新凭证**：在当前证书或API密钥到期之前在Temporal Cloud中创建新证书或API密钥
+2. **支持双资源**：Update Temporal Cloud同时支持新旧资源
+3. **迁移 Worker**：将 Worker 应用程序从旧线路转换到新线路
+4. **验证连接**：确认所有Worker都可以进行身份验证，并且业务流程使用新账户正常运行
+5. **删除旧密钥**：确认迁移成功后，从您的SSH提供程序中删除旧证书和API SSH
 
-This approach ensures near-zero-downtime rotation and prevents authentication failures that could impact running workflows. For specific guidance to rotate mTLS certificates and API keys, see:
-- https://docs.temporal.io/cloud/certificates#manage-certificates 
-- https://docs.temporal.io/cloud/api-keys#rotate-an-api-key 
-- https://github.com/temporal-sa/temporal-Worker-cert-rotation 
+方法可以确保近乎零的时间轮换，并防止可能影响Workflow运行的身份验证失败。有关轮换mTLS证书和API密钥的具体指南，请参见：
+- https://docs.Temporal.io/cloud/certificates#manage-certificates 
+- https://docs.Temporal.io/cloud/api-keys#rotate-an-api-key 
+- https://github.com/temporal-sa/temporal-Worker-cert-rotation
 
-For mutual TLS (mTLS) implementations, using Let's Encrypt is not recommended, as it is designed primarily for public-facing services and lacks support for internal certificate requirements. 
+对于相互 TLS (mTLS) 实现，不建议使用 Let's Encrypt，因为它主要是面向公众的服务设计的，缺乏对内部证书要求的支持。
 
-While we are not making a specific product recommendation, there are several valid options for managing certificates. Many organizations choose vendor solutions such as AWS Private CA, Sectigo, Microsoft Certification Authority, or DigiCert for their robust integration and lifecycle features. Alternatively, self-signed certificates are a valid and commonly used approach, even in production environments. If you choose to self-sign, tools like [OpenSSL](https://openssl-library.org/), [CFSSL](https://github.com/cloudflare/cfssl), or [step CLI](https://github.com/smallstep/cli) can help generate and manage certificates effectively. 
+虽然我们没有提出具体的产品推荐，但有多种有效的证书管理选项。许多组织选择 AWS Private CA、Sectigo、Microsoft Certification Authority 或 DigiCert 等供应商解决方案，因为它们具有强大的集成和生命周期功能。或者，自签名证书是一种有效且常用的方法，即使在生产环境中也是如此。如果您选择自签名，[开放式SSL](https://openssl-library.org/)、[CFSSL](https://github.com/cloudflare/cfssl) 或 [步骤CLI](https://github.com/smallstep/cli)等工具可以帮助有效生成和管理证书。
 
-Select the option that aligns best with your infrastructure, security requirements, and operational needs.
+选择最适合您的基础设施、安全要求和运营需求的选项。
 
-In the case that you are using multiple certificates signed by the same CA, and some of these certificates are for production environments, there are some workarounds you can employ. 
+如果您使用由相同 CA 签名的多个证书，并且其中一些证书用于生产环境，则您可以采用一些解决方法。
 
-One convention is to give certificates a common name that matches the namespace. If you do this when using the same CA for dev and prod, then you can leverage Certificate Filters to prevent access to production environments. This is described in detail under the [authorization section](https://docs.temporal.io/cloud/certificates#control-authorization) of the documentation. 
+约定为证书提供一个与 Namespace 匹配的通用名称。如果您在开发和生产使用相同的 CA 时执行此操作，则可以利用证书过滤器来阻止对生产环境的访问。文档的 [授权部分](https://docs.temporal.io/cloud/certificates#control-authorization) 对此进行了详细描述。
 
-## Best practices: 
-#### 1. Establish clear guidelines on authentication methods: Teams should standardize on either [mTLS certificates](https://docs.temporal.io/cloud/certificates) or [API keys](https://docs.temporal.io/cloud/api-keys) for the following operations:
-- Connect Temporal clients to Temporal Cloud (e.g. Worker processes)
-- Automation (e.g. Temporal Cloud [Operations API](https://docs.temporal.io/ops), [Terraform provider](https://docs.temporal.io/cloud/terraform-provider), [Temporal CLI](https://docs.temporal.io/cli/setup-cli))
+<a id="best-practices"></a>
+## 最佳实践： {#best-practices}
+<a id="1-establish-clear-guidelines-on-authentication-methods-teams-should-standardize-on-either-mtls-certificates-or-api-keys-for-the-following-operations"></a>
+#### 1. 建立有关身份验证方法的明确指南：团队应针对以下操作对 [mTLS 证书](https://docs.temporal.io/cloud/certificates) 或 [API键](https://docs.temporal.io/cloud/api-keys) 进行标准化： {#1-establish-clear-guidelines-on-authentication-methods-teams-should-standardize-on-either-mtls-certificates-or-api-keys-for-the-following-operations}
+- 将 Temporal CLIents 连接到 Temporal Cloud（例如 Worker 进程）
+- 自动化（例如Temporal Cloud [操作API](https://docs.temporal.io/ops)、[现状](https://docs.temporal.io/cloud/terraform-provider)、[Temporal CLI](https://docs.temporal.io/cli/setup-cli)）
 
-    By default, it is recommended for teams to use API keys and [service accounts](https://docs.temporal.io/cloud/service-accounts) for both operations because API keys are easier to manage and rotate for most teams. In addition, you can control account-level and namespace-level roles for service accounts. 
+默认情况下，建议团队对这两个操作使用 API 密钥和 [服务账户](https://docs.temporal.io/cloud/service-accounts)，因为对于大多数团队来说，API 密钥更容易管理和轮换。此外，您还可以控制服务帐户的帐户级别和 Namespace 级别角色。
 
-    If your organization requires mutual authentication and stronger cryptographic guarantees, then it is encouraged for your teams to use mTLS certificates to authenticate Temporal clients to Temporal Cloud and use API keys for automation (because Temporal Cloud [Operations API](https://docs.temporal.io/ops) and [Terraform provider](https://docs.temporal.io/cloud/terraform-provider) only supports API key for authentication)
+如果您的组织需要相互身份验证和更强的加密保证，那么建议您的团队使用 mTLS 证书将 Temporal CLIents 验证为 Temporal Cloud 并使用 API 密钥进行自动化（因为 Temporal Cloud [操作API](https://docs.temporal.io/ops) 和 [现状](https://docs.temporal.io/cloud/terraform-provider) 仅支持 API 密钥进行身份验证）
 
-#### 2. Use Certificate Filters to restrict access when using shared CAs (e.g., `dev` vs `prod`):
+<a id="2-use-certificate-filters-to-restrict-access-when-using-shared-cas-eg-dev-vs-prod"></a>
+#### 2.使用共享CA时使用证书过滤器来限制访问（例如，`dev` 与 `prod`）： {#2-use-certificate-filters-to-restrict-access-when-using-shared-cas-eg-dev-vs-prod}
 
-  Certificate Filters are an additional way of validating using the client certificate presented during client authentication. Give certificates a common name that matches the namespace. This is not a requirement.   
+证书过滤器是使用客户端身份验证期间提供的客户端证书进行验证的另一种方法。为证书指定一个与 Namespace 匹配的通用名称。这不是一个要求。
 
-  If you do this when using the same CA for dev and prod environments, then you can leverage Certificate Filters to prevent access to production. 
+如果您在开发和生产环境中使用相同的 CA 时执行此操作，则可以利用证书过滤器来阻止对生产的访问。

@@ -1,8 +1,8 @@
 ---
 id: basics
-title: Workflow basics - Java SDK
-sidebar_label: Workflow basics
-description: This section explains how to implement Workflows with the Java SDK
+title: "Workflow 基础知识 - Java SDK"
+sidebar_label: "Workflow 基础知识"
+description: "本节介绍如何使用 Java SDK 实施 Workflow"
 toc_max_heading_level: 4
 keywords:
   - Java SDK
@@ -11,14 +11,15 @@ tags:
   - Temporal SDKs
 ---
 
-## How to develop a Workflow {#develop-workflows}
+<a id="develop-workflows"></a>
+## 如何开发 Workflow {#develop-workflows}
 
-Workflows are the fundamental unit of a Temporal Application, and it all starts with the development of a [Workflow Definition](/workflow-definition).
+Workflow 是 Temporal 应用程序的基本单元，这一切都始于 [Workflow Definition](/workflow-definition) 的开发。
 
-In the Temporal Java SDK programming model, a Workflow Definition comprises a Workflow interface annotated with `@WorkflowInterface` and a Workflow implementation that implements the Workflow interface.
+在 Temporal Java SDK 编程模型中，Workflow Definition 包括用 `@WorkflowInterface` 注释的 Workflow 接口和实现 Workflow 接口的 Workflow 实现。
 
-The Workflow interface is a Java interface and is annotated with `@WorkflowInterface`.
-Each Workflow interface must have only one method annotated with `@WorkflowMethod`.
+Workflow接口是一个Java接口，注释为`@WorkflowInterface`。
+每个 Workflow 接口只能有一种用 `@WorkflowMethod` 注释的方法。
 
 ```java
 // Workflow interface
@@ -30,15 +31,15 @@ public interface YourWorkflow {
 }
 ```
 
-However, when using dynamic Workflows, do not specify a `@WorkflowMethod`, and implement the `DynamicWorkflow` directly in the Workflow implementation code.
+但是，使用动态 Workflow 时，不要指定 `@WorkflowMethod`，而直接在 Workflow 实现代码中实现 `DynamicWorkflow`。
 
-The `@WorkflowMethod` identifies the method that is the starting point of the Workflow Execution.
-The Workflow Execution completes when this method completes.
+`@WorkflowMethod` 标识作为 Workflow Execution 起点的方法。
+当此方法完成时，Workflow Execution 也完成。
 
-You can create [interface inheritance hierarchies](#interface-inheritance) to reuse components across other Workflow interfaces.
-The interface inheritance approach does not apply to `@WorkflowMethod` annotations.
+您可以创建 [接口继承层次结构](#interface-inheritance) 以跨其他 Workflow 接口重用组件。
+接口继承方法不适用于 `@WorkflowMethod` 注释。
 
-A Workflow implementation implements a Workflow interface.
+Workflow 实现实现 Workflow 接口。
 
 ```java
 // Define the Workflow implementation which implements our getGreeting Workflow method.
@@ -48,18 +49,18 @@ A Workflow implementation implements a Workflow interface.
   }
 ```
 
-To call Activities in your Workflow, call the Activity implementation.
+要调用 Workflow 中的活动，请调用 Activity 实现。
 
-Use `ExternalWorkflowStub` to start or send Signals from within a Workflow to other running Workflow Executions.
+使用 `ExternalWorkflowStub` 启动 Signal 或将 Workflow 中的 Signal 发送到其他正在运行的 Workflow Execution。
 
-You can also invoke other Workflows as Child Workflows with `Workflow.newChildWorkflowStub()` or `Workflow.newUntypedChildWorkflowStub()` within a Workflow Definition.
+您还可以在 Workflow Definition 中使用 `Workflow.newChildWorkflowStub()` 或 `Workflow.newUntypedChildWorkflowStub()` 将其他 Workflow 调用为 Child Workflow。
 
-## Workflow interface inheritance {#interface-inheritance}
+## Workflow 接口继承 {#interface-inheritance}
 
-Workflow interfaces can form inheritance hierarchies.
-It may be useful for creating reusable components across multiple
-Workflow interfaces.
-For example imagine a UI or CLI button that allows a `retryNow` Signal on any Workflow. To implement this feature you can redesign an interface like the following:
+Workflow 接口可以形成继承层次结构。
+它对于创建跨多个可重用的组件可能很有用
+Workflow 接口。
+例如，想象一个 UI 或 CLI 按钮允许在任何 Workflow 上使用 `retryNow` Signal。要实现此功能，您可以重新设计如下界面：
 
 ```java
 public interface Retryable {
@@ -84,7 +85,7 @@ public interface FileProcessingWorkflow extends Retryable {
 }
 ```
 
-Then some other Workflow interface can extend just `Retryable`, for example:
+然后其他一些 Workflow 接口可以仅扩展 `Retryable`，例如：
 
 ```java
 @WorkflowInterface
@@ -95,7 +96,7 @@ public interface MediaProcessingWorkflow extends Retryable {
 }
 ```
 
-Now if we have two running Workflows, one that implements the `FileProcessingWorkflow` interface and another that implements the `MediaProcessingWorkflow` interface, we can Signal to both using their common interface and knowing their WorkflowIds, for example:
+现在，如果我们有两个正在运行的 Workflow，一个实现 `FileProcessingWorkflow` 接口，另一个实现 `MediaProcessingWorkflow` 接口，我们可以使用 Signal 的通用接口并了解其 WorkflowId，例如：
 
 ```java
 Retryable r1 = client.newWorkflowStub(Retryable.class, firstWorkflowId);
@@ -104,10 +105,10 @@ r1.retryNow();
 r2.retryNow();
 ```
 
-The same technique can be used to query Workflows using a base Workflow interface.
+相同的技术可用于使用基本 Workflow 接口的 Query Workflow。
 
-Note that this approach does not apply to `@WorkflowMethod` annotations, meaning that when using a base interface, it should not include any `@WorkflowMethod` methods.
-To illustrate this, let's say that we define the following **invalid** code:
+请注意，此方法不适用于 `@WorkflowMethod` 注释，这意味着在使用基本接口时，它不应包含任何 `@WorkflowMethod` 方法。
+为了说明这一点，假设我们定义了以下**无效**代码：
 
 ```java
 // INVALID CODE!
@@ -123,33 +124,34 @@ public interface Workflow1 extends BaseWorkflow {}
 public interface Workflow2 extends BaseWorkflow {}
 ```
 
-Any attempt to register both implementations with the Worker will fail.
-Let's say that we have:
+任何使用 Worker 注册这两个实现的尝试都将失败。
+假设我们有：
 
 ```java
 worker.registerWorkflowImplementationTypes(
     Workflow1Impl.class, Workflow2Impl.class);
 ```
 
-This registration will fail with:
+此注册将失败并显示：
 
 ```text
 java.lang.IllegalStateException: BaseWorkflow workflow type is already registered with the worker
 ```
 
-## Define Workflow parameters {#workflow-parameters}
+<a id="workflow-parameters"></a>
+## 定义 Workflow 参数 {#workflow-parameters}
 
-Temporal Workflows may have any number of custom parameters.
-However, we strongly recommend that objects are used as parameters, so that the object's individual fields may be altered without breaking the signature of the Workflow.
-All Workflow Definition parameters must be serializable.
+Temporal Workflow 可以具有任意数量的自定义参数。
+但是，我们强烈建议将对象用作参数，以便可以在不破坏 Workflow 签名的情况下更改对象的各个字段。
+所有 Workflow Definition 参数都必须可序列化。
 
-A method annotated with `@WorkflowMethod` can have any number of parameters.
+用 `@WorkflowMethod` 注释的方法可以有任意数量的参数。
 
-We recommend passing a single parameter that contains all the input fields to allow for adding fields in a backward-compatible manner.
+我们建议传递包含所有输入字段的单个参数，以允许以向后兼容的方式添加字段。
 
-Note that all inputs should be serializable by the default Jackson JSON Payload Converter.
+请注意，所有输入都应该可由默认的 Jackson JSON 负载转换器进行序列化。
 
-You can create a custom object and pass it to the Workflow method, as shown in the following example.
+您可以创建自定义对象并将其传递给 Workflow 方法，如以下示例所示。
 
 ```java
 //...
@@ -161,30 +163,32 @@ public interface YourWorkflow {
 }
 ```
 
-## Define Workflow return parameters {#workflow-return-values}
+<a id="workflow-return-values"></a>
+## 定义 Workflow 返回参数 {#workflow-return-values}
 
-Workflow return values must also be serializable.
-Returning results, returning errors, or throwing exceptions is fairly idiomatic in each language that is supported.
-However, Temporal APIs that must be used to get the result of a Workflow Execution will only ever receive one of either the result or the error.
+Workflow 返回值也必须是可序列化的。
+返回结果、返回错误或引发异常在每种受支持的语言中都是相当惯用的。
+但是，必须用于获取 Workflow Execution 结果的 Temporal API 将仅收到结果或错误之一。
 
-Workflow method arguments and return values must be serializable and deserializable using the provided [`DataConverter`](https://www.javadoc.io/static/io.temporal/temporal-sdk/1.17.0/io/temporal/common/converter/DataConverter.html).
+Workflow 方法参数和返回值必须可使用提供的 [`DataConverter`](https://www.javadoc.io/static/io.temporal/temporal-sdk/1.17.0/io/temporal/common/converter/DataConverter.html) 进行序列化和反序列化。
 
-The `execute` method for `DynamicWorkflow` can return type Object.
-Ensure that your Client can handle an Object type return or is able to convert the Object type response.
+`DynamicWorkflow` 的 `execute` 方法可以返回 Object 类型。
+确保您的客户端可以处理对象类型返回或能够转换对象类型响应。
 
-Related references:
+相关参考：
 
 - [Data Converter](/dataconversion)
-- [Java DataConverter reference](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/converter/DataConverter.html)
+- [Java 数据转换器参考](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/converter/DataConverter.html)
 
-## Customize your Workflow Type {#workflow-type}
+<a id="workflow-type"></a>
+## 自定义您的 Workflow 类型 {#workflow-type}
 
-Workflows have a Type that is referred to as the Workflow name.
+Workflow 具有称为 Workflow 名称的类型。
 
-The following examples demonstrate how to set a custom name for your Workflow Type.
+以下示例演示如何为 Workflow 类型设置自定义名称。
 
-The Workflow Type defaults to the short name of the Workflow interface.
-In the following example, the Workflow Type defaults to `NotifyUserAccounts`.
+Workflow 类型默认为 Workflow 接口的短名称。
+在以下示例中，Workflow 类型默认为 `NotifyUserAccounts`。
 
 ```java
   @WorkflowInterface
@@ -195,8 +199,8 @@ In the following example, the Workflow Type defaults to `NotifyUserAccounts`.
 }
 ```
 
-To overwrite this default naming and assign a custom Workflow Type, use the `@WorkflowMethod` annotation with the `name` parameter.
-In the following example, the Workflow Type is set to `your-workflow`.
+要覆盖此默认命名并分配自定义 Workflow 类型，请使用带有 `name` 参数的 `@WorkflowMethod` 注释。
+在以下示例中，Workflow 类型设置为 `your-Workflow`。
 
 ```java
 @WorkflowInterface
@@ -207,38 +211,39 @@ In the following example, the Workflow Type is set to `your-workflow`.
   }
 ```
 
-When you set the Workflow Type this way, the value of the `name` parameter does not have to start with an uppercase letter.
+当您以这种方式设置 Workflow 类型时，`name` 参数的值不必以大写字母开头。
 
-## Workflow logic requirements {#workflow-logic-requirements}
+<a id="workflow-logic-requirements"></a>
+## Workflow 逻辑要求 {#workflow-logic-requirements}
 
-Workflow logic is constrained by [deterministic execution requirements](/workflow-definition#deterministic-constraints).
-Therefore, each language is limited to the use of certain idiomatic techniques.
-However, each Temporal SDK provides a set of APIs that can be used inside your Workflow to interact with external (to the Workflow) application code.
+Workflow 逻辑受 [确定性执行要求](/workflow-definition#deterministic-constraints) 约束。
+因此，每种语言都仅限于使用某些惯用技术。
+但是，每个 Temporal SDK 都提供了一组 API，可在 Workflow 内部使用这些 API 来与外部（对于 Workflow）应用程序代码进行交互。
 
-When defining Workflows using the Temporal Java SDK, the Workflow code must be written to execute effectively once and to completion.
+使用 Temporal Java SDK 定义 Workflow 时，必须编写 Workflow 代码以有效执行一次并完成。
 
-The following constraints apply when writing Workflow Definitions:
+写入 Workflow Definition 时适用以下约束：
 
-- Do not use mutable global variables in your Workflow implementations.
-  This will ensure that multiple Workflow instances are fully isolated.
-- Your Workflow code must be deterministic.
-  Do not call non-deterministic functions (such as non-seeded random or `UUID.randomUUID()`) directly from the Workflow code.
-  The Temporal SDK provides specific API for calling non-deterministic code in your Workflows.
-- Do not use programming language constructs that rely on system time.
-  For example, only use `Workflow.currentTimeMillis()` to get the current time inside a Workflow.
-- Do not use native Java `Thread` or any other multi-threaded classes like `ThreadPoolExecutor`.
-  Use `Async.function` or `Async.procedure`, provided by the Temporal SDK, to execute code asynchronously.
-- Do not use synchronization, locks, or other standard Java blocking concurrency-related classes besides those provided by the Workflow class.
-  There is no need for explicit synchronization because multi-threaded code inside a Workflow is executed one thread at a time and under a global lock.
-  - Call `Workflow.sleep` instead of `Thread.sleep`.
-  - Use `Promise` and `CompletablePromise` instead of `Future` and `CompletableFuture`.
-  - Use `WorkflowQueue` instead of `BlockingQueue`.
-- Use `Workflow.getVersion` when making any changes to the Workflow code.
-  Without this, any deployment of updated Workflow code might break already running Workflows.
-- Do not access configuration APIs directly from a Workflow because changes in the configuration might affect a Workflow Execution path.
-  Pass it as an argument to a Workflow function or use an Activity to load it.
-- Use `DynamicWorkflow` when you need a default Workflow that can handle all Workflow Types that are not registered with a Worker.
-  A single implementation can implement a Workflow Type which by definition is dynamically loaded from some external source.
-  All standard `WorkflowOptions` and determinism rules apply to Dynamic Workflow implementations.
+- 不要在 Workflow 实现中使用可变全局变量。
+  这将确保多个 Workflow 实例完全隔离。
+- 您的 Workflow 代码必须是确定性的。
+  不要直接从 Workflow 代码调用非确定性函数（例如非种子随机函数或 `UUID.randomUUID()`）。
+  Temporal SDK 提供了用于调用 Workflow 中的非确定性代码的特定 API。
+- 不要使用依赖系统时间的编程语言结构。
+  例如，仅使用 `Workflow.currentTimeMillis()` 来获取 Workflow 内的当前时间。
+- 不要使用本机 Java `Thread` 或任何其他多线程类，如 `ThreadPoolExecutor`。
+  使用Temporal SDK提供的`Async.function`或`Async.procedure`异步执行代码。
+- 除了 Workflow 类提供的类之外，请勿使用同步、锁或其他标准 Java 阻塞并发相关类。
+  不需要显式同步，因为 Workflow 内的多线程代码一次执行一个线程，并且在全局锁下执行。
+  - 呼叫 `Workflow.sleep` 而不是 `Thread.sleep`。
+  - 使用 `Promise` 和 `CompletablePromise` 代替 `Future` 和 `CompletableFuture`。
+  - 使用 `WorkflowQueue` 代替 `BlockingQueue`。
+- 对 Workflow 代码进行任何更改时使用 `Workflow.getVersion`。
+  如果没有这个，Updated Workflow 代码的任何部署都可能会破坏已经运行的 Workflow。
+- 不要直接从 Workflow 访问配置 API，因为配置更改可能会影响 Workflow Execution 路径。
+  将其作为参数传递给 Workflow 函数或使用 Activity 加载它。
+- 当您需要一个默认的 Workflow 来处理未使用 Worker 注册的所有 Workflow 类型时，请使用 `DynamicWorkflow`。
+  单个实现可以实现 Workflow 类型，根据定义，该类型是从某些外部源动态加载的。
+  所有标准 `WorkflowOptions` 和确定性规则均适用于动态 Workflow 实现。
 
-Java Workflow reference: [https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/package-summary.html](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/package-summary.html)
+Java Workflow 参考：[https://www.javadoc.io/doc/io.Temporal/temporal-sdk/latest/io/temporal/Workflow/package-summary.html](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/package-summary.html)

@@ -1,8 +1,8 @@
 ---
 id: index
-title: Account access
+title: "账户访问"
 slug: /cloud/manage-access/
-description: Manage access to your Temporal Cloud account
+description: "管理对您的 Temporal Cloud 帐户的访问"
 toc_max_heading_level: 3
 keywords:
   - introduction
@@ -16,104 +16,109 @@ tags:
   - Users
 ---
 
-Access to Temporal Cloud is governed by role-based access control (RBAC). Within an account, each access principal, such
-as user, user group or service account, has one account-level role and optionally, one or more Namespace-level
-permissions. Each principal can only perform actions that are allowed by their assigned roles and permissions.
+对 Temporal Cloud 的访问由基于角色的访问控制 (RBAC) 管理。在帐户内，每个访问主体，例如
+作为用户、用户组或服务帐户，具有一个帐户级角色，并且可选地具有一个或多个 Namespace 级角色
+权限。每个主体只能执行其分配的角色和权限允许的操作。
 
-Temporal Cloud supports Security Assertion Markup Language (SAML) and System for Cross-domain Identity Management (SCIM)
-for integration with your organization's identity provider (IdP). SAML enables single sign-on (SSO) by allowing your
-identity provider to authenticate users into Temporal Cloud. SCIM automatically creates, updates, and removes users and
-groups in Temporal Cloud based on changes in your identity provider.
+Temporal Cloud 支持安全断言标记语言 (SAML) 和跨域身份管理系统 (SCIM)
+用于与您组织的身份提供商 (IdP) 集成。 SAML 通过允许您的
+身份提供者对 Temporal Cloud 中的用户进行身份验证。 SCIM 自动创建 Update，并删除用户和
+根据身份提供商的更改在 Temporal Cloud 中进行分组。
 
-## Temporal Cloud accounts
+<a id="temporal-cloud-accounts"></a>
+## Temporal Cloud 帐户 {#temporal-cloud-accounts}
 
-Accounts are the top-level container for access control. Each account has at least one user assigned the Account Owner
-role, which has full administrative permissions across the account, including users, billing and usage. An account is
-**not** an access principal itself.
+帐户是访问控制的顶级容器。每个帐户至少有一个分配了帐户所有者的用户
+角色，拥有整个帐户的完整管理权限，包括用户、计费和使用情况。一个帐户是
+**不是**访问主体本身。
 
-When you sign up for Temporal Cloud without joining an existing account, you are automatically assigned the Account
-Owner role for a new account. You can then invite other users to join the account and assign them roles. If your
-organization has an IdP, we recommend using [a SAML integration](/cloud/saml) for enterprise identity management.
+当您在未加入现有帐户的情况下注册 Temporal Cloud 时，系统会自动为您分配该帐户
+新帐户的所有者角色。然后，您可以邀请其他用户加入该帐户并为他们分配角色。如果你的
+组织拥有 IdP，我们建议使用 [SAML 集成](/cloud/saml) 进行企业身份管理。
 
 :::info
 
-Multiple accounts can coexist on the same email domain. Each account can have its own independent SAML configuration,
-tied to its unique Account ID.
+多个帐户可以共存于同一电子邮件域中。每个帐户可以有自己独立的SAML配置，
+绑定到其唯一的帐户 ID。
 
-However, each email address can only be associated with a single Temporal Cloud account. If you need access to multiple
-accounts, you’ll need a separate invite for each one using a different email address.
+但是，每个电子邮件地址只能与一个 Temporal Cloud 帐户关联。如果您需要访问多个
+帐户，您需要使用不同的电子邮件地址为每个帐户发出单独的邀请。
 
 :::
 
-## Access principals
+<a id="access-principals"></a>
+## 访问主体 {#access-principals}
 
-Temporal Cloud offers the following principals for access control:
+Temporal Cloud 提供以下访问控制原则：
 
-- [**Users**](/cloud/users) - Manage individual user accounts and permissions
-- [**User Groups**](/cloud/user-groups) - Organize users into groups for simplified access management
-- [**Service Accounts**](/cloud/service-accounts) - Configure service accounts for automated access
+- [**用户**](/cloud/users) - 管理个人用户帐户和权限
+- [**用户组**](/cloud/user-groups) - 将用户分组以简化访问管理
+- [**服务帐户**](/cloud/service-accounts) - 配置服务帐户以进行自动访问
 
-These principals can assume [account-level roles](/cloud/manage-access/roles-and-permissions#account-level-roles) and be
-granted [Namespace-level permissions](/cloud/manage-access/roles-and-permissions#namespace-level-permissions) to perform
-actions within the account and a Namespace, respectively.
+这些主体可以假设为 [账户级角色](/cloud/manage-access/roles-and-permissions#account-level-roles) 并且是
+授予 [Namespace级权限](/cloud/manage-access/roles-and-permissions#namespace-level-permissions) 执行权
+分别是帐户内的操作和 Namespace。
 
-## Roles and permissions
+<a id="roles-and-permissions"></a>
+## 角色和权限 {#roles-and-permissions}
 
-Temporal Cloud's RBAC model works in a hierarchical manner. Account-level roles grant permissions to perform actions
-within the account, and Namespace-level permissions grant permissions to perform actions within a Namespace. Refer to
-the [Roles and permissions](/cloud/manage-access/roles-and-permissions) page for more details.
+Temporal Cloud 的 RBAC 模型以分层方式工作。帐户级角色授予执行操作的权限
+在帐户内，Namespace 级权限授予在 Namespace 内执行操作的权限。参考
+请访问 [角色和权限](/cloud/manage-access/roles-and-permissions) 页面了解更多详情。
 
-## Integration with identity providers
+<a id="integration-with-identity-providers"></a>
+## 与身份提供商集成 {#integration-with-identity-providers}
 
-Temporal Cloud supports SAML and SCIM for integration with your organization's identity provider (IDP).
+Temporal Cloud 支持 SAML 和 SCIM 与您组织的身份提供商 (IDP) 集成。
 
-- [**SAML**](/cloud/saml) - Configure SAML-based SSO integration
-- [**SCIM**](/cloud/scim) - Use your IDP to manage Temporal Cloud users and access via SCIM integration
+- [**SAML**](/cloud/saml) - 配置基于 SAML 的 SSO 集成
+- [**SCIM**](/cloud/scim) - 使用您的 IDP 管理 Temporal Cloud 用户并通过 SCIM 集成进行访问
 
-## Troubleshoot account access issues
+<a id="troubleshoot-account-access-issues"></a>
+## 解决帐户访问问题 {#troubleshoot-account-access-issues}
 
-### Recover your account after losing access to your authenticator app {#mfa-recovery}
+### 在失去对身份验证器应用的访问权限后恢复您的帐户 {#mfa-recovery}
 
-Accounts registered with email and password require multi-factor authentication (MFA) with an authenticator app. If you
-lose access to your authenticator app, you can still log in by clicking **Try another method** on the MFA screen. From
-there, you can either:
+使用电子邮件和密码注册的帐户需要使用身份验证器应用程序进行多重身份验证 (MFA)。如果你
+无法访问您的身份验证器应用程序，您仍然可以通过单击 MFA 屏幕上的 **尝试其他方法** 来登录。来自
+在那里，您可以：
 
-- Enter your recovery code (provided when you first set up MFA)
-- Receive a verification code through email
+- 输入您的恢复代码（首次设置 MFA 时提供）
+- 通过电子邮件接收验证码
 
-Once you're logged in, you can reset your authenticator app by navigating to **My Profile** > **Password and
-Authentication** and then clicking **Authenticator App** > **Remove method**.
+登录后，您可以通过导航至 **我的个人资料** > **密码和
+身份验证**，然后单击 **身份验证器应用程序** > **删除方法**。
 
-### Reset your password {#reset-password}
+### 重置您的密码 {#reset-password}
 
-If you're currently logged in and would like to change your password, click your profile icon at the top right of the
-Temporal Cloud UI, navigate to **My Profile** > **Password and Authentication**, and then click **Reset Password**.
+如果您当前已登录并想要更改密码，请点击右上角的个人资料图标
+Temporal Cloud UI，导航到 **我的个人资料** > **密码和身份验证**，然后单击 **重置密码**。
 
-If you're not currently logged in, navigate to the login page of the Temporal Cloud UI, enter your email address, click
-**Continue**, and then select **Forgot password**. In both cases, you will receive an email with instructions on how to
-reset your password.
+如果您当前尚未登录，请导航至 Temporal Cloud UI 的登录页面，输入您的电子邮件地址，然后单击
+**继续**，然后选择**忘记密码**。在这两种情况下，您都会收到一封电子邮件，其中包含有关如何进行操作的说明
+重置您的密码。
 
-### Sign in after email domain changes {#email-domain-change}
+### 更改电子邮件域名后登录 {#email-domain-change}
 
-If your organization changed its email domain (for example, from `@oldcompany.com` to `@newcompany.com`), you may be
-unable to sign in to Temporal Cloud with your existing account.
+如果您的组织更改了其电子邮件域（例如，从 `@oldcompany.com` 更改为 `@newcompany.com`），您可能会
+无法使用您现有的帐户登录 Temporal Cloud。
 
-**Why this happens:** When you sign in using "Continue with Google" or "Continue with Microsoft", Temporal Cloud
-identifies your account by your email address. If your email address changes, Temporal Cloud sees this as a different
-identity and cannot match it to your existing account.
+**为什么会发生这种情况：** 当您使用“继续使用 Google”或“继续使用 Microsoft”登录时，Temporal Cloud
+通过您的电子邮件地址识别您的帐户。如果您的电子邮件地址发生变化，Temporal Cloud 会将其视为不同的
+身份，无法将其与您现有的帐户相匹配。
 
-**How to resolve this:** [Create a support ticket](/cloud/support#support-ticket) with the following information:
+**如何解决此问题：** [创建支持票](/cloud/support#support-ticket) 包含以下信息：
 
-- Your previous email address (the one originally used to access Temporal Cloud)
-- Your new email address
-- Your Temporal Cloud Account Id (if known)
+- 您之前的电子邮件地址（最初用于访问 Temporal Cloud 的电子邮件地址）
+- 您的新电子邮件地址
+- 您的 Temporal Cloud 帐户 ID（如果知道）
 
-Temporal Support can update your account to use your new email address.
+Temporal 支持人员可以在您的 Update 帐户中使用您的新电子邮件地址。
 
 :::tip Use SAML for enterprise identity management
 
-If your organization frequently changes email domains or wants centralized control over user authentication, consider
-using [SAML authentication](/cloud/saml). With SAML, your identity provider (IdP) manages user identities, and email
-domain changes can be handled within your IdP without affecting Temporal Cloud access.
+如果您的组织经常更改电子邮件域或希望集中控制用户身份验证，请考虑
+使用 [SAML 身份验证](/cloud/saml)。通过 SAML，您的身份提供商 (IdP) 可以管理用户身份和电子邮件
+域更改可以在您的 IdP 内处理，而不会影响 Temporal Cloud 访问。
 
 :::

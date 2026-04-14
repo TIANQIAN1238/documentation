@@ -1,8 +1,8 @@
 ---
 id: archival
-title: Archival
-sidebar_label: Archival
-description: Archival is a feature that automatically backs up Event Histories and Visibility records from Temporal Service persistence to a custom blob store.
+title: "档案"
+sidebar_label: "档案"
+description: "存档是一项功能，可自动将事件历史记录和 Visibility 记录从 Temporal 服务持久性备份到自定义 Blob 存储。"
 slug: /temporal-service/archival
 toc_max_heading_level: 4
 keywords:
@@ -13,27 +13,28 @@ tags:
   - Temporal Service
 ---
 
-This page discusses [Archival](#archival).
+本页讨论 [档案](#archival)。
 
-## What is Archival? {#archival}
+<a id="archival"></a>
+## 什么是归档？ {#archival}
 
-Use Archival to copy closed Workflow Execution [Event Histories](/workflow-execution/event#event-history) and Visibility records from Temporal Service persistence to blob storage.
+使用存档将关闭的 Workflow Execution [事件历史](/workflow-execution/event#event-history) 和 Visibility 记录从 Temporal 服务持久性复制到 Blob 存储。
 
-- [How to create a custom Archiver](/self-hosted-guide/archival#custom-archiver)
-- [How to set up Archival](/self-hosted-guide/archival#set-up-archival)
+- [如何创建自定义存档器](/self-hosted-guide/archival#custom-archiver)
+- [如何设置存档](/self-hosted-guide/archival#set-up-archival)
 
-When a Workflow Execution closes, Temporal schedules close-processing tasks for both Visibility records and Event History archival.
-Archival then runs asynchronously after a randomized delay.
-By default, that delay is up to 5 minutes (`history.archivalProcessorArchiveDelay`), capped by the Namespace [Retention Period](/temporal-service/temporal-server#retention-period).
+当 Workflow Execution 关闭时，Temporal Schedule 会关闭 Visibility 记录和 Event History 归档的处理任务。
+然后，归档会在随机延迟后异步运行。
+默认情况下，该延迟最长为 5 分钟 (`history.archivalProcessorArchiveDelay`)，由 Namespace [保留期限](/temporal-service/temporal-server#retention-period) 限制。
 
-The closed execution still stays in Temporal persistence until retention cleanup runs.
-For some time, the same closed execution can exist in both persistence and archival storage.
-Archival enables Workflow Execution data to persist beyond retention without overwhelming the Temporal Service persistence store.
+关闭的执行仍保持 Temporal 持久性，直到运行保留清理。
+在一段时间内，相同的封闭执行可以同时存在于持久性存储和归档存储中。
+归档使 Workflow Execution 数据能够持久保存，而不会压垮 Temporal 服务持久性存储。
 
-This feature is helpful for compliance and debugging.
+此功能有助于合规性和调试。
 
-Temporal's Archival feature is considered **experimental** and not subject to normal [versioning and support policy](/temporal-service/temporal-server#versions-and-support).
+Temporal 的存档功能被认为是**实验性**，不受正常 [版本控制和支持政策](/temporal-service/temporal-server#versions-and-support) 的约束。
 
-Archival is not supported when running Temporal through Docker.
-It's disabled by default when installing the system manually and when deploying through [helm charts](https://github.com/temporalio/helm-charts/blob/main/charts/temporal/templates/server-configmap.yaml).
-It can be enabled in the [config](https://github.com/temporalio/temporal/blob/main/config/development.yaml).
+通过 Docker 运行 Temporal 时不支持存档。
+手动安装系统和通过 [舵图](https://github.com/temporalio/helm-charts/blob/main/charts/temporal/templates/server-configmap.yaml) 部署时默认禁用它。
+它可以在 [配置](https://github.com/temporalio/temporal/blob/main/config/development.yaml) 中启用。

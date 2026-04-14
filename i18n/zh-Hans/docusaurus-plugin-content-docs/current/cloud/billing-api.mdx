@@ -1,0 +1,130 @@
+---
+id: billing-api
+title: 云计费API
+sidebar_label: 云计费API
+description: Temporal Cloud 计费 API 通过按需计费报告提供 Namespace 级别的成本归因。
+slug: /cloud/billing-api
+toc_max_heading_level: 4
+keywords:
+  - explanation
+tags:
+  - API
+  - Billing
+  - Temporal Cloud
+---
+
+Temporal Cloud 计费 API 通过按需计费报告提供 Namespace 级别的成本归因。 
+报告以 CSV 格式提供，可以通过 API 访问或直接下载以在 FinOps 工具和成本管理平台中使用。
+
+此 API 是 [云操作 API](/ops) 的一部分。
+
+:::tip Support, stability, and dependency info
+
+Temporal Cloud 计费 API 处于[预发布](/evaluate/development-product-features/release-stages#pre-release) 状态。
+
+:::
+
+计费 API 允许您：
+
+- 生成指定发票月份的账单报告  
+- 检索报告状态和元数据  
+- 下载可输入内部分析工具或云成本管理平台的 CSV 报告
+
+帐单报告包含：
+
+- 精准的Namespace级成本归属  
+- 每小时粒度  
+- [FOCUS](https://focus.finops.org/) 友好的数据格式
+
+有关完整的请求和响应架构，请参阅下面的架构。
+
+计费报告生成是**异步**。您启动报告创建，然后轮询是否完成。
+
+## 报告数据限制
+
+对于预发布，只能为当前帐单月份和上一个帐单月份生成每小时粒度的报告。
+
+## 允许的日期范围
+
+日期范围必须使用帐单月份边界 (MM/YYYY)。 
+请求可能包括当前的帐单月份。 
+最终报告中的数据包括截至“current_time”\- 24 小时的使用情况（四舍五入到最近的小时）。
+
+## 速率限制和并发数
+
+速率限制适用于 API 使用。
+
+### 每账户并发数
+
+在单个帐户内：
+
+- 每个帐户一次仅生成一份账单报告  
+- 其他请求已接受但已排队
+
+### 报告生成延迟
+
+报告生成时间各不相同，并且无法保证。影响它的因素包括请求的日期范围的大小和整体平台负载。
+
+## 最佳实践
+
+重试请求时提供幂等键（`async_operation_id`）。
+
+使用指数退避轮询“GetBillingReport”。
+
+生成后立即下载报告（URL 过期）。
+
+避免在当前计费周期内频繁生成大的重叠范围。
+
+## 计费报告架构
+
+账单报告以 CSV 格式提供。
+
+每行代表一条收费记录。
+
+|栏目名称 |描述 |示例|
+| -----| -----| -----|
+|帐单帐户 ID | Temporal Cloud 帐户 ID | a2dd6 |
+|帐单帐户名称 | Temporal Cloud 账户名 | Temporal |
+|帐单货币 |帐户计费所用的货币 |美元（分）|
+|计费周期结束 |计费周期的唯一结束界限| 2024-02-01T00:00:00Z |
+|计费周期开始 |计费周期的包含开始范围 | 2024-01-01T00:00:00Z |
+|收费类别 |根据计费方式对费用进行最高级别分类 |用途 |
+|收费说明 |费用目的的独立摘要 |行动 \- 第 1 层 |
+|充电频率|指示收费的频率 |基于使用的 |
+|收费期结束 |从本次收费发生时起的时间段结束，与数据粒度相关 | 2025-10-01T01:00:00.000Z |
+|收费期开始 |时间段从该充电发生时开始，与数据粒度相关 | 2025-10-01T00:00:00.000Z |
+|合同成本|通过将 ContractedUnitPrice 和 PricingQuantity 相乘计算出的成本 | 100.00 |
+|合同单价 |相关 SKU 的单个定价单位的商定单价。包含协商折扣 | 10.00 |
+|发票ID |此计费周期的发票 ID |在\_XXXXXXXXXXXXXXXXXXXX |
+|发票开具人 |负责开具应付发票的实体 |条纹|
+|定价数量 |使用或购买的给定 SKU 的数量 | 10.00 |
+|定价单位 |用于 PricingQuantity 的计量单位 | 100 万次行动 |
+|供应商|购买资源或服务的提供者 | Temporal 技术 |
+|出版商 |购买资源或服务的发布者 | Temporal 技术 |
+|资源ID | Namespace 姓名 \+ Temporal Cloud 帐户 ID |生产.a2dd6 |
+|资源名称 | Namespace 姓名 \+ Temporal Cloud 帐户 ID |生产.a2dd6 |
+|资源类型 |收费适用的资源类型 | Namespace |
+|服务类别 |根据服务的核心功能对服务进行最高级别的分类 | Temporal Cloud |
+|服务名称 |可以从提供商处购买的产品 | Temporal Cloud |
+|服务子类别 |根据服务的核心功能对服务类别进行二次分类 |行动|
+| SKUID |代表特定 SKU 的唯一标识符 |基本行动 |
+| SKU 计 |由收费中的特定 SKU 计量或测量的功能 |行动|
+|标签 |提供商和客户定义的与资源相关的标签`{"$tmprl_project":["project-id"],"Namespace-tag-key":["Namespace-tag-value"]}` |
+
+## 生成报告
+
+要生成报告，请执行以下步骤：
+
+1. 使用“CreateBillingReport”创建账单报告。该响应包括“billing_report_id”和“async_operation_id”。
+1. 使用 `billing_report_id` 轮询 `GetBillingReport`  
+1. 当报告状态变为`BILLING_REPORT_STATE_GENERATED`时，检索下载URL  
+1. 在URL过期之前下载报告
+
+### 关键标识符
+
+|标识符 |目的|
+| -----| -----|
+| `billing_report_id` |标识计费报告并用于检索元数据和下载 URL |
+| `async_operation_id` |标识负责生成报告的后台操作 |
+
+异步操作遵循标准云操作异步模型（请参阅[异步操作](/ops#per-identity-rate-limits)）。

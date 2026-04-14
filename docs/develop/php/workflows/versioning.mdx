@@ -1,8 +1,8 @@
 ---
 id: versioning
-title: Versioning - PHP SDK feature guide
-sidebar_label: Versioning
-description: Ensure deterministic Temporal Workflow execution and deploy updates with the PHP SDK's patching and Worker Versioning APIs.
+title: "版本控制 - PHP SDK 功能指南"
+sidebar_label: "版本控制"
+description: "确保 Temporal Workflow Execution 的确定性，并使用 PHP SDK 的修补和 Worker 版本控制 API 部署 Update。"
 toc_max_heading_level: 4
 keywords:
   - best practices
@@ -27,29 +27,31 @@ tags:
   - Temporal SDKs
 ---
 
-Since Workflow Executions in Temporal can run for long periods — sometimes months or even years — it's common to need to make changes to a Workflow Definition, even while a particular Workflow Execution is in progress.
+由于 Temporal 中的 Workflow Execution 可以运行很长时间（有时是几个月甚至几年），因此通常需要对 Workflow Definition 进行更改，即使特定的 Workflow Execution 正在进行中也是如此。
 
-The Temporal Platform requires that Workflow code is [deterministic](/workflow-definition#deterministic-constraints).
-If you make a change to your Workflow code that would cause non-deterministic behavior on Replay, you'll need to use one of our Versioning methods to gracefully update your running Workflows.
-With Versioning, you can modify your Workflow Definition so that new executions use the updated code, while existing ones continue running the original version.
-There are two primary Versioning methods that you can use:
+Temporal 平台要求 Workflow 代码为 [确定性的](/workflow-definition#deterministic-constraints)。
+如果您对 Workflow 代码进行的更改会导致重播时出现不确定行为，则您需要使用我们的版本控制方法之一来优雅地 Update 您正在运行的 Workflow。
+通过版本控制，您可以修改 Workflow Definition，以便新执行使用 Updated 代码，而现有执行继续运行原始版本。
+您可以使用两种主要的版本控制方法：
 
-- [Worker Versioning](/production-deployment/worker-deployments/worker-versioning). The Worker Versioning feature allows you to tag your Workers and programmatically roll them out in versioned deployments, so that old Workers can run old code paths and new Workers can run new code paths.
-- [Versioning with Patching](#php-sdk-patching-api). This method works by adding branches to your code tied to specific revisions. It applies a code change to new Workflow Executions while avoiding disruptive changes to in-progress Workflow Executions.
+- [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning)。 Worker 版本控制功能允许您标记 Worker 并以编程方式在版本化部署中推出它们，以便旧的 Worker 可以运行旧的代码路径，而新的 Worker 可以运行新的代码路径。
+- [通过补丁进行版本控制](#php-sdk-patching-api)。此方法的工作原理是向与特定修订版相关的代码添加分支。它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
 
-## Worker Versioning
+<a id="worker-versioning"></a>
+## Worker 版本控制 {#worker-versioning}
 
-Temporal's [Worker Versioning](/production-deployment/worker-deployments/worker-versioning) feature allows you to tag your Workers and programmatically roll them out in Deployment Versions, so that old Workers can run old code paths and new Workers can run new code paths. This way, you can pin your Workflows to specific revisions, avoiding the need for patching.
+Temporal 的 [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning) 功能允许您标记 Worker 并以编程方式在部署版本中推出它们，以便旧的 Worker 可以运行旧的代码路径，而新的 Worker 可以运行新的代码路径。这样，您就可以将 Workflow 固定到特定版本，从而无需修补。
 
-## Versioning with Patching {#php-sdk-patching-api}
+## 使用补丁进行版本控制 {#php-sdk-patching-api}
 
-### Patching with GetVersion
+<a id="patching-with-getversion"></a>
+### 使用 GetVersion 进行修补 {#patching-with-getversion}
 
-A Patch defines a logical branch in a Workflow for a specific change, similar to a feature flag.
-It applies a code change to new Workflow Executions while avoiding disruptive changes to in-progress Workflow Executions.
-When you want to make substantive code changes that may affect existing Workflow Executions, create a patch. Note that there's no need to patch [Pinned Workflows](/worker-versioning).
+补丁在 Workflow 中为特定更改定义逻辑分支，类似于功能标志。
+它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
+当您想要进行可能影响现有 Workflow Execution 的实质性代码更改时，请创建补丁。请注意，无需修补 [固定 Workflow](/worker-versioning)。
 
-Suppose you have an initial Workflow that runs `prePatchActivity`:
+假设您有一个运行 `prePatchActivity` 的初始 Workflow：
 
 ```php
 #[WorkflowInterface]
@@ -73,12 +75,12 @@ class MyWorkflow
 }
 ```
 
-Suppose you replaced `prePatchActivity` with `postPatchActivity` and deployed the updated code.
+假设您将 `prePatchActivity` 替换为 `postPatchActivity` 并部署了 Updated 代码。
 
-If an existing Workflow Execution was started by the original version of the Workflow code, where `prePatchActivity` was run, and then resumed running on a new Worker where it was replaced with `postPatchActivity`, the server side Event History would be out of sync.
-This would cause the Workflow to fail with a nondeterminism error.
+如果现有的 Workflow Execution 由运行 `prePatchActivity` 的 Workflow 代码的原始版本启动，然后在被 `postPatchActivity` 替换的新 Worker 上恢复运行，则服务器端 Event History 将不同步。
+这将导致 Workflow 失败并出现不确定性错误。
 
-To resolve this, you can use [Workflow::getVersion](https://php.temporal.io/classes/Temporal-Workflow.html#method_getVersion) to patch to your Workflow:
+要解决此问题，您可以使用 [Workflow::getVersion](https://php.temporal.io/classes/temporal-Workflow.html#method_getVersion) 修补 Workflow：
 
 ```php
 #[WorkflowInterface]
@@ -98,10 +100,10 @@ class MyWorkflow
 }
 ```
 
-When `getVersion()` is run for the new Workflow Execution, it records a marker in the Event History so that all future calls to `getVersion()` for this change Id — `Step 1` in the example — on this Workflow Execution will always return the given version number, which is `1` in the example.
+当为新的 Workflow Execution 运行 `getVersion()` 时，它会在 Event History 中记录一个标记，以便将来针对此 Workflow Execution 上的此更改 Id（本例中为 `Step 1`）对 `getVersion()` 的所有调用将始终返回给定的版本号，在本例中为 `1`。
 
-If you make an additional change, such as adding `anotherPatchActivity()`, you need to
-add some additional code:
+如果您进行其他更改，例如添加 `anotherPatchActivity()`，则需要
+添加一些额外的代码：
 
 ```php
 #[WorkflowInterface]
@@ -123,12 +125,12 @@ class MyWorkflow
 }
 ```
 
-Note that we changed `maxSupported` from 1 to 2.
-A Workflow that has already passed this `getVersion()` call before it was introduced returns `DEFAULT_VERSION`.
-A Workflow that was run with `maxSupported` set to 1 returns 1.
-New Workflows return 2.
+请注意，我们将 `maxSupported` 从 1 更改为 2。
+在引入之前已经通过此 `getVersion()` 调用的 Workflow 返回 `DEFAULT_VERSION`。
+在 `maxSupported` 设置为 1 的情况下运行的 Workflow 返回 1。
+新Workflow回归2。
 
-After all the Workflow Executions prior to version 1 have left retention, you can remove the code for that version:
+在版本 1 之前的所有 Workflow Execution 都保留后，您可以删除该版本的代码：
 
 ```php
     #[WorkflowMethod]
@@ -143,9 +145,9 @@ After all the Workflow Executions prior to version 1 have left retention, you ca
     }
 ```
 
-You'll note that `minSupported` has changed from `DEFAULT_VERSION` to `1`.
-If an older version of the Workflow Execution history is replayed on this code, it fails because the minimum expected version is 1.
-After all the Workflow Executions for version 1 have left retention, you can remove version 1 so that your code looks like the following:
+您会注意到 `minSupported` 已从 `DEFAULT_VERSION` 更改为 `1`。
+如果在此代码上重播旧版本的 Workflow Execution 历史记录，则会失败，因为最低预期版本为 1。
+在版本 1 的所有 Workflow Execution 都保留后，您可以删除版本 1，以便您的代码如下所示：
 
 ```php
     #[WorkflowMethod]
@@ -157,17 +159,18 @@ After all the Workflow Executions for version 1 have left retention, you can rem
     }
 ```
 
-Patching allows you to make changes to currently running Workflows.
-It is a powerful method for introducing compatible changes without introducing non-determinism errors.
+修补允许您对当前运行的 Workflow 进行更改。
+它是一种引入兼容更改而不引入非确定性错误的强大方法。
 
-### Workflow cutovers
+<a id="workflow-cutovers"></a>
+### Workflow 切换 {#workflow-cutovers}
 
-To understand why Patching is useful, it's helpful to demonstrate cutting over an entire Workflow.
+要了解修补为何有用，演示剪切整个 Workflow 会很有帮助。
 
-Since incompatible changes only affect open Workflow Executions of the same type, you can avoid determinism errors by creating a whole new Workflow when making changes.
-To do this, you can copy the Workflow Definition function, giving it a different name, and register both names with your Workers.
+由于不兼容的更改仅影响相同类型的打开的 Workflow Execution，因此您可以在进行更改时通过创建全新的 Workflow 来避免确定性错误。
+为此，您可以复制 Workflow Definition 函数，为其指定一个不同的名称，然后将这两个名称注册到您的 Worker 中。
 
-For example, you would duplicate `MyWorkflow` as `MyWorkflowV2`:
+例如，您可以将 `MyWorkflow` 复制为 `MyWorkflowV2`：
 
 ```php
 #[WorkflowInterface]
@@ -179,25 +182,25 @@ class MyWorkflowV2
 {}
 ```
 
-You would then need to update the Worker configuration, and any other identifier strings, to register both Workflow Types.
-The downside of this method is that it requires you to duplicate code and to update any commands used to start the Workflow.
-This can become impractical over time.
-This method also does not provide a way to version any still-running Workflows -- it is essentially just a cutover, unlike Patching.
+然后，您需要 Update、Worker 配置以及任何其他标识符字符串来注册这两种 Workflow 类型。
+此方法的缺点是它需要您复制代码以及用于启动 Workflow 的任何命令到 Update。
+随着时间的推移，这可能变得不切实际。
+此方法也不提供对任何仍在运行的 Workflow 进行版本控制的方法——它本质上只是一个转换，与修补不同。
 
-## Runtime checking {#runtime-checking}
+## 运行时检查 {#runtime-checking}
 
-The Temporal PHP SDK performs a runtime check to help prevent obvious incompatible changes.
-Adding, removing, or reordering any of these methods without Versioning triggers the runtime check and results in a nondeterminism error:
+Temporal PHP SDK 执行运行时检查以帮助防止明显的不兼容更改。
+在没有版本控制的情况下添加、删除或重新排序任何这些方法都会触发运行时检查并导致不确定性错误：
 
-- `workflow.ExecuteActivity()`
-- `workflow.ExecuteChildWorkflow()`
-- `workflow.NewTimer()`
-- `workflow.RequestCancelWorkflow()`
-- `workflow.SideEffect()`
-- `workflow.SignalExternalWorkflow()`
-- `workflow.Sleep()`
+- `Workflow.ExecuteActivity()`
+- `Workflow.ExecuteChildWorkflow()`
+- `Workflow.NewTimer()`
+- `Workflow.RequestCancelWorkflow()`
+- `Workflow.SideEffect()`
+- `Workflow.SignalExternalWorkflow()`
+- `Workflow.Sleep()`
 
-The runtime check does not perform a thorough check.
-For example, it does not check on the Activity's input arguments or the Timer duration.
-Each Temporal SDK implements these sanity checks differently, and they are not a complete check for non-deterministic changes.
-Instead, you should incorporate [Replay Testing](/develop/php/best-practices/testing-suite#replay) when making revisions.
+运行时检查不会执行彻底的检查。
+例如，它不会检查 Activity 的输入参数或 Timer 持续时间。
+每个 Temporal SDK 都以不同的方式实现这些健全性检查，并且它们并不是对非确定性更改的完整检查。
+相反，您应该在进行修订时合并 [重播测试](/develop/php/best-practices/testing-suite#replay)。

@@ -1,0 +1,41 @@
+---
+id: data-handling
+title: 数据处理 - Python SDK
+sidebar_label: 数据处理
+slug: /develop/python/data-handling
+description: Learn how Temporal handles data through the Data Converter, including payload conversion, encryption, and large
+  Learn how Temporal handles data through the Data Converter, including payload conversion, encryption, and large
+  payload storage.
+toc_max_heading_level: 3
+tags:
+  - Python SDK
+  - Temporal SDKs
+  - Data Converters
+---
+
+import ThemedImage from '@theme/ThemedImage';
+
+发送至 Temporal 服务和从 Temporal 服务发送的所有数据都会通过 **Data Converter**。 Data Converter 有三个
+处理不同问题的层：
+
+<图>
+  <ThemedImage
+alt="通过 Data Converter 的数据流"
+    来源={{
+      光：'/diagrams/data-converter-flow-with-external-storage.svg'，
+      黑暗：'/diagrams/data-converter-flow-dark.svg'，
+    }}
+  />
+  <figcaption>通过 Data Converter 的数据流</figcaption>
+</figure>
+
+在这三层中，只有 PayloadConverter 是必需的。 Temporal 使用默认的 PayloadConverter 处理 JSON
+序列化。 PayloadCodec 和ExternalStorage 层是可选的。您只需要在以下情况下自定义这些图层：
+您的应用程序需要非 JSON 类型、加密或负载卸载。
+
+|                           | [PayloadConverter](/develop/python/data-handling/data-conversion) | [PayloadCodec](/develop/python/数据处理/数据加密) | [外部存储](/develop/python/数据处理/外部存储) |
+| ---------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| **目的** |将应用程序数据序列化为字节 |转换编码的有效负载（加密、压缩）|将大量有效负载卸载到外部存储 |
+| **默认** | JSON 序列化 |无（直通）|无（所有有效负载都存储在 Workflow 历史记录中）|
+
+如需更深入的概念解释，请参阅[数据转换百科全书](/dataconversion) 和[外部存储](/external-storage)。

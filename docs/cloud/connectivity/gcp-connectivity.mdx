@@ -1,9 +1,9 @@
 ---
 id: gcp-connectivity
-title: Google Private Service Connect connectivity
-sidebar_label: GCP Private Connect
+title: "Google Private Service Connect 连接"
+sidebar_label: "GCP 专用连接"
 slug: /cloud/connectivity/gcp-connectivity
-description: Connect to Temporal Cloud using Google Private Services Connect
+description: "使用 Google Private Services Connect 连接到 Temporal Cloud"
 tags:
   - Connectivity
   - GCP
@@ -23,115 +23,122 @@ keywords:
 
 import { ToolTipTerm, DiscoverableDisclosure, JsonTable } from '@site/src/components';
 
-[Google Cloud Private Service Connect](https://cloud.google.com/vpc/docs/private-service-connect) allows you to open a path to Temporal without opening a public egress.
-It establishes a private connection between your Google Virtual Private Cloud (VPC) and Temporal Cloud.
-This one-way connection means Temporal cannot establish a connection back to your service.
-This is useful if normally you block traffic egress as part of your security protocols.
-If you use a private environment that does not allow external connectivity, you will remain isolated.
+[Google 云私有服务连接](https://cloud.google.com/vpc/docs/private-service-connect) 允许您打开通往 Temporal 的路径，而无需打开公共出口。
+它会在您的 Google Virtual Private Cloud (VPC) 和 Temporal Cloud 之间建立私有连接。
+这一单向连接意味着 Temporal 无法建立与您的服务的连接。
+如果您通常将阻止流量出口作为安全协议的一部分，那么这非常有用。
+如果您使用不允许外部连接的私有环境，您将保持孤立状态。
 
 :::warning Namespaces with High Availability features and GCP Private Service Connect
 
-Automatic failover via Temporal Cloud DNS is not currently supported with GCP Private Service Connect.
-If you use GCP Private Service Connect, you must manually update your workers to point to the active region's Private Service Connect endpoint when a failover occurs.
+GCP Private Service Connect 目前不支持通过 Temporal Cloud DNS 自动故障转移。
+如果您使用 GCP Private Service Connect，则在发生故障转移时，您必须手动 Update 您的 Worker 指向活动区域的 Private Service Connect 终端节点。
 
 :::
 
-## Requirements
+＃＃ 要求
 
-Your GCP Private Service Connect connection must be in the same region as your Temporal Cloud namespace. If using [replication for High Availability](/cloud/high-availability), the PSC connection must be in the same region as one of the replicas.
+您的 GCP Private Service Connect 连接必须与您的 Temporal Cloud Namespace 位于同一区域。如果使用 [复制以实现高可用性](/cloud/high-availability)，PSC 连接必须与副本之一位于同一区域。
 
-## Creating a Private Service Connect connection
+<a id="requirements"></a>
+## 创建 Private Service Connect 连接 {#requirements}
 
-Set up Private Service Connect with Temporal Cloud with these steps:
+通过以下步骤设置 Private Service Connect 与 Temporal Cloud：
 
-1. Open the Google Cloud console
-2. Navigate to **Network Services**, then **Private Service Connect**. If you haven't used **Network Services** recently, you might have to find it by clicking on **View All Products** at the bottom of the left sidebar.
+1. 打开 Google Cloud 控制台
+2. 导航到 **网络服务**，然后导航到 **Private Service Connect**。如果您最近没有使用过**网络服务**，您可能需要通过单击左侧边栏底部的**查看所有产品**来找到它。
 
-   ![GCP console showing Network Services, and the View All Products button](/img/cloud/gcp/gcp-console.png)
+![显示网络服务的 GCP 控制台和“查看所有产品”按钮](/img/cloud/gcp/gcp-console.png)
 
-3. Go to the **Endpoints** section. Click on **Connect endpoint**.
+3. 转到 **端点** 部分。单击**连接端点**。
 
-   ![GCP console showing the endpoints, and the Connect endpoint button](/img/cloud/gcp/connect-endpoint-button.png)
+![显示端点的 GCP 控制台和“连接端点”按钮](/img/cloud/gcp/connect-endpoint-button.png)
 
-4. Under **Target**, select **Published service**, this will change the contents of the form to allow you to fill the rest as described below
+4. 在 **目标** 下，选择 **已发布的服务**，这将更改表单的内容，以允许您填写其余部分，如下所述
 
-   ![GCP console showing the endpoints, and the Connect endpoint button](/img/cloud/gcp/connect-endpoint.png)
+![显示端点的 GCP 控制台和“连接端点”按钮](/img/cloud/gcp/connect-endpoint.png)
 
-- For **Target service**, fill in the **Service name** with the Private Service Connect Service Name for the region you’re trying to connect to:
+- 对于 **目标服务**，请使用您尝试连接的区域的 Private Service Connect 服务名称填写 **服务名称**：
 
 :::tip
 
-GCP Private Service Connect services are regional.
-Individual Namespaces do not use separate services.
+GCP Private Service Connect 服务是区域性的。
+各个 Namespace 不使用单独的服务。
 
 :::
 
 <JsonTable filename="/json/privatelink_gcp.json" />
 
-- For **Endpoint name**, enter a unique identifier to use for this endpoint. It could be for instance `temporal-api` or `temporal-api-<namespace>` if you want a different endpoint per namespace.
-- For **Network** and **Subnetwork**, choose the network and subnetwork where you want to publish your endpoint.
-- For **IP address**, click the dropdown and select **Create IP address** to create an internal IP from your subnet dedicated to the endpoint. Select this IP.
-- Check **Enable global access** if you intend to connect the endpoint to virtual machines outside of the selected region. We recommend regional connectivity instead of global access, as it can be better in terms of latency for your workers. _**Note:** this requires the network routing mode to be set to **GLOBAL**._
+- 对于 **端点名称**，输入用于该端点的唯一标识符。例如，如果您希望每个 Namespace 有不同的端点，则可以是 `Temporal-api` 或 `Temporal-api-<Namespace>`。
+- 对于 **网络** 和 **子网**，选择您想要发布终端节点的网络和子网。
+- 对于 **IP 地址**，单击下拉列表并选择 **创建 IP 地址**，从您的子网中创建专用于端点的内部 IP。选择该IP。
+- 如果您打算将端点连接到所选区域之外的虚拟机，请选中**启用全局访问**。我们建议区域连接而不是全球访问，因为它可以更好地降低 Worker 的延迟。 _**注意：**这需要将网络路由模式设置为**GLOBAL**._
 
-5. Click the **Add endpoint** button at the bottom of the screen.
+5. 单击屏幕底部的 **添加端点** 按钮。
 
-6. [Create a Temporal Cloud Connectivity Rule](/cloud/connectivity#creating-a-connectivity-rule) using the Connection ID of the newly created endpoint and the corresponding GCP Project.
+6. [创建 Temporal Cloud 连接规则](/cloud/connectivity#creating-a-connectivity-rule) 使用新创建的端点的连接 ID 和相应的 GCP 项目。
 
-7. Once the status is "Accepted", the GCP Private Service Connect endpoint is ready for use.
+7. 状态变为“已接受”后，GCP Private Service Connect 端点即可使用。
 
 :::tip Connectivity Rule required
 
-If your Private Service Connect connection status is not becoming "Active", verify that you have [created a Connectivity Rule](/cloud/connectivity#creating-a-connectivity-rule).
-Connectivity Rules are mandatory for GCP Private Service Connect connections.
-The connection will not become active without one.
+如果您的 Private Service Connect 连接状态未变为“活动”，请验证您是否拥有 [创建了连接规则](/cloud/connectivity#creating-a-connectivity-rule)。
+连接规则对于 GCP Private Service Connect 连接是强制性的。
+如果没有之一，连接将不会变为活动状态。
 
 :::
 
-- Take note of the **IP address** that has been assigned to your endpoint, as it will be used to connect to Temporal Cloud.
+- 记下已分配给您的端点的 **IP 地址**，因为它将用于连接到 Temporal Cloud。
 
 :::caution
-You still need to set up private DNS or override client configuration for your clients to actually use the new Private Service Connect connection to connect to Temporal Cloud.
+您仍然需要为客户端设置私有 DNS 或覆盖客户端配置，才能实际使用新的 Private Service Connect 连接来连接到 Temporal Cloud。
 
-See [configuring private DNS for GCP Private Service Connect](#configuring-private-dns-for-gcp-private-service-connect)
+参见 [为 GCP Private Service Connect 配置私有 DNS](#configuring-private-dns-for-gcp-private-service-connect)
 :::
 
-## Configuring Private DNS for GCP Private Service Connect
+<a id="creating-a-private-service-connect-connection"></a>
+## 为 GCP Private Service Connect 配置私有 DNS {#creating-a-private-service-connect-connection}
 
-### Why configure private DNS?
+<a id="configuring-private-dns-for-gcp-private-service-connect"></a>
+### 为什么要配置私有DNS？ {#configuring-private-dns-for-gcp-private-service-connect}
 
-When you connect to Temporal Cloud through GCP Private Service Connect you normally must:
+当您通过 GCP Private Service Connect 连接到 Temporal Cloud 时，您通常必须：
 
-1. **Point your SDKs/Workers at the Private Service Connect endpoint IP address** _and_
-2. **Override the Server Name Indicator (SNI)** so that the TLS handshake still presents the public Temporal Cloud hostname (e.g., `my-namespace.my-account.tmprl.cloud`).
+1. **将您的 SDK/Worker 指向 Private Service Connect 端点 IP 地址** _and_
+2. **覆盖服务器名称指示符 (SNI)**，以便 TLS 握手仍显示公共 Temporal Cloud 主机名（例如 `my-Namespace.my-account.tmprl.cloud`）。
 
-By creating a **private Cloud DNS zone (PZ)** that maps the public Temporal Cloud hostname (or the region hostname) directly to the PSC endpoint IP address, you can:
+通过创建将公共 Temporal Cloud 主机名（或区域主机名）直接映射到 PSC 端点 IP 地址的 **私有云 DNS 区域 (PZ)**，您可以：
 
-- Keep using the standard Temporal Cloud hostnames in code and configuration.
-- Eliminate the need to set a custom SNI override.
-- Make future endpoint rotations transparent—only the DNS record changes.
+- 在代码和配置中继续使用标准 Temporal Cloud 主机名。
+- 无需设置自定义 SNI 覆盖。
+- 使未来的端点轮换变得透明——仅 DNS 记录发生变化。
 
-This approach is **optional**; Temporal Cloud works without it. It simply streamlines configuration and operations. If you cannot use private DNS, refer to [our guide for updating the server and TLS settings on your clients](/cloud/connectivity#update-dns-or-clients-to-use-private-connectivity).
+这种方法是**可选的**； Temporal Cloud 无需它即可工作。它只是简化了配置和操作。如果您无法使用私有 DNS，请参阅 [我们更新客户端上的服务器和 TLS 设置的指南](/cloud/connectivity#update-dns-or-clients-to-use-private-connectivity)。
 
-### Prerequisites
+<a id="why-configure-private-dns"></a>
+### 先决条件 {#why-configure-private-dns}
 
-| Requirement                                           | Notes                                                                             |
+| 要求                                           | 笔记                                                                             |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Google Cloud VPC Network with DNS enabled             | PSC endpoints and the DNS zone must live in (or be attached to) the same network. |
-| Private Service Connect endpoint for Temporal Cloud   | Create an endpoint and reserve an internal IP in the namespace region             |
-| Cloud DNS API enabled and roles/dns.admin permissions | Needed to create private zones and records.                                       |
-| Namespace details                                     | Determines which hostname pattern you override (table below).                     |
+| 启用 DNS 的 Google Cloud VPC 网络             | PSC 端点和 DNS 区域必须位于（或连接到）同一网络。 |
+| Temporal Cloud 的专用服务连接端点   | 在 Namespace 区域创建终端节点并保留内部 IP             |
+| 已启用 Cloud DNS API 和 Roles/dns.admin 权限 | 需要创建私人区域和记录。                                       |
+| Namespace 详细信息                                     | 确定您覆盖的主机名模式（下表）。                     |
 
-### Choose the override domain and endpoint
+<a id="prerequisites"></a>
+### 选择覆盖域和端点 {#prerequisites}
 
-| Temporal Cloud setup                       | Use this PHZ domain                | Example                                        |
+| Temporal Cloud 设置                       | 使用此 PHZ 域                | 例子                                        |
 | ------------------------------------------ | ---------------------------------- | ---------------------------------------------- |
-| Single-region namespace with mTLS auth     | `<account>.tmprl.cloud`            | `payments.abcde.tmprl.cloud` ↔ `X.X.X.X`       |
-| Single-region namespace with API-key auth  | `<cloud_provider>.api.temporal.io` | `us-central1.gcp.api.temporal.io` ↔ `X.X.X.X`  |
-| Multi-region namespace | `region.tmprl.cloud`               | `gcp-us-central1.region.tmprl.cloud` ↔ `X.X.X.X` |
+| 具有 mTLS 身份验证的单区域 Namespace     | `<account>.tmprl.cloud`            | `payments.abcde.tmprl.cloud` ↔ `X.X.X.X`       |
+| 具有 API 密钥身份验证的单区域 Namespace  | `<cloud_provider>.api.Temporal.io` | `us-central1.gcp.api.Temporal.io` ↔ `X.X.X.X`  |
+| 多区域 Namespace | `region.tmprl.cloud`               | `gcp-us-central1.region.tmprl.cloud` ↔ `X.X.X.X` |
 
-### Step-by-step instructions
+<a id="choose-the-override-domain-and-endpoint"></a>
+### 分步说明 {#choose-the-override-domain-and-endpoint}
 
-#### 1. Collect your PSC endpoint IP address
+<a id="step-by-step-instructions"></a>
+#### 1. 收集您的 PSC 端点 IP 地址 {#step-by-step-instructions}
 
 ```shell
 # List the forwarding rule you created for the endpoint
@@ -141,39 +148,43 @@ gcloud compute forwarding-rules list \
 # Example output: 10.1.2.3
 ```
 
-Save the internal IP -- you will point the A record at it.
+保存内部 IP——您将把 A 记录指向它。
 
-#### 2. Create a Cloud DNS private zone
+<a id="1-collect-your-psc-endpoint-ip-address"></a>
+#### 2. 创建 Cloud DNS 私有区域 {#1-collect-your-psc-endpoint-ip-address}
 
-1. Open _Network Services → Cloud DNS → Create zone_.
-2. Select zone type **Private**.
-3. Enter a **Zone name** (e.g., `temporal-cloud`).
-4. Enter a **DNS name** based on the table above (e.g., `payments.abcde.tmprl.cloud` or `aws-us-east-1.region.tmprl.cloud`).
-5. Select **Add networks** and choose the Project and Network that contains your PSC endpoint.
-6. Click **Create**.
+1. 打开_网络服务→云DNS→创建区域_。
+2. 选择区域类型**私人**。
+3. 输入**区域名称**（例如，`Temporal-cloud`）。
+4. 根据上表输入 **DNS 名称**（例如，`payments.abcde.tmprl.cloud` 或 `aws-us-east-1.region.tmprl.cloud`）。
+5. 选择 **添加网络** 并选择包含您的 PSC 端点的项目和网络。
+6. 单击“**创建**”。
 
-#### 3. Add an A record
+<a id="2-create-a-cloud-dns-private-zone"></a>
+#### 3.添加A记录 {#2-create-a-cloud-dns-private-zone}
 
-Inside the new zone, add a _standard A record_:
+在新区域内，添加_标准 A 记录_：
 
-| Field                | Value                                                          |
+| 场地                | 价值                                                          |
 | -------------------- | -------------------------------------------------------------- |
-| DNS name             | the namespace endpoint (e.g. `payments.abcde.tmprl.cloud`)     |
-| Resource record type | A                                                              |
-| TTL                  | 60s is typical, but you can adjust as needed.                  |
-| IPv4 Address         | the internal IP address of your PSC endpoint (e.g. `10.1.2.3`) |
+| DNS名称             | Namespace 端点（例如 `payments.abcde.tmprl.cloud`）     |
+| 资源记录类型 | 一个                                                              |
+| TTL                  | 60 是典型值，但您可以根据需要进行调整。                  |
+| IPv4地址         | PSC 端点的内部 IP 地址（例如 `10.1.2.3`） |
 
-#### 4. Verify DNS resolution from inside the Network
+<a id="3-add-an-a-record"></a>
+#### 4. 验证网络内部的 DNS 解析 {#3-add-an-a-record}
 
 ```shell
 dig payments.abcde.tmprl.cloud
 ```
 
-If the hostname resolves to the PSC endpoint IP address from a VM in the bound network, the override is working.
+如果主机名从绑定网络中的虚拟机解析为 PSC 端点 IP 地址，则覆盖正在起作用。
 
-### Updating your workers/clients
+<a id="4-verify-dns-resolution-from-inside-the-network"></a>
+### 更新您的 Worker/客户端 {#4-verify-dns-resolution-from-inside-the-network}
 
-With private DNS in place, configure your SDKs exactly as the public-internet examples show (filling in your own namespace):
+部署好私有 DNS 后，按照公共互联网示例所示配置您的 SDK（填写您自己的 Namespace）：
 
 ```go
 clientOptions := client.Options{
@@ -183,11 +194,12 @@ clientOptions := client.Options{
 }
 ```
 
-The DNS resolver inside your network returns the private endpoint IP address, while TLS still validates the original hostname—simplifying both code and certificate management.
+网络内的 DNS 解析器返回专用端点 IP 地址，而 TLS 仍验证原始主机名，从而简化代码和证书管理。
 
-## Available GCP regions, PSC endpoints, and DNS record overrides
+<a id="updating-your-workersclients"></a>
+## 可用的 GCP 区域、PSC 端点和 DNS 记录覆盖 {#updating-your-workersclients}
 
-The following table lists the available Temporal regions, PrivateLink endpoints, and regional endpoints used for DNS record overrides:
+下表列出了可用的 Temporal 区域、PrivateLink 终端节点和用于 DNS 记录覆盖的区域终端节点：
 
 import GCPRegions from '@site/docs/cloud/references/regions/gcpregions.md';
 

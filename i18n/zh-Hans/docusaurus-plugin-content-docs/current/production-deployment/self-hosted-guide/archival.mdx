@@ -1,0 +1,314 @@
+---
+id: archival
+title: Self-hosted Archival setup
+sidebar_label: Archival
+description: Configure Archival to store closed Workflow Event Histories and Visibility records in blob storage.
+slug: /self-hosted-guide/archival
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - how-to
+tags:
+  - Temporal Service
+  - Self-hosting
+---
+
+Use Archival to back up closed Workflow Execution [Event Histories](/Workflow-execution/event#event-history) and
+Visibility records from Temporal Service persistence to blob storage.
+
+- [How to create a custom Archiver](#custom-archiver)
+- [How to set up Archival](#set-up-archival)
+
+When a Workflow Execution closes, Temporal Schedules close-processing tasks for both Visibility records and Event
+History Archival. Archival then runs asynchronously after a randomized delay. By default, that delay is up to 5 minutes
+set by `history.archivalProcessorArchiveDelay`, and is capped by the Namespace
+[Retention Period](/Temporal-service/Temporal-server#retention-period).
+
+关闭的执行仍保持 Temporal 持久性，直到运行保留清理。有一段时间，同样关闭
+执行可以存在于持久性存储和归档存储中。存档使 Workflow Execution 数据能够持久保存
+保留，而不会压垮 Temporal 服务持久性存储。
+
+使用此功能可以保持封闭的 Workflow 数据可用于合规性、审核和调试，而无需将所有封闭的数据保留在
+您的主要持久性存储。
+
+:::info Experimental feature
+
+存档是一项**实验性**功能，不受正常情况影响
+[版本控制和支持政策](/Temporal-service/Temporal-server#versions-and-support)。
+
+:::
+
+通过 Docker 运行 Temporal 时不支持存档。安装系统时默认是关闭的
+手动以及通过部署时
+[helm 图表](https://github.com/Temporalio/helm-charts/blob/main/charts/Temporal/templates/server-configmap.yaml)。它
+可以在服务器[配置](https://github.com/Temporalio/Temporal/blob/main/config/development.yaml)中启用。
+
+### 设置存档 {#set-up-archival}
+
+要设置 [存档](/Temporal-service/archival)，请确定以下内容：
+
+- **使用哪个提供商：** S3、Google Cloud、本地文件系统或自定义。
+- **使用哪个 URI：** URI 方案和路径标识提供者和目的地。
+- **哪个 Namespace 应使用存档：** 必须在 Temporal 服务级别和 Namespace 上启用存档
+  水平。
+
+请按照以下步骤设置存档：
+
+1. [选择存档提供商](#choose-an-archival-provider)。
+2. [配置存档选项](#configure-archival-options)。
+3. [创建存档 Namespace](#create-an-archiving-Namespace)。
+
+#### 选择存档提供商 {#choose-an-archival-provider}
+
+Temporal 直接支持多个提供商：
+
+- **本地文件系统**：
+  [filestore archiver](https://github.com/Temporalio/Temporal/tree/main/common/archiver/filestore) 用于归档
+  Temporal Server 运行的任何主机的文件系统中的数据。如果是
+  [Temporal helm-charts](https://github.com/Temporalio/helm-charts)，存档数据存储在 `history` pod 中。
+  API 不适用于文件存储存档。该提供程序主要用于本地安装和测试以及
+  不应依赖生产环境。
+- **Google Cloud**：[gcloud archiver](https://github.com/Temporalio/Temporal/tree/main/common/archiver/gcloud) 是
+  用于与 [Google Cloud](https://cloud.google.com/storage) 连接和存档数据。
+- **S3**：[s3store archiver](https://github.com/Temporalio/Temporal/tree/main/common/archiver/s3store) 用于
+  使用 [S3](https://aws.amazon.com/s3) 连接并存档数据。
+- **自定义**：如果您想使用当前不支持的提供程序，您可以
+  [创建您自己的存档器](#custom-archiver) 来支持它。
+
+保存提供程序 URI，以便您在创建启用存档的 Namespace 时可以传递它。
+
+#### 配置存档选项 {#configure-archival-options}
+
+配置存档于
+[`config/development.yaml`](https://github.com/Temporalio/Temporal/blob/main/config/development.yaml#L93):
+
+```yaml
+# Temporal Service level Archival config
+archival:
+  # Event History configuration
+  history:
+    # Archival is enabled at the Temporal Service level
+    state: 'enabled'
+    enableRead: true
+    # Namespaces can use either the local filestore provider or the Google Cloud provider
+    provider:
+      filestore:
+        fileMode: '0666'
+        dirMode: '0766'
+      gstorage:
+        credentialsPath: '/tmp/gcloud/keyfile.json'
+
+# Default values for a Namespace if none are provided at creation
+namespaceDefaults:
+  # Archival defaults
+  archival:
+    # Event History defaults
+    history:
+      state: 'enabled'
+      # New Namespaces will default to the local provider
+      URI: 'file:///tmp/temporal_archival/development'
+```
+
+您可以通过将 `archival.history.state` 和 `NamespaceDefaults.archival.history.state` 设置为来禁用存档
+`“禁用”`。
+
+例子：
+
+```yaml
+archival:
+  history:
+    state: 'disabled'
+
+namespaceDefaults:
+  archival:
+    history:
+      state: 'disabled'
+```
+
+下表显示了可用的配置选项及其可接受的值：
+
+|配置 |可接受的值|描述 |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `档案.历史.状态` | `启用`、`禁用` |必须“启用”才能将存档功能与 Temporal 服务中的任何 Namespace 一起使用。                                    |
+| `archive.history.enableRead` | “真”、“假” |必须为“true”才能从存档的 Event History 中读取。                                                                      |
+| `档案.历史.提供者` |子提供程序配置为“filestore”、“gstorage”、“s3”或“your_custom_provider”。 |默认配置指定“filestore”。                                                                                        |
+| `archival.history.provider.filestore.fileMode` |文件权限字符串|归档文件的文件权限。我们建议使用默认值“0666”以避免读/写问题。         |
+| `archival.history.provider.filestore.dirMode` |文件权限字符串 |归档目录的目录权限。我们建议使用默认值“0766”以避免读/写问题。 |
+| `NamespaceDefaults.archival.history.state` | `启用`、`禁用` |每当创建新的 Namespace 且未指定存档状态时，存档功能的默认状态。             |
+| `NamespaceDefaults.archival.history.URI` |有效的 URI |必须是文件存储位置的 URI，并匹配与提供程序相关的架构。                                   |
+
+其他资源：[Temporal 服务配置参考](/references/configuration)。
+
+#### 创建存档 Namespace {#create-an-archiving-Namespace}
+
+尽管存档是在 Temporal 服务级别配置的，但它在每个 Namespace 中独立运行。如果你
+在 Namespace 创建过程中不要指定存档 URI，Namespace 使用 `NamespaceDefaults.archival.history.URI`
+来自“config/development.yaml”。创建 Namespace 后，存档 URI 无法更改。每个 Namespace
+仅支持单个存档 URI，但每个 Namespace 可以使用不同的 URI。 Namespace 可以安全地切换存档
+只要在 Temporal 服务级别启用存档，就可以在“启用”和“禁用”状态之间切换。
+
+[Global Namespaces](/global-Namespace)（跨多个集群的 Namespaces）支持存档。归档时
+在 Global Namespace 中运行，它首先在活动集群上运行；稍后它会在备用集群上运行。之前
+归档，进行历史记录检查以查看以前归档的内容。
+
+#### 测试您的存档设置 {#test-your-archival-setup}
+
+要在本地测试存档，请首先运行 Temporal Server：
+
+```bash
+./temporal-server start
+```
+
+然后注册一个新的 Namespace 并启用存档。
+
+{/* ./tctl --ns 样本-Namespace Namespace 寄存器 --gd false --history_archival_state 已启用 --retention 3 */}
+
+```bash
+./temporal operator namespace create --namespace="my-namespace" --global false --history-archival-state="enabled" --retention="4d"
+```
+
+:::note
+
+如果未设置保留期限，则默认为 72 小时。最短保留期限为一天。对于保留最大值，
+检查您的服务器的[Temporal 服务保留期限制](/Temporal-service/Temporal-server#retention-period)
+版本。
+
+将保留期设置为 0 会导致错误_未根据请求设置有效的保留期_。
+
+:::
+
+接下来，运行示例 Workflow，例如
+[helloworld Temporal 示例](https://github.com/Temporalio/Temporal-go-samples/tree/master/helloworld)。
+
+当Workflow Execution关闭时，Temporal和Schedule进行归档处理。
+
+#### 检索存档历史记录 {#retrieve-archived-history}
+
+您可以通过从日志中复制已完成的 Workflow 的“WorkflowId”和“runId”来检索存档的事件历史记录
+输出并运行以下命令：
+
+{/* ./tctl --ns 样本-Namespace wf show --wid <WorkflowId> --rid <runId> */}
+
+```bash
+./temporal workflow show --workflow-id="my-workflow-id" --run-id="my-run-id" --namespace="my-namespace"
+```
+
+### 创建自定义存档器 {#custom-archiver}
+
+要使用给定提供商归档数据，使用 [Archival](/Temporal-service/archival) 功能，Temporal 必须具有
+安装了相应的 Archiver 组件。该平台不限制您只能使用现有的提供商。使用提供商
+目前不支持，您可以创建自己的存档器。
+
+#### 创建一个新包
+
+第一步是为您的实施创建一个新包
+[/common/archiver](https://github.com/Temporalio/Temporal/tree/main/common/archiver)。在归档器中创建一个目录
+文件夹并安排结构如下所示：
+
+```
+temporal/common/archiver
+  - filestore/                      -- Filestore implementation
+  - provider/
+      - provider.go                 -- Provider of archiver instances
+  - yourImplementation/
+      - historyArchiver.go          -- HistoryArchiver implementation
+      - historyArchiver_test.go     -- Unit tests for HistoryArchiver
+      - visibilityArchiver.go       -- VisibilityArchiver implementations
+      - visibilityArchiver_test.go  -- Unit tests for VisibilityArchiver
+```
+
+#### 归档器接口
+
+接下来，定义实现以下功能的对象
+[HistoryArchiver](https://github.com/Temporalio/Temporal/blob/main/common/archiver/interface.go#L80) 和
+[VisibilityArchiver](https://github.com/Temporalio/Temporal/blob/main/common/archiver/interface.go#L121) 接口。
+
+这些对象应分别位于“historyArchiver.go”和“VisibilityArchiver.go”中。
+
+#### Update 提供商
+
+Update 中“archiverProvider”对象的“GetHistoryArchiver”和“GetVisibilityArchiver”方法
+[/common/archiver/provider/provider.go](https://github.com/Temporalio/Temporal/blob/main/common/archiver/provider/provider.go)
+文件，以便它知道如何创建存档器的实例。
+
+#### 添加配置
+
+将存档器的配置添加到“config/development.yaml”文件中，然后修改
+[HistoryArchiverProvider](https://github.com/Temporalio/Temporal/blob/main/common/config/config.go#L376) 和
+[VisibilityArchiverProvider](https://github.com/Temporalio/Temporal/blob/main/common/config/config.go#L393) 中的结构
+相应地`/common/common/config.go`。
+
+#### 自定义存档器常见问题解答
+
+**如果我的自定义存档方法可以由调用者自动重试，我如何记录和访问之间的进度
+重试？**
+
+使用“ArchiverOptions”处理这种情况。这是一个例子：
+
+```go
+func(a * Archiver) Archive(ctx context.Context, URI string, request * ArchiveRequest, opts...ArchiveOption) error {
+    featureCatalog: = GetFeatureCatalog(opts...) // this function is defined in options.go
+    var progress progress
+    // Check if the feature for recording progress is enabled.
+    if featureCatalog.ProgressManager != nil {
+        if err: = featureCatalog.ProgressManager.LoadProgress(ctx, & prevProgress);
+        err != nil {
+            // log some error message and return error if needed.
+        }
+    }
+
+    // Your archiver implementation...
+
+    // Record current progress
+    if featureCatalog.ProgressManager != nil {
+        if err: = featureCatalog.ProgressManager.RecordProgress(ctx, progress);
+        err != nil {
+            // log some error message and return error if needed.
+        }
+    }
+}
+```
+
+**如果我的“Archive”方法遇到不可重试的错误，我如何向调用者表明它不应该
+重试？**
+
+```go
+func(a * Archiver) Archive(ctx context.Context, URI string, request * ArchiveRequest, opts...ArchiveOption) error {
+    featureCatalog: = GetFeatureCatalog(opts...) // this function is defined in options.go
+
+    err: = youArchiverImpl()
+
+    if nonRetryableErr(err) {
+        if featureCatalog.NonRetryableError != nil {
+            return featureCatalog.NonRetryableError() // when the caller gets this error type back it will not retry anymore.
+        }
+    }
+}
+```
+
+**我的历史归档器实现如何读取历史记录？**
+
+归档程序包提供了一个名为的实用程序
+[HistoryIterator](https://github.com/Temporalio/Temporal/blob/main/common/archiver/historyIterator.go) 这是一个
+的包装纸
+[ExecutionManager](https://github.com/Temporalio/Temporal/blob/main/common/persistence/data_interfaces.go#L1014)。
+`HistoryIterator` 比 `HistoryManager` 更简单，后者在 BootstrapContainer 中可用，因此 archiver
+实现在读取 Workflow 历史记录时可以选择使用它。请参阅
+[historyIterator.go](https://github.com/Temporalio/Temporal/blob/main/common/archiver/history_iterator.go) 文件了解更多信息
+详细信息。使用
+[文件存储历史归档器实现](https://github.com/Temporalio/Temporal/tree/main/common/archiver/filestore)
+举个例子。
+
+**我的归档程序应该定义自己的错误类型吗？**
+
+每个归档器都可以自由定义和返回自己的错误。然而，归档器之间存在的许多常见错误是
+已经定义在
+[common/archiver/constants.go](https://github.com/Temporalio/Temporal/blob/main/common/archiver/constants.go)。
+
+**Visibility 存档器是否有通用的 Query 语法？**
+
+目前，没有。但这是我们计划在未来做的事情。至于现在，请尝试使您的语法类似于
+由我们的高级列表 Workflow API 使用。
+
+- [s3store](https://github.com/Temporalio/Temporal/tree/main/common/archiver/s3store#Visibility-Query-syntax)
+- [gcloud](https://github.com/Temporalio/Temporal/tree/main/common/archiver/gcloud#Visibility-Query-syntax)

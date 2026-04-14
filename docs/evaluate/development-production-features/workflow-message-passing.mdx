@@ -1,8 +1,8 @@
 ---
 id: workflow-message-passing
-title: Workflow message passing - Temporal feature
-description: Enhance your Workflows with Signals and Queries, allowing dynamic responses to external events and real-time state access for comprehensive monitoring and tracking.
-sidebar_label: Workflow message passing
+title: "Workflow 消息传递 - Temporal 功能"
+description: "使用 Signal 和查询增强您的 Workflow，允许动态响应外部事件和实时状态访问，以进行全面监控和跟踪。"
+sidebar_label: "Workflow消息传递"
 tags:
   - Signals
   - Queries
@@ -28,29 +28,29 @@ keywords:
 
 import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
 
-Need to interact with your Workflow from outside of it? Think about use cases like these:
+需要从外部与 Workflow 进行交互吗？考虑如下用例：
 
-- Your shipment-tracking Workflow needs to know when the item leaves the warehouse and is loaded into their truck. **Signal** your Workflow when the truck driver scans the barcode.
-- Folks in your company want to track the progress of their data migration Workflows. **Query** your running batch Workflow to get the data for the progress bar.
-- Your eCommerce shopping cart Workflow needs to know when a new item is added. **Update** it to add the item and receive back the current items to render.
+- 您的货运跟踪 Workflow 需要知道物品何时离开仓库并装载到卡车上。 **Signal** 当卡车司机扫描条形码时您的 Workflow。
+- 贵公司的人员希望跟踪其数据迁移 Workflow 的进度。 **Query** 运行批处理 Workflow 以获取进度条的数据。
+- 您的电子商务购物车 Workflow 需要知道何时添加新商品。 **Update** 它用于添加项目并接收当前要渲染的项目。
 
-Temporal provides Signals, Queries, and Updates to allow rich interactivity with your running Workflows.
+Temporal 提供 Signal、查询和 Update，以允许与正在运行的 Workflow 进行丰富的交互。
 
-**Signals**: Signal to send messages asynchronously to a running Workflow, changing its state or controlling its flow in real-time.
+**Signals**：Signal 将消息异步发送到正在运行的 Workflow，实时更改其状态或控制其流程。
 
-**Queries**: Query to check the progress of your Workflow or debug the internal state in real-time.
+**查询**：Query 用于检查 Workflow 的进度或实时调试内部状态。
 
-**Updates**: Update to send synchronous requests to your Workflow and track it in real-time.
+**Updates**：Update 向您的 Workflow 发送同步请求并实时跟踪它。
 
-To learn more about using these powerful primitives, see our encyclopedia entry:
+要了解有关使用这些强大原语的更多信息，请参阅我们的百科全书条目：
 
 <RelatedReadContainer>
   <RelatedReadItem path="/encyclopedia/workflow-message-passing" text="Workflow message passing (Signals, Queries, & Updates)" archetype="encyclopedia" />
 </RelatedReadContainer>
 
-For a deeper dive into Workflow message passing, enroll in one of [our courses](https://learn.temporal.io/courses/interacting_with_workflows).
+要更深入地了解 Workflow 消息传递，请注册 [我们的课程](https://learn.temporal.io/courses/interacting_with_workflows) 之一。
 
-If you want to jump straight to implementation details, see the SDK feature guides.
+如果您想直接跳转到实现细节，请参阅 SDK 功能指南。
 
 <RelatedReadContainer>
   <RelatedReadItem path="/develop/go/workflows/message-passing" text="Go SDK Workflow message passing feature guide" archetype="feature-guide" />

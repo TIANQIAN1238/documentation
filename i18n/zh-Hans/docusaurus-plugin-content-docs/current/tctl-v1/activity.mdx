@@ -1,0 +1,162 @@
+---
+id: activity
+title: tctl v1.17 Activity 命令参考
+sidebar_label: Activity
+description: 体验新的 Temporal CLI 公共预览版，以简化 Workflow 和 Activity 管理。利用 tctl 命令（如“完成”和“失败”）以及各种修饰符来实现精确控制。
+toc_max_heading_level: 4
+keywords:
+  - cli
+  - cli reference
+  - tctl
+  - temporal
+  - temporal cli
+  - temporal server
+---
+
+:::info tctl is deprecated
+
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议转换到 [Temporal CLI](/cli) 以继续使用和访问新功能。
+
+感谢您成为 Temporal 社区的重要组成部分。
+
+:::
+
+`tctl Activity` 命令启用 [Activity 执行](/Activity-执行) 操作。
+
+- [tctl Activity 完整](#完整)
+- [tctl Activity 失败](#fail)
+
+＃＃ 完全的
+
+“tctl Activity 完成”命令完成 [Activity 执行](/Activity-执行)。
+
+`tctl Activity 完整 <修饰符>`
+
+以下修饰符控制命令的行为。
+
+### --Workflow_id
+
+指定要完成的 [Activity 执行](/Activity-execution) 的 [Workflow Id](/Workflow-execution/Workflowid-runid#Workflow-id)。
+
+别名：`-w`
+
+**例子**
+
+```bash
+tctl activity complete --workflow_id <id>
+```
+
+### --run_id
+
+指定要完成的 [Activity 执行](/Activity-execution) 的 [运行 Id](/Workflow-execution/Workflowid-runid#run-id)。
+
+别名：`-r`
+
+**例子**
+
+```bash
+tctl activity complete --run_id <id>
+```
+
+### --Activity_id
+
+指定要完成的 [Activity 执行](/Activity-execution) 的 [Activity Id](/Activity-execution#Activity-id)。
+
+**例子**
+
+```bash
+tctl activity complete --activity_id <id>
+```
+
+＃＃＃  - 结果
+
+指定使用 tctl 完成 Activity 执行时 [Activity 执行](/Activity-执行) 的结果。
+
+**例子**
+
+```bash
+tctl activity complete --result <value>
+```
+
+＃＃＃  - 身份
+
+指定使用 tctl 完成 [Activity 执行](/Activity-执行) 时操作员的身份。
+
+**例子**
+
+```bash
+tctl activity complete --identity <value>
+```
+
+＃＃ 失败
+
+“tctl Activity 失败”命令使 [Activity 执行](/Activity-执行) 失败。
+
+`tctl Activity 失败 [<修饰符>]`
+
+以下修饰符控制命令的行为。
+
+### --Workflow_id
+
+指定 [Activity 执行](/Activity-execution) 的 [Workflow Id](/Workflow-execution/Workflowid-runid#Workflow-id) 失败。
+
+别名：`-w`
+
+**例子**
+
+```bash
+tctl activity fail --workflow_id <id>
+```
+
+### --run_id
+
+指定 [Activity 执行](/Activity-execution) 的 [运行 Id](/Workflow-execution/Workflowid-runid#run-id) 失败。
+
+别名：`-r`
+
+**例子**
+
+```bash
+tctl activity fail --run_id <id>
+```
+
+### --Activity_id
+
+指定要失败的 [Activity 执行](/Activity-execution) 的 [Activity Id](/Activity-execution#Activity-id)。
+
+**例子**
+
+```bash
+tctl activity fail --activity_id <id>
+```
+
+＃＃＃  - 原因
+
+指定 [Activity 执行](/Activity-执行) 失败的原因。
+
+**例子**
+
+```bash
+tctl activity fail --reason <value>
+```
+
+＃＃＃  - 细节
+
+指定 [Activity 执行](/Activity-执行) 失败原因的详细信息。
+
+**例子**
+
+```bash
+tctl activity fail --detail <value>
+```
+
+＃＃＃  - 身份
+
+指定使用 tctl 使 [Activity 执行](/Activity-执行) 失败时操作员的身份。
+
+**例子**
+
+```bash
+tctl activity complete --identity <value>
+```

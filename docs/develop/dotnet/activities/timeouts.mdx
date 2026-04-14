@@ -1,8 +1,8 @@
 ---
 id: timeouts
-title: Activity Timeouts - .NET SDK
-sidebar_label: Timeouts
-description: Optimize Workflow Execution with Temporal .NET SDK - Set Activity Timeouts and Retry Policies efficiently.
+title: "Activity 超时 - .NET SDK"
+sidebar_label: "超时"
+description: "使用 Temporal 优化 Workflow Execution .NET SDK - 有效设置 Activity 超时和重试策略。"
 toc_max_heading_level: 4
 keywords:
   - .NET
@@ -17,25 +17,25 @@ tags:
   - Temporal SDKs
 ---
 
-## Activity Timeouts {#activity-timeouts}
+<a id="activity-timeouts"></a>
+## Activity 超时 {#activity-timeouts}
+每个 Activity 超时控制 Activity 执行不同方面的最大持续时间。
 
-Each Activity Timeout controls the maximum duration of a different aspect of an Activity Execution.
+Activity 选项中提供以下超时。
 
-The following Timeouts are available in the Activity Options.
+- **[Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout)：** 是整个 [Activity 执行](/activity-execution) 允许的最大时间量。
+- **[开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)：** 是单个 [Activity 任务执行](/tasks#activity-task-execution) 允许的最长时间。
+- **[Schedule-启动超时](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout)：** 是从 [Activity 任务](/tasks#activity-task) 为 Scheduled 到 [Worker](/workers#worker) 启动该 Activity 任务所允许的最长时间。
 
-- **[Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout):** is the maximum amount of time allowed for the overall [Activity Execution](/activity-execution).
-- **[Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout):** is the maximum time allowed for a single [Activity Task Execution](/tasks#activity-task-execution).
-- **[Schedule-To-Start Timeout](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout):** is the maximum amount of time that is allowed from when an [Activity Task](/tasks#activity-task) is scheduled to when a [Worker](/workers#worker) starts that Activity Task.
+Activity 执行必须设置“开始到关闭”或“Schedule 到关闭超时”。
 
-An Activity Execution must have either the Start-To-Close or the Schedule-To-Close Timeout set.
+当调用 `ExecuteActivityAsync` 时，可以在 `ActivityOptions` 中设置这些值。
 
-These values can be set in the `ActivityOptions` when calling `ExecuteActivityAsync`.
-
-Available timeouts are:
+可用的超时有：
 
 - ScheduleToCloseTimeout
 - ScheduleToStartTimeout
-- StartToCloseTimeout
+- 开始到关闭超时
 
 ```csharp
 return await Workflow.ExecuteActivityAsync(
@@ -43,13 +43,13 @@ return await Workflow.ExecuteActivityAsync(
     new() { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
 ```
 
-### Set an Activity Retry Policy {#activity-retries}
+<a id="activity-retries"></a>
+### 设置 Activity Retry Policy {#activity-retries}
+Retry Policy 与超时配合提供精细控制以优化执行体验。
 
-A Retry Policy works in cooperation with the timeouts to provide fine controls to optimize the execution experience.
+Activity 如果未提供自定义执行，则执行会自动与默认 [Retry Policy](/encyclopedia/retry-policies) 关联。
 
-Activity Executions are automatically associated with a default [Retry Policy](/encyclopedia/retry-policies) if a custom one is not provided.
-
-To create an Activity Retry Policy in .NET, set the `RetryPolicy` on the `ActivityOptions` when calling `ExecuteActivityAsync`.
+要在 .NET 中创建 Activity Retry Policy，请在调用 `ExecuteActivityAsync` 时在 `ActivityOptions` 上设置 `RetryPolicy`。
 
 ```csharp
 return await Workflow.ExecuteActivityAsync(
@@ -61,13 +61,13 @@ return await Workflow.ExecuteActivityAsync(
     });
 ```
 
-### Override the Retry interval with `nextRetryDelay` {#next-retry-delay}
+<a id="next-retry-delay"></a>
+### 使用 `nextRetryDelay` {#next-retry-delay} 覆盖重试间隔
+当您抛出 [应用失败](/references/failures#application-failure) 并分配 `nextRetryDelay` 字段时，其值将替换并覆盖活动 Retry Policy 中定义的重试间隔。
 
-When you throw an [Application Failure](/references/failures#application-failure) and assign the `nextRetryDelay` field, its value replaces and overrides the Retry interval defined in the active Retry Policy.
-
-For example, you might scale the next Retry delay interval based on the current number of attempts.
-Here's how you'd do that in an Activity.
-In the following sample, the `attempt` count is retrieved from the Activity Execution context and used to set the number of seconds for the next Retry delay:
+例如，您可以根据当前的尝试次数调整下一个重试延迟间隔。
+以下是在 Activity 中执行此操作的方法。
+在以下示例中，从 Activity 执行上下文中检索 `attempt` 计数，并用于设置下一次重试延迟的秒数：
 
 ```csharp
 var attempt = ActivityExecutionContext.Current.Info.Attempt;
@@ -78,21 +78,21 @@ throw new ApplicationFailureException(
     nextRetryDelay: TimeSpan.FromSeconds(3 * attempt));
 ```
 
-## Heartbeat an Activity {#activity-heartbeats}
+<a id="activity-heartbeats"></a>
+## 心跳 Activity {#activity-heartbeats}
+[Activity 心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 是从正在执行 Activity 的 [Worker 流程](/workers#worker-process) 到 [Temporal 服务](/temporal-service) 的 ping。
+每个心跳都会通知 Temporal 服务 [Activity 执行](/activity-execution) 正在取得进展并且 Worker 尚未崩溃。
+如果Temporal服务在[心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout)时间段内没有收到Heartbeat，则Activity将被视为失败，并且根据Retry Policy，另一个[Activity 任务执行](/tasks#activity-task-execution)可能是Scheduled。
 
-An [Activity Heartbeat](/encyclopedia/detecting-activity-failures#activity-heartbeat) is a ping from the [Worker Process](/workers#worker-process) that is executing the Activity to the [Temporal Service](/temporal-service).
-Each Heartbeat informs the Temporal Service that the [Activity Execution](/activity-execution) is making progress and the Worker has not crashed.
-If the Temporal Service does not receive a Heartbeat within a [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout) time period, the Activity will be considered failed and another [Activity Task Execution](/tasks#activity-task-execution) may be scheduled according to the Retry Policy.
+心跳可能并不总是发送到 Temporal 服务 — 它们可能是由 Worker 发送的 [节流](/encyclopedia/detecting-activity-failures#throttling)。
 
-Heartbeats may not always be sent to the Temporal Service—they may be [throttled](/encyclopedia/detecting-activity-failures#throttling) by the Worker.
+Activity 取消会在活动检测到时从 Temporal 服务传递到活动。没有心跳的活动无法收到取消。
+心跳限制可能会导致取消的发送时间晚于预期。
 
-Activity Cancellations are delivered to Activities from the Temporal Service when they Heartbeat. Activities that don't Heartbeat can't receive a Cancellation.
-Heartbeat throttling may lead to Cancellation getting delivered later than expected.
+心跳可以包含描述 Activity 当前进度的 `Details` 字段。
+如果重试 Activity，则 Activity 可以从发送到 Temporal 服务的最后一个心跳访问 `Details`。
 
-Heartbeats can contain a `Details` field describing the Activity's current progress.
-If an Activity gets retried, the Activity can access the `Details` from the last Heartbeat that was sent to the Temporal Service.
-
-To Heartbeat an Activity Execution in .NET, use the [`Heartbeat()`](https://dotnet.temporal.io/api/Temporalio.Activities.ActivityExecutionContext.html#Temporalio_Activities_ActivityExecutionContext_Heartbeat_System_Object___) method on the `ActivityExecutionContext`.
+要在 .NET 中对 Activity 执行进行检测，请在 `ActivityExecutionContext` 上使用 [`Heartbeat()`](https://dotnet.temporal.io/api/temporalio.Activities.ActivityExecutionContext.html#Temporalio_Activities_ActivityExecutionContext_Heartbeat_System_Object___) 方法。
 
 ```csharp
 [Activity]
@@ -109,14 +109,14 @@ public async Task MyActivityAsync()
 }
 ```
 
-In addition to obtaining cancellation information, Heartbeats also support detail data that persists on the server for retrieval during Activity retry.
-If an Activity calls `Heartbeat(123, 456)` and then fails and is retried, `HeartbeatDetails` on the `ActivityInfo` returns an collection containing `123` and `456` on the next Run.
+除了获取取消信息之外，Heartbeats 还支持保留在服务器上的详细数据，以便在 Activity 重试期间检索。
+如果 Activity 调用 `Heartbeat(123, 456)` 然后失败并重试，则 `ActivityInfo` 上的 `HeartbeatDetails` 将在下次运行时返回包含 `123` 和 `456` 的集合。
 
-### Set a Heartbeat Timeout {#heartbeat-timeout}
+<a id="heartbeat-timeout"></a>
+### 设置心跳超时 {#heartbeat-timeout}
+[心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout) 与 [Activity 心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 配合使用。
 
-A [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout) works in conjunction with [Activity Heartbeats](/encyclopedia/detecting-activity-failures#activity-heartbeat).
-
-`HeartbeatTimeout` is a property on `ActivityOptions` for `ExecuteActivityAsync` used to set the maximum time between Activity Heartbeats.
+`HeartbeatTimeout` 是 `ExecuteActivityAsync` 的 `ActivityOptions` 上的一个属性，用于设置 Activity 心跳之间的最大时间。
 
 ```csharp
 await Workflow.ExecuteActivityAsync(

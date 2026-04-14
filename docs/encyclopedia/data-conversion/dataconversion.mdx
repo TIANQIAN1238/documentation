@@ -1,8 +1,8 @@
 ---
 id: dataconversion
-title: How does Temporal handle application data?
-sidebar_label: Data conversion
-description: This guide explores Data Converters in the Temporal Platform, detailing how they handle serialization and encoding for Workflow inputs and outputs, ensuring data stays secure and manageable.
+title: "Temporal如何处理应用数据？"
+sidebar_label: "ZXQ0Token"
+description: "本指南介绍Temporal平台中的Data Converter，包括如何处理Workflow输入输出的序列化与编码，确保数据安全和可管理。"
 slug: /dataconversion
 toc_max_heading_level: 4
 keywords:
@@ -21,41 +21,41 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-This guide provides an overview of data handling using a Data Converter on the Temporal Platform.
+本指南概述了在 Temporal 平台上使用 Data Converter 的数据处理。
 
-Data Converters in Temporal are SDK components that handle the serialization and encoding of data entering and exiting a Temporal Service.
-Workflow inputs and outputs need to be serialized and deserialized so they can be sent as JSON to a Temporal Service.
+Temporal 中的 Data Converter 是 SDK 组件，用于处理进入和退出 Temporal 服务的数据的序列化和编码。
+Workflow 输入和输出需要序列化和反序列化，以便它们可以作为 JSON 发送到 Temporal 服务。
 
 <CaptionedImage
-    src="/diagrams/default-data-converter.svg"
-    title="Data Converter encodes and decodes data"
+src="/diagrams/default-data-converter.svg"
+title="Data Converter 编码和解码数据"
     />
 
-The Data Converter encodes data from your application to a [Payload](/dataconversion#payload) before it is sent to the Temporal Service in the Client call.
-When the Temporal Server sends the encoded data back to the Worker, the Data Converter decodes it for processing within your application.
-This ensures that all your sensitive data exists in its original format only on hosts that you control.
+Data Converter 将应用程序中的数据编码为 [Payload](/dataconversion#payload)，然后再将其发送到客户端调用中的 Temporal 服务。
+当 Temporal Server 将编码数据发送回 Worker 时，Data Converter 对其进行解码以便在您的应用程序中进行处理。
+这可确保您的所有敏感数据仅以其原始格式存在于您控制的主机上。
 
-Data Converter steps are followed when data is sent to a Temporal Service (as input to a Workflow) and when it is returned from a Workflow (as output).
-Due to how Temporal provides access to Workflow output, this implementation is asymmetric:
+当数据发送到 Temporal 服务（作为 Workflow 的输入）以及从 Workflow 返回数据（作为输出）时，将遵循 Data Converter 步骤。
+由于 Temporal 如何提供对 Workflow 输出的访问，此实现是不对称的：
 
-- Data encoding is performed automatically using the default converter provided by Temporal or your custom Data Converter when passing input to a Temporal Service. For example, plain text input is usually serialized into a JSON object.
-- Data decoding may be performed by your application logic during your Workflows or Activities as necessary, but decoded Workflow results are never persisted back to the Temporal Service. Instead, they are stored encoded on the Temporal Service, and you need to provide an additional parameter when using [`temporal workflow show`](/cli/workflow#show) or when browsing the Web UI to view output.
+- 将输入传递到 Temporal 服务时，使用 Temporal 或您的自定义 Data Converter 提供的默认转换器自动执行数据编码。例如，纯文本输入通常会序列化为 JSON 对象。
+- 根据需要，您的应用程序逻辑可以在 Workflow 或活动期间执行数据解码，但解码后的 Workflow 结果永远不会保留回 Temporal 服务。相反，它们以编码形式存储在 Temporal 服务上，并且在使用 [`temporal workflow show`](/cli/workflow#show) 或浏览 Web UI 以查看输出时，您需要提供额外的参数。
 
-Each piece of data (like a single argument or return value) is encoded as a [Payload](/dataconversion#payload), which consists of binary data and key-value metadata.
+每条数据（如单个参数或返回值）都被编码为 [Payload](/dataconversion#payload)，它由二进制数据和键值元数据组成。
 
-For details, see the API references:
+详细信息请参见API参考：
 
-- [Go](https://pkg.go.dev/go.temporal.io/sdk/converter#DataConverter)
+- [开始](https://pkg.go.dev/go.temporal.io/sdk/converter#DataConverter)
 - [Java](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/converter/DataConverter.html)
 - [Python](https://python.temporal.io/temporalio.converter.DataConverter.html)
 - [TypeScript](https://typescript.temporal.io/api/interfaces/common.DataConverter)
 
-### What is a Payload? {#payload}
+### 什么是有效负载？ {#payload}
 
-A [Payload](https://api-docs.temporal.io/#temporal.api.common.v1.Payload) represents binary data such as input and output from Activities and Workflows.
-Payloads also contain metadata that describe their data type or other parameters for use by custom encoders/converters.
+[Payload](https://api-docs.temporal.io/#temporal.api.common.v1.Payload) 表示二进制数据，例如活动和 Workflow 的输入和输出。
+有效负载还包含描述其数据类型或供自定义编码器使用的其他参数的元数据/converters.
 
-When processed through the SDK, the [default Data Converter](/default-custom-data-converters#default-data-converter) serializes your data/value to a Payload before sending it to the Temporal Server.
-The default Data Converter processes supported type values to Payloads. You can create a custom [Payload Converter](/payload-converter) to apply different conversion steps.
+通过 SDK 处理时，[默认 Data Converter](/default-custom-data-converters#default-data-converter) 将您的数据 /value 序列化为有效负载，然后再将其发送到 Temporal Server。
+默认 Data Converter 将支持的类型值处理为有效负载。您可以创建自定义[有效负载转换器](/payload-converter)来应用不同的转换步骤。
 
-You can additionally apply [custom codecs](/payload-codec), such as for encryption or compression, on your Payloads.
+您还可以在有效负载上应用[自定义编解码器](/payload-codec)，例如加密或压缩。

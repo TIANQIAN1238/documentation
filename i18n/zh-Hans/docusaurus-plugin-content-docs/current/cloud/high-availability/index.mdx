@@ -1,0 +1,117 @@
+---
+id: index
+title: 高可用性
+sidebar_label: 高可用性
+slug: /cloud/high-availability
+description: Temporal Cloud 的 Namespace 具有高可用性功能，可为需要容灾部署和 99.99% 正常运行时间的工作负载提供自动故障转移、同步数据和复制。
+tags:
+  - Temporal Cloud
+  - Production
+  - High Availability
+keywords:
+  - availability
+  - explanation
+  - failover
+  - high-availability
+  - replication
+  - namespaces
+  - temporal-cloud
+---
+
+import { ToolTipTerm, DiscoverableDisclosure, CaptionedImage } from '@site/src/components';
+
+Temporal Cloud 的高可用性功能使用跨多个 <ToolTipTerm term="isolationdomains"/> 的异步 <ToolTipTerm term="replication"/> 来提供增强的弹性和 99.99% [SLA](/cloud/sla)。
+当您启用高可用性功能时，Temporal 会将您的主数据库及其 <ToolTipTerm term="replica"/> 部署在单独的隔离域中，从而使您能够控制两者的位置。这种冗余与 <ToolTipTerm term="failover"/> 功能相结合，增强了中断期间的可用性。
+
+:::tip White paper
+
+有关涵盖从为什么需要高可用性到在生产中设置高可用性和高级选项等所有内容的深入指南，请阅读[高可用性白皮书](https://Temporal.io/pages/high-availability-white-paper)。
+
+:::
+
+## 内置可靠性
+
+即使没有高可用性功能，Temporal Cloud 也能提供强大的可靠性和 99.9% 的合同服务级别协议 ([SLA](/cloud/sla)) 保证，防止出现服务错误。
+
+每个标准 Temporal Namespace 使用跨三个可用区 (AZ) 的复制来确保高可用性。
+可用区类似于由云超大规模管理器管理的隔离数据中心，具有独立的电源、网络和冷却基础设施。
+
+跨可用区的复制可确保在 Temporal 服务向客户端确认更改之前，对 Workflow 状态或历史记录的任何更改都保存在所有三个可用区中。
+因此，即使标准 Temporal Namespace 的三个可用区之一变得不可用，它也能保持运行。
+这为 Temporal Cloud Namespace 的 99.9% 服务水平协议奠定了基础。
+
+然而，一些关键用例（例如面向客户的应用程序）需要更好的可用性。这就是 Temporal Cloud 的高可用性功能的用武之地。
+
+## 高可用性功能 {#high-availability-features}
+
+高可用性功能将 Temporal Cloud 的复制产品扩展到更多不同的隔离域：
+
+| **部署** | **描述** |
+| --------------------------------------- | ---------------------------------------------------------------------- |
+| **多区域复制** | Namespace 跨两个云区域进行复制 |
+| **多云复制** | Namespace 在不同的云提供商之间进行复制 |
+
+### 主要特点
+
+- **实时复制** — Temporal 跨远程隔离域复制您的 Namespace，而不会对您的 Worker 或 Workflow 产生性能影响。
+- **具有 20 分钟 RTO 的自动故障转移** — Temporal 通过 20 分钟 [RTO](/cloud/rpo-rto) 管理故障转移。您还可以随时手动[触发故障转移](/cloud/high-availability/failovers)，例如用于测试。
+- **透明 DNS 路由** — 故障转移时，DNS 会将您的 [Namespace 端点](/cloud/Namespaces#access-Namespaces) 重新路由到活动区域。到达副本的请求会自动转发到活动区域。
+- **不到 1 分钟的 RPO** — 在中断期间的故障转移中，[恢复点目标](/cloud/rpo-rto) 不到一分钟。
+- **实时延迟监控** — 实时监控 Namespace 的复制延迟，以了解当前的 RPO。
+- **冲突解决** — 如果两个区域在故障转移时未完全同步，Temporal 的冲突解决过程会协调差异并确保数据完整性。
+
+:::info Region availability
+
+您通常可以选择副本区域，但副本必须与主区域位于同一大陆。
+这意味着一些 Temporal Cloud 区域尚不支持多区域复制和/或多云复制。
+有关支持的副本区域的完整列表，请参阅[区域](/cloud/regions)。
+
+您无法在同一命名空间上同时启用多区域复制和多云复制。
+
+:::
+
+### 多云复制
+
+多云复制将 Namespace 分布在完全不同的云提供商之间，即使在全云中断期间也能保持 Namespace 运行。
+如果发生提供商中断、服务中断或网络问题，流量会自动转移到副本。
+
+复制的数据经过加密并通过公共互联网在云提供商之间传输。
+这种互联网连接还允许一个云中的 Worker 在故障转移期间到达不同云中的副本。
+如果您使用[专用连接](/cloud/high-availability/ha-connectivity)，可能需要额外的架构工作来确保您的 Worker 可以到达副本区域。
+
+:::info
+
+当您采用 Temporal 的高可用性功能时，不要忘记考虑您自己的 Worker、基础设施和依赖项的可靠性。
+网络中断、硬件故障或您自己的系统配置错误等问题可能会影响您的应用程序性能。
+
+为了获得最高级别的可靠性，请跨区域分布您的依赖项，并使用我们的多区域或多云复制功能。
+使用物理上分离的区域可以提高应用程序的容错能力。
+
+:::
+
+## 服务水平和恢复目标
+
+使用高可用性的 Namespace 具有 99.99% 的 [正常运行时间 SLA](/cloud/sla)，以及不到 1 分钟的 [RPO](/cloud/rpo-rto) 和 20 分钟的 [RTO](/cloud/rpo-rto)。详细信息：
+
+- [服务级别协议 (SLA)](/cloud/sla)
+- [恢复点目标 (RPO) 和恢复时间目标 (RTO)](/cloud/rpo-rto)
+
+## 故障转移
+
+高可用性 如果主数据库不可用或运行状况不佳，Namespace 可以自动或手动[故障转移](/cloud/high-availability/failover) 到副本。
+
+## 目标工作负载
+
+高可用性 Namespace 是针对会导致中断的工作负载的绝佳解决方案：
+
+- 收入损失
+- 客户体验差
+- 源于要求高可用性的政策/法律要求的问题
+
+这些通常是金融服务、电子商务、游戏、全球 SaaS 平台、预订和预订、交付和运输以及订单管理的主要问题。
+
+## 同域复制
+
+在选定区域中，您可以将副本添加到同一区域中的 Namespace。
+Temporal 运行“单元架构”，并将在该区域的多个单元中复制 Namespace。
+此功能目前在选定区域处于[公开预览](/evaluate/development-product-features/release-stages)。

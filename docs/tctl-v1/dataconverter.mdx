@@ -1,8 +1,8 @@
 ---
 id: dataconverter
-title: tctl v1.17 data-converter command reference
-sidebar_label: dataconverter
-description: Explore the new public preview of Temporal CLI and provide your feedback. Use the tctl dataconverter command to customize Data Converter operations with Temporal Web.
+title: "tctl v1.17 数据转换器命令参考"
+sidebar_label: "数据转换器"
+description: "探索 Temporal CLI 的新公共预览版并提供您的反馈。使用 tctl dataconverter 命令通过 Temporal Web 自定义 Data Converter 操作。"
 toc_max_heading_level: 4
 keywords:
   - cli
@@ -15,43 +15,45 @@ keywords:
 
 :::info tctl is deprecated
 
-The tctl command line utility has been deprecated and is no longer actively supported.
-We recommend transitioning to [Temporal CLI](/cli) for continued use and access to new features.
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议过渡到 [Temporal CLI](/cli) 以继续使用和访问新功能。
 
-Thank you for being a valued part of the Temporal community.
+感谢您成为 Temporal 社区的重要组成部分。
 
 :::
 
-The `tctl dataconverter` command enables custom [Data Converter](/dataconversion) operations.
+`tctl dataconverter` 命令启用自定义 [Data Converter](/dataconversion) 操作。
 
-- [tctl dataconverter web](#web)
+- [tctl 数据转换器网络](#web)
 
-## web
+<a id="web"></a>
+## 网络 {#web}
 
-The `tctl dataconverter web` command specifies the WebSocket URL of a custom [Data Converter](/dataconversion) to use with Temporal Web.
+`tctl dataconverter web` 命令指定与 Temporal Web 一起使用的自定义 [Data Converter](/dataconversion) 的 WebSocket URL。
 
 `tctl dataconverter web --web_ui_url <url>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --port
+### - 港口 {#port}
 
-Specify a port for the WebSocket URL of a custom [Data Converter](/dataconversion).
-The default value is 0.
+指定自定义 [Data Converter](/dataconversion) 的 WebSocket URL 的端口。
+默认值为 0。
 
-**Example**
+**例子**
 
 ```bash
 tctl dataconverter web --web_ui_url <url> --port <value>
 ```
 
-### --web_ui_url
+<a id="port"></a>
+### --web_ui_url {#webuiurl}
 
-_Required modifier_
+_所需修饰符_
 
-Specify the WebSocket URL of a custom [Data Converter](/dataconversion).
+指定自定义 [Data Converter](/dataconversion) 的 WebSocket URL。
 
-**Example**
+**例子**
 
 ```bash
 tctl dataconverter web --web_ui_url <url>

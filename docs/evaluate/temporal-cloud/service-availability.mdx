@@ -1,8 +1,8 @@
 ---
 id: service-availability
-title: Service availability - Temporal Cloud
-sidebar_label: Availability
-description: Temporal Cloud offers high availability and low latency across multiple cloud provider regions with adjustable throughput limits and robust latency targets. Contact us for more details.
+title: "服务可用性 - Temporal Cloud"
+sidebar_label: "可用性"
+description: "Temporal Cloud 跨多个云提供商区域提供高可用性和低延迟，并具有可调整的吞吐量限制和强大的延迟目标。联系我们了解更多详情。"
 slug: /cloud/service-availability
 toc_max_heading_level: 4
 keywords:
@@ -14,52 +14,55 @@ tags:
   - Temporal Cloud
 ---
 
-The operating envelope of Temporal Cloud includes throughput, latency, and limits.
-Service regions are listed on [this page](/cloud/regions).
-If you need more details, [contact us](https://pages.temporal.io/contact-us).
+Temporal Cloud 的操作范围包括吞吐量、延迟和限制。
+服务区域列在 [本页](/cloud/regions) 上。
+如果您需要更多详细信息，[联系我们](https://pages.temporal.io/contact-us)。
 
-## Throughput expectations {#throughput}
+## 吞吐量预期 {#throughput}
 
-**What kind of throughput can I get with Temporal Cloud?**
+**使用 Temporal Cloud 可以获得什么样的吞吐量？**
 
-Each Namespace in Temporal has a rate limit, which is measured in [Actions](/cloud/pricing#action) per second. 
-Temporal offers two different modes for adjusting capacity: On-Demand Capacity or Provisioned Capacity.
-With On-Demand Capacity, Namespace capacity is increased automatically along with usage.
-With Provisioned Capacity, you can control your capacity limits by requesting Temporal Resource Units (TRUs).
+Temporal 中的每个 Namespace 都有一个速率限制，以每秒 [行动](/cloud/pricing#action) 为单位进行测量。 
+Temporal 提供两种不同的容量调整模式：按需容量或预置容量。
+通过按需容量，Namespace 容量会随着使用情况自动增加。
+借助预配置容量，您可以通过请求 Temporal 资源单元 (TRU) 来控制容量限制。
 
 :::tip Support, stability, and dependency info
 
-Provisioned Capacity is currently in [Public Preview](/evaluate/development-production-features/release-stages#public-preview).
+预配置容量当前为 [公开预览](/evaluate/development-production-features/release-stages#public-preview)。
 
 :::
 
-## Latency Service Level Objective (SLO) {#latency}
+## 延迟服务级别目标 (SLO) {#latency}
 
-**What kind of latency can I expect from Temporal Cloud?**
+**Temporal Cloud 会有什么样的延迟？**
 
-Temporal Cloud has a p99 latency SLO of 200ms per region.
+Temporal Cloud 每个区域的 p99 延迟 SLO 为 200 毫秒。
 
-The same SLO for normal Worker requests (commands and polling) apply to Nexus in both the caller and handler Namespaces.
+正常 Worker 请求（命令和轮询）的相同 SLO 适用于调用方和处理程序 Namespace 中的 Nexus。
 
-### Historical latency data
+<a id="historical-latency-data"></a>
+### 历史延迟数据 {#historical-latency-data}
 
-Latency over a week-long period for starting and signaling Workflow Executions was as follows:
+启动 Signaling Workflow Execution 的一周延迟如下：
 
-#### January 2026
+<a id="january-2026"></a>
+#### 2026 年 1 月 {#january-2026}
 
-| Operation                          |  p50   | p90  |  p99 |
+| 手术                          |  p50   | p90  |  p99 |
 | :--------------------------------- | :----: | :--: | ---: |
-| `StartWorkflowExecution`           | 14ms | 21ms | 69ms |
-| `SignalWorkflowExecution`          | 11ms | 19ms | 46ms |
-| `SignalWithStartWorkflowExecution` | 19ms | 37ms | 95ms |
+| `StartWorkflowExecution`           | 14毫秒 | 21毫秒 | 69毫秒 |
+| `SignalWorkflowExecution`          | 11毫秒 | 19毫秒 | 46毫秒 |
+| `SignalWithStartWorkflowExecution` | 19毫秒 | 37毫秒 | 95毫秒 |
 
-#### March 2024
+<a id="march-2024"></a>
+#### 2024 年 3 月 {#march-2024}
 
-| Operation                          | p90  |  p99 |
+| 手术                          | p90  |  p99 |
 | :--------------------------------- | :--: | ---: |
-| `StartWorkflowExecution`           | 24ms | 54ms |
-| `SignalWorkflowExecution`          | 14ms | 40ms |
-| `SignalWithStartWorkflowExecution` | 24ms | 61ms |
+| `StartWorkflowExecution`           | 24毫秒 | 54毫秒 |
+| `SignalWorkflowExecution`          | 14毫秒 | 40毫秒 |
+| `SignalWithStartWorkflowExecution` | 24毫秒 | 61毫秒 |
 
-Latency observed from the Temporal Client is influenced by other system components like the Codec Server, egress proxy, and the network itself.
-Also, concurrent operations on the same Workflow Execution may result in higher latency.
+从 Temporal CLIent 观察到的延迟受到其他系统组件（例如 Codec Server、出口代理和网络本身）的影响。
+此外，同一 Workflow Execution 上的并发操作可能会导致更高的延迟。

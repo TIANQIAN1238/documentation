@@ -1,8 +1,8 @@
 ---
 id: limits
-title: Workflow Execution limits
-sidebar_label: Limits
-description: The Workflow Execution's Event History is limited to 51,200 Events or 50 MB and will warn you after 10,240 Events or 10 MB.
+title: "Workflow Execution 限制"
+sidebar_label: "限制"
+description: "Workflow Execution 的 Event History 仅限于 51,200 个事件或 50 MB，并会在 10,240 个事件或 10 MB 后向您发出警告。"
 slug: /workflow-execution/limits
 keywords:
   - limits
@@ -14,49 +14,52 @@ tags:
   - Workflows
 ---
 
-This page discusses [Workflow Execution limits](#workflow-execution-limits), [Workflow Execution Callback limits](#workflow-execution-callback-limits), and [Nexus Operation limits](#workflow-execution-nexus-operation-limits).
+本页讨论 [Workflow Execution 限制](#workflow-execution-limits)、[Workflow Execution 回调限制](#workflow-execution-callback-limits) 和 [Nexus 操作限制](#workflow-execution-nexus-operation-limits)。
 
-## Limits {#workflow-execution-limits}
+<a id="workflow-execution-limits"></a>
+## 限制 {#workflow-execution-limits}
 
-There is no limit to the number of concurrent Workflow Executions, albeit you must abide by the Workflow Execution's Event History limit.
+并发 Workflow Execution 的数量没有限制，但您必须遵守 Workflow Execution 的 Event History 限制。
 
 :::caution
 
-As a precautionary measure, the Workflow Execution's Event History is limited to [51,200 Events](https://github.com/temporalio/temporal/blob/e3496b1c51bfaaae8142b78e4032cc791de8a76f/service/history/configs/config.go#L382) or [50 MB](https://github.com/temporalio/temporal/blob/e3496b1c51bfaaae8142b78e4032cc791de8a76f/service/history/configs/config.go#L380) and will warn you after 10,240 Events or 10 MB.
+作为预防措施，Workflow Execution 的 Event History 仅限于 [51,200 场活动](https://github.com/temporalio/temporal/blob/e3496b1c51bfaaae8142b78e4032cc791de8a76f/service/history/configs/config.go#L382) 或 [50MB](https://github.com/temporalio/temporal/blob/e3496b1c51bfaaae8142b78e4032cc791de8a76f/service/history/configs/config.go#L380)，并将在 10,240 个事件或 10 MB 后向您发出警告。
 
 :::
 
-There is also a limit to the number of certain types of incomplete operations.
+某些类型的不完整操作的数量也有限制。
 
-Each in-progress Activity generates a metadata entry in the Workflow Execution's mutable state.
-Too many entries in a single Workflow Execution's mutable state causes unstable persistence.
-To protect the system, Temporal enforces a maximum number of incomplete Activities, Child Workflows, Signals, or Cancellation requests per Workflow Execution (by default, 2,000 for each type of operation).
-Once the limit is reached for a type of operation, if the Workflow Execution attempts to start another operation of that type (by producing a `ScheduleActivityTask`, `StartChildWorkflowExecution`, `SignalExternalWorkflowExecution`, or `RequestCancelExternalWorkflowExecution` Command), it will be unable to (the Workflow Task Execution will fail and get retried).
+每个正在进行的 Activity 都会在 Workflow Execution 的可变状态下生成一个元数据条目。
+单个 Workflow Execution 的可变状态中的条目过多会导致持久性不稳定。
+为了保护系统，Temporal 强制每个 Workflow Execution 的不完整活动、Child Workflow、Signal 或取消请求的最大数量（默认情况下，每种类型的操作为 2,000）。
+一旦达到某种操作类型的限制，如果 Workflow Execution 尝试启动该类型的另一个操作（通过生成 `ScheduleActivityTask`、`StartChildWorkflowExecution`、`SignalExternalWorkflowExecution` 或 `RequestCancelExternalWorkflowExecution` 命令），它将无法启动（Workflow 任务执行将失败并重试）。
 
-These limits are set with the following [dynamic configuration keys](https://github.com/temporalio/temporal/blob/main/service/history/configs/config.go):
+这些限制是通过以下 [动态配置键](https://github.com/temporalio/temporal/blob/main/service/history/configs/config.go) 设置的：
 
 - `NumPendingActivitiesLimit`
 - `NumPendingChildExecutionsLimit`
 - `NumPendingSignalsLimit`
 - `NumPendingCancelRequestsLimit`
 
-## Workflow Execution Callback limits {#workflow-execution-callback-limits}
+<a id="workflow-execution-callback-limits"></a>
+## Workflow Execution 回调限制 {#workflow-execution-callback-limits}
 
-There is a limit to the total number of Workflow Callbacks that may be attached to a single Workflow Execution.
-Attaching [multiple Nexus callers to a handler Workflow](/nexus/operations#attaching-multiple-nexus-callers) may exceed these limits.
+可附加到单个 Workflow Execution 的 Workflow 回调总数有限制。
+连接 [处理程序 Workflow 的多个 Nexus 调用者](/nexus/operations#attaching-multiple-nexus-callers) 可能会超出这些限制。
 
-These limits can be set with the following dynamic configuration keys:
+可以使用以下动态配置键设置这些限制：
 - [MaxCallbacksPerWorkflow](https://github.com/temporalio/temporal/blob/3b626075691c483871630d4a4df266e783f86328/common/dynamicconfig/constants.go#L998)
 - [MaxCHASMCallbacksPerWorkflow](https://github.com/temporalio/temporal/blob/3b626075691c483871630d4a4df266e783f86328/common/dynamicconfig/constants.go#L1005)
 
-## Workflow Execution Nexus Operation Limits {#workflow-execution-nexus-operation-limits}
+<a id="workflow-execution-nexus-operation-limits"></a>
+## Workflow Execution Nexus 操作限制 {#workflow-execution-nexus-operation-limits}
 
-There is a limit to the maximum number of Nexus Operations in a Workflow before Continue-As-New is required.
-Each in-progress Nexus Operation generates a metadata entry in the Workflow Execution's mutable state.
-Too many entries in a single Workflow Execution's mutable state causes unstable persistence.
-To protect the system, Temporal enforces a maximum number of incomplete Nexus Operation requests per Workflow Execution (by default, 30 Nexus Operations).
-Once the limit is reached for a type of operation, if the Workflow Execution attempts to start another Nexus operation (by producing a ScheduleNexusOperation), it will be unable to do so (the Workflow Task Execution will fail and get retried).
+在需要 Continue-As-New 之前，Workflow 中的 Nexus 操作的最大数量有限制。
+每个正在进行的 Nexus 操作都会在 Workflow Execution 的可变状态下生成一个元数据条目。
+单个 Workflow Execution 的可变状态中的条目过多会导致持久性不稳定。
+为了保护系统，Temporal 强制每个 Workflow Execution 的不完整 Nexus 操作请求的最大数量（默认情况下，30 个 Nexus 操作）。
+一旦达到某种操作类型的限制，如果 Workflow Execution 尝试启动另一个 Nexus 操作（通过生成 ScheduleNexusOperation），它将无法执行此操作（Workflow 任务执行将失败并重试）。
 
-These limits are set with the following [dynamic configuration keys](https://github.com/temporalio/temporal/blob/de7c8879e103be666a7b067cc1b247f0ac63c25c/components/nexusoperations/config.go#L38):
+这些限制是通过以下 [动态配置键](https://github.com/temporalio/temporal/blob/de7c8879e103be666a7b067cc1b247f0ac63c25c/components/nexusoperations/config.go#L38) 设置的：
 
-- MaxConcurrentOperations
+- 最大并发操作数

@@ -1,9 +1,9 @@
 ---
 id: billing-and-cost
-title: Usage and billing management
-sidebar_label: Usage and billing
+title: "使用和计费管理"
+sidebar_label: "使用和计费"
 sidebar_position: 3
-description: As an Account Owner, you can access and manage billing details anytime, with invoices available for download on the Billing page. Typical billing cycles begin on the first of the month (UTC).
+description: "作为帐户所有者，您可以随时访问和管理帐单详细信息，并可在帐单页面下载发票。典型的计费周期从每月的第一天 (UTC) 开始。"
 slug: /cloud/billing-and-cost
 toc_max_heading_level: 4
 keywords:
@@ -23,146 +23,148 @@ tags:
 
 import * as Components from '@site/src/components';
 
-Temporal strives to provide full transparency over billing and costs.
-Use this information to assess your spending patterns, inspect your credit ledger, check your invoice histories, update payment details,
-and manage your current plan as needed.
+Temporal 致力于提供计费和成本的完全透明度。
+使用此信息来评估您的支出模式、检查您的信用分类帐、检查您的发票历史记录、Update 付款详细信息、
+并根据需要管理您当前的计划。
 
-For more information on current Temporal Cloud pricing for Actions, storage, and services/support, please visit our [Pricing](/cloud/pricing) page.
+有关操作、存储和服务/支持的当前 Temporal Cloud 定价的更多信息，请访问我们的 [定价](/cloud/pricing) 页面。
 
-Temporal Provides multiple ways to view your usage and billing data:
+Temporal 提供多种方式查看您的使用情况和计费数据：
 
-- [Billing Center](https://cloud.temporal.io/billing) allows you to see summary invoices and credits, manage plans, and delete your accounts.
-    - Coming soon: Billing dashboard enhancements to visualize billing by Namespace over time
-    - Viewable by Account Owners and Finance Admin
-- [Usage Dashboards](https://cloud.temporal.io/usage) allow you to monitor Namespace level usage over time.
-    - Coming soon: Additional granularity based on Action Types, grouping by Tags, and grouping by Projects
-    - Viewable by Account Owners, Finance Admin, Global Admin on an account level. Namespace level usage is visible on the Namespace pages to those with access.
-- [Billing API](/cloud/billing-api) allow you to access billing information on a Namespace basis down to an hourly granularity, enriched with Tags and Projects.
-The Billing API provides a FOCUS-guided data format that can be ingested into your cloud cost management platform or analytics tooling, or downloaded as a CSV.
-    - Viewable by Account Owners, Finance Admin
+- [计费中心](https://cloud.temporal.io/billing) 允许您查看汇总发票和积分、管理计划以及删除帐户。
+    - 即将推出：计费仪表板增强功能，可随时间推移通过 Namespace 可视化计费
+    - 账户所有者和财务管理员可以查看
+- [使用情况仪表板](https://cloud.temporal.io/usage) 允许您监控 Namespace 级别随时间的使用情况。
+    - 即将推出：基于操作类型、按标签分组和按项目分组的附加粒度
+    - 账户所有者、财务管理员、账户级别的全局管理员均可查看。 Namespace 级别的使用情况在 Namespace 页面上对具有访问权限的人员可见。
+- [计费接口](/cloud/billing-api) 允许您以 Namespace 为基础访问计费信息，粒度细至每小时，并通过标签和项目进行丰富。
+计费 API 提供了一种 FOCUS 引导的数据格式，可以将其引入到您的云成本管理平台或分析工具中，或以 CSV 形式下载。
+    - 账户所有者、财务管理员均可查看
 
 :::tip Support, stability, and dependency info
 
-The Temporal Cloud Billing API is in [Pre-release](/evaluate/development-production-features/release-stages#pre-release).
+Temporal Cloud 计费 API 位于 [预发布](/evaluate/development-production-features/release-stages#pre-release) 中。
 
 :::
 
-## Current balance {#current-balance}
+## 当前余额 {#current-balance}
 
-Your current balance card shows the balance for your current billing cycle and the date it was last updated.
-This balance adjusts with use and appears on the first line of your Invoices table.
+您当前的余额卡显示当前结算周期的余额以及上次 Updated 的日期。
+该余额会根据使用情况进行调整，并显示在发票表的第一行。
 
 :::note Billing Cycles
 
-Billing cycles normally begin on the first of the month (UTC).
-The minimum plan fee for your first month is prorated based on your sign-up date.
+计费周期通常从每月的第一天 (UTC) 开始。
+第一个月的最低计划费用根据您的注册日期按比例分配。
 
 :::
 
-## Recent bill {#recent-bill}
+## 最近账单 {#recent-bill}
 
-The "Recent Bill" card displays the previous bill amount.
+“最近账单”卡显示之前的账单金额。
 
-![Recent bill card showing a balance of $0.00](/img/cloud/billing/billing-card.png)
+![最近的帐单卡显示余额为 0.00 美元](/img/cloud/billing/billing-card.png)
 
-- If you pay your invoices through Stripe, you'll see a **Pay Now** button.
-  It takes you to the Stripe portal to complete your payment
-- If your account is set up for auto-payment, you don’t need to manually pay bills.
-  However, you can choose to make manual payments whenever you wish
+- 如果您通过 Stripe 支付发票，您将看到 **立即付款** 按钮。
+  它会将您带到 Stripe 门户以完成付款
+- 如果您的帐户设置为自动付款，则无需手动支付账单。
+  但是，您可以随时选择手动付款
 
-## Invoices {#invoice}
+## 发票 {#invoice}
 
-To review your invoices, follow these steps:
+要查看您的发票，请按照以下步骤操作：
 
-1. Click **Billing** on your left-side vertical navigation.
-2. Under the **Invoices** section, select and download the invoice(s) you want to review.
+1. 单击左侧垂直导航上的**账单**。
+2. 在 **发票** 部分下，选择并下载您要查看的发票。
 
-The Invoices table shows the following information:
+发票表显示以下信息：
 
-- Date (UTC): The date range covered by the invoice
-- Type: The type of invoice, such as credit purchase or cloud usage
-- Status: The current status of the invoice, such as paid or pending
-- Credit Granted: The total credits added to your account
-- Credit Purchase Amount: The amount paid for purchasing credits
-- Credit Usage: The credits used during the billing cycle
-- Subtotal: The total amount of the invoice before any adjustments
-- Balance Due: The amount to pay after applying credits
+- 日期 (UTC)：发票涵盖的日期范围
+- 类型：发票类型，例如信用购买或云使用
+- 状态：发票的当前状态，例如已付款或待处理
+- 授予的积分：添加到您帐户的总积分
+- 积分购买金额：购买积分所支付的金额
+- 积分使用情况：计费周期内使用的积分
+- 小计：任何调整前的发票总金额
+- 应付余额：申请积分后需要支付的金额
 
-![Billing page showing Invoices tab](/img/cloud/billing/billing-invoices.png)
+![显示“发票”选项卡的计费页面](/img/cloud/billing/billing-invoices.png)
 
-You may download your Invoices prior to this calendar month by clicking the download icon by the date.
+您可以通过单击日期旁边的下载图标来下载本日历月之前的发票。
 
 :::note Current Month Invoice
 
-During the current billing period, your invoice will not be finalized and the download option will not be available.
+在当前计费周期内，您的发票尚未最终确定，并且下载选项将不可用。
 
 :::
 
-## Credits {#credit-table}
+## 学分 {#credit-table}
 
-The following information appears under the credits table:
+以下信息显示在 Credits 表下：
 
-- Effective At (UTC): The date when the credit grant became effective
-- Type: Indicates whether the transaction was a deduction, expiry, or grant
-- Amount: The credit amount that was granted, deducted, or expired
-- Credits Remaining: The remaining credit available in the account
+- 生效时间（UTC）：信用授予生效的日期
+- 类型：指示交易是扣除、到期还是赠款
+- 金额：授予、扣除或过期的信用金额
+- 剩余积分：账户中剩余的可用积分
 
-![Billing page showing Credits tab](/img/cloud/billing/billing-credits.png)
+![显示“积分”选项卡的计费页面](/img/cloud/billing/billing-credits.png)
 
-## Cost by Namespace {#cost-by-namespace}
+<a id="cost-by-namespace"></a>
+## 成本 Namespace {#cost-by-namespace}
 
 :::tip Temporal Cloud Billing API in Pre-release
 
-The [Temporal Cloud Billing API](/cloud/billing-api) allows you to access billing information on a Namespace basis to an hourly granularity, enriched with Tags and Projects. The Billing API will replace the Cost by Namespace UI.
+[Temporal Cloud 计费 API](/cloud/billing-api) 允许您以 Namespace 为基础，以小时为单位访问计费信息，并通过标签和项目进行丰富。计费 API 将通过 Namespace UI 替换成本。
 
 :::
 
-Account Owners and Finance Admins can access a cost column on the Usage page.
-This allows you to monitor your cost on a per Namespace basis.
-If your organization separates work by Namespace—for development, production, or different products—you can view costs for each.
+账户所有者和财务管理员可以访问“使用情况”页面上的成本列。
+这使您可以根据 Namespace 监控您的成本。
+如果您的组织按 Namespace 划分工作（开发、生产或不同产品），您可以查看每个工作的成本。
 
-![Billing page showing Usage](/img/cloud/billing/billing-usage.png)
+![显示使用情况的计费页面](/img/cloud/billing/billing-usage.png)
 
 :::note Cost Breakdown Limitations
 
-Namespace cost details are not available for "last 90 days" or "last 120 days".
+Namespace 费用详细信息不适用于“过去 90 天”或“过去 120 天”。
 
-Cost breakdowns distribute the total usage cost to namespaces proportionally based on their metered usage. The proration
-reflects your effective price, factoring in included Actions/Storage and tiered pricing rates in your Temporal plan.
+成本细分根据 Namespace 的计量使用情况按比例将总使用成本分配给 Namespace。按比例分配
+反映您的有效价格，考虑 Temporal 计划中包含的操作/存储和分级定价费率。
 
 :::
 
-## Plans {#plans}
+## 计划 {#plans}
 
-Account Owners and Finance Admins can access their Temporal Plan information on the plans page.
-For customers on a standard agreement you will be able to:
+帐户所有者和财务管理员可以在计划页面上访问其 Temporal 计划信息。
+对于签订标准协议的客户，您将能够：
 
-- View current plan information, pricing details and entitlements
-- View other available plans, pricing details and entitlements
-- View Pay-as-You-Go pricing rates applicable to your plan
-- Upgrade and Downgrade between plans available on a standard agreement
+- 查看当前计划信息、定价详细信息和权利
+- 查看其他可用计划、定价详细信息和权利
+- 查看适用于您的计划的即用即付定价
+- 标准协议上可用的计划之间的升级和降级
 
-![Billing page showing Plans tab](/img/cloud/billing/billing-plans.png)
+![显示“计划”选项卡的计费页面](/img/cloud/billing/billing-plans.png)
 
-Requests to upgrade your plan are processed immediately and you will be billed on a pro-rated basis for that billing period.
-Your monthly entitlements will reflect the full volume of included Actions and Storage of the upgrade plan for that billing month.
-After an upgrade, a downgrade cannot be processed until the following billing period.
+升级您的计划的请求将立即得到处理，并且您将在该计费周期内按比例付费。
+您的每月权利将反映该帐单月份升级计划中包含的操作和存储的全部数量。
+升级后，直到下一个计费周期才能处理降级。
 
-Requests to downgrade will be processed immediately. Billing and entitlements will be backdated to the beginning of the billing period.
+降级请求将立即得到处理。计费和权利将回溯到计费周期开始时。
 
-## Account Cancellation
+<a id="account-cancellation"></a>
+## 账户注销 {#account-cancellation}
 
-The way you created your Temporal account determines how you can cancel your subscription and remove the account.
+您创建 Temporal 帐户的方式决定了您如何取消订阅和删除帐户。
 
-- **For accounts managed by our sales team**. <br />
-  Please submit a support ticket so we can help you.
+- **适用于我们销售团队管理的帐户**。 <br />
+  请提交支持票，以便我们为您提供帮助。
 
-- **For accounts created through our self-signup portal**. <br />
-  Account owners can delete their accounts on the Temporal Cloud Billing page, under the **Plan** tab.
-  If you're no longer using Temporal Cloud, use the Delete Account button to begin the process.
+- **对于通过我们的自助注册门户创建的帐户**。 <br />
+  帐户所有者可以在 Temporal Cloud 计费页面的 **计划** 选项卡下删除其帐户。
+  如果您不再使用 Temporal Cloud，请使用“删除帐户”按钮开始该过程。
 
-  - Permanently deleted accounts will immediately cease billing and be scheduled for full deletion within 72 hours.
+- 永久删除的帐户将立即停止计费，并在 72 小时内完全删除为 Scheduled。
 
-  - Account Data and Active Storage will be permanently deleted. Retained Storage will be deleted in accordance with its configured retention period.
+- 帐户数据和活动存储将被永久删除。保留存储将根据其配置的保留期限被删除。
 
-![Billing page showing the Plan tab. The contents on the tab include "Manage Payment Method" and "Delete Account" buttons. The "Delete Account" button is placed below text asking "No longer using Temporal Cloud?"](/img/cloud/billing/billing-cancel.png)
+![显示“计划”选项卡的计费页面。选项卡上的内容包括“管理付款方式”和“删除帐户”按钮。 “删除帐户”按钮位于询问“不再使用 Temporal Cloud？”的文本下方。](/img/cloud/billing/billing-cancel.png)

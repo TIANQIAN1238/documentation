@@ -1,8 +1,8 @@
 ---
 id: testing-suite
-title: Testing - .NET SDK
-sidebar_label: Testing
-description: The .NET test-suite guide covers Workflow and integration testing for Temporal. It includes end-to-end, integration, and unit testing, emphasizing the use of the test server to optimize test execution.
+title: "测试 - .NET SDK"
+sidebar_label: "测试"
+description: ".NET 测试套件指南涵盖 Workflow 和 Temporal 的集成测试。它包括端到端、集成和单元测试，强调使用测试服务器来优化测试执行。"
 toc_max_heading_level: 4
 keywords:
   - developer guide
@@ -18,42 +18,44 @@ tags:
   - Testing
 ---
 
-The .NET test-suite feature guide describes the frameworks that facilitate Workflow and integration testing.
+.NET 测试套件功能指南描述了促进 Workflow 和集成测试的框架。
 
-In the context of Temporal, you can create these types of automated tests:
+在 Temporal 的上下文中，您可以创建以下类型的自动化测试：
 
-- **End-to-end:** Running a Temporal Server and Worker with all its Workflows and Activities; starting and interacting with Workflows from a Client.
-- **Integration:** Anything between end-to-end and unit testing.
-  - Running Activities with mocked Context and other SDK imports (and usually network requests).
-  - Running Workers with mock Activities, and using a Client to start Workflows.
-  - Running Workflows with mocked SDK imports.
-- **Unit:** Running a piece of Workflow or Activity code and mocking any code it calls.
+- **端到端：** 运行 Temporal Server 和 Worker 及其所有 Workflow 和活动；从客户端启动 Workflow 并与之交互。
+- **集成：** 端到端和单元测试之间的任何内容。
+  - 使用模拟上下文和其他 SDK 导入（通常是网络请求）运行活动。
+  - 使用模拟活动运行 Worker，并使用客户端启动 Workflow。
+  - 使用模拟 SDK 导入运行 Workflow。
+- **单元：** 运行一段 Workflow 或 Activity 代码并模拟它调用的任何代码。
 
-We generally recommend writing the majority of your tests as integration tests.
+我们通常建议将大部分测试编写为集成测试。
 
-Because the test server supports skipping time, use the test server for both end-to-end and integration tests with Workers.
+由于测试服务器支持跳过时间，因此请使用测试服务器与 Worker 进行端到端测试和集成测试。
 
-## Test frameworks {#test-frameworks}
+## 测试框架 {#test-frameworks}
 
-**Compatible testing frameworks**
+**兼容的测试框架**
 
-The .NET SDK is compatible with any testing framework and does not have a specific recommendation.
-Most .NET SDK samples use [xUnit](https://xunit.net/).
+.NET SDK 与任何测试框架兼容，没有具体的建议。
+大多数 .NET SDK 示例使用 [x单位](https://xunit.net/)。
 
-## Testing Workflows {#testing-workflows}
+<a id="testing-workflows"></a>
+## 测试 Workflows {#testing-workflows}
 
-**How to test Workflow Definitions using the Temporal .NET SDK**
+**如何使用 Temporal .NET SDK 测试 Workflow Definition**
 
-Workflow testing can be done in an integration-test fashion against a real server, however it is hard to simulate timeouts and other long time-based code.
-Using the time-skipping Workflow test environment can help there.
+Workflow 测试可以针对真实服务器以集成测试方式完成，但是很难模拟超时和其他基于长时间的代码。
+使用跳时 Workflow 测试环境可以提供帮助。
 
-### Testing Workflows with standard server
+<a id="testing-workflows-with-standard-server"></a>
+### 使用标准服务器测试 Workflow {#testing-workflows-with-standard-server}
 
-A non-time-skipping `Temporalio.Testing.WorkflowEnvironment` can be started via `StartLocalAsync` which supports all standard Temporal features.
-It is actually the real Temporal dev server packaged in the Temporal CLI, lazily downloaded on first use, and run as a sub-process in the background.
-Assuming tests properly use separate Task Queues, the same server can and should be reused across tests.
+非跳时 `Temporalio.Testing.WorkflowEnvironment` 可以通过 `StartLocalAsync` 启动，`StartLocalAsync` 支持所有标准 Temporal 功能。
+它实际上是打包在 Temporal CLI 中的真正的 Temporal 开发服务器，首次使用时会延迟下载，并在后台作为子进程运行。
+假设测试正确使用单独的 Task Queue，则可以而且应该在测试中重复使用同一服务器。
 
-Here's a simple example of a Workflow:
+以下是 Workflow 的简单示例：
 
 ```csharp
 [Workflow]
@@ -67,7 +69,7 @@ public class SayHelloWorkflow
 }
 ```
 
-Here's how a test of that Workflow may appear in xUnit:
+以下是 Workflow 的测试在 xUnit 中的显示方式：
 
 ```csharp
 using Temporalio.Testing;
@@ -97,20 +99,22 @@ public async Task SayHelloWorkflow_SimpleRun_Succeeds()
 }
 ```
 
-While this is just a demonstration, a local server is often used as a fixture across many tests.
+虽然这只是一个演示，但本地服务器通常用作许多测试的固定装置。
 
-### Testing Workflows with time skipping
+<a id="testing-workflows-with-time-skipping"></a>
+### 通过时间跳跃测试 Workflow {#testing-workflows-with-time-skipping}
 
-Sometimes there is a need to test Workflows that run a long time or to test that timeouts occur.
-A time-skipping `Temporalio.Testing.WorkflowEnvironment` can be started via `StartTimeSkippingAsync` which is a reimplementation of the Temporal server with special time skipping capabilities.
-Like `StartLocalAsync`, this also lazily downloads the process to run when first called.
-Note, unlike `StartLocalAsync`, this class is not thread safe nor safe for use with independent tests.
-It can be technically be reused, but only for one test at a time because time skipping is locked/unlocked at the environment level.
-Developers are encouraged to run it per test needed.
+有时需要测试运行时间较长的Workflow或测试是否发生超时。
+时间跳跃 `Temporalio.Testing.WorkflowEnvironment` 可以通过 `StartTimeSkippingAsync` 启动，`StartTimeSkippingAsync` 是具有特殊时间跳跃功能的 Temporal Server 的重新实现。
+与 `StartLocalAsync` 一样，这也会在第一次调用时延迟下载要运行的进程。
+请注意，与 `StartLocalAsync` 不同，此类不是线程安全的，也不能安全用于独立测试。
+从技术上讲，它可以重复使用，但一次只能用于一个测试，因为时间跳跃是在环境级别锁定/解锁的。
+鼓励开发人员根据需要的测试运行它。
 
-#### Automatic time skipping
+<a id="automatic-time-skipping"></a>
+#### 自动时间跳跃 {#automatic-time-skipping}
 
-Here's a simple example of a Workflow that waits a day:
+下面是一个等待一天的 Workflow 的简单示例：
 
 ```csharp
 [Workflow]
@@ -125,9 +129,9 @@ public class WaitADayWorkflow
 }
 ```
 
-A regular integration test of this Workflow on a normal server would be way too slow.
-However, the time-skipping server automatically skips to the next event when we wait on the result.
-Here's a test for that Workflow in xUnit:
+在普通服务器上对此 Workflow 进行常规集成测试会太慢。
+然而，当我们等待结果时，跳时服务器会自动跳到下一个事件。
+以下是 xUnit 中 Workflow 的测试：
 
 ```csharp
 using Temporalio.Testing;
@@ -157,16 +161,17 @@ public async Task WaitADayWorkflow_SimpleRun_Succeeds()
 }
 ```
 
-This test will run almost instantly.
-This is because by calling `ExecuteWorkflowAsync` on our client, we are actually calling `StartWorkflowAsync` + `GetResultAsync`, and `GetResultAsync` automatically skips time as much as it can (basically until the end of the workflow or until an activity is run).
+该测试几乎会立即运行。
+这是因为通过在客户端上调用 `ExecuteWorkflowAsync`，我们实际上是在调用 `StartWorkflowAsync` + `GetResultAsync`，并且 `GetResultAsync` 会自动尽可能地跳过时间（基本上直到 Workflow 结束或直到 Activity 运行）。
 
-To disable automatic time-skipping while waiting for a workflow result, run code as a lambda passed to `env.WithAutoTimeSkippingDisabled` or `env.WithAutoTimeSkippingDisabledAsync`.
+要在等待 Workflow 结果时禁用自动时间跳跃，请将代码作为传递给 `env.WithAutoTimeSkippingDisabled` 或 `env.WithAutoTimeSkippingDisabledAsync` 的 lambda 运行。
 
-#### Manual time skipping
+<a id="manual-time-skipping"></a>
+#### 手动时间跳跃 {#manual-time-skipping}
 
-Until a Workflow is waited on, all time skipping in the time-skipping environment is done manually via `WorkflowEnvironment.DelayAsync`.
+在等待 Workflow 之前，时间跳跃环境中的所有时间跳跃都是通过 `WorkflowEnvironment.DelayAsync` 手动完成的。
 
-Here's a Workflow that waits for a Signal or times out:
+这是等待 Signal 或超时的 Workflow：
 
 ```csharp
 [Workflow]
@@ -190,7 +195,7 @@ public class SignalWorkflow
 }
 ```
 
-To test a normal Signal in xUnit, you might:
+要在 xUnit 中测试正常的 Signal，您可以：
 
 ```csharp
 using Temporalio.Testing;
@@ -215,7 +220,7 @@ public async Task SignalWorkflow_SendSignal_HasExpectedResult()
 }
 ```
 
-But how would you test the timeout part? Like so:
+但如何测试超时部分呢？就像这样：
 
 ```csharp
 using Temporalio.Testing;
@@ -240,35 +245,36 @@ public async Task SignalWorkflow_SignalTimeout_HasExpectedResult()
 }
 ```
 
-### Mocking Activities
+<a id="mocking-activities"></a>
+### 嘲笑活动 {#mocking-activities}
 
-When testing Workflows, often you don't want to actually run the Activities.
-Activities are just methods with the `[Activity]` attribute.
-Simply write different/empty/fake/asserting ones and pass those to the Worker to have different activities called during the test.
+测试 Workflow 时，您通常不想实际运行活动。
+活动只是具有 `[Activity]` 属性的方法。
+只需编写不同的/空的/假的/断言的并将它们传递给 Worker 即可在测试期间调用不同的活动。
 
-## Testing Activities {#test-activities}
+## 测试活动 {#test-activities}
 
-**How to test Activity Definitions using the Temporal .NET SDK**
+**如何使用 Temporal .NET SDK 测试 Activity Definition**
 
-Unit testing an Activity or any code that could run in an Activity is done via the `Temporalio.Testing.ActivityEnvironment` class.
-Simply instantiate the class, and any code inside `RunAsync` will be invoked inside the activity context.
-The following important members are available on the environment to affect the activity context:
+Activity 或任何可以在 Activity 中运行的代码的单元测试是通过 `Temporalio.Testing.ActivityEnvironment` 类完成的。
+只需实例化该类，`RunAsync` 中的任何代码都将在 Activity 上下文中调用。
+环境中可以使用以下重要成员来影响 Activity 上下文：
 
-- `Info` - Activity info, defaulted to a basic set of values.
-- `Logger` - Activity logger, defaulted to a null logger.
-- `Cancel(CancelReason)` - Helper to set the reason and cancel the source.
-- `CancelReason` - Cancel reason.
-- `CancellationTokenSource` - Token source for issuing cancellation.
-- `Heartbeater` - Callback invoked each heartbeat.
-- `WorkerShutdownTokenSource` - Token source for issuing Worker shutdown.
-- `PayloadConverter` - Defaulted to default payload converter.
+- `Info` - Activity 信息，默认为一组基本值。
+- `Logger` - Activity 记录器，默认为空记录器。
+- `Cancel(CancelReason)` - 设置原因并取消源的帮助程序。
+- `CancelReason` - 取消原因。
+- `CancellationTokenSource` - 用于发出取消的令牌源。
+- `Heartbeater` - 回调调用每个心跳。
+- `WorkerShutdownTokenSource` - 用于发出 Worker 关闭的令牌源。
+- `PayloadConverter` - 默认为默认有效负载转换器。
 
-## Replay test {#replay}
+## 重播测试 {#replay}
 
-**How to do a Replay test using the Temporal .NET SDK**
+**如何使用 Temporal .NET SDK 进行重放测试**
 
-Given a Workflow's history, it can be replayed locally to check for things like non-determinism errors.
-For example, assuming the `history` parameter below is given a JSON string of history exported from the CLI or web UI, the following method will replay it:
+给定 Workflow 的历史记录，可以在本地重播它以检查诸如非确定性错误之类的内容。
+例如，假设下面的 `history` 参数给出了从 CLI 或 Web UI 导出的历史记录的 JSON 字符串，则以下方法将重播它：
 
 ```csharp
 using Temporalio;
@@ -282,11 +288,11 @@ public static async Task ReplayFromJsonAsync(string historyJson)
 }
 ```
 
-If there is a non-determinism, this will throw an exception.
+如果存在非确定性，则会抛出异常。
 
-Workflow history can be loaded from more than just JSON.
-It can be fetched individually from a Workflow handle, or even in a list.
-For example, the following code will check that all Workflow histories for a certain Workflow type (i.e. workflow class) are safe with the current Workflow code.
+Workflow 历史记录不仅可以从 JSON 加载。
+它可以从 Workflow 句柄中单独获取，甚至可以在列表中获取。
+例如，以下代码将检查特定 Workflow 类型（即 Workflow 类）的所有 Workflow 历史记录对于当前 Workflow 代码是否安全。
 
 ```csharp
 using Temporalio;

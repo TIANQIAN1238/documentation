@@ -1,8 +1,8 @@
 ---
 id: managing-aps-limits
-title: Managing Actions per Second (APS) limits in Temporal Cloud
-sidebar_label: Managing APS limits
-description: Control how limits are assigned to a Namespace with Capacity Modes
+title: "管理 Temporal Cloud 中的每秒操作数 (APS) 限制"
+sidebar_label: "管理 APS 限制"
+description: "控制如何将限制分配给具有容量模式的 Namespace"
 slug: /best-practices/managing-aps-limits
 toc_max_heading_level: 4
 keywords:
@@ -23,246 +23,272 @@ tags:
   - TRUs
 ---
 
-If you're running Workflows on Temporal Cloud, you've probably noticed that each Namespace comes with an Actions Per Second (APS) limit. 
-But what exactly does that mean, and why does it matter?
+如果您在 Temporal Cloud 上运行 Workflow，您可能已经注意到每个 Namespace 都带有每秒操作数 (APS) 限制。 
+但这到底意味着什么？为什么它很重要？
 
-In Temporal, an "action" is any operation that modifies Workflow state or interacts with the Temporal service. 
-Your Namespace's APS limit controls how many of these operations can happen per second across all Workflows within that Namespace.
-When the APS limit is reached, Temporal begins to throttle requests. 
-Depending on the business priority of the Workflow, this may be fine or it may have significant impact. 
+在 Temporal 中，“操作”是修改 Workflow 状态或与 Temporal 服务交互的任何操作。 
+Namespace 的 APS 限制控制该 Namespace 内的所有 Workflow 每秒可以发生的此类操作的数量。
+当达到 APS 限制时，Temporal 开始限制请求。 
+根据 Workflow 的业务优先级，这可能没问题，也可能会产生重大影响。
 
-The difficulty is that APS consumption isn't always intuitive. 
-A single Workflow Execution generates multiple actions from the moment it starts, and use cases that fit nicely within APS limits at small scale can exhaust those limits as they grow. 
-Many customers are surprised to find they're hitting APS constraints well before they expected to based on their Workflow count alone.
+困难在于 APS 消耗并不总是直观的。 
+单个 Workflow Execution 从启动的那一刻起就会生成多个操作，并且在小规模下非常适合 APS 限制的用例可以随着它们的增长而耗尽这些限制。 
+许多客户惊讶地发现，他们远远超出了仅根据 Workflow 计数所预期的 APS 限制。
 
-This guide will help you understand why customers hit APS limits, how to design Workflows that use actions efficiently, and what to do when you're approaching capacity.
-When design changes aren't enough, Temporal Cloud offers [Provisioned Capacity Mode](#provisioned-capacity-and-trus) that let you reserve additional capacity using Temporal Resource Units (TRUs) for spiky or unpredictable workloads.
+本指南将帮助您了解客户为何达到 APS 限制、如何设计有效使用操作的 Workflow，以及在接近容量时应采取的措施。
+当设计更改还不够时，Temporal Cloud 提供 [预配容量模式](#provisioned-capacity-and-trus)，让您可以使用 Temporal 资源单元 (TRU) 为尖峰或不可预测的工作负载预留额外容量。
 
-Whether you're just getting started with Temporal Cloud or optimizing an existing deployment, managing APS effectively is key to building scalable, reliable applications.
+无论您是刚刚开始使用 Temporal Cloud 还是优化现有部署，有效管理 APS 都是构建可扩展、可靠的应用程序的关键。
 
-## Understanding Actions in Temporal
+<a id="understanding-actions-in-temporal"></a>
+## 了解 Temporal 中的操作 {#understanding-actions-in-temporal}
 
-Before we dive into why customers hit APS limits, let's talk about what actions are.
+在我们深入探讨客户为何达到 APS 限制之前，我们先讨论一下哪些操作。
 
-### What Counts as an Action?
+<a id="what-counts-as-an-action"></a>
+### 什么才是行动？ {#what-counts-as-an-action}
 
-In Temporal, actions are the fundamental operations that drive your Workflows forward. 
-Here's an overview of what counts, with [the full list in our documentation](/cloud/actions).
+在Temporal中，行动是推动您的Workflow前进的基本操作。 
+以下概述了 [我们文档中的完整列表](/cloud/actions) 的重要性。
 
-- Workflows: Starting, completing, resetting. Also starting Child Workflows, as well as Schedules and Timers
-- Activities: Starting, retrying, Heartbeating
-- Signals, Updates, and Queries 
+- Workflows：开始、完成、重置。还启动 Child Workflows、Schedules 和 Timers
+- 活动：开始、重试、心跳
+- Signal、Update 和查询
 
-Actions that count toward an APS limit are, with a few exemptions, the same as actions that are billable. 
-The key insight here is that nearly everything that happens in Temporal--state changes, decision points, interactions--is counted as an action.
+除少数例外情况外，计入 APS 限制的操作与计费操作相同。 
+这里的关键见解是，Temporal 中发生的几乎所有事情——状态变化、决策点、交互——都被算作一个动作。
 
-### The Action Multiplier Effect
+<a id="the-action-multiplier-effect"></a>
+### 行动乘数效应 {#the-action-multiplier-effect}
 
-What this means is that when you start a single Workflow, you're not performing just one action as it relates to APS because a Workflow isn’t a single atomic operation, it’s a series of events that Temporal orchestrates. 
-Each Activity at the start of the Workflow is an Action, so there can be a burst of Activities at the start of a Workflow. 
-Additionally, there are often business reasons to start multiple Workflows at the same time.
+这意味着，当您启动单个 Workflow 时，您不仅仅执行与 APS 相关的一个操作，因为 Workflow 不是单个原子操作，而是 Temporal 编排的一系列事件。 
+Workflow 开头的每个 Activity 都是一个操作，因此 Workflow 开头可能会出现一系列活动。 
+此外，通常出于业务原因需要同时启动多个 Workflow。
 
-These can all contribute to the multiplier effect. 
+这些都可以起到事半功倍的效果。
 
-### The Effect of Rate Limiting
+<a id="the-effect-of-rate-limiting"></a>
+### 速率限制的影响 {#the-effect-of-rate-limiting}
 
-In Temporal Cloud, the effect of rate limiting is increased latency, not lost work. 
-Workers [might take longer](/cloud/service-availability#throughput) to complete Workflows. 
+在 Temporal Cloud 中，速率限制的影响是增加延迟，而不是丢失工作。 
+Workers [可能需要更长的时间](/cloud/service-availability#throughput) 来完成 Workflows。
 
-## Common Reasons Customers Hit APS Limits
+<a id="common-reasons-customers-hit-aps-limits"></a>
+## 客户达到 APS 限制的常见原因 {#common-reasons-customers-hit-aps-limits}
 
-Now that you understand how actions are defined and how they count toward APS limits, let's look at the patterns that most commonly push customers into APS constraints. 
+现在您已经了解了操作的定义方式以及它们如何计入 APS 限制，让我们看一下最常使客户陷入 APS 限制的模式。
 
-### Bursty Traffic
+<a id="bursty-traffic"></a>
+### 突发流量 {#bursty-traffic}
 
-Most businesses don't operate at constant velocity—they have rhythms, cycles, and spikes. 
-These patterns can create APS challenges because Temporal Cloud enforces limits at the per-second level.
+大多数企业并不是以恒定的速度运营——它们有节奏、周期和峰值。 
+这些模式可能会带来 APS 挑战，因为 Temporal Cloud 在每秒级别强制实施限制。
 
-Common bursty patterns include:
+常见的突发模式包括：
 
-- Calendar-driven spikes: Month-end financial close processes, quarterly reporting Workflows, payroll that runs on the 1st and 15th, scheduled batch jobs that kick off at midnight. These create predictable but intense load concentrations.
-- Event-driven surges: Product launches, marketing campaigns, flash sales, breaking news, or seasonal events like Black Friday. 
-- Recovery scenarios: When a downstream dependency fails and then recovers, you often get a thundering herd effect—hundreds or thousands of Workflows that were waiting all suddenly resume execution simultaneously, creating an artificial spike in APS consumption.
-- Geographic/business hours concentration: Global applications often see load follow the sun, with peak activity during business hours in each region. If your business concentrates in specific markets, you'll see daily peaks rather than even 24/7 distribution.
-- Retry Storms: when a large number of Workflows get stuck on an Activity, and that Activity is failing, if retry delay is very short, this can cause a spike in Actions.
-- Timer Storms: a large number of Workflows all set a Timer for the exact same time--triggering a spike as those Timers fire and then Activities run, causing a lot of actions all at the same time.
+- 日历驱动的峰值：月末财务结算流程、季度报告 Workflow、1 日和 15 日运行的工资单、午夜开始的 Scheduled 批处理作业。这些会产生可预测但强烈的负载集中。
+- 事件驱动的激增：产品发布、营销活动、限时抢购、突发新闻或黑色星期五等季节性活动。 
+- 恢复场景：当下游依赖项失败然后恢复时，您通常会遇到惊群效应 - 数百或数千个正在等待的 Workflow 突然同时恢复执行，从而人为地导致 APS 消耗激增。
+- 地理/营业时间集中度：全球应用程序经常出现负载跟随太阳变化的情况，每个地区的营业时间期间出现 Activity 峰值。如果您的业务集中在特定市场，您将看到每日峰值，而不是 24/7 分布。
+- 重试风暴：当大量 Workflow 卡在 Activity 上，并且 Activity 失败时，如果重试延迟非常短，这可能会导致操作激增。
+- Timer 风暴：大量 Workflow 都在同一时间设置了 Timer——当这些 Timer 触发时触发峰值，然后活动运行，导致同时发生大量操作。
 
-These types of processes can result in your Namespace averaging 200 APS over a day, but spiking to 800 APS or more during your peak hour/day/event/etc. 
+这些类型的流程可能会导致您的 Namespace 在一天内平均达到 200 APS，但在高峰时段/一天/事件/等期间飙升至 800 APS 或更高。
 
-#### How to Mitigate
+<a id="how-to-mitigate"></a>
+#### 如何缓解 {#how-to-mitigate}
 
-You can’t change the patterns of how customers interact with your systems, but there are some adjustments you can make to your Workflows to make traffic patterns more consistent, especially for use cases where immediate response isn’t necessary. 
+您无法更改客户与系统交互的模式，但您可以对 Workflow 进行一些调整，以使流量模式更加一致，特别是对于不需要立即响应的用例。
 
-These adjustments include:
-- Implement application-level queuing or rate limiting to smooth out predictable spikes.
-- For scheduled batch operations, stagger start times rather than triggering everything at once--implement jitter in your high-volume [Schedules](/schedule#spec).
-- Implement jitter when starting Workflows, such as with [Start Delay](/workflow-execution/timers-delays#delay-workflow-execution).
-- Accept rate limiting
-- [Provisioned Capacity](/cloud/capacity-modes#provisioned-capacity)
+这些调整包括：
+- 实施应用程序级排队或速率限制以消除可预测的峰值。
+- 对于 Scheduled 批量操作，错开启动时间而不是立即触发所有内容 - 在大容量 [Schedules](/schedule#spec) 中实现抖动。
+- 启动 Workflow（例如 [启动延迟](/workflow-execution/timers-delays#delay-workflow-execution)）时实现抖动。
+- 接受速率限制
+- [预配置容量](/cloud/capacity-modes#provisioned-capacity)
 
-### Cascading Workflows and Fan-Out Patterns
+<a id="cascading-workflows-and-fan-out-patterns"></a>
+### 级联 Workflow 和扇出模式 {#cascading-workflows-and-fan-out-patterns}
 
-Decomposing complex processes into parent and Child Workflows (or with Nexus) is a common and often appropriate pattern, but the APS costs multiply dramatically with depth and fan-out.
+将复杂的流程分解为父进程和 Child Workflow（或使用 Nexus）是一种常见且通常合适的模式，但 APS 成本随着深度和扇出而急剧增加。
 
-Consider an order fulfillment Workflow that spawns Child Workflows for payment processing, inventory management, shipping, and customer notifications. 
-Each Child Workflow goes through its full action lifecycle (start, tasks, activities, completion), and all of those actions count toward the APS limits on your Namespace. 
+考虑一个订单履行 Workflow，它会生成用于付款处理、库存管理、运输和客户通知的 Child Workflow。 
+每个 Child Workflow 都会经历其完整的操作生命周期（开始、任务、活动、完成），所有这些操作都计入 Namespace 的 APS 限制。
 
-This pattern appears frequently in:
-- Batch processing: A parent workflow processes a file with 1,000 records, spawning a Child Workflow for each record. Batch processing is also often bursty whenever the batch begins.
-- Map-reduce patterns: Data processing Workflows that fan out to process partitions in parallel, then aggregate results.
+这种模式经常出现在：
+- 批处理：父 Workflow 处理包含 1,000 条记录的文件，为每条记录生成一个 Child Workflow。每当批处理开始时，批处理也常常是突发的。
+- Map-reduce 模式：数据处理 Workflow 扇出以并行处理分区，然后聚合结果。
 
-This challenge additionally compounds when you have multiple levels of nesting--parent Workflows that create children, which create their own children. 
+当您有多个嵌套级别时（父级 Workflow 创建子级，父级 Workflow 创建自己的子级），这一挑战还会变得更加复杂。
 
-#### How to Mitigate
+<a id="how-to-mitigate"></a>
+#### 如何缓解 {#how-to-mitigate}
 
-- Evaluate whether Child Workflows are necessary--other options include Activities or Workflows in another Namespace (via Nexus)
-- When you do use Child Workflows, limit fan-out size--design a Child Workflow to process its work in batches rather than one Child per work item. [This sample application](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/batch/slidingwindow) shows more detail.
-- Consider flattening deeply nested hierarchies into shallower structures. 
+- 评估 Child Workflow 是否必要 - 其他选项包括另一个 Namespace 中的活动或 Workflow（通过 Nexus）
+- 当您使用 Child Workflow 时，限制扇出大小 - 设计一个 Child Workflow 来批量处理其工作，而不是每个工作项一个子项。 [该示例应用程序](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/batch/slidingwindow) 显示更多细节。
+- 考虑将深层嵌套的层次结构展平为较浅的结构。
 
-### Human-in-the-Loop Processes at Scale
+<a id="human-in-the-loop-processes-at-scale"></a>
+### 大规模人机交互流程 {#human-in-the-loop-processes-at-scale}
 
-Workflows that incorporate human decision-making--approvals, reviews, manual data entry, quality checks--tend to be long-running and interaction-intensive, which creates sustained APS load.
+Workflow 包含人工决策（批准、审查、手动数据输入、质量检查），往往需要长时间运行且交互密集，从而产生持续的 APS 负载。
 
-These Workflows can involve Queries from UIs to display current state and pending tasks.
+这些 Workflow 可以涉及来自 UI 的查询以显示当前状态和待处理任务。
 
-At small scale, this is manageable. But when you're running thousands of them at the same time--like a content moderation queue with pending reviews, or a loan approval system processing applications, or a support ticket system managing thousands of open cases--the cumulative APS load from all of those long-running Workflows adds up.
+在小规模上，这是可以管理的。但是，当您同时运行数以千计的程序时（例如等待审核的内容审核队列、处理申请的贷款审批系统或管理数以千计未决案例的支持票证系统），所有这些长期运行的 Workflow 的累积 APS 负载就会增加。
 
-#### How to Mitigate
+<a id="how-to-mitigate"></a>
+#### 如何缓解 {#how-to-mitigate}
 
-- Avoid polling patterns where UIs constantly query Workflow state. Instead, push state changes to a database that UIs can read. 
+- 避免 UI 不断处于 Query Workflow 状态的轮询模式。相反，将状态更改推送到 UI 可以读取的数据库。
 
-### Real-Time SLAs and Deadline Management
+<a id="real-time-slas-and-deadline-management"></a>
+### 实时 SLA 和期限管理 {#real-time-slas-and-deadline-management}
 
-Businesses with strict service level agreements often implement active monitoring and escalation in their Workflows. 
-This is generally accomplished by setting Timers every [x] minutes to determine if an SLA deadline is approaching, allowing the Workflow to trigger escalations or alerts. 
+具有严格服务水平协议的企业通常会在其 Workflow 中实施主动监控和升级。 
+这通常是通过每 [x] 分钟设置 Timer 来确定 SLA 截止日期是否临近，从而允许 Workflow 触发升级或警报来完成的。
 
-Each of these Timers/monitoring actions affect APS. 
-When you have thousands of in-flight Workflows all actively monitoring their own SLAs, the background load becomes significant.
-You're consuming substantial APS capacity even when Workflows aren't doing their primary work.
+这些 Timer/监控操作中的每一个都会影响 APS。 
+当您有数千个运行中的 Workflow 都主动监控自己的 SLA 时，后台负载就会变得很大。
+即使 Workflow 没有执行其主要工作，您也会消耗大量 APS 容量。
 
-#### How to Mitigate
+<a id="how-to-mitigate"></a>
+#### 如何缓解 {#how-to-mitigate}
 
-- Use longer monitoring intervals where possible. For example, check SLAs every 30 minutes rather than every 1 minute.
-- Where possible, consolidate Timers. Rather than 10 Timers that check 10 tasks, have 1 Timer and then check those 10 tasks.
-- Where possible, have an external system signal your Workflow rather than using short-lived Timers to poll.
-- For retries, use exponential backoff with reasonable initial intervals.
+- 尽可能使用更长的监测间隔。例如，每 30 分钟而不是每 1 分钟检查一次 SLA。
+- 如果可能，合并 Timer。不是使用 10 个 Timer 检查 10 个任务，而是使用 1 个 Timer 然后检查这 10 个任务。
+- 在可能的情况下，为 Workflow 使用外部系统 Signal，而不是使用短暂的 Timer 进行轮询。
+- 对于重试，请使用具有合理初始间隔的指数退避。
 
-## Additional Design Patterns
-There are some design patterns that can lead to high APS that are consistent across many different types of business use cases. 
+<a id="additional-design-patterns"></a>
+## 附加设计模式 {#additional-design-patterns}
+有一些设计模式可以带来高 APS，并且在许多不同类型的业务用例中保持一致。
 
-### Many Small Activities
+<a id="many-small-activities"></a>
+### 许多小活动 {#many-small-activities}
 
-Consider two approaches to processing 1,000 records:
+考虑两种处理 1,000 条记录的方法：
 
-- Approach A: Create a Workflow that spawns 1,000 separate activities, one per record.
-- Approach B: Create a Workflow that spawns 10 activities, each processing 100 records in a batch.
+- 方法 A：创建一个 Workflow，它生成 1,000 个单独的活动，每个记录一个。
+- 方法 B：创建一个生成 10 个活动的 Workflow，每个活动批量处理 100 条记录。
 
-Approach B will clearly result in less APS. 
-This is a simple example, but this pattern shows up everywhere: processing individual transactions versus batches, sending individual notifications versus bulk operations, or making separate API calls versus batch endpoints. 
-Each separate Activity adds Action overhead.
+方法 B 显然会导致 APS 减少。 
+这是一个简单的示例，但这种模式随处可见：处理单个事务与批量、发送单个通知与批量操作，或者进行单独的 API 调用与批量端点。 
+每个单独的 Activity 都会增加操作开销。
 
-#### How to Mitigate
+<a id="how-to-mitigate"></a>
+#### 如何缓解 {#how-to-mitigate}
 
-- Consider if you can combine multiple external calls within a single Activity.
-- If processing a large amount of data, process it in chunks.
-- See [How Many Activities should I use in my Temporal Workflow?](https://temporal.io/blog/how-many-activities-should-i-use-in-my-temporal-workflow) for more information.
+- 考虑是否可以在单个 Activity 中组合多个外部调用。
+- 如果处理大量数据，请分块处理。
+- 请参阅 [我应该在 Temporal Workflow 中使用多少个活动？](https://temporal.io/blog/how-many-activities-should-i-use-in-my-temporal-workflow) 了解更多信息。
 
-### Multiple Use Cases in One Namespace
-Often when starting with Temporal, the first use case is implemented in a single Namespace, generally one per logical environment. 
-When the second Temporal use case is implemented, it runs in the same Namespace, the same for the third, fourth, etc. 
+<a id="multiple-use-cases-in-one-namespace"></a>
+### 多个用例合二为一 Namespace {#multiple-use-cases-in-one-namespace}
+通常，当从 Temporal 开始时，第一个用例是在单个 Namespace 中实现的，通常每个逻辑环境一个。 
+当实现第二个 Temporal 用例时，它在相同的 Namespace 中运行，第三个、第四个用例也是如此。
 
-An APS limit is set per Namespace, so multiple use cases with multiple traffic patterns in the same Namespace can exhaust this limit quickly.
+每个 Namespace 设置 APS 限制，因此同一 Namespace 中具有多种流量模式的多个用例可以快速耗尽此限制。
 
-#### How to Mitigate
+<a id="how-to-mitigate"></a>
+#### 如何缓解 {#how-to-mitigate}
 
-Plan for a set of Namespaces (one per environment) per use case. See [Managing a Namespace](/best-practices/managing-namespace) for more details.
+每个用例规划一组 Namespace（每个环境一个）。有关详细信息，请参阅 [管理 Namespace](/best-practices/managing-namespace)。
 
-## Provisioned Capacity and TRUs
+<a id="provisioned-capacity-and-trus"></a>
+## 预配置容量和 TRU {#provisioned-capacity-and-trus}
 
-The strategies above help you design Workflows that use actions efficiently.
-But sometimes you need more capacity than the on-demand model provides, especially for spiky or unpredictable workloads.
+上述策略可帮助您设计高效使用操作的 Workflow。
+但有时您需要比按需模型提供的容量更多的容量，特别是对于尖峰或不可预测的工作负载。
 
-Temporal Cloud offers two [Capacity Modes](/cloud/capacity-modes):
+Temporal Cloud 提供两种 [容量模式](/cloud/capacity-modes)：
 
-- **On-Demand mode** (default): Your Namespace automatically scales based on your trailing 7-day usage. This works well for steady, predictable workloads.
-- **Provisioned mode**: You reserve capacity by adding Temporal Resource Units (TRUs), giving you guaranteed headroom for traffic spikes.
+- **按需模式**（默认）：您的 Namespace 根据您过去 7 天的使用情况自动扩展。这对于稳定、可预测的工作负载非常有效。
+- **配置模式**：您可以通过添加 Temporal 资源单元 (TRU) 来预留容量，为您提供应对流量峰值的保证空间。
 
-See [Capacity Modes](/cloud/capacity-modes) for complete details on TRUs, available increments, and how to manage capacity via UI, CLI, or API.
+有关 TRU、可用增量以及如何通过 UI、CLI 或 API 管理容量的完整详细信息，请参阅 [容量模式](/cloud/capacity-modes)。
 
-### Choosing the Right Approach
+<a id="choosing-the-right-approach"></a>
+### 选择正确的方法 {#choosing-the-right-approach}
 
-Use Provisioned capacity when the on-demand model can't respond quickly enough:
+当按需模型无法足够快地响应时，使用预配置容量：
 
-| Scenario | Pattern | Recommendation |
+| 设想 | 图案 | 推荐 |
 |----------|---------|----------------|
-| **Planned spikes** | Promotions, holiday traffic, product launches | Pre-provision TRUs before the event starts |
-| **Unplanned spikes** | Sudden traffic surges, viral events | React instantly via UI/CLI/API when you see throttling |
-| **Load testing** | Validating new services at scale | Provision TRUs for the test, deprovision after |
-| **Batch jobs** | Scheduled high-throughput jobs | Automate TRU scaling via API around job schedules |
-| **Migrations** | Onboarding a new workload faster than on-demand adjusts | Bridge with TRUs for approximately 7 days while the on-demand envelope catches up |
+| **计划峰值** | 促销、节日流量、产品发布 | 在活动开始前预先配置 TRU |
+| **计划外峰值** | 流量突然激增、病毒式事件 | 当您看到限制时，立即通过 UI/CLI/API 做出反应 |
+| **负载测试** | 大规模验证新服务 | 为测试提供 TRU，之后取消提供 |
+| **批量作业** | Scheduled 高通量作业 | 通过 API 围绕作业 Schedules 自动进行 TRU 扩展 |
+| **迁移** | 加入新工作负载的速度比按需调整的速度更快 | 与 TRU 桥接大约 7 天，同时按需信封赶上 |
 
 :::note
-When switching back to on-demand mode, your APS limit resets to the running average from the last 7 days.
-Plan for this if your workload is sensitive to the transition.
+当切换回按需模式时，您的 APS 限制将重置为过去 7 天的运行平均值。
+如果您的工作负载对过渡很敏感，请为此做好计划。
 :::
 
-### Cost Optimization Tips
+<a id="cost-optimization-tips"></a>
+### 成本优化技巧 {#cost-optimization-tips}
 
-See [Capacity Modes Pricing](/cloud/pricing#capacity-modes-pricing) for billing details. To minimize costs:
+有关账单详细信息，请参阅 [容量模式定价](/cloud/pricing#capacity-modes-pricing)。为了最大限度地降低成本：
 
-- Provision only when you need extra capacity
-- Deprovision promptly after spikes end
-- For predictable patterns, automate scaling to minimize time in provisioned mode
+- 仅在需要额外容量时提供
+- 峰值结束后立即取消配置
+- 对于可预测的模式，自动扩展以最大限度地减少处于配置模式的时间
 
-### Automation Best Practices
+<a id="automation-best-practices"></a>
+### 自动化最佳实践 {#automation-best-practices}
 
-Since you understand your workload patterns better than any auto-scaling system, consider building your own TRU automation:
+由于您比任何自动扩展系统都更了解您的工作负载模式，因此请考虑构建您自己的 TRU 自动化：
 
-- **Use the [Cloud Ops API](/ops), [Terraform Provider](/cloud/terraform-provider), or [tcld CLI](/cloud/tcld)** to programmatically scale capacity based on your application's signals
-- **Set utilization thresholds**: For example, scale up when hitting 70-80% of your limit, scale down after sustained low usage
-- **Schedule capacity changes**: Use [Temporal Schedules](/schedule) or Workflows to increase TRUs before known events
-- **React to leading indicators**: If your application has upstream signals (incoming order queue depth, marketing campaign start), use those to trigger capacity changes proactively
+- **使用 [云运营 API](/ops)、[地形提供者](/cloud/terraform-provider) 或 [tcld CLI](/cloud/tcld)** 根据应用程序的 Signal 以编程方式扩展容量
+- **设置利用率阈值**：例如，在达到限制的 70-80% 时扩大规模，在持续低使用率后缩小规模
+- **Schedule 容量更改**：在已知事件之前使用 [Temporal Schedules](/schedule) 或 Workflow 增加 TRU
+- **对领先指标做出反应**：如果您的应用程序具有上游 Signal（传入订单队列深度、营销活动开始），请使用它们主动触发容量更改
 
-## Knowing if You're Hitting APS Limits
+<a id="knowing-if-youre-hitting-aps-limits"></a>
+## 了解您是否达到 APS 限制 {#knowing-if-youre-hitting-aps-limits}
 
-In addition to understanding the patterns that can affect APS limits on a Temporal Namespace, it's also important to know if you're approaching (or exceeding) these limits.
-Temporal Cloud provides several metrics that, if tracked, will tell you if you're being rate limited due to APS.
-See the documentation on [detecting resource exhaustion](/cloud/service-health#rps-aps-rate-limits) for an explanation of those metrics as well as a sample Grafana dashboard that shows how they could be viewed.
+除了了解可能影响 Temporal Namespace 的 APS 限制的模式之外，了解您是否正在接近（或超过）这些限制也很重要。
+Temporal Cloud 提供了几个指标，如果进行跟踪，将告诉您是否由于 APS 而受到速率限制。
+请参阅 [检测资源耗尽](/cloud/service-health#rps-aps-rate-limits) 上的文档，了解这些指标的说明以及显示如何查看这些指标的示例 Grafana 仪表板。
 
-### Monitoring for TRU Decisions
+<a id="monitoring-for-tru-decisions"></a>
+### 监控 TRU 决策 {#monitoring-for-tru-decisions}
 
-If you're considering Provisioned capacity, set up monitoring to understand your usage patterns:
+如果您正在考虑预配置容量，请设置监控以了解您的使用模式：
 
-- **Use [OpenMetrics](/cloud/metrics/openmetrics)**: For real-time visibility into APS consumption, integrate Temporal Cloud metrics with your observability stack
-- **Track APS usage vs. limits**: Monitor `temporal_cloud_v0_resource_exhausted_errors` to detect throttling events
-- **Set alerts at 70-80% utilization**: This gives you time to provision TRUs before hitting limits
-- **Analyze historical patterns**: Understanding your traffic patterns helps you decide between reactive TRU provisioning and proactive automation
+- **使用 [开放指标](/cloud/metrics/openmetrics)**：要将 Visibility 实时纳入 APS 消耗，请将 Temporal Cloud 指标与可观测性堆栈集成
+- **跟踪 APS 使用情况与限制**：监控 `Temporal_cloud_v0_resource_exhausted_errors` 以检测节流事件
+- **设置利用率为 70-80% 的警报**：这让您有时间在达到限制之前配置 TRU
+- **分析历史模式**：了解您的流量模式有助于您在被动 TRU 配置和主动自动化之间做出决定
 
-## Key Takeaways
+<a id="key-takeaways"></a>
+## 要点 {#key-takeaways}
 
-Let's recap the main reasons customers hit APS limits and how to address them:
+让我们回顾一下客户达到 APS 限制的主要原因以及如何解决这些问题：
 
-| Reason for Hitting APS Limits | How to Address It |
+| 达到 APS 限制的原因 | 如何解决这个问题 |
 |-------------------------------|-------------------|
-| Bursty Traffic                | Implement application-level queuing or rate limiting to smooth spike, stagger start times for scheduled batch operations. |
-| Cascading Workflows <br />and Fan-Out Patterns | Evaluate if Child Workflows are necessary (consider activities or another Namespace), limit fan-out size by processing work in batches within a Child Workflow, consider flattening deeply nested hierarchies. |
-| Human-in-the-Loop <br />Processes at Scale | Design long-running Workflows to minimize sustained APS load from interaction (by avoiding polling where UIs constantly Query state and using Signals only for key human inputs). |
-| Many small activities         | Consider if you can combine multiple external calls within a single Activity. If processing a large amount of data, process it in chunks. |
-| Multiple use cases <br />in one Namespace | Plan for a set of Namespaces (one per environment) per use case. |
-| Planned traffic spikes        | Pre-provision TRUs before the event, then deprovision after. |
-| Unpredictable spikes <br />requiring instant response | Switch to Provisioned mode for self-service capacity scaling via UI, CLI, or API. |
-| Load testing at scale         | Provision TRUs for the test duration, deprovision when complete. |
-| New workload onboarding       | Bridge with TRUs while the on-demand envelope adjusts (approximately 7 days). |
+| 突发流量                | 实施应用程序级排队或速率限制，以平滑 Scheduled 批处理操作的尖峰、错开启动时间。 |
+| 级联 Workflow 和 <br /> 和扇出模式 | 评估 Child Workflow 是否必要（考虑活动或另一个 Namespace），通过在 Child Workflow 内批量处理工作来限制扇出大小，考虑展平深度嵌套的层次结构。 |
+| 人在环 <br /> 大规模流程 | 设计长时间运行的 Workflow，以最大程度地减少交互带来的持续 APS 负载（通过避免轮询 UI 持续的 Query 状态，并仅将 Signal 用于关键的人工输入）。 |
+| 许多小活动         | 考虑是否可以在单个 Activity 中组合多个外部调用。如果处理大量数据，请分块处理。 |
+| 多个用例 <br /> 合一 Namespace | 每个用例规划一组 Namespace（每个环境一个）。 |
+| 计划中的流量峰值        | 在事件发生前预先配置 TRU，然后在事件发生后取消配置。 |
+| 不可预测的尖峰 <br /> 需要即时响应 | 通过 UI、CLI 或 API 切换到预配置模式以进行自助容量扩展。 |
+| 大规模负载测试         | 在测试期间配置 TRU，完成后取消配置。 |
+| 新工作负载上线       | 在按需包络调整期间与 TRU 进行桥接（大约 7 天）。 |
 
 
-## General guidance
+<a id="general-guidance"></a>
+## 一般指导 {#general-guidance}
 
-When designing Temporal Workflows with an eye toward APS limits, ask yourself the following questions: 
-- How many actions will a single execution of this Workflow consume?
-- How many Workflows will typically be running at the same time?
-- What happens to APS consumption when the number of Actions * number of active Workflows scales to 100x current volume?
-- Are there natural opportunities to combine operations: combine activities, or process chunks of data together?
-- Am I polling when I could be using Signals?
-- Does this Workflow need to run continuously, or can it be event-driven?
+在设计 Temporal Workflow 时着眼于 APS 限制，请问自己以下问题： 
+- 此 Workflow 的单次执行将消耗多少个操作？
+- 通常会同时运行多少个 Workflow？
+- 当操作数量 * 活动 Workflow 数量扩展至当前容量的 100 倍时，APS 消耗会发生什么情况？
+- 是否存在组合操作的自然机会：组合活动或一起处理数据块？
+- 我是否正在轮询何时可以使用 Signal？
+- 这个Workflow是否需要连续运行，或者可以是事件驱动的吗？
 
-A few hours spent optimizing Workflow design can save you from capacity crunches, emergency limit increases, and potentially significant cost increases down the road.
+花几个小时优化 Workflow 设计可以帮助您避免容量紧缩、紧急限制增加以及未来潜在的显着成本增加。

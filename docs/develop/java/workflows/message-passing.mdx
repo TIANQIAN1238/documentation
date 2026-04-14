@@ -1,8 +1,8 @@
 ---
 id: message-passing
-title: Workflow message passing - Java SDK
-sidebar_label: Messages
-description: Develop with Queries, Signals, and Updates with the Temporal Java SDK.
+title: "Workflow 消息传递 - Java SDK"
+sidebar_label: "留言"
+description: "使用 Temporal Java SDK 进行查询、Signal 和 Update 的开发。"
 toc_max_heading_level: 3
 keywords:
   - temporal java signals
@@ -26,24 +26,24 @@ tags:
   - Temporal SDKs
 ---
 
-A Workflow can act like a stateful web service that receives messages: Queries, Signals, and Updates.
-The Workflow implementation defines these endpoints via handler methods that can react to incoming messages and return values.
-Temporal Clients use messages to read Workflow state and control execution.
-See [Workflow message passing](/encyclopedia/workflow-message-passing) for a general overview of this topic.
-This page introduces these features for the Temporal Java SDK.
+Workflow 可以像有状态 Web 服务一样接收消息：查询、Signal 和 Update。
+Workflow 实现通过可以对传入消息和返回值做出反应的处理程序方法定义这些端点。
+Temporal CLIents 使用消息读取 Workflow 状态并控制执行。
+有关此主题的一般概述，请参阅 [Workflow消息传递](/encyclopedia/workflow-message-passing)。
+本页介绍 Temporal Java SDK 的这些功能。
 
-## Write message handlers {#writing-message-handlers}
+<a id="writing-message-handlers"></a>
+## 编写消息处理程序 {#writing-message-handlers}
+编写消息处理程序时请遵循以下准则：
 
-Follow these guidelines when writing your message handlers:
+- 消息处理程序使用以下三个注释之一定义为 Workflow 类上的方法：[`@QueryMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/QueryMethod.html)、[`@SignalMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/SignalMethod.html) 和 [`@UpdateMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/UpdateMethod.html)。
+- 处理程序和主 Workflow 函数的参数和返回值必须是 [可序列化](/dataconversion)。
+- 优先使用具有多个字段的单个类，而不是使用多个输入参数。
+  类允许您添加字段而不更改调用签名。
 
-- Message handlers are defined as methods on the Workflow class, using one of the three annotations: [`@QueryMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/QueryMethod.html), [`@SignalMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/SignalMethod.html), and [`@UpdateMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/UpdateMethod.html).
-- The parameters and return values of handlers and the main Workflow function must be [serializable](/dataconversion).
-- Prefer a single class with multiple fields over using multiple input parameters.
-  A class allows you to add fields without changing the calling signature.
-
-### Query handlers {#queries}
-
-A [Query](/sending-messages#sending-queries) is a synchronous operation that retrieves state from a Workflow Execution:
+<a id="queries"></a>
+### Query 处理程序 {#queries}
+[Query](/sending-messages#sending-queries) 是从 Workflow Execution 检索状态的同步操作：
 
 ```java
 public class MessagePassingIntro {
@@ -94,13 +94,13 @@ public class MessagePassingIntro {
 }
 ```
 
-- A Query handler must not modify Workflow state.
-- You can't perform blocking operations such as executing an Activity in a Query handler.
-- The Query annotation accepts an argument (`name`) as described in the API reference docs for [`@QueryMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/QueryMethod.html).
+- Query 处理程序不得修改 Workflow 状态。
+- 您无法执行阻塞操作，例如在 Query 处理程序中执行 Activity。
+- Query 注释接受参数 (`name`)，如 [`@QueryMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/QueryMethod.html) 的 API 参考文档中所述。
 
-### Signal handlers {#signals}
-
-A [Signal](/sending-messages#sending-signals) is an asynchronous message sent to a running Workflow Execution to change its state and control its flow:
+<a id="signals"></a>
+### Signal 处理程序 {#signals}
+[Signal](/sending-messages#sending-signals) 是发送到正在运行的 Workflow Execution 的异步消息，用于更改其状态并控制其流程：
 
 ```java
 public class MessagePassingIntro {
@@ -139,21 +139,21 @@ public class MessagePassingIntro {
 }
 ```
 
-- The handler should not return a value.
-  The response is sent immediately from the server, without waiting for the Workflow to process the Signal.
+- 处理程序不应返回值。
+  服务器立即发送响应，无需等待 Workflow 处理 Signal。
 
-- The Signal annotation accepts arguments (`name`, and `unfinished_policy`) as described in the API reference docs for [`@SignalMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/SignalMethod.html).
+- Signal 注释接受参数（`name` 和 `unfinished_policy`），如 [`@SignalMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/SignalMethod.html) 的 API 参考文档中所述。
 
-- Signal (and Update) handlers can be blocking.
-  This allows you to use Activities, Child Workflows, durable [`Workflow.sleep`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#sleep(java.time.Duration)) Timers, [`Workflow.await`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#await(java.time.Duration,java.util.function.Supplier)), and more.
-  See [Blocking handlers](#blocking-handlers) and [Workflow message passing](/encyclopedia/workflow-message-passing) for guidelines on safely using blocking Signal and Update handlers.
+- Signal（和 Update）处理程序可能会阻塞。
+  这允许您使用活动、Child Workflow、耐用的 [`Workflow.sleep`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#sleep(java.time.Duration)) Timer、[`Workflow.await`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#await(java.time.Duration,java.util.function.Supplier)) 等。
+  有关安全使用阻止 Signal 和 Update 处理程序的指南，请参阅 [阻塞处理程序](#blocking-handlers) 和 [Workflow消息传递](/encyclopedia/workflow-message-passing)。
 
-### Update handlers and validators {#updates}
-
-An [Update](/sending-messages#sending-updates) is a trackable synchronous request sent to a running Workflow Execution.
-It can change the Workflow state, control its flow, and return a result.
-The sender must wait until the Worker accepts or rejects the Update.
-The sender may wait further to receive a returned value or an exception if something goes wrong:
+<a id="updates"></a>
+### Update 处理程序和验证器 {#updates}
+[Update](/sending-messages#sending-updates) 是发送到正在运行的 Workflow Execution 的可跟踪同步请求。
+它可以更改 Workflow 状态、控制其流程并返回结果。
+发送方必须等待，直到 Worker 接受或拒绝 Update。
+如果出现问题，发送者可能会进一步等待接收返回值或异常：
 
 ```java
 public class MessagePassingIntro {
@@ -191,36 +191,36 @@ public class MessagePassingIntro {
 }
 ```
 
-- The Update annotation accepts arguments (`name`, and `unfinished_policy`) as described in the API reference docs for [`@UpdateMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/UpdateMethod.html).
+- Update 注释接受参数（`name` 和 `unfinished_policy`），如 [`@UpdateMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/UpdateMethod.html) 的 API 参考文档中所述。
 
-- About validators:
-  - Use validators to reject an Update before it is written to History.
-    Validators are always optional.
-    If you don't need to reject Updates, you can skip them.
-  - Define an Update validator with the `@UpdateValidatorMethod` annotation.
-    Use the `updateName` argument when declaring the validator to connect it to its Update.
-    The validator must return `void` and accept the same argument types as the handler.
+- 关于验证器：
+  - 在将 Update 写入历史记录之前，使用验证器拒绝该 Update。
+    验证器始终是可选的。
+    如果您不需要拒绝 Update，则可以跳过它们。
+  - 使用 `@UpdateValidatorMethod` 注释定义 Update 验证器。
+    声明验证器时使用 `UpdateName` 参数将其连接到其 Update。
+    验证器必须返回 `void` 并接受与处理程序相同的参数类型。
 
-- Accepting and rejecting Updates with validators:
-  - To reject an Update, throw an exception of any type in the validator.
-  - Without a validator, Updates are always accepted.
-- Validators and Event History:
-  - The `WorkflowExecutionUpdateAccepted` event is written into the History whether the acceptance was automatic or programmatic.
-  - When a Validator throws an error, the Update is rejected, the Update is not run, and `WorkflowExecutionUpdateAccepted` _won't_ be added to the Event History.
-    The caller receives an "Update failed" error.
+- 使用验证器接受和拒绝 Update：
+  - 要拒绝 Update，请在验证器中抛出任何类型的异常。
+  - 如果没有验证器，则始终接受 Update。
+- 验证器和 Event History：
+  - 无论是自动接受还是编程接受，`WorkflowExecutionUpdateAccepted` 事件都会写入历史记录。
+  - 当验证器抛出错误时，Update 会被拒绝，Update 不会运行，并且 `WorkflowExecutionUpdateAccepted` _不会_ 添加到 Event History 中。
+    调用者收到“Update 失败”错误。
 
-- Use [`getCurrentUpdateInfo`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/internal/sync/WorkflowInternal.html#getCurrentUpdateInfo()) to obtain information about the current Update. This includes the Update ID, which can be useful for deduplication when using Continue-As-New: see [Ensuring your messages are processed exactly once](https://docs.temporal.io/handling-messages#exactly-once-message-processing).
+- 使用[`getCurrentUpdateInfo`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/internal/sync/WorkflowInternal.html#getCurrentUpdateInfo()) 获取有关当前Update 的信息。这包括 Update ID，它在使用 Continue-As-New 时可用于重复数据删除：请参阅 [确保您的消息仅被处理一次](https://docs.temporal.io/handling-messages#exactly-once-message-processing)。
 
-- Signal (and Update) handlers can be blocking, letting them use Activities, Child Workflows, durable [`Workflow.sleep`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#sleep(java.time.Duration)) Timers, [`Workflow.await`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#await(java.time.Duration,java.util.function.Supplier)) conditions, and more.
-  See [Blocking handlers](#blocking-handlers) and [Workflow message passing](/encyclopedia/workflow-message-passing) for safe usage guidelines.
+- Signal（和 Update）处理程序可以是阻塞的，让它们使用活动、Child Workflow、持久 [`Workflow.sleep`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#sleep(java.time.Duration)、Timer、[`Workflow.await`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#await(java.time.Duration,java.util.function.Supplier)）条件等。
+  请参阅 [阻塞处理程序](#blocking-handlers) 和 [Workflow消息传递](/encyclopedia/workflow-message-passing) 了解安全使用指南。
 
-## Send messages {#send-messages}
+<a id="send-messages"></a>
+## 发送消息 {#send-messages}
+要发送查询、Signal 或 Update，您可以调用 `WorkflowInterface` 上的方法，通常称为“WorkflowStub”。
 
-To send Queries, Signals, or Updates you call methods on a `WorkflowInterface`, often called the "WorkflowStub."
+使用 [newWorkflow存根](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowClient.html#newWorkflowStub(java.lang.Class,io.temporal.client.WorkflowOptions)) 获取 WorkflowStub。
 
-Use [newWorkflowStub](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowClient.html#newWorkflowStub(java.lang.Class,io.temporal.client.WorkflowOptions)) to obtain the WorkflowStub.
-
-For example:
+例如：
 
 ```java
 WorkflowServiceStubs service = WorkflowServiceStubs.newLocalServiceStubs();
@@ -237,72 +237,72 @@ GreetingWorkflow workflow = client.newWorkflowStub(GreetingWorkflow.class, workf
 WorkflowClient.start(workflow::getGreetings);
 ```
 
-To check the argument types required when sending messages -- and the return type for Queries and Updates -- refer to the corresponding handler method in the Workflow Definition.
+要检查发送消息时所需的参数类型以及查询和 Update 的返回类型，请参阅 Workflow Definition 中相应的处理程序方法。
 
 :::warning Using Continue-as-New and Updates
 
-- Temporal _does not_ support Continue-as-New functionality within Update handlers.
-- Complete all handlers _before_ using Continue-as-New.
-- Use Continue-as-New from your main Workflow Definition method, just as you would complete or fail a Workflow Execution.
+- Temporal_不_支持 Update 处理程序中的 Continue-As-New 功能。
+- 使用 Continue-As-New_之前_完成所有处理程序。
+- 从您的主要 Workflow Definition 方法中使用 Continue-As-New，就像完成或失败 Workflow Execution 一样。
 
 :::
 
-### Send a Query {#send-query}
-
-Call a Query method defined within a Workflow from a `WorkflowStub` created in Client code to send a Query to a Workflow Execution:
+<a id="send-query"></a>
+### 发送 Query {#send-query}
+从客户端代码中创建的 `WorkflowStub` 调用 Workflow 中定义的 Query 方法，以将 Query 发送到 Workflow Execution：
 
 ```java
 List<Language> languages = workflow.getLanguages(new GetLanguagesInput(false));
 System.out.println("Supported languages: " + languages);
 ```
 
-- Sending a Query doesn’t add events to a Workflow's Event History.
+- 发送 Query 不会将事件添加到 Workflow 的 Event History。
 
-- You can send Queries to closed Workflow Executions within a Namespace's Workflow retention period.
-  This includes Workflows that have completed, failed, or timed out.
-  Querying terminated Workflows is not safe and, therefore, not supported.
+- 您可以在 Namespace 的 Workflow 保留期内向已关闭的 Workflow Execution 发送查询。
+  这包括已完成、失败或超时的 Workflow。
+  Querying 终止的 Workflow 不安全，因此不受支持。
 
-- A Worker must be online and polling the Task Queue to process a Query.
+- Worker 必须在线并轮询 Task Queue 才能处理 Query。
 
-### Send a Signal {#send-signal}
+<a id="send-signal"></a>
+### 发送 Signal {#send-signal}
+您可以从 Temporal CLIent 或另一个 Workflow Execution 向 Workflow Execution 发送 Signal。
+但是，您只能将 Signal 发送到尚未关闭的 Workflow Execution。
 
-You can send a Signal to a Workflow Execution from a Temporal Client or from another Workflow Execution.
-However, you can only send Signals to Workflow Executions that haven’t closed.
-
-#### Send a Signal from a Client {#send-signal-from-client}
-
-To send a Signal from Client code, call a Signal method on the WorkflowStub:
+<a id="send-signal-from-client"></a>
+#### 从客户端发送 Signal {#send-signal-from-client}
+要从客户端代码发送 Signal，请在 WorkflowStub 上调用 Signal 方法：
 
 ```java
 workflow.approve(new ApproveInput("Me"));
 ```
 
-- The call returns when the server accepts the Signal; it does _not_ wait for the Signal to be delivered to the Workflow Execution.
+- 当服务器接受 Signal 时调用返回；它并不等待 Signal 被传送到 Workflow Execution。
 
-- The [WorkflowExecutionSignaled](/references/events#workflowexecutionsignaled) Event appears in the Workflow's Event History.
+- [Workflow执行Signaled](/references/events#workflowexecutionsignaled) 事件出现在 Workflow 的 Event History 中。
 
-#### Send a Signal from a Workflow {#send-signal-from-workflow}
-
-A Workflow can send a Signal to another Workflow, known as an _External Signal_.
-Use [`Workflow.newExternalWorkflowStub`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#newExternalWorkflowStub(java.lang.Class,io.temporal.api.common.v1.WorkflowExecution)) in your _current_ Workflow to create an `ExternalWorkflowStub` for the other Workflow.
-Call Signal methods on the external stub to Signal the other Workflow:
+<a id="send-signal-from-workflow"></a>
+#### 从 Workflow 发送 Signal {#send-signal-from-workflow}
+Workflow 可以将 Signal 发送到另一个 Workflow，称为_外部 Signal_。
+在_当前_ Workflow 中使用 [`Workflow.newExternalWorkflowStub`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#newExternalWorkflowStub(java.lang.Class,io.temporal.api.common.v1.WorkflowExecution)) 为另一个 Workflow 创建 `ExternalWorkflowStub`。
+在外部存根上调用 Signal 方法到 Signal 和其他 Workflow：
 
 ```java
 OtherWorkflow other = Workflow.newExternalWorkflowStub(OtherWorkflow.class, otherWorkflowID);
 other.mySignalMethod();
 ```
 
-When an External Signal is sent:
+当发送外部 Signal 时：
 
-- A [SignalExternalWorkflowExecutionInitiated](/references/events#signalexternalworkflowexecutioninitiated) Event appears in the sender's Event History.
-- A [WorkflowExecutionSignaled](/references/events#workflowexecutionsignaled) Event appears in the recipient's Event History.
+- [Signal外部Workflow执行已启动](/references/events#signalexternalworkflowexecutioninitiated) 事件出现在发件人的 Event History 中。
+- [Workflow执行Signaled](/references/events#workflowexecutionsignaled) 事件出现在收件人的 Event History 中。
 
-#### Signal-With-Start {#signal-with-start}
-
-Signal-With-Start allows a Client to send a Signal to a Workflow Execution, starting the Execution if it is not already running.
-If there's a Workflow running with the given Workflow Id, it will be signaled.
-If there isn't, a new Workflow will be started and immediately signaled.
-To use Signal-With-Start, call `signalWithStart` and pass the name of your Signal with its arguments:
+<a id="signal-with-start"></a>
+#### Signal-带启动 {#signal-with-start}
+Signal-With-Start 允许客户端将 Signal 发送到 Workflow Execution，如果尚未运行则启动执行。
+如果有一个 Workflow 使用给定的 Workflow Id 运行，则它将是 Signaled。
+如果没有，将启动新的 Workflow 并立即删除 Signal。
+要使用 Signal-With-Start，请调用 `SignalWithStart` 并传递 Signal 的名称及其参数：
 
 ```java
 public static void signalWithStart() {
@@ -319,8 +319,8 @@ public static void signalWithStart() {
 }
 ```
 
-Here's the `WorkflowInterface` for the previous example.
-When using Signal-With-Start, the Signal handler (`setCustomer`) will be executed before the Workflow method (`greet`).
+这是上一个示例的 `WorkflowInterface`。
+使用 Signal-With-Start 时，Signal 处理程序 (`setCustomer`) 将在 Workflow 方法 (`greet`) 之前执行。
 
 ```java
 @WorkflowInterface
@@ -336,34 +336,34 @@ public interface GreetingWorkflow {
 }
 ```
 
-### Send an Update {#send-update-from-client}
+<a id="send-update-from-client"></a>
+### 发送 Update {#send-update-from-client}
+Update 是同步、阻塞调用，可以更改 Workflow 状态、控制其流程并返回结果。
 
-An Update is a synchronous, blocking call that can change Workflow state, control its flow, and return a result.
+发送 Update 的客户端必须等待，直到服务器将 Update 传递给 Worker。
+Worker 必须可用且响应迅速。
+如果服务器收到请求后需要立即响应，请改用 Signal。
+另请注意，您无法将 Update 发送到其他 Workflow Execution。
 
-A Client sending an Update must wait until the Server delivers the Update to a Worker.
-Workers must be available and responsive.
-If you need a response as soon as the Server receives the request, use a Signal instead.
-Also note that you can't send Updates to other Workflow Executions.
+- 当Worker确认Update通过验证时，`WorkflowExecutionUpdateAccepted`被添加到Event History。
+- 当Worker确认Update已完成时，`WorkflowExecutionUpdateCompleted`被添加到Event History。
 
-- `WorkflowExecutionUpdateAccepted` is added to the Event History when the Worker confirms that the Update passed validation.
-- `WorkflowExecutionUpdateCompleted` is added to the Event History when the Worker confirms that the Update has finished.
+要将 Update 发送到 Workflow Execution，您可以：
 
-To send an Update to a Workflow Execution, you can:
-
-- Call the Update method on a WorkflowStub in Client code and wait for the Update to complete.
-  This code fetches an Update result:
+- 在客户端代码中调用 WorkflowStub 上的 Update 方法并等待 Update 完成。
+  此代码获取 Update 结果：
 
   ```java
   Language previousLanguage = workflow.setLanguage(Language.CHINESE);
   ```
 
-- Send [`startUpdate`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#startUpdate(io.temporal.client.UpdateOptions,java.lang.Object...)) to receive an [`WorkflowUpdateHandle`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowUpdateHandle.html) as soon as the Update is accepted or rejected.
+- 发送 [`startUpdate`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#startUpdate(io.temporal.client.UpdateOptions,java.lang.Object...))，以便在 Update 被接受或拒绝后立即收到 [`WorkflowUpdateHandle`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowUpdateHandle.html)。
 
-  - Use this `WorkflowUpdateHandle` later to fetch your results.
-  - Blocking Update handlers normally perform long-running asynchronous operations.
-  - `startUpdate` only waits until the Worker has accepted or rejected the Update, not until all asynchronous operations are complete.
+- 稍后使用此 `WorkflowUpdateHandle` 获取结果。
+  - 阻塞 Update 处理程序通常执行长时间运行的异步操作。
+  - `startUpdate` 仅等待直到 Worker 接受或拒绝 Update，而不等待所有异步操作完成。
 
-  For example:
+例如：
 
   ```java
   WorkflowUpdateHandle<Language> handle =
@@ -373,57 +373,57 @@ To send an Update to a Workflow Execution, you can:
   previousLanguage = handle.getResultAsync().get();
   ```
 
-  For more details, see the "Blocking handlers" section.
+有关更多详细信息，请参阅“阻止处理程序”部分。
 
-To obtain an Update handle, you can:
+要获取 Update 句柄，您可以：
 
-- Use [`startUpdate`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#startUpdate(io.temporal.client.UpdateOptions,java.lang.Object...)) to start an Update and return the handle, as shown in the preceding example.
-- Use [`getUpdateHandle`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#getUpdateHandle(java.lang.String,java.lang.Class)) to fetch a handle for an in-progress Update using the Update ID and Workflow ID.
+- 使用 [`startUpdate`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#startUpdate(io.temporal.client.UpdateOptions,java.lang.Object...)) 启动 Update 并返回句柄，如前面的示例所示。
+- 使用 [`getUpdateHandle`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#getUpdateHandle(java.lang.String,java.lang.Class)) 使用 Update ID 和 Workflow ID 获取正在进行的 Update 的句柄。
 
-You can use the `WorkflowUpdateHandle` to obtain information about the update:
+您可以使用 `WorkflowUpdateHandle` 获取有关 Update 的信息：
 
-- `getExecution()`: Returns the Workflow Execution that this Update was sent to.
-- `getId()`: Returns the Update's unique ID, which can be useful for deduplication when using Continue-As-New: see [Ensuring your messages are processed exactly once](/handling-messages#exactly-once-message-processing).
-- `getResultAsync()`: Returns a `CompletableFuture` which can be used to wait for the Update to complete.
+- `getExecution()`：返回此 Update 发送到的 Workflow Execution。
+- `getId()`：返回 Update 的唯一 ID，这对于使用 Continue-As-New 时的重复数据删除很有用：请参阅 [确保您的消息仅被处理一次](/handling-messages#exactly-once-message-processing)。
+- `getResultAsync()`：返回 `CompletableFuture`，可用于等待 Update 完成。
 
-#### Update-With-Start {#update-with-start}
-
+<a id="update-with-start"></a>
+#### Update-带启动 {#update-with-start}
 :::tip
 
-For open source server users, Temporal Server version [Temporal Server version 1.28](https://github.com/temporalio/temporal/releases/tag/v1.28.0) is recommended.
+对于开源服务器用户，建议使用Temporal Server版本[Temporal Server 版本 1.28](https://github.com/temporalio/temporal/releases/tag/v1.28.0)。
 
 :::
 
-[Update-with-Start](/sending-messages#update-with-start) lets you
-[send an Update](/develop/java/workflows/message-passing#send-update-from-client) that checks whether an already-running Workflow with that ID exists:
+[Update-带启动](/sending-messages#update-with-start) 让您
+[发送 Update](/develop/java/workflows/message-passing#send-update-from-client) 检查是否存在具有该 ID 的已运行的 Workflow：
 
-- If the Workflow exists, the Update is processed.
-- If the Workflow does not exist, a new Workflow Execution is started with the given ID, and the Update is processed before the main Workflow method starts to execute.
+- 如果 Workflow 存在，则处理 Update。
+- 如果 Workflow 不存在，则使用给定 ID 启动新的 Workflow Execution，并在主 Workflow 方法开始执行之前处理 Update。
 
-Use the [`startUpdateWithStart`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowClient.html#startUpdateWithStart(io.temporal.workflow.Functions.Func,io.temporal.client.UpdateOptions,io.temporal.client.WithStartWorkflowOperation)) WorkflowClient API.
-It returns once the requested Update wait stage has been reached; or when the request times out.
-Use the [`WorkflowUpdateHandle`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowUpdateHandle.html) to retrieve a result from the Update.
+使用 [`startUpdateWithStart`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowClient.html#startUpdateWithStart(io.temporal.workflow.Functions.Func,io.temporal.client.UpdateOptions,io.temporal.client.WithStartWorkflowOperation)) WorkflowClient API。
+一旦到达所请求的 Update 等待阶段，它就会返回；或者当请求超时时。
+使用 [`WorkflowUpdateHandle`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowUpdateHandle.html) 从 Update 检索结果。
 
-You will need to provide:
+您需要提供：
 
-- WorkflowStub created from [`WorkflowOptions`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.html).
-  The `WorkflowOptions` require [Workflow Id Conflict Policy](/workflow-execution/workflowid-runid#workflow-id-conflict-policy) to be specified.
-  Choose "Use Existing" and use an idempotent Update handler to ensure your code can be executed again in case of a Client failure.
-  Not all `WorkflowOptions` are allowed.
-  For example, specifying a Cron Schedule will result in an error.
+- 从 [`WorkflowOptions`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.html) 创建的 WorkflowStub。
+  `WorkflowOptions` 需要指定 [Workflow ID 冲突政策](/workflow-execution/workflowid-runid#workflow-id-conflict-policy)。
+  选择“使用现有”并使用幂等 Update 处理程序以确保在客户端发生故障时可以再次执行您的代码。
+  并非所有 `WorkflowOptions` 都是允许的。
+  例如，指定 Cron Schedule 将导致错误。
 
-- [`UpdateOptions`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/UpdateOptions.html).
-  Same as for [Update Workflow](/develop/java/workflows/message-passing#send-update-from-client), the update wait stage must be specified.
-  For Update-with-Start, the Workflow Id is optional.
-  When specified, the Id must match the one used in `WorkflowOptions`.
-  Since a running Workflow Execution may not already exist, you can't set a Run Id.
+- [`UpdateOptions`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/UpdateOptions.html)。
+  与 [Update Workflow](/develop/java/workflows/message-passing#send-update-from-client) 相同，必须指定 Update 等待阶段。
+  对于 Update-with-Start，Workflow Id 是可选的。
+  指定时，Id 必须与 `WorkflowOptions` 中使用的 ID 匹配。
+  由于正在运行的 Workflow Execution 可能尚不存在，因此您无法设置运行 ID。
 
-- [`WithStartWorkflowOperation`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WithStartWorkflowOperation.html).
-  Specify the workflow method.
-  Note that a `WithStartWorkflowOperation` can only be used once.
-  Re-using a previously used operation returns an error from `startUpdateWithStart`.
+- [`WithStartWorkflowOperation`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WithStartWorkflowOperation.html)。
+  指定 Workflow 方法。
+  请注意，`WithStartWorkflowOperation` 只能使用一次。
+  重新使用以前使用过的操作会返回 `startUpdateWithStart` 错误。
 
-For example:
+例如：
 
 ```java
 WorkflowUpdateHandle<Language> handle =
@@ -436,12 +436,12 @@ WorkflowUpdateHandle<Language> handle =
 Language previousLanguage = handle.getResultAsync().get();
 ```
 
-To obtain the update result directly, use the [`executeUpdateWithStart`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowClient.html#executeUpdateWithStart(io.temporal.workflow.Functions.Func,io.temporal.client.UpdateOptions,io.temporal.client.WithStartWorkflowOperation)) WorkflowClient API.
-It returns once the update result is available; or when the API call times out.
-The update wait stage on the `UpdateOptions` is optional.
-When specified, it must be `WorkflowUpdateStage.COMPLETED`.
+要直接获取 Update 结果，请使用 [`executeUpdateWithStart`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowClient.html#executeUpdateWithStart(io.temporal.workflow.Functions.Func,io.temporal.client.UpdateOptions,io.temporal.client.WithStartWorkflowOperation)) WorkflowClient API。
+一旦 Update 结果可用，它就会返回；或者当 API 调用超时时。
+`UpdateOptions` 上的 Update 等待阶段是可选的。
+指定时，它必须是 `WorkflowUpdateStage.COMPLETED`。
 
-For example:
+例如：
 
 ```java
 Language previousLanguage =
@@ -452,48 +452,48 @@ Language previousLanguage =
         new WithStartWorkflowOperation<>(workflow::getGreetings));
 ```
 
-For more examples, see the [Java sample for early-return pattern](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/earlyreturn).
+有关更多示例，请参阅 [提前返回模式的 Java 示例](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/earlyreturn)。
 
 :::info NON-TYPE SAFE API CALLS
 
-In real-world development, sometimes you may be unable to import Workflow Definition method signatures.
-When you don't have access to the Workflow Definition or it isn't written in Java, you can use these non-type safe APIs to obtain an untyped WorkflowStub:
+在实际开发中，有时您可能无法导入 Workflow Definition 方法签名。
+当您无权访问 Workflow Definition 或者它不是用 Java 编写时，您可以使用这些非类型安全 API 来获取无类型的 WorkflowStub：
 
-- [`WorkflowClient.newUntypedWorkflowStub`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowClient.html#newUntypedWorkflowStub(java.lang.String,io.temporal.client.WorkflowOptions))
-- [`Workflow.newUntypedExternalWorkflowStub`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#newUntypedExternalWorkflowStub(java.lang.String)).
+- [`WorkflowClient.newUntypedWorkflowStub`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowClient.html#newUntypedWorkflowStub(java.lang.String,io.temporal.client.WorkflowOptions)）
+- [`Workflow.newUntypedExternalWorkflowStub`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#newUntypedExternalWorkflowStub(java.lang.String)）。
 
-Pass method names instead of method objects to:
+将方法名称而不是方法对象传递给：
 
-- [`WorkflowStub.query`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#query(java.lang.String,java.lang.Class,java.lang.Object...))
-- [`WorkflowStub.signal`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#signal(java.lang.String,java.lang.Object...))
-- [`WorkflowStub.update`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#update(java.lang.String,java.lang.Class,java.lang.Object...))
+- [`WorkflowStub.Query`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#query(java.lang.String,java.lang.Class,java.lang.Object...)）
+- [`WorkflowStub.Signal`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#signal(java.lang.String,java.lang.Object...)）
+- [`WorkflowStub.Update`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#update(java.lang.String,java.lang.Class,java.lang.Object...))
 - [`WorkflowStub.startUpdateWithStart`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#startUpdateWithStart(io.temporal.client.UpdateOptions,java.lang.Object%5B%5D,java.lang.Object%5B%5D))
 - [`WorkflowStub.executeUpdateWithStart`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#executeUpdateWithStart(io.temporal.client.UpdateOptions,java.lang.Object%5B%5D,java.lang.Object%5B%5D))
 
 :::
 
-## Message handler patterns {#message-handler-patterns}
-
-This section covers common write operations, such as Signal and Update handlers.
-It doesn't apply to pure read operations, like Queries or Update Validators.
+<a id="message-handler-patterns"></a>
+## 消息处理程序模式 {#message-handler-patterns}
+本节介绍常见的写入操作，例如 Signal 和 Update 处理程序。
+它不适用于纯读取操作，例如查询或 Update 验证器。
 
 :::tip
 
-For additional information, see [Inject work into the main Workflow](/handling-messages#injecting-work-into-main-workflow), and [Ensuring your messages are processed exactly once](/handling-messages#exactly-once-message-processing).
+有关其他信息，请参阅 [将工作注入主 Workflow](/handling-messages#injecting-work-into-main-workflow) 和 [确保您的消息仅被处理一次](/handling-messages#exactly-once-message-processing)。
 
 :::
 
-### Do blocking operations in handlers {#blocking-handlers}
+<a id="blocking-handlers"></a>
+### 在处理程序中执行阻塞操作 {#blocking-handlers}
+Signal 和 Update 处理程序可以阻止。
+这允许您使用 [`Workflow.await`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#await(java.time.Duration,java.util.function.Supplier))、活动、Child Workflow、[`Workflow.sleep`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#sleep(java.time.Duration)) Timer 等。
+这扩展了处理程序可以完成的操作的可能性，但这也意味着处理程序执行和您的主 Workflow 方法都是同时运行的，并在调用 wait 时在它们之间进行切换。
 
-Signal and Update handlers can block.
-This allows you to use [`Workflow.await`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#await(java.time.Duration,java.util.function.Supplier)), Activities, Child Workflows, [`Workflow.sleep`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#sleep(java.time.Duration)) Timers, etc.
-This expands the possibilities for what can be done by a handler but it also means that handler executions and your main Workflow method are all running concurrently, with switching occurring between them at await calls.
+为了安全地使用阻塞处理程序，了解可能出错的事情至关重要。
+有关安全使用阻止 Signal 和 Update 处理程序的指南，请参阅 [Workflow消息传递](/encyclopedia/workflow-message-passing) 以及下面的 [控制处理程序并发](#control-handler-concurrency) 和 [等待消息处理程序完成](#wait-for-message-handlers) 部分。
 
-It's essential to understand the things that could go wrong in order to use blocking handlers safely.
-See [Workflow message passing](/encyclopedia/workflow-message-passing) for guidance on safe usage of blocking Signal and Update handlers, and the [Controlling handler concurrency](#control-handler-concurrency) and [Waiting for message handlers to finish](#wait-for-message-handlers) sections below.
-
-The following code modifies the Update handler from earlier on in this page.
-The Update handler now makes a blocking call to execute an Activity:
+以下代码修改了本页前面的 Update 处理程序。
+Update 处理程序现在进行阻塞调用来执行 Activity：
 
 ```java
 public static class GreetingWorkflowImpl implements GreetingWorkflow {
@@ -518,26 +518,26 @@ public static class GreetingWorkflowImpl implements GreetingWorkflow {
 }
 ```
 
-Although a Signal handler can also make blocking calls like this, using an Update handler allows the Client to receive a result or error once the Activity completes.
-This lets your Client track the progress of asynchronous work performed by the Update's Activities, Child Workflows, etc.
+尽管 Signal 处理程序也可以进行这样的阻塞调用，但使用 Update 处理程序允许客户端在 Activity 完成后接收结果或错误。
+这使您的客户端可以跟踪 Update 的活动、Child Workflow 等执行的异步工作的进度。
 
-### Add blocking wait conditions {#block-with-wait}
+<a id="block-with-wait"></a>
+### 添加阻塞等待条件 {#block-with-wait}
+有时，阻塞 Signal 或 Update 处理程序需要满足某些条件才能继续。
+您可以使用 [`Workflow.await`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#await(java.time.Duration,java.util.function.Supplier)) 来阻止代码继续执行，直到条件成立为止。
+您可以通过传递返回 `true` 或 `false` 的函数来指定条件。
+这是一个重要的功能，可以帮助您控制处理程序逻辑。
 
-Sometimes, blocking Signal or Update handlers need to meet certain conditions before they should continue.
-You can use [`Workflow.await`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#await(java.time.Duration,java.util.function.Supplier)) to prevent the code from proceeding until a condition is true.
-You specify the condition by passing a function that returns `true` or `false`.
-This is an important feature that helps you control your handler logic.
+以下是 `Workflow.await` 的两个重要用例：
 
-Here are two important use cases for `Workflow.await`:
+- 在处理程序中等待，直到适合继续。
+- 在主 Workflow 中等待，直到所有活动处理程序完成。
 
-- Waiting in a handler until it is appropriate to continue.
-- Waiting in the main Workflow until all active handlers have finished.
-
-#### Wait for conditions in handlers {#wait-in-handlers}
-
-It's common to use `Workflow.await` in a handler.
-For example, suppose your Workflow class has a `updateReadyToExecute` method that indicates whether your Update handler should be allowed to start executing.
-You can use `workflow.wait_condition` in the handler to make the handler pause until the condition is met:
+<a id="wait-in-handlers"></a>
+#### 等待处理程序中的条件 {#wait-in-handlers}
+在处理程序中使用 `Workflow.await` 是很常见的。
+例如，假设您的 Workflow 类具有 `UpdateReadyToExecute` 方法，该方法指示是否应允许您的 Update 处理程序开始执行。
+您可以在处理程序中使用 `Workflow.wait_condition` 使处理程序暂停，直到满足条件：
 
 ```java
 @Override
@@ -547,17 +547,17 @@ public String setLanguage(UpdateInput input) {
 }
 ```
 
-Remember: handlers can execute before the main Workflow method starts.
+请记住：处理程序可以在主 Workflow 方法启动之前执行。
 
-You can also use `Workflow.await` anywhere else in the handler to wait for a specific condition to become true.
-This allows you to write handlers that pause at multiple points, each time waiting for a required condition to become true.
+您还可以在处理程序中的任何其他位置使用 `Workflow.await` 来等待特定条件变为真。
+这允许您编写在多个点暂停的处理程序，每次都等待所需的条件变为真。
 
-#### Ensure your handlers finish before the Workflow completes {#wait-for-message-handlers}
-
-`Workflow.await` can ensure your handler completes before a Workflow finishes.
-When your Workflow uses blocking Signal or Update handlers, your main Workflow method can return or Continue-as-New while a handler is still waiting on an async task, such as an Activity.
-The Workflow completing may interrupt the handler before it finishes crucial work and cause Client errors when trying to retrieve Update results.
-Use `Workflow.await` to wait for [`Workflow.isEveryHandlerFinished`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#isEveryHandlerFinished()) to return `true` to address this problem and allow your Workflow to end smoothly:
+<a id="wait-for-message-handlers"></a>
+#### 确保您的处理程序在 Workflow 完成 {#wait-for-message-handlers} 之前完成
+`Workflow.await` 可以确保您的处理程序在 Workflow 完成之前完成。
+当您的 Workflow 使用阻塞 Signal 或 Update 处理程序时，您的主 Workflow 方法可以在处理程序仍在等待异步任务（例如 Activity）时返回 或 Continue-As-New。
+Workflow 完成可能会在处理程序完成关键工作之前中断处理程序，并在尝试检索 Update 结果时导致客户端错误。
+使用`Workflow.await`等待[`Workflow.isEveryHandlerFinished`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#isEveryHandlerFinished()返回`true`来解决这个问题，让你的Workflow顺利结束：
 
 ```java
 public class MyWorkflowImpl implements MyWorkflow {
@@ -571,8 +571,8 @@ public class MyWorkflowImpl implements MyWorkflow {
 }
 ```
 
-By default, your Worker will log a warning when you allow a Workflow Execution to finish with unfinished handler executions.
-You can silence these warnings on a per-handler basis by passing the `unfinishedPolicy` argument to the [`@SignalMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/SignalMethod.html) / [`@UpdateMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/UpdateMethod.html) annotation:
+默认情况下，当您允许 Workflow Execution 完成未完成的处理程序执行时，您的 Worker 将记录一条警告。
+您可以通过将 `unfinishedPolicy` 参数传递给 [`@SignalMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/SignalMethod.html) / [`@UpdateMethod`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/UpdateMethod.html) 注释来在每个处理程序的基础上消除这些警告：
 
 ```java
 @WorkflowInterface
@@ -583,24 +583,25 @@ public interface MyWorkflow {
 }
 ```
 
-See [Finishing handlers before the Workflow completes](/handling-messages#finishing-message-handlers) for more information.
+请参阅 [在 Workflow 完成之前完成处理程序](/handling-messages#finishing-message-handlers) 了解更多信息。
 
-### Use `@WorkflowInit` to operate on Workflow input before any handler executes
+<a id="use-workflowinit-to-operate-on-workflow-input-before-any-handler-executes"></a>
+### 在执行任何处理程序之前，使用 `@WorkflowInit` 对 Workflow 输入进行操作 {#use-workflowinit-to-operate-on-workflow-input-before-any-handler-executes}
 
-Normally, your Workflows constructor won't have any parameters.
-However, if you use the `@WorkflowInit` annotation on your constructor, you can give it the same [Workflow parameters](/develop/java/workflows/basics#workflow-parameters) as your `@WorkflowMethod`.
-The SDK will then ensure that your constructor receives the Workflow input arguments that the [Client sent](/develop/java/client/temporal-client#start-workflow-execution).
-The Workflow input arguments are also passed to your `@WorkflowMethod` method -- that always happens, whether or not you use the `@WorkflowInit` annotation.
-This is useful if you have message handlers that need access to Workflow input: see [Initializing the Workflow first](/handling-messages#workflow-initializers).
+通常，您的 Workflows 构造函数不会有任何参数。
+但是，如果您在构造函数上使用 `@WorkflowInit` 注释，则可以为其指定与 `@WorkflowMethod` 相同的 [Workflow参数](/develop/java/workflows/basics#workflow-parameters)。
+然后，SDK 将确保您的构造函数接收到 [客户发送](/develop/java/client/temporal-client#start-workflow-execution) 的 Workflow 输入参数。
+Workflow 输入参数也会传递到您的 `@WorkflowMethod` 方法 - 无论您是否使用 `@WorkflowInit` 注释，这种情况总是会发生。
+如果您有需要访问 Workflow 输入的消息处理程序，这非常有用：请参阅 [首先初始化Workflow](/handling-messages#workflow-initializers)。
 
 :::caution
 
-Do not make blocking calls from within your `@WorkflowInit` method. This could result in your Workflow being incompletely initialized at the start, meaning, for example, that Signal, Query, and Update handler registration would be delayed.
+不要从 `@WorkflowInit` 方法内进行阻塞调用。这可能会导致 Workflow 在开始时未完全初始化，这意味着 Signal、Query 和 Update 处理程序注册将被延迟。
 
 :::
 
-Here's an example.
-Notice that the constructor and `getGreeting` must have the same parameters:
+这是一个例子。
+请注意，构造函数和 `getGreeting` 必须具有相同的参数：
 
 ```java
 public class GreetingExample {
@@ -642,11 +643,11 @@ public class GreetingExample {
 }
 ```
 
-### Use locks to prevent concurrent handler execution {#control-handler-concurrency}
-
-Concurrent processes can interact in unpredictable ways.
-Incorrectly written [concurrent message-passing](/handling-messages#message-handler-concurrency) code may not work correctly when multiple handler instances run simultaneously.
-Here's an example of a pathological case:
+<a id="control-handler-concurrency"></a>
+### 使用锁来防止并发处理程序执行 {#control-handler-concurrency}
+并发进程可以以不可预测的方式交互。
+当多个处理程序实例同时运行时，编写不正确的 [并发消息传递](/handling-messages#message-handler-concurrency) 代码可能无法正常工作。
+这是一个病态病例的例子：
 
 ```java
 public class DataWorkflowImpl implements DataWorkflow {
@@ -663,8 +664,8 @@ public class DataWorkflowImpl implements DataWorkflow {
 }
 ```
 
-Coordinating access with `WorkflowLock` corrects this code.
-Locking makes sure that only one handler instance can execute a specific section of code at any given time:
+与 `WorkflowLock` 协调访问可更正此代码。
+锁定可确保在任何给定时间只有一个处理程序实例可以执行特定的代码部分：
 
 ```java
 public class DataWorkflowImpl implements DataWorkflow {
@@ -688,108 +689,108 @@ public class DataWorkflowImpl implements DataWorkflow {
 }
 ```
 
-## Message handler troubleshooting {#message-handler-troubleshooting}
+<a id="message-handler-troubleshooting"></a>
+## 消息处理程序故障排除 {#message-handler-troubleshooting}
+将 Signal、Update 或 Query 发送到 Workflow 时，您的客户端可能会遇到以下错误：
 
-When sending a Signal, Update, or Query to a Workflow, your Client might encounter the following errors:
+- **客户端无法联系服务器**：
+  您将收到一个 [`WorkflowServiceException`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowServiceException.html)，其中 `cause` 是 [`StatusRuntimeException`](https://grpc.github.io/grpc-java/javadoc/io/grpc/StatusRuntimeException.html)，`status` 是 `UNAVAILABLE`（重试几次后）。
 
-- **The Client can't contact the server**:
-  You'll receive a [`WorkflowServiceException`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowServiceException.html) on which the `cause` is a [`StatusRuntimeException`](https://grpc.github.io/grpc-java/javadoc/io/grpc/StatusRuntimeException.html) and `status` of `UNAVAILABLE` (after some retries).
+- **Workflow 不存在**：
+  您将收到 [`WorkflowNotFoundException`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowNotFoundException.html)。
 
-- **The Workflow does not exist**:
-  You'll receive a [`WorkflowNotFoundException`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowNotFoundException.html).
+有关此主题的非特定于 Java 的讨论，请参阅 [消息处理程序中的异常](/handling-messages#exceptions)。
 
-See [Exceptions in message handlers](/handling-messages#exceptions) for a non–Java-specific discussion of this topic.
+<a id="signal-problems"></a>
+### 发送 Signal 时出现问题 {#signal-problems}
+使用 Signal 时，上述 `WorkflowException` 是请求导致的唯一异常类型。
 
-### Problems when sending a Signal {#signal-problems}
+相反，对于查询和 Update，客户端等待来自 Worker 的响应。
+如果 Worker 执行处理程序期间出现问题，客户端可能会收到异常。
 
-When using Signal, the above `WorkflowException`s are the only types of exception that will result from the request.
+<a id="update-problems"></a>
+### 发送 Update 时出现问题 {#update-problems}
+使用 Update 时，您可能会遇到以下错误：
 
-In contrast, for Queries and Updates, the client waits for a response from the Worker.
-If an issue occurs during the handler execution by the Worker, the Client may receive an exception.
+- **没有 Workflow Worker 正在轮询 Task Queue**：
+  SDK 客户端将无限期地重试您的请求。
+  您可以使用带有超时参数的 `CompletableFuture.get()` 方法强制超时。
+  这会在过期时引发 `java.util.concurrent.TimeoutException` 异常。
 
-### Problems when sending an Update {#update-problems}
+- **Update 失败**：您将收到 `WorkflowUpdateException` 异常。
+  有两种方式可以发生这种情况：
 
-When working with Updates, you may encounter these errors:
+- Update 被 Workflow 中与 Update 处理程序一起定义的 Update 验证器拒绝。
 
-- **No Workflow Workers are polling the Task Queue**:
-  Your request will be retried by the SDK Client indefinitely.
-  You can impose a timeout with `CompletableFuture.get()` method with a timeout parameter.
-  This throws a `java.util.concurrent.TimeoutException` exception when it expires.
+- Update 被接受后失败。
 
-- **Update failed**: You'll receive a `WorkflowUpdateException` exception.
-  There are two ways this can happen:
+Update 故障类似于 [Workflow 故障](/references/failures)。
+  导致 main 方法中的 Workflow 失败的问题也会导致 Update 处理程序中的 Update 失败。
+  这些可能包括：
 
-  - The Update was rejected by an Update validator defined in the Workflow alongside the Update handler.
+- 失败的Child Workflow
+      - 失败的 Activity（如果 Activity 重试已设置为有限次数）
+      - Workflow作者扔`ApplicationFailure`
+      - [getFailWorkflowExceptionTypes](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/WorkflowImplementationOptions.html#getFailWorkflowExceptionTypes()) 中列出的任何错误（默认为空）
 
-  - The Update failed after having been accepted.
+- **处理程序导致 Workflow 任务失败**：
+  [Workflow 任务失败](/references/failures) 导致服务器无限期地重试 Workflow 任务。您的 Update 请求会发生什么情况取决于其阶段：
+  - 如果服务器未接受请求，您将收到 `FAILED_PRECONDITION` [`WorkflowServiceException`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowServiceException.html) 异常。
+  - 如果请求已被接受，则该请求是持久的。
+    代码部署后，一旦 Workflow 再次正常运行，请使用 [`WorkflowUpdateHandle`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowUpdateHandle.html) 获取 Update 结果。
 
-  Update failures are like [Workflow failures](/references/failures).
-  Issues that cause a Workflow failure in the main method also cause Update failures in the Update handler.
-  These might include:
+- **Workflow 已完成，而 Update 处理程序执行正在进行中**：
+  您将收到 [`WorkflowServiceException`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowServiceException.html)“Workflow Execution 已完成”`。
 
-      - A failed Child Workflow
-      - A failed Activity (if the Activity retries have been set to a finite number)
-      - The Workflow author throwing `ApplicationFailure`
-      - Any error listed in [getFailWorkflowExceptionTypes](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/WorkflowImplementationOptions.html#getFailWorkflowExceptionTypes()) (empty by default)
+如果 Workflow 完成而 Update 处理程序执行正在进行中，则会发生这种情况，例如因为
 
-- **The handler caused the Workflow Task to fail**:
-  A [Workflow Task Failure](/references/failures) causes the server to retry Workflow Tasks indefinitely. What happens to your Update request depends on its stage:
-  - If the request hasn't been accepted by the server, you receive a `FAILED_PRECONDITION` [`WorkflowServiceException`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowServiceException.html) exception.
-  - If the request has been accepted, it is durable.
-    Once the Workflow is healthy again after a code deploy, use a [`WorkflowUpdateHandle`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowUpdateHandle.html) to fetch the Update result.
+- Workflow 已取消或失败。
 
-- **The Workflow finished while the Update handler execution was in progress**:
-  You'll receive a [`WorkflowServiceException`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowServiceException.html) "workflow execution already completed"`.
+- Workflow 正常完成或继续如新，而 Workflow 作者没有 [等待处理程序完成](/handling-messages#finishing-message-handlers)。
 
-  This will happen if the Workflow finished while the Update handler execution was in progress, for example because
+<a id="query-problems"></a>
+### 发送 Query 时出现问题 {#query-problems}
+使用查询时，您可能会遇到以下错误：
 
-  - The Workflow was canceled or failed.
+- **没有 Workflow Worker 轮询 Task Queue**：
+  您将收到一个 [`WorkflowServiceException`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowServiceException.html)，其中 `cause` 是 [`StatusRuntimeException`](https://grpc.github.io/grpc-java/javadoc/io/grpc/StatusRuntimeException.html)，`status` 是 `FAILED_PRECONDITION`。
 
-  - The Workflow completed normally or continued-as-new and the Workflow author did not [wait for handlers to be finished](/handling-messages#finishing-message-handlers).
+- **Query 失败**：
+  如果 Query 期间出现问题，您将收到 [`WorkflowQueryException`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowQueryException.html) 异常。
+  Query 处理程序中的任何异常都会触发此错误。
+  这与 Signal 和 Update 请求不同，其中异常可能会导致 Workflow 任务失败。
 
-### Problems when sending a Query {#query-problems}
+- **处理程序导致 Workflow 任务失败。**
+  例如，如果 Query 处理程序阻塞线程太长时间而没有屈服，就会发生这种情况。
 
-When working with Queries, you may encounter these errors:
+<a id="dynamic-handler"></a>
+## 动态组件 {#dynamic-handler}
+动态 Workflow、Activity、Signal、Update 或 Query 是一种未命名项目。
+通常，这些项目按名称注册到 Worker 并在运行时调用。
+当未注册或无法识别的 Workflow、Activity 或带有已识别方法签名的消息请求到达时，Worker 可以使用预先注册的动态替代。
 
-- **There is no Workflow Worker polling the Task Queue**:
-  You'll receive a [`WorkflowServiceException`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowServiceException.html) on which the `cause` is a [`StatusRuntimeException`](https://grpc.github.io/grpc-java/javadoc/io/grpc/StatusRuntimeException.html) with a `status` of `FAILED_PRECONDITION`.
+例如，您可以发送请求来启动名为​​“MyUnknownWorkflow”的 Workflow。
+收到 Workflow 任务后，Worker 可能会发现没有已注册的该类型的 Workflow Definition。
+然后，它检查是否存在已注册的动态 Workflow。
+如果动态 Workflow 签名与传入的 Workflow 签名匹配，则 Worker 会调用该签名，就像调用非动态静态命名版本一样。
 
-- **Query failed**:
-  You'll receive a [`WorkflowQueryException`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowQueryException.html) exception if something goes wrong during a Query.
-  Any exception in a Query handler will trigger this error.
-  This differs from Signal and Update requests, where exceptions can lead to Workflow Task Failure instead.
-
-- **The handler caused the Workflow Task to fail.**
-  This would happen, for example, if the Query handler blocks the thread for too long without yielding.
-
-## Dynamic components {#dynamic-handler}
-
-A dynamic Workflow, Activity, Signal, Update, or Query is a kind of unnamed item.
-Normally, these items are registered by name with the Worker and invoked at runtime.
-When an unregistered or unrecognized Workflow, Activity, or message request arrives with a recognized method signature, the Worker can use a pre-registered dynamic stand-in.
-
-For example, you might send a request to start a Workflow named "MyUnknownWorkflow".
-After receiving a Workflow Task, the Worker may find that there's no registered Workflow Definitions of that type.
-It then checks to see if there's a registered dynamic Workflow.
-If the dynamic Workflow signature matches the incoming Workflow signature, the Worker invokes that just as it would invoke a non-dynamic statically named version.
-
-By registering dynamic versions of your Temporal components, the Worker can fall back to these alternate implementations for name mismatches.
+通过注册 Temporal 组件的动态版本，Worker 可以回退到这些名称不匹配的替代实现。
 
 :::caution
 
-Use dynamic elements judiciously and as a fallback mechanism, not a primary design.
-They can introduce long-term maintainability and debugging issues.
-Reserve dynamic invocation use for cases where a name is not or can't be known at compile time.
+明智地使用动态元素并将其作为后备机制，而不是主要设计。
+它们可能会带来长期的可维护性和调试问题。
+保留动态调用用于在编译时不知道或无法知道名称的情况。
 
 :::
 
-### Set a Dynamic Workflow {#set-a-dynamic-workflow}
+<a id="set-a-dynamic-workflow"></a>
+### 设置动态 Workflow {#set-a-dynamic-workflow}
+使用 [`DynamicWorkflow`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/DynamicWorkflow.html) 动态实现 Workflow 类型。
+注册一个扩展 `DynamicWorkflow` 的 Workflow 实现类型，以实现未向 Worker 显式注册的任何 Workflow 类型。
 
-Use [`DynamicWorkflow`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/DynamicWorkflow.html) to implement Workflow Types dynamically.
-Register a Workflow implementation type that extends `DynamicWorkflow` to implement any Workflow Type that is not explicitly registered with the Worker.
-
-The dynamic Workflow interface is implemented with the `execute` method. This method takes in `EncodedValues` that are inputs to the Workflow Execution.
-These inputs can be specified by the Client when invoking the Workflow Execution.
+动态Workflow接口是用`execute`方法实现的。此方法接受 `EncodedValues`，它们是 Workflow Execution 的输入。
+这些输入可以由客户端在调用 Workflow Execution 时指定。
 
 ```java
 public class MyDynamicWorkflow implements DynamicWorkflow {
@@ -799,14 +800,14 @@ public class MyDynamicWorkflow implements DynamicWorkflow {
 }
 ```
 
-### How to set a Dynamic Activity {#set-a-dynamic-activity}
+<a id="set-a-dynamic-activity"></a>
+### 如何设置动态 Activity {#set-a-dynamic-activity}
+要处理没有显式注册处理程序的 Activity 类型，您可以直接实现动态 Activity。
 
-To handle Activity types that do not have an explicitly registered handler, you can directly implement a dynamic Activity.
+使用 `DynamicActivity` 动态实现任意数量的 Activity 类型。
+当注册扩展 `DynamicActivity` 的 Activity 实现时，任何没有显式注册处理程序的 Activity 类型调用都会调用它。
 
-Use `DynamicActivity` to implement any number of Activity types dynamically.
-When an Activity implementation that extends `DynamicActivity` is registered, it is called for any Activity type invocation that doesn't have an explicitly registered handler.
-
-The dynamic Activity interface is implemented with the `execute` method, as shown in the following example.
+动态Activity接口是通过`execute`方法实现的，如下例所示。
 
 ```java
 // Dynamic Activity implementation
@@ -825,13 +826,13 @@ The dynamic Activity interface is implemented with the `execute` method, as show
  }
 ```
 
-Use `Activity.getExecutionContext()` to get information about the Activity type that should be implemented dynamically.
+使用 `Activity.getExecutionContext()` 获取有关应动态实现的 Activity 类型的信息。
 
-### How to set a Dynamic Signal {#set-a-dynamic-signal}
+<a id="set-a-dynamic-signal"></a>
+### 如何设置动态 Signal {#set-a-dynamic-signal}
+您还可以动态实现 Signal 处理程序。这对于库级代码和 DSL 的实现非常有用。
 
-You can also implement Signal handlers dynamically. This is useful for library-level code and implementation of DSLs.
-
-Use `Workflow.registerListener(Object)` to register an implementation of the `DynamicSignalListener` in the Workflow implementation code.
+使用 `Workflow.registerListener(Object)` 在 Workflow 实现代码中注册 `DynamicSignalListener` 的实现。
 
 ```java
 Workflow.registerListener(
@@ -839,15 +840,15 @@ Workflow.registerListener(
       (signalName, encodedArgs) -> name = encodedArgs.get(0, String.class));
 ```
 
-When registered, any Signals sent to the Workflow without a defined handler will be delivered to the `DynamicSignalHandler`.
-Note that you can only register one `Workflow.registerListener(Object)` per Workflow Execution.
-`DynamicSignalHandler` can be implemented in both regular and dynamic Workflow implementations.
+注册后，发送到 Workflow 且没有定义处理程序的任何 Signal 将被传送到 `DynamicSignalHandler`。
+请注意，每个 Workflow Execution 只能注册一个 `Workflow.registerListener(Object)`。
+`DynamicSignalHandler` 可以在常规和动态 Workflow 实现中实现。
 
-### How to set a Dynamic Query {#set-a-dynamic-query}
+<a id="set-a-dynamic-query"></a>
+### 如何设置动态 Query {#set-a-dynamic-query}
+您还可以动态实现 Query 处理程序。这对于库级代码和 DSL 的实现非常有用。
 
-You can also implement Query handlers dynamically. This is useful for library-level code and implementation of DSLs.
-
-Use `Workflow.registerListener(Object)` to register an implementation of the `DynamicQueryListener` in the Workflow implementation code.
+使用 `Workflow.registerListener(Object)` 在 Workflow 实现代码中注册 `DynamicQueryListener` 的实现。
 
 ```java
 Workflow.registerListener(
@@ -855,14 +856,14 @@ Workflow.registerListener(
       (queryName, encodedArgs) -> name = encodedArgs.get(0, String.class));
 ```
 
-When registered, any Queries sent to the Workflow without a defined handler will be delivered to the `DynamicQueryHandler`.
-Note that you can only register one `Workflow.registerListener(Object)` per Workflow Execution.
-`DynamicQueryHandler` can be implemented in both regular and dynamic Workflow implementations.
+注册后，任何发送到 Workflow 且没有定义处理程序的查询都将被传送到 `DynamicQueryHandler`。
+请注意，每个 Workflow Execution 只能注册一个 `Workflow.registerListener(Object)`。
+`DynamicQueryHandler` 可以在常规和动态 Workflow 实现中实现。
 
-### How to set a Dynamic Update {#set-a-dynamic-update}
-
-You can also implement Update handlers dynamically.
-This is useful for library-level code and implementation of DSLs.
+<a id="set-a-dynamic-update"></a>
+### 如何设置动态 Update {#set-a-dynamic-update}
+您还可以动态实现 Update 处理程序。
+这对于库级代码和 DSL 的实现非常有用。
 
 ```java
 Workflow.registerListener(
@@ -870,6 +871,6 @@ Workflow.registerListener(
       (updateName, encodedArgs) -> encodedArgs.get(0, String.class));
 ```
 
-When registered, any Updates sent to the Workflow without a defined handler will be delivered to the `DynamicUpdateHandler`.
-You can only register one `Workflow.registerListener(Object)` per Workflow Execution.
-`DynamicUpdateHandler` can be implemented in both regular and dynamic Workflow implementations.
+注册后，任何发送到 Workflow 且没有定义处理程序的 Update 将被传送到 `DynamicUpdateHandler`。
+每个 Workflow Execution 只能注册一个 `Workflow.registerListener(Object)`。
+`DynamicUpdateHandler` 可以在常规和动态 Workflow 实现中实现。

@@ -1,0 +1,54 @@
+---
+id: timeouts
+title: Workflow 超时 - Ruby SDK
+sidebar_label: 超时
+description: 使用 Temporal 优化 Workflow Execution Ruby SDK - 有效设置 Workflow 超时和重试策略。
+toc_max_heading_level: 4
+keywords:
+  - Ruby
+  - failure detection
+  - timeouts
+tags:
+  - Activities
+  - Workflows
+  - Errors
+  - Failures
+  - Ruby SDK
+  - Temporal SDKs
+---
+
+## Workflow 超时 {#Workflow-超时}
+
+每个 Workflow 超时控制 Workflow Execution 不同方面的最大持续时间。
+
+- **[Workflow Execution 超时](/encyclopedia/Detecting-Workflow-failures#Workflow-execution-timeout)**：限制完整 Workflow Execution 可以运行的时间。
+- **[Workflow 运行超时](/encyclopedia/Detecting-Workflow-failures#Workflow-run-timeout)**：限制 Workflow Execution 单独运行的持续时间。
+- **[Workflow Task Timeout](/encyclopedia/Detecting-Workflow-failures#Workflow-task-timeout)**：限制 Worker 处理 Workflow Task 所允许的时间。
+
+启动 Workflow 时将这些值设置为关键字参数选项。
+
+```ruby
+result = my_client.execute_workflow(
+  MyWorkflow, 'some-input',
+  id: 'my-workflow-id', task_queue: 'my-task-queue',
+  execution_timeout: 5 * 60
+)
+```
+
+### Workflow 重试 {#Workflow-重试}
+
+Retry Policy 可以与超时配合，提供精细控制以优化执行体验。
+
+使用 [Retry Policy](/encyclopedia/retry-policies) 在失败时自动重试 Workflow Execution。
+
+默认情况下，Workflow Execution 不会重试，并且仅在某些情况下才应将重试策略与 Workflow Execution 一起使用。
+
+可以在调用“start_Workflow”或“execute_Workflow”时设置“retry_policy”。
+
+```ruby
+result = my_client.execute_workflow(
+  MyWorkflow, 'some-input',
+  id: 'my-workflow-id', task_queue: 'my-task-queue',
+  retry_policy: Temporalio::RetryPolicy.new(max_interval: 10)
+)
+```

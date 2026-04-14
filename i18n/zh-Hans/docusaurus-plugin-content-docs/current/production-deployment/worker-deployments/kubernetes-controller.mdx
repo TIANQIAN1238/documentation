@@ -1,0 +1,139 @@
+---
+id: kubernetes-controller
+title: Temporal Worker 控制器
+sidebar_label: Worker控制器
+description: 使用 Temporal 提供的 Kubernetes 控制器以编程方式扩展您的 Worker 部署。
+slug: /production-deployment/worker-deployments/kubernetes-controller
+toc_max_heading_level: 4
+keywords:
+  - kubernetes
+  - scaling
+  - helm
+  - workers
+  - scaling
+  - versioning
+tags:
+  - Temporal Service
+  - Durable Execution
+---
+
+[Temporal Worker 控制器](https://github.com/Temporalio/Temporal-Worker-controller) 提供自动化功能，通过简化对哪些版本仍具有活动 Workflow 的跟踪、管理版本化 Worker 部署的生命周期以及调用 Temporal API 来实现 Worker 的彩虹部署Update Temporal Worker 部署的路由配置。
+Temporal Worker 控制器使在 Kubernetes 上部署 Temporal Worker 变得简单、安全。
+
+如果您在 Kubernetes 上运行版本化的 Worker，则建议使用 Worker 控制器来同时管理部署和自动扩展。
+
+### 为什么采用Worker控制器？
+
+修改 Temporal Workflow 的传统方法是使用 [版本控制 API](/Workflow-definition#Workflow-versioning) 添加分支。
+随着时间的推移，这些检查可能会成为技术债务的来源，因为从代码库中安全地删除它们是一个谨慎的过程，通常涉及 Querying 所有正在运行的 Workflow。
+
+[Worker 版本控制](/生产部署/Worker-部署/Worker-版本控制) 是一项 Temporal 功能，允许您将 Workflow 固定到 Worker 的各个版本，这些版本称为 Worker 部署版本。
+使用固定，您无需向 Workflow 添加分支即可避免非确定性错误。
+这允许您绕过其他版本控制 API。
+
+Worker 控制器可让您以编程方式直接控制 Worker 部署，并与 [Temporal CLI](/生产部署/Worker-deployments/Worker-versioning#rolling-out-changes-with-the-cli) 集成。
+您不需要通过 Worker 控制器来使用 Worker 版本控制，但当一起使用时，Worker 版本控制和 Worker 控制器可以提供更优雅的部署和升级，并且无需手动调整 Worker。
+
+请注意，在 Temporal 中，**Worker 部署**有时被称为 **部署**，但由于 Worker 控制器对 Kubernetes 部署资源进行了重要引用，因此在此页面中我们将坚持以下术语：
+
+- [**Worker 部署**](/Worker-versioning#deployments)：Worker 部署是一种逻辑服务，它将类似的 Worker 分组在一起以进行统一管理。每个部署都有一个名称（例如您的服务名称），并支持通过一系列 Worker 部署版本进行版本控制。
+- [**Worker 部署版本**](/Worker-versioning#deployment-versions)：Worker 部署版本表示 Worker 部署的迭代。每个部署版本均由共享相同代码构建和环境的 Worker 组成。当 Worker 开始轮询 Workflow 和 Activity 任务时，它会向 Temporal Server 报告其部署版本。
+- **部署**：Kubernetes 部署资源。如果部署正在运行版本化的 Temporal Workers/pollers，则该部署是“版本化的”。
+
+＃＃＃ 特征
+
+- 注册新的 Temporal Worker 部署版本
+- 创建版本化部署资源（管理运行 Temporal 轮询器的 Pod）
+- 删除与耗尽的 Worker 部署版本相关的资源
+- 新版本的“手动”、“AllAtOnce”和“渐进”推出
+- 能够指定“门”Workflow，该门必须在新版本上成功，然后才能将实际流量路由到该版本
+- 使用 Kubernetes Horizontal Pod Autoscaler (HPA) 自动缩放版本化部署
+
+有关使用详细信息，请参阅 [Temporal Worker 控制器存储库](https://github.com/Temporalio/Temporal-Worker-controller/)。
+
+## 自动缩放版本 Workers
+
+Worker 控制器可以管理版本化 Worker 部署的自动缩放，而无需强迫您在
+安全的推出行为和弹性能力。
+
+当您需要以下所有功能时，请使用 Worker 控制器：
+
+- [Worker 版本控制](/生产部署/Worker-部署/Worker-版本控制)用于安全的 Workflow 代码更改
+- Kubernetes-native rollout automation
+- 分别遵循每个活动 Worker 部署版本的自动缩放
+
+Because the Worker Controller uses Kubernetes HPA, you can scale on any metric available to your HPA pipeline,
+包括：
+
+- CPU和内存利用率
+- Task Queue 通过指标管道公开的积压指标
+- 插槽利用率和其他 Worker 特定指标
+- 通过 Prometheus 或其他 Kubernetes 指标适配器出现的自定义指标
+
+### TemporalWorkerOwnedResource
+
+要将自动缩放或其他 Kubernetes 资源附加到每个 Worker 部署版本，请使用
+`TemporalWorkerOwnedResource`（两个）。
+
+TWOR 允许您定义一次资源模板，并让 Worker 控制器为每个模板创建特定于版本的副本
+活动 Worker 部署版本。这对于以下资源很有用：
+
+- `HorizontalPodAutoscaler`
+- `PodDisruptionBudget`
+- 其他应该跟踪版本化部署生命周期的 Kubernetes 资源
+
+Worker 控制器管理这些资源以及它创建的版本化部署，因此它们是 Updated 和
+随着版本的前滚和耗尽而被清理。
+
+### 为什么使用这个而不是 KEDA？
+
+如果您已使用 Worker 控制器进行 Worker 版本控制，请使用 Worker 控制器进行自动缩放，如下所示
+好吧。这使得部署管理和扩展能够附加到相同版本的 Kubernetes 部署。
+
+KEDA 仍然是非版本化或旧版 Worker 部署的有效选项。然而，对于版本 Worker，
+Worker 控制器是首选路径，因为它使自动扩展与 Worker 部署版本保持一致。
+
+## 配置 Worker 生命周期
+
+要使用 Temporal Worker 控制器，请按照使用 [Worker 版本控制](/生产部署/Worker-部署/Worker-版本控制)的指南标记您的 Worker。
+
+以下是一个以“HelloWorld” Workflow 的成功为基础的渐进式推出策略的示例：
+
+```
+rollout:
+  strategy: Progressive
+  steps:
+    - rampPercentage: 1
+      pauseDuration: 30s
+    - rampPercentage: 10
+      pauseDuration: 1m
+  gate:
+    workflowType: "HelloWorld"
+```
+
+当您发布新的部署版本时，Worker 控制器会自动检测它们，并逐渐使该版本成为其所属 Worker 部署的新**当前版本**。
+当较旧的固定 Workflow 完成执行并且已弃用的部署版本耗尽时，Worker 控制器还会通过取消轮询这些版本的“部署”资源来释放资源。
+
+当您将自动扩展与 Worker 控制器结合使用时，每个活动的 Worker 部署版本都可以独立扩展，同时
+它正在为交通服务。这使得旧版本可以安全地耗尽，而新版本则可以根据实时需求进行扩展。
+
+## 运行 Temporal Worker 控制器
+
+您可以使用我们的 Helm 图表安装 Temporal Worker 控制器：
+
+```bash
+RELEASE=temporal-worker-controller
+NAMESPACE=temporal-system
+VERSION=1.0.0
+
+helm install $RELEASE oci://docker.io/temporalio/helm-charts/temporal-worker-controller \
+  --version $VERSION \
+  --namespace $NAMESPACE \
+  --create-namespace
+  
+helm install temporal-worker-controller ./helm/temporal-worker-controller \
+  --namespace $NAMESPACE \
+  --create-namespace 
+```
+
+有关其他 Worker 控制器部署模板，请参阅 [GitHub](https://github.com/Temporalio/Temporal-Worker-controller/tree/main/helm/Temporal-Worker-controller/templates)。

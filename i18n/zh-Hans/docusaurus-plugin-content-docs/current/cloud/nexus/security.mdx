@@ -1,0 +1,29 @@
+---
+id: security
+slug: /cloud/nexus/security
+title: 安全 - Temporal Nexus
+description: 了解 Temporal Nexus 的安全性
+sidebar_label: 安全
+tags:
+  - Temporal Cloud
+  - Nexus
+keywords:
+  - Temporal Nexus
+  - Nexus
+  - security
+  - access control
+---
+
+:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+
+Temporal Nexus 现已[普遍可用](/evaluate/development-product-features/release-stages#general-availability)。
+了解为什么应在[评估指南](/evaluate/Nexus) 中使用 Nexus。
+
+:::
+
+Temporal Cloud 中的 Nexus 安全性：
+
+- **[运行时访问控制](/Nexus/security#runtime-access-controls)** - 端点白名单限制哪些调用者 Namespace 可以使用端点。请参阅[配置访问控制](/Nexus/registry#configure-runtime-access-controls)。
+- **[安全连接](/Nexus/security#secure-connectivity)** - mTLS 用于跨单元和区域的所有 Nexus 通信。端点只能在 Temporal Cloud 帐户内访问。
+- **[有效负载加密](/Nexus/security#payload-encryption-data-converter)** - Data Converter 与 Workflow 和活动相同，具有三种跨 Namespace 加密方法。
+- **[注册表角色和权限](/Nexus/registry#roles-and-permissions)** - 控制谁可以查看、创建、编辑和删除端点。

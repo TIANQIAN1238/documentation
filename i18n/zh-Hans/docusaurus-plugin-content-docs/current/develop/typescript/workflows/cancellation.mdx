@@ -1,0 +1,99 @@
+---
+id: cancellation
+title: 取消 Workflow - TypeScript SDK
+sidebar_label: 消除
+slug: /develop/typescript/workflows/cancellation
+keywords:
+  - cancellation
+tags:
+  - Workflows
+  - TypeScript SDK
+  - Temporal SDKs
+description: Explore the power of Cancellation Scopes in TypeScript to manage nested, non-cancellable, and timeout-based operations
+  Explore the power of Cancellation Scopes in TypeScript to manage nested, non-cancellable, and timeout-based operations
+  within Temporal Workflows with ease.
+---
+
+## 从 Workflow 取消 Activity {#cancel-an-Activity}
+
+从 Workflow 内取消 Activity 要求 Activity 执行发送心跳并设置心跳
+超时。如果不调用Heartbeat，Activity将无法接收取消请求。当任何非立即
+Activity 执行后，Activity 执行应发送心跳并设置
+[心跳超时](/encyclopedia/Detecting-Activity-failures#heartbeat-timeout) 确保服务器知道它是
+仍在工作。
+
+当取消 Activity 时，Activity 会在下一个可用机会时引发错误。如果清理逻辑
+需要执行，可以在“finally”子句中或在捕获的取消错误中完成。然而，对于 Activity
+要显示已取消，需要重新抛出异常。
+
+:::note
+
+与常规活动不同，[本地活动](/local-Activity) 如果不发送心跳，则可以取消。本地
+活动在本地处理，处理取消逻辑所需的所有信息都可以在同一个
+Worker 过程。
+
+:::
+
+## 重置 Workflow Execution {#reset}
+
+重置 Workflow Execution 将终止当前的 Workflow Execution 并从
+您在 Event History 中指定的点。当 Workflow 由于非确定性错误或其他原因而被阻止时，请使用重置
+阻止其完成的问题。
+
+当您重置 Workflow 时，重置点之前的 Event History 将被复制到新的 Workflow Execution，并且
+Workflow 从该点开始使用当前代码恢复。仅当您解决了根本问题（例如
+删除不确定性代码。重置点之后取得的任何进度都将被丢弃。给出一个理由，当
+重置，因为它将记录在 Event History 中。
+
+<Tabs>
+
+<TabItem value="web-ui" label="Web UI">
+
+1. 导航至Workflow Execution详细信息页面，
+2. 单击右上角下拉菜单中的 **重置** 按钮，
+3. 选择要重置的事件 ID，
+4. 提供重置原因，
+5. 确认重置。
+
+Web UI 显示可用的重置点，并在重置完成后创建指向新 Workflow Execution 的链接。
+
+</TabItem>
+
+<TabItem value="cli" label="Temporal CLI">
+
+使用“Temporal Workflow重置”命令重置Workflow Execution：
+
+```bash
+temporal workflow reset \
+    --workflow-id <workflow-id> \
+    --event-id <event-id> \
+    --reason "Reason for reset"
+```
+
+例如：
+
+```bash
+temporal workflow reset \
+    --workflow-id my-background-check \
+    --event-id 4 \
+    --reason "Fixed non-deterministic code"
+```
+
+默认情况下，该命令会将最新的 Workflow Execution 重置为“默认”Namespace。使用 `--run-id` 重置
+具体运行。使用 `--Namespace` 指定不同的 Namespace：
+
+```bash
+temporal workflow reset \
+    --workflow-id my-background-check \
+    --event-id 4 \
+    --reason "Fixed non-deterministic code" \
+    --namespace my-namespace \
+    --tls-cert-path /path/to/cert.pem \
+    --tls-key-path /path/to/key.pem
+```
+
+重置后监视新的 Workflow Execution 以确保其成功完成。
+
+</TabItem>
+
+</Tabs>

@@ -1,8 +1,8 @@
 ---
 id: basics
-title: Activity basics - Ruby SDK
-sidebar_label: Activity basics
-description: This section explains Activity basics with the Ruby SDK
+title: "Activity 基础知识 - Ruby SDK"
+sidebar_label: "Activity 基础知识"
+description: "本节介绍 Activity 与 Ruby SDK 的基础知识"
 toc_max_heading_level: 4
 keywords:
   - Ruby SDK
@@ -11,16 +11,17 @@ tags:
   - Temporal SDKs
 ---
 
-## Develop an Activity {#develop-activity}
+<a id="develop-activity"></a>
+## 开发 Activity {#develop-activity}
 
-One of the primary things that Workflows do is orchestrate the execution of Activities.
-An Activity is a normal method execution that's intended to execute a single, well-defined action (either short or long-running), such as querying a database, calling a third-party API, or transcoding a media file.
-An Activity can interact with world outside the Temporal Platform or use a Temporal Client to interact with a Temporal Service.
-For the Workflow to be able to execute the Activity, we must define the [Activity Definition](/activity-definition).
+Workflow 所做的主要事情之一是协调活动的执行。
+Activity 是正常方法执行，旨在执行单个、明确定义的操作（短期或长期运行），例如 Query 数据库、调用第三方 API 或对媒体文件进行转码。
+Activity 可以与 Temporal 平台之外的世界交互，或使用 Temporal CLIent 与 Temporal 服务交互。
+为了使 Workflow 能够执行 Activity，我们必须定义 [Activity Definition](/activity-definition)。
 
-You can develop an Activity Definition by creating a class that extends `Temporalio::Activity::Definition`.
-To register a class as an Activity with a custom name, use the `activity_name` class method in the class definition.
-Otherwise, the activity name is the unqualified class name.
+您可以通过创建扩展 `Temporalio::Activity::Definition` 的类来开发 Activity Definition。
+要将类注册为具有自定义名称的 Activity，请在类定义中使用 `Activity_name` 类方法。
+否则，Activity 名称是非限定类名称。
 
 ```ruby
 class MyActivity < Temporalio::Activity::Definition
@@ -30,39 +31,40 @@ class MyActivity < Temporalio::Activity::Definition
 end
 ```
 
-Activity implementation code should be _idempotent_. Learn more about [idempotency](/activity-definition#idempotency).
+Activity 实现代码应该是_幂等的_。了解有关 [幂等性](/activity-definition#idempotency) 的更多信息。
 
-There is no explicit limit to the total number of parameters that an [Activity Definition](/activity-definition) may support.
-However, there is a limit to the total size of the data that ends up encoded into a gRPC message Payload.
+[Activity Definition](/activity-definition) 可以支持的参数总数没有明确的限制。
+但是，最终编码到 gRPC 消息有效负载中的数据的总大小是有限制的。
 
-A single argument is limited to a maximum size of 2 MB.
-And the total size of a gRPC message, which includes all the arguments, is limited to a maximum of 4 MB.
+单个参数的最大大小限制为 2 MB。
+gRPC 消息的总大小（包括所有参数）限制为最大 4 MB。
 
-Some SDKs require that you pass context objects, others do not.
-When it comes to your application data—that is, data that is serialized and encoded into a Payload—we recommend that you use a single hash or object as an argument that wraps the application data passed to Activities.
-This is so that you can change what data is passed to the Activity without breaking a method signature.
+某些 SDK 要求您传递上下文对象，而其他 SDK 则不需要。
+当涉及到您的应用程序数据（即序列化并编码到有效负载中的数据）时，我们建议您使用单个哈希或对象作为包装传递给活动的应用程序数据的参数。
+这样您就可以更改传递给 Activity 的数据，而不会破坏方法签名。
 
-The `execute` method in your Activity can technically accept multiple parameters of any data type that Temporal can convert.
-However, Temporal strongly encourages using a single parameter object to simplify versioning and maintainability.
+Activity 中的 `execute` 方法在技术上可以接受 Temporal 可以转换的任何数据类型的多个参数。
+但是，Temporal 强烈鼓励使用单个参数对象来简化版本控制和可维护性。
 
-### Activity Concurrency and Executors {#activity-concurrency-and-executors}
+<a id="activity-concurrency-and-executors"></a>
+### Activity 并发和执行器 {#activity-concurrency-and-executors}
 
 :::note
 
-This section covers advanced concurrency and execution options that most users will not need when getting started.
+本节介绍大多数用户在开始时不需要的高级并发和执行选项。
 
 :::
 
-By default, activities run in the "thread pool executor" (i.e. `Temporalio::Worker::ActivityExecutor::ThreadPool`).
-This default is shared across all workers and is a naive thread pool that continually makes threads as needed when none are
-idle/available to handle incoming work.
-If a thread sits idle long enough, it will be killed.
+默认情况下，活动在“线程池执行器”（即 `Temporalio::Worker::ActivityExecutor::ThreadPool`）中运行。
+此默认值在所有 Worker 之间共享，并且是一个简单的线程池，当没有线程时，它会根据需要不断创建线程。
+空闲/可用于处理传入的工作。
+如果一个线程空闲足够长的时间，它就会被杀死。
 
-The maximum number of concurrent activities a worker will run at a time is configured via its `tuner` option.
-The default is `Temporalio::Worker::Tuner.create_fixed` which defaults to 100 activities at a time for that worker.
-When this value is reached, the worker will stop asking for work from the server until there are slots available again.
+Worker 一次运行的最大并发活动数通过其 `tuner` 选项进行配置。
+默认值为 `Temporalio::Worker::Tuner.create_fixed`，默认情况下该 Worker 一次有 100 个活动。
+当达到此值时，Worker 将停止向服务器请求工作，直到再次有可用的插槽。
 
-In addition to the thread pool executor, there is also a fiber executor in the default executor set.
-To use fibers, call `activity_executor :fiber` class method at the top of the activity class (the default of this value is `:default` which is the thread pool executor).
-Activities can only choose the fiber executor if the worker has been created and run in a fiber, but thread pool executor is always available.
-Currently due to [an issue](https://github.com/temporalio/sdk-ruby/issues/162), workers can only run in a fiber on Ruby versions 3.3 and newer.
+除了线程池执行器之外，默认执行器集中还有一个 Fiber 执行器。
+要使用纤程，请调用 Activity 类顶部的 `Activity_executor :fiber` 类方法（该值的默认值是 `:default`，它是线程池执行器）。
+仅当Worker已创建并在纤程中运行时，活动才能选择纤程执行器，但线程池执行器始终可用。
+目前，由于 [一个问题](https://github.com/temporalio/sdk-ruby/issues/162)，Worker 只能在 Ruby 3.3 及更高版本上的 Fiber 中运行。

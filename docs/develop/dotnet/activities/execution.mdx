@@ -1,8 +1,8 @@
 ---
 id: execution
-title: Activity execution - .NET SDK
-description: Shows how to perform Activity execution with the .NET SDK
-sidebar_label: Activity execution
+title: "Activity 执行 - .NET SDK"
+description: "展示如何使用 .NET SDK 执行 Activity"
+sidebar_label: "Activity 执行"
 slug: /develop/dotnet/activities/execution
 toc_max_heading_level: 3
 tags:
@@ -11,23 +11,24 @@ tags:
   - Activity
 ---
 
-## Start Activity Execution {#activity-execution}
+<a id="activity-execution"></a>
+## 启动 Activity 执行 {#activity-execution}
 
-Calls to spawn [Activity Executions](/activity-execution) are written within a [Workflow Definition](/workflow-definition).
-The call to spawn an Activity Execution generates the [ScheduleActivityTask](/references/commands#scheduleactivitytask) Command.
-This results in the set of three [Activity Task](/tasks#activity-task) related Events ([ActivityTaskScheduled](/references/events#activitytaskscheduled), [ActivityTaskStarted](/references/events#activitytaskstarted), and ActivityTask[Closed]) in your Workflow Execution Event History.
+对生成 [Activity 执行](/activity-execution) 的调用写入 [Workflow Definition](/workflow-definition) 中。
+调用生成 Activity 执行会生成 [ScheduleActivity任务](/references/commands#scheduleactivitytask) 命令。
+这会在 Workflow Execution Event History 中产生一组三个 [Activity 任务](/tasks#activity-task) 相关事件（[Activity任务Scheduled](/references/events#activitytaskscheduled)、[Activity任务已开始](/references/events#activitytaskstarted) 和 ActivityTask[Closed]）。
 
-A single instance of the Activities implementation is shared across multiple simultaneous Activity invocations.
-Activity implementation code should be _idempotent_.
+活动实现的单个实例在多个同时的 Activity 调用之间共享。
+Activity 实现代码应该是_幂等的_。
 
-The values passed to Activities through invocation parameters or returned through a result value are recorded in the Execution history.
-The entire Execution history is transferred from the Temporal service to Workflow Workers when a Workflow state needs to recover.
-A large Execution history can thus adversely impact the performance of your Workflow.
+通过调用参数传递给活动的值或通过结果值返回的值都记录在执行历史记录中。
+当 Workflow 状态需要恢复时，整个执行历史记录将从 Temporal 服务传输到 Workflow Worker。
+因此，大量执行历史记录可能会对 Workflow 的性能产生不利影响。
 
-Therefore, be mindful of the amount of data you transfer through Activity invocation parameters or Return Values.
-Otherwise, no additional limitations exist on Activity implementations.
+因此，请注意通过 Activity 调用参数或返回值传输的数据量。
+否则，Activity 实现不存在其他限制。
 
-To spawn an Activity Execution, use the `ExecuteActivityAsync` operation from within your Workflow Definition.
+要生成 Activity 执行，请在 Workflow Definition 中使用 `ExecuteActivityAsync` 操作。
 
 ```csharp
 using Temporalio.Workflows;
@@ -45,10 +46,11 @@ public class MyWorkflow
 }
 ```
 
-Activity Execution semantics rely on several parameters.
-The only required value that needs to be set is either a [Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) or a [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout).
-These values are set in the Activity Options.
+Activity 执行语义依赖于多个参数。
+唯一需要设置的值是 [Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) 或 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。
+这些值在 Activity 选项中设置。
 
-### Get Activity Execution results {#get-activity-results}
+<a id="get-activity-results"></a>
+### 获取Activity执行结果 {#get-activity-results}
 
-The Activity result is returned in the Task from the `ExecuteActivityAsync` call.
+Activity 结果在 `ExecuteActivityAsync` 调用的任务中返回。

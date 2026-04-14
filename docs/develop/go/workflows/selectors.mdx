@@ -1,7 +1,7 @@
 ---
 id: selectors
-title: Selectors - Go SDK
-sidebar_label: Selectors
+title: "选择器 - Go SDK"
+sidebar_label: "选择器"
 toc_max_heading_level: 4
 keywords:
   - selectors
@@ -10,27 +10,27 @@ tags:
   - Workflows
   - Go SDK
   - Temporal SDKs
-description: Use Temporal’s Go SDK Selectors with Futures, Timers, and Channels. Ensure deterministic Workflow execution and handle multiple parallel tasks efficiently.
+description: "将 Temporal 的 Go SDK 选择器与期货、Timer 和通道结合使用。确保确定性 Workflow Execution 并高效处理多个并行任务。"
 ---
 
-This page shows how to do the following:
+此页面显示如何执行以下操作：
 
-- [Use Selectors with Futures](#use-selectors-with-futures)
-- [Use Selectors with Timers](#use-selectors-with-timers)
-- [Use Selectors with Channels](#use-selectors-with-channels)
+- [将选择器与 Future 结合使用](#use-selectors-with-futures)
+- [将选择器与 Timer 结合使用](#use-selectors-with-timers)
+- [将选择器与通道一起使用](#use-selectors-with-channels)
 
-In Go, the `select` statement lets a goroutine wait on multiple communication operations.
-A `select` **blocks until one of its cases can run**, then it executes that case.
-It chooses one at random if multiple are ready.
+在 Go 中，`select` 语句让 goroutine 等待多个通信操作。
+`select` **会阻塞，直到其中一个案例可以运行**，然后执行该案例。
+如果准备好多个，它会随机选择一个。
 
-However, a normal Go select statement can not be used inside of Workflows directly because of the random nature.
-Temporal's Go SDK `Selector`s are similar and act as a replacement.
-They can block on sending and receiving from Channels but as a bonus can listen on Future deferred work.
-Usage of Selectors to defer and process work (in place of Go's `select`) are necessary in order to ensure deterministic Workflow code execution (though using `select` in Activity code is fine).
+然而，由于随机性，普通的 Go select 语句不能直接在 Workflow 内部使用。
+Temporal 的 Go SDK `Selector` 类似，可作为替代品。
+他们可以阻止从通道发送和接收，但作为奖励可以监听未来的推迟工作。
+为了确保确定性的 Workflow 代码执行，必须使用选择器来推迟和处理工作（代替 Go 的 `select`）（尽管在 Activity 代码中使用 `select` 很好）。
 
-## Full API example {#api-example}
+## 完整的 API 示例 {#api-example}
 
-The API is sufficiently different from `select` that it bears documenting:
+该 API 与 `select` 有很大不同，因此需要记录：
 
 ```go
 func SampleWorkflow(ctx workflow.Context) error {
@@ -65,9 +65,10 @@ func SampleWorkflow(ctx workflow.Context) error {
 }
 ```
 
-## Use Selectors with Futures
+<a id="use-selectors-with-futures"></a>
+## 将选择器与 Future 一起使用 {#use-selectors-with-futures}
 
-You usually add `Futures` after `Activities`:
+通常在 `Activities` 之后添加 `Futures`：
 
 ```go
 // API Example: defer code execution until after an activity is done
@@ -77,9 +78,9 @@ selector.AddFuture(work, func(f workflow.Future) {
 })
 ```
 
-Calling `ExecuteActivity` by itself doesn't result in actual Activity execution. It results in a command that gets batched with others when there's a yield point in the Workflow definition. Your `Futures` won't run until you call `selector.Select(ctx)`. So no calls to `ExecuteActivity` should result in commands being sent to the server until `selector.Select` is called.
+单独调用 `ExecuteActivity` 不会导致实际的 Activity 执行。当 Workflow Definition 中有屈服点时，它会导致一个命令与其他命令一起批处理。在您调用 `selector.Select(ctx)` 之前，您的 `Futures` 不会运行。因此，在调用 `selector.Select` 之前，对 `ExecuteActivity` 的调用不会导致命令发送到服务器。
 
-A call to `selector.Select(ctx)` doesn't actually execute a `Future`, but it _requests_ execution for a `Future`. So this is a point where the SDK will communicate the command to execute the Activity to the server.
+对 `selector.Select(ctx)` 的调用实际上并不执行 `Future`，但它_请求_执行 `Future`。因此，此时 SDK 将向服务器传达执行 Activity 的命令。
 
 ```go
   // API Example: blocking conditionally
@@ -94,17 +95,18 @@ A call to `selector.Select(ctx)` doesn't actually execute a `Future`, but it _re
   }
 ```
 
-A Future matches only once per Selector instance even if Select is called multiple times.
-If multiple items are available, the order of matching is not defined.
+即使多次调用 Select，Future 也只会在每个 Selector 实例中匹配一次。
+如果有多个项目可用，则不定义匹配顺序。
 
-## Use Selectors with Timers
+<a id="use-selectors-with-timers"></a>
+## 将选择器与 Timer 一起使用 {#use-selectors-with-timers}
 
-An important use case of futures is setting up a race between a timer and a pending activity, effectively adding a "soft" timeout that doesn't result in any errors or retries of that activity.
+future 的一个重要用例是在 Timer 和待处理的 Activity 之间设置竞争，从而有效地添加“软”超时，不会导致该 Activity 出现任何错误或重试。
 
-For example, [the Timer sample](https://github.com/temporalio/samples-go/blob/master/timer) shows how you can write a long running order processing operation where:
+例如，[Timer 样本](https://github.com/temporalio/samples-go/blob/master/timer) 展示了如何编写长时间运行的订单处理操作，其中：
 
-- if processing takes too long, we send out a notification email to user about the delay, but we won't cancel the operation
-- if the operation finishes before the timer fires, then we want to cancel the timer.
+- 如果处理时间太长，我们会向用户发送有关延迟的通知电子邮件，但我们不会取消操作
+- 如果操作在 Timer 触发之前完成，那么我们要取消 Timer。
 
 ```go
 var processingDone bool
@@ -128,11 +130,12 @@ selector.AddFuture(timerFuture, func(f workflow.Future) {
 selector.Select(ctx)
 ```
 
-We create timers with the `workflow.NewTimer` API.
+我们使用 `Workflow.NewTimer` API 创建 Timer。
 
-## Use Selectors with Channels
+<a id="use-selectors-with-channels"></a>
+## 将选择器与通道一起使用 {#use-selectors-with-channels}
 
-`selector.AddReceive(channel, func(c workflow.ReceiveChannel, more bool) {})` is the primary mechanism which receives messages from `Channels`.
+`selector.AddReceive(channel, func(c Workflow.ReceiveChannel, more bool) {})` 是从 `Channels` 接收消息的主要机制。
 
 ```go
 // API Example: receive information from a Channel
@@ -144,17 +147,18 @@ selector.AddReceive(channel, func(c workflow.ReceiveChannel, more bool) {
 })
 ```
 
-Merely matching on the channel doesn't consume the message; it has to be explicitly consumed with a `c.Receive(ctx, &signalVal)` call.
+仅在通道上进行匹配不会消耗消息；它必须通过 `c.Receive(ctx, &SignalVal)` 调用显式使用。
 
-## Query Selector state
+<a id="query-selector-state"></a>
+## Query 选择器状态 {#query-selector-state}
 
-You can use the `selector.HasPending` API to ensure that signals are not lost when a Workflow is closed (e.g. by `ContinueAsNew`).
+您可以使用 `selector.HasPending` API 确保 Signal 在 Workflow 关闭（例如通过 `ContinueAsNew`）时不会丢失。
 
-## Learn more
+＃＃ 了解更多
 
-Usage of Selectors is best learned by example:
+最好通过示例来学习选择器的用法：
 
-- Setting up a race condition between an Activity and a Timer, and conditionally execute ([Timer example](https://github.com/temporalio/samples-go/blob/14980b3792cc3a8447318fefe9a73fe0a580d4b9/timer/workflow.go))
-- Receiving information in a Channel ([Mutex example](https://github.com/temporalio/samples-go/blob/14980b3792cc3a8447318fefe9a73fe0a580d4b9/mutex/mutex_workflow.go))
-- Looping through a list of work and scheduling them all in parallel ([DSL example](https://github.com/temporalio/samples-go/blob/14980b3792cc3a8447318fefe9a73fe0a580d4b9/dsl/workflow.go))
-- Executing activities in parallel, pick the first result, cancel remainder ([Pick First example](https://github.com/temporalio/samples-go/blob/14980b3792cc3a8447318fefe9a73fe0a580d4b9/pickfirst/pickfirst_workflow.go))
+- 在 Activity 和 Timer 之间设置竞争条件，并有条件地执行 ([Timer 示例](https://github.com/temporalio/samples-go/blob/14980b3792cc3a8447318fefe9a73fe0a580d4b9/timer/workflow.go))
+- 在频道中接收信息（[互斥体示例](https://github.com/temporalio/samples-go/blob/14980b3792cc3a8447318fefe9a73fe0a580d4b9/mutex/mutex_workflow.go)）
+- 循环遍历工作列表并并行安排它们（[DSL 示例](https://github.com/temporalio/samples-go/blob/14980b3792cc3a8447318fefe9a73fe0a580d4b9/dsl/workflow.go)）
+- 并行执行活动，选择第一个结果，取消剩余部分（[选择第一个例子](https://github.com/temporalio/samples-go/blob/14980b3792cc3a8447318fefe9a73fe0a580d4b9/pickfirst/pickfirst_workflow.go)）

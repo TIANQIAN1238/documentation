@@ -1,0 +1,95 @@
+---
+id: server-frontend-api-reference
+title: 服务器前端 API 参考
+sidebar_label: 服务器API
+description: Easily interact with the Temporal Server via Client SDKs or CLI, or use the gRPC API for Workflow operations. Access
+  Easily interact with the Temporal Server via Client SDKs or CLI, or use the gRPC API for Workflow operations. Access
+  code examples and API docs at api-docs.temporal.io.
+slug: /self-hosted-guide/server-frontend-api-reference
+toc_max_heading_level: 4
+keywords:
+  - reference
+tags:
+  - Temporal Service
+  - Self-hosting
+  - API
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+虽然通常最容易通过
+[Client SDK](/encyclopedia/Temporal-sdks#Temporal-client) 或 [Temporal CLI](https://docs.Temporal.io/cli)，您可以
+还可以使用其 gRPC API。
+
+我们的客户端和 Worker SDK 使用 gRPC API。 API 参考位于此处：
+
+[`api-docs.Temporal.io`](https://api-docs.Temporal.io/)
+
+## 与代码一起使用
+
+通常，您通过“client.Workflow.start()”等高级方法与 API 进行交互。然而，客户端 SDK 也
+公开底层 gRPC 服务。例如，TypeScript SDK 具有：
+
+- Workflow服务：
+  [`Client.connection.WorkflowService`](https://typescript.Temporal.io/api/classes/client.Connection#Workflowservice)
+- 操作员服务：
+  [`Client.connection.operatorService`](https://typescript.Temporal.io/api/classes/client.Connection/#operatorservice)
+- 健康服务：
+  [`Client.connection.healthService`](https://typescript.Temporal.io/api/classes/client.Connection/#healthservice)
+
+如果您不使用 SDK 客户端（很少见），您可以通过以下方式生成 gRPC 客户端存根：
+
+- 克隆 [`Temporalio/api`](https://github.com/Temporalio/api)（包含 Protobuf 文件的存储库）
+- 用[您的语言]生成代码(https://gRPC.io/docs/languages/)
+
+## 手动使用
+
+要通过命令行或 GUI 手动使用 Query API，首先：
+
+- 如果您还没有要连接的服务器，请运行 [`Temporal Server start-dev`](/cli/server#start-dev)
+- 克隆这个仓库：
+
+```shell
+git clone https://github.com/temporalio/api.git
+cd api
+```
+
+### 使用命令行
+
+安装 [`evans`](https://github.com/ktr0731/evans#installation)。
+
+```shell
+cd /path/to/api
+evans --proto temporal/api/workflowservice/v1/service.proto --port 7233
+```
+
+要连接到 Temporal Cloud，请设置主机、证书、证书密钥和 TLS 标志：
+
+```shell
+evans --proto temporal/api/workflowservice/v1/service.proto --host devrel.a2dd6.tmprl.cloud --port 7233 --tls --cert /Users/me/certs/temporal.pem --certkey /Users/me/certs/temporal.key
+```
+
+进入 evans 提示符后，您可以运行“help”、“show service”等命令来列出可用的方法，以及
+`调用 ListWorkflowExecutions`。
+
+### 使用 GUI
+
+- 安装 [BloomRPC](https://github.com/bloomrpc/bloomrpc#installation)。
+- 打开应用程序
+- 选择左上角的“导入路径”按钮，然后输入克隆存储库的路径：`/path/to/api`
+- 选择“导入原型”+按钮并选择此文件：
+
+```shell
+/path/to/api/temporal/api/workflowservice/v1/service.proto
+```
+
+- 方法列表应出现在侧栏中。选择一个。
+- 在左侧窗格中编辑 JSON。
+- 点击“Cmd/Ctrl-Enter”或单击播放按钮即可从右侧服务器获取响应。
+
+<CaptionedImage src="/img/proto/ListWorkflowExecutions.png" title="ListWorkflowExecutions" />
+
+与 [命令行](#with-command-line) 相比，它的一个缺点是它不显示枚举名称，仅显示数字，例如
+`“任务队列类型”：1`。
+
+<CaptionedImage src="/img/proto/DescribeTaskQueue.png" title="DescribeTaskQueue" />

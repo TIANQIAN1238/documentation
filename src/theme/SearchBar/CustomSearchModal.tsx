@@ -181,7 +181,7 @@ export function CustomSearchModal({
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label="Search documentation"
+        aria-label="搜索文档"
       >
         <InstantSearch searchClient={searchClient} indexName={indexName}>
           <Configure
@@ -199,7 +199,7 @@ export function CustomSearchModal({
           />
           <div className="custom-search-header">
             <SearchBox
-              placeholder="Search documentation..."
+              placeholder="搜索文档..."
               autoFocus
               classNames={{
                 root: 'custom-search-box',
@@ -213,7 +213,7 @@ export function CustomSearchModal({
             <button
               className="custom-search-close"
               onClick={onClose}
-              aria-label="Close search"
+              aria-label="关闭搜索"
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10 8.586L2.929 1.515 1.515 2.929 8.586 10l-7.071 7.071 1.414 1.414L10 11.414l7.071 7.071 1.414-1.414L11.414 10l7.071-7.071-1.414-1.414L10 8.586z"/>
@@ -234,7 +234,7 @@ export function CustomSearchModal({
           <SearchFooter />
           {/* Screen reader announcements */}
           <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-            {resultCount > 0 ? `${resultCount} results found` : ''}
+            {resultCount > 0 ? `${resultCount} 条结果` : ''}
           </div>
         </InstantSearch>
       </div>

@@ -1,8 +1,8 @@
 ---
 id: capacity-modes
-title: Capacity modes
-sidebar_label: Capacity modes
-description: Control how limits are assigned to a Namespace with Capacity Modes
+title: "容量模式"
+sidebar_label: "容量模式"
+description: "控制如何将限制分配给具有容量模式的 Namespace"
 slug: /cloud/capacity-modes
 toc_max_heading_level: 4
 keywords:
@@ -27,205 +27,215 @@ tags:
   - TRUs
 ---
 
-Each Namespace in Temporal has a rate limit, which is measured in [Actions](/cloud/pricing#action) per second. 
-Temporal offers two different modes for adjusting capacity: On-Demand Capacity or Provisioned Capacity.
-With On-Demand Capacity, Namespace capacity is increased automatically along with usage.
-With Provisioned Capacity, you can control your capacity limits by requesting Temporal Resource Units (TRUs).
+Temporal 中的每个 Namespace 都有一个速率限制，以每秒 [行动](/cloud/pricing#action) 为单位进行测量。 
+Temporal 提供两种不同的容量调整模式：按需容量或预置容量。
+通过按需容量，Namespace 容量会随着使用情况自动增加。
+借助预配置容量，您可以通过请求 Temporal 资源单元 (TRU) 来控制容量限制。
 
-## Namespace Capacity
+<a id="namespace-capacity"></a>
+## Namespace 容量 {#namespace-capacity}
 
-Namespaces in Temporal can be set to either an **On-Demand** or **Provisioned Capacity** Mode. 
-These modes govern how limits are assigned to a Namespace.  
+Temporal 中的 Namespace 可以设置为 **按需** 或 **预配置容量** 模式。 
+这些模式控制如何将限制分配给 Namespace。
 
-Actions Per Second (APS) is the primary limit for Namespaces and is based on the operating billable Actions that occur each second.
-Some Actions can result in multiple back-end operations, so limits are also set on Requests Per Second (RPS) and Operations Per Second (OPS) to maintain reliability.
+每秒操作数 (APS) 是 Namespace 的主要限制，基于每秒发生的可计费操作数。
+某些操作可能会导致多个后端操作，因此还对每秒请求数 (RPS) 和每秒操作数 (OPS) 设置限制以保持可靠性。
 
-See [Service-level RPS limits](/references/dynamic-configuration#service-level-rps-limits) for more about RPS.
-See the [operations list](/references/operation-list) for the list of operations.
-See the [Actions page](/cloud/actions) for the list of actions.
+有关 RPS 的更多信息，请参阅 [服务级别 RPS 限制](/references/dynamic-configuration#service-level-rps-limits)。
+有关操作列表，请参阅 [操作清单](/references/operation-list)。
+有关操作列表，请参阅 [操作页面](/cloud/actions)。
 
 :::tip Measuring throughput with APS, RPS, and OPS
 
-APS, RPS, and OPS are all measures of throughput that apply to different aspects of Temporal.
+APS、RPS 和 OPS 都是适用于 Temporal 不同方面的吞吐量度量。
 
-APS, or Actions Per Second, is specific to Temporal Cloud. 
-It measures the rate at which Actions, like starting or signaling a Workflow, can be performed in a specific Namespace. 
-Temporal Cloud uses APS to protect the system from sudden major spikes in load. 
+APS（即每秒操作数）特定于 Temporal Cloud。 
+它测量可以在特定 Namespace 中执行操作（例如启动或 Signaling Workflow）的速率。 
+Temporal Cloud 使用 APS 来保护系统免受负载突然大幅上升的影响。
 
-RPS, or Requests Per Second, is used in the Temporal Service, both in self-hosted Temporal and Temporal Cloud. 
-It measures and controls the rate of gRPC requests to the Service. 
-This is a lower-level measure that manages rates at the service level. 
+RPS（即每秒请求数）用于 Temporal 服务（在自托管 Temporal 和 Temporal Cloud 中）。 
+它测量和控制 gRPC 向服务请求的速率。 
+这是一种较低级别的措施，用于管理服务级别的费率。
 
-OPS, or Operations per Second, is used by Temporal Cloud. 
-An operation is anything a user does directly, or that Temporal does on behalf of the user in the background, that results in load on Temporal Server. 
-This is a lower-level measure that manages rates across Temporal cloud services.
+Temporal Cloud 使用 OPS（即每秒操作次数）。 
+操作是用户直接执行的任何操作，或者 Temporal 代表用户在后台执行的任何操作，这些操作会导致 Temporal Server 上的负载。 
+这是管理 Temporal Cloud 服务费率的较低级别措施。
 
-In summary, APS is a higher-level measure to limit and mitigate Action spikes in Temporal Cloud. 
-RPS and OPS  are lower-level measures to control and balance request rates at the service level.
+总之，APS 是一种更高级别的措施，用于限制和缓解 Temporal Cloud 中的操作峰值。 
+RPS 和 OPS 是较低级别的措施，用于在服务级别控制和平衡请求率。
 
 :::
 
-### What happens when my Actions Rate exceeds my Limit?
+<a id="what-happens-when-my-actions-rate-exceeds-my-limit"></a>
+### 当我的操作率超过我的限制时会发生什么？ {#what-happens-when-my-actions-rate-exceeds-my-limit}
 
-When your Action rate exceeds your quota, Temporal Cloud throttles Actions.
-Throttling limits the rate at which Actions are performed to prevent the Namespace from exceeding its APS limit.
+当您的操作速率超过配额时，Temporal Cloud 会限制操作。
+限制会限制执行操作的速率，以防止 Namespace 超出其 APS 限制。
 
-**How throttling works:**
-- Low-priority operations are throttled first; higher-priority operations (like starting or signaling Workflows) continue when possible.
-- Rate limiting is not instantaneous, so usage may briefly exceed your limit before throttling takes effect.
-- When throttled, the server returns `ResourceExhausted` errors that SDK clients automatically retry.
-- If throttling persists beyond the SDK's retry limit, client calls can fail.
+**节流如何工作：**
+- 低优先级操作首先被限制；如果可能，更高优先级的操作（例如启动或 Signaling Workflow）将继续。
+- 速率限制不是即时的，因此在限制生效之前，使用量可能会短暂超出您的限制。
+- 受到限制时，服务器会返回 `ResourceExhausted` 错误，SDK 客户端会自动重试。
+- 如果限制持续超出 SDK 的重试限制，客户端调用可能会失败。
 
-**To avoid data loss during throttling:**
-- Log any failed client calls (with payloads) so you can retry or backfill later.
-- Set up [limit metrics](/cloud/metrics/openmetrics/metrics-reference#limit-metrics) to alert when approaching your limits.
+**为了避免节流期间数据丢失：**
+- 记录任何失败的客户端调用（带有有效负载），以便您可以稍后重试或回填。
+- 设置 [限制指标](/cloud/metrics/openmetrics/metrics-reference#limit-metrics) 在接近极限时发出警报。
 
-See [Throttling behavior](/cloud/limits#throttling-behavior) for more details.
+有关详细信息，请参阅 [节流行为](/cloud/limits#throttling-behavior)。
 
-Your rate limits can be adjusted automatically over time or provisioned manually with Capacity Modes.
+您的速率限制可以随着时间的推移自动调整，也可以通过容量模式手动配置。
 
-We recommend tracking your Actions Rate and Limits using Temporal metrics to assess your use cases specific needs.
-See [Monitoring Trends Against Limits](/cloud/service-health#rps-aps-rate-limits) to track usage trends.
+我们建议使用 Temporal 指标跟踪您的操作率和限制，以评估您的用例特定需求。
+请参阅 [监控趋势与限制](/cloud/service-health#rps-aps-rate-limits) 以跟踪使用趋势。
 
-For Namespaces using Provisioned Capacity, on-demand envelope metrics show what your limits would be if operating in on-demand mode.
-Use these to evaluate whether on-demand capacity would meet your needs before switching modes.
-See [On-demand envelope limits](/cloud/service-health#on-demand-envelope-limits) for details.
+对于使用预配置容量的 Namespace，按需信封指标显示在按需模式下运行时的限制。
+在切换模式之前，使用这些来评估按需容量是否满足您的需求。
+详细信息请参见 [按需信封限制](/cloud/service-health#on-demand-envelope-limits)。
 
 :::note Actions that don't count against APS
-Actions that are external to the core Temporal service do not contribute to your APS. These Calls include:
-* [Export](/cloud/export)
-* Capacity Related Actions
+核心 Temporal 服务外部的操作不会对您的 APS 产生影响。这些电话包括：
+* [出口](/cloud/export)
+* 与容量相关的操作
 :::
 
-## On-Demand Capacity {#on-demand-capacity}
+## 按需容量 {#on-demand-capacity}
 
-Using On-Demand Capacity, your rate limit grows automatically along with your usage. 
+使用按需容量，您的速率限制会随着您的使用情况而自动增长。
 
 
-|               | Actions Per Second | Requests Per Second | Operations Per Second|
+|               | 每秒操作数 | 每秒请求数 | 每秒操作数|
 |---------------|--------------------|---------------------|----------------------|
-| Default Limit | 500                | 2000                | 4000                 |
+| 默认限制 | 500                | 2000年                | 4000                 |
 
 
-Scaling automatically adjusts based on the lesser of 4 * APS Average or 2 * APS P90 over the past 7 days.
+缩放比例根据过去 7 天内 4 * APS Average 或 2 * APS P90 中的较小者自动调整。
 
-If you experience usage spikes, you may hit a throughput limit. 
-In that case, consider switching to [Provisioned Capacity](#provisioned-capacity). 
-You can also optimize your workload to remain under the On-Demand limits. See [Best Practices for Managing APS Limits](/best-practices/managing-aps-limits) for more information. 
+如果您遇到使用高峰，则可能会达到吞吐量限制。 
+在这种情况下，请考虑切换到 [预配置容量](#provisioned-capacity)。 
+您还可以优化工作负载以保持在按需限制以下。请参阅 [管理 APS 限制的最佳实践](/best-practices/managing-aps-limits) 了解更多信息。
 
-### What kind of throughput can I get on Temporal Cloud with On-Demand Capacity?
+<a id="what-kind-of-throughput-can-i-get-on-temporal-cloud-with-on-demand-capacity"></a>
+### 在具有按需容量的 Temporal Cloud 上可以获得什么样的吞吐量？ {#what-kind-of-throughput-can-i-get-on-temporal-cloud-with-on-demand-capacity}
 
-Each Namespace has a rate limit, which is measured in Actions per second (APS). 
-A Namespace's default limit is set at 500 APS and automatically adjusts based on a formula that compares your average usage over the last 7 days and your usage at the 90th percentile, or P90. 
-Your throughput limit will never fall below the default value. 
-Under On-Demand capacity you are only charged for the Actions you use.
+每个 Namespace 都有一个速率限制，以每秒操作数 (APS) 来衡量。 
+Namespace 的默认限制设置为 500 APS，并根据比较过去 7 天的平均使用情况和第 90 个百分位（即 P90）的使用情况的公式自动调整。 
+您的吞吐量限制永远不会低于默认值。 
+在按需容量下，您只需为您使用的操作付费。
 
-For example: If your average APS in the last 7 days was 200 APS, and your P90 was 500 APS, then your limit would be calculated as follows:
-Greater of:
-* Default limit of 500 APS
-* The lesser of:
-  * 4 * 200 APS Mean = 800 APS
+例如：如果您过去 7 天的平均 APS 为 200 APS，而您的 P90 为 500 APS，则您的限制将计算如下：
+较大者：
+* 默认限制为 500 APS
+* 较小者：
+  * 4 * 200 APS 平均值 = 800 APS
   * 2 * 500 APS P90 = 1000 APS
 
-This means that your default limit would be 800 APS.
+这意味着您的默认限制为 800 APS。
 
-![Usage graph showing increasing APS usage for one month, with occasional spikes, and a rising APS limit](/img/cloud/provisioned-capacity/usage_graph.png)
+![使用情况图表显示 APS 使用量在一个月内不断增加，偶尔出现峰值，并且 APS 限制不断上升](/img/cloud/provisioned-capacity/usage_graph.png)
 
-## Provisioned Capacity {#provisioned-capacity}
+## 预配置容量 {#provisioned-capacity}
 
 :::tip Support, stability, and dependency info
 
-Provisioned Capacity is currently in [Public Preview](/evaluate/development-production-features/release-stages#public-preview).
+预配置容量当前为 [公开预览](/evaluate/development-production-features/release-stages#public-preview)。
 
 :::
 
-Provisioned Capacity provides an alternative to On-Demand Capacity by allowing you to control the limits on your Namespace based on your specific need.
+预置容量提供了按需容量的替代方案，允许您根据您的具体需求控制 Namespace 的限制。
 
-|               | Actions Per Second | Requests Per Second | Operations Per Second|
+|               | 每秒操作数 | 每秒请求数 | 每秒操作数|
 |---------------|--------------------|---------------------|----------------------|
-| TRU           | 500                | 1500                | 4000                 |
+| 特鲁           | 500                | 1500                | 4000                 |
 
-Customers can set 2, 3, 4, 6, 8, 10, 12 TRUs, subject to availability. TRUs can be adjusted hourly.
+客户可以根据可用性设置 2、3、4、6、8、10、12 个 TRU。 TRU 可以每小时调整一次。
 
-See [Capacity Mode Pricing](/cloud/pricing#capacity-modes-pricing) for pricing implications.
+请参阅 [容量模式定价](/cloud/pricing#capacity-modes-pricing) 了解定价影响。
 
-### What kind of throughput can I get with Temporal Cloud with Provisioned Capacity?
+<a id="what-kind-of-throughput-can-i-get-with-temporal-cloud-with-provisioned-capacity"></a>
+### 使用预置容量的 Temporal Cloud 可以获得什么样的吞吐量？ {#what-kind-of-throughput-can-i-get-with-temporal-cloud-with-provisioned-capacity}
 
-With Provisioned Capacity, you can set your rate limits by selecting the number of Temporal Resource Units (TRUs) on your Namespace.
-Each TRU supports up to 500 APS and can be provisioned in groups of 2, 3, 4, 6, 8, 10, or 12 TRUs if there is capacity available in a region. 
-When TRUs are requested we aim to provision the additional capacity within two minutes. 
+使用预配置容量，您可以通过选择 Namespace 上的 Temporal 资源单元 (TRU) 数量来设置速率限制。
+每个 TRU 最多支持 500 个 APS，并且如果某个区域有可用容量，则可以按 2、3、4、6、8、10 或 12 个 TRU 的组进行配置。 
+当请求 TRU 时，我们的目标是在两分钟内提供额外的容量。
 
 :::tip Large TRU requests
 
-For Requests in excess of 4 TRUs in regions outside of the US, we recommend submitting a support ticket to ensure capacity availability.
+对于美国以外地区超过 4 个 TRU 的请求，我们建议提交支持票以确保容量可用性。
 
 :::
 
-### Provisioned Capacity Availability
-The amount of capacity available within a region may vary. 
-Temporal will check available capacity at the time of your request and aims to provision requested capacity within two minutes. 
-If you need capacity beyond what is self-serviceable or available in a region, please [file a support ticket](https://docs.temporal.io/cloud/support#ticketing) indicating the limit, region, and timeframe that the capacity is needed. 
+<a id="provisioned-capacity-availability"></a>
+### 预置容量可用性 {#provisioned-capacity-availability}
+一个区域内的可用容量可能会有所不同。 
+Temporal 将在您提出请求时检查可用容量，并旨在在两分钟内提供请求的容量。 
+如果您需要的容量超出了自助服务或某个区域可用的容量，请 [提交支持票](https://docs.temporal.io/cloud/support#ticketing) 指明所需容量的限制、区域和时间范围。
 
 
-### When should I use Provisioned Capacity?
+<a id="when-should-i-use-provisioned-capacity"></a>
+### 我什么时候应该使用预置容量？ {#when-should-i-use-provisioned-capacity}
 
-Provisioned Capacity works well when you’re aware of specific increases in load on your Namespace. For example:
+当您意识到 Namespace 上负载的具体增加时，预配置容量会发挥良好作用。例如：
 
-* Planned events
-* Unplanned events/usage spikes
-* Known but sudden system spikes
-* Load testing
-* Migrating workloads
+* 计划的活动
+* 计划外事件/使用高峰
+* 已知但突然的系统峰值
+* 负载测试
+* 迁移工作负载
 
-Depending on your usage patterns and your system monitoring, you can use Provisioned Capacity to quickly remedy rate limiting without contacting support.
-You can also automate changes in capacity if you have a known event or a recurring usage pattern that produces predictable usage spikes. 
+根据您的使用模式和系统监控，您可以使用预配置容量来快速修复速率限制，而无需联系支持人员。
+如果您有已知事件或重复使用模式会产生可预测的使用峰值，您还可以自动更改容量。
 
-## Setting Capacity Modes
-Capacity Modes and TRUs can be set via the Temporal Cloud UI, CLI, or API. 
-Capacity modes can be set and adjusted by Global Admin and Namespace Admin. 
+<a id="setting-capacity-modes"></a>
+## 设置容量模式 {#setting-capacity-modes}
+容量模式和 TRU 可以通过 Temporal Cloud UI、CLI 或 API 设置。 
+容量模式可由全局管理员和Namespace管理员设置和调整。
 
-### Setting Capacity Modes from the UI
+<a id="setting-capacity-modes-from-the-ui"></a>
+### 从 UI 设置容量模式 {#setting-capacity-modes-from-the-ui}
 
-You can set Capacity Modes for an individual Namespace by navigating to the Namespace page in the Temporal Cloud UI (`https://cloud.temporal.io/namespaces/<Namespace ID>`). 
-To view your current capacity configuration and change your capacity mode, navigate to the capacity tile and click *Manage Capacity*.
+您可以通过导航到 Temporal Cloud UI (`https://cloud.Temporal.io/namespaces/<Namespace ID>`) 中的 Namespace 页面来设置单个 Namespace 的容量模式。 
+要查看当前容量配置并更改容量模式，请导航至容量磁贴并单击*管理容量*。
 
-![Manage Capacity button in the Temporal UI](/img/cloud/provisioned-capacity/manage_capacity_button.png)
+![Temporal UI 中的“管理容量”按钮](/img/cloud/provisioned-capacity/manage_capacity_button.png)
 
-Under *Manage Capacity* you will be able to select between *On-Demand* and *Provisioned Capacity* modes. 
-The *On-Demand* section will display your available On-Demand capacity. 
-The *Provisioned* section will display the limit available with selected TRUs and the Included Actions required per hour. [See details on Provisioned Capacity Pricing](/cloud/pricing#capacity-modes-pricing). 
+在“管理容量”下，您可以在“按需”和“预配置容量”模式之间进行选择。 
+*按需*部分将显示您可用的按需容量。 
+*已配置*部分将显示所选 TRU 的可用限制以及每小时所需的包含操作。 [查看预配置容量定价的详细信息](/cloud/pricing#capacity-modes-pricing)。
 
-To switch to Provisioned capacity: 
+要切换到预配置容量：
 
-1. Select the *Provisioned* radio button.
-1. Specify the requested number of TRUs using the slider.
-1. Check the dialog acknowledging potential pricing implications.
-1. Click *Confirm*. 
+1. 选择*已配置*单选按钮。
+1. 使用滑块指定请求的 TRU 数量。
+1. 检查对话框，确认潜在的定价影响。
+1. 单击*确认*。
 
-In addition to the Capacity Mode selections, a summary of APS usage over the last seven days is included to help you estimate your current usage. 
-For more detailed information, we recommend setting up metrics that track your APS and Limits. 
-See [Monitoring Trends Against Limits](/cloud/service-health#rps-aps-rate-limits) to track usage trends.
+除了容量模式选择之外，还包括过去 7 天内 APS 使用情况的摘要，以帮助您估计当前的使用情况。 
+有关更多详细信息，我们建议设置跟踪您的 APS 和限制的指标。 
+请参阅 [监控趋势与限制](/cloud/service-health#rps-aps-rate-limits) 以跟踪使用趋势。
 
-![Manage Capacity panel in the Temporal UI](/img/cloud/provisioned-capacity/manage_capacity_panel.png)
+![Temporal UI 中的“管理容量”面板](/img/cloud/provisioned-capacity/manage_capacity_panel.png)
 
-### Setting Capacity Modes from the CLI
+<a id="setting-capacity-modes-from-the-cli"></a>
+### 从 CLI 设置容量模式 {#setting-capacity-modes-from-the-cli}
 
 ```command
 tcld namespace capacity update --namespace <namespace_name> --capacity-mode <on_demand|provisioned> --capacity-value <tru value> [--request–id <request_id> --resource-version <resource-version>]
 ```
 
-Use this command to specify the Namespace name and configure the capacity settings:
+使用此命令指定 Namespace 名称并配置容量设置：
 
-* `--capacity-mode` sets the billing mode for the Namespace. Use `on_demand` for automatic scaling or `provisioned` for a fixed capacity allocation.
-* `--capacity-value` sets the throughput value in TRUs (Temporal Resource Units).
+* `--capacity-mode` 设置Namespace 的计费模式。使用 `on_demand` 进行自动扩展，或使用 `provisioned` 进行固定容量分配。
+* `--capacity-value` 设置 TRU 中的吞吐量值（Temporal 资源单元）。
 
-Optional flags:
+可选标志：
 
-* `--request-id` specifies a request identifier for the asynchronous operation. If not specified, the server assigns one automatically.
-* `--resource-version` specifies the resource version (etag) to update from. If not set, the CLI uses the latest version.
+* `--request-id` 指定异步操作的请求标识符。如果未指定，服务器会自动分配一个。
+* `--resource-version` 指定从 Update 开始的资源版本 (etag)。如果未设置，CLI 将使用最新版本。
 
-If using API key authentication with the `--api-key` flag, you must add it directly after the tcld command and before capacity update.
+如果使用带有 `--api-key` 标志的 API 密钥身份验证，则必须将其直接添加到 tcld 命令之后、容量 Update 之前。
 
-### Setting Capacity Modes from the API
+<a id="setting-capacity-modes-from-the-api"></a>
+### 从 API 设置容量模式 {#setting-capacity-modes-from-the-api}
 
-Call the `UpdateNamespace` API after Namespace creation and define the desired capacity state as part of the capacity spec.
+创建 Namespace 后调用 `UpdateNamespace` API 并将所需的容量状态定义为容量规范的一部分。

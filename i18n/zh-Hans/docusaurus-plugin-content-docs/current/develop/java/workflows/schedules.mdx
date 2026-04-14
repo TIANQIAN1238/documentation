@@ -1,0 +1,243 @@
+---
+id: schedules
+title: Schedules - Java SDK
+sidebar_label: Schedules
+slug: /develop/java/workflows/schedules
+toc_max_heading_level: 2
+keywords:
+  - schedules
+tags:
+  - Workflows
+  - Schedules
+  - Java SDK
+  - Temporal SDKs
+description: Schedule, Backfill, Delete, Describe, List, Pause, Trigger, Update, and set Cron and Start Delays for Workflow Executions in Java using Temporal's ScheduleClient.
+---
+
+此页面显示如何执行以下操作：
+
+- [如何使用 Schedule 和 Workflow](#Schedule-a-Workflow)
+  - [如何用 Java 创建 Schedule](#create-Schedule)
+  - [如何用 Java 回填 Schedule](#backfill-Schedule)
+  - [如何在Java中删除Schedule](#delete-Schedule)
+  - [如何用 Java 描述 Schedule](#describe-Schedule)
+  - [如何在 Java 中列出 Schedule](#list-Schedule)
+  - [如何在 Java 中暂停 Schedule](#pause-Schedule)
+  - [如何在Java中触发Schedule](#trigger-Schedule)
+  - [如何在 Java 中使用 Update 和 Schedule](#Update-Schedule)
+- [如何在 Java 中设置 Cron Schedule](#cron-Schedule)
+- [启动延迟](#start-delay)
+
+## 如何 Schedule 和 Workflow {#Schedule-a-Workflow}
+
+调度 Workflow 是任何自动化流程的一个重要方面，尤其是在处理时间敏感的任务时。通过调度 Workflow，您可以自动执行重复任务，减少手动干预的需要，并确保及时执行业务流程。
+
+使用以下任一操作来帮助 Schedule 和 Workflow Execution 并控制您的自动化流程。
+
+### 如何在 Java 中创建 Schedule {#create-Schedule}
+
+创建操作使您能够创建新的 Schedule。创建新的 Schedule 时，会生成唯一的 Schedule ID，您可以使用该 ID 在其他 Schedule 命令中引用 Schedule。
+
+要在 Java 中创建 Scheduled Workflow Execution，请在“ScheduleClient”上使用“createSchedule()”方法。创建“ScheduleClient”时，您还可以通过设置来使用任何自定义 Namespace 而不是默认值[`ScheduleClientOptions`](https://www.javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/client/Schedules/ScheduleClientOptions.Builder.html)。 Schedule 必须使用 Schedule ID 进行初始化。
+
+```java
+Schedule schedule =
+    Schedule.newBuilder()
+        .setAction(
+            ScheduleActionStartWorkflow.newBuilder()
+                .setWorkflowType(HelloSchedules.GreetingWorkflow.class)
+                .setArguments("World")
+                .setOptions(
+                    WorkflowOptions.newBuilder()
+                        .setWorkflowId("WorkflowId")
+                        .setTaskQueue("TaskQueue")
+                        .build())
+                .build())
+        .setSpec(ScheduleSpec.newBuilder()
+                .setIntervals(
+                    Collections.singletonList(new ScheduleIntervalSpec(Duration.ofSeconds(5)))
+                ).build()
+            )
+        .build();
+
+// Create a schedule on the server
+ScheduleClient scheduleClient = ScheduleClient
+    .newInstance(service, ScheduleClientOptions.newBuilder()
+        .setNamespace("custom_namespace")
+        .build()
+    );
+
+ScheduleHandle handle =
+    scheduleClient.createSchedule("ScheduleId", schedule, ScheduleOptions.newBuilder().build());
+```
+
+:::tip Schedule Auto-Deletion
+
+一旦 Schedule 完成创建所有 Workflow Execution，Temporal 服务就会将其删除，因为它不会再次触发。
+Temporal 服务不保证何时会发生此删除。
+
+:::
+
+### 如何在 Java 中回填 Schedule {#backfill-Schedule}
+
+回填操作会在指定时间范围之前执行操作。当您需要执行错过或延迟的操作时，或者当您想要在 Scheduled 时间之前测试 Workflow 时，此命令非常有用。
+
+要在 Java 中回填 Scheduled Workflow Execution，请在“ScheduleHandle”上使用“backfill()”方法。
+
+```java
+ScheduleHandle handle = client.getHandle("schedule-id")
+
+Instant now = Instant.now();
+handle.backfill(
+    Arrays.asList(
+        new ScheduleBackfill(now.minusMillis(5500), now.minusMillis(2500)),
+        new ScheduleBackfill(now.minusMillis(2500), now)));
+```
+
+### 如何在 Java 中删除 Schedule {#delete-Schedule}
+
+删除操作使您能够删除 Schedule。删除 Schedule 时，不会影响由 Schedule 启动的任何 Workflow。
+
+要在 Java 中删除 Scheduled Workflow Execution，请在“Schedule Handle”上使用“delete()”方法。
+
+```java
+ScheduleHandle handle = client.getHandle("schedule-id")
+handle.delete();
+```
+
+### 如何用 Java 描述 Schedule {#describe-Schedule}
+
+描述操作显示当前的 Schedule 配置，包括有关过去、当前和未来 Workflow 运行的信息。当您想要获取 Schedule 及其关联的 Workflow 运行的详细视图时，此命令非常有用。
+
+要在 Java 中描述 Scheduled Workflow Execution，请在“ScheduleHandle”上使用“describe()”方法。
+
+```java
+ScheduleHandle handle = client.getHandle("schedule-id")
+ScheduleDescription description = handle.describe();
+```
+
+### 如何在 Java 中列出 Schedule {#list-Schedule}
+
+列表操作列出了所有可用的 Schedule。当您想要查看所有 Schedule 及其各自的 Schedule ID 的列表时，此命令非常有用。
+
+要列出所有 Schedule，请在“ScheduleClient”上使用“listSchedules()”异步方法。
+如果添加或删除 Schedule，它可能不会立即在列表中可用。
+
+```java
+Stream<ScheduleListDescription> scheduleStream = client.listSchedules();
+```
+
+### 如何在 Java 中暂停 Schedule {#pause-Schedule}
+
+暂停操作使您能够暂停和取消暂停 Schedule。当您暂停 Schedule 时，与 Schedule 关联的所有未来 Workflow 运行都会暂时停止。当您由于维护或任何其他原因想要暂时停止 Workflow 时，此命令非常有用。
+
+要在 Java 中暂停 Scheduled Workflow Execution，请在“ScheduleHandle”上使用“pause()”方法。
+您可以将“note”传递给“pause()”方法，以提供暂停 Schedule 的原因。
+
+```java
+ScheduleHandle handle = client.getHandle("schedule-id")
+handle.pause("Pausing the schedule for now");
+```
+
+### 如何在 Java 中触发 Schedule {#trigger-Schedule}
+
+触发操作会使用给定的 Schedule 触发立即操作。默认情况下，此操作受 Schedule 的重叠策略的约束。当您想要在 Scheduled 时间之外执行 Workflow 时，此命令非常有用。
+
+要在 Java 中触发 Scheduled Workflow Execution，请在“ScheduleHandle”上使用“trigger()”方法。
+
+```java
+ScheduleHandle handle = client.getHandle("schedule-id")
+handle.trigger();
+```
+
+### 如何在 Java 中使用 Update 和 Schedule {#Update-Schedule}
+
+Update 操作使您能够将 Update 替换为现有的 Schedule。当您需要修改 Schedule 的配置（例如更改开始时间、结束时间或间隔）时，此命令非常有用。
+
+创建一个接受“ScheduleUpdateInput”并返回“ScheduleUpdate”的函数。
+对于 Update 和 Schedule，请使用回调根据描述构建 Update。
+以下示例 Update 与 Schedule 一起设置有限数量的操作。
+
+```java
+ScheduleHandle handle = client.getHandle("schedule-id")
+handle.update(
+    (ScheduleUpdateInput input) -> {
+      Schedule.Builder builder = Schedule.newBuilder(input.getDescription().getSchedule());
+      // Make the schedule paused to demonstrate how to unpause a schedule
+      builder.setState(
+          ScheduleState.newBuilder()
+              .setLimitedAction(true)
+              .setRemainingActions(10)
+              .build());
+      return new ScheduleUpdate(builder.build());
+    });
+```
+
+## 如何在 Java 中设置 Cron Schedule {#cron-Schedule}
+
+:::caution Cron support is not recommended
+
+我们建议使用 [Schedules](https://docs.Temporal.io/Schedule) 而不是 Cron 作业。
+Schedule 旨在提供更好的开发人员体验，包括更多配置选项以及 Update 或暂停运行 Schedule 的能力。
+
+:::
+
+[Temporal Cron Job](/cron-job) 是在调用中提供 Cron Schedule 来生成 Workflow Execution 时发生的一系列 Workflow Execution。
+
+当调用生成 Workflow Execution 时，将提供 Cron Schedule 作为选项。
+
+使用客户端代码中的 [`WorkflowStub`](https://www.javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/client/WorkflowStub.html) 实例设置 Cron Schedule [`WorkflowOptions.Builder.setCronSchedule`](https://www.javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/client/WorkflowOptions.Builder.html)。
+
+设置 `setCronSchedule` 将 Workflow Execution 更改为 Temporal Cron 作业。
+Cron 的默认时区是 UTC。
+
+- 类型：`字符串`
+- 默认：无
+
+```java
+//create Workflow stub for YourWorkflowInterface
+YourWorkflowInterface workflow1 =
+    YourWorker.yourclient.newWorkflowStub(
+        YourWorkflowInterface.class,
+        WorkflowOptions.newBuilder()
+                .setWorkflowId("YourWF")
+                .setTaskQueue(YourWorker.TASK_QUEUE)
+                // Set Cron Schedule
+                .setCronSchedule("* * * * *")
+                .build());
+```
+
+Temporal Workflow Schedule Cron 字符串遵循以下格式：
+
+```
+┌───────────── minute (0 - 59)
+│ ┌───────────── hour (0 - 23)
+│ │ ┌───────────── day of the month (1 - 31)
+│ │ │ ┌───────────── month (1 - 12)
+│ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+│ │ │ │ │
+* * * * *
+```
+
+更多详细信息，请参见[Cron示例](https://github.com/Temporalio/samples-java/blob/main/core/src/main/java/io/Temporal/samples/hello/HelloCron.java)
+
+## 启动延迟 {#start-delay}
+
+**如何使用 Temporal Java SDK 的启动延迟来延迟 Workflow Execution 的启动。**
+
+在特定的一次性未来点而不是在重复的 Schedule 上对 Schedule 和 Workflow Execution 使用“StartDelay”。
+
+在客户端代码中创建 [`WorkflowStub`](https://www.javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/client/WorkflowStub.html) 的实例，并使用 `setStartDelay` 设置 `StartDelay`。
+
+```java
+//create Workflow stub for YourWorkflowInterface
+YourWorkflowInterface workflow1 =
+    WorkerGreet.greetclient.newWorkflowStub(
+        GreetWorkflowInterface.class,
+        WorkflowOptions.newBuilder()
+                .setWorkflowId("YourWorkflow")
+                .setTaskQueue(WorkerGreet.TASK_QUEUE)
+                // Start the workflow in 12 hours
+                .setStartDelay(Duration.ofHours(12))
+                .build());
+```

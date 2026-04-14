@@ -1,0 +1,91 @@
+---
+id: connectivity-rule
+title: tcld 连接规则命令参考
+sidebar_label: 连接规则
+description: 连接规则操作
+slug: /cloud/tcld/connectivity-rule
+toc_max_heading_level: 5
+keywords:
+  - cli reference
+  - tcld
+tags:
+  - Temporal Cloud
+  - tcld
+  - Connectivity
+---
+
+“tcld 连接规则”命令管理 Temporal Cloud 中的[连接规则](/cloud/connectivity#connectivity-rules)。
+
+别名：`cr`
+
+- [tcld 连接规则创建](#create)
+- [tcld 连接规则删除](#delete)
+- [tcld 连接规则获取](#get)
+- [tcld 连接规则列表](#list)
+
+＃＃ 创造
+
+“tcld 连接规则创建”命令创建连接规则。
+
+别名：`c`
+
+#### --连接 ID
+
+专用连接的连接 ID。
+
+别名：`ci`
+
+#### --连接类型
+
+连接类型，目前仅支持“私有”和“公共”。
+
+别名：`ct`
+
+#### --gcp-项目-id
+
+连接的 GCP 项目 ID，如果云提供商是“gcp”，则需要该 ID。
+
+别名：`gpi`
+
+＃＃＃＃  - 地区
+
+连接的区域。
+
+别名：`r`
+
+＃＃ 删除
+
+“tcld 连接规则删除”命令删除连接规则。
+
+别名：`d`
+
+#### --连接规则 ID
+
+连接规则 ID。
+
+别名：`id`
+
+＃＃ 得到
+
+“tcldconnectivity-rule get”命令获取连接规则。
+
+别名：`g`
+
+#### --连接规则 ID
+
+连接规则 ID。
+
+别名：`id`
+
+＃＃ 列表
+
+“tcld 连接规则列表”命令列出连接规则。
+
+别名：`l`
+
+#### --Namespace
+
+Namespace 托管在 Temporal Cloud 上。
+
+别名：`n`
+

@@ -1,0 +1,298 @@
+---
+id: reference
+title: Temporal Cloud 指标参考
+sidebar_label: 可用指标
+description: 使用 PromQL 探索 Temporal Cloud 到 Query 的指标，或通过 OpenMetrics 进行抓取，支持速率和延迟计算。
+toc_max_heading_level: 4
+tags:
+  - Metrics
+  - Observability
+  - Temporal Cloud
+keywords:
+  - temporal cloud metrics
+  - promql temporal metrics
+  - prometheus temporal monitoring
+  - temporal cloud observability
+  - workflow latency metrics
+  - workflow state transition metrics
+  - analyze temporal cloud metrics
+  - metric labels for temporal
+  - workflow execution metrics
+  - temporal cloud latency analysis
+  - temporal cloud promql
+  - histogram metrics analysis
+  - metric filtering with labels
+  - workflow success metrics
+  - gRPC error count
+---
+
+:::danger PromQL endpoint deprecated
+
+PromQL 端点及其“Temporal_cloud_v0_*”指标已于 2026 年 4 月 2 日弃用，并且不再接受新用户。
+将于 **2026 年 10 月 5 日**对所有用户禁用 PromQL 端点。
+
+迁移到 [OpenMetrics 端点](/cloud/metrics/openmetrics)，它提供具有更高基数、准确百分位数和简化身份验证的“Temporal_cloud_v1_*”指标。
+有关完整的 v0 到 v1 指标映射，请参阅[迁移指南](/cloud/metrics/openmetrics/migration-guide)。
+
+:::
+
+指标是一种测量或数据点，可提供对系统性能和运行状况的洞察。
+本文档介绍了已弃用的 Temporal Cloud PromQL 端点中可用的“Temporal_cloud_v0_*”指标。
+有关当前指标参考，请参阅 [OpenMetrics 指标参考](/cloud/metrics/openmetrics/metrics-reference)。
+
+本文档描述：
+
+- **[可用的 Temporal Cloud 指标](#available-metrics)**：
+  Temporal Cloud 发出的指标包括 gRPC 错误、请求、与轮询器匹配的成功任务的计数等。
+- **[指标标签](#metrics-labels)**：
+  Temporal Cloud 指标标签可以过滤指标并帮助对结果进行分类和区分。
+- **[操作](#metrics-操作)**：
+  操作是一种特殊类型的标签，用于对收集指标时执行的操作类型进行分类。
+
+:::info SDK METRICS
+
+本文档讨论 [Temporal Cloud](/cloud) 发出的指标。
+Temporal SDK 还发出源自 Temporal CLIents 和 Worker 进程的指标。
+您可以在其[专用页面](/references/sdk-metrics)上找到有关Temporal SDK指标的信息。
+
+请注意：
+
+- SDK 指标以短语“Temporal_”开头。
+- Temporal Cloud 指标以“Temporal_cloud_”开头。
+
+:::
+
+## 可用的 Temporal Cloud 指标 {#available-metrics}
+
+**Temporal Cloud 发出哪些指标？**
+
+针对您的 Namespace 发出以下指标：
+
+### 前端服务指标 {#frontend}
+
+#### Temporal_cloud_v0_frontend_service_error_count
+
+这是按操作聚合返回的 gRPC 错误计数。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
+
+#### Temporal_cloud_v0_frontend_service_request_count
+
+这是按操作聚合的收到的 gRPC 请求的计数。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
+
+#### Temporal_cloud_v0_resource_exhausted_error_count
+
+收到的 gRPC 请求受到 Temporal Cloud 速率限制，按原因聚合。
+标签： Temporal_account、Temporal_Namespace、resource_exhausted_cause
+
+#### Temporal_cloud_v0_state_transition_count
+
+一旦故障转移异步操作成功返回，Namespace 将进行故障转移。
+XPROT026X 管理故障转移 XPROT027X 的重试。
+在极少数情况下，内部错误导致故障转移无法完成，XPROT026X 待命团队会自动传呼进行干预并强制故障转移完成。
+
+#### Temporal_cloud_v0_total_action_count
+
+Temporal Cloud 操作的大致数量。
+标签: Temporal_account, Temporal_Namespace, is_background, Namespace_mode
+
+### 民意调查指标{#poll}
+
+#### Temporal_cloud_v0_poll_success_count
+
+与轮询器成功匹配的任务。
+标签： Temporal_帐户、Temporal_Namespace、操作、任务类型、Temporal_服务类型
+
+#### Temporal_cloud_v0_poll_success_sync_count
+
+成功同步与轮询器匹配的任务。
+标签： Temporal_帐户、Temporal_Namespace、操作、任务类型、Temporal_服务类型
+
+#### Temporal_cloud_v0_poll_timeout_count
+
+当轮询器在超时之前没有可用的任务时。
+标签： Temporal_帐户、Temporal_Namespace、操作、任务类型、Temporal_服务类型
+
+### 复制延迟指标 {#replication-lag}
+
+#### Temporal_cloud_v0_replication_lag_bucket
+
+具有高可用性的 Namespace 在特定时间间隔内的[复制滞后](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_replication_lag_p99) 的直方图。
+标签: Temporal_account, Temporal_Namespace, le
+
+#### Temporal_cloud_v0_replication_lag_count
+
+具有高可用性的 Namespace 在特定时间间隔内的[复制滞后](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_replication_lag_p99) 计数。
+标签: Temporal_帐户, Temporal_Namespace
+
+#### Temporal_cloud_v0_replication_lag_sum
+
+具有高可用性的 Namespace 在特定时间间隔内的 [复制延迟](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_replication_lag_p99) 总和。
+标签: Temporal_帐户, Temporal_Namespace
+
+### Schedule 指标 {#Schedule}
+
+#### Temporal_cloud_v0_Schedule_action_success_count
+
+成功执行 Scheduled Workflow。
+标签: Temporal_帐户, Temporal_Namespace
+
+#### Temporal_cloud_v0_Schedule_buffer_overruns_count
+
+当平均 Schedule 游程长度大于平均 Schedule 间隔，同时配置了“buffer_all”重叠策略时。
+标签: Temporal_帐户, Temporal_Namespace
+
+#### Temporal_cloud_v0_Schedule_missed_catchup_window_count
+
+当 Workflow 延迟时间长于追赶窗口时，跳过 Scheduled 执行。
+标签: Temporal_帐户, Temporal_Namespace
+
+#### Temporal_cloud_v0_Schedule_rate_limited_count
+
+由于超出速率限制而延迟的 Workflow。
+标签: Temporal_帐户, Temporal_Namespace
+
+### 服务延迟指标 {#service-latency}
+
+#### Temporal_cloud_v0_service_latency_bucket
+
+“SignalWithStartWorkflowExecution”、“SignalWorkflowExecution”、“StartWorkflowExecution”操作的延迟。
+标签: Temporal_account, Temporal_Namespace, 文件, 操作, Temporal_service_type
+
+#### Temporal_cloud_v0_service_latency_count
+
+“SignalWithStartWorkflowExecution”、“SignalWorkflowExecution”、“StartWorkflowExecution”操作的延迟观察计数。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
+
+#### Temporal_cloud_v0_service_latency_sum
+
+- `.example.*`
+- `代码.*.com`
+- `*`
+
+### Workflow 指标 {#Workflow}
+
+#### Temporal_cloud_v0_Workflow_cancel_count
+
+Workflow 在完成执行之前被取消。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
+
+#### Temporal_cloud_v0_Workflow_continued_as_new_count
+
+从过去的执行中延续为新的 Workflow Execution。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
+
+#### Temporal_cloud_v0_Workflow_failed_count
+
+Workflow 在完成之前失败。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
+
+#### Temporal_cloud_v0_Workflow_success_count
+
+Workflow 已成功完成。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
+
+#### Temporal_cloud_v0_Workflow_terminate_count
+
+Workflows 在完成执行之前终止。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
+
+#### 高基数标签
+
+Workflow 在完成执行之前超时。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
+
+## 指标标签 {#metrics-labels}
+
+**您可以使用哪些标签来过滤指标？**
+
+Temporal Cloud 指标包括在其关联元数据中称为标签的键值对。
+标签可帮助您对指标进行分类和区分，以进行精确过滤、Querying 和聚合。
+使用标签来过滤特定属性或比较值，例如直方图中的数字桶。
+添加的上下文增强了监控和分析功能，提供对数据的更深入的见解。
+
+使用以下标签来过滤指标：
+
+|标签|说明|
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `乐` |小于或等于 (`le`) 用于直方图中，根据观测值小于或等于预定义的上限将观测值分类到桶中。                                                                                                                      |
+| `操作` |这包括 gRPC 操作和一般云操作，例如如：<ul><li>SignalWorkflowExecution</li><li>StartBatchOperation</li><li>StartWorkflowExecution</li><li>Ta skQueueMgr</li><li>终止Workflow执行</li><li>UpdateNamespace</li><li>UpdateSchedule</li></ul>请参阅：[度量操作](#metrics-operations) 和 [Temporal Cloud 操作参考](/references/operation-list)|
+| `资源耗尽原因` |资源耗尽的原因。                                                                                                                                                                                                                                                             |
+| `任务类型` | Activity、Workflow 或 Nexus。                                                                                                                                                                                                                                                              |
+| `Temporal_帐户` | Temporal 帐户。                                                                                                                                                                                                                                                                          |
+| `Temporal_Namespace` | Temporal Namespace。                                                                                                                                                                                                                                                                        |
+| `Temporal_service_type` |前端或匹配或历史或 Worker。                                                                                                                                                                                                                                                 |
+| `is_background` | “Temporal_cloud_v0_total_action_count”上的此标签指示 Temporal 后台作业何时生成操作，例如：每小时 Workflow 导出。                                                                                                                                |
+| `Namespace_模式` | “Temporal_cloud_v0_total_action_count”上的此标签指示操作是否由活动 Namespace 和备用 Namespace 产生。对于常规 Namespace，“Namespace_mode”将始终处于“活动”状态。                                                                                             |
+
+以下是如何使用标签过滤指标的示例：
+
+```text
+temporal_cloud_v0_poll_success_count{__rollup__="true", operation="TaskQueueMgr", task_type="Activity", temporal_account="12345", temporal_namespace="your_namespace.12345", temporal_service_type="matching"}
+```
+
+## 操作 {#metrics-操作}
+
+**Temporal Cloud 捕获哪些操作标签？**
+
+操作是一类特殊的指标标签。
+它们描述了捕获指标的上下文。
+Temporal Cloud 包括以下操作标签：
+
+- 管理描述可变状态
+- AdminGetWorkflowExecutionRawHistory
+- AdminGetWorkflowExecutionRawHistoryV2
+- 管理重新申请事件
+- 计数Workflow执行次数
+- CreateSchedule
+- 删除Schedule
+- 删除Workflow执行
+- 描述批量操作
+- 描述Namespace
+- 描述Schedule
+- 描述任务队列
+- 描述Workflow执行
+- 获取WorkerBuildIdCompatibility
+- 获取WorkerTask可达性
+- 获取Workflow执行历史记录
+- GetWorkflowExecutionHistoryReverse
+- 列表批量操作
+- 列出ClosedWorkflowExecutions
+- OperatorDeleteNamespace
+- 补丁Schedule
+- PollActivityTaskQueue
+- PollNexusTaskQueue
+- PollWorkflowExecutionHistory
+- PollWorkflowExecutionUpdate
+- PollWorkflowTaskQueue
+- QueryWorkflow
+- RecordActivityTaskHeartbeat
+- RecordActivityTaskHeartbeatById
+- 注册Namespace
+- 请求取消Workflow执行
+- 重置StickyTaskQueue
+- 重置Workflow执行
+- 响应ActivityTask已取消
+- 响应ActivityTaskCompleted
+- RespondActivityTaskCompletedById
+- 响应ActivityTaskFailed
+- 响应ActivityTaskFailedById
+- 响应NexusTaskCompleted
+- 响应NexusTaskFailed
+- 响应QueryTaskCompleted
+- 响应WorkflowTaskCompleted
+- 响应WorkflowTaskFailed
+- SignalWithStartWorkflow执行
+- SignalWorkflow执行
+- 开始批量操作
+- 启动Workflow执行
+- 停止批量操作
+- 终止Workflow执行
+- UpdateNamespace
+- UpdateSchedule
+- UpdateWorkerBuildId兼容性
+- UpdateWorkflow执行
+
+如下表所示，某些[指标组](#available-metrics)支持[操作](#metrics-operations)进行聚合和过滤：
+
+独立活动是独立启动的 XPROT028X 执行，没有关联的 Workflow。对于包含“XPROT026X_Workflow_type”标签的 XPROT028X 指标，独立活动使用占位符值“__standalone_XPROT028X”。

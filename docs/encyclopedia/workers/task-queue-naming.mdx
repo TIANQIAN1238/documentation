@@ -1,8 +1,8 @@
 ---
 id: task-queue-naming
-title: Task Queues and naming best practices
-sidebar_label: Task Queue naming
-description: A mismatch in Task Queue names creates separate queues, preventing the Worker from receiving tasks and stalling Workflow Execution.
+title: "Task Queue 和命名最佳实践"
+sidebar_label: "Task Queue命名"
+description: "Task Queue 名称不匹配会创建单独的队列，从而阻止 Worker 接收任务并停止 Workflow Execution。"
 slug: /task-queue/naming
 toc_max_heading_level: 4
 keywords:
@@ -14,17 +14,18 @@ tags:
   - Task Queues
 ---
 
-# Task Queue Names
+<a id="task-queue-names"></a>
+# Task Queue 名称 {#task-queue-names}
 
-The Temporal Service maintains a set of Task Queues, which Workers poll to see
-what work needs to be done. Each Task Queue is identified by a name, which is
-provided to the Temporal Service when launching a Workflow Execution.
+Temporal 服务维护一组 Task Queue，Worker 轮询以查看这些 Task Queue
+需要做什么工作。每个 Task Queue 都由一个名称来标识，该名称是
+启动 Workflow Execution 时提供给 Temporal 服务。
 
 <Tabs groupId="start-workflow-configure-worker-by-sdk" queryString>
 
 <TabItem value="python" label="Python">
 
-**Excerpt of code used to start the Workflow in Python**
+**用于在 Python 中启动 Workflow 的代码摘录**
 
 ```python
 client = await Client.connect("localhost:7233", namespace="default")
@@ -38,7 +39,7 @@ result = await client.execute_workflow(
 )
 ```
 
-**Excerpt of code used to configure the Worker in Python**
+**用于在 Python 中配置 Worker 的代码摘录**
 
 ```python
 worker = Worker(
@@ -52,7 +53,7 @@ worker = Worker(
 </TabItem>
 <TabItem value="go" label="Go">
 
-**Excerpt of code used to start the Workflow in Go**
+**用于在 Go 中启动 Workflow 的代码摘录**
 
 ```go
 options := client.StartWorkflowOptions{
@@ -63,7 +64,7 @@ options := client.StartWorkflowOptions{
 run, err := c.ExecuteWorkflow(ctx, options, ProcessOrderWorkflow, input)
 ```
 
-**Excerpt of code used to configure the Worker in Go**
+**用于在 Go 中配置 Worker 的代码摘录**
 
 ```go
 w := worker.New(c, "my-task-queue-name", worker.Options{})
@@ -72,7 +73,7 @@ w := worker.New(c, "my-task-queue-name", worker.Options{})
 </TabItem>
 <TabItem value="java" label="Java">
 
-**Excerpt of code used to start the Workflow in Java**
+**用于在 Java 中启动 Workflow 的代码摘录**
 
 ```java
 WorkflowOptions options = WorkflowOptions.newBuilder()
@@ -83,7 +84,7 @@ WorkflowOptions options = WorkflowOptions.newBuilder()
 MyWorkflow workflow = client.newWorkflowStub(MyWorkflow.class, options);
 ```
 
-**Excerpt of code used to configure the Worker in Java**
+**用于在 Java 中配置 Worker 的代码摘录**
 
 ```java
 Worker worker = factory.newWorker("my-task-queue-name");
@@ -92,7 +93,7 @@ Worker worker = factory.newWorker("my-task-queue-name");
 </TabItem>
 <TabItem value="typescript" label="Typescript">
 
-**Excerpt of code used to start the Workflow in TypeScript**
+**用于在 TypeScript 中启动 Workflow 的代码摘录**
 
 ```typescript
 await client.workflow.start(OrderProcessingWorkflow, {
@@ -102,7 +103,7 @@ await client.workflow.start(OrderProcessingWorkflow, {
 });
 ```
 
-**Excerpt of code used to configure the Worker in TypeScript**
+**用于在 TypeScript 中配置 Worker 的代码摘录**
 
 ```typescript
 const worker = await Worker.create({
@@ -116,7 +117,7 @@ const worker = await Worker.create({
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
-**Excerpt of code used to start the Workflow in C# and .NET**
+**用于在 C# 和 .NET 中启动 Workflow 的代码摘录**
 
 ```csharp
 var options = new WorkflowOptions(
@@ -129,7 +130,7 @@ var result = await client.ExecuteWorkflowAsync(
     options);
 ```
 
-**Excerpt of code used to configure the Worker in C# and .NET**
+**用于在 C# 和 .NET 中配置 Worker 的代码摘录**
 
 ```csharp
 using var worker = new TemporalWorker(
@@ -143,26 +144,26 @@ using var worker = new TemporalWorker(
 
 </Tabs>
 
-Since Task Queues are created dynamically when they are first used, a mismatch
-between these two values does not result in an error. Instead, it will result
-in the creation of two different Task Queues. Consequently, the Worker will
-not receive any tasks from the Temporal Service and the Workflow Execution
-will not progress. Therefore, we recommend that you define the Task Queue name
-in a constant that is referenced by the Client and Worker if possible, as this
-will ensure that they always use the same value.
+由于 Task Queue 是在首次使用时动态创建的，因此不匹配
+这两个值之间不会导致错误。反而会产生这样的结果
+创建两个不同的 Task Queue。因此，Worker 将
+未从 Temporal 服务和 Workflow Execution 接收任何任务
+不会进步。因此，我们建议您定义 Task Queue 名称
+如果可能的话，在客户端和 Worker 引用的常量中，因为这
+将确保它们始终使用相同的值。
 
 <Tabs groupId="start-workflow-configure-worker-by-sdk" queryString>
 
 <TabItem value="python" label="Python">
 
-**Excerpt of code used to define a constant with the Task Queue name in Python (in a shared.py file)**
+**用于在 Python 中定义名称为 Task Queue 的常量的代码摘录（在共享.py 文件中）**
 
 ```python
 TASK_QUEUE_NAME = "my-task-queue-name"
 ```
 
-**Excerpt of code used to start the Workflow, referencing the constant
-defined with the Task Queue name in Python**
+**用于启动 Workflow 的代码摘录，引用常量
+在 Python 中使用 Task Queue 名称定义**
 
 ```python
 from shared import TASK_QUEUE_NAME
@@ -180,8 +181,8 @@ result = await client.execute_workflow(
 )
 ```
 
-**Excerpt of code used to configure the Worker, referencing the constant
-defined with the Task Queue name in Python**
+**用于配置 Worker 的代码摘录，引用常量
+在 Python 中使用 Task Queue 名称定义**
 
 ```python
 worker = Worker(
@@ -195,7 +196,7 @@ worker = Worker(
 </TabItem>
 <TabItem value="go" label="Go">
 
-**Excerpt of code used to define a constant with the Task Queue name in Go**
+**用于在 Go 中定义名称为 Task Queue 的常量的代码摘录**
 
 ```go
 package app 
@@ -203,7 +204,7 @@ package app
 const TaskQueueName = "my-taskqueue-name"
 ```
 
-**Excerpt of code used to start the Workflow, referencing the constant defined with the Task Queue name in Go**
+**用于启动 Workflow 的代码摘录，引用 Go 中使用 Task Queue 名称定义的常量**
 
 ```go
 options := client.StartWorkflowOptions{
@@ -214,7 +215,7 @@ options := client.StartWorkflowOptions{
 run, err := c.ExecuteWorkflow(ctx, options, ProcessOrderWorkflow, input)
 ```
 
-**Excerpt of code used to configure the Worker, referencing the constant defined with the Task Queue name in Go**
+**用于配置 Worker 的代码摘录，引用 Go 中使用 Task Queue 名称定义的常量**
 
 ```go
 w := worker.New(c, app.TaskQueueName, worker.Options{})
@@ -223,7 +224,7 @@ w := worker.New(c, app.TaskQueueName, worker.Options{})
 </TabItem>
 <TabItem value="java" label="Java">
 
-**Excerpt of code used to define a constant with the Task Queue name in Java**
+**用于在 Java 中定义名称为 Task Queue 的常量的代码摘录**
 
 ```java
 package app;
@@ -235,7 +236,7 @@ public class Constants {
 }
 ```
 
-**Excerpt of code used to start the Workflow, referencing the constant defined with the Task Queue name in Java**
+**用于启动 Workflow 的代码摘录，引用 Java 中使用 Task Queue 名称定义的常量**
 
 ```java
 WorkflowOptions options = WorkflowOptions.newBuilder()
@@ -246,7 +247,7 @@ WorkflowOptions options = WorkflowOptions.newBuilder()
 MyWorkflow workflow = client.newWorkflowStub(MyWorkflow.class, options);
 ```
 
-**Excerpt of code used to configure the Worker, referencing the constant defined with the Task Queue name in Java**
+**用于配置 Worker 的代码摘录，引用 Java 中使用 Task Queue 名称定义的常量**
 
 ```java
 Worker worker = factory.newWorker(Constants.taskQueueName);
@@ -255,13 +256,13 @@ Worker worker = factory.newWorker(Constants.taskQueueName);
 </TabItem>
 <TabItem value="typescript" label="Typescript">
 
-**Excerpt of code used to define a constant with the Task Queue name in TypeScript**
+**用于在 TypeScript 中定义名称为 Task Queue 的常量的代码摘录**
 
 ```typescript
 const TASK_QUEUE_NAME = 'my-taskqueue-name';
 ```
 
-**Excerpt of code used to start the Workflow, referencing the constant defined with the Task Queue name in TypeScript**
+**用于启动 Workflow 的代码摘录，引用 TypeScript 中使用 Task Queue 名称定义的常量**
 
 ```typescript
 import { TASK_QUEUE_NAME } from './shared';
@@ -275,7 +276,7 @@ await client.workflow.start(OrderProcessingWorkflow, {
 });
 ```
 
-**Excerpt of code used to configure the Worker, referencing the constant defined with the Task Queue name in TypeScript**
+**用于配置 Worker 的代码摘录，引用 TypeScript 中使用 Task Queue 名称定义的常量**
 
 ```typescript
 import { TASK_QUEUE_NAME } from './shared';
@@ -293,7 +294,7 @@ const worker = await Worker.create({
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
-**Excerpt of code used to define a constant with the Task Queue name in C# and .NET**
+**用于在 C# 和 .NET 中定义名称为 Task Queue 的常量的代码摘录**
 
 ```csharp
 public static class WorkflowConstants
@@ -302,7 +303,7 @@ public static class WorkflowConstants
 }
 ```
 
-**Excerpt of code used to start the Workflow, referencing the constant defined with the Task Queue name in C# and .NET**
+**用于启动 Workflow 的代码摘录，引用 C# 和 .NET 中使用 Task Queue 名称定义的常量**
 
 ```csharp
 var options = new WorkflowOptions(
@@ -315,7 +316,7 @@ var result = await client.ExecuteWorkflowAsync(
     options);
 ```
 
-**Excerpt of code used to configure the Worker, referencing the constant defined with the Task Queue name in C# and .NET**
+**用于配置 Worker 的代码摘录，引用 C# 和 .NET 中使用 Task Queue 名称定义的常量**
 
 ```csharp
 using var worker = new TemporalWorker(
@@ -329,6 +330,6 @@ using var worker = new TemporalWorker(
 
 </Tabs>
 
-However, it’s not always possible to do define the Task Queue name in a constant, such as when the Client used
-to start the Workflow is running on another system or is implemented in a
-different programming language.
+然而，并不总是可以在常量中定义 Task Queue 名称，例如当客户端使用
+启动Workflow正在另一个系统上运行或在一个系统中实现
+不同的编程语言。

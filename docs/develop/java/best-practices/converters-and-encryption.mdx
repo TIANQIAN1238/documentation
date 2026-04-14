@@ -1,8 +1,8 @@
 ---
 id: converters-and-encryption
-title: Converters and encryption - Java SDK
-sidebar_label: Converters and encryption
-description: Create and implement a Custom Payload Codec and Payload Converter in Java using the Temporal SDK for custom data encryption, compression, and type conversion.
+title: 转换器与加密 - Java SDK
+sidebar_label: 转换器与加密
+description: 使用 Temporal SDK 在 Java 中创建并实现自定义 Payload Codec 和 Payload Converter，用于自定义数据加密、压缩和类型转换。
 toc_max_heading_level: 4
 keywords:
   - java sdk
@@ -20,27 +20,21 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-Temporal's security model is designed around client-side encryption of Payloads.
-A client may encrypt Payloads before sending them to the server, and decrypt them after receiving them from the server.
-This provides a high degree of confidentiality because the Temporal Server itself has absolutely no knowledge of the actual data.
-It also gives implementers more power and more freedom regarding which client is able to read which data -- they can control access with keys, algorithms, or other security measures.
+Temporal 的安全模型围绕 Payload 的客户端加密设计。客户端可以在将 Payload 发送到服务器之前对其进行加密，并在从服务器接收后对其进行解密。这提供了高度的机密性，因为 Temporal Server 本身对实际数据完全不知情。它还为实现者提供了更多关于哪个客户端能够读取哪些数据的权力和自由——他们可以通过密钥、算法或其他安全措施控制访问。
 
-A Temporal developer adds client-side encryption of Payloads by providing a Custom Payload Codec to its Client.
-Depending on business needs, a complete implementation of Payload Encryption may involve selecting appropriate encryption algorithms, managing encryption keys, restricting a subset of their users from viewing payload output, or a combination of these.
+Temporal 开发者通过向其 Client 提供自定义 Payload Codec 来添加 Payload 的客户端加密。根据业务需求，Payload 加密的完整实现可能涉及选择合适的加密算法、管理加密密钥、限制部分用户查看 Payload 输出，或这些措施的组合。
 
-The server itself never adds encryption over Payloads.
-Therefore, unless client-side encryption is implemented, Payload data will be persisted in non-encrypted form to the data store, and any Client that can make requests to a Temporal namespace (including the Temporal UI and CLI) will be able to read Payloads contained in Workflows.
-When working with sensitive data, you should always implement Payload encryption.
+服务器本身从不对 Payload 添加加密。因此，除非实现了客户端加密，否则 Payload 数据将以非加密形式持久化到数据存储中，任何能够向 Temporal Namespace 发出请求的 Client（包括 Temporal UI 和 CLI）都能读取 Workflow 中包含的 Payload。在处理敏感数据时，应始终实现 Payload 加密。
 
-## Custom Payload Codec in Java {#custom-payload-codec}
+## Java 中的自定义 Payload Codec {#custom-payload-codec}
 
-Create a custom implementation of [`PayloadCodec`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/payload/codec/PayloadCodec.html) and use it in [`CodecDataConverter`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/converter/CodecDataConverter.html) to set a custom Data Converter.
+创建 [`PayloadCodec`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/payload/codec/PayloadCodec.html) 的自定义实现，并在 [`CodecDataConverter`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/converter/CodecDataConverter.html) 中使用它来设置自定义 Data Converter。
 
-The Payload Codec does byte-to-byte conversion and must be set with a Data Converter.
+Payload Codec 执行字节到字节的转换，必须与 Data Converter 一起设置。
 
-Define custom encryption/compression logic in your `encode` method and decryption/decompression logic in your `decode` method.
+在 `encode` 方法中定义自定义加密/压缩逻辑，在 `decode` 方法中定义解密/解压缩逻辑。
 
-The following example from the [Java encryption sample](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/encryptedpayloads/CryptCodec.java) shows how to implement encryption and decryption logic on your payloads in your `encode` and `decode` methods.
+下面来自 [Java 加密示例](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/encryptedpayloads/CryptCodec.java)的示例，展示了如何在 `encode` 和 `decode` 方法中对 Payload 实现加密和解密逻辑。
 
 ```java
 class YourCustomPayloadCodec implements PayloadCodec {
@@ -138,11 +132,11 @@ class YourCustomPayloadCodec implements PayloadCodec {
 }
 ```
 
-**Set Data Converter to use custom Payload Codec**
+**设置 Data Converter 以使用自定义 Payload Codec**
 
-Use `CodecDataConverter` with an instance of a Data Converter and the custom `PayloadCodec` in the `WorkflowClient` options that you use in your Worker process and to start your Workflow Executions.
+在 Worker 进程和启动 Workflow Execution 所用的 `WorkflowClient` 选项中，将 `CodecDataConverter` 与 Data Converter 实例及自定义 `PayloadCodec` 一起使用。
 
-For example, to set a custom `PayloadCodec` implementation with `DefaultDataConverter`, use the following code:
+例如，要使用 `DefaultDataConverter` 设置自定义 `PayloadCodec` 实现，请使用以下代码：
 
 ```java
 WorkflowServiceStubs service = WorkflowServiceStubs.newLocalServiceStubs();
@@ -158,46 +152,37 @@ WorkflowServiceStubs service = WorkflowServiceStubs.newLocalServiceStubs();
               .build());
 ```
 
-- Data **encoding** is performed by the client using the converters and codecs provided by Temporal or your custom implementation when passing input to the Temporal Cluster. For example, plain text input is usually serialized into a JSON object, and can then be compressed or encrypted.
-- Data **decoding** may be performed by your application logic during your Workflows or Activities as necessary, but decoded Workflow results are never persisted back to the Temporal Cluster. Instead, they are stored encoded on the Cluster, and you need to provide an additional parameter when using the [temporal workflow show](/cli/workflow#show) command or when browsing the Web UI to view output.
+- 数据**编码**由客户端使用 Temporal 提供的或自定义的转换器和 Codec 在向 Temporal Cluster 传递输入时执行。例如，纯文本输入通常先序列化为 JSON 对象，然后可以进行压缩或加密。
+- 数据**解码**可以在 Workflow 或 Activity 中由应用逻辑按需执行，但解码后的 Workflow 结果不会持久化回 Temporal Cluster。相反，它们以编码形式存储在 Cluster 上，你需要在使用 [temporal workflow show](/cli/workflow#show) 命令或在 Web UI 中浏览时提供附加参数来查看输出。
 
-For reference, see the [Encryption](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/encryptedpayloads) sample.
+参考示例，请参阅 [Encryption](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/encryptedpayloads) 示例。
 
-### Using a Codec Server
+### 使用 Codec Server
 
-A Codec Server is an HTTP server that uses your custom Codec logic to decode your data remotely.
-The Codec Server is independent of the Temporal Cluster and decodes your encrypted payloads through predefined endpoints.
-You create, operate, and manage access to your Codec Server in your own environment.
-The Temporal CLI and the Web UI in turn provide built-in hooks to call the Codec Server to decode encrypted payloads on demand.
-Refer to the [Codec Server](/production-deployment/data-encryption) documentation for information on how to design and deploy a Codec Server.
+Codec Server 是一个 HTTP 服务器，它使用自定义的 Codec 逻辑远程解码数据。Codec Server 独立于 Temporal Cluster，通过预定义的端点解码加密的 Payload。你在自己的环境中创建、运行和管理对 Codec Server 的访问。Temporal CLI 和 Web UI 提供内置钩子，可按需调用 Codec Server 解码加密的 Payload。有关如何设计和部署 Codec Server 的信息，请参阅 [Codec Server](/production-deployment/data-encryption) 文档。
 
-For reference, see the [Codec server](https://github.com/temporalio/sdk-java/tree/master/temporal-remote-data-encoder) sample.
+参考示例，请参阅 [Codec server](https://github.com/temporalio/sdk-java/tree/master/temporal-remote-data-encoder) 示例。
 
-## Using custom Payload conversion {#custom-payload-conversion}
+## 使用自定义 Payload 转换 {#custom-payload-conversion}
 
-Temporal SDKs provide a [Payload Converter](/payload-converter) that can be customized to convert a custom data type to [Payload](/dataconversion#payload) and back.
+Temporal SDK 提供了一个 [Payload Converter](/payload-converter)，可以自定义以将自定义数据类型转换为 [Payload](/dataconversion#payload) 并再转换回来。
 
-Implementing custom Payload conversion is optional.
-It is needed only if the [default Data Converter](/default-custom-data-converters#default-data-converter) does not support your custom values.
+实现自定义 Payload 转换是可选的。只有在[默认 Data Converter](/default-custom-data-converters#default-data-converter) 不支持你的自定义值时才需要。
 
-To support custom Payload conversion, create a [custom Payload Converter](/payload-converter#composite-data-converters) and configure the Data Converter to use it in your Client options.
+要支持自定义 Payload 转换，请创建[自定义 Payload Converter](/payload-converter#composite-data-converters) 并在 Client 选项中配置 Data Converter 使用它。
 
-The order in which your encoding Payload Converters are applied depend on the order given to the Data Converter.
-You can set multiple encoding Payload Converters to run your conversions.
-When the Data Converter receives a value for conversion, it passes through each Payload Converter in sequence until the converter that handles the data type does the conversion.
+编码 Payload Converter 的应用顺序取决于提供给 Data Converter 的顺序。可以设置多个编码 Payload Converter 来运行转换。当 Data Converter 接收到需要转换的值时，它会按顺序通过每个 Payload Converter，直到处理该数据类型的转换器完成转换。
 
-Payload Converters can be customized independently of a Payload Codec.
-Temporal's Converter architecture looks like this:
+Payload Converter 可以独立于 Payload Codec 进行自定义。Temporal 的 Converter 架构如下所示：
 
 <CaptionedImage
     src="/img/info/converter-architecture.png"
     title="Temporal converter architecture"
 />
 
-Create a custom implementation of a [PayloadConverter](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/converter/PayloadConverter.html) interface and use the `withPayloadConverterOverrides` method to implement the custom object conversion with `DefaultDataConverter`.
+创建 [PayloadConverter](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/converter/PayloadConverter.html) 接口的自定义实现，并使用 `withPayloadConverterOverrides` 方法通过 `DefaultDataConverter` 实现自定义对象转换。
 
-`PayloadConverter` serializes and deserializes method parameters that need to be sent over the wire.
-You can create a custom implementation of `PayloadConverter` for custom formats, as shown in the following example:
+`PayloadConverter` 序列化和反序列化需要通过网络传输的方法参数。可以为自定义格式创建 `PayloadConverter` 的自定义实现，如下面的示例所示：
 
 ```java
 /** Payload Converter specific to your custom object */
@@ -222,9 +207,9 @@ public class YourCustomPayloadConverter implements PayloadConverter {
 }
 ```
 
-You can also use [specific implementation classes](https://www.javadoc.io/static/io.temporal/temporal-sdk/1.18.1/io/temporal/common/converter/package-summary.html) provided in the Java SDK.
+还可以使用 Java SDK 中提供的[特定实现类](https://www.javadoc.io/static/io.temporal/temporal-sdk/1.18.1/io/temporal/common/converter/package-summary.html)。
 
-For example, to create a custom `JacksonJsonPayloadConverter`, use the following:
+例如，要创建自定义 `JacksonJsonPayloadConverter`，请使用以下代码：
 
 ```java
 //...
@@ -236,9 +221,9 @@ private static JacksonJsonPayloadConverter yourCustomJacksonJsonPayloadConverter
 //...
 ```
 
-To set your custom Payload Converter, use it with [withPayloadConverterOverrides](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/converter/DefaultDataConverter.html#withPayloadConverterOverrides(io.temporal.common.converter.PayloadConverter...)) with a new instance of `DefaultDataConverter` in your `WorkflowClient` options that you use in your Worker process and to start your Workflow Executions.
+要设置自定义 Payload Converter，请在 Worker 进程和启动 Workflow Execution 所用的 `WorkflowClient` 选项中，将其与新的 `DefaultDataConverter` 实例一起通过 [withPayloadConverterOverrides](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/converter/DefaultDataConverter.html#withPayloadConverterOverrides(io.temporal.common.converter.PayloadConverter...)) 使用。
 
-The following example shows how to set a custom `YourCustomPayloadConverter` Payload Converter.
+以下示例展示了如何设置自定义 `YourCustomPayloadConverter` Payload Converter。
 
 ```java
 //...

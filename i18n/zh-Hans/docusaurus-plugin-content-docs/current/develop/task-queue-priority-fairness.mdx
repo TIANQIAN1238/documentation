@@ -1,0 +1,651 @@
+---
+id: task-queue-priority-fairness
+title: Task Queue 优先级和公平性
+sidebar_label: Task Queue优先级和公平性
+description: 如何使用 Task Queue 优先级和公平性功能。
+toc_max_heading_level: 4
+keywords:
+  - task queue
+  - task queue priority
+  - task queue fairness
+  - task queue priority and fairness
+tags:
+  - Task Queues
+  - Priority and Fairness
+---
+
+import { EnlargeImage } from '@site/src/components';
+import SdkTabs from '@site/src/components';
+
+[Task Queue 优先级](#task-queue-priority) 和 [Task Queue 公平性](#task-queue-fairness) 是管理任务队列的两种方法
+Task Queue 内的工作分配。优先级重点关注如何在单个 Task Queue 内对任务进行优先级排序。
+公平性旨在防止一组任务阻塞同一优先级内的其他任务。
+
+您可以在 Task Queue 中单独使用优先级和公平性，也可以将它们一起使用以获得更复杂的效果
+场景。
+
+:::tip Support, stability, and dependency info
+
+优先级和公平性目前处于
+[公开预览](/evaluate/development-product-features/release-stages#public-preview)。优先级是 Temporal Cloud 和自托管 Temporal 服务的免费功能。
+
+公平性将成为 Temporal Cloud 中的一项 __paid__ 功能，并且计费功能将在不久的将来启用。您可以在[此处](/cloud/actions#fairness)找到有关 Fairness 定价结构的更多详细信息。
+
+:::
+
+## Task Queue 优先级
+
+**Task Queue 优先级** 允许您根据单个 Task Queue 中分配的优先级值来控制 Workflow、活动和 Child Workflow 的执行顺序。每个优先级充当一个子队列，将单个 Task Queue 内的任务分开，以便高优先级任务可以插在低优先级任务前面。
+
+<EnlargeImage
+src =“/img/develop/task-queue-priority-fairness/priority-details.png”
+  alt="优先级工作原理的详细视图"
+/>
+
+### 何时使用优先级
+
+如果您需要一种方法来指定任务的执行顺序，您可以使用优先级来管理它。优先级可让您区分任务，例如批处理任务和实时任务，以便您可以使用单个 Worker 池进行高效的资源分配，同时确保实时任务先于批处理任务进行处理。
+
+您还可以使用它来立即运行紧急任务并覆盖其他任务。例如，如果您正在运行电子商务平台，您可能希望在时间敏感度较低的任务（例如内部库存管理）之前处理与付款相关的任务。
+
+### 如何使用优先级
+
+优先级适用于自托管 Temporal 实例和 Temporal Cloud，并且会自动启用。如果您应用优先键，则将使用该功能。
+
+:::info
+
+您可以通过将动态配置“matching.useNewMatcher”设置为“true”或“false”来在 Task Queue、Namespace 上或全局切换优先级启用。
+
+:::
+
+您可以通过将_优先级键_设置为整数范围“[1,5]”内的值来选择优先级。较低的值
+意味着更高的优先级，因此“1”是最高优先级。如果您不指定优先级，则任务默认为
+优先级为“3”。如果单独的 Activity 优先级，活动将继承其 Workflow 的优先级
+未设置。
+
+当您在 Task Queue 中设置优先级时，这意味着它们将**全部**按优先级顺序进行处理。
+例如，所有优先级为“1”的任务将在优先级为“2”的任务之前执行，依此类推。所以你的
+较低优先级的任务将被阻塞，直到较高优先级的任务完成运行。具有相同优先级的任务
+Scheduled 按先进先出 (FIFO) 顺序运行。如果您需要更灵活地将资源分配给以下任务
+同一类型，如处理多个电商平台的支付，查看
+[公平性部分](#task-queue-fairness)。
+
+您可以通过 Temporal CLI 执行此操作，在 Workflow 上设置优先级键参数：
+
+```
+temporal workflow start \
+  --type ChargeCustomer \
+  --task-queue my-task-queue \
+  --workflow-id my-workflow-id \
+  --input '{"customerId":"12345"}' \
+  --priority-key 1
+```
+
+或者在下面选择您的 SDK，查看为 Workflow 设置优先级的示例：
+
+<SdkTabs>
+<SdkTabs.Go>
+```go
+workflowOptions := client.StartWorkflowOptions{
+  ID:        "my-workflow-id",
+  TaskQueue: "my-task-queue",
+  Priority:  temporal.Priority{PriorityKey: 5},
+}
+we, err := c.ExecuteWorkflow(context.Background(), workflowOptions, MyWorkflow)
+```
+</SdkTabs.Go>
+<SdkTabs.Java>
+```java
+WorkflowOptions options = WorkflowOptions.newBuilder()
+  .setTaskQueue("my-task-queue")
+  .setPriority(Priority.newBuilder().setPriorityKey(5).build()) 
+  .build();
+
+WorkflowClient client = WorkflowClient.newInstance(service); MyWorkflow workflow =
+client.newWorkflowStub(MyWorkflow.class, options); workflow.run();
+
+````
+</SdkTabs.Java>
+<SdkTabs.Python>
+```python
+await client.start_workflow(
+  MyWorkflow.run,
+  args="hello",
+  id="my-workflow-id",
+  task_queue="my-task-queue",
+  priority=Priority(priority_key=1),
+)
+````
+
+</SdkTabs.Python>
+<SdkTabs.DotNet>
+```csharp
+var handle = await Client.StartWorkflowAsync(
+  (MyWorkflow wf) => wf.RunAsync("hello"),
+  new StartWorkflowOptions(
+    id: "my-workflow-id",
+    taskQueue: "my-task-queue"
+  )
+  {
+    Priority = new Priority(1),
+  }
+);
+```
+</SdkTabs.DotNet>
+</SdkTabs>
+
+在下面选择您的 SDK，查看为您的活动设置优先级的示例：
+
+<SdkTabs>
+<SdkTabs.Go>
+```go
+ao := workflow.ActivityOptions{
+  StartToCloseTimeout: time.Minute,
+  Priority:            temporal.Priority{PriorityKey: 3},
+}
+ctx := workflow.WithActivityOptions(ctx, ao)
+err := workflow.ExecuteActivity(ctx, MyActivity).Get(ctx, nil)
+```
+</SdkTabs.Go>
+<SdkTabs.Java>
+```java
+ActivityOptions options = ActivityOptions.newBuilder()
+  .setStartToCloseTimeout(Duration.ofMinutes(1))
+  .setPriority(Priority.newBuilder().setPriorityKey(3).build())
+  .build();
+
+MyActivity activity = Workflow.newActivityStub(MyActivity.class, options); activity.perform();
+
+````
+</SdkTabs.Java>
+<SdkTabs.Python>
+```python
+await workflow.execute_activity(
+  say_hello,
+  "hi",
+  priority=Priority(priority_key=3),
+  start_to_close_timeout=timedelta(seconds=5),
+)
+````
+
+</SdkTabs.Python>
+<SdkTabs.TypeScript>
+</SdkTabs.TypeScript>
+<SdkTabs.DotNet>
+```csharp
+await Workflow.ExecuteActivityAsync(
+  () => SayHello("hi"),
+    new()
+    {
+      StartToCloseTimeout = TimeSpan.FromSeconds(5),
+      Priority = new(3),
+    }
+  );
+```
+</SdkTabs.DotNet>
+</SdkTabs>
+
+在下面选择您的 SDK，查看为 Child Workflow 设置优先级的示例：
+
+<SdkTabs>
+<SdkTabs.Go>
+```go
+cwo := workflow.ChildWorkflowOptions{
+  WorkflowID: "child-workflow-id",
+  TaskQueue:  "child-task-queue",
+  Priority:   temporal.Priority{PriorityKey: 1},
+}
+ctx := workflow.WithChildOptions(ctx, cwo)
+err := workflow.ExecuteChildWorkflow(ctx, MyChildWorkflow).Get(ctx, nil)
+```
+</SdkTabs.Go>
+<SdkTabs.Java>
+```java
+ChildWorkflowOptions childOptions = ChildWorkflowOptions.newBuilder()
+  .setTaskQueue("child-task-queue")
+  .setWorkflowId("child-workflow-id")
+  .setPriority(Priority.newBuilder().setPriorityKey(1).build())
+  .build();
+
+MyChildWorkflow child = Workflow.newChildWorkflowStub(MyChildWorkflow.class, childOptions); child.run();
+
+````
+</SdkTabs.Java>
+<SdkTabs.Python>
+```python
+await workflow.execute_child_workflow(
+  MyChildWorkflow.run,
+  args="hello child",
+  priority=Priority(priority_key=1),
+)
+````
+
+</SdkTabs.Python>
+<SdkTabs.DotNet>
+```csharp
+await Workflow.ExecuteChildWorkflowAsync(
+  (MyChildWorkflow wf) => wf.RunAsync("hello child"),
+  new() { Priority = new(1) }
+);
+```
+</SdkTabs.DotNet>
+</SdkTabs>
+
+## Task Queue 公平性
+
+使用“asyncio.Lock”协调访问可以更正此代码。
+锁定可确保在任何给定时间只有一个处理程序实例可以执行特定的代码部分：
+
+这些虚拟队列使用循环调度机制进行操作，这意味着系统在选择下一个要调度的任务时依次循环使用每个公平键。循环方法本质上可以防止任何单个公平密钥占用 Worker 容量。这确保了来自一个公平键的任务不能完全阻止来自其他键的任务，即使一个键的积压量比其他键大得多。
+
+当 Worker 可用时，每个公平键都有机会分派任务，而不是在移动到下一个键之前处理一个键的所有任务。这创建了更公平的分配，其中较小的租户或较低容量的工作负载仍然获得常规处理时间，而不是等待较高容量的操作。
+
+与每个公平键关联的任务可以根据分配给该键的_公平权重_进行调度。单个 Task Queue 中的每个公平键只能分配一个公平权重。在公平键上拥有多个公平权重将导致不特定的行为。
+
+公平权重可用于为公平密钥提供更多或更少的资源。默认情况下，公平键的公平权重为 1.0。属于权重为 2.0 的公平键的任务的调度频率是其他权重为 1.0 的键的两倍。
+
+使用公平键及其相应的公平权重，您可以定义具有加权容量的级别。例如，您可以拥有免费、基本和高级级别，公平性可确保高级任务的涌入不会淹没您的资源并阻止免费和基本任务。
+
+:::info
+
+当您开始使用公平键时，它将您的活动 Task Queue 切换到公平模式。这意味着新任务是公平创建的，并且现有的排队任务在任何新任务之前得到处理。
+
+:::
+
+### 何时使用公平性
+
+公平旨在解决常见情况，例如：
+
+- 具有大小租户的多租户应用程序，其中小租户不应被大租户阻止。
+- 将任务分配给不同的容量范围，然后，例如，从一个范围分派 80%，从另一个范围分派 20%
+  当一个频段为空时，不会限制总容量。
+
+它使用基于以下条件的加权分布对 Task Queue 中的任务进行概率排序：
+
+- 您设置的公平权重
+- 当前积压的任务
+- 一种数据结构，用于跟踪您如何为不同的公平性密钥分配任务
+
+例如，想象一个具有三个租户（_tenant-big_、_tenant-mid_、_tenant-small_）的工作负载，它们具有不同的
+任何时候的任务数量。您的 _tenant-big_ 有大量任务可能会压垮您的 Task Queue，并且
+阻止 _tenant-mid_ 和 _tenant-small_ 运行其任务。通过 Fairness，您可以为每个租户提供不同的
+确保 _tenant-big_ 不会使用所有 Task Queue 资源并阻止其他资源的公平性关键。
+
+在这种情况下，_tenant-mid_ 和 _tenant-small_ 将在 _tenant-big_ 任务之间运行任务，以便它们
+“公平地”执行。不过，如果你的所有任务都可以立即调度，那么你就不需要使用公平性。
+
+同样的场景也适用于批处理作业，其中某些作业比其他作业运行得更频繁，或者处理订单
+多个供应商，其中几个供应商拥有大部分订单。
+
+公平性适用于基于通过 Task Queue 的任务信息的任务调度时间，并考虑
+每个任务在调度之前具有相同的成本。它不考虑当前正在执行的任何任务执行
+Workers。因此，如果您查看 Worker 正在处理的任务，您可能看不到租户之间的“公平性”。例如，
+如果您已经处理了来自 _tenant-big_ 的任务，那么当调度 _tenant-small_ 的任务时，它可能仍然会
+看起来 _tenant-big_ 使用的资源最多。
+
+有两种使用 Task Queue 公平性的方法：无优先级和有优先级。
+
+### 公平如何运作
+
+如果您使用不带优先级的公平性，则具有不同公平性键的任务将使用基于
+在 Task Queue 中分配资源的公平权重。例如，假设您有三个公平键来描述
+客户等级：_免费等级_、_基本等级_和_高级等级_。您给 _premium-tier_ 的公平权重为 5.0，
+_basic-tier_ 公平权重为 3.0，_free-tier_ 公平权重为 2.0。公平地说，这意味着 50%
+时间 _premium-tier_ 任务调度，30% 时间 _basic-tier_ 任务调度，20% 时间 _free-tier_ 任务
+从 Task Queue 积压中调度。
+
+如果 Task Queue 待办事项中有具有相同公平键的任务，那么它们将被分派到
+[先进先出顺序](/任务队列#任务排序)。
+
+通过这种方式，您可以确保一层不会使用所有资源并阻止 Task Queue 中的其他任务
+调度积压。
+
+当您使用 Update 公平性键或公平性权重时，Task Queue 将仅反映以下任务的这些更改：
+还没发货。
+
+<EnlargeImage
+src =“/img/develop/task-queue-priority-fairness/fairness-details.png”
+  alt="公平如何运作的高层次"
+/>
+
+没有设置“fairness_key”的任务将在隐式空字符串键下分组在一起。
+所有未设置密钥的任务共享此单个默认存储桶，并与命名的公平性密钥一起参与相同的循环调度，默认权重为 1.0。
+
+这意味着公平性的采用可以是渐进的：您可以将公平性密钥分配给某些租户，但不能分配给其他租户。
+未加密的任务不会绕过公平性；他们作为一个团队与所有明确指定的任务一起竞争。
+
+### 结合使用公平性和优先性
+
+当您同时使用公平性和优先级时，优先级决定任务进入哪个子队列。单个 Task Queue 具有
+实现的优先级将根据优先级级别有不同的子队列。公平性将适用于以下任务：
+每个优先级。
+
+<EnlargeImage
+src =“/img/develop/task-queue-priority-fairness/priority-fairness.png”
+  alt="优先级和公平性如何协同工作的高层次"
+/>
+
+### 如何使用公平性
+
+公平性适用于自托管 Temporal 实例和 Temporal Cloud。
+
+如果您开始在 API 调用中使用_公平键_，它将在 Temporal Cloud 中自动启用。
+
+如果您是自托管 Temporal，请使用最新的预发布开发服务器并设置 `matching.useNewMatcher` 和
+将“matching.enableFairness”设置为“true”
+[动态配置](https://github.com/Temporalio/Temporal/blob/a3a53266c002ae33b630a41977274f8b5b587031/common/dynamicconfig/constants.go#L1345-L1348)
+在相关 Task Queue 或 Namespace 上。您还需要将“matching.enableMigration”设置为“true”，以便
+支持在启用公平性后排出现有待办事项中的任务。
+
+启用“matching.useNewMatcher”和“matching.enableFairness”仅适用于自托管Temporal实例。
+Temporal Cloud 即将推出一个开关，可在 Namespace 级别启用优先级和公平性。
+
+:::info
+
+公平性将成为 Temporal Cloud 中的付费功能，并且将在不久的将来启用计费功能。您将收到通知
+在为 Namespace 启用计费之前。当 Temporal 开始为此功能计费时，您将能够在 Namespace 级别启用或禁用公平性，并且
+计费将在禁用后的下一个日历小时被禁用。
+
+:::
+
+您可以通过 Temporal CLI 执行此操作，在其中为 Workflow 设置公平键和权重参数：
+
+```
+temporal workflow start \
+  --type ChargeCustomer \
+  --task-queue my-task-queue \
+  --workflow-id my-workflow-id \
+  --input '{"customerId":"12345"}' \
+  --priority-key 1 \
+  --fairness-key a-key \
+  --fairness-weight 3.14
+```
+
+或者选择下面的 SDK，查看为 Workflow 设置公平性的示例：
+
+<SdkTabs>
+<SdkTabs.Go>
+```go
+workflowOptions := client.StartWorkflowOptions{
+  ID:        "my-workflow-id",
+  TaskQueue: "my-task-queue",
+  Priority:  temporal.Priority{
+    PriorityKey:    1,
+    FairnessKey:    "a-key",
+    FairnessWeight: 3.14,
+  },
+}
+we, err := c.ExecuteWorkflow(context.Background(), workflowOptions, MyWorkflow)
+```
+</SdkTabs.Go>
+<SdkTabs.Java>
+```java
+WorkflowOptions options = WorkflowOptions.newBuilder()
+  .setTaskQueue("my-task-queue")
+  .setPriority(Priority.newBuilder().setPriorityKey(5).setFairnessKey("a-key").setFairnessWeight(3.14).build())
+  .build();
+WorkflowClient client = WorkflowClient.newInstance(service);
+MyWorkflow workflow = client.newWorkflowStub(MyWorkflow.class, options);
+workflow.run();
+```
+</SdkTabs.Java>
+<SdkTabs.Python>
+```python
+await client.start_workflow(
+  MyWorkflow.run,
+  args="hello",
+  id="my-workflow-id",
+  task_queue="my-task-queue",
+  priority=Priority(priority_key=3, fairness_key="a-key", fairness_weight=3.14),
+)
+```
+</SdkTabs.Python>
+<SdkTabs.Ruby>
+```ruby
+client.start_workflow(
+  MyWorkflow, "input-arg",
+  id: "my-workflow-id",
+  task_queue: "my-task-queue",
+  priority: Temporalio::Priority.new(
+    priority_key: 3,
+    fairness_key: "a-key",
+    fairness_weight: 3.14
+  )
+)
+```
+</SdkTabs.Ruby>
+<SdkTabs.TypeScript>
+```ts
+const handle = await startWorkflow(workflows.priorityWorkflow, {
+  args: [false, 1],
+  priority: { priorityKey: 3, fairnessKey: 'a-key', fairnessWeight: 3.14 },
+});
+```
+</SdkTabs.TypeScript>
+<SdkTabs.DotNet>
+```csharp
+var handle = await Client.StartWorkflowAsync(
+  (MyWorkflow wf) => wf.RunAsync("hello"),
+  new StartWorkflowOptions(
+    id: "my-workflow-id",
+    taskQueue: "my-task-queue"
+  )
+  {
+    Priority = new Priority(
+      priorityKey: 3,
+      fairnessKey: "a-key",
+      fairnessWeight: 3.14
+    )
+  }
+);
+```
+</SdkTabs.DotNet>
+</SdkTabs>
+
+在下面选择您的 SDK，查看为您的活动设置公平性的示例：
+
+<SdkTabs>
+<SdkTabs.Go>
+```go
+ao := workflow.ActivityOptions{
+    StartToCloseTimeout: time.Minute,
+    Priority: temporal.Priority{
+    PriorityKey: 1,
+    FairnessKey: "a-key",
+    FairnessWeight: 3.14,
+  },
+}
+ctx := workflow.WithActivityOptions(ctx, ao)
+err := workflow.ExecuteActivity(ctx, MyActivity).Get(ctx, nil)
+````
+</SdkTabs.Go>
+<SdkTabs.Java>
+```java
+ActivityOptions options = ActivityOptions.newBuilder()
+  .setStartToCloseTimeout(Duration.ofMinutes(1))
+  .setPriority(Priority.newBuilder().setPriorityKey(3).setFairnessKey("a-key").setFairnessWeight(3.14).build())
+  .build();
+MyActivity activity = Workflow.newActivityStub(MyActivity.class, options);
+activity.perform();
+````
+
+</SdkTabs.Java>
+<SdkTabs.Python>
+```python
+await workflow.execute_activity(
+  say_hello,
+  "hi",
+  priority=Priority(priority_key=3, fairness_key="a-key", fairness_weight=3.14),
+  start_to_close_timeout=timedelta(seconds=5),
+)
+```
+</SdkTabs.Python>
+<SdkTabs.Ruby>
+```ruby
+client.start_activity(
+  MyActivity, "input-arg",
+  id: "my-workflow-id",
+  task_queue: "my-task-queue",
+  priority: Temporalio::Priority.new(
+    priority_key: 3,
+    fairness_key: "a-key",
+    fairness_weight: 3.14
+  )
+)
+```
+</SdkTabs.Ruby>
+<SdkTabs.TypeScript>
+```ts
+const handle = await startWorkflow(workflows.priorityWorkflow, {
+  args: [false, 1],
+  priority: { priorityKey: 3, fairnessKey: 'a-key', fairnessWeight: 3.14 },
+});
+```
+</SdkTabs.TypeScript>
+<SdkTabs.DotNet>
+```csharp
+var handle = await Client.StartWorkflowAsync(
+  (MyWorkflow wf) => wf.RunAsync("hello"),
+  new StartWorkflowOptions(
+    id: "my-workflow-id",
+    taskQueue: "my-task-queue"
+  )
+  {
+    Priority = new Priority(
+      priorityKey: 3,
+      fairnessKey: "a-key",
+      fairnessWeight: 3.14
+    )
+  }
+);
+```
+</SdkTabs.DotNet>
+</SdkTabs>
+
+选择下面的 SDK，查看为 Child Workflow 设置公平性的示例：
+
+<SdkTabs>
+<SdkTabs.Go>
+```go
+cwo := workflow.ChildWorkflowOptions{
+  WorkflowID: "child-workflow-id",
+  TaskQueue:  "child-task-queue",
+  Priority:   temporal.Priority{
+    PriorityKey:    1,
+    FairnessKey:    "a-key",
+    FairnessWeight: 3.14,
+  },
+}
+ctx := workflow.WithChildOptions(ctx, cwo)
+err := workflow.ExecuteChildWorkflow(ctx, MyChildWorkflow).Get(ctx, nil)
+```
+</SdkTabs.Go>
+<SdkTabs.Java>
+```java
+ChildWorkflowOptions childOptions = ChildWorkflowOptions.newBuilder()
+  .setTaskQueue("child-task-queue")
+  .setWorkflowId("child-workflow-id")
+  .setPriority(Priority.newBuilder().setPriorityKey(1).setFairnessKey("a-key").setFairnessWeight(3.14).build())
+  .build();
+MyChildWorkflow child = Workflow.newChildWorkflowStub(MyChildWorkflow.class, childOptions);
+child.run();
+```
+</SdkTabs.Java>
+<SdkTabs.Python>
+```python
+await workflow.execute_child_workflow(
+  MyChildWorkflow.run,
+  args="hello child",
+  priority=Priority(priority_key=3, fairness_key="a-key", fairness_weight=3.14),
+)
+```
+</SdkTabs.Python>
+<SdkTabs.Ruby>
+```ruby
+client.start_child_workflow(
+  MyChildWorkflow, "input-arg",
+  id: "my-child-workflow-id",
+  task_queue: "my-task-queue",
+  priority: Temporalio::Priority.new(
+    priority_key: 3,
+    fairness_key: "a-key",
+    fairness_weight: 3.14
+  )
+)
+```
+</SdkTabs.Ruby>
+<SdkTabs.TypeScript>
+```ts
+const handle = await startChildWorkflow(workflows.priorityWorkflow, {
+  args: [false, 1],
+  priority: { priorityKey: 3, fairnessKey: 'a-key', fairnessWeight: 3.14 },
+});
+```
+</SdkTabs.TypeScript>
+<SdkTabs.DotNet>
+```csharp
+var handle = await Client.StartWorkflowAsync(
+  (MyWorkflow wf) => wf.RunAsync("hello"),
+  new StartWorkflowOptions(
+    id: "my-workflow-id",
+    taskQueue: "my-task-queue"
+  )
+  {
+    Priority = new Priority(
+      priorityKey: 3,
+      fairnessKey: "a-key",
+      fairnessWeight: 3.14
+    )
+  }
+);
+```
+</SdkTabs.DotNet>
+</SdkTabs>
+
+### 在 Task Queue 级别设置速率限制
+
+当您开始扩展 Temporal 服务时，您可能决定设置[每秒请求数 (RPS)](/references/dynamic-configuration#service-level-rps-limits) 限制来测试您的工作负载或尝试配置基准。您可以使用 CLI 中的“queue-rps-limit”在 Task Queue 级别设置 RPS 限制。
+
+无论公平键如何，整个队列速率都会限制任务的调度速率。尽管您可能会因分区而看到小突发，但在几秒钟内平均时，任务的分派速度不会快于指定的限制。
+
+:::note
+
+整个队列速率限制与通过 SDK 中的 Worker 选项提供的功能相同。如果通过 API 设置，则该限制优先于通过 Worker 选项设置的限制。
+
+:::
+
+如果您想确保特定的公平性密钥对限制任务有限制，您还可以在 CLI 中使用“fairness-key-rps-limit-default”基于公平性密钥设置 RPS 限制。这可能是您区分客户层的方式，仅允许该层处理定义数量的任务。
+
+```
+temporal task-queue config set \
+    --task-queue my-task-queue \
+    --task-queue-type activity \
+    --namespace my-namespace \
+    --queue-rps-limit 500 \
+    --queue-rps-limit-reason "overall limit" \
+    --fairness-key-rps-limit-default 33.3 \
+    --fairness-key-rps-limit-reason "per-key limit"
+```
+
+每个公平密钥速率限制与 Task Queue 公平性结合使用。如果您将公平性视为将队列分为每个键的一个虚拟队列，那么每个公平键的速率限制就是对每个单独虚拟队列的限制。关于每个公平键限制的一些重要注意事项：
+
+- 整个队列限制和每个公平键限制可以独立设置：可以不设置、设置其中之一、或者两者都设置。如果两者都设置了，则应用限制性更强的一项。
+- 密钥的每个公平密钥限制按分配给该密钥的公平权重进行缩放。因此，如果队列的每个公平键限制设置为 10，则具有默认权重 (1.0) 的所有键的限制为 10 个任务/秒。但如果某个特定键的权重为 2.5，则该键的每个键速率限制将为 25 个任务/秒。
+- 由于每个密钥的调度率应与其权重成正比，因此如果任何密钥达到每个密钥的限制，则几乎所有密钥都会达到。它的工作方式是，如果要分派的下一个任务达到每个键的限制，则分派将等待，直到它可以执行。
+- 通常实际上并没有任何阻塞，但当任务为 Scheduled 和分派任务之间键的公平权重发生变化时，可能会出现阻塞。例如，如果密钥的公平权重降低，则将遵守新的较低的每密钥速率限制。由于这些任务最初是具有较高速率的 Scheduled，因此它们在调度时会阻塞其他任务。这个限制将来会得到改善。
+
+### 公平权重覆盖
+
+在许多情况下，提供公平密钥的权重以及密钥本身是很简单的。在某些情况下，将权重排除在客户端代码之外并通过配置 API 控制少量键的权重是很方便的。
+
+您可以通过配置 API 覆盖最多 1000 个键的权重。当为某个键设置覆盖时，通过 Workflow 或 Activity 优先级元数据附加到任务的权重将被忽略，而将使用覆盖的权重。
+
+重量覆盖按 Task Queue 存储，包括类型，因此必须为 Workflow 和 Activity Task Queue 设置它们才能对两者生效。
+
+### 公平的局限性
+
+- 您可以使用的公平性密钥的数量没有限制，但随着您添加更多，它们的准确性可能会降低。
+- Task Queue 在内部进行[分区](/task-queue#task-ordering)，任务随机分配到分区。这可能会干扰公平性。根据您的使用案例，您可以联系 Temporal 支持，将您的 Task Queue 设置为单个分区。
+- 公平权重适用于Schedule时间，而不是调度时间。因此，它仅影响新的 Scheduled 任务，而不影响当前积压的任务。这意味着如果您需要限制现有任务积压中的单个公平键，您将无法做到。
+- 当您使用 Worker 版本控制并将 Workflow 从一个版本移动到另一个版本时，版本之间的优先级仍然适用。不保证版本之间的公平性。例如，您可能有最初在 Worker 版本 _alpha_ 上排队的任务、在 Worker 版本 _beta_ 上排队的任务，以及某些任务从 _alpha_ 移至 _beta_。仅当任务最初在同一 Worker 版本上排队时才能保证公平性。因此，从 _alpha_ 移至 _beta_ 的任务可能存在一些差异。
+- 积压的任务是持久的并且不受服务器重新启动的影响。对于最活跃的键，在重新启动时会保留公平排序；不太活跃的键可能会在现有积压的任务之前短暂调度新任务，直到排序正常化。

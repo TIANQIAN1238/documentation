@@ -1,8 +1,8 @@
 ---
 id: search-attribute
-title: Search Attributes
-sidebar_label: Search Attributes
-description: This guide on Temporal Search Attributes explains how to set up, configure, and use default and custom Search Attributes in Temporal Server versions. Learn about supported types, limits, and how to use them to enhance Workflow filtering and querying.
+title: "Search Attribute"
+sidebar_label: "Search Attribute"
+description: "本 Temporal Search Attribute 指南介绍了如何在 Temporal Server 版本中设置、配置和使用默认和自定义 Search Attribute。了解支持的类型、限制以及如何使用它们来增强 Workflow 过滤和 Querying。"
 slug: /search-attribute
 toc_max_heading_level: 4
 keywords:
@@ -17,228 +17,229 @@ tags:
   - Search Attributes
 ---
 
-This page discusses the following:
+本页讨论以下内容：
 
 - [Search Attributes](#search-attribute)
-- [Default Search Attributes](#default-search-attribute)
-- [Custom Search Attributes](#custom-search-attribute)
+- [默认 Search Attribute](#default-search-attribute)
+- [定制 Search Attribute](#custom-search-attribute)
 
+<a id="search-attribute"></a>
 ## What is a Search Attribute? {#search-attribute}
 
-A Search Attribute is an indexed field used in a [List Filter](/list-filter) to filter a list of [Workflow Executions](/workflow-execution) that have the Search Attribute in their metadata.
+Search Attribute 是 [列表过滤器](/list-filter) 中使用的索引字段，用于过滤元数据中包含 Search Attribute 的 [Workflow Executions](/workflow-execution) 列表。
 
-Each Search Attribute is a key-value pair metadata object included in a Workflow Execution's Visibility information.
-This information is available in the Visibility store.
+每个Search Attribute 都是包含在Workflow Execution 的Visibility 信息中的键值对元数据对象。
+此信息可在 Visibility 商店中找到。
 
 :::caution Do not use sensitive data or PII in Search Attributes
 
-Do not include sensitive data, secrets, or personally identifiable information (PII) in Search Attribute **names or values**.
-Search Attribute values are stored unencrypted in the Visibility store and are not processed by a custom [Payload Codec](/payload-codec#payload-codec).
-The Temporal Server must be able to read these values in plain text to support filtering and ordering, so encryption is not possible without breaking search functionality.
+请勿在 Search Attribute **名称或值**中包含敏感数据、秘密或个人身份信息 (PII)。
+Search Attribute 值未加密地存储在 Visibility 存储中，并且不由自定义 [有效负载编解码器](/payload-codec#payload-codec) 处理。
+Temporal Server 必须能够以纯文本形式读取这些值以支持过滤和排序，因此在不破坏搜索功能的情况下不可能进行加密。
 
-Attribute names are also visible in Namespace configuration, query expressions, and Temporal UI.
-Using sensitive data in either names or values risks exposure to anyone with Namespace access and may violate data protection regulations such as GDPR, HIPAA, or SOC 2.
+属性名称在 Namespace 配置、Query 表达式和 Temporal UI 中也可见。
+在名称或值中使用敏感数据可能会导致任何具有 Namespace 访问权限的人面临暴露风险，并且可能违反 GDPR、HIPAA 或 SOC 2 等数据保护法规。
 
 :::
 
-Temporal provides some [default Search Attributes](/search-attribute#default-search-attribute), such as `ExecutionStatus`, the current state of your Workflow Executions.
-You can also create [custom Search Attribute](/search-attribute#custom-search-attribute) keys in your Visibility store and assign values when starting a Workflow Execution or in Workflow code.
+Temporal 提供一些 [默认 Search Attribute](/search-attribute#default-search-attribute)，例如 `ExecutionStatus`，即 Workflow Execution 的当前状态。
+您还可以在 Visibility 存储中创建 [定制Search Attribute](/search-attribute#custom-search-attribute) 密钥，并在启动 Workflow Execution 或在 Workflow 代码中分配值。
 
-When using [Continue-As-New](/workflow-execution/continue-as-new) or a [Temporal Cron Job](/cron-job), Search Attribute keys are carried over to the new Workflow Run by default.
-Search Attribute values are only available for as long as the Workflow is.
+使用 [Continue-As-New](/workflow-execution/continue-as-new) 或 [Temporal 计划任务](/cron-job) 时，默认情况下，Search Attribute 键将转移到新的 Workflow 运行。
+Search Attribute 值仅与 Workflow 一样长。
 
-Search Attributes are most effective for search purposes or tasks requiring collection-based result sets.
-For business logic in which you need to get information about a Workflow Execution, consider one of the following:
+Search Attribute 对于搜索目的或需要基于集合的结果集的任务最有效。
+对于需要获取有关 Workflow Execution 信息的业务逻辑，请考虑以下操作之一：
 
-- Storing state in a local variable and exposing it with a Query.
-- Storing state in an external datastore through Activities and fetching it directly from the store.
+- 将状态存储在局部变量中并使用 Query 公开它。
+- 通过活动将状态存储在外部数据存储中，并直接从存储中获取状态。
 
-If your business logic requires high throughput or low latency, store and fetch the data through Activities.
-You might experience lag due to time passing between the Workflow's state change and the Activity updating the Visibility store.
+如果您的业务逻辑需要高吞吐量或低延迟，请通过“活动”存储和获取数据。
+由于 Workflow 的状态更改和 Activity 更新 Visibility 存储之间的时间流逝，您可能会遇到延迟。
 
-### Default Search Attributes {#default-search-attribute}
+### 默认 Search Attributes {#default-search-attribute}
 
-A Temporal Service has a set of default Search Attributes already available.
-Default Search Attributes are set globally in any Namespace.
-These Search Attributes are created when the initial index is created.
+Temporal 服务具有一组可用的默认 Search Attribute。
+默认 Search Attribute 在任何 Namespace 中全局设置。
+这些 Search Attribute 是在创建初始索引时创建的。
 
-| NAME                               | TYPE         | DEFINITION                                                                                                                                                                                                   |
+| 姓名                               | 类型         | 定义                                                                                                                                                                                                   |
 | ---------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| BatcherUser                        | Keyword      | Used by internal batcher Workflow that runs in `TemporalBatcher` Namespace division to indicate the user who started the batch operation.                                                                    |
-| BinaryChecksums                    | Keyword List | List of binary Ids of Workers that run the Workflow Execution. Deprecated since server version 1.21 in favor of the `BuildIds` search attribute.                                                             |
-| BuildIds                           | Keyword List | List of Worker Build Ids that have processed the Workflow Execution, formatted as `versioned:{BuildId}` or `unversioned:{BuildId}`, or the sentinel `unversioned` value. Available from server version 1.21. |
-| CloseTime                          | Datetime     | The time at which the Workflow Execution completed.                                                                                                                                                          |
-| ExecutionDuration                  | Int          | The time needed to run the Workflow Execution (in nanoseconds). Available only for closed Workflows.                                                                                                         |
-| ExecutionStatus                    | Keyword      | The current state of the Workflow Execution.                                                                                                                                                                 |
-| ExecutionTime                      | Datetime     | The time at which the Workflow Execution actually begins running; same as `StartTime` for most cases but different for Cron Workflows and retried Workflows.                                                 |
-| HistoryLength                      | Int          | The number of events in the history of Workflow Execution. Available only for closed Workflows.                                                                                                              |
-| HistorySizeBytes                   | Long         | The size of the Event History.                                                                                                                                                                               |
-| RunId                              | Keyword      | Identifies the current Workflow Execution Run.                                                                                                                                                               |
-| StartTime                          | Datetime     | The time at which the Workflow Execution started.                                                                                                                                                            |
-| StateTransitionCount               | Int          | The number of times that Workflow Execution has persisted its state. Available only for closed Workflows.                                                                                                    |
-| TaskQueue                          | Keyword      | Task Queue used by Workflow Execution.                                                                                                                                                                       |
-| TemporalChangeVersion              | Keyword List | Stores change/version pairs if the GetVersion API is enabled.                                                                                                                                                |
-| TemporalReportedProblems           | Keyword List | Stores information about Workflow task failures. Formatted as `category=<category> cause=<cause>`.
-| TemporalScheduledStartTime         | Datetime     | The time that the Workflow is schedule to start according to the Schedule Spec. Can be manually triggered. Set on Schedules.                                                                                 |
-| TemporalScheduledById              | Keyword      | The Id of the Schedule that started the Workflow.                                                                                                                                                            |
-| TemporalSchedulePaused             | Boolean      | Indicates whether the Schedule has been paused. Set on Schedules.                                                                                                                                            |
-| TemporalWorkerDeployment           | Keyword      | Indicates the name of the associated Worker Deployment.                                                                                                                                                      |
-| TemporalWorkerDeploymentVersion    | Keyword      | Indicates the Version string of the associated Worker Deployment, in the format `<deployment name>:<build id>`.                                                                                              |
-| TemporalWorkflowVersioningBehavior | Keyword      | Indicates the associated Worker Versioning behavior ("Pinned", "Auto-Upgrade", or null if not using Worker Versioning).                                                                                      |
-| WorkflowId                         | Keyword      | Identifies the Workflow Execution.                                                                                                                                                                           |
-| WorkflowType                       | Keyword      | The type of Workflow.                                                                                                                                                                                        |
+| 批处理用户                        | 关键词      | 由在 `TemporalBatcher` Namespace 分区中运行的内部批处理程序 Workflow 使用，指示启动批处理操作的用户。                                                                    |
+| 二进制校验和                    | 关键词列表 | 运行 Workflow Execution 的 Worker 的二进制 ID 列表。自服务器版本 1.21 起已弃用，取而代之的是 `BuildIds` Search Attribute。                                                             |
+| 构建ID                           | 关键词列表 | 已处理 Workflow Execution 的 Worker 构建 ID 列表，格式为 `versioned:{BuildId}` 或 `unversioned:{BuildId}`，或哨兵 `unversioned` 值。从服务器版本 1.21 开始可用。 |
+| 关闭时间                          | 日期时间     | Workflow Execution 完成的时间。                                                                                                                                                          |
+| 执行持续时间                  | INT          | 运行 Workflow Execution 所需的时间（以纳秒为单位）。仅适用于封闭式 Workflow。                                                                                                         |
+| 执行状态                    | 关键词      | Workflow Execution 的当前状态。                                                                                                                                                                 |
+| 执行时间                      | 日期时间     | Workflow Execution 实际开始运行的时间；大多数情况下与 `StartTime` 相同，但 Cron Workflow 和重试的 Workflow 不同。                                                 |
+| 历史长度                      | INT          | Workflow Execution历史上的事件数量。仅适用于封闭式 Workflow。                                                                                                              |
+| 历史大小字节                   | 长的         | Event History 的尺寸。                                                                                                                                                                               |
+| 运行ID                              | 关键词      | 标识当前 Workflow Execution 运行。                                                                                                                                                               |
+| 开始时间                          | 日期时间     | Workflow Execution 开始的时间。                                                                                                                                                            |
+| 状态转换计数               | INT          | Workflow Execution 保持其状态的次数。仅适用于封闭式 Workflow。                                                                                                    |
+| 任务队列                          | 关键词      | Task Queue 由 Workflow Execution 使用。                                                                                                                                                                       |
+| Temporal更改版本              | 关键词列表 | 如果启用 GetVersion API，则存储更改/版本对。                                                                                                                                                |
+| Temporal报告的问题           | 关键词列表 | 存储有关 Workflow 任务失败的信息。格式为 `category=<category> cause=<cause>`。
+| TemporalScheduled开始时间         | 日期时间     | 根据 Schedule 规格，Workflow 是 Schedule 启动的时间。可以手动触发。设置在 Schedule 上。                                                                                 |
+| TemporalScheduledById              | 关键词      | 启动 Workflow 的 Schedule 的 ID。                                                                                                                                                            |
+| TemporalSchedule已暂停             | 布尔值      | 指示Schedule是否已暂停。设置在 Schedule 上。                                                                                                                                            |
+| TemporalWorker部署           | 关键词      | 指示关联的 Worker 部署的名称。                                                                                                                                                      |
+| TemporalWorker部署版本    | 关键词      | 指示关联的 Worker 部署的版本字符串，格式为 `<deployment name>:<build id>`。                                                                                              |
+| TemporalWorkflow版本控制行为 | 关键词      | 指示关联的 Worker 版本控制行为（“固定”、“自动升级”，如果不使用 Worker 版本控制则为 null）。                                                                                      |
+| WorkflowId                         | 关键词      | 标识 Workflow Execution。                                                                                                                                                                           |
+| Workflow型                       | 关键词      | Workflow 的型号。                                                                                                                                                                                        |
 
-- All default Search Attributes are reserved and read-only.
-  You cannot create a custom one with the same name or alter the existing one.
+- 所有默认的 Search Attribute 均保留且只读。
+  您无法创建具有相同名称的自定义名称或更改现有名称。
 
-- Search Attributes are not encrypted in the system.
-  Do not use sensitive data or PII as either the Search Attribute name or value.
+- Search Attribute 在系统中未加密。
+  请勿使用敏感数据或 PII 作为 Search Attribute 名称或值。
 
-- To use default Search Attributes with the `Temporal` prefix in a List Filter, you can use their non-prefixed alias.
-  Refer to [Search Attribute aliasing](./list-filter.mdx#search-attribute-aliasing) for details.
+- 要在列表过滤器中使用带有 `Temporal` 前缀的默认 Search Attribute，您可以使用它们的无前缀别名。
+  详细信息请参阅 [Search Attribute 别名](./list-filter.mdx#search-attribute-aliasing)。
 
-- ExecutionStatus values correspond to Workflow Execution statuses: Running, Completed, Failed, Canceled, Terminated, ContinuedAsNew, TimedOut.
+- ExecutionStatus 值对应于 Workflow Execution 状态：正在运行、已完成、失败、已取消、已终止、ContinuedAsNew、TimedOut。
 
-- StartTime, CloseTime, and ExecutionTime are stored as dates but are supported by queries that use either EpochTime in nanoseconds or a string in [RFC3339Nano format](https://pkg.go.dev/time#pkg-constants) (such as "2006-01-02T15:04:05.999999999Z07:00").
+- StartTime、CloseTime 和 ExecutionTime 存储为日期，但受使用以纳秒为单位的 EpochTime 或 [RFC3339Nano格式](https://pkg.go.dev/time#pkg-constants) 中的字符串（例如“2006-01-02T15:04:05.999999999Z07:00”）的查询支持。
 
-- ExecutionDuration is stored in nanoseconds but is supported by queries that use integers in nanoseconds, [Golang duration format](https://pkg.go.dev/time#ParseDuration), or "hh:mm:ss" format.
+- ExecutionDuration 以纳秒为单位存储，但受使用纳秒、[Golang 持续时间格式](https://pkg.go.dev/time#ParseDuration) 或“hh:mm:ss”格式的整数的查询支持。
 
-- CloseTime, HistoryLength, StateTransitionCount, and ExecutionDuration are present only in a closed Workflow Execution.
+- CloseTime、HistoryLength、StateTransitionCount 和 ExecutionDuration 仅存在于关闭的 Workflow Execution 中。
 
-- ExecutionTime can differ from StartTime in retry and cron use cases.
+- 在重试和 cron 用例中，ExecutionTime 可能与 StartTime 不同。
 
-You can use the default Search Attributes in a List Filter, such as in the Temporal Web UI or with the `temporal workflow list` commands, under the following conditions:
+在以下条件下，您可以在列表过滤器中使用默认的 Search Attribute，例如在 Temporal Web UI 中或使用 `Temporal Workflow list` 命令：
 
-- Without advanced Visibility, you can only use the `=` operator with a single default Search Attribute in your List Filter.
-  For example: `temporal workflow list --query "ExecutionStatus = 'Completed'"` or `temporal workflow list --query "WorkflowType = 'YourWorkflow'"`.
-- With advanced Visibility, you can combine default Search Attributes in a List Filter to get a list of specific Workflow Executions.
-  For example: `temporal workflow list --query "WorkflowType = 'main.YourWorkflowDefinition' and ExecutionStatus != 'Running' and (StartTime > '2022-06-07T16:46:34.236-08:00' or CloseTime < '2022-06-08T16:46:34-08:00')"`
+- 如果没有高级 Visibility，您只能将 `=` 运算符与列表过滤器中的单个默认 Search Attribute 一起使用。
+  例如：`Temporal Workflow list --Query "ExecutionStatus = 'Completed'"` 或 `Temporal Workflow list --Query "WorkflowType = 'YourWorkflow'"`。
+- 使用高级 Visibility，您可以在列表过滤器中组合默认的 Search Attribute，以获得特定 Workflow Execution 的列表。
+  例如：`Temporal Workflow list --Query "WorkflowType = 'main.YourWorkflowDefinition' and ExecutionStatus != 'Running' and (StartTime > '2022-06-07T16:46:34.236-08:00' or CloseTime < '2022-06-08T16:46:34-08:00')"`
 
-### Custom Search Attributes {#custom-search-attribute}
+### 自定义 Search Attributes {#custom-search-attribute}
 
-You can [create custom Search Attributes](/self-hosted-guide/visibility#create-custom-search-attributes) with unique key names that are relevant to your business needs.
+您可以使用与您的业务需求相关的唯一键名称 [创建自定义 Search Attribute](/self-hosted-guide/visibility#create-custom-search-attributes)。
 
-Use custom Search Attributes in a List Filter, such as in the Temporal Web UI or with the `temporal workflow list` commands, under the following conditions:
+在以下条件下，在列表过滤器中使用自定义 Search Attribute，例如在 Temporal Web UI 中或使用 `Temporal Workflow list` 命令：
 
-- Without advanced Visibility, you cannot use a custom Search Attribute in your List Filter.
-- With advanced Visibility, you can create multiple custom Search Attributes and use them in combinations with List Filters to get a list of specific Workflow Executions.
-  For example: `temporal workflow list --query "WorkflowType = 'main.YourWorkflowDefinition' and YourCustomSA = 'YourCustomSAValue' and (StartTime > '2022-06-07T16:46:34.236-08:00' or CloseTime < '2022-06-08T16:46:34-08:00')"`
-  - With Temporal Server v1.19 and earlier, you must [integrate Elasticsearch](/self-hosted-guide/visibility#elasticsearch) to use custom Search Attributes with List Filters.
-  - With Temporal Server v1.20 and later, custom Search Attribute capabilities are available on MySQL (v8.0.17 or later), PostgreSQL (v12 and later), and SQLite (v3.31.0 and later), in addition to Elasticsearch.
+- 如果没有高级 Visibility，您无法在列表过滤器中使用自定义 Search Attribute。
+- 使用高级 Visibility，您可以创建多个自定义 Search Attribute 并将它们与列表过滤器结合使用以获得特定 Workflow Execution 的列表。
+  例如：`Temporal Workflow list --Query "WorkflowType = 'main.YourWorkflowDefinition' and YourCustomSA = 'YourCustomSAValue' and (StartTime > '2022-06-07T16:46:34.236-08:00' or CloseTime < '2022-06-08T16:46:34-08:00')"`
+  - 对于 Temporal Server v1.19 及更早版本，您必须 [集成Elasticsearch](/self-hosted-guide/visibility#elasticsearch) 才能将自定义 Search Attribute 与列表过滤器一起使用。
+  - 对于 Temporal Server v1.20 及更高版本，除了 Elasticsearch 之外，自定义 Search Attribute 功能还可在 MySQL（v8.0.17 或更高版本）、PostgreSQL（v12 及更高版本）和 SQLite（v3.31.0 及更高版本）上使用。
 
-If you use Elasticsearch as your Visibility store, your custom Search Attributes apply globally and can be used across Namespaces.
-However, if using any of the [supported SQL databases](/self-hosted-guide/visibility) with Temporal Server v1.20 and later, your custom Search Attributes are associated with a specific Namespace and can be used for Workflow Executions in that Namespace.
+如果您使用 Elasticsearch 作为 Visibility 存储，则您的自定义 Search Attribute 全局适用，并且可以跨 Namespace 使用。
+但是，如果将任何 [支持的 SQL 数据库](/self-hosted-guide/visibility) 与 Temporal Server v1.20 及更高版本一起使用，则您的自定义 Search Attribute 会与特定的 Namespace 关联，并且可用于该 Namespace 中的 Workflow Execution。
 
-See [custom Search Attributes limits](/search-attribute#custom-search-attribute-limits) for limits on the number and size of custom Search Attributes you can create.
+有关您可以创建的自定义 Search Attribute 的数量和大小的限制，请参阅 [自定义 Search Attribute 限制](/search-attribute#custom-search-attribute-limits)。
 
-#### Supported types {#supported-types}
+#### 支持的类型 {#supported-types}
 
-Custom Search Attributes must be one of the following types:
+自定义 Search Attribute 必须是以下类型之一：
 
-- Bool
-- Datetime
-- Double
-- Int
-- Keyword
-- KeywordList
-- Text
+- 布尔
+- 日期时间
+- 双人间
+- 智力
+- 关键字
+- 关键词列表
+- 文字
 
-Note:
+笔记：
 
-- **Double** is backed up by `scaled_float` Elasticsearch type with scale factor 10000 (4 decimal digits).
-- **Datetime** is backed up by `date` type with milliseconds precision in Elasticsearch 6 and `date_nanos` type with nanoseconds precision in Elasticsearch 7.
-- **Int** is 64-bit integer (`long` Elasticsearch type).
-- **Keyword** and **Text** types are concepts taken from Elasticsearch. Each word in a **Text** is considered a searchable keyword.
-  For a UUID, that can be problematic because Elasticsearch indexes each portion of the UUID separately.
-  To have the whole string considered as a searchable keyword, use the **Keyword** type.
-  For example, if the key `ProductId` has the value of `2dd29ab7-2dd8-4668-83e0-89cae261cfb1`:
-  - As a **Keyword** it would be matched only by `ProductId = "2dd29ab7-2dd8-4668-83e0-89cae261cfb1`.
-  - As a **Text** it would be matched by `ProductId = 2dd8`, which could cause unwanted matches.
-- With Temporal Server v1.19 and earlier, the **Keyword** type can store a list of values.
-- With Temporal Server v1.20 and later, the **Keyword** type supports only a single value.
-  To store a list of values, use **KeywordList**.
-- The **Text** type cannot be used in the "Order By" clause.
+- **Double** 由 `scaled_float` Elasticsearch 类型支持，比例因子为 10000（4 个十进制数字）。
+- **日期时间** 在 Elasticsearch 6 中由毫秒精度的 `date` 类型和 Elasticsearch 7 中的纳秒精度的 `date_nanos` 类型支持。
+- **Int** 是 64 位整数（`long` Elasticsearch 类型）。
+- **关键字**和**文本**类型是取自 Elasticsearch 的概念。 **文本**中的每个单词都被视为可搜索的关键字。
+  对于 UUID，这可能会出现问题，因为 Elasticsearch 会单独索引 UUID 的每个部分。
+  要将整个字符串视为可搜索关键字，请使用 **Keyword** 类型。
+  例如，如果密钥 `ProductId` 的值为 `2dd29ab7-2dd8-4668-83e0-89cae261cfb1`：
+  - 作为 **关键字**，它只能与 `ProductId = "2dd29ab7-2dd8-4668-83e0-89cae261cfb1` 匹配。
+  - 作为**文本**，它将与 `ProductId = 2dd8` 匹配，这可能会导致不需要的匹配。
+- 对于 Temporal Server v1.19 及更早版本，**Keyword** 类型可以存储值列表。
+- 对于 Temporal Server v1.20 及更高版本，**关键字** 类型仅支持单个值。
+  要存储值列表，请使用 **KeywordList**。
+- **Text** 类型不能在“Order By”子句中使用。
 
-#### Custom Search Attributes limits {#custom-search-attribute-limits}
+#### 自定义 Search Attribute 限制 {#custom-search-attribute-limits}
 
 {/* TODO - [How to configure maximum number of Search Attribute keys per Cluster](#) */}
 
-The following table lists the maximum number of custom Search Attributes you can create per Namespace by supported Visibility database.
+下表列出了您可以通过受支持的 Visibility 数据库为每个 Namespace 创建的自定义 Search Attribute 的最大数量。
 
-| Search Attribute type | MySQL (v8.0.17 and later) | PostgreSQL (v12 and later) | SQLite (v3.31.0 and later) | Temporal Cloud |
+| Search Attribute型 | MySQL（v8.0.17 及更高版本） | PostgreSQL（v12 及更高版本） | SQLite（v3.31.0 及更高版本） | Temporal Cloud |
 | --------------------- | :-----------------------: | :------------------------: | :------------------------: | :------------: |
-| Bool                  |             3             |             3              |             3              |       20       |
-| Datetime              |             3             |             3              |             3              |       20       |
-| Double                |             3             |             3              |             3              |       20       |
-| Int                   |             3             |             3              |             3              |       20       |
-| Keyword               |            10             |             10             |             10             |       40       |
-| KeywordList           |             3             |             3              |             3              |       5        |
-| Text                  |             3             |             3              |             3              |       5        |
+| 布尔                  |             3             |             3              |             3              |       20       |
+| 日期时间              |             3             |             3              |             3              |       20       |
+| 双倍的                |             3             |             3              |             3              |       20       |
+| INT                   |             3             |             3              |             3              |       20       |
+| 关键词               |            10             |             10             |             10             |       40       |
+| 关键词列表           |             3             |             3              |             3              |       5        |
+| 文本                  |             3             |             3              |             3              |       5        |
 
-Temporal does not impose a limit on the number of custom Search Attributes you can create with Elasticsearch. However, [Elasticsearch sets a default mapping limit](https://www.elastic.co/guide/en/elasticsearch/reference/8.6/mapping-settings-limit.html) that may apply.
-Custom Search Attributes are an advanced Visibility feature and are not supported on Cassandra.
+Temporal 不会对您可以使用 Elasticsearch 创建的自定义 Search Attribute 数量施加限制。然而，[Elasticsearch 设置默认映射限制](https://www.elastic.co/guide/en/elasticsearch/reference/8.6/mapping-settings-limit.html) 可能适用。
+自定义 Search Attribute 是一项高级 Visibility 功能，Cassandra 不支持。
 
-Size limits for a custom Search Attribute:
+自定义 Search Attribute 的尺寸限制：
 
 {/*
-_This refers to the SA key you create in the visibility store with `tctl search-attribute create`. this value is no longer applicable so commenting out for ref later_
-Default total maximum number of Search Attribute **keys** per Temporal Service is 100. */}
+_这是指您在 Visibility 存储中使用 `tctl search-attribute create` 创建的 SA 密钥。该值不再适用，因此稍后注释掉以供参考_
+每个 Temporal 服务的 Search Attribute **密钥** 默认总最大数量为 100。*/}
 
-- The default single Search Attribute **value** size limit is 2 KB.
+- 默认单个 Search Attribute **值** 大小限制为 2 KB。
 
 {/* TODO - [How to configure Search Attribute value size limit](#) */}
 
-- The maximum total Search Attribute size is 40 KB.
+- Search Attribute 的最大总大小为 40 KB。
 
 {/* TODO - [How to configure total Search Attribute size limit](#) */}
 
-- The maximum total characters per Search Attribute value is 255.
+- 每个 Search Attribute 值的最大字符总数为 255。
 
 {/* temp keeping for reference
-This is configurable with [`SearchAttributesNumberOfKeysLimit`, `SearchAttributesTotalSizeLimit` and `SearchAttributesSizeOfValueLimit`](https://github.com/temporalio/temporal/blob/v1.7.0/service/history/configs/config.go#L440-L442), if you know what you are doing.
+如果您知道自己在做什么，则可以使用 [`SearchAttributesNumberOfKeysLimit`、`SearchAttributesTotalSizeLimit` 和 `SearchAttributesSizeOfValueLimit`](https://github.com/temporalio/temporal/blob/v1.7.0/service/history/configs/config.go#L440-L442) 进行配置。
 */}
 
-For Temporal Cloud specific configurations, see the [Defaults, limits, and configurable settings -Temporal Cloud](/cloud/limits#number-of-custom-search-attributes) guide.
+有关 Temporal Cloud 特定配置，请参阅 [默认值、限制和可配置设置 -Temporal Cloud](/cloud/limits#number-of-custom-search-attributes) 指南。
 
-### Usage {#usage}
+### 用法 {#usage}
 
-Search Attributes available in your Visibility store can be used with Workflow Executions for the Temporal Service.
-To actually have results from the use of a [List Filter](/list-filter), Search Attributes must be added to a Workflow Execution as metadata.
+Visibility 商店中提供的 Search Attribute 可以与 Workflow Execution 一起使用以获取 Temporal 服务。
+要实际获得使用 [列表过滤器](/list-filter) 的结果，必须将 Search Attribute 作为元数据添加到 Workflow Execution。
 
-- To create custom Search Attributes in your Visibility store, see [Create custom Search Attributes](/self-hosted-guide/visibility#create-custom-search-attributes).
-- To remove a custom Search Attribute from the Visibility store, see [Remove custom Search Attributes](/self-hosted-guide/visibility#remove-custom-search-attributes).
-  Removing custom Search Attributes is not supported on Temporal Cloud.
-- To rename a custom Search Attribute on Temporal Cloud, see [`tcld namespace search-attributes rename`](/cloud/tcld/namespace/#rename).
+- 要在 Visibility 商店中创建自定义 Search Attribute，请参阅 [创建自定义 Search Attribute](/self-hosted-guide/visibility#create-custom-search-attributes)。
+- 要从 Visibility 存储中删除自定义 Search Attribute，请参阅 [删除自定义 Search Attribute](/self-hosted-guide/visibility#remove-custom-search-attributes)。
+  Temporal Cloud 不支持删除自定义 Search Attribute。
+- 要重命名 Temporal Cloud 上的自定义 Search Attribute，请参阅 [`tcld Namespace search-attributes rename`](/cloud/tcld/namespace/#rename)。
 
-With Workflows you can do the following:
+使用 Workflow，您可以执行以下操作：
 
-- Set the value of Search Attributes in your Workflow
-- Update the value set for a Search Attribute from within the Workflow code
-- Remove the value set for a Search Attribute from within the Workflow code
+- 在 Workflow 中设置 Search Attribute 的值
+- Update 从 Workflow 代码中为 Search Attribute 设置的值
+- 从 Workflow 代码中删除为 Search Attribute 设置的值
 
 :::info Manage Search Attributes by SDK
 
-- [How to manage Search Attributes using the Go SDK](/develop/go/platform/observability#visibility)
-- [How to manage Search Attributes using the Java SDK](/develop/java/platform/observability#visibility)
-- [How to manage Search Attributes using the PHP SDK](/develop/php/platform/observability#visibility)
-- [How to manage Search Attributes using the Python SDK](/develop/python/platform/observability#visibility)
-- [How to manage Search Attributes using the TypeScript SDK](/develop/typescript/platform/observability#visibility)
-- [How to manage Search Attributes using the .NET SDK](/develop/dotnet/platform/observability#search-attributes)
+- [如何使用 Go SDK 管理 Search Attribute](/develop/go/platform/observability#visibility)
+- [如何使用 Java SDK 管理 Search Attribute](/develop/java/platform/observability#visibility)
+- [如何使用 PHP SDK 管理 Search Attribute](/develop/php/platform/observability#visibility)
+- [如何使用 Python SDK 管理 Search Attribute](/develop/python/platform/observability#visibility)
+- [如何使用 TypeScript SDK 管理 Search Attribute](/develop/typescript/platform/observability#visibility)
+- [如何使用 .NET SDK 管理 Search Attribute](/develop/dotnet/platform/observability#search-attributes)
 
 :::
 
-- To get a list of Search Attributes using the Temporal CLI, issue `temporal operator search-attribute list`. See [Search Attributes](/search-attribute).
+- 要使用 Temporal CLI 获取 Search Attribute 列表，请发出 `Temporal operator search-attribute list`。参见 [Search Attributes](/search-attribute)。
 
-After you add and set your Search Attributes, use your default or custom Search Attributes in a List Filter.
+添加并设置 Search Attribute 后，请在列表过滤器中使用默认或自定义 Search Attribute。
 
 {/* commenting out this part. added this detail in how to create a custom search attribute under clusters.
-The [temporalio/auto-setup](https://hub.docker.com/r/temporalio/auto-setup) Docker image uses a pre-defined set of custom Search Attributes that are handy for testing.
-Their names indicate their types:
+The [Temporalio/自动设置](https://hub.docker.com/r/temporalio/auto-setup) Docker image uses a pre-defined set of custom Search Attributes that are handy for testing.
+他们的名字表明了他们的类型：
 
-- CustomBoolField
-- CustomDatetimeField
-- CustomDoubleField
-- CustomIntField
-- CustomKeywordField
-- CustomTextField
+- 自定义布尔字段
+- 自定义日期时间字段
+- 自定义双字段
+- 自定义IntField
+- 自定义关键字字段
+- 自定义文本字段
   */}

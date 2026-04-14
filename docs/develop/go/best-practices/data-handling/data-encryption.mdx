@@ -1,7 +1,7 @@
 ---
 id: data-encryption
-title: Payload encryption - Go SDK
-sidebar_label: Payload encryption
+title: "有效负载加密 - Go SDK"
+sidebar_label: "有效负载加密"
 slug: /develop/go/data-handling/data-encryption
 toc_max_heading_level: 2
 tags:
@@ -10,31 +10,31 @@ tags:
   - Codec Server
   - Go SDK
   - Temporal SDKs
-description: Encrypt data sent to and from the Temporal Service using a custom Payload Codec in the Go SDK.
+description: "使用 Go SDK 中的自定义有效负载编解码器对发送到 Temporal 服务和从 Temporal 服务发送的数据进行加密。"
 ---
 
-Temporal's security model is designed around client-side encryption of Payloads.
-A client may encrypt Payloads before sending them to the server, and decrypt them after receiving them from the server.
-This provides a high degree of confidentiality because the Temporal Server itself has absolutely no knowledge of the actual data.
-It also gives implementers more power and more freedom regarding which client is able to read which data. Implementers can control access with keys, algorithms, or other security measures.
+Temporal 的安全模型是围绕有效负载的客户端加密而设计的。
+客户端可以在将有效负载发送到服务器之前对其进行加密，并在从服务器接收到有效负载后对其进行解密。
+这提供了高度的保密性，因为 Temporal Server 本身完全不知道实际数据。
+它还为实施者提供了更多的权力和更多的自由来决定哪个客户端能够读取哪些数据。实施者可以使用密钥、算法或其他安全措施来控制访问。
 
-A Temporal developer adds client-side encryption of Payloads by providing a Custom Payload Codec to its Client.
-Depending on business needs, a complete implementation of Payload Encryption may involve selecting appropriate encryption algorithms, managing encryption keys, restricting a subset of their users from viewing payload output, or a combination of these.
+Temporal 开发人员通过向其客户端提供自定义有效负载编解码器来添加有效负载的客户端加密。
+根据业务需求，有效负载加密的完整实施可能涉及选择适当的加密算法、管理加密密钥、限制部分用户查看有效负载输出，或这些的组合。
 
-The server itself never adds encryption over Payloads.
-Therefore, unless client-side encryption is implemented, Payload data will be persisted in non-encrypted form to the data store, and any Client that can make requests to a Temporal namespace (including the Temporal UI and CLI) will be able to read Payloads contained in Workflows.
-When working with sensitive data, you should always implement Payload encryption.
+服务器本身永远不会在有效负载上添加加密。
+因此，除非实现客户端加密，否则有效负载数据将以非加密形式持久保存到数据存储中，并且任何可以向 Temporal Namespace（包括 Temporal UI 和 CLI）发出请求的客户端都将能够读取 Workflow 中包含的有效负载。
+在处理敏感数据时，您应该始终实施有效负载加密。
 
-## Use a custom Payload Codec {#custom-payload-codec}
+## 使用自定义有效负载编解码器 {#custom-payload-codec}
 
-**Step 1: Create a custom Payload Codec**
+**第 1 步：创建自定义有效负载编解码器**
 
-Create a custom [PayloadCodec](https://pkg.go.dev/go.temporal.io/sdk/converter#PayloadCodec) implementation and define your encryption/compression and decryption/decompression logic in the `Encode` and `Decode` functions.
+创建自定义 [有效负载编解码器](https://pkg.go.dev/go.temporal.io/sdk/converter#PayloadCodec) 实现并在 `Encode` 和 `Decode` 函数中定义加密/压缩和解密/解压缩逻辑。
 
-The Payload Codec converts bytes to bytes.
-It must be used in an instance of [CodecDataConverter](https://pkg.go.dev/go.temporal.io/sdk/converter#CodecDataConverter) that wraps a Data Converter to do the [Payload](/dataconversion#payload) conversions, and applies the custom encoding and decoding in `PayloadCodec` to the converted Payloads.
+有效负载编解码器将字节转换为字节。
+它必须在包装 Data Converter 的 [编解码器数据转换器](https://pkg.go.dev/go.temporal.io/sdk/converter#CodecDataConverter) 实例中使用，以执行 [有效载荷](/dataconversion#payload) 转换，并将 `PayloadCodec` 中的自定义编码和解码应用于转换后的有效负载。
 
-The following example from the [Data Converter sample](https://github.com/temporalio/samples-go/blob/main/codec-server/data_converter.go) shows how to create a custom `NewCodecDataConverter` that wraps an instance of a Data Converter with a custom `PayloadCodec`.
+以下来自 [Data Converter 样品](https://github.com/temporalio/samples-go/blob/main/codec-server/data_converter.go) 的示例展示了如何创建自定义 `NewCodecDataConverter`，该自定义 `NewCodecDataConverter` 使用自定义 `PayloadCodec` 包装 Data Converter 的实例。
 
 ```go
 // Create an instance of Data Converter with your codec.
@@ -49,7 +49,7 @@ func NewPayloadCodec() converter.PayloadCodec {
 }
 ```
 
-Implement your encryption/compression logic in the `Encode` function and the decryption/decompression logic in the `Decode` function in your custom `PayloadCodec`, as shown in the following example.
+在自定义 `PayloadCodec` 的 `Encode` 函数中实现加密/压缩逻辑，并在 `Decode` 函数中实现解密/解压缩逻辑，如以下示例所示。
 
 ```go
 // Codec implements converter.PayloadEncoder for snappy compression.
@@ -101,11 +101,11 @@ func (Codec) Decode(payloads []*commonpb.Payload) ([]*commonpb.Payload, error) {
 }
 ```
 
-**Step 2: Set Data Converter to use custom Payload Codec.**
+**步骤 2：设置 Data Converter 以使用自定义有效负载编解码器。**
 
-Set your custom `PayloadCodec` with an instance of `DataConverter` in your `Dial` client options that you use to create the client.
+在用于创建客户端的 `Dial` 客户端选项中，使用 `DataConverter` 的实例设置自定义 `PayloadCodec`。
 
-The following example shows how to set your custom Data Converter from a package called `mycodecpackage`.
+以下示例演示如何从名为 `mycodecpackage` 的包中设置自定义 Data Converter。
 
 ```go
 //...
@@ -117,17 +117,18 @@ c, err := client.Dial(client.Options{
 //...
 ```
 
-- Data **encoding** is performed by the client using the converters and codecs provided by Temporal or your custom implementation when passing input to the Temporal Cluster. For example, plain text input is usually serialized into a JSON object, and can then be compressed or encrypted.
-- Data **decoding** may be performed by your application logic during your Workflows or Activities as necessary, but decoded Workflow results are never persisted back to the Temporal Cluster. Instead, they are stored encoded on the Cluster, and you need to provide an additional parameter when using the [temporal workflow show](/cli/workflow#show) command or when browsing the Web UI to view output.
+- 数据**编码**由客户端在将输入传递到 Temporal 集群时使用 Temporal 或您的自定义实现提供的转换器和编解码器来执行。例如，纯文本输入通常会序列化为 JSON 对象，然后可以进行压缩或加密。
+- 数据**解码**可以根据需要在 Workflow 或活动期间由您的应用程序逻辑执行，但解码的 Workflow 结果永远不会保留回 Temporal 集群。相反，它们以编码形式存储在集群上，并且在使用 [Temporal Workflow 显示](/cli/workflow#show) 命令或浏览 Web UI 以查看输出时，您需要提供附加参数。
 
-For reference, see the [Encryption](https://github.com/temporalio/samples-go/tree/main/encryption) sample.
+作为参考，请参阅 [加密](https://github.com/temporalio/samples-go/tree/main/encryption) 示例。
 
-### Using a Codec Server
+<a id="using-a-codec-server"></a>
+### 使用 Codec Server {#using-a-codec-server}
 
-A Codec Server is an HTTP server that uses your custom Codec logic to decode your data remotely.
-The Codec Server is independent of the Temporal Cluster and decodes your encrypted payloads through predefined endpoints.
-You create, operate, and manage access to your Codec Server in your own environment.
-The Temporal CLI and the Web UI in turn provide built-in hooks to call the Codec Server to decode encrypted payloads on demand.
-Refer to the [Codec Server](/production-deployment/data-encryption) documentation for information on how to design and deploy a Codec Server.
+Codec Server 是一个 HTTP 服务器，它使用您的自定义编解码器逻辑来远程解码您的数据。
+Codec Server 独立于 Temporal 集群，并通过预定义端点解码您的加密负载。
+您可以在自己的环境中创建、操作和管理对 Codec Server 的访问。
+Temporal CLI 和 Web UI 反过来提供内置挂钩来调用 Codec Server 以按需解码加密的有效负载。
+有关如何设计和部署 Codec Server 的信息，请参阅 [Codec Server](/production-deployment/data-encryption) 文档。
 
-For reference, see the [Codec server](https://github.com/temporalio/samples-go/tree/main/codec-server) sample.
+作为参考，请参阅 [Codec Server](https://github.com/temporalio/samples-go/tree/main/codec-server) 示例。

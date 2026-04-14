@@ -1,8 +1,8 @@
 ---
 id: automated
-title: Automated migration
-sidebar_label: Automated migration
-description:
+title: "自动迁移"
+sidebar_label: "自动迁移"
+description: Automated migration is designed to provide a zero-downtime, secure means of migrating to Temporal Cloud. This guide
   Automated migration is designed to provide a zero-downtime, secure means of migrating to Temporal Cloud. This guide
   outlines the current process for transitioning workflows from a self-hosted setup to one hosted within Temporal Cloud.
 slug: /cloud/migrate/automated
@@ -20,112 +20,120 @@ tags:
 
 :::tip Support, stability, and dependency info
 
-Automated migration is currently in [Pre-release](/evaluate/development-production-features/release-stages#pre-release).
-Please contact your Temporal account executive prior to planning your migration project.
+自动迁移当前处于 [预发布](/evaluate/development-production-features/release-stages#pre-release) 中。
+在规划您的迁移项目之前，请联系您的 Temporal 客户经理。
 
 :::
 
-## Process Overview
+<a id="process-overview"></a>
+## 流程概述 {#process-overview}
 
-Automated migration is designed to provide a zero-downtime, secure means of migrating to Temporal Cloud. This guide
-outlines the current process for transitioning Workflows from self-hosted Temporal Server to a namespace hosted within
-Temporal Cloud.
+自动迁移旨在提供一种零停机、安全的迁移到 Temporal Cloud 的方法。本指南
+概述了将 Workflow 从自托管 Temporal Server 转换为托管在其中的 Namespace 的当前流程
+Temporal Cloud。
 
-### Namespace migration schedule
+<a id="namespace-migration-schedule"></a>
+### Namespace 迁移 Schedule {#namespace-migration-schedule}
 
-When planning a migration it is highly recommended to migrate in the order of least-critical to most-critical Namespace.
-Ideally, the project will begin with Namespaces designated as "testing", where downtime is an acceptable outcome of the
-testing process. From there, prioritize migrations based on order of least potential impact.
+规划迁移时，强烈建议按照从最不重要到最重要的 Namespace 的顺序进行迁移。
+理想情况下，该项目将从指定为“测试”的 Namespace 开始，其中停机是可接受的结果
+测试过程。在此基础上，根据潜在影响最小的顺序确定迁移的优先级。
 
-![Temporal automated migration components](/img/cloud/migration/ns_migration_schedule.png)
+![Temporal自动化迁移组件](/img/cloud/migration/ns_migration_schedule.png)
 
-### Project phases
+<a id="project-phases"></a>
+### 项目阶段 {#project-phases}
 
-The migration process is separated into several phases, part of which involves coordinating with Temporal to create
-necessary cloud-side resources.
+迁移过程分为几个阶段，其中一部分涉及与 Temporal 协调以创建
+必要的云端资源。
 
-Migration involves the following phases:
+迁移涉及以下阶段：
 
-1. Prepare - Initial preparation involves collecting and evaluating key data points from the self-hosted clusters.
-   Collected data will be evaluated by Temporal to ensure eligibility for migration.
-2. Setup - Once eligibility has been verified, configurations for the self-hosted clusters will be modified to support
-   the migration. All cloud-side components will be provisioned and the self-hosted
-   [S2S Proxy](https://hub.docker.com/r/temporalio/s2s-proxy/tags) will be deployed.
-3. Test - Once all required components are in place, the migration process will be validated using a test Namespace.
-4. Initiate - At the conclusion of a successful testing process, migration of production Namespaces will begin.
-5. Finalize - After the Namespace has been transferred to Temporal Cloud and validated, the migration will be finalized.
+1. 准备 - 初始准备涉及从自托管集群收集和评估关键数据点。
+   收集的数据将由 Temporal 进行评估，以确保迁移资格。
+2. 设置 - 验证资格后，将修改自托管集群的配置以支持
+   迁移。所有云端组件都将被配置并且自托管
+   将部署 [S2S代理](https://hub.docker.com/r/temporalio/s2s-proxy/tags)。
+3. 测试 - 一旦所有必需的组件就位，将使用测试 Namespace 来验证迁移过程。
+4. 启动 - 成功测试过程结束后，将开始生产 Namespace 的迁移。
+5. 完成 - 将 Namespace 转移到 Temporal Cloud 并进行验证后，迁移将完成。
 
-Please review the [additional notes](#additional-notes) section prior to planning the migration.
+请在规划迁移之前查看 [附加说明](#additional-notes) 部分。
 
-## Phase 1: Prepare
+<a id="phase-1-prepare"></a>
+## 第一阶段：准备 {#phase-1-prepare}
 
-In preparation for migrating to Temporal Cloud, the following data points must be collected and provided to Temporal via
-support ticket.
+在准备迁移到 Temporal Cloud 时，必须收集以下数据点并通过以下方式提供给 Temporal：
+支持票。
 
-- List of Temporal Cloud Accounts. If you are new to Temporal Cloud, then the most common recommendation is to create a
-  single Account that contains your Namespaces.
-- Target Temporal Cloud provider/region per cluster. See the list of [current regions](/cloud/regions).
-- Server Configuration for each cluster.
-- For each Namespace:
-  - Namespace name and its translated cloud-side name. Since Namespaces in Temporal Cloud follow a
-    [specific format](/cloud/namespaces#temporal-cloud-namespace-name), existing Namespaces must be converted to the new
-    format.
-  - Namespace sizing metrics. These are used to properly size cloud-side resources for the migration.
-  - Custom search attributes (if any). Temporal must ensure that your custom search attributes, specifically when using
-    SQL-based visibility store, are compatible with Temporal Cloud.
+- Temporal Cloud 帐户列表。如果您是 Temporal Cloud 的新手，那么最常见的建议是创建一个
+  包含您的 Namespace 的单个帐户。
+- 每个集群的目标 Temporal Cloud 提供商/区域。请参阅 [当前区域](/cloud/regions) 列表。
+- 每个集群的服务器配置。
+- 对于每个 Namespace：
+  - Namespace名称及其翻译的云端名称。由于 Temporal Cloud 中的 Namespace 遵循
+    [具体格式](/cloud/namespaces#temporal-cloud-namespace-name)，现有的 Namespace 必须转换为新的
+    格式。
+  - Namespace 尺寸指标。这些用于为迁移正确调整云端资源的大小。
+  - 自定义 Search Attribute（如果有）。 Temporal 必须确保您的自定义 Search Attribute，特别是在使用时
+    基于 SQL 的 Visibility 存储，与 Temporal Cloud 兼容。
 
-### Capture cluster configurations
+<a id="capture-cluster-configurations"></a>
+### 捕获集群配置 {#capture-cluster-configurations}
 
-Temporal must review your self-hosted server configurations to ensure compatibility. For modern versions of Temporal
-OSS, run the following command against each of your clusters:
+Temporal 必须检查您的自托管服务器配置以确保兼容性。适用于 Temporal 的现代版本
+OSS，对每个集群运行以下命令：
 
 ```
 temporal operator cluster describe --address <frontend:7233> --output json
 ```
 
-For server versions 1.28.1 and prior, use one of the following alternate methods:
+对于服务器版本 1.28.1 及更早版本，请使用以下替代方法之一：
 
 ```
 tctl --address <frontend:7233> admin cluster describe
 ```
 
-or
+或者
 
 ```
 grpcurl -v -plaintext <your temporal address and port> temporal.server.api.adminservice.v1.AdminService.DescribeCluster
 ```
 
-### Capture Namespace metrics
+<a id="capture-namespace-metrics"></a>
+### 捕获 Namespace 指标 {#capture-namespace-metrics}
 
-It is vital that current usage patterns for production Namespaces are well understood, as this data is used for
-cloud-side resource planning. For each Namespace, collect the following metrics:
+充分了解生产 Namespace 的当前使用模式至关重要，因为此数据用于
+云侧资源规划。对于每个 Namespace，收集以下指标：
 
-- Total number of open/closed Workflows
-- Total storage used
-- Current retention policy. Note that this may differ from the
-  [default retention policy](/cloud/limits#default-retention-period) in Temporal Cloud.
-- Peak [action per second](/glossary#actions-per-second-aps) (APS). See the section
-  [below](#how-to-gather-self-hosted-metrics) for instructions on collecting these metrics.
-- If you use custom search Attributes:
-  - provide _CustomSearchAttributeAliases_ of your Namespace (see command below).
-  - provide the VisibilityStore used (e.g. Elasticsearch or SQL)
+- 打开/关闭 Workflow 的总数
+- 使用的总存储空间
+- 当前的保留政策。请注意，这可能与
+  [默认保留策略](/cloud/limits#default-retention-period) 中的 Temporal Cloud。
+- 峰值 [每秒动作](/glossary#actions-per-second-aps) (APS)。参见 参考资料 部分
+  [以下](#how-to-gather-self-hosted-metrics) 有关收集这些指标的说明。
+- 如果您使用自定义 Search Attribute：
+  - 提供您的 Namespace 的_CustomSearchAttributeAliases_（请参阅下面的命令）。
+  - 提供使用的 VisibilityStore（例如 Elasticsearch 或 SQL）
 
-Use the following command to capture _CustomSearchAttributeAliases_, if needed:
+如果需要，请使用以下命令捕获 _CustomSearchAttributeAliases_：
 
 ```
 temporal operator namespace describe -n <namespace>
 ```
 
-### Prepare mTLS certificates
+<a id="prepare-mtls-certificates"></a>
+### 准备mTLS证书 {#prepare-mtls-certificates}
 
-mTLS is used to secure the [S2S Proxy](#s2s-proxy-configuration) communications channel. Generate new certificates following the process outlined
-[here](/cloud/certificates#issue-certificates). You will need to provide these certificates as part of your support request.
+mTLS 用于保护 [S2S代理](#s2s-proxy-configuration) 通信通道的安全。按照概述的流程生成新证书
+[这里](/cloud/certificates#issue-certificates)。您需要提供这些证书作为支持请求的一部分。
 
 
-### Report collected data
-Provide all collected data and mTLS certificates to Temporal via a [support ticket](/cloud/support#ticketing). 
+<a id="report-collected-data"></a>
+### 报告收集的数据 {#report-collected-data}
+通过 [支持票](/cloud/support#ticketing) 将所有收集到的数据和 mTLS 证书提供给 Temporal。
 
-Use the following template for the collected data.
+使用以下模板来收集数据。
 
 ```
 Temporal Cloud Account:
@@ -146,90 +154,94 @@ Namespaces:
 <end>
 ```
 
-## Phase 2: Setup
+<a id="phase-2-setup"></a>
+## 第 2 阶段：设置 {#phase-2-setup}
 
-Once the migration has been approved, the next step is to prepare both the self-hosted clusters and Temporal Cloud
-resources for the migration.
+迁移获得批准后，下一步是准备自托管集群和 Temporal Cloud
+迁移的资源。
 
 :::warning
 
-Proceed only when your request has been approved by Temporal.
+仅当您的请求已获得 Temporal 批准后才能继续。
 
 :::
 
-### Prepare Temporal Cloud Namespace
+<a id="prepare-temporal-cloud-namespace"></a>
+### 准备 Temporal Cloud Namespace {#prepare-temporal-cloud-namespace}
 
-For each Namespace to be migrated, create an empty Namespace in Temporal Cloud to serve as the migration target. Since
-migration cannot proceed into a Namespace that's already in use, the Namespace should remain empty (no Workflows). Apply
-any required custom search attributes.
+对于每个要迁移的Namespace，在Temporal Cloud中创建一个空的Namespace作为迁移目标。自从
+迁移无法继续到已在使用的 Namespace，Namespace 应保持为空（无 Workflow）。申请
+任何所需的自定义 Search Attribute。
 
-Be sure to adjust the [rate limits](/cloud/capacity-modes) of your Namespace as needed and create any custom search
-attributes that are required.
+请务必根据需要调整 Namespace 的 [速率限制](/cloud/capacity-modes) 并创建任何自定义搜索
+所需的属性。
 
-If you are new to Temporal Cloud, consider your desired connectivity path to your Namespace. You may connect over the
-public internet or via [private connectivity](/cloud/connectivity).
+如果您是 Temporal Cloud 的新手，请考虑您所需的 Namespace 连接路径。您可以通过以下方式连接
+公共互联网或通过 [私人连接](/cloud/connectivity)。
 
-### S2S Proxy configuration
+<a id="s2s-proxy-configuration"></a>
+### S2S代理配置 {#s2s-proxy-configuration}
 
-The [S2S Proxy](https://github.com/temporalio/s2s-proxy) requires a cloud-side inbound endpoint. Proceed with deployment
-only after receiving the endpoint from Temporal.
+[S2S代理](https://github.com/temporalio/s2s-proxy)需要云侧入站端点。继续部署
+仅在收到来自 Temporal 的端点后。
 
-The proxy provides API forwarding over a secure 2-way tunnel to Temporal Cloud. The self-hosted proxy will initiate an
-outbound connection (TCP 8233) to its cloud-side counterpart and establish the 2-way tunnel. If there are firewalls
-in-path, ensure that they permit this outbound connection.
+该代理通过安全的 2 路隧道提供 API 转发至 Temporal Cloud。自托管代理将启动
+与其云端对应方的出站连接 (TCP 8233) 并建立 2 向隧道。如果有防火墙
+在路径内，确保它们允许此出站连接。
 
-![Temporal automated migration components](/img/cloud/migration/auto-migration-components.png)
+![Temporal自动化迁移组件](/img/cloud/migration/auto-migration-components.png)
 
-Use the following procedure to deploy the proxy:
+使用以下过程来部署代理：
 
-1. Obtain the latest Docker image from the
-   [temporalio/s2s-proxy repository](https://hub.docker.com/r/temporalio/s2s-proxy/tags).
-2. Gather the mTLS certs generated in the previous step.
-3. Deploy 3 replicas of the s2s-proxy (minimum 4 CPU and 512mb memory). For Kubernetes users, use this
-   [helm chart example](https://github.com/temporalio/s2s-proxy/blob/main/charts/s2s-proxy/README.md) as a reference.
-   See the [example](https://github.com/temporalio/s2s-proxy/blob/main/charts/s2s-proxy/example.yaml) configuration file
-   as a reference. Note that it is possible to deploy more than 1 replica. If more than 1 replica is deployed, you must
-   update Temporal with the number of replicas used so that an identical number may be configured on the cloud-side.
-4. Test access using the command below. It should display the information of the migration server.
+1. 从以下位置获取最新的Docker镜像
+   [Temporalio/s2s-proxy 存储库](https://hub.docker.com/r/temporalio/s2s-proxy/tags)。
+2. 收集上一步中生成的 mTLS 证书。
+3. 部署 3 个 s2s-proxy 副本（至少 4 个 CPU 和 512mb 内存）。对于 Kubernetes 用户，请使用此
+   [舵图示例](https://github.com/temporalio/s2s-proxy/blob/main/charts/s2s-proxy/README.md)作为参考。
+   查看[例子](https://github.com/temporalio/s2s-proxy/blob/main/charts/s2s-proxy/example.yaml)配置文件
+   作为参考。请注意，可以部署超过 1 个副本。如果部署了 1 个以上的副本，您必须
+   Update Temporal 与所使用的副本数量，以便可以在云端配置相同的数量。
+4. 使用以下命令测试访问。它应该显示迁移服务器的信息。
 
 ```
 temporal operator cluster describe --address {the-outbound-external-address-of-your-proxy}
 ```
 
-Once connectivity has been verified, notify Temporal so that connectivity may be validated from the cloud-side proxy.
+验证连接后，通知 Temporal，以便可以从云端代理验证连接。
 
-There are multiple metrics available on the S2S proxy (prometheus endpoint: _proxy-pod-ip_:9090/metrics). These are
-helpful for monitoring the overall health of the proxy. In particular, the metric
+S2S 代理上有多个可用指标（prometheus 端点：_proxy-pod-ip_:9090/metrics）。这些是
+有助于监控代理的整体健康状况。特别是，度量
 
-`temporal_s2s_proxy_mux_connection_active`
+`Temporal_s2s_proxy_mux_connection_active`
 
-will monitor connectivity to the cloud-side proxy.
+将监视与云端代理的连接。
 
 
-### Modify cluster configuration
+<a id="modify-cluster-configuration"></a>
+### 修改集群配置 {#modify-cluster-configuration}
 
-The [dynamic configuration](/references/dynamic-configuration) of your self-hosted cluster must be modified to
-facilitate the migration.
+您的自托管集群的 [动态配置](/references/dynamic-configuration) 必须修改为
+方便迁移。
 
 :::warning
 
-Coordinate closely with Temporal for this step of the process.
+与 Temporal 密切协调此过程的步骤。
 
 :::
 
-Adjust the maximum connection keepalive time to match the setting in cloud.
+调整最大连接保持活动时间以匹配云中的设置。
 
 ```yaml
 frontend.keepAliveMaxConnectionAge:
   - value: '2h'
 ```
 
-If you have previously enabled [Global Namespace](/global-namespace), the Failover Version Increment must be approved by
-Temporal. This is **critical**, since the value may only be set once and cannot change.
+如果您之前已启用 [全球 Namespace](/global-namespace)，则故障转移版本增量必须获得
+Temporal。这是**关键**，因为该值只能设置一次并且不能更改。
 
-If you've never enabled Global Namespace, then you may enable it and set the Initial Failover Version to a unique value
-(between 1 and 100). Enable by updating the _clusterMetadata_ and the _dcRedirectionPolicy_. When complete, restart all
-Temporal services (frontend, history, matching, worker), starting with the frontend.
+如果您从未启用全局 Namespace，那么您可以启用它并将初始故障转移版本设置为唯一值
+（1 到 100 之间）。通过更新 _clusterMetadata_ 和 _dcRedirectionPolicy_ 来启用。完成后，重新启动所有
+Temporal 服务（前端、历史、匹配、Worker），从前端开始。
 
 ```yaml
 dcRedirectionPolicy:
@@ -248,13 +260,13 @@ clusterInformation:
     rpcAddress: _NO_CHANGE_
 ```
 
-After all services have restarted, verify the configuration using:
+所有服务重新启动后，使用以下命令验证配置：
 
 ```
 temporal operator cluster describe
 ```
 
-The following sample output is expected:
+预期输出示例如下：
 
 ```yaml
 "failoverVersionIncrement": "1000000",
@@ -262,220 +274,234 @@ The following sample output is expected:
 "isGlobalNamespaceEnabled": true
 ```
 
-## Phase 3: Testing
+<a id="phase-3-testing"></a>
+## 第三阶段：测试 {#phase-3-testing}
 
-Testing should proceed using either a newly created Namespace or else one that is considered to be non-production. In
-either case, test Workflows should be utilized. It is ideal to have a mix of completed, active, and new Workflows to use
-during testing.
+应使用新创建的 Namespace 或被视为非生产的 Namespace 继续进行测试。在
+无论哪种情况，都应使用测试 Workflow。混合使用已完成的、现用的和新的 Workflow 是理想的选择
+测试期间。
 
-Testing uses the following process:
+测试使用以下过程：
 
-1. Create or identify a non-production Namespace that can tolerate data loss in the event of issues.
-2. Create target cloud-side Namespace and add the Namespace definition to the S2S Proxy configuration.
-3. Run test Workflows against the Namespace.
-4. Perform a complete end-to-end migration for the Namespace (see remaining phases for full process).
+1. 创建或确定非生产 Namespace，它可以在出现问题时容忍数据丢失。
+2. 创建目标云端Namespace，并将Namespace定义添加到S2S代理配置中。
+3. 针对 Namespace 运行测试 Workflow。
+4. 对 Namespace 执行完整的端到端迁移（请参阅完整过程的剩余阶段）。
 
-Testing is considered successful if all data from the self-hosted deployment is migrated to cloud.
+如果自托管部署中的所有数据都迁移到云端，则认为测试成功。
 
-## Phase 4: Initiate
+<a id="phase-4-initiate"></a>
+## 第 4 阶段：启动 {#phase-4-initiate}
 
-The sections below outline the process for initiating the migration.
+以下部分概述了启动迁移的过程。
 
-### Migration start
+<a id="migration-start"></a>
+### 迁移开始 {#migration-start}
 
-Temporal will initiate the migration. During this process, the self-hosted Namespace remains active while the cloud
-Namespace becomes passive. Workflows are replicated from the self-hosted Namespace to the cloud Namespace. Once cloud
-Namespace has fully synced with self-hosted Namespace, migration is ready for handover.
+Temporal 将启动迁移。在此过程中，自托管 Namespace 保持活动状态，而云
+Namespace 变为被动。 Workflow 从自托管 Namespace 复制到云 Namespace。曾经云
+Namespace已与自托管Namespace完全同步，迁移已准备好移交。
 
-The following [command](https://pkg.go.dev/github.com/temporalio/tcld#readme-start-a-migration) is used to start the
-migration:
+下面的[命令](https://pkg.go.dev/github.com/temporalio/tcld#readme-start-a-migration)用于启动
+迁移：
 
 ```
 tcld migration start --endpoint-id <endpoint-id> --source-namespace <source-namespace> --target-namespace <target-namespace>
 ```
 
-### Monitor
+＃＃＃ 监视器
 
-During the initial sync, it is important to monitor the overall process to ensure progress is being made. While Temporal
-will monitor from the cloud-side, progress may also be monitored from the self-hosted side using the
-_replication_stream_stuck_ metric.
+在初始同步期间，监控整个过程以确保取得进展非常重要。而Temporal
+将从云端进行监控，也可以使用以下方式从自托管端监控进度
+_replication_stream_stuck_ 指标。
 
-The following [command](https://pkg.go.dev/github.com/temporalio/tcld#readme-get-a-migration) may also be used to
-monitor the migration progress:
+以下 [命令](https://pkg.go.dev/github.com/temporalio/tcld#readme-get-a-migration) 也可用于
+监控迁移进度：
 
 ```
 tcld migration get --id <migration-id>
 ```
 
-### Handover-to-cloud
+<a id="monitor"></a>
+### 切换到云端 {#monitor}
 
-Once the sync process has completed, Temporal will flip the roles of the self-hosted and cloud Namespace. At this point,
-the cloud becomes active and the self-hosted Namespace becomes passive. Workflows are then replicated from the cloud to
-the self-hosted server.
+同步过程完成后，Temporal 将翻转自托管和云 Namespace 的角色。此时，
+云变为主动，自托管 Namespace 变为被动。然后将 Workflow 从云端复制到
+自托管服务器。
 
-The following [command](https://pkg.go.dev/github.com/temporalio/tcld#readme-perform-handover-during-a-migration) is
-used to trigger the handover:
+以下[命令](https://pkg.go.dev/github.com/temporalio/tcld#readme-perform-handover-during-a-migration)是
+用于触发切换：
 
 ```
 tcld migration handover --id <migration-id> --to-replica-id <to-replica-id>
 ```
 
-When using this command, replace `<to-replica-id>` with `cloud` when handing over to Temporal Cloud. Replace
-`<to-replica-id>` with `on-prem` when handing back to the self-hosted setup.
+使用该命令时，在移交至Temporal Cloud时将`<to-replica-id>`替换为`cloud`。更换
+返回自托管设置时，`<to-replica-id>` 和 `on-prem`。
 
-## Phase 5: Finalize
+<a id="handover-to-cloud"></a>
+## 第 5 阶段：最终确定 {#handover-to-cloud}
 
-### Final validation
+<a id="phase-5-finalize"></a>
+### 最终验证 {#phase-5-finalize}
 
-Use the following checklist prior to finalizing the migration:
+在完成迁移之前使用以下清单：
 
-- Confirm that workers can access Namespaces. Either via public internet or [private connectivity](/cloud/connectivity).
-- Understand how to access metrics for your Namespace on Temporal Cloud.
-- Monitor general Workflow metrics (schedule to start latency, start v.s. completion rate, sync match rate, etc).
-- Learn how [capacity management](/cloud/capacity-modes) works in Temporal Cloud.
-- Plan for a worker tuning session - performance change between Temporal Cloud v.s. self-hosted cluster, which could
-  lead to unexpected symptoms and optimizations.
-- Know how to reach out to your Temporal Solutions Architect (SA) and Account Executive (AE) for assistance.
+- 确认Worker可以访问Namespace。通过公共互联网或 [私人连接](/cloud/connectivity)。
+- 了解如何在 Temporal Cloud 上访问 Namespace 的指标。
+- 监控一般 Workflow 指标（Schedule 启动延迟、启动与完成率、同步匹配率等）。
+- 了解 [容量管理](/cloud/capacity-modes) 在 Temporal Cloud 中的工作原理。
+- 计划 Worker 调整会话 - Temporal Cloud 与 Temporal Cloud 之间的性能变化自托管集群，可以
+  导致意想不到的症状和优化。
+- 了解如何联系您的 Temporal 解决方案架构师 (SA) 和客户主管 (AE) 寻求帮助。
 
-### Confirm complete
+<a id="final-validation"></a>
+### 确认完成 {#final-validation}
 
-Once a Namespace has been transferred to the cloud and validated, the migration will be completed. Note that this step
-is final and may not be undone. Once performed, Workflow replication from the cloud Namespace to the self-hosted server
-is halted.
+一旦 Namespace 传输到云端并经过验证，迁移就会完成。注意这一步
+是最终的，可能无法撤消。执行后，Workflow 从云 Namespace 复制到自托管服务器
+已停止。
 
-The following [command](https://pkg.go.dev/github.com/temporalio/tcld#readme-confirm-a-migration) is used to confirm the
-migration:
+下面的[命令](https://pkg.go.dev/github.com/temporalio/tcld#readme-confirm-a-migration)用于确认
+迁移：
 
 ```
 tcld migration confirm --id <migration-id>
 ```
 
-or to [abort](https://pkg.go.dev/github.com/temporalio/tcld#readme-abort-a-migration) and roll-back changes without
-impacting your Workflows, if needed:
+或 [中止](https://pkg.go.dev/github.com/temporalio/tcld#readme-abort-a-migration) 并回滚更改，无需
+如果需要，影响您的 Workflow：
 
 ```
 tcld migration abort --id <migration-id>
 ```
 
-### Transfer clients to cloud
+<a id="confirm-complete"></a>
+### 将客户端转移到云端 {#confirm-complete}
 
-There are two options for switching Temporal clients to the cloud.
+有两种选项可将 Temporal CLIents 切换到云。
 
-#### Option 1 (recommended)
+<a id="transfer-clients-to-cloud"></a>
+#### 选项 1（推荐） {#transfer-clients-to-cloud}
 
-Deploy two sets of Temporal clients: one pointing to your Temporal server and one to the Cloud Namespace endpoint. This
-is the recommended option since your Workflows will continue to make progress during the handover, even if your cloud
-Temporal client is unable to access the cloud (due to misconfiguration, for example). The process is as follows:
+部署两组 Temporal CLIent：一组指向您的 Temporal Server，一组指向云 Namespace 端点。这个
+是推荐的选项，因为您的 Workflow 在移交期间将继续取得进展，即使您的云
+Temporal CLIent 无法访问云（例如由于配置错误）。流程如下：
 
-1. Direct your cloud-based Temporal clients to the cloud Namespace endpoint. Initially, these clients will connect and
-   send Poll requests but will not receive any tasks.
-2. Start migration. Your self-hosted Namespace is active while your cloud Namespace is passive (or standby). Your cloud
-   Temporal clients can begin receiving tasks, but all requests from cloud clients to the Cloud Namespace will
-   automatically forward from the cloud to your self-hosted server.
-3. Hand over Namespace to the cloud. Your cloud Namespace becomes active and your self-hosted Namespace becomes passive.
-   All requests from your self-hosted Temporal clients will automatically forward from your server to the cloud.
-4. Complete migration. Your self-hosted Temporal clients will no longer receive any tasks from your server, allowing you
-   to stop these clients.
+1. 将基于云的 Temporal CLIent 定向到云 Namespace 端点。最初，这些客户端将连接并
+   发送 Poll 请求但不会接收任何任务。
+2. 开始迁移。您的自托管 Namespace 处于活动状态，而您的云 Namespace 处于被动（或备用）状态。你的云
+   Temporal CLIents 可以开始接收任务，但从云客户端到云 Namespace 的所有请求都将
+   自动从云端转发到您的自托管服务器。
+3、将Namespace交给云端。您的云 Namespace 变为主动，而您的自托管 Namespace 变为被动。
+   来自自托管 Temporal CLIents 的所有请求都会自动从您的服务器转发到云。
+4. 完成迁移。您的自托管 Temporal CLIents 将不再从您的服务器接收任何任务，从而允许您
+   来阻止这些客户。
 
-#### Option 2
+<a id="option-1-recommended"></a>
+#### 选项 2 {#option-1-recommended}
 
-Deploy one set of Temporal clients and switch the Namespace endpoint during migration. With this option, if your workers
-are misconfigured during the switch, then it is possible that Workflows can stop making progress. It is important to
-ensure that all workers maintain connectivity to cloud to avoid this scenario. The process is as follows:
+部署一组 Temporal CLIent 并在迁移期间切换 Namespace 端点。使用此选项，如果您的 Worker
+如果在切换过程中配置错误，则 Workflow 可能会停止前进。重要的是
+确保所有 Worker 保持与云的连接以避免这种情况。流程如下：
 
-1. Start migration.
-2. Switch your Temporal clients to point to the cloud Namespace endpoint. Requests from your Temporal clients will
-   automatically forward from the cloud to your server. Alternatively, you may switch Temporal clients to the cloud
-   Namespace endpoint after handover.
-3. Hand over Namespace to the cloud. Requests from your Temporal clients will now be served by the cloud and will not be
-   forwarded to your server.
-4. Confirm migration completion.
+1. 开始迁移。
+2. 将您的 Temporal CLIents 切换为指向云 Namespace 端点。来自您的 Temporal CLIents 的请求将
+   自动从云端转发到您的服务器。或者，您可以将 Temporal CLIents 切换到云端
+   Namespace 切换后的端点。
+3、将Namespace交给云端。来自您的 Temporal CLIents 的请求现在将由云提供服务，并且不会被
+   转发到您的服务器。
+4. 确认迁移完成。
 
-## Additional notes
+<a id="option-2"></a>
+## 附加说明 {#option-2}
 
-### Limitations
+<a id="additional-notes"></a>
+### 限制 {#additional-notes}
 
-The following are known limitations.
+以下是已知的限制。
 
-- OSS server versions 1.22 or newer are required. Refer to the
-  [upgrade](/self-hosted-guide/upgrade-server#upgrade-server) procedure as needed.
-- History shard counts must be a multiple of two.
-- If you have multiple self-hosted servers and they are all configured with the same cluster name (by default Temporal
-  uses 'active' as cluster name), they cannot be connected to a single migration server simultaneously due to cluster
-  name collision. There are 2 available options:
-  1. Migrate one server at a time using a single migration server.
-  2. Create multiple migration servers (one for each self-hosted server) if you need to migrate all servers
-     simultaneously.
-- If you are using multi-cluster replication in your self-hosted setup and have previously failed over Namespaces, then
-  this may impact your eligibility for automated migration. Specifically, whenever Global Namespace has been previously
-  enabled the following restrictions apply:
-  1. Initial Failover Version must be less than or equal to 1,000,000
-  2. Failover Version Increment must be a divisor of 1,000,000
-- OSS supports cross-Namespace commands (e.g., parent-child, SignalExternal, CancelExternal) through the
-  `system.enableCrossNamespaceCommands` configuration. This configuration is disabled on Temporal Cloud. The
-  `system.enableCrossNamespaceCommands` configuration must be disabled, and code using cross-Namespace calls must be
-  updated or removed prior to migration.
+- 需要 OSS 服务器版本 1.22 或更高版本。请参阅
+  [升级](/self-hosted-guide/upgrade-server#upgrade-server) 程序根据需要。
+- 历史分片计数必须是 2 的倍数。
+- 如果您有多个自托管服务器，并且它们都配置有相同的集群名称（默认为 Temporal
+  使用“active”作为集群名称），由于集群的原因，它们无法同时连接到单个迁移服务器
+  名称冲突。有 2 个可用选项：
+  1. 使用单个迁移服务器一次迁移一台服务器。
+  2. 如果需要迁移所有服务器，请创建多个迁移服务器（每个自托管服务器一个）
+     同时。
+- 如果您在自托管设置中使用多集群复制并且之前曾对 Namespace 进行过故障转移，则
+  这可能会影响您自动迁移的资格。具体来说，每当 Global Namespace 之前已
+  启用以下限制适用：
+  1.初始故障转移版本必须小于或等于1,000,000
+  2. 故障转移版本增量必须是 1,000,000 的除数
+- OSS通过以下方式支持跨Namespace命令（例如，父子、SignalExternal、CancelExternal）
+  `system.enableCrossNamespaceCommands`配置。此配置在 Temporal Cloud 上被禁用。的
+  必须禁用 `system.enableCrossNamespaceCommands` 配置，并且必须禁用使用跨 Namespace 调用的代码
+  Updated 或在迁移之前删除。
 
-### Special dynamic configuration for Version 1.22.x-1.23.x
+###版本1.22.x-1.23.x的特殊动态配置
 
-Temporal versions 1.22.x and 1.23.x include support for stream-based replication, but it is disabled by default. Since
-those releases, stream-based replication has been validated as more reliable than the poll-based replication that
-remained the default in 1.22 and 1.23.
+Temporal 版本 1.22.x 和 1.23.x 包括对基于流的复制的支持，但默认情况下处于禁用状态。自从
+在这些版本中，基于流的复制已被验证为比基于轮询的复制更可靠。
+1.22 和 1.23 中仍保留默认值。
 
-When preparing for an S2C migration on these versions, configure the following dynamic settings to enable stream-based
-replication:
+当准备在这些版本上进行 S2C 迁移时，请配置以下动态设置以启用基于流的
+复制：
 
 ```yaml
 history.enableReplicationStream:
   - value: true
 ```
 
-Enabling this configuration will require a restart of your history pods.
+启用此配置将需要重新启动历史记录 Pod。
 
-## Frequently asked questions
+<a id="limitations"></a>
+## 常见问题 {#limitations}
 
-**Why does it matter if custom search attributes are used?**
+**使用自定义 Search Attribute 为什么很重要？**
 
-Custom search attributes must be mapped to the Namespace in Temporal Cloud. This process differs depending on the type
-of data store used for visibility.
+自定义 Search Attribute 必须映射到 Temporal Cloud 中的 Namespace。此过程因类型而异
+用于 Visibility 的数据存储。
 
-**What Workflows are migrated by default?**
+**默认迁移哪些 Workflow？**
 
-Open workflows are always migrated. You may specify a date range for closed Workflows. Limiting the time range for
-closed Workflows will greatly reduce the amount of time it takes to migrate a Namespace. Your cloud-side Namespace must
-be configured with your desired retention period prior to starting the migration.
+打开的 Workflow 始终会迁移。您可以指定已关闭的 Workflow 的日期范围。限制时间范围
+关闭 Workflow 将大大减少迁移 Namespace 所需的时间。您的云端Namespace必须
+在开始迁移之前配置您所需的保留期。
 
-**I have a long retention period for my Workflows. Is this compatible with Temporal Cloud?**
+**我的 Workflow 的保留期很长。这与 Temporal Cloud 兼容吗？**
 
-Occasionally, self-hosted [retention periods](/temporal-service/temporal-server#retention-period) are in excess of what
-is [supported](/cloud/limits#default-retention-period) in Temporal Cloud. In these cases it is recommended to utilize
-[archival](/temporal-service/archival) to store closed Workflows that cannot be migrated. In general, archival is
-recommended over large retention periods since the extra data can stress the persistence layer of the system.
+有时，自托管 [保留期限](/temporal-service/temporal-server#retention-period) 会超出
+是 Temporal Cloud 中的 [支持](/cloud/limits#default-retention-period)。在这些情况下，建议使用
+[档案的](/temporal-service/archival) 用于存储无法迁移的关闭的 Workflow。一般来说，归档是
+建议在较长的保留期内使用，因为额外的数据会给系统的持久层带来压力。
 
-**I am using payload encryption in my self-hosted Temporal cluster. Is this supported in cloud?**
+**我在自托管 Temporal 集群中使用有效负载加密。云支持吗？**
 
-Yes. If payloads are already [encrypted](/payload-codec#encryption) in your self-hosted server via data converter, then 
-they will remain encrypted during and after migration.
+是的。如果有效负载已通过 Data Converter 在您的自托管服务器中为 [加密的](/payload-codec#encryption)，则 
+它们在迁移期间和之后将保持加密状态。
 
 
-**I would like to enable payload encryption as part of the migration. Is this supported?**
+**我想在迁移过程中启用有效负载加密。支持吗？**
 
-Enabling payload encryption as part of the migration is not currently supported. If encryption is required, then the best
-approach is to enable it prior to migrating. 
+目前不支持在迁移过程中启用负载加密。如果需要加密的话最好
+方法是在迁移之前启用它。
 
-## How to gather self-hosted metrics
+<a id="special-dynamic-configuration-for-version-122x-123x"></a>
+## 如何收集自托管指标 {#special-dynamic-configuration-for-version-122x-123x}
 
-Temporal Server (version > 1.17) provides an [action](/cloud/pricing#action) metric. You may use Grafana to capture and
-display this metric. Use this [sample](https://github.com/temporalio/dashboards/blob/master/server/server-general.json)
-dashboard as a reference. To determine actions per second (APS) you may use the following promql queries.
+Temporal Server（版本 > 1.17）提供 [行动](/cloud/pricing#action) 指标。您可以使用 Grafana 来捕获和
+显示该指标。使用这个[样本](https://github.com/temporalio/dashboards/blob/master/server/server-general.json)
+仪表板作为参考。要确定每秒操作数 (APS)，您可以使用以下 promql 查询。
 
 `sum (rate(action{service_name="frontend"}[1m]))`
 
-`sum (rate(action{service_name="frontend"}[1m]))  by (exported_namespace)`
+`sum (rate(action{service_name="frontend"}[1m]))  by (exported_Namespace)`
 
-The first query will calculate total APS. The second will isolate the metric per Namespace.
+第一个 Query 将计算总 APS。第二个将根据 Namespace 隔离指标。
 
-For Datadog, the following widget will calculate actions per second:
+对于 Datadog，以下小部件将计算每秒的操作：
 
 ```
 {

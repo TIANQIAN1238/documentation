@@ -1,7 +1,7 @@
 ---
 id: braintrust
-title: Braintrust integration
-sidebar_label: Braintrust
+title: "智囊团整合"
+sidebar_label: "智囊团"
 toc_max_heading_level: 2
 keywords:
   - ai
@@ -14,57 +14,59 @@ tags:
   - Braintrust
   - Python SDK
   - Temporal SDKs
-description:
+description: Add LLM observability and prompt management to Python Workflows using the Temporal Python SDK and Braintrust.
   Add LLM observability and prompt management to Python Workflows using the Temporal Python SDK and Braintrust.
 ---
 
-Temporal's integration with [Braintrust](https://braintrust.dev) gives you full observability into your AI agent
-Workflows—tracing every LLM call, managing prompts without code deploys, and tracking costs across models.
+Temporal 与 [智囊团](https://braintrust.dev) 的集成使您能够全面观察您的 AI 代理
+Workflows — 跟踪每个 LLM 调用，无需部署代码即可管理提示，并跟踪跨模型的成本。
 
-When building AI agents with Temporal, you get durable execution: automatic retries, state persistence, and the ability
-to recover from failures mid-workflow. Braintrust adds the observability layer: see exactly what your agents are doing,
-iterate on prompts in a UI, and measure whether changes improve outcomes.
+使用 Temporal 构建 AI 代理时，您可以获得持久执行：自动重试、状态持久性和能力
+从 Workflow 中期的故障中恢复。 Braintrust 添加了可观察层：准确查看您的代理正在做什么，
+迭代 UI 中的提示，并衡量更改是否会改善结果。
 
-The integration connects these capabilities with minimal code changes. Every Workflow and Activity becomes a span in
-Braintrust, and every LLM call is traced with inputs, outputs, tokens, and latency.
+该集成通过最少的代码更改将这些功能连接起来。每个 Workflow 和 Activity 都成为一个跨度
+Braintrust，每个 LLM 调用都会通过输入、输出、令牌和延迟进行跟踪。
 
 :::info
 
-The Temporal Python SDK integration with Braintrust is currently in
-[Public Preview](/evaluate/development-production-features/release-stages#public-preview). Refer to the
-[Temporal product release stages guide](/evaluate/development-production-features/release-stages) for more information.
+Temporal Python SDK 与 Braintrust 的集成目前正在进行中
+[公开预览](/evaluate/development-production-features/release-stages#public-preview)。请参阅
+[Temporal 产品发布阶段指南](/evaluate/development-production-features/release-stages) 了解更多信息。
 
 :::
 
-All code snippets in this guide are taken from the
-[deep research sample](https://github.com/braintrustdata/braintrust-cookbook/blob/main/examples/TemporalDeepResearch/TemporalDeepResearch.mdx). Refer to the sample for the
-complete code and run it locally.
+本指南中的所有代码片段均取自
+[深度研究样本](https://github.com/braintrustdata/braintrust-cookbook/blob/main/examples/temporalDeepResearch/temporalDeepResearch.mdx)。请参阅示例
+完成代码并在本地运行。
 
-## Prerequisites
+<a id="prerequisites"></a>
+## 先决条件 {#prerequisites}
 
-- This guide assumes you are already familiar with Braintrust. If you aren't, refer to the
-  [Braintrust documentation](https://www.braintrust.dev/docs) for more details.
-- If you are new to Temporal, we recommend reading [Understanding Temporal](/evaluate/understanding-temporal) or taking
-  the [Temporal 101](https://learn.temporal.io/courses/temporal_101/) course.
-- Ensure you have set up your local development environment by following the
-  [Set up your local development environment](/develop/python/set-up-your-local-python) guide. When you're done, leave the
-  Temporal Development Server running if you want to test your code locally.
+- 本指南假设您已经熟悉 Braintrust。如果不是，请参阅
+  [智囊团文档](https://www.braintrust.dev/docs) 了解更多详情。
+- 如果您是 Temporal 的新手，我们建议您阅读 [了解 Temporal](/evaluate/understanding-temporal) 或采取
+  [Temporal 101](https://learn.temporal.io/courses/temporal_101/) 课程。
+- 确保您已按照以下步骤设置本地开发环境
+  [设置本地开发环境](/develop/python/set-up-your-local-python) 指南。完成后，离开
+  如果您想在本地测试代码，则运行 Temporal 开发服务器。
 
-## Configure Workers to use Braintrust
+<a id="configure-workers-to-use-braintrust"></a>
+## 配置 Worker 以使用 Braintrust {#configure-workers-to-use-braintrust}
 
-Workers execute the code that defines your Workflows and Activities. To trace Workflow and Activity execution in
-Braintrust, add the `BraintrustPlugin` to your Worker.
+Worker 执行定义 Workflow 和活动的代码。跟踪 Workflow 和 Activity 的执行
+Braintrust，将 `BraintrustPlugin` 添加到您的 Worker 中。
 
-Follow the steps below to configure your Worker.
+请按照以下步骤配置您的 Worker。
 
-1. Install the Braintrust SDK with Temporal support.
+1. 安装支持 Temporal 的 Braintrust SDK。
 
    ```bash
    uv pip install "braintrust[temporal]"
    ```
 
-2. Initialize the Braintrust logger before creating your Worker. The logger must be initialized first so that spans are
-   properly connected.
+2. 在创建 Worker 之前初始化 Braintrust 记录器。必须首先初始化记录器，以便跨度
+   正确连接。
 
    ```python
    import os
@@ -74,7 +76,7 @@ Follow the steps below to configure your Worker.
    init_logger(project=os.environ.get("BRAINTRUST_PROJECT", "my-project"))
    ```
 
-3. Add the `BraintrustPlugin` to your Worker.
+3. 将 `BraintrustPlugin` 添加到 Worker。
 
    ```python
    from braintrust.contrib.temporal import BraintrustPlugin
@@ -89,8 +91,8 @@ Follow the steps below to configure your Worker.
    )
    ```
 
-4. Add the plugin to your Temporal Client as well. This enables span context propagation, linking client code to the
-   Workflows it starts.
+4. 将该插件也添加到您的 Temporal CLIent 中。这使得跨度上下文传播成为可能，将客户端代码链接到
+   Workflow 启动。
 
    ```python
    from temporalio.client import Client
@@ -102,8 +104,8 @@ Follow the steps below to configure your Worker.
    )
    ```
 
-5. Run the Worker. Ensure the Worker process has access to your Braintrust API key via the `BRAINTRUST_API_KEY`
-   environment variable.
+5. 运行 Worker。确保 Worker 进程可以通过 `BRAINTRUST_API_KEY` 访问您的 Braintrust API 密钥
+   环境变量。
 
    ```bash
    export BRAINTRUST_API_KEY="your-api-key"
@@ -112,15 +114,16 @@ Follow the steps below to configure your Worker.
 
    :::tip
 
-   You only need to provide API credentials to the Worker process. The client application that starts Workflow
-   Executions doesn't need the Braintrust API key.
+您只需向 Worker 进程提供 API 凭据。启动 Workflow 的客户端应用程序
+   执行不需要 Braintrust API 密钥。
 
    :::
 
-## Trace LLM calls with wrap_openai
+<a id="trace-llm-calls-with-wrapopenai"></a>
+## 使用wrap_openai 跟踪LLM 调用 {#trace-llm-calls-with-wrapopenai}
 
-The simplest way to trace LLM calls is to wrap your OpenAI client. Every call through the wrapped client automatically
-creates a span in Braintrust with inputs, outputs, token counts, and latency.
+跟踪 LLM 调用的最简单方法是包装 OpenAI 客户端。自动通过包装的客户端进行每次调用
+在 Braintrust 中创建一个包含输入、输出、令牌计数和延迟的跨度。
 
 ```python
 from braintrust import wrap_openai
@@ -131,7 +134,7 @@ from openai import AsyncOpenAI
 client = wrap_openai(AsyncOpenAI(max_retries=0))
 ```
 
-Use this client in your Activities:
+在您的活动中使用此客户端：
 
 ```python
 from temporalio import activity
@@ -151,7 +154,7 @@ async def invoke_model(prompt: str) -> str:
     return response.choices[0].message.content
 ```
 
-After running a Workflow, you'll see a trace hierarchy in Braintrust:
+运行 Workflow 后，您将在 Braintrust 中看到跟踪层次结构：
 
 ```
 my-workflow-request (client span)
@@ -160,9 +163,10 @@ my-workflow-request (client span)
         └── Chat Completion (gpt-4o)
 ```
 
-## Add custom spans for application context
+<a id="add-custom-spans-for-application-context"></a>
+## 为应用程序上下文添加自定义跨度 {#add-custom-spans-for-application-context}
 
-Add your own spans to capture business-level context like user queries, workflow inputs, and final outputs.
+添加您自己的跨度以捕获业务级上下文，例如用户查询、Workflow 输入和最终输出。
 
 ```python
 from braintrust import start_span
@@ -182,17 +186,18 @@ async def run_research(query: str):
         return result
 ```
 
-## Manage prompts with load_prompt
+<a id="manage-prompts-with-loadprompt"></a>
+## 使用 load_prompt 管理提示 {#manage-prompts-with-loadprompt}
 
-Braintrust lets you manage prompts in a UI and deploy changes without code deploys. The workflow is:
+Braintrust 允许您管理 UI 中的提示并部署更改，而无需部署代码。 Workflow 是：
 
-1. **Develop** prompts in code, see results in Braintrust traces
-2. **Create** a prompt in the Braintrust UI from your best version
-3. **Evaluate** different versions using Braintrust's eval tools
-4. **Deploy** by pointing your code at the Braintrust prompt
-5. **Iterate** in the UI—changes go live without code deploys
+1. **在代码中开发**提示，在 Braintrust 跟踪中查看结果
+2. **在 Braintrust UI 中使用您的最佳版本创建**提示
+3. **使用 Braintrust 的评估工具评估**不同版本
+4. 通过将您的代码指向 Braintrust 提示来进行**部署**
+5. UI 中的**迭代** — 更改无需部署代码即可生效
 
-To load a prompt from Braintrust in your Activity:
+要在 Activity 中加载来自 Braintrust 的提示：
 
 ```python
 import braintrust
@@ -231,8 +236,8 @@ async def invoke_model(prompt_slug: str, user_input: str) -> str:
 
 :::tip
 
-Provide a fallback prompt in your code for resilience. If Braintrust is unavailable, your Workflow continues with the
-hardcoded prompt.
+在代码中提供后备提示以提高弹性。如果 Braintrust 不可用，您的 Workflow 将继续
+硬编码的提示。
 
 ```python
 DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant."
@@ -247,20 +252,21 @@ except Exception as e:
 
 :::
 
-## Example: Deep Research Agent
+<a id="example-deep-research-agent"></a>
+## 示例：深度研究代理 {#example-deep-research-agent}
 
-The [deep research sample](https://github.com/braintrustdata/braintrust-cookbook/blob/main/examples/TemporalDeepResearch/TemporalDeepResearch.mdx) demonstrates a complete AI
-agent that:
+[深度研究样本](https://github.com/braintrustdata/braintrust-cookbook/blob/main/examples/temporalDeepResearch/temporalDeepResearch.mdx) 展示了完整的 AI
+代理：
 
-- Plans research strategies
-- Generates search queries
-- Executes web searches in parallel
-- Synthesizes findings into comprehensive reports
+- 计划研究策略
+- 生成搜索查询
+- 并行执行网络搜索
+- 将调查结果综合成综合报告
 
-The sample shows all integration patterns: wrapped OpenAI client, BraintrustPlugin on Worker and Client, custom spans,
-and prompt management with `load_prompt()`.
+该示例显示了所有集成模式：包装的 OpenAI 客户端、Worker 和客户端上的 BraintrustPlugin、自定义跨度、
+并通过 `load_prompt()` 进行即时管理。
 
-To run the sample:
+运行示例：
 
 ```bash
 # Terminal 1: Start Temporal

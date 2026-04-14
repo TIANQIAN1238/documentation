@@ -1,0 +1,63 @@
+---
+id: child-workflows
+title: Child Workflows - Ruby SDK
+sidebar_label: Child Workflows
+description: 启动子 Workflow Execution 并使用 Temporal Ruby SDK 设置父关闭策略。
+keywords:
+  - start child workflow execution
+  - temporal ruby sdk
+  - parent close policy
+  - child workflow
+  - child workflow options
+  - signal child workflow
+  - ruby examples
+tags:
+  - Workflows
+  - Ruby SDK
+  - Temporal SDKs
+  - Child Workflows
+---
+
+此页面显示如何执行以下操作：
+
+- 使用 Ruby SDK [启动子 Workflow Execution](#child-Workflows)
+- 使用 Ruby SDK [设置父关闭策略](#parent-close-policy)
+
+## 启动子 Workflow Execution {#child-Workflows}
+
+[Child Workflow Execution](/child-Workflows) 是使用 Child Workflow API 从另一个 Workflow 内部生成 Scheduled 的 Workflow Execution。
+
+使用 Child Workflow API 时，Child Workflow 相关事件 ([StartChildWorkflowExecutionInitiated](/references/events#startchildWorkflowexecutionstarted)、[ChildWorkflowExecutionStarted](/references/events#childWorkflowexecutionstarted)、 [ChildWorkflowExecutionCompleted](/references/events#childWorkflowexecutioncompleted) 等...）记录在 Workflow Execution Event History 中。
+
+始终阻止进度，直到 [ChildWorkflowExecutionStarted](/references/events#childWorkflowexecutionstarted) 事件记录到 Event History，以确保子 Workflow Execution 已启动。
+此后，可以使用 Child Workflow 选项中设置的_Abandon_ [Parent Close Policy](/parent-close-policy) 放弃子 Workflow Execution。
+
+要在 Ruby 中生成子 Workflow Execution，请使用“execute_child_Workflow”方法来启动 Child Workflow 并等待完成或
+使用“start_child_Workflow”方法启动 Child Workflow 并返回其句柄。
+如果您想在启动后执行某些操作，或者获取 Workflow/运行 ID，或者能够在运行时对其进行 Signal，则此功能非常有用。
+
+:::note
+
+`execute_child_Workflow` 是 `start_child_Workflow(...).result` 的辅助方法。
+
+:::
+
+```ruby
+Temporalio::Workflow.execute_child_workflow(MyChildWorkflow, 'my-workflow-arg')
+```
+
+## 设置父关闭策略 {#parent-close-policy}
+
+[父关闭策略](/parent-close-policy) 确定如果子 Workflow Execution 的父更改为关闭状态（已完成、失败或超时），子 Workflow Execution 会发生什么情况。
+
+默认“父关闭策略”选项设置为终止子 Workflow Execution。
+
+为“execute_child_Workflow”或“start_child_Workflow”设置“parent_close_policy”参数，以指定父 Workflow 关闭时 Child Workflow 的行为。
+
+```ruby
+Temporalio::Workflow.execute_child_workflow(
+  MyChildWorkflow,
+  'my-workflow-arg',
+  parent_close_policy: Temporalio::Workflow::ParentClosePolicy::ABANDON
+)
+```

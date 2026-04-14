@@ -1,7 +1,7 @@
 ---
 id: data-encryption
-title: Payload encryption - Python SDK
-sidebar_label: Payload encryption
+title: "有效负载加密 - Python SDK"
+sidebar_label: "有效负载加密"
 slug: /develop/python/data-handling/data-encryption
 toc_max_heading_level: 2
 tags:
@@ -10,21 +10,22 @@ tags:
   - Codec Server
   - Python SDK
   - Temporal SDKs
-description: Encrypt data sent to and from the Temporal Service using a custom Payload Codec in the Python SDK.
+description: "使用 Python SDK 中的自定义有效负载编解码器对发送到 Temporal 服务和从 Temporal 服务发送的数据进行加密。"
 ---
 
-Payload Codecs transform `Payload` bytes after serialization (by the Payload Converter) and before the data is sent to the Temporal Service.
-Unlike Payload Converters, codecs run outside the Workflow sandbox, so they can use non-deterministic operations and call external services.
+有效负载编解码器在序列化（由有效负载转换器）之后和数据发送到 Temporal 服务之前转换 `Payload` 字节。
+与有效负载转换器不同，编解码器在 Workflow 沙箱外部运行，因此它们可以使用非确定性操作并调用外部服务。
 
-The most common use case is encryption: encrypting payloads before they reach the Temporal Service so that sensitive data is never stored in plaintext.
+最常见的用例是加密：在有效负载到达 Temporal 服务之前对其进行加密，以便敏感数据永远不会以明文形式存储。
 
-## PayloadCodec interface
+<a id="payloadcodec-interface"></a>
+## PayloadCodec接口 {#payloadcodec-interface}
 
-Implement a `PayloadCodec` with `encode()` and `decode()` methods.
-These should loop through all of a Workflow's payloads, perform your marshaling, compression, or encryption steps in order, and set an `"encoding"` metadata field.
+使用 `encode()` 和 `decode()` 方法实现 `PayloadCodec`。
+这些应该循环遍历 Workflow 的所有有效负载，按顺序执行编组、压缩或加密步骤，并设置 `"encoding"` 元数据字段。
 
-In this example, the `encode` method compresses a payload using Python's [cramjam](https://github.com/milesgranger/cramjam) library to provide `snappy` compression.
-The `decode()` function implements the `encode()` logic in reverse:
+在此示例中，`encode` 方法使用 Python 的 [补习班](https://github.com/milesgranger/cramjam) 库压缩有效负载以提供 `snappy` 压缩。
+`decode()` 函数逆向实现 `encode()` 逻辑：
 
 ```python
 import cramjam
@@ -53,9 +54,10 @@ class EncryptionCodec(PayloadCodec):
         return ret
 ```
 
-## Configure the codec on the Data Converter
+<a id="configure-the-codec-on-the-data-converter"></a>
+## 在 Data Converter 上配置编解码器 {#configure-the-codec-on-the-data-converter}
 
-Add a `data_converter` parameter to your `Client.connect()` options that overrides the default converter with your Payload Codec:
+将 `data_converter` 参数添加到您的 `Client.connect()` 选项中，该参数将使用您的有效负载编解码器覆盖默认转换器：
 
 ```python
 from codec import EncryptionCodec
@@ -68,10 +70,10 @@ client = await Client.connect(
 )
 ```
 
-For reference, see the [Encryption](https://github.com/temporalio/samples-python/tree/main/encryption) sample.
+作为参考，请参阅 [加密](https://github.com/temporalio/samples-python/tree/main/encryption) 示例。
 
 ## Codec Server
 
-A Codec Server is an HTTP server that runs your `PayloadCodec` remotely, so that the Temporal Web UI and CLI can decode encrypted payloads for display.
+Codec Server 是远程运行 `PayloadCodec` 的 HTTP 服务器，以便 Temporal Web UI 和 CLI 可以解码加密的有效负载以进行显示。
 
-For more information, see [Codec Server](/codec-server).
+有关详细信息，请参阅 [Codec Server](/codec-server)。

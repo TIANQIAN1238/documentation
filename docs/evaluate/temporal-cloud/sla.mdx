@@ -1,8 +1,8 @@
 ---
 id: sla
-title: Service Level Agreement (SLA) - Temporal Cloud
-sidebar_label: SLA
-description: Temporal Cloud offers two availability levels; 99.99% uptime for standard and High Availability feature deployments, with SLAs guaranteeing 99.9% and 99.99% against service errors, respectively.
+title: "服务水平协议 (SLA) - Temporal Cloud"
+sidebar_label: "SLA"
+description: "Temporal Cloud 提供两个可用性级别；标准和高可用性功能部署的正常运行时间为 99.99%，SLA 分别保证 99.9% 和 99.99% 的服务错误率。"
 slug: /cloud/sla
 toc_max_heading_level: 4
 keywords:
@@ -14,25 +14,25 @@ tags:
   - Support
 ---
 
-**What is Temporal Cloud's Service Level Agreement? SLA?**
+**Temporal Cloud 的服务水平协议是什么？ SLA？**
 
-Temporal Cloud provides two availability levels: the [service availability](https://en.wikipedia.org/wiki/Reliability,_availability_and_serviceability) and the contractual [service level agreement](https://en.wikipedia.org/wiki/Service-level_agreement) (SLA).
-These levels are set by your deployment mode:
+Temporal Cloud 提供两个可用性级别：[服务可用性](https://en.wikipedia.org/wiki/Reliability,_availability_and_serviceability) 和合同 [服务水平协议](https://en.wikipedia.org/wiki/Service-level_agreement) (SLA)。
+这些级别由您的部署模式设置：
 
-- **Temporal Cloud with standard single-region deployment**:
-  Standard Temporal Cloud deployment provides 99.99% availability and a contractual service level agreement (SLA) of 99.9% guarantee against service errors.
-- **Temporal Cloud with High Availability feature Namespace deployment**:
-  Temporal Cloud Namespaces that use the High Availability feature provide 99.99% availability and contractual service level agreement (SLA) of 99.99% guarantee against service errors.
+- **Temporal Cloud 具有标准单区域部署**：
+  标准 Temporal Cloud 部署提供 99.99% 的可用性和 99.9% 防止服务错误的合同服务级别协议 (SLA)。
+- **Temporal Cloud 具有高可用性功能 Namespace 部署**：
+  使用高可用性功能的 Temporal Cloud Namespace 提供 99.99% 的可用性和 99.99% 的合同服务级别协议 (SLA)，以防止服务错误。
 
-The same SLA for normal Worker requests (commands and polling) apply to Nexus in both the caller and handler Namespaces.
+正常 Worker 请求（命令和轮询）的相同 SLA 适用于调用方和处理程序 Namespace 中的 Nexus。
 
-To calculate the service-error rate, Temporal Cloud captures all requests that arrive in a Namespace during a five-minute interval.
-We record the number of gRPC service errors that occurred.
-For each Namespace, we calculate the service-error rate as 1 - (count of errors / count of requests).
-Rates are averaged per month and reset quarterly.
+为了计算服务错误率，Temporal Cloud 捕获五分钟间隔内到达 Namespace 的所有请求。
+我们记录发生的 gRPC 服务错误的数量。
+对于每个 Namespace，我们将服务错误率计算为 1 -（错误计数/请求计数）。
+费率按月计算平均值，并每季度重置。
 
-Errors recorded against the SLA are service errors, such as the `UNAVAILABLE` [gRPC status code](https://grpc.github.io/grpc/core/md_doc_statuscodes.html).
-The following errors are _not_ counted against the SLA:
+根据 SLA 记录的错误是服务错误，例如 `UNAVAILABLE` [gRPC 状态码](https://grpc.github.io/grpc/core/md_doc_statuscodes.html)。
+以下错误不计入 SLA：
 
 - `ClientVersionNotSupported`
 - `InvalidArgument`
@@ -50,12 +50,12 @@ The following errors are _not_ counted against the SLA:
 - `WorkflowExecutionAlreadyStarted`
 - `WorkflowNotReady`
 
-Our internal alerting system is based on a [service level objective](https://en.wikipedia.org/wiki/Service-level_objective) (SLO) for all errors, not just errors that count against the SLA.
-When we receive an alert that an SLO is not being met, we page our on-call engineers, which often means that issues are resolved before they become noticeable.
+我们的内部警报系统基于针对所有错误的 [服务水平目标](https://en.wikipedia.org/wiki/Service-level_objective) (SLO)，而不仅仅是针对 SLA 的错误。
+当我们收到未满足 SLO 的警报时，我们会呼叫待命工程师，这通常意味着问题在问题变得明显之前就已得到解决。
 
-Internally, our components are distributed across a minimum of three availability zones per region.
-We implement a cell architecture.
-Each cell contains the software and services necessary to host a Namespace.
-Within each cell, the components are distributed across a minimum of three availability zones per region.
+在内部，我们的组件分布在每个区域至少三个可用区。
+我们实现了单元架构。
+每个单元都包含托管 Namespace 所需的软件和服务。
+在每个单元内，组件分布在每个区域至少三个可用区中。
 
-For current system status and information about recent incidents, see [Temporal Status](https://status.temporal.io).
+有关当前系统状态和有关最近事件的信息，请参阅 [Temporal 状态](https://status.temporal.io)。

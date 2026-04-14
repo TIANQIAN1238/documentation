@@ -1,8 +1,8 @@
 ---
 id: execution
-title: Activity execution - PHP SDK
-description: Shows how to perform Activity execution with the PHP SDK
-sidebar_label: Activity Execution
+title: "Activity 执行 - PHP SDK"
+description: "展示如何使用 PHP SDK 执行 Activity"
+sidebar_label: "Activity 执行"
 slug: /develop/php/activities/execution
 toc_max_heading_level: 3
 tags:
@@ -11,26 +11,27 @@ tags:
   - Activity
 ---
 
-## How to start an Activity Execution {#activity-execution}
+<a id="activity-execution"></a>
+## 如何启动 Activity 执行 {#activity-execution}
 
-Calls to spawn [Activity Executions](/activity-execution) are written within a [Workflow Definition](/workflow-definition).
-The call to spawn an Activity Execution generates the [ScheduleActivityTask](/references/commands#scheduleactivitytask) Command.
-This results in the set of three [Activity Task](/tasks#activity-task) related Events ([ActivityTaskScheduled](/references/events#activitytaskscheduled), [ActivityTaskStarted](/references/events#activitytaskstarted), and ActivityTask[Closed]) in your Workflow Execution Event History.
+对生成 [Activity 执行](/activity-execution) 的调用写入 [Workflow Definition](/workflow-definition) 中。
+调用生成 Activity 执行会生成 [ScheduleActivity任务](/references/commands#scheduleactivitytask) 命令。
+这会在 Workflow Execution Event History 中产生一组三个 [Activity 任务](/tasks#activity-task) 相关事件（[Activity任务Scheduled](/references/events#activitytaskscheduled)、[Activity任务已开始](/references/events#activitytaskstarted) 和 ActivityTask[Closed]）。
 
-A single instance of the Activities implementation is shared across multiple simultaneous Activity invocations.
-Activity implementation code should be _idempotent_.
+活动实现的单个实例在多个同时的 Activity 调用之间共享。
+Activity 实现代码应该是_幂等的_。
 
-The values passed to Activities through invocation parameters or returned through a result value are recorded in the Execution history.
-The entire Execution history is transferred from the Temporal service to Workflow Workers when a Workflow state needs to recover.
-A large Execution history can thus adversely impact the performance of your Workflow.
+通过调用参数传递给活动的值或通过结果值返回的值都记录在执行历史记录中。
+当 Workflow 状态需要恢复时，整个执行历史记录将从 Temporal 服务传输到 Workflow Worker。
+因此，大量执行历史记录可能会对 Workflow 的性能产生不利影响。
 
-Therefore, be mindful of the amount of data you transfer through Activity invocation parameters or Return Values.
-Otherwise, no additional limitations exist on Activity implementations.
+因此，请注意通过 Activity 调用参数或返回值传输的数据量。
+否则，Activity 实现不存在其他限制。
 
-Activity implementation is an implementation of an Activity interface.
-The following code example, uses a constructor that takes an Amazon S3 client and a local directory, and uploads a file to the S3 bucket.
-Then, the code uses a function to download a file from the S3 bucket passing a bucket name, remote name, and local name as arguments.
-Finally, it uses a function that takes a local file name as an argument and returns a string.
+Activity 实现是 Activity 接口的实现。
+以下代码示例使用一个构造函数，该构造函数采用 Amazon S3 客户端和本地目录，并将文件上传到 S3 存储桶。
+然后，代码使用函数从 S3 存储桶下载文件，并传递存储桶名称、远程名称和本地名称作为参数。
+最后，它使用一个函数，该函数将本地文件名作为参数并返回一个字符串。
 
 ```php
 // An implementation of an Activity interface.
@@ -83,24 +84,25 @@ class FileProcessingActivitiesImpl implements FileProcessingActivities {
 }
 ```
 
-### How to set the required Activity Timeouts {#required-timeout}
+### 如何设置所需的 Activity 超时 {#required-timeout}
 
-Activity Execution semantics rely on several parameters.
-The only required value that needs to be set is either a [Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) or a [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout).
-These values are set in the Activity Options.
+Activity 执行语义依赖于多个参数。
+唯一需要设置的值是 [Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) 或 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。
+这些值在 Activity 选项中设置。
 
-### How to get the results of an Activity Execution {#get-activity-results}
+<a id="get-activity-results"></a>
+### 如何获取 Activity 执行的结果 {#get-activity-results}
 
-The call to spawn an [Activity Execution](/activity-execution) generates the [ScheduleActivityTask](/references/commands#scheduleactivitytask) Command and provides the Workflow with an Awaitable.
-Workflow Executions can either block progress until the result is available through the Awaitable or continue progressing, making use of the result when it becomes available.
+调用生成 [Activity 执行](/activity-execution) 会生成 [ScheduleActivity任务](/references/commands#scheduleactivitytask) 命令，并为 Workflow 提供 Awaitable。
+Workflow Execution 可以阻止进度，直到结果通过 Awaitable 可用为止，或者继续进度，在结果可用时使用它。
 
-`Workflow::newActivityStub`returns a client-side stub an implements an Activity interface. The client-side stub can be used within the Workflow code. It takes the Activity's type and`ActivityOptions` as arguments.
+`Workflow::newActivityStub` 返回客户端存根并实现 Activity 接口。客户端存根可以在 Workflow 代码中使用。它采用 Activity 的类型和 `ActivityOptions` 作为参数。
 
-Calling (via `yield`) a method on this interface invokes an Activity that implements this method.
-An Activity invocation synchronously blocks until the Activity completes, fails, or times out.
-Even if Activity Execution takes a few months, the Workflow code still sees it as a single synchronous invocation.
-It doesn't matter what happens to the processes that host the Workflow.
-The business logic code just sees a single method call.
+调用（通过 `yield`）此接口上的方法会调用实现此方法的 Activity。
+Activity 调用会同步阻塞，直到 Activity 完成、失败或超时。
+即使 Activity 执行需要几个月的时间，Workflow 代码仍然将其视为单个同步调用。
+托管 Workflow 的进程发生什么并不重要。
+业务逻辑代码只看到单个方法调用。
 
 ```php
 class GreetingWorkflow implements GreetingWorkflowInterface
@@ -123,7 +125,7 @@ class GreetingWorkflow implements GreetingWorkflowInterface
 }
 ```
 
-If different Activities need different options, like timeouts or a task queue, multiple client-side stubs can be created with different options.
+如果不同的活动需要不同的选项，例如超时或 Task Queue，则可以使用不同的选项创建多个客户端存根。
 
 ```php
 $greetingActivity = Workflow::newActivityStub(

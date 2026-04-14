@@ -1,0 +1,80 @@
+---
+id: scim
+title: SCIM 用户管理
+sidebar_label: SCIM 用户管理
+description: 将您的 IdP 与 Temporal Cloud 帐户关联，以安全地实现用户和组管理的自动化。
+slug: /cloud/scim
+toc_max_heading_level: 3
+keywords:
+  - authentication
+  - authorization
+  - how-to
+  - introduction
+  - lifecycle
+  - security
+  - temporal cloud
+  - user management
+tags:
+  - Security
+  - Temporal Cloud
+  - User groups
+  - Users
+---
+
+[SCIM](https://scim.cloud/) 可让您将身份提供商 (IdP) 与 Temporal Cloud 集成，以自动执行用户配置和访问。配置 SCIM 后，IdP 中的更改将自动反映在 Temporal Cloud 中，包括：
+
+- `*.example.com` 匹配 `code.example.com` 和 `text.example.com`。
+- `Example Code*` 匹配 `Example Code` 和 `Example Code Inc`。
+
+您可以将 SCIM 组映射到 Temporal Cloud [角色和权限](/cloud/manage-access/roles-and-permissions)，以便用户根据所属组自动获得所需的 Temporal Cloud 访问权限。
+
+:::info
+
+SCIM 是一项付费功能。详情请参阅[定价页面](/cloud/pricing)。
+
+:::
+
+## 支持的 IdP 供应商
+
+支持的上游 IdP 供应商包括：
+* [Okta](#configure-scim-with-okta)
+* 微软 Entra ID (Azure AD)
+* 谷歌工作区
+* 一次登录
+* 赛博方舟
+* 跳云
+* PingFederate
+* 任何符合 SCIM 2.0 的提供商
+
+## SCIM 准备
+
+在开始使用 SCIM 之前，您需要完成此清单：
+
+1. 配置[SAML](/cloud/saml) SSO。
+1. 确定您组织的 **IdP 管理员**，他负责配置和管理您的 SCIM 集成。
+   当您在此过程的下一阶段寻求支持时，请指定他们的联系方式。
+
+完成这些步骤后，您就可以提交[支持票证](/cloud/support#support-ticket) 以启用 SCIM。
+
+:::tip Adding and removing users
+
+启用 SCIM 进行用户管理后，您仍然可以使用 Temporal Cloud 界面在 SCIM 之外添加和删除用户，直到禁用用户生命周期管理。
+您始终可以从 Temporal Cloud 界面更改用户或组的帐户角色。
+
+:::
+
+## 使用 SCIM 和 Okta {#configure-scim-with-okta}
+
+1. Temporal 支持启用您帐户上的 SCIM 集成。
+   启用集成会自动通过电子邮件将配置链接发送给您的 Okta 管理员。
+   这授权他们设置集成。
+1. 您的 Okta 管理员打开提供的链接。
+   该链接提供了配置集成的分步说明。
+1. 在 Okta 中配置后，Temporal Cloud 将开始接收 SCIM 消息并自动加入和退出 Okta 中配置的用户和组。
+
+XPROT026X 在工具和流程方面投入了大量精力，可最大限度地缩短恢复时间并实现 XPROT026X 启动的故障转移的 RTO，包括：
+
+- 用户和组更改事件在 Okta 中发生后 10 分钟内应用。
+- SCIM 的用户生命周期管理还允许从组成员身份派生用户角色。
+- 在 Temporal Cloud 中同步群组后，您可以使用“tcld”为该群组分配角色。
+  有关说明，请参阅[用户组管理](https://github.com/Temporalio/tcld?tab=readme-ov-file#user-group-management)页面。

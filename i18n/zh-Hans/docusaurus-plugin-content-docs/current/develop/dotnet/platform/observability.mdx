@@ -1,0 +1,223 @@
+---
+id: observability
+title: 可观测性 - .NET SDK
+sidebar_label: 可观察性
+description: 探索适用于指标、跟踪、日志记录和 Visibility 的 Temporal SDK 可观察性功能。跟踪 Workflow Execution、设置 Prometheus 端点、自定义指标、配置跟踪等。
+toc_max_heading_level: 4
+keywords:
+  - client
+  - code sample
+  - developer guide
+  - guide context
+  - how to
+  - logging
+  - dotnet
+  - dotnet sdk
+  - sdk
+  - search attribute
+  - workflow
+  - observability
+tags:
+  - .Net SDK
+  - Temporal SDKs
+  - Observability
+  - Search Attributes
+  - Workflows
+---
+
+此页面涵盖与查看应用程序状态相关的功能，包括：
+
+- [指标](#metrics)
+- [追踪](#tracing)
+- [日志记录](#logging)
+- [Visibility](#Visibility)
+
+可观察性功能指南涵盖了查看 [Temporal 应用程序](/Temporal#Temporal-应用程序) 当前状态的多种方法。
+这包括查看 [Temporal Platform](/Temporal#Temporal-platform) 跟踪哪些 [Workflow Execution](/Workflow-execution) 的方法以及任何指定 Workflow Execution 当前或执行点的状态。
+
+## 发出指标 {#metrics}
+
+连接 XPROT009X 需要以下环境变量：
+
+- 有关 Prometheus 和 Grafana 集成的概述，请参阅[监控](/self-hosted-guide/monitoring) 指南。
+- 有关指标列表，请参阅[SDK 指标参考](/references/sdk-metrics)。
+- 有关使用 .NET SDK 公开指标的端到端示例，请参阅 [samples-dotnet](https://github.com/Temporalio/samples-dotnet/tree/main/src/OpenTelemetry) 存储库。
+
+.NET 中的指标是在“TemporalRuntime”上“Telemetry”属性的“Metrics”属性上配置的。该对象应该是全局创建的，并且应该用于所有客户端；因此，您应该在任何其他 Temporal 代码之前配置它。
+
+### 设置 Prometheus 端点
+
+以下示例在端口“9000”上公开 Prometheus 端点。
+
+```csharp
+using Temporalio.Client;
+using Temporalio.Runtime;
+
+var runtime = new TemporalRuntime(new()
+{
+    Telemetry = new() { Metrics = new() { Prometheus = new("0.0.0.0:9000") } },
+});
+var client = await Temporalio.ConnectAsync(new("localhost:7233") { Runtime = runtime });
+```
+
+### 设置自定义指标
+
+可以在遥测选项上设置自定义指标，以编程方式处理指标。
+[Temporalio.Extensions.DiagnosticSource](https://github.com/Temporalio/sdk-dotnet/tree/main/src/Temporalio.Extensions.DiagnosticSource) 扩展提供了一个自定义指标仪表实现，它将所有指标发送到[System.Diagnostics.Metrics.Meter](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter) 实例。
+
+```csharp
+using System.Diagnostics.Metrics;
+using Temporalio.Client;
+using Temporalio.Extensions.DiagnosticSource;
+using Temporalio.Runtime;
+
+// Create .NET meter
+using var meter = new Meter("My.Meter");
+// Can create MeterListener or OTel meter provider here...
+
+// Create Temporal runtime with a custom metric meter for that meter
+var runtime = new TemporalRuntime(new()
+{
+    Telemetry = new()
+    {
+        Metrics = new() { CustomMetricMeter = new CustomMetricMeter(meter) },
+    },
+});
+var client = await Temporalio.ConnectAsync(new("localhost:7233") { Runtime = runtime });
+```
+
+## 设置跟踪 {#tracing}
+
+跟踪允许您查看 Workflow 及其活动、Nexus Operation 和任何 Child Workflow 的调用图。
+
+要在 .NET 中配置 OpenTelemetry 跟踪，请使用 [Temporalio.Extensions.OpenTelemetry](https://github.com/Temporalio/sdk-dotnet/tree/main/src/Temporalio.Extensions.OpenTelemetry) 扩展。
+
+[`Temporalio.Extensions.OpenTelemetry.TracingInterceptor`](https://dotnet.Temporal.io/api/Temporalio.Extensions.OpenTelemetry.TracingInterceptor.html) 类可以在客户端选项中设置为拦截器，或者如果您正在构建一个可重用的库。
+
+连接客户端后，将为 Worker 上的所有客户端调用、活动和 Workflow 调用创建跨度。
+Span 是通过服务器创建和序列化的，以提供 Workflow Execution 的一个跟踪。
+
+## 从 Workflow 记录 {#logging}
+
+日志记录使您能够在代码执行期间记录关键信息。
+记录器创建审核跟踪并捕获有关 Workflow 操作的信息。
+适当的日志记录级别取决于您的具体需求。
+在开发或故障排除期间，您可能会使用调试甚至跟踪。
+在生产中，您可以使用 info 或 warn 来避免日志量过多。
+
+记录器支持以下日志记录级别：
+
+|水平|使用 |
+| -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| '追踪' |最详细的日志记录级别，用于非常细粒度的信息。                               |
+| `调试` |详细信息，通常可用于调试目的。                                            |
+| `信息` |有关应用程序操作的一般信息。                                                    |
+| `警告` |指示不会阻止应用程序运行的潜在有害情况或小问题。 |
+| `错误` |指示可能仍允许应用程序继续运行的错误情况。                    |
+
+Temporal SDK 核心通常使用“WARN”作为其默认日志记录级别。
+
+日志记录使用 .NET 标准日志记录 API。
+`LoggerFactory`可以在客户端设置。
+以下示例显示控制台上的日志记录并将级别设置为“信息”。
+
+```csharp
+var client = await TemporalClient.ConnectAsync(new("localhost:7233")
+{
+    LoggerFactory = LoggerFactory.Create(builder =>
+        builder.
+            AddSimpleConsole(options => options.TimestampFormat = "[HH:mm:ss] ").
+            SetMinimumLevel(LogLevel.Information)),
+});
+```
+
+您可以使用“Workflow.Logger”从 Workflow 进行日志记录，“Workflow.Logger”是 .NET 的“ILogger”的实例。
+
+```csharp
+Workflow.Logger.LogInformation("Given name: {Name}", name);
+```
+
+## 使用 Visibility API {#Visibility}
+
+Temporal Platform 中的术语 Visibility 是指使操作员能够查看 Temporal 服务中当前存在的 Workflow Execution 的子系统和 API。
+
+### 使用 Search Attributes {#search-attributes}
+
+检索 Workflow Execution 的典型方法是通过其 Workflow Id。
+
+但是，有时您会希望根据另一属性检索一个或多个 Workflow Execution。例如，假设您想要获取某个时间范围内失败的某种类型的所有 Workflow Execution，以便您可以使用相同的参数启动新的 Workflow Execution。
+
+您可以使用 [Search Attributes](/search-attribute) 来执行此操作。
+
+- [默认 Search Attributes](/search-attribute#default-search-attribute) 像 `WorkflowType`、`StartTime` 和 `ExecutionStatus` 会自动添加到 Workflow Executions。
+- [自定义 Search Attributes](/search-attribute#custom-search-attribute) 可以包含自己的特定于域的数据（例如“customerId”或“numItems”）。
+
+使用定制 Search Attribute 的步骤如下：
+
+- 在 CLI 或 Web UI 中的 Temporal 服务中创建新的 Search Attribute。
+  - 例如：“Temporal 运算符搜索属性创建 --name CustomKeywordField --type Text”
+    - 将“CustomKeywordField”替换为您的 Search Attribute 的名称。
+    - 将“Text”替换为与您的 Search Attribute 关联的类型值：“Text” | `关键字` | `Int` | “双”| `布尔` | `日期时间` | `关键字列表`
+- 为 Workflow Execution 设置 Search Attribute 的值：
+  - 在客户端上，在启动执行时将其作为选项包含在内。
+  - 在 Workflow 中通过调用 `UpsertTypedSearchAttributes`。
+- 读取Search Attribute的值：
+  - 在客户端上，通过调用“WorkflowHandle”上的“Describe”。
+  - 在 Workflow 中，通过查看“WorkflowInfo”。
+- Query Workflow Execution 由 Search Attribute 使用 [列表过滤器](/list-filter)：
+  - [在 Temporal CLI 中](/cli/operator#list-2)
+  - 在代码中调用“ListWorkflowsAsync”。
+
+### 列出 Workflow Execution {#list-Workflow-executions}
+
+使用 [ListWorkflowsAsync()](https://dotnet.Temporal.io/api/Temporalio.Client.ITemporalClient.html#Temporalio_Client_ITemporalClient_ListWorkflowsAsync_System_String_Temporalio_Client_WorkflowListOptions_) 方法在客户端上并传递一个 [List Filter](/list-filter) 作为参数来过滤列出的 Workflow。
+结果是一个异步可枚举。
+
+```csharp
+await foreach (var wf in client.ListWorkflowsAsync("WorkflowType='GreetingWorkflow'"))
+{
+    Console.WriteLine("Workflow: {0}", wf.Id);
+}
+```
+
+### 设置自定义 Search Attributes {#custom-search-attributes}
+
+在 Temporal 服务中创建自定义 Search Attribute（使用“Temporal 运算符搜索属性创建”或云 UI）后，您可以在启动 Workflow 时设置自定义 Search Attribute 的值。
+
+要设置自定义 Search Attribute，请使用“WorkflowOptions”上“StartWorkflowAsync”或“ExecuteWorkflowAsync”的“TypedSearchAttributes”属性。
+类型化的 Search Attribute 是使用构建器创建的“SearchAttributeCollection”。
+
+```csharp
+// This only needs to be created once, so it is common to make it a static readonly even though we
+// create inline here for demonstration
+var myKeywordAttributeKey = SearchAttributeKey.CreateKeyword("MyKeywordAttribute");
+
+// Start workflow with the search attribute collection
+var handle = await client.StartWorkflowAsync(
+    (MyWorkflow wf) => wf.RunAsync(),
+    new(id: "my-workflow-id", taskQueue: "my-task-queue")
+    {
+        TypedSearchAttributes = new SearchAttributeCollection.Builder().
+            Set(myKeywordAttributeKey, "SomeKeywordValue").
+            ToSearchAttributeCollection(),
+    });
+```
+
+### 更新插入 Search Attributes {#upsert-search-attributes}
+
+您可以更新插入 Search Attribute 以在 Workflow 代码中添加、Update 或删除 Search Attribute。
+
+要更新插入自定义 Search Attribute，请使用[`UpsertTypedSearchAttributes()`](https://dotnet.Temporal.io/api/Temporalio.Workflows.Workflow.html#XPRO T026Xio_Workflows_Workflow_UpsertTypedSearchAttributes_Temporalio_Workflows_SearchAttributeUpdate___)使用一组 Update 的方法。
+可以预定义密钥以供重复使用。
+
+```csharp
+// These only need to be created once, so it is common to make them static readonly even though we
+// create inline here for demonstration
+var myKeywordAttributeKey = SearchAttributeKey.CreateKeyword("MyKeywordAttribute");
+var myTextAttributeKey = SearchAttributeKey.CreateText("MyTextAttribute");
+
+// Add/Update the keyword one and remove the text one
+Workflow.UpsertTypedSearchAttributes(
+    myKeywordAttributeKey.ValueSet("SomeKeywordValue"),
+    myTextAttributeKey.ValueUnset());
+```

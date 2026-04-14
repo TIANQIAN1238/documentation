@@ -1,0 +1,34 @@
+---
+id: client-environment-configuration
+title: 环境配置
+sidebar_label: 环境配置
+description: 使用环境变量和 TOML 配置文件配置 Temporal CLIents 的参考。
+tags:
+  - Temporal Client
+  - Configuration
+  - Environment Variables
+  - TOML
+---
+
+下表详细介绍了所有可用设置、其相应的环境变量及其 TOML 文件
+路径。有关使用环境变量和配置文件设置 Temporal CLIent 的更多信息，请参阅
+到[环境配置](/develop/environment-configuration)。
+
+|设置|环境变量 | TOML 路径 |描述 |
+| :------------------------ | :---------------------------------------- | ：------------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|配置文件路径 | `Temporal_CONFIG_FILE` | **不适用** | TOML 配置文件的路径 |
+|服务器地址 | `Temporal_ADDRESS` | `个人资料。<名称>.地址` | Temporal 前端服务的主机和端口（例如“localhost:7233”）。                                                                                                                                                |
+| Namespace | `Temporal_Namespace` | `配置文件。<名称>.Namespace` |要连接的 Temporal Namespace。                                                                                                                                                                                       |
+| API 密钥 | `Temporal_API_KEY` | `profile.<名称>.api_key` |用于身份验证的 API 密钥。如果存在，则默认启用 TLS。                                                                                                                                                       |
+|启用/禁用 TLS | `Temporal_TLS` | `profile.<名称>.tls.disabled` |设置为“true”以启用 TLS，设置为“false”以禁用。在 TOML 中，disabled = true 会关闭 TLS。                                                                                                                                    |
+|客户证书| `Temporal_TLS_CLIENT_CERT_DATA` | `profile.<名称>.tls.client_cert_data` |包含客户端公共 TLS 证书的原始 PEM 数据。或者，您可以使用“Temporal_TLS_CLIENT_CERT_PATH”提供证书或 TOML“profile.<name>.tls.client_cert_path”的路径。         |
+|客户端证书路径| `Temporal_TLS_CLIENT_CERT_PATH` | `profile.<名称>.tls.client_cert_path` |客户端公共 TLS 证书的文件系统路径。或者，您可以使用“Temporal_TLS_CLIENT_CERT_DATA”或 TOML“profile.<name>.tls.client_cert_data”提供原始 PEM 数据。                          |
+|客户端密钥 | `Temporal_TLS_CLIENT_KEY_DATA` | `profile.<名称>.tls.client_key_data` |包含客户端 TLS 私钥的原始 PEM 数据。或者，您可以使用“Temporal_TLS_CLIENT_KEY_PATH”提供密钥或 TOML“profile.<name>.tls.client_key_path”的路径。                          |
+|客户端密钥路径 | `Temporal_TLS_CLIENT_KEY_PATH` | `profile.<名称>.tls.client_key_path` |客户端 TLS 私钥的文件系统路径。或者，您可以使用“Temporal_TLS_CLIENT_KEY_DATA”或 TOML“profile.<name>.tls.client_key_data”提供原始 PEM 数据。                                   |
+|服务器 CA 证书 | `Temporal_TLS_SERVER_CA_CERT_DATA` | `profile.<名称>.tls.server_ca_cert_data` |用于验证服务器的证书颁发机构证书的原始 PEM 数据。或者，您可以使用“Temporal_TLS_SERVER_CA_CERT_PATH”来提供路径或 TOML“profile.<name>.tls.server_ca_cert_path”。 |
+|服务器 CA 证书路径 | `Temporal_TLS_SERVER_CA_CERT_PATH` | `profile.<名称>.tls.server_ca_cert_path` |证书颁发机构证书的文件系统路径。或者，您可以使用“Temporal_TLS_SERVER_CA_CERT_DATA”或 TOML“profile.<name>.tls.server_ca_cert_data”提供原始 PEM 数据。                  |
+| TLS 服务器名称 | `Temporal_TLS_SERVER_NAME` | `profile.<名称>.tls.server_name` |覆盖 TLS 握手中用于服务器名称指示 (SNI) 的服务器名称。                                                                                                                                       |
+|禁用主机验证 | `Temporal_TLS_DISABLE_HOST_VERIFICATION` | `profile.<名称>.tls.disable_host_verification` |用于禁用服务器主机名验证的布尔值。谨慎使用。并非所有 SDK 都支持。                                                                                                                             |
+|编解码器端点| `Temporal_CODEC_ENDPOINT` | `profile.<名称>.codec.endpoint` |远程 Data Converter 的端点。并非所有 SDK 都支持此功能。默认情况下，支持此配置的 SDK 不会应用它。主要供 CLI 使用。                                                   |
+|编解码器验证 | `Temporal_CODEC_AUTH` | `profile.<名称>.codec.auth` |远程 Data Converter 的授权标头值。                                                                                                                                                               |
+| gRPC 元数据 | `Temporal_gRPC_META_*` | `配置文件。<名称>.gRPC_meta` |设置 gRPC 标头。 `_META_` 之后的部分成为标头键（例如，`_SOME_KEY` -> `some-key`）。                                                                                                                        |

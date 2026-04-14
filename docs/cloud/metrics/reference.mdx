@@ -1,8 +1,8 @@
 ---
 id: reference
-title: Temporal Cloud metrics reference
-sidebar_label: Available metrics
-description: Explore Temporal Cloud metrics to query with PromQL or scrape via OpenMetrics, supporting rate and latency calculations.
+title: "Temporal Cloud 指标参考"
+sidebar_label: "可用指标"
+description: "使用 PromQL 探索 Temporal Cloud 到 Query 的指标，或通过 OpenMetrics 进行抓取，支持速率和延迟计算。"
 toc_max_heading_level: 4
 tags:
   - Metrics
@@ -28,273 +28,276 @@ keywords:
 
 :::danger PromQL endpoint deprecated
 
-The PromQL endpoint and its `temporal_cloud_v0_*` metrics were deprecated on April 2, 2026 and are no longer accepting new users.
-The PromQL endpoint will be disabled for all users on **October 5, 2026**.
+PromQL 端点及其 `Temporal_cloud_v0_*` 指标已于 2026 年 4 月 2 日弃用，并且不再接受新用户。
+将于 **2026 年 10 月 5 日**对所有用户禁用 PromQL 端点。
 
-Migrate to the [OpenMetrics endpoint](/cloud/metrics/openmetrics) which provides `temporal_cloud_v1_*` metrics with higher cardinality, accurate percentiles, and simplified authentication.
-See the [migration guide](/cloud/metrics/openmetrics/migration-guide) for a complete v0-to-v1 metric mapping.
+迁移到 [OpenMetrics 端点](/cloud/metrics/openmetrics)，它提供具有更高基数、准确百分位数和简化身份验证的 `Temporal_cloud_v1_*` 指标。
+有关完整的 v0 到 v1 指标映射，请参阅 [迁移指南](/cloud/metrics/openmetrics/migration-guide)。
 
 :::
 
-A metric is a measurement or data point that provides insights into the performance and health of a system.
-This document describes the `temporal_cloud_v0_*` metrics available from the deprecated Temporal Cloud PromQL endpoint.
-For the current metrics reference, see the [OpenMetrics metrics reference](/cloud/metrics/openmetrics/metrics-reference).
+指标是一种测量或数据点，可提供对系统性能和运行状况的洞察。
+本文档介绍了已弃用的 Temporal Cloud PromQL 端点中可用的 `Temporal_cloud_v0_*` 指标。
+有关当前指标参考，请参阅 [OpenMetrics 指标参考](/cloud/metrics/openmetrics/metrics-reference)。
 
-This document describes:
+本文档描述：
 
-- **[Available Temporal Cloud metrics](#available-metrics)**:
-  The metrics emitted by Temporal Cloud include counts of gRPC errors, requests, successful task matches to a poller, and more.
-- **[Metrics labels](#metrics-labels)**:
-  Temporal Cloud metrics labels can filter metrics and help categorize and differentiate results.
-- **[Operations](#metrics-operations)**:
-  An operation is a special type of label that categorizes the type of operation being performed when the metric was collected.
+- **[可用的 Temporal Cloud 指标](#available-metrics)**：
+  Temporal Cloud 发出的指标包括 gRPC 错误、请求、与轮询器匹配的成功任务的计数等。
+- **[指标标签](#metrics-labels)**：
+  Temporal Cloud 指标标签可以过滤指标并帮助对结果进行分类和区分。
+- **[运营](#metrics-operations)**：
+  操作是一种特殊类型的标签，用于对收集指标时执行的操作类型进行分类。
 
 :::info SDK METRICS
 
-This document discusses metrics emitted by [Temporal Cloud](/cloud).
-Temporal SDKs also emit metrics, sourced from Temporal Clients and Worker processes.
-You can find information about Temporal SDK metrics on its [dedicated page](/references/sdk-metrics).
+本文档讨论 [Temporal Cloud](/cloud) 发出的指标。
+Temporal SDK 还发出源自 Temporal CLIents 和 Worker 进程的指标。
+您可以在其 [专用页面](/references/sdk-metrics) 上找到有关 Temporal SDK 指标的信息。
 
-Please note:
+请注意：
 
-- SDK metrics start with the phrase `temporal_`.
-- Temporal Cloud metrics start with `temporal_cloud_`.
+- SDK 指标以短语 `Temporal_` 开头。
+- Temporal Cloud 指标以 `Temporal_cloud_` 开头。
 
 :::
 
-## Available Temporal Cloud metrics {#available-metrics}
+## 可用的 Temporal Cloud 指标 {#available-metrics}
 
-**What metrics are emitted from Temporal Cloud?**
+**Temporal Cloud 发出哪些指标？**
 
-The following metrics are emitted for your Namespaces:
+针对您的 Namespace 发出以下指标：
 
-### Frontend Service metrics {#frontend}
+### 前端服务指标 {#frontend}
 
-#### temporal_cloud_v0_frontend_service_error_count
+#### Temporal_cloud_v0_frontend_service_error_count
 
-This is a count of gRPC errors returned aggregated by operation.
-Labels: temporal_account, temporal_namespace, operation, temporal_service_type
+这是按操作聚合返回的 gRPC 错误计数。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
 
-#### temporal_cloud_v0_frontend_service_request_count
+#### Temporal_cloud_v0_frontend_service_request_count
 
-This is a count of gRPC requests received aggregated by operation.
-Labels: temporal_account, temporal_namespace, operation, temporal_service_type
+这是按操作聚合的收到的 gRPC 请求的计数。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
 
-#### temporal_cloud_v0_resource_exhausted_error_count
+#### Temporal_cloud_v0_resource_exhausted_error_count
 
-gRPC requests received that were rate-limited by Temporal Cloud, aggregated by cause.
-Labels: temporal_account, temporal_namespace, resource_exhausted_cause
+收到的 gRPC 请求受 Temporal Cloud 速率限制，按原因聚合。
+标签： Temporal_account、Temporal_Namespace、resource_exhausted_cause
 
-#### temporal_cloud_v0_state_transition_count
+#### Temporal_cloud_v0_state_transition_count
 
-Count of state transitions for each Namespace.
+每个 Namespace 的状态转换计数。
 
-#### temporal_cloud_v0_total_action_count
+#### Temporal_cloud_v0_total_action_count
 
-Approximate count of Temporal Cloud Actions.
-Labels: temporal_account, temporal_namespace, is_background, namespace_mode
+Temporal Cloud 操作的大致计数。
+标签： Temporal_account、Temporal_Namespace、is_background、Namespace_mode
 
-### Poll metrics {#poll}
+### 民意调查指标 {#poll}
 
-#### temporal_cloud_v0_poll_success_count
+#### Temporal_cloud_v0_poll_success_count
 
-Tasks that are successfully matched to a poller.
-Labels: temporal_account, temporal_namespace, operation, task_type, temporal_service_type
+与轮询器成功匹配的任务。
+标签： Temporal_account、Temporal_Namespace、操作、task_type、Temporal_service_type
 
-#### temporal_cloud_v0_poll_success_sync_count
+#### Temporal_cloud_v0_poll_success_sync_count
 
-Tasks that are successfully sync matched to a poller.
-Labels: temporal_account, temporal_namespace, operation, task_type, temporal_service_type
+成功同步与轮询器匹配的任务。
+标签： Temporal_account、Temporal_Namespace、操作、task_type、Temporal_service_type
 
-#### temporal_cloud_v0_poll_timeout_count
+#### Temporal_cloud_v0_poll_timeout_count
 
-When no tasks are available for a poller before timing out.
-Labels: temporal_account, temporal_namespace, operation, task_type, temporal_service_type
+当轮询器在超时之前没有可用的任务时。
+标签： Temporal_account、Temporal_Namespace、操作、task_type、Temporal_service_type
 
-### Replication lag metrics {#replication-lag}
+### 复制延迟指标 {#replication-lag}
 
-#### temporal_cloud_v0_replication_lag_bucket
+#### Temporal_cloud_v0_replication_lag_bucket
 
-A histogram of [replication lag](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p99) during a specific time interval for a Namespace with high availability.
-Labels: temporal_account, temporal_namespace, le
+具有高可用性的 Namespace 在特定时间间隔内的 [复制滞后](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p99) 直方图。
+标签: Temporal_account, Temporal_Namespace, le
 
-#### temporal_cloud_v0_replication_lag_count
+#### Temporal_cloud_v0_replication_lag_count
 
-The [replication lag](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p99) count during a specific time interval for a Namespace with high availability.
-Labels: temporal_account, temporal_namespace
+具有高可用性的 Namespace 在特定时间间隔内的 [复制滞后](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p99) 计数。
+标签： Temporal_帐户、Temporal_Namespace
 
-#### temporal_cloud_v0_replication_lag_sum
+#### Temporal_cloud_v0_replication_lag_sum
 
-The sum of [replication lag](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p99) during a specific time interval for a Namespace with high availability.
-Labels: temporal_account, temporal_namespace
+具有高可用性的 Namespace 在特定时间间隔内 [复制滞后](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p99) 的总和。
+标签： Temporal_帐户、Temporal_Namespace
 
-### Schedule metrics {#schedule}
+<a id="schedule"></a>
+### Schedule 指标 {#schedule}
 
-#### temporal_cloud_v0_schedule_action_success_count
+#### Temporal_cloud_v0_Schedule_action_success_count
 
-Successful execution of a Scheduled Workflow.
-Labels: temporal_account, temporal_namespace
+成功执行 Scheduled Workflow。
+标签： Temporal_帐户、Temporal_Namespace
 
-#### temporal_cloud_v0_schedule_buffer_overruns_count
+#### Temporal_cloud_v0_Schedule_buffer_overruns_count
 
-When average schedule run length is greater than average schedule interval while a `buffer_all` overlap policy is configured.
-Labels: temporal_account, temporal_namespace
+当配置 `buffer_all` 重叠策略时，平均 Schedule 游程长度大于平均 Schedule 间隔。
+标签： Temporal_帐户、Temporal_Namespace
 
-#### temporal_cloud_v0_schedule_missed_catchup_window_count
+#### Temporal_cloud_v0_Schedule_missed_catchup_window_count
 
-Skipped Scheduled executions when Workflows were delayed longer than the catchup window.
-Labels: temporal_account, temporal_namespace
+当 Workflow 延迟时间长于追赶窗口时，跳过 Scheduled 执行。
+标签： Temporal_帐户、Temporal_Namespace
 
-#### temporal_cloud_v0_schedule_rate_limited_count
+#### Temporal_cloud_v0_Schedule_rate_limited_count
 
-Workflows that were delayed due to exceeding a rate limit.
-Labels: temporal_account, temporal_namespace
+Workflow 由于超出速率限制而延迟。
+标签： Temporal_帐户、Temporal_Namespace
 
-### Service latency metrics {#service-latency}
+### 服务延迟指标 {#service-latency}
 
-#### temporal_cloud_v0_service_latency_bucket
+#### Temporal_cloud_v0_service_latency_bucket
 
-Latency for `SignalWithStartWorkflowExecution`, `SignalWorkflowExecution`, `StartWorkflowExecution` operations.
-Labels: temporal_account, temporal_namespace, le, operation, temporal_service_type
+`SignalWithStartWorkflowExecution`、`SignalWorkflowExecution`、`StartWorkflowExecution` 操作的延迟。
+标签： Temporal_account、Temporal_Namespace、le、操作、Temporal_service_type
 
-#### temporal_cloud_v0_service_latency_count
+#### Temporal_cloud_v0_service_latency_count
 
-Count of latency observations for `SignalWithStartWorkflowExecution`, `SignalWorkflowExecution`, `StartWorkflowExecution` operations.
-Labels: temporal_account, temporal_namespace, operation, temporal_service_type
+`SignalWithStartWorkflowExecution`、`SignalWorkflowExecution`、`StartWorkflowExecution` 操作的延迟观察计数。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
 
-#### temporal_cloud_v0_service_latency_sum
+#### Temporal_cloud_v0_service_latency_sum
 
-Sum of latency observation time for `SignalWithStartWorkflowExecution`, `SignalWorkflowExecution`, `StartWorkflowExecution` operations.
-Labels: temporal_account, temporal_namespace, operation, temporal_service_type
+`SignalWithStartWorkflowExecution`、`SignalWorkflowExecution`、`StartWorkflowExecution` 操作的延迟观察时间总和。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
 
-### Workflow metrics {#workflow}
+<a id="workflow"></a>
+### Workflow 指标 {#workflow}
 
-#### temporal_cloud_v0_workflow_cancel_count
+#### Temporal_cloud_v0_Workflow_cancel_count
 
-Workflows canceled before completing execution.
-Labels: temporal_account, temporal_namespace, operation, temporal_service_type
+Workflows 在完成执行之前被取消。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
 
-#### temporal_cloud_v0_workflow_continued_as_new_count
+#### Temporal_cloud_v0_Workflow_continued_as_new_count
 
-Workflow Executions that were Continued-As-New from a past execution.
-Labels: temporal_account, temporal_namespace, operation, temporal_service_type
+Workflow Execution 从过去的执行中延续为新。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
 
-#### temporal_cloud_v0_workflow_failed_count
+#### Temporal_cloud_v0_Workflow_failed_count
 
-Workflows that failed before completion.
-Labels: temporal_account, temporal_namespace, operation, temporal_service_type
+Workflow 在完成之前失败。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
 
-#### temporal_cloud_v0_workflow_success_count
+#### Temporal_cloud_v0_Workflow_success_count
 
-Workflows that successfully completed.
-Labels: temporal_account, temporal_namespace, operation, temporal_service_type
+Workflow 已成功完成。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
 
-#### temporal_cloud_v0_workflow_terminate_count
+#### Temporal_cloud_v0_Workflow_terminate_count
 
-Workflows terminated before completing execution.
-Labels: temporal_account, temporal_namespace, operation, temporal_service_type
+Workflows 在完成执行之前终止。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
 
-#### temporal_cloud_v0_workflow_timeout_count
+#### Temporal_cloud_v0_Workflow_timeout_count
 
-Workflows that timed out before completing execution.
-Labels: temporal_account, temporal_namespace, operation, temporal_service_type
+Workflow 在完成执行之前超时。
+标签： Temporal_account、Temporal_Namespace、操作、Temporal_service_type
 
-## Metrics labels {#metrics-labels}
+## 指标标签 {#metrics-labels}
 
-**What labels can you use to filter metrics?**
+**您可以使用哪些标签来过滤指标？**
 
-Temporal Cloud metrics include key-value pairs called labels in their associated metadata.
-Labels help you categorize and differentiate metrics for precise filtering, querying, and aggregation.
-Use labels to filter specific attributes or compare values, such as numeric buckets in histograms.
-This added context enhances the monitoring and analysis capabilities, providing deeper insights into your data.
+Temporal Cloud 指标在其关联元数据中包含称为标签的键值对。
+标签可帮助您对指标进行分类和区分，以进行精确筛选、Querying 和聚合。
+使用标签来过滤特定属性或比较值，例如直方图中的数字桶。
+添加的上下文增强了监控和分析功能，提供对数据的更深入的见解。
 
-Use the following labels to filter metrics:
+使用以下标签来过滤指标：
 
-| Label                      | Explanation                                                                                                                                                                                                                                                                                |
+| 标签                      | 解释                                                                                                                                                                                                                                                                                |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `le`                       | Less than or equal to (`le`) is used in histograms to categorize observations into buckets based on their value being less than or equal to a predefined upper limit.                                                                                                                      |
-| `operation`                | This includes gRPC operations and general Cloud operations such as:<ul><li>SignalWorkflowExecution</li><li>StartBatchOperation</li><li>StartWorkflowExecution</li><li>TaskQueueMgr</li><li>TerminateWorkflowExecution</li><li>UpdateNamespace</li><li>UpdateSchedule</li></ul> See: [Metric Operations](#metrics-operations) and [Temporal Cloud Operation reference](/references/operation-list)|
-| `resource_exhausted_cause` | Cause for resource exhaustion.                                                                                                                                                                                                                                                             |
-| `task_type`                | Activity, Workflow, or Nexus.                                                                                                                                                                                                                                                              |
-| `temporal_account`         | Temporal Account.                                                                                                                                                                                                                                                                          |
-| `temporal_namespace`       | Temporal Namespace.                                                                                                                                                                                                                                                                        |
-| `temporal_service_type`    | Frontend or Matching or History or Worker.                                                                                                                                                                                                                                                 |
-| `is_background`            | This label on `temporal_cloud_v0_total_action_count` indicates when actions are produced by a Temporal background job, for example: hourly Workflow Export.                                                                                                                                |
-| `namespace_mode`           | This label on `temporal_cloud_v0_total_action_count` indicates if actions are produced by an active vs a standby Namespace. For a regular Namespace, `namespace_mode` will always be “active”.                                                                                             |
+| `le`                       | 小于或等于 (`le`) 在直方图中用于根据观测值小于或等于预定义上限将观测值分类到桶中。                                                                                                                      |
+| `operation`                | 这包括 gRPC 操作和一般云操作，例如如：<ul><li>SignalWorkflowExecution</li><li>StartBatchOperation</li><li>StartWorkflowExecution</li><li>Tas kQueueMgr</li><li>终止Workflow执行</li><li>ZZT ERM031ZZNamespace</li><li>UpdateSchedule</li></ul>请参阅：[公制运算](#metrics-operations) 和 [Temporal Cloud 操作参考](/references/operation-list)|
+| `resource_exhausted_cause` | 资源耗尽的原因。                                                                                                                                                                                                                                                             |
+| `task_type`                | Activity、Workflow 或 Nexus。                                                                                                                                                                                                                                                              |
+| `Temporal_account`         | Temporal 帐户。                                                                                                                                                                                                                                                                          |
+| `Temporal_Namespace`       | Temporal Namespace。                                                                                                                                                                                                                                                                        |
+| `Temporal_service_type`    | 前端或匹配或历史或 Worker。                                                                                                                                                                                                                                                 |
+| `is_background`            | `Temporal_cloud_v0_total_action_count` 上的此标签指示 Temporal 后台作业何时生成操作，例如：每小时 Workflow 导出。                                                                                                                                |
+| `Namespace_mode`           | `Temporal_cloud_v0_total_action_count` 上的此标签指示操作是由活动 Namespace 还是由备用 Namespace 产生。对于常规 Namespace，`Namespace_mode` 将始终处于“活动”状态。                                                                                             |
 
-The following is an example of how you can filter metrics using labels:
+以下是如何使用标签过滤指标的示例：
 
 ```text
 temporal_cloud_v0_poll_success_count{__rollup__="true", operation="TaskQueueMgr", task_type="Activity", temporal_account="12345", temporal_namespace="your_namespace.12345", temporal_service_type="matching"}
 ```
 
-## Operations {#metrics-operations}
+<a id="metrics-operations"></a>
+## 操作 {#metrics-operations}
 
-**What operation labels are captured by Temporal Cloud?**
+**Temporal Cloud 捕获哪些操作标签？**
 
-Operations are a special class of metrics label.
-They describe the context during which a metric was captured.
-Temporal Cloud includes the following operations labels:
+操作是一类特殊的指标标签。
+它们描述了捕获指标的上下文。
+Temporal Cloud 包括以下操作标签：
 
-- AdminDescribeMutableState
+- 管理描述可变状态
 - AdminGetWorkflowExecutionRawHistory
 - AdminGetWorkflowExecutionRawHistoryV2
-- AdminReapplyEvents
-- CountWorkflowExecutions
-- CreateSchedule
-- DeleteSchedule
-- DeleteWorkflowExecution
-- DescribeBatchOperation
-- DescribeNamespace
-- DescribeSchedule
-- DescribeTaskQueue
-- DescribeWorkflowExecution
-- GetWorkerBuildIdCompatibility
+- 管理重新申请事件
+- CountWorkflow执行次数
+- 创建Schedule
+- 删除Schedule
+- 删除Workflow执行
+- 描述批量操作
+- 描述Namespace
+- 描述Schedule
+- 描述任务队列
+- 描述Workflow执行
+- 获取WorkerBuildIdCompatibility
 - GetWorkerTaskReachability
-- GetWorkflowExecutionHistory
+- 获取Workflow执行历史记录
 - GetWorkflowExecutionHistoryReverse
-- ListBatchOperations
+- 列表批量操作
 - ListClosedWorkflowExecutions
 - OperatorDeleteNamespace
-- PatchSchedule
-- PollActivityTaskQueue
-- PollNexusTaskQueue
-- PollWorkflowExecutionHistory
-- PollWorkflowExecutionUpdate
-- PollWorkflowTaskQueue
+- 补丁Schedule
+- 轮询ActivityTaskQueue
+- 轮询NexusTaskQueue
+- 民意调查Workflow执行历史记录
+- 民意调查Workflow执行Update
+- 轮询WorkflowTaskQueue
 - QueryWorkflow
-- RecordActivityTaskHeartbeat
+- 记录ActivityTaskHeartbeat
 - RecordActivityTaskHeartbeatById
-- RegisterNamespace
-- RequestCancelWorkflowExecution
-- ResetStickyTaskQueue
-- ResetWorkflowExecution
-- RespondActivityTaskCanceled
-- RespondActivityTaskCompleted
-- RespondActivityTaskCompletedById
-- RespondActivityTaskFailed
-- RespondActivityTaskFailedById
-- RespondNexusTaskCompleted
-- RespondNexusTaskFailed
-- RespondQueryTaskCompleted
-- RespondWorkflowTaskCompleted
-- RespondWorkflowTaskFailed
-- SignalWithStartWorkflowExecution
-- SignalWorkflowExecution
-- StartBatchOperation
-- StartWorkflowExecution
-- StopBatchOperation
-- TerminateWorkflowExecution
+- 注册Namespace
+- 请求取消Workflow执行
+- 重置StickyTaskQueue
+- 重置Workflow执行
+- 回复ActivityTaskCanceled
+- 回复ActivityTaskCompleted
+- 响应ActivityTaskCompletedById
+- 响应ActivityTaskFailed
+- 响应ActivityTaskFailedById
+- 回复NexusTaskCompleted
+- 响应NexusTaskFailed
+- 回复QueryTaskCompleted
+- 回复WorkflowTaskCompleted
+- 响应WorkflowTaskFailed
+- SignalWithStartWorkflow执行
+- SignalWorkflow执行
+- 开始批量操作
+- 开始Workflow执行
+- 停止批量操作
+- 终止Workflow执行
 - UpdateNamespace
 - UpdateSchedule
-- UpdateWorkerBuildIdCompatibility
-- UpdateWorkflowExecution
+- UpdateWorkerBuildId兼容性
+- UpdateWorkflow执行
 
-As the following table shows, certain [metrics groups](#available-metrics) support [operations](#metrics-operations) for aggregation and filtering:
+如下表所示，某些[指标组](#available-metrics)支持[运营](#metrics-operations)进行聚合和过滤：
 
-| Metrics Group / Operations                      | All Operations | SignalWithStartWorkflowExecution / SignalWorkflowExecution / StartWorkflowExecution | TaskQueueMgr | CompletionStats |
+| 指标组/运营                      | 所有操作 | SignalWithStartWorkflow执行 / SignalWorkflow执行 / StartWorkflow执行 | 任务队列管理器 | 完成统计 |
 | ----------------------------------------------- | -------------- | ----------------------------------------------------------------------------------- | ------------ | --------------- |
-| **[Frontend Service Metrics](#frontend)**       | X              |                                                                                     |              |                 |
-| **[Service Latency Metrics](#service-latency)** |                | X                                                                                   |              |                 |
-| **[Poll Metrics](#poll)**                       |                |                                                                                     | X            |                 |
-| **[Workflow Metrics](#workflow)**               |                |                                                                                     |              | X               |
+| **[前端服务指标](#frontend)**       | X              |                                                                                     |              |                 |
+| **[服务延迟指标](#service-latency)** |                | X                                                                                   |              |                 |
+| **[民意调查指标](#poll)**                       |                |                                                                                     | X            |                 |
+| **[Workflow 指标](#workflow)**               |                |                                                                                     |              | X               |

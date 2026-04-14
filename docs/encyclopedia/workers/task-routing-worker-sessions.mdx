@@ -1,8 +1,8 @@
 ---
 id: task-routing-worker-sessions
-title: Task Routing and Worker sessions
-sidebar_label: Task Routing and Worker sessions
-description: Learn about routing Tasks and Worker Sessions. 
+title: "任务路由和 Worker 会话"
+sidebar_label: "任务路由和 Worker 会话"
+description: "了解路由任务和 Worker 会话。"
 slug: /task-routing
 toc_max_heading_level: 4
 keywords:
@@ -13,87 +13,97 @@ tags:
   - Task Queues
 ---
 
-This page discusses the following:
+本页讨论以下内容：
 
-- [Task Routing](#task-routing)
-- [Worker Sessions](#worker-session)
+- [任务路由](#task-routing)
+- [Worker 会议](#worker-session)
 
-## What is Task Routing? {#task-routing}
+<a id="task-routing"></a>
+## 什么是任务路由？ {#task-routing}
 
-Task Routing is simply when a Task Queue is paired with one or more Workers, primarily for Activity Task Executions.
+任务路由就是 Task Queue 与一个或多个 Worker 配对时的情况，主要用于 Activity 任务执行。
 
-This could also mean employing multiple Task Queues, each one paired with a Worker Process.
+这也可能意味着采用多个 Task Queue，每个 Worker 进程都配对。
 
-Task Routing has many applicable use cases.
+任务路由有许多适用的用例。
 
-Some SDKs provide a [Session API](#worker-session) that provides a straightforward way to ensure that Activity Tasks are executed with the same Worker without requiring you to manually specify Task Queue names.
-It also includes features like concurrent session limitations and worker failure detection.
+某些 SDK 提供 [会话API](#worker-session)，它提供了一种简单的方法来确保使用相同的 Worker 执行 Activity 任务，而无需您手动指定 Task Queue 名称。
+它还包括并发会话限制和 Worker 故障检测等功能。
 
-### Flow control
+<a id="flow-control"></a>
+### 流量控制 {#flow-control}
 
-A Worker that consumes from a Task Queue asks for an Activity Task only when it has available capacity, so it is never overloaded by request spikes.
-If Activity Tasks get created faster than Workers can process them, they are backlogged in the Task Queue.
+从 Task Queue 消耗的 Worker 仅在具有可用容量时才请求 Activity 任务，因此它永远不会因请求峰值而过载。
+如果 Activity 任务的创建速度快于 Worker 的处理速度，则它们会积压在 Task Queue 中。
 
-### Throttling
+<a id="throttling"></a>
+### 节流 {#throttling}
 
-The rate at which each Activity Worker polls for and processes Activity Tasks is configurable per Worker.
-Workers do not exceed this rate even if it has spare capacity.
-There is also support for global Task Queue rate limiting.
-This limit works across all Workers for the given Task Queue.
-It is frequently used to limit load on a downstream service that an Activity calls into.
+每个 Activity Worker 轮询和处理 Activity 任务的速率可根据 Worker 进行配置。
+即使 Worker 有闲置容量，也不会超过此速率。
+还支持全局 Task Queue 速率限制。
+此限制适用于给定 Task Queue 的所有 Worker。
+它经常用于限制 Activity 调用的下游服务的负载。
 
-### Specific environments
+<a id="specific-environments"></a>
+### 特定环境 {#specific-environments}
 
-In some cases, you might need to execute Activities in a dedicated environment.
-To send Activity Tasks to this environment, use a dedicated Task Queue.
+在某些情况下，您可能需要在专用环境中执行活动。
+要将 Activity 任务发送到此环境，请使用专用的 Task Queue。
 
-#### Route Activity Tasks to a specific host
+<a id="route-activity-tasks-to-a-specific-host"></a>
+#### 将 Activity 任务路由到特定主机 {#route-activity-tasks-to-a-specific-host}
 
-In some use cases, such as file processing or machine learning model training, an Activity Task must be routed to a specific Worker Process or Worker Entity.
+在某些用例中，例如文件处理或机器学习模型训练，Activity 任务必须路由到特定的 Worker 进程或 Worker 实体。
 
-For example, suppose that you have a Workflow with the following three separate Activities:
+例如，假设您有一个 Workflow，其中包含以下三个单独的活动：
 
-- Download a file.
-- Process the file in some way.
-- Upload a file to another location.
+- 下载文件。
+- 以某种方式处理文件。
+- 将文件上传到另一个位置。
 
-The first Activity, to download the file, could occur on any Worker on any host.
-However, the second and third Activities must be executed by a Worker on the same host where the first Activity downloaded the file.
+下载文件的第一个 Activity 可能发生在任何主机上的任何 Worker 上。
+但是，第二个和第三个活动必须由第一个 Activity 下载文件的同一主机上的 Worker 执行。
 
-In a real-life scenario, you might have many Worker Processes scaled over many hosts.
-You would need to develop your Temporal Application to route Tasks to specific Worker Processes when needed.
+在现实场景中，您可能有许多 Worker 进程在许多主机上扩展。
+您需要开发 Temporal 应用程序，以便在需要时将任务路由到特定的 Worker 流程。
 
-Code samples:
+代码示例：
 
-- [Go file processing example](https://github.com/temporalio/samples-go/tree/main/fileprocessing)
-- [Java file processing example](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/fileprocessing)
-- [PHP file processing example](https://github.com/temporalio/samples-php/tree/master/app/src/FileProcessing)
+- [Go文件处理示例](https://github.com/temporalio/samples-go/tree/main/fileprocessing)
+- [Java文件处理示例](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/fileprocessing)
+- [PHP文件处理示例](https://github.com/temporalio/samples-php/tree/master/app/src/FileProcessing)
 
-#### Route Activity Tasks to a specific process
+<a id="route-activity-tasks-to-a-specific-process"></a>
+#### 将 Activity 任务路由到特定进程 {#route-activity-tasks-to-a-specific-process}
 
-Some Activities load large datasets and cache them in the process.
-The Activities that rely on those datasets should be routed to the same process.
+某些活动会加载大型数据集并在此过程中缓存它们。
+依赖这些数据集的活动应路由到同一进程。
 
-In this case, a unique Task Queue would exist for each Worker Process involved.
+在这种情况下，涉及的每个 Worker 进程都会存在唯一的 Task Queue。
 
-#### Workers with different capabilities
+<a id="workers-with-different-capabilities"></a>
+#### Worker 具有不同的功能 {#workers-with-different-capabilities}
 
-Some Workers might exist on GPU boxes versus non-GPU boxes.
-In this case, each type of box would have its own Task Queue and a Workflow can pick one to send Activity Tasks.
+与非 GPU 盒子相比，某些 Worker 可能存在于 GPU 盒子上。
+在这种情况下，每种类型的盒子都有自己的 Task Queue，而 Workflow 可以选择一个来发送 Activity 任务。
 
-### Multiple priorities
+<a id="multiple-priorities"></a>
+### 多个优先级 {#multiple-priorities}
 
-If your use case involves more than one priority, you can create one Task Queue per priority, with a Worker pool per priority.
+如果您的用例涉及多个优先级，您可以为每个优先级创建一个 Task Queue，并为每个优先级创建一个 Worker 池。
 
-### Versioning
+<a id="versioning"></a>
+### 版本控制 {#versioning}
 
-Task Routing is the simplest way to version your code.
+任务路由是对代码进行版本控制的最简单方法。
 
-If you have a new backward-incompatible Activity Definition, start by using a different Task Queue.
+如果您有新的向后不兼容的 Activity Definition，请首先使用不同的 Task Queue。
 
-## What is a Worker Session? {#worker-session}
+<a id="worker-session"></a>
+## 什么是 Worker 会话？ {#worker-session}
 
-A Worker Session is a feature provided by some SDKs that provides a straightforward API for [Task Routing](#task-routing) to ensure that Activity Tasks are executed with the same Worker without requiring you to manually specify Task Queue names.
-It also includes features like concurrent session limitations and Worker failure detection.
+Worker 会话是某些 SDK 提供的一项功能，它为 [任务路由](#task-routing) 提供简单的 API，以确保使用相同的 Worker 执行 Activity 任务，而无需您手动指定 Task Queue 名称。
+它还包括并发会话限制和 Worker 故障检测等功能。
 
-- [How to use Worker Sessions](/develop/go/workers/sessions)
+- [如何使用 Worker 会话](/develop/go/workers/sessions)

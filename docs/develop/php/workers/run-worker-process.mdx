@@ -1,8 +1,8 @@
 ---
 id: run-worker-process
-title: Run Worker processes - PHP SDK
-description: Shows how to run Worker processes with the PHP SDK
-sidebar_label: Worker processes
+title: "运行 Worker 进程 - PHP SDK"
+description: "演示如何使用 PHP SDK 运行 Worker 进程"
+sidebar_label: "Worker 流程"
 slug: /develop/php/workers/run-worker-process
 toc_max_heading_level: 3
 tags:
@@ -11,28 +11,29 @@ tags:
   - Worker
 ---
 
-## How to run Worker Processes {#run-a-dev-worker}
+<a id="run-a-dev-worker"></a>
+## 如何运行 Worker 进程 {#run-a-dev-worker}
 
-The [Worker Process](/workers#worker-process) is where Workflow Functions and Activity Functions are executed.
+[Worker 流程](/workers#worker-process) 是执行 Workflow 函数和 Activity 函数的地方。
 
-- Each [Worker Entity](/workers#worker-entity) in the Worker Process must register the exact Workflow Types and Activity Types it may execute.
-- Each Worker Entity must also associate itself with exactly one [Task Queue](/task-queue).
-- Each Worker Entity polling the same Task Queue must be registered with the same Workflow Types and Activity Types.
+- Worker 进程中的每个 [Worker 实体](/workers#worker-entity) 必须注册其可能执行的确切 Workflow 类型和 Activity 类型。
+- 每个 Worker 实体还必须将其自身与一个 [Task Queue](/task-queue) 关联起来。
+- 轮询相同 Task Queue 的每个 Worker 实体必须使用相同的 Workflow 类型和 Activity 类型进行注册。
 
-A [Worker Entity](/workers#worker-entity) is the component within a Worker Process that listens to a specific Task Queue.
+[Worker 实体](/workers#worker-entity) 是 Worker 进程中侦听特定 Task Queue 的组件。
 
-Although multiple Worker Entities can be in a single Worker Process, a single Worker Entity Worker Process may be perfectly sufficient.
-For more information, see the [Worker tuning guide](/develop/worker-performance).
+尽管多个 Worker 实体可以位于单个 Worker 进程中，但单个 Worker 实体 Worker 进程可能就足够了。
+有关详细信息，请参阅 [Worker 调音指南](/develop/worker-performance)。
 
-A Worker Entity contains a Workflow Worker and/or an Activity Worker, which makes progress on Workflow Executions and Activity Executions, respectively.
+Worker 实体包含 Workflow Worker 和/或 Activity Worker，它们分别在 Workflow Execution 和 Activity 执行上取得进展。
 
-The [RoadRunner application server](https://roadrunner.dev/) will launch multiple Temporal PHP Worker processes based on provided `.rr.yaml` configuration.
+[RoadRunner 应用服务器](https://roadrunner.dev/) 将根据提供的 `.rr.yaml` 配置启动多个 Temporal PHP Worker 进程。
 
-Each Worker might connect to one or multiple Task Queues.
-Workers poll the _Temporal Service_ for tasks, perform those tasks, and communicate task execution results back to the _Temporal Service_.
+每个 Worker 可以连接到一个或多个 Task Queue。
+Worker 轮询 _Temporal 服务_ 中的任务，执行这些任务，并将任务执行结果传达回 _Temporal 服务_。
 
-Worker code is developed, deployed, and operated by Temporal customers.
-To create a worker use `Temporal\WorkerFactory`:
+Worker 代码由 Temporal 客户开发、部署和运营。
+要创建 Worker 使用 `Temporal\WorkerFactory`：
 
 ```php
 <?php
@@ -65,15 +66,15 @@ $worker->registerActivity(App\DemoActivity::class, fn(ReflectionClass $class) =>
 $factory->run();
 ```
 
-You can configure task queue name using first argument of `WorkerFactory`->`newWorker`:
+您可以使用 `WorkerFactory`->`newWorker` 的第一个参数配置 Task Queue 名称：
 
 ```php
 $worker = $factory->newWorker('your-task-queue');
 ```
 
-As mentioned preceding, you can create as many Task Queue connections inside a single Worker Process as you need.
+如前所述，您可以根据需要在单个 Worker 进程内创建任意数量的 Task Queue 连接。
 
-To configure additional WorkerOptions use `Temporal\Worker\WorkerOptions`:
+要配置其他 WorkerOptions，请使用 `Temporal\Worker\WorkerOptions`：
 
 ```php
 use Temporal\Worker\WorkerOptions;
@@ -85,7 +86,7 @@ $worker = $factory->newWorker(
 );
 ```
 
-Make sure to point the Worker file in application server configuration:
+确保在应用程序服务器配置中指向 Worker 文件：
 
 ```yaml
 rpc:
@@ -100,9 +101,9 @@ temporal:
     num_workers: 10
 ```
 
-> You can serve HTTP endpoints using the same server setup.
+> 您可以使用相同的服务器设置为 HTTP 端点提供服务。
 
-To provide the [API key](/cloud/api-keys) to RoadRunner use a `ServiceCredentials` DTO when creating the WorkerFactory:
+要向 RoadRunner 提供 [API密钥](/cloud/api-keys)，请在创建 WorkerFactory 时使用 `ServiceCredentials` DTO：
 
 ```php
 use Temporal\Worker\ServiceCredentials;
@@ -112,16 +113,16 @@ $workerFactory = \Temporal\WorkerFactory::create(
 );
 ```
 
-[How to configure connection to a Temporal Cloud](/develop/php/client/temporal-client#connect-to-temporal-cloud)
+[如何配置与 Temporal Cloud 的连接](/develop/php/client/temporal-client#connect-to-temporal-cloud)
 
-### How to register types {#register-types}
+### 如何注册类型 {#register-types}
 
-All Workers listening to the same Task Queue name must be registered to handle the exact same Workflows Types and Activity Types.
+必须注册所有监听相同 Task Queue 名称的 Worker 才能处理完全相同的 Workflow 类型和 Activity 类型。
 
-If a Worker polls a Task for a Workflow Type or Activity Type it does not know about, it fails that Task.
-However, the failure of the Task does not cause the associated Workflow Execution to fail.
+如果 Worker 轮询任务以查找它不知道的 Workflow 类型或 Activity 类型，则该任务将失败。
+但是，任务失败不会导致关联的 Workflow Execution 失败。
 
-Worker listens on a Task Queue and hosts both Workflow and Activity implementations:
+Worker 监听 Task Queue 并托管 Workflow 和 Activity 实现：
 
 ```php
 // Workflows are stateful. So you need a type to create instances:
@@ -130,9 +131,9 @@ $worker->registerWorkflowTypes(App\DemoWorkflow::class);
 $worker->registerActivity(App\DemoActivity::class);
 ```
 
-In case an activity class requires some external dependencies provide a callback - factory
-that creates or builds a new activity instance. The factory should be a callable which accepts
-an instance of ReflectionClass with an activity class which should be created.
+如果 Activity 类需要一些外部依赖项，则提供回调 - 工厂
+创建或构建新的 Activity 实例。工厂应该是一个可调用的接受
+应该创建一个带有 Activity 类的 ReflectionClass 实例。
 
 ```php
 $worker->registerActivity(
@@ -141,8 +142,8 @@ $worker->registerActivity(
 );
 ```
 
-If you want to clean up some resources after activity is done, you may register a finalizer. This callback is called
-after each activity invocation:
+如果您想在 Activity 完成后清理一些资源，您可以注册一个终结器。这个回调被称为
+每次 Activity 调用后：
 
 ```php
 $worker->registerActivityFinalizer(fn() => $kernel->shutdown());

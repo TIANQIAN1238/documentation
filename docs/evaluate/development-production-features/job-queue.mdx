@@ -1,8 +1,8 @@
 ---
 id: job-queue
-title: Job Queue
-sidebar_label: Job Queue
-description: Standalone Activities adds the ability to execute any Temporal Activity as a top-level primitive without the full overhead of a Workflow.
+title: "作业队列"
+sidebar_label: "作业队列"
+description: "独立活动增加了将任何 Temporal Activity 作为顶级原语执行的能力，而无需 Workflow 的全部开销。"
 keywords:
   - job queue
   - job system
@@ -16,42 +16,45 @@ tags:
 
 import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
 
-## What is a Job Queue?
+<a id="what-is-a-job-queue"></a>
+## 什么是作业队列？ {#what-is-a-job-queue}
 
-A job is a single, discrete unit of work that runs asynchronously in the background such as sending an email, processing a webhook, syncing data, or executing a single function reliably.
+作业是在后台异步运行的单个离散工作单元，例如发送电子邮件、处理 Webhook、同步数据或可靠地执行单个函数。
 
-A job queue is the system that manages these jobs: accepting work, dispatching it to workers, retrying on failure, and providing visibility into what's running and what failed.
+作业队列是管理这些作业的系统：接受工作、将其分派到 Worker、失败时重试以及将 Visibility 提供给正在运行的内容和失败的内容。
 
-**Standalone Activities are Temporal's job queue.**
+**独立活动是 Temporal 的作业队列。**
 
-They let you use Temporal Activities as background jobs, in addition to using the same Activities as steps inside a Workflow. You write an Activity once and can run it either as a background job or as part of a multi-step Workflow.
+除了使用与 Workflow 内的步骤相同的活动之外，它们还允许您使用 Temporal 活动作为后台作业。您只需编写一次 Activity，就可以将其作为后台作业或多步骤 Workflow 的一部分运行。
 
-Temporal provides stronger guarantees, better visibility, and more control than traditional job queues - while remaining cost-effective for high-volume use cases and offering a clean upgrade path to multi-step workflow orchestration.
+Temporal 提供比传统作业队列更强大的保证、更好的 Visibility 和更多的控制，同时对于大容量用例保持成本效益，并为多步骤 Workflow 编排提供干净的升级路径。
 
-### Overview
+＃＃＃ 概述
 
-Standalone Activities add the ability to execute any Temporal Activity as a top-level Activity Execution for durable job processing.
+独立活动添加了执行任何 Temporal Activity 作为顶级 Activity 执行的能力，以实现持久作业处理。
 
-#### Unified programming model & worker deployment
+####统一编程模型&Worker部署
 
-- Write an Activity once and use it anywhere - with a unified Activity programming model
-- Optional heartbeats support checkpointing for long-running jobs
-- Deploy to an Activity Worker once, and invoke standalone or from within a Workflow
+- 使用统一的 Activity 编程模型编写一次 Activity 并在任何地方使用它
+- 可选的心跳支持长时间运行作业的检查点
+- 部署到 Activity Worker 一次，并独立调用或从 Workflow 内部调用
 
-#### Execution lifecycle
+<a id="overview"></a>
+#### 执行生命周期 {#overview}
 
-- Jobs are submitted as Standalone Activity Executions
-- Each job is durably persisted with Temporal reliability, so jobs are not lost
-- Jobs are scheduled with priority, fairness, deduplication and no head-of-line blocking
-- Workers poll task queues and execute Activities (you run your own Workers)
-- Temporal ensures retries, timeouts, and exponential backoff policy is enforced
+- 作业作为独立 Activity 执行提交
+- 每个作业都以 Temporal 的可靠性持久保留，因此作业不会丢失
+- 作业是 Scheduled，具有优先级、公平性、重复数据删除和无队头阻塞
+- Worker 轮询 Task Queue 并执行活动（您运行自己的 Worker）
+- Temporal 确保重试、超时和指数退避策略得到执行
 
-#### Observability & lifecycle controls
+<a id="unified-programming-model-worker-deployment"></a>
+#### 可观察性和生命周期控制 {#unified-programming-model-worker-deployment}
 
-- Full job visibility (list, search) with detailed execution state, retry count, errors & results
-- OpenMetrics support
-- Lifecycle controls: cancel, pause, unpause, reset, terminate
-- Manual completion for external integrations & on-call management
+- 完整作业 Visibility（列表、搜索），包含详细的执行状态、重试计数、错误和结果
+- OpenMetrics 支持
+- 生命周期控制：取消、暂停、取消暂停、重置、终止
+- 手动完成外部集成和待命管理
 
 <RelatedReadContainer>
   <RelatedReadItem path="/standalone-activity" text="Standalone Activity concepts and getting started" archetype="encyclopedia" />

@@ -1,8 +1,8 @@
 ---
 id: service-health
-title: Monitor Temporal Cloud
-sidebar_label: Monitor Temporal Cloud
-description: Use Temporal Cloud metrics to monitor your production deployment Temporal Cloud.
+title: "监视器 Temporal Cloud"
+sidebar_label: "监视器 Temporal Cloud"
+description: "使用 Temporal Cloud 指标来监控您的生产部署 Temporal Cloud。"
 toc_max_heading_level: 4
 keywords:
   - temporal-cloud
@@ -14,46 +14,52 @@ tags:
   - Observability
 ---
 
-Temporal Cloud metrics help monitor production deployments.
-This documentation covers best practices for monitoring Temporal Cloud.
+Temporal Cloud 指标有助于监控生产部署。
+本文档涵盖了监控 Temporal Cloud 的最佳实践。
 
-## Monitor availability issues
+<a id="monitor-availability-issues"></a>
+## 监控可用性问题 {#monitor-availability-issues}
 
-When you see a sudden drop in Worker resource utilization, verify whether Temporal Cloud's API is showing increased latency and error rates.
+当您看到 Worker 资源利用率突然下降时，请验证 Temporal Cloud 的 API 是否显示延迟和错误率增加。
 
-### Reference Metrics
+<a id="reference-metrics"></a>
+### 参考指标 {#reference-metrics}
 
-- [temporal\_cloud\_v1\_service\_latency\_p99](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_service_latency_p99)
+- [Temporal\_cloud\_v1\_service\_latency\_p99](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_service_latency_p99)
 
-This metric measures latency for `SignalWithStartWorkflowExecution`, `SignalWorkflowExecution`, `StartWorkflowExecution` operations.
-These operations are mission critical and never [throttled](/cloud/service-availability#throughput).
-This metric is a good indicator of your lowest possible latency for the 99th percentile of requests.
+该指标衡量 `SignalWithStartWorkflowExecution`、`SignalWorkflowExecution`、`StartWorkflowExecution` 操作的延迟。
+这些操作是关键任务，绝不是 [节流](/cloud/service-availability#throughput)。
+该指标可以很好地指示第 99 个百分位数的请求的最低延迟。
 
-### Workflow execution latency
+<a id="workflow-execution-latency"></a>
+### Workflow Execution 延迟 {#workflow-execution-latency}
 
-To monitor end-to-end Workflow execution time (not just the service API latency above), use the workflow schedule-to-close latency metrics:
+要监控端到端 Workflow Execution 时间（不仅仅是上面的服务 API 延迟），请使用 Workflow Schedule 关闭延迟指标：
 
-- [temporal\_cloud\_v1\_workflow\_schedule\_to\_close\_latency\_p50](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_workflow_schedule_to_close_latency_p50)
-- [temporal\_cloud\_v1\_workflow\_schedule\_to\_close\_latency\_p95](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_workflow_schedule_to_close_latency_p95)
-- [temporal\_cloud\_v1\_workflow\_schedule\_to\_close\_latency\_p99](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_workflow_schedule_to_close_latency_p99)
+- [Temporal\_cloud\_v1\_Workflow\_Schedule\_to\_close\_latency\_p50](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_workflow_schedule_to_close_latency_p50)
+- [Temporal\_cloud\_v1\_Workflow\_Schedule\_to\_close\_latency\_p95](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_workflow_schedule_to_close_latency_p95)
+- [Temporal\_cloud\_v1\_Workflow\_Schedule\_to\_close\_latency\_p99](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_workflow_schedule_to_close_latency_p99)
 
-These measure the time from when a Workflow is scheduled until it closes, including all Activity execution time. A sudden increase may indicate Worker capacity issues, downstream service degradation, or retry storms.
+这些测量从 Workflow 为 Scheduled 到其关闭的时间，包括所有 Activity 执行时间。突然增加可能表明 Worker 容量问题、下游服务降级或重试风暴。
 
-## Monitor Temporal Service errors
+<a id="monitor-temporal-service-errors"></a>
+## 监控 Temporal 服务错误 {#monitor-temporal-service-errors}
 
-Check for Temporal Service gRPC API errors.
-Note that Service API errors are not equivalent to guarantees mentioned in the [Temporal Cloud SLA](/cloud/sla).
+检查 Temporal 服务 gRPC API 错误。
+请注意，服务 API 错误并不等同于 [Temporal Cloud SLA](/cloud/sla) 中提到的保证。
 
-### Reference Metrics
+<a id="reference-metrics"></a>
+### 参考指标 {#reference-metrics}
 
-- [temporal\_cloud\_v1\_service\_error\_count](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_service_error_count)
-- [temporal\_cloud\_v1\_service\_request\_count](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_service_request_count)
+- [Temporal\_cloud\_v1\_service\_error\_count](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_service_error_count)
+- [Temporal\_cloud\_v1\_service\_request\_count](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_service_request_count)
 
-### Prometheus Query for this Metric
+<a id="prometheus-query-for-this-metric"></a>
+### Prometheus Query 对于此指标 {#prometheus-query-for-this-metric}
 
-Measure your daily average success rate over 10-minute windows.
+衡量 10 分钟窗口内的每日平均成功率。
 
-OpenMetrics v1 metrics are pre-computed rates. Use `sum()` to aggregate across dimensions rather than `increase()` or `rate()`.
+OpenMetrics v1 指标是预先计算的速率。使用 `sum()` 跨维度聚合，而不是 `increase()` 或 `rate()`。
 
 ```
 avg_over_time((
@@ -72,115 +78,124 @@ avg_over_time((
     )[1d:1m])
 ```
 
-## Detecting Activity and Workflow Failures
+<a id="detecting-activity-and-workflow-failures"></a>
+## 检测 Activity 和 Workflow 故障 {#detecting-activity-and-workflow-failures}
 
-The metrics `temporal_cloud_v1_activity_fail_count` and `temporal_cloud_v1_workflow_failed_count` together provide failure detection for Temporal applications. These metrics work in tandem to give you both granular component-level visibility and high-level workflow health insights.
+指标 `Temporal_cloud_v1_Activity_fail_count` 和 `Temporal_cloud_v1_Workflow_failed_count` 一起为 Temporal 应用程序提供故障检测。这些指标协同工作，为您提供精细的组件级 Visibility 和高级 Workflow 运行状况洞察。
 
-### Activity failure cascade
+<a id="activity-failure-cascade"></a>
+### Activity 级联故障 {#activity-failure-cascade}
 
-If not using infinite retry policies, Activity failures can lead to Workflow failures:
+如果不使用无限重试策略，Activity 故障可能会导致 Workflow 故障：
 
 ```
 Activity Failure --> Retry Logic --> More Activity Failures --> Workflow Decision --> Potential Workflow Failure
 ```
 
-Activity failures are often recoverable and expected. Workflow failures represent terminal states requiring immediate attention.
-A spike in activity failures may precede workflow failures.
-Generally Temporal recommends that Workflows should be designed to always succeed. If an Activity fails more than its retry policy allows, we suggest having the Workflow handle Activity failure and take action to notify a human to take corrective action or be aware of the error.
+Activity 故障通常是可恢复的并且是预期的。 Workflow 故障代表需要立即关注的最终状态。
+Activity 故障的峰值可能先于 Workflow 故障。
+一般来说，Temporal 建议 Workflow 的设计应始终成功。如果 Activity 的故障超出其 Retry Policy 允许的范围，我们建议让 Workflow 处理 Activity 故障并采取措施通知人员采取纠正措施或了解错误。
 
-### Ratio-based monitoring
+<a id="ratio-based-monitoring"></a>
+### 基于比率的监控 {#ratio-based-monitoring}
 
-#### Failure conversion rate
+<a id="failure-conversion-rate"></a>
+#### 失败转化率 {#failure-conversion-rate}
 
-Monitor the ratio of workflow failures to activity failures:
+监控 Workflow 故障与 Activity 故障的比率：
 
 ```
 workflow_failure_rate = temporal_cloud_v1_workflow_failed_count / temporal_cloud_v1_activity_fail_count
 ```
 
-What to watch for:
-- High ratio (greater than 0.1): Poor error handling - activities failing are causing workflow failures
-- Low ratio (less than 0.01): Good resilience - activities fail but workflows recover
-- Sudden spikes: May indicate systematic issues
+需要注意什么：
+- 高比率（大于 0.1）：差错处理 - 活动失败导致 Workflow 故障
+- 低比率（小于 0.01）：良好的弹性 - 活动失败但 Workflow 恢复
+- 突然出现峰值：可能表明存在系统问题
 
-#### Activity success rate
+<a id="activity-success-rate"></a>
+#### Activity 成功率 {#activity-success-rate}
 
 ```
 activity_success_rate = temporal_cloud_v1_activity_success_count / (temporal_cloud_v1_activity_success_count + temporal_cloud_v1_activity_fail_count)
 ```
 
-Target: >95% for most applications. Lower success rate can be a sign of system troubles.
-See also:
-- [Crafting an Error Handling Strategy](https://learn.temporal.io/courses/errstrat/)
-- [Temporal Failures reference](/references/failures)
-- [Detecting Workflow failures](/encyclopedia/detecting-workflow-failures)
+目标：对于大多数应用，>95%。较低的成功率可能是系统出现问题的迹象。
+另请参阅：
+- [制定错误处理策略](https://learn.temporal.io/courses/errstrat/)
+- [Temporal 故障参考](/references/failures)
+- [检测 Workflow 故障](/encyclopedia/detecting-workflow-failures)
 
-## Monitor replication lag for Namespaces with High Availability features
+<a id="monitor-replication-lag-for-namespaces-with-high-availability-features"></a>
+## 监控具有高可用性功能的 Namespace 的复制延迟 {#monitor-replication-lag-for-namespaces-with-high-availability-features}
 
-Replication lag refers to the transmission delay of Workflow updates and history events from the primary Namespace to the replica.
-Always check the [metric replication lag](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p99) before initiating a failover.
-A forced failover when there is a large replication lag has a higher likelihood of rolling back Workflow progress.
+复制延迟是指从主 Namespace 到副本的 Workflow Update 和历史事件的传输延迟。
+在启动故障转移之前，请务必检查 [度量复制滞后](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p99)。
+当存在较大复制延迟时，强制故障转移更有可能回滚 Workflow 进度。
 
-**Who owns the replication lag?**
-Temporal owns replication lag.
+**谁拥有复制滞后？**
+Temporal 拥有复制滞后。
 
-**What guarantees are available?**
-There is no SLA for replication lag.
-Temporal recommends that customers do not trigger failovers except for testing or emergency situations.
-High Availability feature's four-9 guarantee SLA means Temporal will handle failovers and ensure high availability.
-Temporal also monitors replication lag.
-Customers who decide to trigger failovers should look at this metric before moving forward.
+**有什么保证？**
+没有针对复制滞后的 SLA。
+Temporal 建议客户除测试或紧急情况外不要触发故障转移。
+高可用性功能的 4-9 保证 SLA 意味着 Temporal 将处理故障转移并确保高可用性。
+Temporal 还监视复制滞后。
+决定触发故障转移的客户应在继续操作之前查看此指标。
 
-**If the lag is high, what should you do?**
-We don't expect users to failover.
-Please contact Temporal support if you feel you have a pressing need.
+**如果延迟很高，你应该做什么？**
+我们不希望用户进行故障转移。
+如果您觉得有迫切需要，请联系 Temporal 支持人员。
 
-**Where can you read more?**
-See [operations and metrics](/cloud/high-availability) for Namespaces with High Availability features.
+**哪里可以阅读更多内容？**
+请参阅 [运营和指标](/cloud/high-availability) 了解具有高可用性功能的 Namespace。
 
-### Reference Metrics
+<a id="reference-metrics"></a>
+### 参考指标 {#reference-metrics}
 
-- [temporal\_cloud\_v1\_replication\_lag\_p99](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p99)
-- [temporal\_cloud\_v1\_replication\_lag\_p95](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p95)
-- [temporal\_cloud\_v1\_replication\_lag\_p50](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p50)
+- [Temporal\_cloud\_v1\_replication\_lag\_p99](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p99)
+- [Temporal\_cloud\_v1\_replication\_lag\_p95](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p95)
+- [Temporal\_cloud\_v1\_replication\_lag\_p50](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p50)
 
-## Detecting Resource Exhaustion
+<a id="detecting-resource-exhaustion"></a>
+## 检测资源耗尽 {#detecting-resource-exhaustion}
 
-The Cloud metric `temporal_cloud_v1_resource_exhausted_error_count` is the primary indicator for Cloud-side throttling, signaling system limits
-are exceeded and `ResourceExhausted` gRPC errors are occurring. This generally does not break workflow processing due to how resources are prioritized.
+云指标`Temporal_cloud_v1_resource_exhausted_error_count`是云端节流的主要指标，Signaling系统限制
+超出并发生 `ResourceExhausted` gRPC 错误。由于资源的优先级排列方式，这通常不会破坏 Workflow 处理。
 
-Persistent non-zero values of this metric are unexpected.
+该指标持续存在非零值是意外的。
 
-## Monitoring Trends Against Limits {#rps-aps-rate-limits}
+## 监控趋势与限制 {#rps-aps-rate-limits}
 
-The set of [limit metrics](/cloud/metrics/openmetrics/metrics-reference#limit-metrics) provide a time series of values for limits. Use these
-metrics with their corresponding count metrics to monitor general trends against limits and set alerts when limits are exceeded. Use the corresponding throttle metrics
-to determine the severity of any active rate limiting.
-| Limit Metric | Count Metric | Throttle Metric |
+[限制指标](/cloud/metrics/openmetrics/metrics-reference#limit-metrics) 组提供了限制值的时间序列。使用这些
+指标及其相应的计数指标，以根据限制监控总体趋势，并在超出限制时设置警报。使用相应的节流指标
+确定任何主动速率限制的严重程度。
+| 限制指标 | 计数指标 | 油门公制 |
 | ------------ | ------------ | --------------- |
-| `temporal_cloud_v1_action_limit` | `temporal_cloud_v1_total_action_count` | `temporal_cloud_v1_total_action_throttled_count` |
-| `temporal_cloud_v1_service_request_limit` | `temporal_cloud_v1_service_request_count` | `temporal_cloud_v1_service_request_throttled_count` |
-| `temporal_cloud_v1_operations_limit` | `temporal_cloud_v1_operations_count` | `temporal_cloud_v1_operations_throttled_count` |
+| `Temporal_cloud_v1_action_limit` | `Temporal_cloud_v1_total_action_count` | `Temporal_cloud_v1_total_action_throttled_count` |
+| `Temporal_cloud_v1_service_request_limit` | `Temporal_cloud_v1_service_request_count` | `Temporal_cloud_v1_service_request_throttled_count` |
+| `Temporal_cloud_v1_operations_limit` | `Temporal_cloud_v1_operations_count` | `Temporal_cloud_v1_operations_throttled_count` |
 
-### On-demand envelope limits
+<a id="on-demand-envelope-limits"></a>
+### 按需信封限制 {#on-demand-envelope-limits}
 
-For Namespaces using provisioned capacity, the following metrics show what your limits would be under on-demand mode.
-Compare these against your current provisioned limits to evaluate capacity mode choices:
+对于使用预配置容量的 Namespace，以下指标显示按需模式下的限制。
+将这些与您当前配置的限制进行比较，以评估容量模式选择：
 
-| On-Demand Envelope Metric | Equivalent Limit Metric |
+| 按需包络指标 | 等效极限指标 |
 | ------------------------- | ----------------------- |
-| `temporal_cloud_v1_action_on_demand_envelope_limit` | `temporal_cloud_v1_action_limit` |
-| `temporal_cloud_v1_operations_on_demand_envelope_limit` | `temporal_cloud_v1_operations_limit` |
-| `temporal_cloud_v1_service_request_on_demand_envelope_limit` | `temporal_cloud_v1_service_request_limit` |
+| `Temporal_cloud_v1_action_on_demand_envelope_limit` | `Temporal_cloud_v1_action_limit` |
+| `Temporal_cloud_v1_operations_on_demand_envelope_limit` | `Temporal_cloud_v1_operations_limit` |
+| `Temporal_cloud_v1_service_request_on_demand_envelope_limit` | `Temporal_cloud_v1_service_request_limit` |
 
-For Namespaces already in on-demand mode, these metrics track the same values as their equivalent limit metrics.
+对于已处于按需模式的 Namespace，这些指标跟踪与其等效限制指标相同的值。
 
-The [Grafana dashboard example](https://github.com/grafana/jsonnet-libs/blob/master/temporal-mixin/dashboards/temporal-overview.json) includes a Usage & Quotas section
-that creates demo charts for these limits and count metrics respectively.
+[Grafana 仪表板示例](https://github.com/grafana/jsonnet-libs/blob/master/temporal-mixin/dashboards/temporal-overview.json) 包括“使用情况和配额”部分
+分别为这些限制和计数指标创建演示图表。
 
-The limit metrics, throttle metrics, and count metrics are already directly comparable as per second rates. Keep in mind that each `count` metric is represented as a per second rate averaged
-over each minute. For example, to get the total count of Actions, you must multiply this metric by 60.
-When setting alerts against limits, consider if your workload is spiky or sensitive to throttling (e.g. does latency matter?). If your workload is sensitive, consider alerting
-for `temporal_cloud_v1_total_action_count` at a 50% threshold of the `temporal_cloud_v1_action_limit`. If your workload is not sensitive, consider an alert at 90% of this threshold
-or directly when throttling is detected as a value greater than zero for `temporal_cloud_v1_total_action_throttled_count`. This logic can also be used to automatically scale [Temporal
-Resource Units](/cloud/capacity-modes#provisioned-capacity) up or down as needed. Some workloads choose to exceed limits and accept throttling because they are not latency sensitive.
+限制指标、节流指标和计数指标已经可以直接与每秒速率进行比较。请记住，每个 `count` 指标均表示为每秒平均速率
+每分钟。例如，要获取操作总数，您必须将此指标乘以 60。
+针对限制设置警报时，请考虑您的工作负载是否尖峰或对限制敏感（例如，延迟重要吗？）。如果您的工作负载很敏感，请考虑发出警报
+对于 `Temporal_cloud_v1_total_action_count`，阈值为 `Temporal_cloud_v1_action_limit` 的 50%。如果您的工作负载不敏感，请考虑在此阈值的 90% 处发出警报
+或者当 `Temporal_cloud_v1_total_action_throttled_count` 检测到节流值大于零时直接执行。该逻辑还可用于根据需要自动放大或缩小 [Temporal
+资源单位](/cloud/capacity-modes#provisioned-capacity)。某些工作负载选择超出限制并接受限制，因为它们对延迟不敏感。

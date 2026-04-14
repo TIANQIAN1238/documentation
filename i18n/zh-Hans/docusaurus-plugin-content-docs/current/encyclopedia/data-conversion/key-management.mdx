@@ -1,0 +1,51 @@
+---
+id: key-management
+title: Key management
+sidebar_label: Key management
+description: Learn about key management practices for securing encryption keys in Temporal applications.
+slug: /key-management
+toc_max_heading_level: 4
+keywords:
+  - encryption
+  - explanation
+  - keys
+  - payloads
+  - secrets
+  - data-converters
+  - key-management
+tags:
+  - Concepts
+  - Encryption
+  - Data Converters
+  - Security
+---
+
+本页讨论[密钥管理](#key-management)。
+
+## 什么是密钥管理？ {#密钥管理}
+
+密钥管理是使用加密密钥的基本部分。
+
+生成和轮换密钥涉及许多计算和逻辑方面，这通常需要堆栈中的专用应用程序。以下是有关使用 Temporal 应用程序加密密钥的一些一般建议：
+
+- [对称加密](https://en.wikipedia.org/wiki/Symmetric-key_algorithm)通常比非对称加密更快，并且产生的有效负载更小。通常，非对称加密的优点是它允许您单独分发加密和解密密钥，但根据您的基础设施，这可能不会为 Temporal 提供任何安全优势。
+
+- 基于 AES 的算法是 [Go 中的硬件加速](https://pkg.go.dev/crypto/aes) 和其他语言。 AES 算法经过广泛审查和信任，有许多不同的变体可以满足您的要求。使用“ALG_AES_256_GCM_HKDF_SHA512_COMMIT_KEY”的负载测试表现良好。
+
+- 以与存储密码、配置详细信息和其他敏感数据相同的方式存储加密密钥。如果可能，请将密钥加载到您的应用程序中，这样您就不需要进行网络调用来检索它。尽可能为每个环境或 Namespace 提供单独的密钥。
+
+- 确保您制定了密钥轮换策略，以防您的密钥遭到泄露或因其他原因需要更换。考虑使用专用秘密引擎或密钥管理系统 (KMS)。请注意，当您轮换密钥时，您可能还需要保留 Query 旧 Workflow 的旧密钥。
+
+### 按键轮换
+
+美国国家标准与技术研究所 (NIST) 指南建议定期轮换加密密钥。对于 AES-GCM 密钥，应遵循 NIST 出版物 800-38D 的指南，在密钥版本执行大约 2^32 次加密之前进行轮换。
+
+建议操作员估计密钥的加密率，并使用它来确定防止达到指导限制的轮换频率。例如，如果确定估计速率为每天 4000 万次操作，那么每三个月轮换一次密钥就足够了。
+
+Key rotation should generally be transparent to the Temporal Data Converter implementation. Temporal's `Encode()` and `Decode()` steps only need to trigger as expected, and Temporal has no knowledge of how or when you are generating your encryption keys.
+
+You should design your Encode and Decode steps to accept all the necessary parameters for your key management, such as the key version, alongside your payloads. Like the Data Converters, keys should be mapped to a Namespace in Temporal.
+
+### Using Vault for Key Management
+
+[This repository](https://github.com/zboralski/codecserver) provides a robust and complete example of using Temporal with HashiCorp's [Vault](https://www.vaultproject.io/) secrets engine.

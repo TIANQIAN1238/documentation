@@ -1,9 +1,9 @@
 ---
 id: index
-title: High Availability
-sidebar_label: High Availability
+title: "高可用性"
+sidebar_label: "高可用性"
 slug: /cloud/high-availability
-description: Temporal Cloud's Namespace with High Availability features offers automated failover, synchronized data, and replication for workloads requiring disaster-tolerant deployment and 99.99% uptime.
+description: "Temporal Cloud 的 Namespace 具有高可用性功能，可为需要容灾部署和 99.99% 正常运行时间的工作负载提供自动故障转移、同步数据和复制。"
 tags:
   - Temporal Cloud
   - Production
@@ -20,98 +20,105 @@ keywords:
 
 import { ToolTipTerm, DiscoverableDisclosure, CaptionedImage } from '@site/src/components';
 
-Temporal Cloud's High Availability features use asynchronous <ToolTipTerm term="replication"/> across multiple <ToolTipTerm term="isolation domains" /> to provide enhanced resilience and a 99.99% [SLA](/cloud/sla).
-When you enable High Availability features, Temporal deploys your primary and its <ToolTipTerm term="replica"/> in separate isolation domains, giving you control over the location of both. This redundancy, combined with <ToolTipTerm term="failover"/> capability, enhances availability during outages.
+Temporal Cloud 的高可用性功能使用跨多个 <ToolTipTerm term="isolation domains" /> 的异步 <ToolTipTerm term="replication"/> 来提供增强的弹性和 99.99% 的 [SLA](/cloud/sla)。
+当您启用高可用性功能时，Temporal 会将您的主数据库及其 <ToolTipTerm term="replica"/> 部署在单独的隔离域中，从而使您能够控制两者的位置。这种冗余与 <ToolTipTerm term="failover"/> 功能相结合，增强了停电期间的可用性。
 
 :::tip White paper
 
-For an in-depth guide covering everything from why you need High Availability to setting it up in production and advanced options, read the [High Availability White Paper](https://temporal.io/pages/high-availability-white-paper).
+有关涵盖从为什么需要高可用性到在生产中设置高可用性和高级选项等所有内容的深入指南，请阅读 [高可用性白皮书](https://temporal.io/pages/high-availability-white-paper)。
 
 :::
 
-## Built-in reliability
+<a id="built-in-reliability"></a>
+## 内置可靠性 {#built-in-reliability}
 
-Even without High Availability features, Temporal Cloud provides robust reliability and a 99.9% contractual Service Level Agreement ([SLA](/cloud/sla)) guarantee against service errors.
+即使没有高可用性功能，Temporal Cloud 也能提供强大的可靠性和 99.9% 的合同服务级别协议 ([SLA](/cloud/sla)) 保证，防止出现服务错误。
 
-Each standard Temporal Namespace uses replication across three [Availability Zones](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-availability-zones) (AZs) to ensure high availability.
-An Availability Zone is akin to an isolated datacenter managed by a cloud hyperscaler, with independent power, networking, and cooling infrastructure.
+每个标准 Temporal Namespace 都使用跨三个 [可用区](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-availability-zones) (AZ) 的复制来确保高可用性。
+可用区类似于由云超大规模管理器管理的隔离数据中心，具有独立的电源、网络和冷却基础设施。
 
-Replication across AZs makes sure that any changes to Workflow state or History are saved in all three AZs _before_ the Temporal Service acknowledges a change back to the Client.
-As a result, your standard Temporal Namespace stays operational even if one of its three AZs becomes unavailable.
-This provides the basis of the 99.9% service level agreement for Temporal Cloud Namespaces.
+跨可用区的复制可确保在 Temporal 服务向客户端确认更改之前，对 Workflow 状态或历史记录的任何更改都保存在所有三个可用区中。
+因此，即使标准 Temporal Namespace 的三个可用区之一变得不可用，它仍可保持运行。
+这为 Temporal Cloud Namespace 的 99.9% 服务水平协议奠定了基础。
 
-However some critical use cases--such as customer-facing applications--require even better availability. That is where Temporal Cloud's High Availability features come in.
+然而，一些关键用例（例如面向客户的应用程序）需要更好的可用性。这就是 Temporal Cloud 的高可用性功能的用武之地。
 
-## High Availability features {#high-availability-features}
+## 高可用性功能 {#high-availability-features}
 
-High Availability features extend Temporal Cloud's replication offering across even more disparate isolation domains:
+高可用性功能将 Temporal Cloud 的复制产品扩展到更多不同的隔离域：
 
-| **Deployment**                          | **Description**                                            |
+| **部署**                          | **描述**                                            |
 | --------------------------------------- | ---------------------------------------------------------- |
-| **Multi&#8209;region&nbsp;Replication** | Namespace is replicated across two cloud regions           |
-| **Multi&#8209;cloud&nbsp;Replication**  | Namespace is replicated across different cloud providers   |
+| **多区域复制** | Namespace 跨两个云区域复制           |
+| **多云复制**  | Namespace 在不同的云提供商之间复制   |
 
-### Key features
+<a id="key-features"></a>
+### 主要特点 {#key-features}
 
-- **Real-time replication** — Temporal replicates your Namespace across distant isolation domains with no performance impact to your Workers or Workflows.
-- **Automatic failover with 20-minute RTO** — Temporal manages failover with a 20-minute [RTO](/cloud/rpo-rto). You can also [trigger failover](/cloud/high-availability/failovers) manually at any time, for example for testing.
-- **Transparent DNS routing** — On failover, DNS reroutes your [Namespace Endpoint](/cloud/namespaces#access-namespaces) to the active region. Requests that reach the replica are forwarded to the active region automatically.
-- **Sub-1-minute RPO** — In a failover during an outage, the [Recovery Point Objective](/cloud/rpo-rto) is under one minute.
-- **Real-time lag monitoring** — Monitor your Namespace's replication lag in real time to understand your current RPO.
-- **Conflict resolution** — If the two regions are not fully in sync at the time of failover, Temporal's conflict resolution process reconciles discrepancies and ensures data integrity.
+- **实时复制** — Temporal 跨远程隔离域复制您的 Namespace，而不会对您的 Worker 或 Workflow 产生性能影响。
+- **具有 20 分钟 RTO 的自动故障转移** — Temporal 通过 20 分钟 [RTO](/cloud/rpo-rto) 管理故障转移。您也可以随时手动 [触发故障转移](/cloud/high-availability/failovers)，例如用于测试。
+- **透明 DNS 路由** — 故障转移时，DNS 会将您的 [Namespace 端点](/cloud/namespaces#access-namespaces) 重新路由到活动区域。到达副本的请求会自动转发到活动区域。
+- **不到 1 分钟的 RPO** — 在中断期间的故障转移中，[恢复点目标](/cloud/rpo-rto) 的时间不到一分钟。
+- **实时滞后监控** — 实时监控 Namespace 的复制滞后，以了解您当前的 RPO。
+- **冲突解决** — 如果两个区域在故障转移时未完全同步，Temporal 的冲突解决过程会协调差异并确保数据完整性。
 
 :::info Region availability
 
-You can usually choose your replica region, but the replica must be on the same continent as the primary region.
-This means that a few Temporal Cloud regions do not yet support Multi-region Replication and/or Multi-cloud Replication.
-See [Regions](/cloud/regions) for a full list of supported replica regions.
+您通常可以选择副本区域，但副本必须与主区域位于同一大陆。
+这意味着一些 Temporal Cloud 区域尚不支持多区域复制和/或多云复制。
+有关受支持副本区域的完整列表，请参阅 [地区](/cloud/regions)。
 
-You can't enable both Multi-region Replication and Multi-cloud Replciation on the same Namepsace at the same time.
+您无法在同一命名空间上同时启用多区域复制和多云复制。
 
 :::
 
-### Multi-cloud Replication
+<a id="multi-cloud-replication"></a>
+### 多云复制 {#multi-cloud-replication}
 
-Multi-cloud Replication spreads a Namespace across entirely different cloud providers, keeping your Namespace running even during a cloud-wide outage.
-If a provider outage, service disruption, or network issue occurs, traffic automatically shifts to the replica.
+多云复制将 Namespace 分布在完全不同的云提供商之间，即使在全云中断期间也能保持 Namespace 运行。
+如果发生提供商中断、服务中断或网络问题，流量会自动转移到副本。
 
-Replicated data is encrypted and transmitted across the public internet between cloud providers.
-This internet connectivity also allows Workers in one cloud to reach the replica in a different cloud during failover.
-If you use [private connectivity](/cloud/high-availability/ha-connectivity), additional architecture work may be required to ensure your Workers can reach the replica region.
+复制的数据经过加密并通过公共互联网在云提供商之间传输。
+这种互联网连接还允许一个云中的 Worker 在故障转移期间到达不同云中的副本。
+如果您使用 [私人连接](/cloud/high-availability/ha-connectivity)，可能需要额外的架构工作来确保您的 Worker 可以到达副本区域。
 
 :::info
 
-When you adopt Temporal's High Availability features, don't forget to consider the reliability of your own workers, infrastructure, and dependencies.
-Issues like network outages, hardware failures, or misconfigurations in your own systems can affect your application performance.
+当您采用 Temporal 的高可用性功能时，不要忘记考虑您自己的 Worker、基础设施和依赖项的可靠性。
+网络中断、硬件故障或您自己的系统配置错误等问题可能会影响您的应用程序性能。
 
-For the highest level of reliability, distribute your dependencies across regions, and use our Multi-region or Multi-cloud replication features.
-Using physically separated regions improves the fault tolerance of your application.
+为了获得最高级别的可靠性，请跨区域分布您的依赖项，并使用我们的多区域或多云复制功能。
+使用物理上分离的区域可以提高应用程序的容错能力。
 
 :::
 
-## Service levels and recovery objectives
+<a id="service-levels-and-recovery-objectives"></a>
+## 服务水平和恢复目标 {#service-levels-and-recovery-objectives}
 
-Namespaces using High Availability have a 99.99% [uptime SLA](/cloud/sla) with sub-1-minute [RPO](/cloud/rpo-rto) and 20-minute [RTO](/cloud/rpo-rto). For detailed information:
+使用高可用性的 Namespace 具有 99.99% 的 [正常运行时间服务等级协议](/cloud/sla)，其中 [恢复点目标](/cloud/rpo-rto) 不到 1 分钟，[RTO](/cloud/rpo-rto) 不到 20 分钟。详细信息：
 
-- [Service Level Agreement (SLA)](/cloud/sla)
-- [Recovery Point Objective (RPO) and Recovery Time Objective (RTO)](/cloud/rpo-rto)
+- [服务水平协议 (SLA)](/cloud/sla)
+- [恢复点目标 (RPO) 和恢复时间目标 (RTO)](/cloud/rpo-rto)
 
-## Failover
+<a id="failover"></a>
+## 故障转移 {#failover}
 
-High Availability Namespaces can automatically or manually [fail over](/cloud/high-availability/failovers) to the replica if the primary is unavailable or unhealthy.
+高可用性 如果主数据库不可用或运行状况不佳，Namespace 可以自动或手动将 [故障转移](/cloud/high-availability/failovers) 发送到副本。
 
-## Target workloads
+<a id="target-workloads"></a>
+## 目标工作负载 {#target-workloads}
 
-High Availability Namespaces are a great solution for Workloads where an outage would cause:
+高可用性 Namespace 是针对会导致中断的工作负载的绝佳解决方案：
 
-- Revenue loss
-- Poor customer experience
-- Problems stemming from policy/legal requirements that demand high availability
+- 收入损失
+- 客户体验差
+- 源于要求高可用性的政策/法律要求的问题
 
-These are often major concerns for financial services, e-commerce, gaming, global SaaS platforms, bookings & reservations, delivery & shipping, and order management.
+这些通常是金融服务、电子商务、游戏、全球 SaaS 平台、预订和预订、交付和运输以及订单管理的主要问题。
 
-## Same-region Replication
+<a id="same-region-replication"></a>
+## 同域复制 {#same-region-replication}
 
-In selected regions, you can add a replica to a Namespace in the same region.
-Temporal operates a "cell architecture" and will replicate the Namespace across multiple cells in that region.
-This feature is currently in [Public Preview](/evaluate/development-production-features/release-stages) in selected regions.
+在选定区域中，您可以将副本添加到同一区域中的 Namespace。
+Temporal 运行“单元架构”，并将在该区域的多个单元中复制 Namespace。
+此功能目前在选定区域中以 [公开预览](/evaluate/development-production-features/release-stages) 形式提供。

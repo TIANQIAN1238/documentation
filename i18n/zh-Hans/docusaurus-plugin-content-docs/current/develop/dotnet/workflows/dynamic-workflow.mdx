@@ -1,0 +1,40 @@
+---
+id: dynamic-workflow
+title: 动态 Workflow - .NET SDK
+sidebar_label: 动态Workflow
+description: 本节介绍动态 Workflow 与 .NET SDK
+toc_max_heading_level: 4
+keywords:
+  - .NET SDK
+tags:
+  - .NET SDK
+  - Temporal SDKs
+---
+
+## 设置动态 Workflow {#set-a-dynamic-Workflow}
+
+**如何使用 Temporal .NET SDK 设置动态 Workflow**
+
+Temporal 中的动态 Workflow 是在运行时动态调用的 Workflow，如果没有注册其他同名的 Workflow。
+通过将“[Workflow]”属性上的“Dynamic”设置为“true”，可以将 Workflow 设为动态。
+您必须先向 Worker 注册 Workflow，然后才能调用它。
+Worker 上只能存在一个 Dynamic Workflow。
+
+然后，Workflow Definition 必须接受“Temporalio.Converters.IRawValue[]”类型的单个参数。
+[Workflow.PayloadConverter](https://dotnet.Temporal.io/api/Temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_PayloadConverter) 属性用于使用扩展方法将“IRawValue”对象转换为所需类型“Temporalio.转换器”Namespace。
+
+```csharp
+[Workflow(Dynamic = true)]
+public class DynamicWorkflow
+{
+    [WorkflowRun]
+    public async Task<string> RunAsync(IRawValue[] args)
+    {
+        var name = Workflow.PayloadConverter.ToValue<string>(args.Single());
+        var param = MyActivityParams("Hello", name);
+        return await Workflow.ExecuteActivityAsync(
+            (MyActivities a) => a.MyActivity(param),
+            new() { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
+    }
+}
+```

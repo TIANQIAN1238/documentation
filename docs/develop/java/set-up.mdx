@@ -1,8 +1,8 @@
 ---
 id: set-up-your-local-java
-title: Set up your local with the Java SDK
-sidebar_label: Quickstart
-description: Configure your local development environment to get started developing with Temporal
+title: "使用 Java SDK 设置本地"
+sidebar_label: "快速入门"
+description: "配置本地开发环境以开始使用 Temporal 进行开发"
 keywords:
   - set up
   - getting started
@@ -19,9 +19,10 @@ import { CallToAction } from '@site/src/components/elements/CallToAction';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Quickstart
+<a id="quickstart"></a>
+# 快速入门 {#quickstart}
 
-Configure your local development environment to get started developing with Temporal.
+配置本地开发环境以开始使用 Temporal 进行开发。
 
 <SetupSteps>
 <SetupStep code={
@@ -31,18 +32,18 @@ Configure your local development environment to get started developing with Temp
     </CodeSnippet>
   </>
 }>
-## Install the Java JDK
+##安装Java JDK
 
-Make sure you have the Java JDK installed. You can either download a copy directly from Oracle or select an OpenJDK
-distribution from your preferred vendor.
+确保您已安装 Java JDK。您可以直接从 Oracle 下载副本或选择 OpenJDK
+来自您首选供应商的分销。
 
-You'll also need either Maven or Gradle installed.
+您还需要安装 Maven 或 Gradle。
 
-**If you don't have Maven:** [Download](https://maven.apache.org/download.cgi) and
-[install](https://maven.apache.org/install.html) from Apache.org, or use Homebrew: `brew install maven`.
+**如果您没有 Maven：** [下载](https://maven.apache.org/download.cgi) 和
+来自 Apache.org 的 [安装](https://maven.apache.org/install.html)，或使用 Homebrew：`brew install maven`。
 
-**If you don't have Gradle:** [Download](https://gradle.org/install/) from Gradle.org, use
-[IntelliJ IDEA](https://www.jetbrains.com/idea/) (bundled), or use Homebrew: `brew install gradle`.
+**如果您没有 Gradle：** 来自 Gradle.org 的 [下载](https://gradle.org/install/)，请使用
+[智能IDEA](https://www.jetbrains.com/idea/)（捆绑），或使用自制软件：`brew install gradle`。
 
 </SetupStep>
 
@@ -73,14 +74,15 @@ You'll also need either Maven or Gradle installed.
 </>
 }>
 
-## Create a Project
+<a id="install-the-java-jdk"></a>
+## 创建一个项目 {#install-the-java-jdk}
 
-Now that you have your build tool installed, create a project to manage your dependencies and build your Temporal
-application.
+现在您已经安装了构建工具，创建一个项目来管理您的依赖项并构建您的 Temporal
+应用程序。
 
-Choose your build tool to create the appropriate project structure. For Maven, this creates a standard project with the
-necessary directories and a basic pom.xml file. For Gradle, this creates a project with build.gradle and the standard
-Gradle directory structure.
+选择您的构建工具来创建适当的项目结构。对于 Maven，这将创建一个标准项目
+必要的目录和基本的 pom.xml 文件。对于 Gradle，这会创建一个包含 build.gradle 和标准的项目
+Gradle 目录结构。
 
 </SetupStep>
 
@@ -150,14 +152,15 @@ sourceSets.main.runtimeClasspath mainClass = 'helloworkflow.Starter' }`}
 </>
 }>
 
-## Add Temporal Java SDK Dependencies
+<a id="create-a-project"></a>
+## 添加 Temporal Java SDK 依赖项 {#create-a-project}
 
-Now add the Temporal SDK dependencies to your project configuration file.
+现在将 Temporal SDK 依赖项添加到项目配置文件中。
 
-For Maven, add the following dependencies to your `pom.xml` file. For Gradle, add the following lines to your
-`build.gradle` file.
+对于 Maven，请将以下依赖项添加到 `pom.xml` 文件中。对于 Gradle，将以下行添加到您的
+`build.gradle` 文件。
 
-Next, you'll configure a local Temporal Service for development.
+接下来，您将配置本地 Temporal 服务以进行开发。
 
 </SetupStep>
 
@@ -197,12 +200,13 @@ Next, you'll configure a local Temporal Service for development.
 </>
 }>
 
-## Install Temporal CLI and start the development server
+<a id="add-temporal-java-sdk-dependencies"></a>
+## 安装Temporal CLI并启动开发服务器 {#add-temporal-java-sdk-dependencies}
 
-The fastest way to get a development version of the Temporal Service running on your local machine is to use
-[Temporal CLI](https://docs.temporal.io/cli).
+在本地计算机上运行 Temporal 服务的开发版本的最快方法是使用
+[Temporal CLI](https://docs.temporal.io/cli)。
 
-Choose your operating system to install Temporal CLI:
+选择您的操作系统来安装 Temporal CLI：
 
 </SetupStep>
 
@@ -223,40 +227,43 @@ temporal server start-dev --ui-port 8080
 </>
 }>
 
-## Start the development server
+<a id="install-temporal-cli-and-start-the-development-server"></a>
+## 启动开发服务器 {#install-temporal-cli-and-start-the-development-server}
 
-Once you've installed Temporal CLI and added it to your PATH, open a new Terminal window and run the following command.
+安装 Temporal CLI 并将其添加到 PATH 后，打开一个新的终端窗口并运行以下命令。
 
-This command starts a local Temporal Service. It starts the Web UI, creates the default Namespace, and uses an in-memory
-database.
+此命令启动本地 Temporal 服务。它启动 Web UI，创建默认的 Namespace，并使用内存中的
+数据库。
 
-The Temporal Service will be available on localhost:7233. The Temporal Web UI will be available at
+Temporal 服务将在 localhost:7233 上可用。 Temporal Web UI 将在以下网址提供：
 http://localhost:8233.
 
-Leave the local Temporal Service running as you work through tutorials and other projects. You can stop the Temporal
-Service at any time by pressing CTRL+C.
+当您完成教程和其他项目时，让本地 Temporal 服务保持运行。您可以停止 Temporal
+按 CTRL+C 可随时提供服务。
 
-Once you have everything installed, you're ready to build apps with Temporal on your local machine.
+安装完所有内容后，您就可以在本地计算机上使用 Temporal 构建应用程序了。
 
 </SetupStep>
 </SetupSteps>
-## Run Hello World: Test Your Installation
+<a id="start-the-development-server"></a>
+## 运行 Hello World：测试您的安装 {#start-the-development-server}
 
-Now let's verify your setup is working by creating and running a complete Temporal application with both a Workflow and
-Activity.
+现在，让我们通过创建并运行一个完整的 Temporal 应用程序来验证您的设置是否正常工作，其中包含 Workflow 和
+Activity。
 
-This test will confirm that:
+该测试将确认：
 
-- The Temporal Java SDK is properly installed
-- Your local Temporal Service is running
-- You can successfully create and execute Workflows and Activities
-- The communication between components is functioning correctly
+- Temporal Java SDK 已正确安装
+- 您本地的 Temporal 服务正在运行
+- 您可以成功创建并执行 Workflow 和活动
+- 组件之间的通信功能正常
 
-### 1. Create the Activity Interface
+<a id="run-hello-world-test-your-installation"></a>
+### 1.创建Activity接口 {#run-hello-world-test-your-installation}
 
-Create an Activity interface file (GreetActivities.java):
+创建Activity接口文件（GreetActivities.java）：
 
-_Note that all files for this quickstart will be created under src/main/java/helloworkflow._
+_请注意，本快速入门的所有文件都将在 src/main/java/helloWorkflow 下创建。_
 
 ```java
 package helloworkflow;
@@ -273,15 +280,16 @@ public interface GreetActivities {
 }
 ```
 
-An Activity is a method that executes a single, well-defined action (either short or long running), which often involve
-interacting with the outside world, such as sending emails, making network requests, writing to a database, or calling
-an API, which are prone to failure. If an Activity fails, Temporal automatically retries it based on your configuration.
+Activity 是一种执行单个明确定义的操作（短期或长期运行）的方法，通常涉及
+与外界交互，例如发送电子邮件、发出网络请求、写入数据库或调用
+API，很容易出现故障。如果 Activity 失败，Temporal 会根据您的配置自动重试。
 
-You define Activities in Java as an annotated interface, and its implementation.
+您将 Java 中的活动定义为带注释的接口及其实现。
 
-### 2. Create the Activity Implementation
+<a id="1-create-the-activity-interface"></a>
+### 2. 创建 Activity 实现 {#1-create-the-activity-interface}
 
-Create an Activity implementation file (GreetActivitiesImpl.java):
+创建Activity实现文件（GreetActivitiesImpl.java）：
 
 ```java
 package helloworkflow;
@@ -296,9 +304,10 @@ public class GreetActivitiesImpl implements GreetActivities {
 }
 ```
 
-### 3. Create the Workflow
+<a id="2-create-the-activity-implementation"></a>
+### 3.创建Workflow {#2-create-the-activity-implementation}
 
-Create a Workflow file (SayHelloWorkflow.java):
+创建 Workflow 文件 (SayHelloWorkflow.java)：
 
 ```java
 package helloworkflow;
@@ -315,15 +324,16 @@ public interface SayHelloWorkflow {
 }
 ```
 
-Workflows orchestrate Activities and contain the application logic. Temporal Workflows are resilient. They can run and
-keep running for years, even if the underlying infrastructure fails. If the application itself crashes, Temporal will
-automatically recreate its pre-failure state so it can continue right where it left off.
+Workflow 编排活动并包含应用程序逻辑。 Temporal Workflow 具有弹性。他们可以奔跑并且
+即使底层基础设施出现故障，也能持续运行数年。如果应用程序本身崩溃，Temporal 将
+自动重新创建故障前的状态，以便可以从中断处继续。
 
-You define Workflows in Java as an annotated interface, and its implementation.
+您在 Java 中将 Workflow 定义为带注释的接口及其实现。
 
-### 4. Create the Workflow Implementation
+<a id="3-create-the-workflow"></a>
+### 4. 创建 Workflow 实现 {#3-create-the-workflow}
 
-Create a Workflow implementation file (SayHelloWorkflowImpl.java):
+创建Workflow实现文件（SayHelloWorkflowImpl.java）：
 
 ```java
 package helloworkflow;
@@ -350,9 +360,10 @@ public class SayHelloWorkflowImpl implements SayHelloWorkflow {
 }
 ```
 
-### 5. Create and Run the Worker
+<a id="4-create-the-workflow-implementation"></a>
+### 5. 创建并运行 Worker {#4-create-the-workflow-implementation}
 
-Create a Worker file (SayHelloWorker.java):
+创建 Worker 文件 (SayHelloWorker.java)：
 
 ```java
 package helloworkflow;
@@ -383,9 +394,9 @@ public class SayHelloWorker {
 }
 ```
 
-With your Activity and Workflow defined, you need a Worker to execute them.
+定义了 Activity 和 Workflow 后，您需要 Worker 来执行它们。
 
-Open a new terminal and run the Worker:
+打开一个新终端并运行 Worker：
 
 <Tabs>
 <TabItem value="maven" label="Maven">
@@ -405,20 +416,21 @@ mvn compile exec:java -Dexec.mainClass="helloworkflow.SayHelloWorker"
 </TabItem>
 </Tabs>
 
-A Worker polls a Task Queue, that you configure it to poll, looking for work to do. Once the Worker dequeues a Workflow
-or Activity task from the Task Queue, it then executes that task.
+Worker 轮询 Task Queue，您将其配置为轮询，寻找要做的工作。一旦 Worker 将 Workflow 出列
+或来自 Task Queue 的 Activity 任务，然后执行该任务。
 
-Workers are a crucial part of your Temporal application as they're what actually execute the tasks defined in your
-Workflows and Activities. For more information on Workers, see
-[Understanding Temporal](/evaluate/understanding-temporal#workers) and a [deep dive into Workers](/workers).
+Worker 是 Temporal 应用程序的重要组成部分，因为它们实际执行您的 Temporal 应用程序中定义的任务。
+Workflow 和活动。有关 Worker 的更多信息，请参阅
+[了解 Temporal](/evaluate/understanding-temporal#workers) 和 [深入研究 Worker](/workers)。
 
-### 6. Execute the Workflow
+<a id="5-create-and-run-the-worker"></a>
+### 6.执行Workflow {#5-create-and-run-the-worker}
 
-Now that your Worker is running, it's time to start a Workflow Execution.
+现在您的 Worker 正在运行，是时候启动 Workflow Execution 了。
 
-This final step will validate that everything is working correctly with your file labeled `Starter.java`.
+最后一步将验证标记为 `Starter.java` 的文件是否一切正常。
 
-Create a separate file called `Starter.java`:
+创建一个名为 `Starter.java` 的单独文件：
 
 ```java
 package helloworkflow;
@@ -449,7 +461,7 @@ public class Starter {
 }
 ```
 
-While your worker is still running, open a new terminal and run:
+当您的 Worker 仍在运行时，打开一个新终端并运行：
 
 <Tabs>
 <TabItem value="maven" label="Maven">
@@ -469,13 +481,14 @@ mvn compile exec:java -Dexec.mainClass="helloworkflow.Starter"
 </TabItem>
 </Tabs>
 
-### Verify Success
+<a id="6-execute-the-workflow"></a>
+### 验证成功 {#6-execute-the-workflow}
 
-If everything is working correctly, you should see:
+如果一切正常，您应该看到：
 
-- Worker processing the workflow and activity
-- Output: `Workflow result: Hello Temporal`
-- Workflow Execution details in the [Temporal Web UI](http://localhost:8233)
+- Worker 处理 Workflow 和 Activity
+- 输出：`Workflow result: Hello Temporal`
+- [Temporal 网页用户界面](http://localhost:8233) 中的 Workflow Execution 详细信息
 
 <CallToAction href="https://learn.temporal.io/getting_started/java/first_program_in_java/">
   <h3>Next: Run your first Temporal Application</h3>

@@ -1,8 +1,8 @@
 ---
 id: notifications 
-title: Notifications
-sidebar_label: Notifications
-description: Receive updates about Temporal Cloud including when certificates will expire, billing updates, and when a failover has completed.
+title: "通知"
+sidebar_label: "通知"
+description: "接收有关 Temporal Cloud 的 Update，包括证书何时过期、计费 Update 以及故障转移何时完成。"
 slug: /cloud/notifications
 toc_max_heading_level: 4
 keywords:
@@ -19,33 +19,33 @@ tags:
   - Billing
 ---
 
-## Get notified about Temporal Cloud status {#cloud-status}
+## 获取有关 Temporal Cloud 状态的通知 {#cloud-status}
 
-In the event of an incident, Temporal updates the [Temporal Cloud status page](https://status.temporal.io/) with important updates.
-Users can subscribe to updates in their preferred mode (e.g. email, Slack, SMS, etc.) by visiting this page.
+如果发生事故，Temporal Update 与重要的 Update 一起成为 [Temporal Cloud 状态页](https://status.temporal.io/)。
+用户可以通过访问此页面以自己喜欢的方式（例如电子邮件、Slack、短信等）订阅 Update。
 
-## Get notified about administrative events {#admin-notifications}
+## 获取有关管理事件的通知 {#admin-notifications}
 
-Temporal Cloud sends emails to notify users of important administrative events.
+Temporal Cloud 发送电子邮件以通知用户重要的管理事件。
 
-| Reason for email | Who receives email |
+| 发送电子邮件的原因 | 谁收到电子邮件 |
 |------------------ | -------------------|
-| Certificate Expiring in 15 days | Global Administrator, Namespace Administrator, Account Owner |
-| Certificate Expiring in 10 days | Global Administrator, Namespace Administrator, Account Owner |
-| Certificate Expiring in 5 days  | Global Administrator, Namespace Administrator, Account Owner |
-| API Key Expiring in 30 days     | Global Administrator, Account Owner, individual user (if API Key has an owner) |
-| API Key Expiring in 20 days     | Global Administrator, Account Owner, individual user (if API Key has an owner) |
-| API Key Expiring in 10 days     | Global Administrator, Account Owner, individual user (if API Key has an owner) |
-| Sign up credit expiring in 30 days | Account Owner, Finance Administrator |
-| Sign up credit expiring in 14 days | Account Owner, Finance Administrator |
-| Sign up credit expiring in  7 days | Account Owner, Finance Administrator |
-| Sign up credit expiring in  1 days | Account Owner, Finance Administrator |
-| Sign up credit is 50% consumed     | Account Owner, Finance Administrator |
-| Sign up credit is 90% consumed     | Account Owner, Finance Administrator |
-| Account plan type changed          | Global Administrator, Account Owner, Finance Administrator |
-| Namespace Failover Completed/Failed | Global Administrator, Namespace Administrator, Account Owner |
+| 证书 15 天后到期 | 全局管理员，Namespace 管理员，帐户所有者 |
+| 证书将在 10 天后过期 | 全局管理员，Namespace 管理员，帐户所有者 |
+| 证书将于 5 天后过期  | 全局管理员，Namespace 管理员，帐户所有者 |
+| API 密钥 30 天后过期     | 全局管理员、帐户所有者、个人用户（如果 API 密钥有所有者） |
+| API 密钥 20 天后过期     | 全局管理员、帐户所有者、个人用户（如果 API 密钥有所有者） |
+| API 密钥 10 天后过期     | 全局管理员、帐户所有者、个人用户（如果 API 密钥有所有者） |
+| 注册积分将在 30 天后到期 | 账户所有者、财务管理员 |
+| 注册积分将在 14 天后到期 | 账户所有者、财务管理员 |
+| 注册积分将于 7 天后到期 | 账户所有者、财务管理员 |
+| 注册积分将在 1 天后过期 | 账户所有者、财务管理员 |
+| 注册积分已消耗 50%     | 账户所有者、财务管理员 |
+| 注册积分已消耗 90%     | 账户所有者、财务管理员 |
+| 帐户计划类型已更改          | 全局管理员、账户所有者、财务管理员 |
+| Namespace 故障转移完成/失败 | 全局管理员，Namespace 管理员，帐户所有者 |
 
-To ensure that you receive email notifications, configure your junk-email filters to permit email from
-`noreply@temporal.io`.
+为确保您收到电子邮件通知，请配置垃圾邮件过滤器以允许来自
+`noreply@Temporal.io`。
 
-To provide feedback on notifications or request changes, [create a support ticket](/cloud/support#support-ticket).
+要提供有关通知或请求更改的反馈，[创建支持票](/cloud/support#support-ticket)。

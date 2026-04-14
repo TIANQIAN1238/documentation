@@ -1,0 +1,96 @@
+---
+id: manual
+title: 手动迁移
+sidebar_label: 手动迁移
+description: 从自托管 Temporal 服务迁移到 Temporal Cloud 的过程因 Workflow 要求而异。本指南涵盖更改客户端代码、Workflow 迁移策略以及必要的代码调整。
+slug: /cloud/migrate/manual
+toc_max_heading_level: 4
+keywords:
+  - migration
+  - multi-cluster replication
+  - temporal cloud
+tags:
+  - Temporal Service
+  - Temporal Cloud
+  - Self-hosting
+  - Production
+---
+
+根据您的使用情况，从自托管 Temporal 服务迁移到 Temporal Cloud 将有不同的要求。
+本指南根据我们帮助各种规模的客户成功迁移的经验提供了一些指导。
+
+### 迁移会发生什么
+
+根据 Workflow 的要求，迁移过程可能就像更改一些参数一样简单，也可能需要更广泛的代码更改。
+迁移时需要考虑两个方面：Temporal CLIent 连接代码和 Workflow Execution。
+以下是您可以期待的内容的高级概述：
+
+- **将另一个 Temporal CLIent 引入您的 Starter 和 Worker 进程：** 配置并部署新的 Temporal CLIent，以便 Temporal Cloud 负责新的 Workflow Execution。
+- **迁移 Workflow Execution：** 对于新的、正在运行的和已完成的 Workflow Execution，有不同的方法。
+  - **新 Workflow Execution：** 当您不再需要向自托管 Temporal 服务发送 Signal 或查询时，您可以弃用旧的客户端代码。在此之前，您的自托管 Temporal 服务可以接收相关流量，同时新的 Workflow Execution 会发送到 Temporal Cloud。
+  - **运行 Workflow Execution：** 短期运行的 Workflow 通常可以耗尽，然后在 Temporal Cloud 上再次启动。无法耗尽的长时间运行的 Workflow 可能需要您实施更多代码更改，以将当前运行的 Workflow 的状态传递到 Temporal Cloud。
+  - **已完成的 Workflow Execution：** 已完成的 Workflow Execution 历史记录无法自动迁移到 Temporal Cloud。有关更多信息，请参阅[多集群复制](#multi-cluster-replication)。
+
+### 更新 Worker 中的客户端连接代码
+
+无论您是自托管 Temporal 还是使用 Temporal Cloud，您都可以管理代码的运行时。
+要将 Workflow 迁移到 Temporal Cloud，您需要更改客户端连接代码中的一些参数，例如更新 Namespace 和 gRPC 端点。
+
+将 Workflow 定向到 Temporal Cloud 所需的更改
+Namespace只有几行代码，包括：
+
+- [添加与您的 Namespace 关联的 SSL 证书和私钥](/cloud/saml)。
+- 从 Namespace 详细信息网页中 [复制云托管端点](/cloud/Namespaces#Temporal-cloud-gRPC-endpoint)。
+  端点使用以下格式：`<Namespace_id>.<account_id>.tmprl.cloud:port`。
+- 使用您的客户端[连接到 Temporal Cloud](/cloud/get-started)。
+- [配置 tcld，Cloud CLI](/cloud/tcld)，具有相同的地址 Namespace，并且
+  用于通过代码创建客户端的证书。
+
+### 迁移您的 Workflow Execution
+
+Temporal 服务存储整个生命周期的完整 Event History
+Workflow Execution。
+要从自托管 Temporal 服务迁移到 Temporal Cloud，请考虑 Event History 的当前状态以及 Workflow Execution 的任何未来期望。
+
+**新的 Workflow 在 Temporal Cloud 上自动执行。**
+在步骤 1 中更改代码并部署新代码后，新的 Workflow Execution 将发送到 Temporal Cloud。
+现有 Workflow 必须接收 Signal 才能在云上迁移并重新执行。
+如果您维护自托管实例，您仍然可以使用它来访问迁移之前的任何执行历史记录。
+您还可以从之前的执行历史记录中导出 JSON，然后将其导入到您自己的分析系统中。
+
+**运行中的 Workflow 可以被耗尽或迁移。**
+如果您的 Workflow 可以在任何促使迁移到 Temporal Cloud 的引人注目的事件之前完成，那么这些 Workflow 可以在 Temporal Cloud 上自动重新启动。
+如果您的 Workflow 需要连续运行，则必须在 Workflow 运行时迁移它们。
+要完成此迁移，请取消当前的 Workflow 并将当前状态传递给 Temporal Cloud 中的新 Workflow。
+请参阅[此存储库](https://github.com/Temporalio/Temporal-migration)，了解在 Java 中迁移运行 Workflow 的示例。
+
+执行实时迁移时，请确保您的 Worker 容量可以支持迁移负载。
+[Signal](/sending-messages#sending-Signals) 和 [Query](/sending-messages#sending-queries) 都将在迁移过程中执行。
+此外，Query API 将 Workflow 的整个历史记录加载到 Worker 中以计算结果（如果尚未缓存）。
+这意味着您的自托管 Temporal 服务 Worker 容量将需要支持在内存中执行这些操作来满足这些请求。
+针对“ListFilter”的所有匹配项执行这些请求的量可能很大。
+
+### 在新的 Temporal 服务或 Namespace 上恢复 Workflow 时的注意事项
+
+- **跳过步骤：** 如果您的 Workflow 步骤不能保证幂等性，请确定在目标 Namespace 中恢复执行时是否需要跳过这些步骤。
+- **经过时间：** 如果您的 Workflow 在目标 Namespace 中“恢复睡眠”，请确定如何计算新执行中睡眠调用的增量。
+- **子级关系：** 如果您的 Workflow 具有 Child Workflow 关系（分离父级关闭策略子级除外），请确定如何将这些子级的状态传递到父级以在恢复状态下执行子级。
+- **心跳状态：** 如果您有依赖于心跳状态的长时间运行的活动，请确定如何在目标 Namespace 中恢复这些活动。
+- 与其父类型具有相同类型的 Child Workflow 在用于收集相关执行的列表过滤器中返回。除非这些是分离的“ParentClosePolicy”子项，否则这不是您想要的，因为父/子关系不会转移到目标 Namespace。
+- 使用心跳详细信息的长时间运行的活动将不会收到目标 Namespace 中的最新详细信息。
+- 在目标 Namespace 中恢复时，需要考虑 Workflow Definition 内等待之间的持续时间以确保经过时间的准确性。
+- 当 Signal 直接从一个 Workflow 到另一个 Workflow 时，请确保在目标 Namespace 中处理“NotFound”执行。 Workflow 可能会无序恢复。
+
+### 迁移时的其他注意事项
+
+- 您是否已将 mTLS 证书添加到您的 Temporal Namespace 中？查看我们的[向 Temporal Cloud 帐户添加证书的文档](/cloud/certificates) 了解更多信息。
+- 自托管 Temporal 和 Temporal Cloud 中指标的生成方式存在差异。查看[有关 Temporal Cloud 指标的文档](/cloud/metrics/) 了解更多信息。
+- 考虑对[Temporal 服务的安全性和访问](/cloud/security) 的影响。
+- 检查您当前的负载（每秒操作数）并与您的客户主管和解决方案架构师联系，以便我们可以设置适当的 [Namespace 限制](/cloud/limits)。
+
+### 多集群复制
+
+[多集群复制](/self-hosted-guide/multi-cluster-replication) 是一项实验性功能，可将 Workflow Execution 从主动集群异步复制到其他被动集群，以进行备份和状态重建。
+目前不支持将执行历史记录从自托管 Temporal 服务迁移到 Temporal Cloud。
+然而，目前正在为 Temporal Cloud 开发一种基于多集群复制的迁移工具，该工具将实现这一点。
+如果您已在本地使用此功能或者有兴趣使用它迁移到 Temporal Cloud，请[创建支持票证](https://docs.Temporal.io/cloud/support) 或观看此空间以获取有关公开可用性的更多信息。

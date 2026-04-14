@@ -1,8 +1,8 @@
 ---
 id: basics
-title: Workflow basics - TypeScript SDK
-description: Shows how to create a Workflow with the TypeScript SDK
-sidebar_label: Workflow basics
+title: "Workflow 基础知识 - TypeScript SDK"
+description: "演示如何使用 TypeScript SDK 创建 Workflow"
+sidebar_label: "Workflow 基础知识"
 slug: /develop/typescript/workflows/basics
 toc_max_heading_level: 3
 tags:
@@ -11,13 +11,14 @@ tags:
   - Workflow
 ---
 
-## How to develop a Workflow {#develop-workflows}
+<a id="develop-workflows"></a>
+## 如何开发 Workflow {#develop-workflows}
 
-Workflows are the fundamental unit of a Temporal Application, and it all starts with the development of a [Workflow Definition](/workflow-definition).
+Workflow 是 Temporal 应用程序的基本单元，这一切都始于 [Workflow Definition](/workflow-definition) 的开发。
 
-In the Temporal TypeScript SDK programming model, Workflow Definitions are _just functions_, which can store state and orchestrate Activity Functions. The following code snippet uses `example` to schedule a `greet` Activity in the system to say hello.
+在 Temporal TypeScript SDK 编程模型中，Workflow Definition _只是函数_，可以存储状态并编排 Activity 函数。下面的代码片段使用`example`到Schedule和系统中的`greet` Activity打招呼。
 
-A Workflow Definition can have multiple parameters; however, we recommend using a single object parameter.
+一个Workflow Definition可以有多个参数；但是，我们建议使用单个对象参数。
 
 ```typescript
 type ExampleArgs = {
@@ -30,17 +31,18 @@ export async function example(args: ExampleArgs): Promise<{ greeting: string }> 
 }
 ```
 
-## How to define Workflow parameters {#workflow-parameters}
+<a id="workflow-parameters"></a>
+## 如何定义 Workflow 参数 {#workflow-parameters}
 
-Temporal Workflows may have any number of custom parameters. However, we strongly recommend that objects are used as
-parameters, so that the object's individual fields may be altered without breaking the signature of the Workflow. All
-Workflow Definition parameters must be serializable.
+Temporal Workflow 可以具有任意数量的自定义参数。但是，我们强烈建议将对象用作
+参数，以便可以在不破坏 Workflow 签名的情况下更改对象的各个字段。全部
+Workflow Definition 参数必须可序列化。
 
-You can define and pass parameters in your Workflow. In this example, you define your arguments in your `client.ts` file
-and pass those parameters to `workflow.ts` through your Workflow function.
+您可以在 Workflow 中定义和传递参数。在此示例中，您在 `client.ts` 文件中定义参数
+并通过 Workflow 函数将这些参数传递给 `Workflow.ts`。
 
-Start a Workflow with the parameters that are in the `client.ts` file. In this example we set the `name` parameter to
-`Temporal` and `born` to `2019`. Then set the Task Queue and Workflow Id.
+使用 `client.ts` 文件中的参数启动 Workflow。在此示例中，我们将 `name` 参数设置为
+`Temporal` 和 `born` 至 `2019`。然后设置 Task Queue 和 Workflow Id。
 
 `client.ts`
 
@@ -55,11 +57,11 @@ await client.workflow.start(example, {
 });
 ```
 
-In `workflows.ts` define the type of the parameter that the Workflow function takes in. The interface `ExampleParam` is
-a name we can now use to describe the requirement in the previous example. It still represents having the two properties
-called `name` and `born` that is of the type `string`. Then define a function that takes in a parameter of the type
-`ExampleParam` and return a `Promise<string>`. The `Promise` object represents the eventual completion, or failure, of
-`await client.workflow.start()` and its resulting value.
+在`Workflows.ts`中定义Workflow函数接受的参数类型。接口`ExampleParam`是
+我们现在可以使用这个名称来描述前面示例中的要求。它仍然代表具有这两个属性
+称为 `name` 和 `born`，其类型为 `string`。然后定义一个函数，该函数接受类型的参数
+`ExampleParam` 并返回 `Promise<string>`。 `Promise` 对象代表最终完成或失败
+`await client.Workflow.start()` 及其结果值。
 
 ```ts
 interface ExampleParam {
@@ -71,16 +73,17 @@ export async function example({ name, born }: ExampleParam): Promise<string> {
 }
 ```
 
-## How to define Workflow return parameters {#workflow-return-values}
+<a id="workflow-return-values"></a>
+## 如何定义 Workflow 返回参数 {#workflow-return-values}
 
-Workflow return values must also be serializable. Returning results, returning errors, or throwing exceptions is fairly
-idiomatic in each language that is supported. However, Temporal APIs that must be used to get the result of a Workflow
-Execution will only ever receive one of either the result or the error.
+Workflow 返回值也必须是可序列化的。返回结果、返回错误或抛出异常都是公平的
+每种受支持语言的惯用语。但是，必须使用 Temporal API 才能获取 Workflow 的结果
+执行只会收到结果或错误之一。
 
-To return a value of the Workflow function, use `Promise<something>`. The `Promise` is used to make asynchronous calls
-and comes with guarantees.
+要返回 Workflow 函数的值，请使用 `Promise<something>`。 `Promise` 用于进行异步调用
+并附带保证。
 
-The following example uses a `Promise<string>` to eventually return a `name` and `born` parameter.
+以下示例使用 `Promise<string>` 最终返回 `name` 和 `born` 参数。
 
 ```typescript
 interface ExampleParam {
@@ -92,19 +95,20 @@ export async function example({ name, born }: ExampleParam): Promise<string> {
 }
 ```
 
-## How to customize your Workflow Type {#workflow-type}
+<a id="workflow-type"></a>
+## 如何自定义您的 Workflow 类型 {#workflow-type}
 
-Workflows have a Type that are referred to as the Workflow name.
+Workflow 具有称为 Workflow 名称的类型。
 
-The following examples demonstrate how to set a custom name for your Workflow Type.
+以下示例演示如何为 Workflow 类型设置自定义名称。
 
-In TypeScript, the Workflow Type is the Workflow function name and there isn't a mechanism to customize the Workflow
-Type.
+在 TypeScript 中，Workflow 类型是 Workflow 函数名称，并且没有自定义 Workflow 的机制
+类型。
 
-In the following example, the Workflow Type is the name of the function, `helloWorld`.
+在以下示例中，Workflow 类型是函数的名称 `helloWorld`。
 
-<!--SNIPSTART typescript-workflow-type -->
-[snippets/src/workflows.ts](https://github.com/temporalio/samples-typescript/blob/main/snippets/src/workflows.ts)
+<!--SNIPSTART typescript-Workflow-type -->
+[片段/src/workflows.ts](https://github.com/temporalio/samples-typescript/blob/main/snippets/src/workflows.ts)
 ```ts
 export async function helloWorld(): Promise<string> {
   return '👋 Hello World!';
@@ -112,38 +116,40 @@ export async function helloWorld(): Promise<string> {
 ```
 <!--SNIPEND-->
 
-## How to develop Workflow logic {#workflow-logic-requirements}
+<a id="workflow-logic-requirements"></a>
+## 如何开发 Workflow 逻辑 {#workflow-logic-requirements}
 
-Workflow logic is constrained by [deterministic execution requirements](/workflow-definition#deterministic-constraints).
-Therefore, each language is limited to the use of certain idiomatic techniques. However, each Temporal SDK provides a
-set of APIs that can be used inside your Workflow to interact with external (to the Workflow) application code.
+Workflow 逻辑受 [确定性执行要求](/workflow-definition#deterministic-constraints) 约束。
+因此，每种语言都仅限于使用某些惯用技术。然而，每个Temporal SDK都提供了一个
+一组 API，可在 Workflow 内部使用以与外部（对于 Workflow）应用程序代码进行交互。
 
-In the Temporal TypeScript SDK, Workflows run in a deterministic sandboxed environment. The code is bundled on Worker
-creation using Webpack, and can import any package as long as it does not reference Node.js or DOM APIs.
+在 Temporal TypeScript SDK 中，Workflow 在确定性沙盒环境中运行。代码捆绑在 Worker 上
+使用 Webpack 创建，并且可以导入任何包，只要它不引用 Node.js 或 DOM API。
 
 :::note
 
-If you **must** use a library that references a Node.js or DOM API and you are certain that those APIs are not used at
-runtime, add that module to the
-[ignoreModules](https://typescript.temporal.io/api/interfaces/worker.BundleOptions#ignoremodules) list.
+如果您**必须**使用引用 Node.js 或 DOM API 的库，并且您确定这些 API 不会在
+运行时，将该模块添加到
+[忽略模块](https://typescript.temporal.io/api/interfaces/worker.BundleOptions#ignoremodules) 列表。
 
 :::
 
-The Workflow sandbox can run only deterministic code, so side effects and access to external state must be done through Activities because Activity outputs are recorded in the Event History and can read be deterministically by the Workflow.
+Workflow 沙箱只能运行确定性代码，因此 Side Effect 和对外部状态的访问必须通过活动完成，因为 Activity 输出记录在 Event History 中，并且可以由 Workflow 确定性读取。
 
-This limitation also means that Workflow code cannot directly import the [Activity Definition](/activity-definition).
-[Activity Types](/activity-definition#activity-type) can be imported, so they can be invoked in a type-safe manner.
+此限制还意味着 Workflow 代码无法直接导入 [Activity Definition](/activity-definition)。
+[Activity 类型](/activity-definition#activity-type) 可以导入，因此可以以类型安全的方式调用它们。
 
-To make the Workflow runtime deterministic, functions like `Math.random()`, `Date`, and `setTimeout()` are replaced by deterministic versions.
+为了使 Workflow 运行时具有确定性，`Math.random()`、`Date` 和 `setTimeout()` 等函数将替换为确定性版本。
 
-[FinalizationRegistry](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry)
-and [WeakRef](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef) are removed because v8's garbage collector is not deterministic.
+[最终确定注册表](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry)
+和 [弱引用](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef) 被删除，因为 v8 的垃圾收集器不是确定性的。
 
-The following sections describe the replay-safe APIs available in the sandbox.
+以下部分描述了沙箱中可用的重放安全 API。
 
-#### Logging
+<a id="logging"></a>
+#### 日志记录 {#logging}
 
-Use [`log`](https://typescript.temporal.io/api/namespaces/workflow#log) from `@temporalio/workflow` instead of `console.log`. The SDK logger automatically suppresses messages during replay to avoid duplicates:
+使用 `@Temporalio/Workflow` 中的 [`log`](https://typescript.temporal.io/api/namespaces/workflow#log) 代替 `console.log`。 SDK 记录器在重放期间自动抑制消息以避免重复：
 
 ```ts
 import { log } from '@temporalio/workflow';
@@ -154,11 +160,12 @@ export async function myWorkflow(name: string): Promise<string> {
 }
 ```
 
-For logger configuration, see [Observability: Log from a Workflow](/develop/typescript/platform/observability#logging).
+有关记录器配置，请参阅 [可观察性：来自 Workflow 的日志](/develop/typescript/platform/observability#logging)。
 
-#### Random numbers and UUIDs
+<a id="random-numbers-and-uuids"></a>
+#### 随机数和 UUID {#random-numbers-and-uuids}
 
-`Math.random()` is replaced by a deterministic version in the sandbox, so you can use it directly. It produces the same sequence of values on replay. UUID libraries that rely on `Math.random()` (such as the `uuid` package) are also safe to use. Avoid `crypto.randomUUID()`, which is not available in the sandbox:
+`Math.random()`在沙盒中被替换为确定性版本，因此您可以直接使用它。它在重播时产生相同的值序列。依赖于 `Math.random()` 的 UUID 库（例如 `uuid` 包）也可以安全使用。避免 `crypto.randomUUID()`，它在沙箱中不可用：
 
 ```ts
 import { v4 as uuid4 } from 'uuid';
@@ -168,9 +175,10 @@ const value = Math.random();
 const id = uuid4();
 ```
 
-#### Current time
+<a id="current-time"></a>
+#### 当前时间 {#current-time}
 
-`Date.now()` and `new Date()` are replaced by deterministic versions that return the time of the last Workflow Task completion. The value only advances when you `await` something (like `sleep()`):
+`Date.now()` 和 `new Date()` 被确定性版本替换，该版本返回最后一次 Workflow 任务完成的时间。仅当您 `await` 某些内容（例如 `sleep()`）时，该值才会增加：
 
 ```ts
 import { sleep } from '@temporalio/workflow';
@@ -187,12 +195,13 @@ for (let x = 0; x < 10; ++x) {
 }
 ```
 
-#### Detecting replay (advanced)
+<a id="detecting-replay-advanced"></a>
+#### 检测重播（高级） {#detecting-replay-advanced}
 
-Use [`workflowInfo().unsafe.isReplaying`](https://typescript.temporal.io/api/interfaces/workflow.UnsafeWorkflowInfo#isreplaying) to guard code that should only run on the first execution, such as emitting metrics or sending external notifications from an [Interceptor](/develop/typescript/workers/interceptors).
+使用 [`WorkflowInfo().unsafe.isReplaying`](https://typescript.temporal.io/api/interfaces/workflow.UnsafeWorkflowInfo#isreplaying) 保护仅应在第一次执行时运行的代码，例如发出指标或从 [拦截器](/develop/typescript/workers/interceptors) 发送外部通知。
 :::caution
 
-Never use this to affect Workflow business logic — branching on replay status breaks determinism.
+切勿使用它来影响 Workflow 业务逻辑 - 重播状态分支会破坏确定性。
 
 :::
 
@@ -204,4 +213,4 @@ if (!workflowInfo().unsafe.isReplaying) {
 }
 ```
 
-If your goal is to always take action when something new is happening, check that `workflowInfo().unsafe.isReplayingHistoryEvents` is false instead. This will be false during read-only operations like queries and update validators. This is what the SDK's built-in logger uses internally.
+如果您的目标是在发生新情况时始终采取行动，请检查 `WorkflowInfo().unsafe.isReplayingHistoryEvents` 是否为 false。在查询和 Update 验证器等只读操作期间，这将是错误的。这是 SDK 的内置记录器在内部使用的。

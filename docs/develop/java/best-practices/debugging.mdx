@@ -1,8 +1,8 @@
 ---
 id: debugging
-title: Debugging - Java SDK
-sidebar_label: Debugging
-description: Debug your Temporal Java Workflows using your favorite Java IDE's debugger. Set the TEMPORAL_DEBUG environment variable to true during debugging to avoid deadlocks. Use Web UI, Temporal CLI, and logging for development and production. Optimize Worker performance with metrics and the Worker performance guide.
+title: "调试 - Java SDK"
+sidebar_label: "调试"
+description: "使用您最喜欢的 Java IDE 的调试器来调试 Temporal Java Workflow。在调试期间将 Temporal_DEBUG 环境变量设置为 true 以避免死锁。使用 Web UI、Temporal CLI 和日志记录进行开发和生产。使用指标和 Worker 性能指南优化 Worker 性能。"
 toc_max_heading_level: 4
 keywords:
   - debugging
@@ -22,29 +22,30 @@ tags:
   - Temporal SDKs
 ---
 
-In addition to writing unit and integration tests, debugging your Workflows is also a very valuable testing tool.
-You can debug your Workflow code using a debugger provided by your favorite Java IDE.
+除了编写单元和集成测试之外，调试 Workflow 也是一个非常有价值的测试工具。
+您可以使用您最喜欢的 Java IDE 提供的调试器来调试 Workflow 代码。
 
-Note that when debugging your Workflow code, the Temporal Java SDK includes deadlock detection which fails a Workflow Task in case the code blocks over a second without relinquishing execution control.
-Because of this you can often encounter the `PotentialDeadlockException` Exception while stepping through Workflow code during debugging.
+请注意，调试 Workflow 代码时，Temporal Java SDK 包含死锁检测，如果代码阻塞超过一秒而不放弃执行控制，则死锁检测会使 Workflow 任务失败。
+因此，在调试期间单步执行 Workflow 代码时，您经常会遇到 `PotentialDeadlockException` 异常。
 
-To alleviate this issue, you can set the `TEMPORAL_DEBUG` environment variable to true before debugging your Workflow code. Make sure to set `TEMPORAL_DEBUG` to true only during debugging.
+为了缓解此问题，您可以在调试 Workflow 代码之前将 `Temporal_DEBUG` 环境变量设置为 true。确保仅在调试期间将 `Temporal_DEBUG` 设置为 true。
 
-## How to debug in a development environment {#debug-in-a-development-environment}
+## 如何在开发环境中调试 {#debug-in-a-development-environment}
 
-In addition to the normal development tools of logging and a debugger, you can also see what's happening in your Workflow by using the [Web UI](/web-ui) or [Temporal CLI](/cli).
+除了日志记录和调试器等常规开发工具之外，您还可以使用 [网页用户界面](/web-ui) 或 [Temporal CLI](/cli) 查看 Workflow 中发生的情况。
 
-## How to debug in a production environment {#debug-in-a-production-environment}
+<a id="debug-in-a-production-environment"></a>
+## 如何在生产环境中调试 {#debug-in-a-production-environment}
 
-You can debug production Workflows using:
+您可以使用以下方法调试生产 Workflow：
 
-- [Web UI](/web-ui)
+- [网页用户界面](/web-ui)
 - [Temporal CLI](/cli)
-- [Replay](/develop/java/best-practices/testing-suite#replay)
-- [Tracing](/develop/java/platform/observability#tracing)
-- [Logging](/develop/java/platform/observability#logging)
+- [重播](/develop/java/best-practices/testing-suite#replay)
+- [追踪](/develop/java/platform/observability#tracing)
+- [记录](/develop/java/platform/observability#logging)
 
-You can debug and tune Worker performance with metrics and the [Worker performance guide](/develop/worker-performance).
-For more information, see [Observability ▶️ Metrics](/develop/java/platform/observability#metrics) for setting up SDK metrics.
+您可以使用指标和 [Worker 性能指南](/develop/worker-performance) 来调试和调整 Worker 性能。
+有关更多信息，请参阅 [可观察性 ▶️ 指标](/develop/java/platform/observability#metrics) 设置 SDK 指标。
 
-Debug Server performance with [Cloud metrics](/cloud/metrics/) or [self-hosted Server metrics](/self-hosted-guide/production-checklist#scaling-and-metrics).
+使用 [云指标](/cloud/metrics/) 或 [自托管服务器指标](/self-hosted-guide/production-checklist#scaling-and-metrics) 调试服务器性能。

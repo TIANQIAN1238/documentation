@@ -1,0 +1,659 @@
+---
+id: events
+title: Temporal 事件参考
+sidebar_label: 活动
+description: Temporal 服务中的事件响应外部事件和 Workflow 命令。 Workflow Execution Event History 包括 WorkflowExecutionStarted、WorkflowExecutionCompleted、WorkflowExecutionFailed 等。
+toc_max_heading_level: 4
+keywords:
+  - reference
+tags:
+  - Reference
+---
+
+[事件](/Workflow-execution/event#event) 由 [Temporal 服务](/Temporal-service) 创建以响应外部事件，[命令](/Workflow-execution#command) 由 [Workflow Execution](/Workflow-execution) 生成。
+下面列出了 Workflow Execution [Event History](/Workflow-execution/event#event-history) 中可能出现的所有事件。
+
+### WorkflowExecutionStarted 开始
+
+这始终是 Workflow Execution Event History 中的第一个 [事件](/Workflow-execution/event#event)。
+它表明 Temporal 服务收到了生成 Workflow Execution 的请求。
+
+|领域|描述 |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workflow_类型 |已启动的 [Workflow](/Workflows) 的 [名称](/Workflow-definition#Workflow-type)。                                                                   |
+|父级_Workflow_Namespace |父级 [Workflow Execution](/Workflow-execution) 的 [Namespace](/Namespaces)（如果适用）。                                                           |
+|父_Workflow_执行 |标识父 Workflow 和执行运行。                                                                                                          |
+|父发起的事件 ID |此事件对应的 [StartWorkflowExecutionInitiated](#startchildWorkflowexecutioninitied) 事件的 ID。                                            |
+|任务队列 |此 [Workflow Task](/tasks#Workflow-task) 已排入队列的 [Task Queue](/task-queue)。
+|输入 |由 SDK 反序列化以向 Workflow 提供参数的信息。                                                                              |
+| Workflow_execution_timeout | Workflow_execution_timeout | [Workflow Execution](/Workflow-执行) 的总超时时间，包括重试和 Continue-As-New。                                               |
+| Workflow_run_timeout | Workflow_run_timeout |单次 Workflow 运行超时。                                                                                                                              |
+| Workflow_task_timeout | Workflow_task_timeout |单个Workflow Task超时。                                                                                                                             |
+|继续执行运行 ID先前 Workflow 的 [运行 ID](/Workflow-execution/Workflowid-runid#run-id) 继续作为新的、重试或由 Cron 执行到此 Workflow 中。     |
+|发起人|允许 Workflow 继续作为新的 Workflow Execution。                                                                                                   |
+|持续失败 |失败的序列化结果。                                                                                                                                |
+|最后完成结果 |来自先前完成的[任务](/tasks#task) 的信息（如果适用）。                                                                                  |
+|原始执行运行 ID原始 Workflow 的 [Run Id](/Workflow-execution/Workflowid-runid#run-id) 已启动。                                                                    |
+|身份|请求启动此 Workflow 的 [Client](/self-hosted-guide/security#client-connections) 或父 Workflow [Worker](/Workers#Worker) 的 ID。 |
+|第一个执行运行 ID沿着 [Continue-As-New](/Workflow-execution/Continue-As-New) 链的第一个 [运行 Id](/Workflow-execution/Workflowid-runid#run-id) 运行并重置。     |
+|重试策略 |由服务的动态配置确定的重试次数。将进行重试，直到达到“Schedule_to_close_timeout”。                  |
+|尝试|为完成此任务而尝试的次数。                                                                                              |
+| Workflow_execution_expiration_time | Workflow_execution_expiration_time | Workflow Execution 将[超时]的绝对时间(/encyclopedia/Detecting-Workflow-failures#Workflow-execution-timeout)。                       |
+| cron_Schedule | cron_Schedule |显示 Workflow 的 [Cron Schedule](/cron-job)（如果适用）。                                                                                             |
+|第一_Workflow_task_backoff |包含 Workflow 的本次迭代为 Scheduled 与下次运行之间的时间量。适用于 Cron 调度。                |
+|备忘录 | Workflow 中显示的非索引信息。                                                                                                               |
+|搜索属性 |提供用于设置 Workflow 的 [Search Attributes](/search-attribute) 的数据。                                                                              |
+| prev_auto_reset_points |                                                                                                                                                                |
+|标题| [Signal](/sending-messages#sending-Signals) 的发送者传递的信息被复制到 [Workflow Task](/tasks#Workflow-task) 中。             |
+|完成回调 | Workflow 启动时附加完成回调。                                                                                                  |
+
+### Workflow执行完成
+
+这表明 [Workflow Execution](/Workflow-执行) 已成功完成。 [事件](/Workflow-execution/event#event) 包含 Workflow Execution 结果。
+
+|领域|描述 |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|结果|已完成的 [Workflow](/Workflows) 的序列化结果。                                                                                       |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。                                              |
+| new_execution_run_id | 新执行运行id新 Workflow Execution 的 [运行 ID](/Workflow-execution/Workflowid-runid#run-id) 是由于 [Cron Schedule](/cron-job) 启动的。 |
+
+### WorkflowExecutionFailed
+
+此 [事件](/Workflow-execution/event#event) 指示 [Workflow Execution](/Workflow-execution) 未成功完成并包含 Workflow Execution 错误。
+
+|领域|描述 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|失败| [Workflow](/Workflows) 故障的序列化结果。                                                                                             |
+|重试状态|提供是否应该重试[任务](/tasks#task) 的原因。                                                            |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 [运行 ID](/Workflow-execution/Workflowid-runid#run-id)。 |
+| new_execution_run_id | 新执行运行id由 Cron 或 [重试](/encyclopedia/retry-policies) 启动的新 Workflow 的 [运行 ID](/Workflow-execution/Workflowid-runid#run-id)。            |
+
+### WorkflowExecutionTimedOut
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Workflow Execution](/Workflow-execution) 已由 [Temporal Server](/Temporal-service/Temporal-server) 超时，因为 [Workflow](/Workflows) 尚未在以下时间内完成[超时]（/百科全书/检测-Workflow-failures#Workflow-执行超时）设置。
+
+|领域|描述 |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+|重试状态|提供是否应该重试[任务](/tasks#task) 的原因。                                                 |
+| new_execution_run_id | 新执行运行id由 Cron 或 [重试](/encyclopedia/retry-policies) 启动的新 Workflow 的 [运行 ID](/Workflow-execution/Workflowid-runid#run-id)。 |
+
+### WorkflowExecutionCancelRequested
+
+此 [Event](/Workflow-execution/event#event) 类型指示已发出取消 [Workflow Execution](/Workflow-execution) 的请求。
+
+|领域 |描述 |
+| ------------------------ | | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|原因 |用户提供的取消请求原因。                                                                                           |
+|外部_发起_事件_id |请求取消的 [Workflow](/Workflows) 中事件的 [运行 ID](/Workflow-execution/Workflowid-runid#run-id)（如果适用）。 |
+|外部_Workflow_执行 |识别外部 Workflow 及其执行的运行。                                                                              |
+|身份|请求取消的 [Worker](/Workers#Worker) 的 ID。                                                                                 |
+
+### WorkflowExecutionCanceled
+
+此 [Event](/Workflow-execution/event#event) 类型表示客户端已确认取消请求，并且 [Workflow Execution](/Workflow-execution) 已被取消。
+
+|领域|描述 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。 |
+|详情 |取消时 [Workflow](/Workflows) 报告的附加信息。                 |
+
+### WorkflowExecutionSignaled
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Workflow](/Workflows) 已收到 [Signal](/sending-messages#sending-Signals) 事件。
+事件类型包含 Signal 名称和 Signal 负载。
+
+|领域|描述 |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Signal_名称 |要触发的 Signal 的名称/类型。                                                                          |
+|输入|由 SDK 反序列化以向 Workflow 函数提供参数的信息。                    |
+|身份|标识 Signal 连接到 Workflow 的 [Worker](/Workers#Worker)。                                       |
+|标题| Signal 的发送者传递的信息被复制到 [Workflow Task](/tasks#Workflow-task) 中。 |
+
+### WorkflowExecutionTermated
+
+此 [Event](/Workflow-execution/event#event) 类型指示 [Workflow Execution](/Workflow-execution) 已被强制终止，并且可能调用了终止 Workflow API。
+
+|领域 |描述 |
+| -------- | -------------------------------------------------------------------------------- |
+|原因|用户或客户为 Workflow 终止提供的信息。 |
+|详情 | Workflow 在终止时报告的附加信息。    |
+|身份|标识请求终止的 Worker。                    |
+
+### WorkflowExecutionContinuedAsNew
+
+此 [Event](/Workflow-execution/event#event) 类型表示 Workflow 已成功完成，并且新的 Workflow 已在同一事务中启动。
+此事件类型包含最后的 [Workflow Execution](/Workflow-执行) 结果以及新的 Workflow Execution 输入。
+
+|领域|描述 |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| new_execution_run_id | 新执行运行id此 Continue-As-New 事件启动的新 Workflow 的 [运行 ID](/Workflow-execution/Workflowid-runid#run-id)。 |
+| Workflow_类型 |由此事件启动的 Workflow 的名称/类型。                                                            |
+|任务队列 |此 [Workflow Task](/tasks#Workflow-task) 已排入队列的 [Task Queue](/task-queue)。
+|输入 |由 SDK 反序列化以向 Workflow 提供参数的信息。                                    |
+| Workflow_run_timeout | Workflow_run_timeout |单次 Workflow 运行超时。                                                                                    |
+| Workflow_task_timeout | Workflow_task_timeout |单个Workflow Task超时。                                                                                   |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件命令所用的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。              |
+|退避开始间隔| [ContinuedAsNew](#Workflowexecutioncontinuedasnew) Workflow 开始延迟的时间量。        |
+|发起人|允许 Workflow 作为新的执行继续。                                                                  |
+|最后完成结果 |先前完成的任务传递给正在进行的执行的信息。                                        |
+|标题| Signal 发送方传递的信息被复制到 Workflow Task 中。                                |
+|备忘录 | Workflow 中显示的非索引信息。                                                                     |
+|搜索属性 |提供用于设置 Workflow 的 [Search Attributes](/search-attribute) 的数据。                                    |
+
+### WorkflowExecutionOptionsUpdated
+
+此 [Event](/Workflow-execution/event#event) 类型表示 Workflow 选项已是 Updated。
+事件类型包含 Updated 选项，例如版本控制覆盖或附加的完成回调。
+
+|领域|描述 |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+|版本控制_覆盖 |在此事件中更新插入了版本控制覆盖。如果 nil 或 unset_versioning_override 为 true，则忽略。                    |
+|取消设置版本覆盖在此事件中删除了版本控制覆盖。                                                                             |
+|附加请求 ID |请求 ID 附加到正在运行的 Workflow Execution，因此具有相同请求 ID 的后续请求将被重复数据删除。 |
+|附加完成回调 |附加到正在运行的 Workflow Execution 的完成回调。                                                       |
+
+### WorkflowTaskScheduled
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Workflow Task](/tasks#Workflow-task) 已是 Scheduled。
+SDK 客户端现在应该能够处理任何新的历史事件。
+
+|领域 |描述 |
+| ---------------------- | ------------------------------------------------------------------------------------------ |
+|任务队列 |此 Workflow Task 已排入队列的 [Task Queue](/task-queue)。
+|开始到关闭超时 | [Worker](/Workers#Worker) 收到此任务后处理该任务所花费的时间。 |
+|尝试|为完成此任务而尝试的次数。                          |
+
+### WorkflowTask开始
+
+此 [Event](/Workflow-execution/event#event) 类型指示 [Workflow Task](/tasks#Workflow-task) 已启动。
+SDK 客户端已获取 Workflow Task 并正在处理新的历史事件。
+
+|领域|描述 |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Scheduled_event_id | Scheduled_event_id |此 Workflow Task 对应的 [WorkflowTaskScheduled](#WorkflowtaskScheduled) 事件的 ID。 |
+|身份|标识启动此任务的 [Worker](/Workers#Worker)。                                            |
+|请求 ID |标识 Workflow Task 请求。                                                                       |
+
+### Workflow任务已完成
+
+此 [Event](/Workflow-execution/event#event) 类型指示 [Workflow Task](/tasks#Workflow-task) 已完成。
+
+|领域|描述 |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Scheduled_event_id | Scheduled_event_id |此 Workflow Task 对应的 [WorkflowTaskScheduled](#WorkflowtaskScheduled) 事件的 ID。 |
+|开始事件 ID |此任务对应的 [WorkflowTaskStarted](#Workflowtaskstarted) 事件的 ID。              |
+|身份|完成此任务的 [Worker](/Workers#Worker) 的身份。                                         |
+|二进制校验和 |完成此任务的 Worker 的二进制 ID。                                                           |
+
+SDK 客户端拾取 Workflow Task，处理新的历史事件，并且可能会也可能不会要求 [Temporal Server](/Temporal-service/Temporal-server) 执行其他工作。
+以下事件仍有可能发生：
+
+- [ActivityTaskScheduled](#ActivitytaskScheduled)
+- [Timer开始](#Timer开始)
+- [UpsertWorkflowSearchAttributes](#upsertWorkflowsearchattributes)
+- [标记记录](#标记记录)
+- [StartChildWorkflowExecutionInitiated](#startchildWorkflowExecutionInitiated)
+- [RequestCancelExternalWorkflowExecutionInitiated](#requestcancelexternalWorkflowExecutionInitiated)
+- [Signal外部Workflow执行启动](#Signal外部Workflow执行启动)
+- [Workflow执行完成](#Workflow执行完成)
+- [Workflow执行失败](#Workflow执行失败)
+- [Workflow执行取消]（#Workflow执行取消）
+- [WorkflowExecutionContinuedAsNew](#Workflowexecutioncontinuedasnew)
+
+## 默认XPROT025X
+
+此 [Event](/Workflow-execution/event#event) 类型指示 [Workflow Task](/tasks#Workflow-task) 遇到 [超时](/encyclopedia/Detecting-Workflow-failures#Workflow-task-timeout)。
+要么是带有本地缓存​​的 SDK 客户端当时不可用，要么是 SDK 客户端处理任务的时间太长。
+
+|领域|描述 |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Scheduled_event_id | Scheduled_event_id |此 Workflow Task 对应的 [WorkflowTaskScheduled](#WorkflowtaskScheduled) 事件的 ID。 |
+|开始事件 ID |此任务对应的 [WorkflowTaskStarted](#Workflowtaskstarted) 事件的 ID。              |
+|超时类型 |已发生的超时类型。                                                                      |
+
+### WorkflowTask失败
+
+此 [Event](/Workflow-execution/event#event) 类型指示 [Workflow Task](/tasks#Workflow-task) 遇到故障。
+通常这意味着 Workflow 是不确定的。
+但是，Workflow 重置功能也使用此事件。
+
+|领域|描述 |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scheduled_event_id | Scheduled_event_id |此 Workflow Task 对应的 [WorkflowTaskScheduled](#WorkflowtaskScheduled) 事件的 ID。                                  |
+|开始事件 ID |此 Workflow Task 对应的 [WorkflowTaskStarted](#Workflowtaskstarted) 事件的 ID。                                      |
+|失败| Workflow Task 故障的详细信息。                                                                                                     |
+|身份|失败此任务的 [Worker](/Workers#Worker) 的身份。必须显式定义 Worker 才能返回该字段的值。 |
+|基本运行 ID | Workflow 的原始 [运行 ID](/Workflow-execution/Workflowid-runid#run-id)。                                                          |
+|新的运行 ID |重置 Workflow 的运行 ID。                                                                                                            |
+| fork_event_version |标识分叉到重置 Workflow 的事件版本。                                                                      |
+|二进制校验和 |失败此任务的 Worker 的二进制 ID。必须显式定义 Worker 才能返回该字段的值。                   |
+
+### ActivityTaskScheduled
+
+此 [事件](/Workflow-execution/event#event) 类型指示 [Activity 任务](/tasks#Activity-task) 是 Scheduled。
+SDK 客户端应获取此 Activity 任务并执行。
+该事件类型包含 Activity 输入以及 Activity 超时配置。
+
+|领域|描述 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Activity_id |由 [Worker](/Workers#Worker) 或用户分配给此 Activity 的标识符。                                                                   |
+| Activity_类型 | [Activity的类型](/Activity-definition#Activity-type)是Scheduled。                                                                     |
+| Namespace | [Activity](/activities) 所在的 Workflow 的 Namespace。
+|任务队列 |此 Activity 任务已排入队列的 [Task Queue](/task-queue)。
+|标题| [Signal](/sending-messages#sending-Signals) 的发送者传递的信息被复制到 [Workflow Task](/tasks#Workflow-task) 中。 |
+|输入 |由 SDK 反序列化以向 [Workflow](/Workflows) 函数提供参数的信息。                                           |
+| Schedule_to_close_timeout | Schedule_to_close_timeout |调用者等待 Activity 完成的时间。限制此 Activity 尝试重试的时间。    |
+| Schedule_to_start_timeout | Schedule_to_start_timeout |限制 Activity 任务可以在 Task Queue 中停留的时间。此超时无法重试。                                                    |
+|开始到关闭超时 | Activity 被 Worker 拾取后允许的最大执行时间。此超时是可重试的。                         |
+|心跳超时 |成功的 Worker 心跳之间允许的最长时间。                                                                               |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。                                                    |
+|重试策略 |由服务的动态配置确定的重试次数。将进行重试，直到达到“Schedule_to_close_timeout”。      |
+
+### ActivityTask开始
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Activity 任务执行](/tasks#Activity-task-execution) 已启动。 SDK Worker 获取 Activity 任务并开始处理 [Activity](/activities) 调用。 “ActivityTaskStarted”是在任务被分派到 Worker 时由服务器生成的，而不是在 Worker 开始执行任务时生成的。
+
+但请注意，直到终端事件（例如 [ActivityTaskCompleted](#Activitytaskcompleted) 或 [ActivityTaskFailed](#Activitytaskfailed)）发生时，此事件才会写入历史记录。
+
+|领域|描述 |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Scheduled_event_id | Scheduled_event_id |此任务对应的 [ActivityTaskScheduled](#ActivitytaskScheduled) 事件的 ID。                   |
+|身份|标识启动任务的 [Worker](/Workers#Worker)。                                                      |
+|请求 ID |标识 Activity 任务请求。                                                                                |
+|尝试|为完成此任务而尝试的次数。                                                    |
+|最后一次失败 |最近失败事件的详细信息。仅当任务先前失败并重试时才分配值。 |
+
+### Activity任务已完成
+
+此 [事件](/Workflow-execution/event#event) 类型指示 [Activity 任务](/tasks#Activity-task) 已完成。
+SDK 客户端已拾取并成功完成 Activity 任务。
+此事件类型包含 [Activity 执行](/Activity-执行) 结果。
+
+|领域|描述 |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+|结果|已完成的 [Activity](/活动) 的序列化结果。                                                      |
+| Scheduled_event_id | Scheduled_event_id |此完成事件对应的 [ActivityTaskScheduled](#ActivitytaskScheduled) 事件的 ID。 |
+|开始事件 ID |此任务对应的 [ActivityTaskStarted](#Activitytaskstarted) 事件的 ID。                 |
+|身份|完成此任务的 [Worker](/Workers#Worker) 的身份。                                            |
+
+### ActivityTask失败
+
+此 [事件](/Workflow-execution/event#event) 类型指示 [Activity 任务](/tasks#Activity-task) 失败。
+SDK 客户端获取了 Activity 任务，但未成功完成。
+此事件类型包含 [Activity 执行](/Activity-执行) 错误。
+
+|领域|描述 |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+|失败| [Workflow](/Workflows) 故障的序列化结果。                                                      |
+| Scheduled_event_id | Scheduled_event_id |此失败事件对应的 [ActivityTaskScheduled](#ActivitytaskScheduled) 事件的 ID。 |
+|开始事件 ID |此故障对应的 [ActivityTaskStarted](#Activitytaskstarted) 事件的 ID。           |
+|重试状态|提供是否应该重试任务的原因。                                    |
+
+### ActivityTaskTimedOut
+
+此 [Event](/Workflow-execution/event#event) 类型表示 Activity 已根据 [Temporal Server](/Temporal-service/Temporal-server) 超时，原因是以下 [Activity](/activities) 超时之一：[Schedule-to-Close超时]（/百科全书/检测-Activity-failures#Schedule-关闭超时）和[Schedule-启动超时]（/百科全书/检测-Activity-failures#Schedule-启动超时）。
+
+|领域|描述 |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+|失败| [Workflow](/Workflows) 故障的序列化结果。                                                      |
+| Scheduled_event_id | Scheduled_event_id |此超时事件对应的 [ActivityTaskScheduled](#ActivitytaskScheduled) 事件的 ID。 |
+|开始事件 ID |此超时对应的 [ActivityTaskStarted](#Activitytaskstarted) 事件的 ID。           |
+|重试状态|提供是否应该重试任务的原因。                                    |
+|超时类型 |导致此事件的超时类型，例如开始到关闭、Schedule 到关闭、Schedule 到开始。     |
+
+您可以运行包含 Activity 执行的 Workflow，该执行的时间比您设置的开始到关闭超时更长，并使用将 MaxAttempts 设置为 1 的 RetryPolicy，以便它不会无限期地重试。
+当 Activity 超时时，您将观察到“ActivityTaskTimedOut”事件包含文档中缺少的其他属性，包括导致该事件的超时类型。
+
+### ActivityTaskCancelRequested
+
+此 [Event](/Workflow-execution/event#event) 类型指示已发生 [cancel](/Activity-execution#cancellation) [Activity](/activities) 的请求。
+
+|领域|描述 |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Scheduled_event_id | Scheduled_event_id |此取消事件对应的 [ActivityTaskScheduled](#ActivitytaskScheduled) 事件的 ID。 |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。            |
+
+### ActivityTask已取消
+
+此 [Event](/Workflow-execution/event#event) 类型指示 [Activity](/activities) 已[取消](/Activity-execution#cancellation)。
+
+|领域|描述 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+|详情 | Activity 在确认取消后报告的附加信息。                                               |
+|最新取消请求事件 ID引用同一 Activity 的最新 [ActivityTaskCancelRequested](#Activitytaskcancelrequested) 事件的 ID。 |
+| Scheduled_event_id | Scheduled_event_id |此取消对应的 [ActivityTaskScheduled](#ActivitytaskScheduled) 事件的 ID。                  |
+|开始事件 ID |此取消对应的 [ActivityTaskStarted](#Activitytaskstarted) 事件的 ID。                      |
+|身份|标识请求取消的 [Worker](/Workers#Worker)。                                                       |
+
+### Timer开始
+
+此 [Event](/Workflow-execution/event#event) 类型表示 Timer 已启动。
+
+|领域|描述 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Timer_id | [Worker](/Workers#Worker) 或用户为 Timer 分配的 ID。                           |
+|启动超时| Timer 触发之前经过的时间。                                                |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。 |
+
+### Timer已发射
+
+此 [Event](/Workflow-execution/event#event) 类型表示 Timer 已触发。
+
+|领域 |描述 |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| Timer_id | [Worker](/Workers#Worker) 或用户为 Timer 分配的 ID。 |
+|开始事件 ID | [TimerStarted](#Timerstarted) 事件本身的 ID。             |
+
+### Timer已取消
+
+此 [Event](/Workflow-execution/event#event) 类型表示 Timer 已被取消。
+
+|领域|描述 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Timer_id | [Worker](/Workers#Worker) 或用户为 Timer 分配的 ID。                           |
+|开始事件 ID | [TimerStarted](#Timerstarted) 事件本身的 ID。                                       |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。 |
+
+### RequestCancelExternalWorkflowExecutionInitiated
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Workflow](/Workflows) 已请求 [Temporal Server](/Temporal-service/Temporal-server) 尝试取消另一个 Workflow。
+
+|领域|描述 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。 |
+| Namespace | Workflow 的 [Namespace](/Namespaces) 将由 Signal 执行。             |
+| Workflow_执行 |识别 Workflow 和 [Workflow Execution](/Workflow-execution) 的运行。           |
+| child_Workflow_only | 儿童_Workflow_only |如果此 Workflow 是发出取消请求的 Workflow 的子级，则设置为 true。   |
+|原因|用户或客户为取消Workflow而提供的信息。                            |
+
+### RequestCancelExternalWorkflowExecutionFailed
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Temporal Server](/Temporal-service/Temporal-server) 无法取消目标 [Workflow](/Workflows)。
+这通常是因为找不到目标Workflow。
+
+|领域|描述 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。 |
+| Namespace |取消失败的 Workflow 的 [Namespace](/Namespaces)。                                 |
+| Workflow_执行 |识别 Workflow 和 [Workflow Execution](/Workflow-execution) 的运行。           |
+|发起事件 ID |此失败对应的 [RequestCancelExternalWorkflowExecutionInitiated] 事件的 ID。  |
+
+### 外部WorkflowExecutionCancelRequested
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Temporal Server](/Temporal-service/Temporal-server) 已成功请求取消目标 [Workflow](/Workflows)。
+
+|领域|描述 |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|发起事件 ID |此取消请求对应的 [RequestCancelExternalWorkflowExecutionInitiated](#requestcancelexternalWorkflowexecutioninitied) 事件的 ID。 |
+| Namespace |请求取消的 Workflow 的 [Namespace](/Namespaces)。                                                                                            |
+| Workflow_执行 |识别 Workflow 和 [Workflow Execution](/Workflow-execution) 的运行。                                                                             |
+
+### 外部WorkflowExecutionSignaled
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Temporal Server](/Temporal-service/Temporal-server) 已成功 [Signaled](/sending-messages#sending-Signals) 目标 [Workflow](/Workflows)。
+
+|领域|描述 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+|发起事件 ID |此事件对应的 [SignalExternalWorkflowExecutionInitiated](#SignalexternalWorkflowexecutioninitied) 事件的 ID。 |
+| Namespace | Workflow 的 [Namespace](/Namespaces) 是 Signal 的。                                                                   |
+| Workflow_执行 |识别 Workflow 和 [Workflow Execution](/Workflow-execution) 的运行。                                            |
+
+### 标记记录
+
+此 [Event](/Workflow-execution/event#event) 类型对于 [Temporal Server](/Temporal-service/Temporal-server) 是透明的。
+服务器只会存储它，不会尝试理解它。
+SDK 客户端可以将其用于本地活动或 Side Effect。
+
+|领域|描述 |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+|标记名称 |识别各种标记。                                                                                         |
+|详情 |标记中记录的序列化信息。                                                                      |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。                     |
+|标题| [Signal](/sending-messages#sending-Signals) 的发送者传递的信息被复制到标记中。 |
+|失败| [Workflow](/Workflows) 故障的序列化结果。                                                              |
+
+### StartChildWorkflowExecutionInitiated
+
+此 [Event](/Workflow-execution/event#event) 类型指示 [Temporal Server](/Temporal-service/Temporal-server) 将尝试启动 Child Workflow。
+
+|领域|描述 |
+| ------------- | ----------------------------------------------------------- |
+| Namespace | Child Workflow 的 [Namespace](/Namespaces)。 |
+| Workflow_id |标识 Child Workflow。                  |
+| Workflow_类型 |启动的 Workflow 的名称/类型。   |
+
+### StartChildWorkflowExecutionFailed
+
+此 [Event](/Workflow-execution/event#event) 类型表示无法启动/触发 [Child Workflow Execution](/child-Workflows)。
+这通常是由于 Child Workflow Id 冲突造成的。
+
+|领域|描述 |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Namespace | Child Workflow 的 [Namespace](/Namespaces)。                                                                          |
+| Workflow_id |标识 Child Workflow。                                                                                           |
+| Workflow_类型 |失败的 Workflow 的名称/类型。                                                                               |
+|发起事件 ID |此事件对应的 [StartChildWorkflowExecutionInitiated](#startchildWorkflowexecutioninitied) 事件的 ID。 |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。                          |
+
+### ChildWorkflowExecutionStarted
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Child Workflow Execution](/child-Workflows) 已成功启动/触发。
+这还会导致为已启动的 Workflow 记录 [WorkflowExecutionStarted](#Workflowexecutionstarted)。
+
+|领域|描述 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Namespace | Child Workflow 的 [Namespace](/Namespaces)。                                                                                  |
+|发起事件 ID |此事件对应的 [StartChildWorkflowExecutionInitiated](#startchildWorkflowexecutioninitied) 事件的 ID。         |
+| Workflow_执行 |识别 Workflow 和 Workflow Execution 的运行。                                                                   |
+| Workflow_类型 |已开始执行的 Workflow 的名称/类型。                                                                            |
+|标题| [Signal](/sending-messages#sending-Signals) 的发送者传递的信息被复制到 Child Workflow 任务中。 |
+
+### ChildWorkflowExecutionCompleted
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Child Workflow Execution](/child-Workflows) 已成功完成。
+这还会导致为已完成的 [Workflow](/Workflows) 记录 [WorkflowExecutionCompleted](#Workflowexecutioncompleted)。
+
+|领域|描述 |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+|结果|已完成的 Child Workflow 的序列化结果。                                                                       |
+| Namespace |已完成的 Child Workflow 的 [Namespace](/Namespaces)。                                                                |
+| Workflow_执行 |识别 Workflow 和 [Workflow Execution](/Workflow-execution) 的运行。                                    |
+| Workflow_类型 |已完成的 Workflow 的名称/类型。                                                                            |
+|发起事件 ID |此事件对应的 [StartChildWorkflowExecutionInitiated](#startchildWorkflowexecutioninitied) 事件的 ID。 |
+|开始事件 ID |此事件对应的 [ChildWorkflowExecutionStarted](#childWorkflowexecutionstarted) 事件的 ID。               |
+
+### ChildWorkflowExecutionFailed
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Child Workflow Execution](/child-Workflows) 未成功完成。
+这还会导致为失败的 Workflow 记录 [WorkflowExecutionFailed](#Workflowexecutionfailed)。
+
+|领域|描述 |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+|失败| [Workflow](/Workflows) 故障的序列化结果。                                                                   |
+| Namespace |失败的 Child Workflow 的 [Namespace](/Namespaces)。                                                              |
+| Workflow_执行 |识别 Workflow 和 [Workflow Execution](/Workflow-execution) 的运行。                                    |
+| Workflow_类型 |失败的 Workflow 的名称/类型。                                                                               |
+|发起事件 ID |此事件对应的 [StartChildWorkflowExecutionInitiated](#startchildWorkflowexecutioninitied) 事件的 ID。 |
+|开始事件 ID |此失败对应的 [ChildWorkflowExecutionStarted](#childWorkflowexecutionstarted) 事件的 ID。             |
+|重试状态|提供是否应该重试任务的原因。                                                 |
+
+### ChildWorkflowExecutionCanceled
+
+此 [Event](/Workflow-execution/event#event) 类型表示子 Workflow Execution 已被取消。
+这还会导致为已取消的 Workflow 记录 [WorkflowExecutionCanceled](#Workflowexecutioncanceled)。
+
+|领域|描述 |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+|详情 |取消时 Child Workflow 报告的附加信息。                                                  |
+| Namespace |已取消的 Child Workflow 的 [Namespace](/Namespaces)。                                                        |
+| Workflow_执行 |识别 Workflow 和 [Workflow Execution](/Workflow-execution) 的运行。                                    |
+| Workflow_类型 |已取消的 Workflow 的名称/类型。                                                                             |
+|发起事件 ID |此事件对应的 [StartChildWorkflowExecutionInitiated](#startchildWorkflowexecutioninitied) 事件的 ID。 |
+|开始事件 ID |此取消对应的 [ChildWorkflowExecutionStarted](#childWorkflowexecutionstarted) 事件的 ID。         |
+
+### ChildWorkflowExecutionTimedOut
+
+此事件类型表示 [Child Workflow Execution](/child-Workflows) 已由 [Temporal Server](/Temporal-service/Temporal-server) 超时。
+这还会导致为超时的 Workflow 记录 [WorkflowExecutionTimeOut](#Workflowexecutiontimedout)。
+
+|领域|描述 |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Namespace | Child Workflow 的 [Namespace](/Namespaces)。                                                                          |
+| Workflow_执行 |识别 Workflow 和 Workflow Execution 的运行。                                                           |
+| Workflow_类型 |已超时的 Workflow 的名称/类型。                                                                            |
+|发起事件 ID |此事件对应的 [StartChildWorkflowExecutionInitiated](#startchildWorkflowexecutioninitied) 事件的 ID。 |
+|开始事件 ID |此超时对应的 [ChildWorkflowExecutionStarted](#childWorkflowexecutionstarted) 事件的 ID。        |
+|重试状态|提供是否应该重试任务的原因。                                                 |
+
+### ChildWorkflowExecutionTermated
+
+此 [Event](/Workflow-execution/event#event) 类型表示子 Workflow Execution 已终止。
+这还会导致为已终止的 Workflow 记录 [WorkflowExecutionTermulated](#Workflowexecutiontermminate)。
+
+|领域|描述 |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Namespace | Child Workflow 的 [Namespace](/Namespaces)。                                                                          |
+| Workflow_执行 |识别 Workflow 和 Workflow Execution 的运行。                                                           |
+| Workflow_类型 |已终止的 Workflow 的名称/类型。                                                                           |
+|发起事件 ID |此事件对应的 [StartChildWorkflowExecutionInitiated](#startchildWorkflowexecutioninitied) 事件的 ID。 |
+|开始事件 ID |此终止对应的 [ChildWorkflowExecutionStarted](#childWorkflowexecutionstarted) 事件的 ID。    |
+|重试状态|提供是否应该重试任务的原因。                                                 |
+
+### SignalExternalWorkflowExecutionInitiated
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Temporal Server](/Temporal-service/Temporal-server) 将尝试 [Signal](/sending-messages#sending-Signals) 目标 [Workflow](/Workflows)。
+此事件类型包含 Signal 名称以及 Signal 负载。
+
+|领域|描述 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。 |
+| Namespace |将被 Signaled 的 Workflow 的 [Namespace](/Namespaces)。                                 |
+| Workflow_执行 |识别 Workflow 和 [Workflow Execution](/Workflow-execution) 的运行。           |
+| Signal_名称 |要触发的 Signal 的名称/类型。                                                            |
+|输入 |由 SDK 反序列化以向 Workflow 函数提供参数的信息。      |
+| child_Workflow_only | 儿童_Workflow_only |如果此 Workflow 是发出取消请求的 Workflow 的子级，则设置为 true。   |
+|标题|要从 Signal 传递到目标 Workflow 的信息。                              |
+
+### SignalExternalWorkflowExecutionFailed
+
+此 [Event](/Workflow-execution/event#event) 类型表示 [Temporal Server](/Temporal-service/Temporal-server) 无法对目标 [Workflow](/Workflows) 进行 Signal，通常是因为找不到 Workflow。
+
+|领域|描述 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告事件的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 的 ID。                                                                                              |
+| Namespace |执行失败的 Workflow 的 [Namespace](/Namespaces)。                                                                                                                             |
+| Workflow_执行 |识别 Workflow 和 [Workflow Execution](/Workflow-execution) 的运行。                                                                                                        |
+|发起事件 ID |此失败 [Signal](/sending-messages#sending-Signals) 对应的 [RequestCancelExternalWorkflowExecutionInitiated](#requestcancelexternalWorkflowexecutioninitied) 事件的 ID。 |
+
+### UpsertWorkflowSearchAttributes
+
+此 [Event](/Workflow-execution/event#event) 类型指示 Workflow [Search Attributes](/search-attribute) 应为 Updated 并与 Visibility 存储同步。
+
+|领域|描述 |
+| -------------------------------- | ------------------------------------------------------------------------------------------ |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id | [WorkflowTaskCompleted](#Workflowtaskcompleted) 事件报告了具有此 ID 的事件。 |
+|搜索属性 |提供用于设置 Workflow 的 [Search Attributes](/search-attribute) 的数据。          |
+
+### WorkflowExecutionUpdateAcceptedEvent
+
+此 [Event](/Workflow-execution/event#event) 类型指示 [Workflow Execution](/Workflow-execution) 已接受 [Update](/sending-messages#sending-Updates) 执行。
+原始请求输入有效负载由该事件指示和存储，因为它在最初请求 Update 时不生成任何事件。
+
+|领域 |描述 |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|协议实例 ID |具有此 ID 的 Update 协议的实例正在执行此 Update。                                                                                             |
+|已接受的请求消息 ID | [Temporal Server](/Temporal-service/Temporal-server)发送到[Worker](/Workers#Worker)的请求消息的ID。                                           |
+|已接受请求排序事件 ID |在具有此 ID 的事件之后执行此 Update。                                                                                                                      |
+|接受的请求 |请求输入和元数据最初由 Update 的调用者提供，随后由 Temporal Server 转发到 Worker 以供接受和执行。 |
+
+### WorkflowExecutionUpdateCompletedEvent
+
+此 [Event](/Workflow-execution/event#event) 类型指示 [Workflow Execution](/Workflow-execution) 已执行 [Update](/sending-messages#sending-Updates) 直至完成。
+
+|领域 |描述 |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|元|与此 Update 关联的元数据源自初始请求。                                                                  |
+|已接受的事件 ID | [WorkflowExecutionUpdateAcceptedEvent](#WorkflowexecutionUpdateacceptedevent) 的 ID 平台接受此 Update 执行。 |
+|结果| Update 的执行结果是成功还是失败。                                            |
+
+### Nexus操作Scheduled
+
+此事件类型指示调用者 Workflow 发出 Nexus Operation Scheduled。
+调用者的 [Nexus Machinery](/glossary#Nexus-machinery) 将尝试启动 Nexus Operation。
+该事件类型包含 Nexus Operation 输入和操作请求 ID。
+
+|领域|描述 |
+| :-------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|终点|端点名称，必须存在于端点注册表中。                                                                                                                                                                                                                                                       |
+|服务 |服务名称。                                                                                                                                                                                                                                                                                             |
+|操作|操作名称。                                                                                                                                                                                                                                                                                           |
+|输入 |操作的输入。服务器在发送 StartOperation 请求时将其转换为 Nexus 请求内容和内部相应的内容标头。在处理程序方面，如果它也由 Temporal 支持，则内容将转换回存储在该事件中的原始有效负载。 |
+| Schedule_to_close_timeout | Schedule_to_close_timeout | Schedule-此操作关闭超时。指示调用者愿意等待操作完成的时间。服务器在内部重试调用。                                                                                                                                      |
+| Nexus_标头 |附加到 Nexus 请求的标头。请注意，这些标头与内部活动和 Child Workflow 上的 Temporal 标头不同，这些标头传输到可能位于外部且不是传统有效负载的 Nexus Operation。                                                               |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告相应 ScheduleNexusOperation 命令的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 事件的 ID。                                                                                                                                                              |
+|请求 ID |创建此事件时历史记录服务生成的唯一 ID。该 ID 将与所有 Nexus StartOperation 请求一起传输，并用作幂等密钥。                                                                                                                            |
+|端点_id |生成此事件时在端点注册表中解析的端点 ID。它存储在事件中，并由服务器在内部使用，以防端点从事件最初为 Scheduled 时重命名。                                                                    |
+
+### Nexus操作开始
+
+此事件类型表示 Nexus Operation 执行已启动。
+此事件将添加到异步 Nexus Operation 的调用者的 Workflow 历史记录中，例如由 Workflow 支持的那些事件。
+该事件不会添加到同步 Nexus Operation 的调用者的 Workflow 历史记录中，因为当 Nexus 处理程序同步提供响应时，它们会直接转换到 [NexusOperationCompleted](#Nexusoperationcompleted) 或另一个最终状态，例如 [NexusOperationFailed](#Nexusoperationfailed)。
+
+|领域|描述 |
+| ：------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scheduled_event_id | Scheduled_event_id |此任务对应的 [NexusOperationScheduled](#NexusoperationScheduled) 事件的 ID。                                                 |
+|操作令牌 | Nexus 处理程序在响应 StartOperation 请求时返回的操作令牌。该令牌在取消操作时使用。 |
+|请求 ID |在 Schedule 时间分配的请求 ID。                                                                                                        |
+
+### Nexus操作完成
+
+此事件类型表明 Nexus Operation 已成功完成。
+调用者的 Workflow 历史记录记录了同步和异步 Nexus Operation 的成功 Nexus Operation 事件的结果。
+此事件类型包含 Nexus Operation 结果。
+
+|领域|描述 |
+| ：------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Scheduled_event_id | Scheduled_event_id | [NexusOperationScheduled](#NexusoperationScheduled) 事件的 ID。唯一标识此操作。                                                         |
+|结果| Nexus Operation 的序列化结果。 Nexus 处理程序的响应。通过完成回调传递或作为对同步操作的响应传递。 |
+|请求 ID |在 Schedule 时间分配的请求 ID。                                                                                                                           |
+
+### Nexus操作失败
+
+此事件类型表明 Nexus Operation 发生故障。
+对于同步和异步 Nexus Operation，调用者的 Workflow 历史记录都会记录失败的 Nexus Operation 以及此事件。
+例如，当 Nexus 处理程序同步响应不可重试的错误时，或者当支持操作的 Workflow 失败时，导致 [WorkflowExecutionFailed](#Workflowexecutionfailed) 事件。
+当 SDK 客户端选取 Nexus Operation 时，Nexus 处理程序会异步启动底层 Workflow，随后导致 [WorkflowExecutionFailed](#Workflowexecutionfailed)。
+此事件类型包含 Nexus Operation 故障。
+
+|领域|描述 |
+| ：------------------ | :------------------------------------------------------------------------------------------------------------ |
+| Scheduled_event_id | Scheduled_event_id | [NexusOperationScheduled](#NexusoperationScheduled)`事件的 ID。唯一标识此操作。 |
+|失败|失败细节。 NexusOperationFailureInfo 包装了 ApplicationFailureInfo。                              |
+|请求 ID |在 Schedule 时间分配的请求 ID。                                                                    |
+
+### Nexus操作超时
+
+此事件类型指示 Nexus Operation 已根据 Temporal Server 超时，原因是以下 Nexus Operation 超时之一：Schedule 关闭超时。
+|领域|描述 |
+| :----| :----|
+| Scheduled_event_id | Scheduled_event_id | [NexusOperationScheduled](#NexusoperationScheduled)`事件的 ID。唯一标识此操作。 |
+|失败|失败细节。 NexusOperationFailureInfo 包装 CanceledFailureInfo。 |
+|请求 ID |在 Schedule 时间分配的请求 ID。 |
+
+### Nexus操作取消请求
+
+此事件类型表示 Workflow、Scheduled、Nexus Operation 请求取消它。
+|领域|描述 |
+| :----| :----|
+| Scheduled_event_id | Scheduled_event_id |此取消请求对应的 [NexusOperationScheduled](#NexusoperationScheduled)` 事件的 ID。 |
+| Workflow_task_completed_event_id | Workflow_task_completed_event_id |报告相应的 RequestCancelNexusOperation 命令的 [WorkflowTaskCompleted](#Workflowtaskcompleted) 事件。 |
+
+### Nexus操作已取消
+
+此事件类型表示 Nexus Operation 已解析为已取消。
+|领域|描述 |
+| :----| :----|
+| Scheduled_event_id | Scheduled_event_id | [NexusOperationScheduled](#NexusoperationScheduled)`事件的 ID。唯一标识此操作。 |
+|失败|取消详情。 |
+|请求 ID |在 Schedule 时间分配的请求 ID。 |

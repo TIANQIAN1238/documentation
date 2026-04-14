@@ -1,0 +1,101 @@
+---
+id: last-connection-error
+title: 解决无法到达服务器错误
+sidebar_label: 无法到达服务器错误
+description: 解决通常由过期 TLS 证书引起的服务器连接错误。验证、更新和 Update 服务器配置，以有效解决 Temporal CLIent 请求问题。
+toc_max_heading_level: 4
+keywords:
+  - cloud
+  - namespaces
+tags:
+  - Temporal Cloud
+  - Namespaces
+---
+
+消息“无法到达服务器：上次连接错误”通常可能是由于 TLS 证书过期或在服务器启动过程中导致的，其中客户端请求在角色完全初始化之前到达服务器。
+
+本故障排除指南向您展示如何执行以下操作：
+
+- 验证认证有效期
+- 更新认证
+- Update服务器配置
+
+### 验证 TLS 认证到期日期
+
+解决此错误的第一步是验证 TLS 认证的到期日期。
+然后您可以更新认证和Update服务器配置。
+
+选择以下方法之一来验证 TLS 认证的到期日期：
+
+**验证 TLS 认证的到期日期**
+
+使用以下命令列出到期日期：
+
+```command
+tcld namespace accepted-client-ca list \
+    --namespace <namespace_id>.<account_id> | \
+    jq -r '.[0].notAfter'
+```
+
+如果返回的日期是过去的日期，则证书已过期。
+
+**现有证书管理基础设施**
+
+如果您使用现有的证书管理基础设施，请使用它来验证 TLS 连接。
+例如，如果您使用 OpenSSL，请运行以下命令：
+
+```command
+openssl s_client -connect <namespace_grpc_endpoint> -showcerts -cert ~/certs/path.pem -key .~/certs/path.key -tls1_2
+```
+
+**自签名证书**
+
+如果您使用自签名证书，请运行以下 Temporal CLI 命令：
+
+```command
+temporal namespace describe \
+    --namespace <namespace_id>.<account_id> \
+    --address <namespace_grpc_endpoint> \
+    --tls-cert-path <path-to-mTLS-pem-file> \
+    --tls-key-path <path-to-mTLS-key-file>
+```
+
+您的 Namespace gRPC 端点可在 [Temporal Cloud Namespace](https://cloud.Temporal.io/Namespaces) 的详细信息页面上找到。
+
+### 更新 TLS 认证
+
+如果证书已过期或即将过期，下一步是续订。
+
+您可以通过联系颁发证书的证书颁发机构 (CA) 并请求续订来执行此操作。
+
+**现有证书管理基础设施**
+
+如果您使用现有的证书管理基础设施，请联系基础设施的管理员来续订证书。
+
+**自签名证书**
+
+如果您使用自签名证书或没有现有基础设施，则可以使用 OpenSSL、[step CLI](https://github.com/smallstep/cli) 或类似工具生成新证书。
+
+有关生成自签名证书的信息，请参阅[控制授权](/cloud/certificates#control-authorization)。
+
+### Update服务器配置中的CA认证
+
+Update Temporal Cloud 服务器配置中的新 CA 证书。
+
+您可以使用以下任一方法进行 Update 证书：
+
+### 执行或调度 XPROT027X 时
+
+在服务器配置中进行 Update TLS 认证后，重试连接。
+
+### 设置提醒
+
+不要让您的证书过期。
+在您的日历中添加提醒，以便在现有证书到期之前尽早颁发新的 CA 证书。
+
+### 其他资源
+
+前面的步骤应该可以帮助您解决由过期的 TLS 证书导致的“无法到达服务器：上次连接错误”错误。
+
+如果此问题仍然存在，请验证用于连接到服务器的客户端是否使用正确的 TLS 认证，以及客户端请求是否在角色完全初始化后到达服务器。
+如果您仍需要帮助，请[创建支持票证](/cloud/support#support-ticket)。

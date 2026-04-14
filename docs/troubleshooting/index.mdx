@@ -1,8 +1,8 @@
 ---
 id: index
-title: Error handling and troubleshooting
-sidebar_label: Troubleshooting
-description: Discover effective troubleshooting solutions for potential Temporal errors and edge cases with our comprehensive guides, ensuring smooth Workflow execution and error management.
+title: "错误处理和故障排除"
+sidebar_label: "故障排除"
+description: "通过我们的综合指南，找到针对潜在 Temporal 错误和边缘情况的有效故障排除解决方案，确保 Workflow Execution 和错误管理顺利进行。"
 toc_max_heading_level: 4
 keywords:
   - error handling
@@ -13,12 +13,12 @@ tags:
  - Failures
 ---
 
-Even the most reliable systems can encounter issues.
-Our troubleshooting guides are designed to help you quickly identify and resolve potential errors, ensuring your Temporal applications run smoothly and efficiently.
+即使是最可靠的系统也可能会遇到问题。
+我们的故障排除指南旨在帮助您快速识别和解决潜在错误，确保您的 Temporal 应用程序平稳高效地运行。
 
-- [Troubleshoot the BlobSizeLimitError](/troubleshooting/blob-size-limit-error): The `BlobSizeLimitError` happens when the size of a blob (payloads including Workflow context and each Workflow and Activity argument and return value) is too large.
-  The maximum payload for a single request is 2 MB, and the maximum size for any Event History transaction is 4 MB.
-- [Troubleshoot the Deadline-Exceeded Error](/troubleshooting/deadline-exceeded-error):
-  The "Context: deadline exceeded" error occurs when requests to the Temporal Service by the Client or Worker cannot be completed.
-  This can be due to network issues, timeouts, server overload, or Query errors.
-- [Troubleshoot the Failed Reaching Server Error](/troubleshooting/last-connection-error): The message "Failed reaching server: last connection error" often happens due to an expired TLS certificate or during the Server startup process when Client requests reach the Server before roles are fully initialized.
+- [解决 BlobSizeLimitError 问题](/troubleshooting/blob-size-limit-error)：当 blob 的大小（包括 Workflow 上下文以及每个 Workflow 和 Activity 参数和返回值的有效负载）太大时，会发生 `BlobSizeLimitError`。
+  单个请求的最大有效负载为 2 MB，任何 Event History 事务的最大大小为 4 MB。
+- [解决超出截止日期的错误](/troubleshooting/deadline-exceeded-error)：
+  当客户端或 Worker 对 Temporal 服务的请求无法完成时，会出现“上下文：超出截止日期”错误。
+  这可能是由于网络问题、超时、服务器过载或 Query 错误造成的。
+- [解决无法访问服务器错误](/troubleshooting/last-connection-error)：消息“无法到达服务器：上次连接错误”通常是由于 TLS 证书过期或在服务器启动过程中，当客户端请求在角色完全初始化之前到达服务器时发生的。

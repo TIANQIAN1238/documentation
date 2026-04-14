@@ -1,0 +1,354 @@
+---
+id: index
+title: 连接性
+sidebar_label: 连接性
+slug: /cloud/connectivity
+description: 使用 Temporal Cloud 的网络连接详细信息
+tags:
+  - Temporal Cloud
+  - Production
+  - Connectivity
+keywords:
+  - availability
+  - explanation
+  - failover
+  - replication
+  - namespaces
+  - temporal-cloud
+  - term
+---
+
+import { ToolTipTerm, DiscoverableDisclosure, CaptionedImage, SdkTabs } from '@site/src/components';
+import { LANGUAGE_TAB_GROUP, getLanguageLabel } from '@site/src/constants/languageTabs';
+
+## Namespace 的专用网络连接
+
+除默认互联网终端节点外，Temporal Cloud 还支持通过 AWS PrivateLink 或 GCP Private Services Connect 与 Namespace 进行私有连接。
+
+无论您选择如何连接，Namespace 访问始终通过 [API 密钥](/cloud/api-keys#overview) 或 [mTLS](/cloud/certificates) 进行安全身份验证。
+
+有关 IP 地址稳定性和白名单的信息，请参阅 [IP 地址](/cloud/connectivity/ip-addresses)。
+
+### 所需步骤
+
+要使用 Temporal Cloud 的专用连接：
+
+1. 设置您的VPC到Temporal Namespace所在区域的私有连接。
+1. Update 您的私有 DNS 和/或 Worker 配置以使用私有连接。
+1.（完成 Google PSC 设置所需，如果使用 AWS PrivateLink，则可选）：为专用连接创建连接规则并将其附加到目标 Namespace。这将阻止所有不通过专用连接对 Namespace 的访问，但您也可以添加公共规则以允许互联网连接。
+
+对于步骤 1 和 2，请遵循我们针对目标 Namespace 云提供商的指南：
+- [AWS PrivateLink](/cloud/connectivity/aws-connectivity) 创建和私有 DNS 设置
+- [Google Cloud Private Service Connect](/cloud/connectivity/gcp-connectivity) 创建和私有 DNS 设置
+
+:::caution Finish client setup (complete step 2)
+
+创建专用连接后，您必须设置专用 DNS 或 Update 配置所有要使用专用连接的客户端。
+
+我们建议使用私有 DNS。
+
+如果没有此步骤，您的客户端如果之前使用公共连接，则可以通过互联网连接到 Namespace，否则将根本无法连接。
+
+如果这不适合您，请参阅[我们的更新客户端上的服务器和 TLS 设置的指南](/cloud/connectivity#Update-dns-or-clients-to-use-private-connectivity)。
+
+:::
+
+对于步骤 3，请继续阅读有关 [连接规则](/cloud/connectivity#connectivity-rules) 的详细信息。
+
+## 连接规则
+
+:::tip Support, stability, and dependency info
+
+连接规则当前处于[公共预览](/evaluate/development-product-features/release-stages#public-preview)。
+
+:::
+
+:::info Web UI Connectivity
+
+Temporal Cloud Web UI 目前不受连接规则强制执行的约束。
+即使 Namespace 配置了专用连接规则，该 Namespace 的 Web UI 仍然可以通过公共互联网进行访问。
+
+:::
+
+＃＃＃ 定义
+
+连接规则是 Temporal Cloud 的机制，用于限制可用于访问 Namespace 的网络访问路径。
+
+默认情况下，Namespace 的连接规则为零，可从 1. 公共互联网和 2. 您配置到包含 Namespace 的区域的所有专用连接进行访问。无论连接规则如何，Namespace 访问始终通过 [API 密钥](/cloud/api-keys#overview) 或 [mTLS](/cloud/certificates) 进行安全身份验证。
+
+当您将一个或多个连接规则附加到 Namespace 时，Temporal Cloud 将立即阻止所有没有相应连接规则的流量访问 Namespace。一台 Namespace 可以有多个连接规则，并且可以混合公共和私有规则。
+
+每个连接规则指定通用公共（即互联网）访问或特定的专用连接。
+
+公共连接规则不带任何参数。
+
+AWS PrivateLink (PL) 专用连接规则需要以下参数：
+
+- `connection-id`：PL 连接的 VPC 终端节点 ID（例如：`vpce-00939a7ed9EXAMPLE`）
+- `region`：PL 连接的区域，以 aws 为前缀（例如：`aws-us-east-1`）。必须与 Namespace 位于同一区域。请参阅 [Temporal Cloud 区域列表](/cloud/regions) 了解支持的区域。
+
+GCP Private Service Connect (PSC) 专用连接规则需要以下参数：
+
+- `connection-id`：PSC 连接的 ID（例如：`1234567890123456789`）
+- `region`：PSC 连接的区域，以 gcp 为前缀（例如：`gcp-us-east1`）。必须与 Namespace 位于同一区域。请参阅 [Temporal Cloud 区域列表](/cloud/regions) 了解支持的区域。
+- `gcp-project-id`：您在其中创建 PSC 连接的 GCP 项目的 ID（例如：`my-example-project-123`）
+
+可以使用 [tcld](https://docs.Temporal.io/cloud/tcld/)、[Terraform](https://github.com/Temporalio/terraform-provider-Temporalcloud/) 或 [Cloud Ops API](/ops) 创建和管理连接规则
+
+### 权限和限制
+
+只有[帐户管理员和帐户所有者](/cloud/manage-access/roles-and-permissions#account-level-roles) 可以创建和管理连接规则。连接规则对帐户开发人员、帐户管理员和帐户所有者可见。
+
+默认情况下，每个 Namespace 仅限 5 条专用连接规则，每个帐户仅限 50 条专用连接规则。您可以[联系支持人员](/cloud/support#support-ticket) 请求更高的限额。
+
+每个帐户只允许使用一条公共规则，因为它是通用的，并且可以重复用于您希望在互联网上可用的所有 Namespace。尝试创建多个公共规则将引发错误。
+
+## 创建连接规则
+
+### Temporal Cloud CLI (tcld)
+
+创建专用连接规则 (AWS)：
+
+```bash
+tcld connectivity-rule create --connectivity-type private --connection-id "vpce-abcde" --region "aws-us-east-1"
+```
+
+创建专用连接规则 (GCP)：
+
+```bash
+tcld connectivity-rule create --connectivity-type private --connection-id "1234567890" --region "gcp-us-central1" --gcp-project-id "my-project-123"
+```
+
+创建公共连接规则（您只需在帐户中执行此操作一次）：
+
+```bash
+tcld connectivity-rule create --connectivity-type public
+```
+
+`cr` 别名的工作方式相同：
+
+专用连接规则：
+
+```bash
+tcld cr create --connectivity-type private --connection-id "vpce-abcde" --region "aws-us-east-1"
+```
+
+```bash
+tcld cr create --connectivity-type public
+```
+
+### 地形
+
+[Terraform 存储库中的示例](https://github.com/Temporalio/terraform-provider-Temporalcloud/blob/main/examples/resources/Temporalcloud_connectivity_rule/resource.tf)
+
+## 将连接规则附加到 Namespace
+
+当心！当在 Namespace 上设置任何连接规则时，该 Namespace 只能通过这些规则中定义的连接进行访问。如果删除 Worker 正在使用的连接规则，您的流量将会中断。
+
+如果您已经拥有使用 Namespace 的 Worker，同时添加公共规则和任何私有规则可以帮助您避免意外的访问权限丢失。然后，您可以确保所有 Worker 都使用专用连接，然后删除公共规则。
+
+### Temporal Cloud CLI (tcld)
+
+在 Namespace 上设置连接规则：
+
+```bash
+tcld namespace set-connectivity-rules --namespace "my-namespace.abc123" --connectivity-rule-ids "rule-id-1" --connectivity-rule-ids "rule-id-2"
+```
+
+或者使用别名：
+
+```bash
+tcld n scrs -n "my-namespace.abc123" --ids "rule-id-1" --ids "rule-id-2"
+```
+
+连接规则作为一组附加，因此如果规则“rule-a”、“rule-b”和“rule-c”附加到 Namespace，并且您只想分离“rule-c”，则可以进行一次调用来附加“rule-a”和“rule-b”：
+
+```bash
+tcld namespace set-connectivity-rules --namespace "my-namespace.abc123 --ids rule-a --ids rule-b
+```
+
+删除所有连接规则（这将使 Namespace 公开）：
+
+```bash
+tcld namespace set-connectivity-rules --namespace "my-namespace.abc123" --remove-all
+```
+
+### 地形
+
+[Terraform 存储库中的示例](https://github.com/Temporalio/terraform-provider-Temporalcloud/tree/main/examples/resources/Temporalcloud_Namespace/resource.tf#L113-L128)
+
+
+## 查看 Namespace 的连接规则
+
+您可以通过两种方式查看附加到特定 Namespace 的连接规则。
+
+### 获取 Namespace
+
+连接规则包含在“Namespace get”命令返回的 Namespace 详细信息中。
+
+```bash
+tcld namespace get -n "my-namespace.abc123"
+```
+
+### 列出 Namespace 的连接规则
+
+要仅查看特定 Namespace 的连接规则（没有其他 Namespace 详细信息），请使用带有 Namespace 参数的“connectivity-rule list”命令。
+
+```bash
+tcld connectivity-rule list -n "my-namespace.abc123"
+```
+
+## Update DNS 或客户端使用专用连接
+
+我们强烈建议使用私有 DNS，而不是更新客户端服务器和 TLS 设置：
+
+- [如何在AWS中设置私有DNS](/cloud/connectivity/aws-connectivity#configuring-private-dns-for-aws-privatelink) 
+- [如何在 GCP 中设置私有 DNS](/cloud/connectivity/gcp-connectivity#configuring-private-dns-for-gcp-private-service-connect)
+
+如果您无法配置私有 DNS，则必须在 Temporal CLIents 中对 Update 进行两项设置：
+
+1. 将端点服务器地址设置为 PrivateLink 或 Private Services Connect 端点（例如“vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com:7233”或“<GCP PSC IP 地址>:7233”）
+2. 设置 TLS 配置以覆盖 TLS 服务器名称（例如 my-Namespace.my-account.tmprl.cloud）
+
+更新这些设置取决于您使用的客户端。
+
+#### Temporal CLI
+```bash
+TEMPORAL_ADDRESS=vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com:7233
+TEMPORAL_NAMESPACE=my-namespace.my-account
+TEMPORAL_TLS_CERT=<path/to/cert.pem>
+TEMPORAL_TLS_KEY=<path/to/cert.key>
+TEMPORAL_TLS_SERVER_NAME=my-namespace.my-account.tmprl.cloud
+
+temporal workflow count -n $TEMPORAL_NAMESPACE
+```
+
+#### gRPCurl
+```bash
+grpcurl \
+    -servername my-namespace.my-account.tmprl.cloud \
+    -cert path/to/cert.pem \
+    -key path/to/cert.key \
+    vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com:7233 \
+    temporal.api.workflowservice.v1.WorkflowService/GetSystemInfo
+```
+
+#### Temporal SDK
+<SdkTabs>
+<SdkTabs.Go>
+```go
+c, err := client.Dial(client.Options{
+	HostPort:  "vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com:7233",
+	Namespace: "namespace-name.accId",
+	ConnectionOptions: client.ConnectionOptions{
+		TLS: &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			ServerName:   "my-namespace.my-account.tmprl.cloud",
+		},
+	},
+})
+```
+</SdkTabs.Go>
+<SdkTabs.Java>
+```java
+WorkflowServiceStubs service =
+        WorkflowServiceStubs.newServiceStubs(
+            WorkflowServiceStubsOptions.newBuilder()
+                .setSslContext(sslContext)
+                .setTarget("vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com:7233")
+                .setChannelInitializer(
+                    c -> c.overrideAuthority("my-namespace.my-account.tmprl.cloud"))
+                .build());
+```
+</SdkTabs.Java>
+<SdkTabs.TypeScript>
+```ts
+const connection = await NativeConnection.connect({
+  address: "vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com:7233",
+  tls: {
+    serverNameOverride: "my-namespace.my-account.tmprl.cloud",
+    //serverRootCACertificate,
+    // See docs for other TLS options
+    clientCertPair: {
+      crt: fs.readFileSync(clientCertPath),
+      key: fs.readFileSync(clientKeyPath),
+    },
+  },
+});
+```
+</SdkTabs.TypeScript>
+<SdkTabs.Python>
+```python
+client_config["tls"] = TLSConfig(
+    client_cert=bytes(crt, "utf-8"),
+    client_private_key=bytes(key, "utf-8"),
+    domain="my-namespace.my-account.tmprl.cloud",
+)
+
+client = await Client.connect("vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com:7233")
+```
+</SdkTabs.Python>
+<SdkTabs.DotNet>
+```dotnet
+// Create client 
+var client = await TemporalClient.ConnectAsync(
+  new(ctx.ParseResult.GetValueForOption(targetHostOption)!)
+  {
+    Namespace = ctx.ParseResult.GetValueForOption (namespaceOption)!,
+    // Set TLS options with client certs. Note, more options could 
+    // be added here for server CA (i.e. "ServerRootCACert") or SNI 
+    // override (i.e. "Domain") for self-hosted environments with 
+    // self-signed certificates. 
+    Tls = new() 
+    {
+      ClientCert = 
+        await File.ReadAllBytesAsync(ctx.ParseResult.GetValueForOption(clientCertOption) !.FullName), 
+      ClientPrivateKey = 
+        await File.ReadAllBytesAsync(ctx.ParseResult.GetValueFor0ption(clientKey0ption)!.FullName), Domain = "my-namespace.my-account.tmprl.cloud",
+  },
+});
+
+// dotnet run --target-host "vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com:7233"
+```
+</SdkTabs.DotNet>
+</SdkTabs>
+
+要检查您的客户端是否具有到相关专用端点的网络连接，请运行：
+```bash
+nc -zv vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com 7233
+```
+
+## 控制平面连接
+
+使用 Temporal Cloud [web UI](/web-ui)、[Terraform 提供程序](/cloud/terraform-provider)、[`tcld` CLI](/cloud/tcld) 或 [Cloud Ops API](/ops) 需要对 Temporal Cloud 控制平面进行网络访问。
+
+### 控制平面主机名
+
+不同的主机名用于服务的不同部分。
+
+- `saas-api.tmprl.cloud`（Terraform、tcld 和 Cloud Ops API 需要） 
+- `web.onboarding.tmprl.cloud`（Web UI 必需）
+- `web.saas-api.tmprl.cloud`（Web UI 必需）
+
+### AWS PrivateLink 与 Temporal Cloud 控制平面的连接
+
+Temporal Cloud 支持与控制平面的 [AWS PrivateLink](https://aws.amazon.com/privatelink/) 连接，这允许从无法传出公共互联网的 VPC 中运行的应用程序进行访问。 Temporal Cloud **不**支持限制帐户，以便专用连接成为控制平面的唯一连接方法；控制平面始终可以通过公共互联网访问。
+
+无论您选择如何连接，控制平面访问始终通过 [API 密钥](/cloud/api-keys#overview) 或 JWT 令牌进行安全身份验证。
+
+要设置与 Temporal Cloud 控制平面的 PrivateLink 连接，请按照[这些说明](/cloud/connectivity/aws-connectivity) 操作，但使用下面的控制平面端点信息：
+
+|主机名 |地区 |控制平面 PrivateLink 服务名称 |
+| ---------------------- | ----------- | -------------------------------------------------------------------- |
+| `saas-api.tmprl.cloud` | `us-west-2` | `com.amazonaws.vpce.us-west-2.vpce-svc-0c57a5930b6f6be0e` |
+
+控制平面 PrivateLink 终端节点包含一个[私有 DNS 名称](https://docs.aws.amazon.com/vpc/latest/privatelink/manage-dns-names.html)，它允许您的客户端使用 PrivateLink 连接，而无需设置私有 DNS 或覆盖客户端配置。要使用 DNS 名称，请确保您的 VPC 已启用“启用 DNS 主机名”和“启用 DNS 支持”选项。如果您无法使用 DNS 名称，您还可以手动[设置私有 DNS](/cloud/connectivity/aws-connectivity#configuring-private-dns-for-aws-privatelink) 或[覆盖客户端上的服务器和 TLS 设置](/cloud/connectivity#Update-dns-or-clients-to-use-private-connectivity)。
+
+:::caution Finish client setup
+
+创建专用连接后，您必须使用提供的 DNS 名称、设置专用 DNS 或 Update 配置要使用专用连接的所有客户端。
+
+如果没有此步骤，如果您的客户端之前使用公共连接，则他们可能会通过互联网连接到控制平面，否则他们将根本无法连接。
+:::
+
+还可以通过 AWS us-west-2 中可用于 Namespace 流量的 PrivateLink 终端节点访问控制平面，但我们强烈建议对控制平面流量使用控制平面特定终端节点。

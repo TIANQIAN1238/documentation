@@ -1,7 +1,7 @@
 ---
 id: worker-versioning-legacy
-title: Worker Versioning (Legacy) - Python SDK
-description: Learn the Python SDK's outdated Worker Versioning APIs.
+title: "Worker 版本控制（旧版）- Python SDK"
+description: "了解 Python SDK 过时的 Worker 版本控制 API。"
 slug: /develop/python/workflows/worker-versioning-legacy
 toc_max_heading_level: 2
 keywords:
@@ -12,28 +12,29 @@ tags:
   - Python SDK
 ---
 
-## (Deprecated) How to use Worker Versioning in Python {#worker-versioning}
+##（已弃用）如何在 Python 中使用 Worker 版本控制 {#Worker-versioning}
 
 :::caution
 
-This section is for a deprecated Worker Versioning API. Please redirect your attention to
-[Worker Versioning](/production-deployment/worker-deployments/worker-versioning).
+本节适用于已弃用的 Worker 版本控制 API。请将您的注意力转移到
+[Worker 版本控制](/production-deployment/worker-deployments/worker-versioning)。
 
-See the [Pre-release README](https://github.com/temporalio/temporal/blob/main/docs/worker-versioning.md) for more
-information.
+请参阅 [预发布自述文件](https://github.com/temporalio/temporal/blob/main/docs/worker-versioning.md) 了解更多信息
+信息。
 
 :::
 
-A Build ID corresponds to a deployment. If you don't already have one, we recommend a hash of the code--such as a Git SHA--combined with a human-readable timestamp.
-To use Worker Versioning, you need to pass a Build ID to your Python Worker and opt in to Worker Versioning.
+构建 ID 对应于部署。如果您还没有，我们建议您将代码的哈希值（例如 Git SHA）与人类可读的时间戳相结合。
+要使用 Worker 版本控制，您需要将构建 ID 传递给 Python Worker 并选择加入 Worker 版本控制。
 
-### Assign a Build ID to your Worker and opt in to Worker Versioning
+<a id="worker-versioning"></a>
+### 为您的 Worker 分配构建 ID 并选择加入 Worker 版本控制 {#worker-versioning}
 
-You should understand assignment rules before completing this step. See the
-[Worker Versioning Pre-release README](https://github.com/temporalio/temporal/blob/main/docs/worker-versioning.md) for
-more information.
+在完成此步骤之前，您应该了解分配规则。请参阅
+[Worker 版本控制预发布自述文件](https://github.com/temporalio/temporal/blob/main/docs/worker-versioning.md) 为
+更多信息。
 
-To enable Worker Versioning for your Worker, assign the Build ID--perhaps from an environment variable--and turn it on.
+要为 Worker 启用 Worker 版本控制，请分配构建 ID（可能来自环境变量）并将其打开。
 
 ```python
 # ...
@@ -48,27 +49,28 @@ worker = Worker(
 
 :::warning
 
-Importantly, when you start this Worker, it won't receive any tasks until you set up assignment rules.
+重要的是，当您启动此 Worker 时，在您设置分配规则之前，它不会接收任何任务。
 
 :::
 
-### Specify versions for Activities, Child Workflows, and Continue-as-New Workflows
+<a id="assign-a-build-id-to-your-worker-and-opt-in-to-worker-versioning"></a>
+### 指定活动、Child Workflow 和 Continue-As-New Workflow 的版本 {#assign-a-build-id-to-your-worker-and-opt-in-to-worker-versioning}
 
 :::caution
 
-This section is for a deprecated Worker Versioning API. Please redirect your attention to
-[Worker Versioning](/production-deployment/worker-deployments/worker-versioning).
+本节适用于已弃用的 Worker 版本控制 API。请将您的注意力转移到
+[Worker 版本控制](/production-deployment/worker-deployments/worker-versioning)。
 
 :::
 
-By default, Activities, Child Workflows, and Continue-as-New Workflows are run on the build of the workflow that created
-them if they are also configured to run on the same Task Queue. When configured to run on a separate Task Queue, they
-will default to using the current assignment rules.
+默认情况下，活动、Child Workflow 和 Continue-As-New Workflow 在创建的 Workflow 的构建上运行
+如果它们也配置为在同一 Task Queue 上运行。当配置为在单独的 Task Queue 上运行时，它们
+将默认使用当前分配规则。
 
-If you want to override this behavior, you can specify your intent via the `versioning_intent` argument available on the
-methods you use to invoke these commands.
+如果您想覆盖此行为，您可以通过 `versioning_intent` 上可用的参数指定您的意图
+用于调用这些命令的方法。
 
-For example, if you want an Activity to use the latest assignment rules rather than inheriting from its parent:
+例如，如果您希望 Activity 使用最新的分配规则而不是从其父级继承：
 
 ```python
 # ...
@@ -81,17 +83,18 @@ await workflow.execute_activity(
 # ...
 ```
 
-### Tell the Task Queue about your Worker's Build ID (Deprecated)
+<a id="specify-versions-for-activities-child-workflows-and-continue-as-new-workflows"></a>
+### 告诉 Task Queue 您的 Worker 的内部版本 ID（已弃用） {#specify-versions-for-activities-child-workflows-and-continue-as-new-workflows}
 
 :::caution
 
-This section is for a deprecated Worker Versioning API. Please redirect your attention to
-[Worker Versioning](/production-deployment/worker-deployments/worker-versioning).
+本节适用于已弃用的 Worker 版本控制 API。请将您的注意力转移到
+[Worker 版本控制](/production-deployment/worker-deployments/worker-versioning)。
 
 :::
 
-Now you can use the SDK (or the Temporal CLI) to tell the Task Queue about your Worker's Build ID. You might want to do
-this as part of your CI deployment process.
+现在您可以使用 SDK（或 Temporal CLI）向 Task Queue 告知您的 Worker 的构建 ID。你可能想做
+这是 CI 部署过程的一部分。
 
 ```python
 # ...
@@ -100,11 +103,11 @@ await client.update_worker_build_id_compatibility(
 )
 ```
 
-This code adds the `deadbeef` Build ID to the Task Queue as the sole version in a new version set, which becomes the
-default for the queue. New Workflows execute on Workers with this Build ID, and existing ones will continue to process
-by appropriately compatible Workers.
+此代码将 `deadbeef` 构建 ID 添加到 Task Queue 作为新版本集中的唯一版本，这将成为
+队列的默认值。新的 Workflow 在具有此构建 ID 的 Worker 上执行，现有的将继续处理
+通过适当兼容的 Worker。
 
-If, instead, you want to add the Build ID to an existing compatible set, you can do this:
+相反，如果您想将构建 ID 添加到现有的兼容集中，您可以执行以下操作：
 
 ```python
 # ...
@@ -113,10 +116,10 @@ await client.update_worker_build_id_compatibility(
 )
 ```
 
-This code adds `deadbeef` to the existing compatible set containing `some-existing-build-id` and marks it as the new
-default Build ID for that set.
+此代码将 `deadbeef` 添加到包含 `some-existing-build-id` 的现有兼容集中，并将其标记为新的
+该集的默认构建 ID。
 
-You can also promote an existing Build ID in a set to be the default for that set:
+您还可以将集合中的现有构建 ID 提升为该集合的默认值：
 
 ```python
 # ...
@@ -125,8 +128,8 @@ await client.update_worker_build_id_compatibility(
 )
 ```
 
-You can also promote an entire set to become the default set for the queue. New Workflows will start using that set's
-default build.
+您还可以将整个集合提升为队列的默认集合。新的 Workflow 将开始使用该套件的
+默认构建。
 
 ```python
 # ...

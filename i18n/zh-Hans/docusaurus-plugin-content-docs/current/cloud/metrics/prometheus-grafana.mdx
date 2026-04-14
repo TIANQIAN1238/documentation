@@ -1,0 +1,282 @@
+---
+id: prometheus-grafana
+title: 普罗米修斯 Grafana 设置
+sidebar_label: 普罗米修斯格拉法纳
+description: Set up Grafana with Temporal Cloud observability to monitor performance and troubleshoot errors using the Prometheus
+  Set up Grafana with Temporal Cloud observability to monitor performance and troubleshoot errors using the Prometheus
+  HTTP API endpoint.
+slug: /cloud/metrics/prometheus-grafana
+toc_max_heading_level: 4
+keywords:
+  - grafana temporal integration
+  - temporal cloud observability
+  - prometheus temporal cloud
+  - grafana prometheus setup
+  - temporal cloud grafana dashboard
+  - grafana data source setup
+  - grafana monitoring workflows
+  - prometheus metrics visualization
+  - observability with grafana
+  - workflow metrics grafana
+  - grafana prometheus integration
+tags:
+  - Metrics
+  - Observability
+  - Temporal Cloud
+---
+
+import { ZoomingImage } from '@site/src/components';
+
+:::danger PromQL endpoint deprecated
+
+PromQL 端点及其“Temporal_cloud_v0_*”指标已于 2026 年 4 月 2 日弃用，并且不再接受新用户。
+将于 **2026 年 10 月 5 日**对所有用户禁用 PromQL 端点。
+
+有关使用 OpenMetrics 端点的 Grafana 设置，请参阅 [OpenMetrics 集成页面](/cloud/metrics/openmetrics/metrics-integrations)。
+
+:::
+
+**如何使用 Temporal Cloud PromQL 端点设置 Grafana 以查看云指标。**
+
+Temporal Cloud 通过
+[Prometheus HTTP API端点](https://prometheus.io/docs/prometheus/latest/Querying/api/)，可以直接使用
+作为 Grafana 中的 Prometheus 数据源或 Query，并将云指标导出到任何可观测平台。
+
+:::note
+
+要设置 SDK 指标（由 Worker 和客户端发出），请参阅
+[SDK 指标设置](/cloud/metrics/sdk-metrics-setup)。
+
+:::
+
+设置 Temporal Cloud PromQL 以与 Grafana 配合使用的过程包括以下步骤：
+
+1. 使用有效证书在 Temporal Cloud 上[生成 Prometheus HTTP API 端点](/cloud/metrics/general-setup)。
+2. 运行 Grafana 并在 Grafana 中[为 Temporal Cloud 指标设置数据源](#grafana-data-source-configuration)。
+3. 在 Grafana 中[创建仪表板](#grafana-dashboards-setup) 以查看 Temporal Cloud 指标。 Temporal 提供
+   [示例社区驱动的 Grafana 仪表板](https://github.com/Temporalio/dashboards) 了解您可以使用的云指标
+   根据您的要求使用和定制。
+
+如果您按照此处提供的示例进行操作，请确保您具备以下条件：
+
+- 根 CA 证书和最终实体证书。有关详细信息，请参阅[证书要求](/cloud/certificates#certificate-requirements)。
+- 使用您选择的 SDK 设置与 Temporal Cloud 的连接，并让一些 Workflow 在 Temporal Cloud 上运行。有关详细信息，请参阅连接到 Temporal 服务。
+
+- [开始](/develop/go/client/Temporal-client#connect-to-Temporal-cloud)
+  - [Java](/develop/java/client/Temporal-client#connect-to-Temporal-cloud)
+  - [PHP](/develop/php/client/Temporal-client#connect-to-a-dev-cluster)
+  - [Python](/develop/python/client/Temporal-client#connect-to-Temporal-cloud)
+  - [TypeScript](/develop/typescript/client/Temporal-client#connect-to-Temporal-cloud)
+  - [.NET](/develop/dotnet/client/Temporal-client#connect-to-Temporal-cloud)
+
+- Grafana已安装。
+
+## Temporal Cloud 指标设置
+
+在设置 Temporal Cloud 指标之前，请确保您具备以下条件：
+
+- 账户所有者或全局管理员 [角色权限](/cloud/manage-access/roles-and-permissions#account-level-roles)
+  Temporal Cloud 帐户。
+- [CA 证书和密钥](/cloud/certificates) 用于可观察性集成。您将需要证书来设置
+  在 Temporal Cloud 中启动可观察性端点。
+
+以下步骤描述了如何在 Temporal Cloud 上设置 Observability 以生成端点：
+
+1. 使用帐户所有者或全局管理员登录 Temporal Cloud UI
+   [角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。
+2. 转至 **设置** 并选择 **集成**。
+3. 选择 **配置可观察性**（如果您是第一次设置）或单击“**编辑**”
+   可观察性部分（如果之前已经配置过）。
+4. 添加您的根 CA 证书 (.pem) 并保存。请注意，如果已设置可观察性端点，您可以
+   在此处附加您的根 CA 证书，以便将生成的可观察性端点与您的 Grafana 实例一起使用。
+5. 要测试您的端点，请在主机上运行以下命令：
+   ```
+   curl -v --cert <path to your client-cert.pem> --key <path to your client-cert.key> "<your generated Temporal Cloud prometheus_endpoint>/api/v1/query?query=temporal_cloud_v0_state_transition_count"
+   ```
+如果您的 Temporal Cloud 实例中的 Namespace 上运行 Workflow，您应该会看到一些数据：
+   运行这个命令。
+6. 复制生成的 HTTP API 端点（它显示在 UI 中）。
+
+应将此端点配置为 Grafana 中 Temporal Cloud 指标的数据源。参见
+[Grafana 数据源配置](#grafana-data-source-configuration) 了解详细信息。
+
+## SDK 指标设置
+
+SDK 指标由用于启动 Worker 以及启动 Signal 或 Query 或 Workflow 的 SDK 客户端发出
+处决。您必须为 Prometheus 配置一个 Prometheus 抓取端点来收集和聚合您的 SDK 指标。
+每种语言开发指南都有有关如何设置的详细信息。
+
+- [Go SDK](/develop/go/platform/observability#metrics)
+- [Java SDK](/develop/java/platform/observability#metrics)
+- [TypeScript SDK](/develop/typescript/platform/observability#metrics)
+- [Python](/develop/python/platform/observability#metrics)
+- [.NET](/develop/dotnet/platform/observability#metrics)
+
+以下示例使用 Java SDK 设置 Prometheus 注册表和 Micrometer 统计报告器、设置范围和
+公开 Prometheus 可以从中抓取 SDK 指标的端点。
+
+```java
+//You need the following packages to set up metrics in Java.
+//See the Developer's guide for packages required for other SDKs.
+
+//…
+import com.sun.net.httpserver.HttpServer;
+import com.uber.m3.tally.RootScopeBuilder;
+import com.uber.m3.tally.Scope;
+import com.uber.m3.util.Duration;
+import com.uber.m3.util.ImmutableMap;
+
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.temporal.common.reporter.MicrometerClientStatsReporter;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+
+import io.temporal.serviceclient.SimpleSslContextBuilder;
+import io.temporal.serviceclient.WorkflowServiceStubs;
+import io.temporal.serviceclient.WorkflowServiceStubsOptions;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+//…
+   {
+     // See the Micrometer documentation for configuration details on other supported monitoring systems.
+     // Set up the Prometheus registry.
+     PrometheusMeterRegistry yourRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+
+       public static Scope yourScope(){
+     //Set up a scope, report every 10 seconds
+       Scope yourScope = new RootScopeBuilder()
+               .tags(ImmutableMap.of(
+                       "customtag1",
+                       "customvalue1",
+                       "customtag2",
+                       "customvalue2"))
+               .reporter(new MicrometerClientStatsReporter(yourRegistry))
+               .reportEvery(Duration.ofSeconds(10));
+
+     //Start Prometheus scrape endpoint at port 8077 on your local host
+     HttpServer scrapeEndpoint = startPrometheusScrapeEndpoint(yourRegistry, 8077);
+     return yourScope;
+   }
+
+   /**
+    * Starts HttpServer to expose a scrape endpoint. See
+    * https://micrometer.io/docs/registry/prometheus for more info.
+    */
+
+   public static HttpServer startPrometheusScrapeEndpoint(
+           PrometheusMeterRegistry yourRegistry, int port) {
+       try {
+           HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+           server.createContext(
+                   "/metrics",
+                   httpExchange -> {
+                       String response = registry.scrape();
+                       httpExchange.sendResponseHeaders(200, response.getBytes(UTF_8).length);
+                       try (OutputStream os = httpExchange.getResponseBody()) {
+                           os.write(response.getBytes(UTF_8));
+                       }
+                   });
+           server.start();
+           return server;
+       } catch (IOException e) {
+           throw new RuntimeException(e);
+       }
+   }
+}
+
+//…
+
+// With your scrape endpoint configured, set the metrics scope in your Workflow service stub and
+// use it to create a Client to start your Workers and Workflow Executions.
+
+//…
+{
+    //Create Workflow service stubs to connect to the Frontend Service.
+    WorkflowServiceStubs service = WorkflowServiceStubs.newServiceStubs(
+               WorkflowServiceStubsOptions.newBuilder()
+                      .setMetricsScope(yourScope()) //set the metrics scope for the WorkflowServiceStubs
+                      .build());
+
+   //Create a Workflow service client, which can be used to start, signal, and query Workflow Executions.
+   WorkflowClient yourClient = WorkflowClient.newInstance(service,
+          WorkflowClientOptions.newBuilder().build());
+}
+
+//…
+```
+
+要检查您的抓取端点是否正在发出指标，请运行您的代码并转到
+[http://localhost:8077/metrics](http://localhost:8077/metrics) 验证您是否看到 SDK 指标。
+
+您可以在客户端中设置单独的抓取端点，用于启动 Worker 和 Workflow Execution。
+
+有关在其他 SDK 中设置指标端点的更多示例，请参阅指标示例：
+
+- [Java SDK 示例](https://github.com/Temporalio/samples-java/tree/main/core/src/main/java/io/Temporal/samples/metrics)
+- [Go SDK 示例](https://github.com/Temporalio/samples-go/tree/main/metrics)
+
+## Grafana 数据源配置 {#grafana-data-source-configuration}
+
+**如何在 Grafana 中配置 Temporal Cloud 指标数据源。**
+
+根据您使用 Grafana 的方式，您可以在本地安装并运行它，将其作为 Docker 容器运行，或者登录到
+Grafana Cloud 用于设置您的数据源。
+
+如果您已在本地安装并运行 Grafana，请转至 [http://localhost:3000](http://localhost:3000) 并登录。
+
+添加我们在中生成的 Temporal Cloud Prometheus HTTP API 端点
+[Temporal Cloud 指标设置](/cloud/metrics/general-setup) 部分，执行以下操作：
+
+1. 转到 **配置> 数据源**。
+1. 选择**添加数据源> Prometheus**。
+1. 输入 Temporal Cloud 指标数据源的名称，例如 _Temporal Cloud 指标_。
+1. 在 **Connection** 部分中，粘贴在 Temporal Cloud 的 Observability 部分中生成的 URL
+   用户界面。
+1. **身份验证**部分可以保留为**无身份验证**。
+1. 在 **TLS 设置** 部分中，选择 **TLS 客户端身份验证**：
+   - 将**服务器名称**留空。这不是必需的。
+   - 粘贴您的最终实体证书和密钥。
+   - 请注意，此处使用的最终实体证书必须是具有根 CA 证书的证书链的一部分
+     在您的 [Temporal Cloud 可观测性设置](/cloud/metrics/general-setup) 中使用。
+     <ZoomingImage
+src =“/img/cloud/prometheus/add-prometheus-api-endpoint.png”
+       alt="Grafana 中的数据源配置"
+     />
+1. 单击“**保存并测试**”以验证数据源是否正常工作。
+
+如果您在设置此数据源时遇到问题，请验证您的 CA 证书链并确保您正在设置
+Temporal Cloud 可观测性设置和 Grafana 中的 TLS 身份验证中的正确证书。
+
+### Grafana 仪表板设置
+
+要在 Grafana 中设置仪表板，您可以使用 UI 或直接在 Grafana 部署中配置它们。
+
+:::tip
+
+Temporal 提供社区驱动
+[Temporal Cloud 的示例仪表板](https://github.com/Temporalio/dashboards/tree/master/cloud)，您可以
+定制以满足您的需求。
+
+:::
+
+要在 Grafana 中导入仪表板：
+
+1. 在左侧导航栏中，选择**仪表板** > **导入仪表板**。
+2. 您可以从以下位置复制并粘贴 JSON：
+   [Temporal Cloud 示例仪表板](https://github.com/Temporalio/dashboards/tree/master/cloud)，或导入 JSON
+   文件导入 Grafana。
+3. 保存仪表板并查看图表中的指标数据。
+
+要使用 UI 配置仪表板：
+
+1. 转到 **创建 > 仪表板** 并添加一个空面板。
+2. 在 **面板配置** 页面的 **Query** 选项卡中，选择您要配置的“Temporal Cloud 指标”数据源
+   较早配置。
+3. 展开**指标浏览器**并选择所需的指标。您还可以选择关联的标签和值
+   对 Query 数据进行排序。 [PromQL 文档](/cloud/metrics/reference) 列出了从 PromQL 发出的所有指标
+   Temporal Cloud。
+4. 图表现在应该根据您选择的查询显示数据。

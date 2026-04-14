@@ -1,7 +1,7 @@
 ---
 id: side-effects
-title: Side Effects - Go SDK
-sidebar_label: Side Effects
+title: "Side Effects - Go SDK"
+sidebar_label: "Side Effects"
 toc_max_heading_level: 4
 keywords:
   - side-effects
@@ -9,35 +9,35 @@ tags:
   - Side-effects
   - Go SDK
   - Temporal SDKs
-description: Side Effects in Workflows execute non-deterministic code, storing results in the Workflow Event History to maintain determinism. Use Go's SideEffect function for integration.
+description: "Workflow 中的 Side Effect 执行非确定性代码，将结果存储在 Workflow Event History 中以保持确定性。使用Go的SideEffect函数进行集成。"
 ---
 
-Side Effects are used to execute non-deterministic code, such as generating a UUID or a random number, without compromising determinism in the Workflow.
-This is done by storing the non-deterministic results of the Side Effect into the Workflow [Event History](/workflow-execution/event#event-history).
+Side Effect 用于执行非确定性代码，例如生成 UUID 或随机数，而不影响 Workflow 中的确定性。
+这是通过将 Side Effect 的非确定性结果存储到 Workflow [Event History](/workflow-execution/event#event-history) 中来完成的。
 
-A Side Effect does not re-execute during a Replay. Instead, it returns the recorded result from the Workflow Execution Event History.
+Side Effect 在重播期间不会重新执行。相反，它返回 Workflow Execution Event History 的记录结果。
 
-Side Effects should not fail. An exception that is thrown from the Side Effect causes failure and retry of the current Workflow Task.
+Side Effect 不应失败。从 Side Effect 引发的异常会导致当前 Workflow 任务失败并重试。
 
-An Activity or a Local Activity may also be used instead of a Side effect, as its result is also persisted in Workflow Execution History.
+也可以使用 Activity 或本地 Activity 来代替 Side Effect，因为其结果也保留在 Workflow Execution 历史记录中。
 
 :::note
 
-You shouldn't modify the Workflow state inside a Side Effect function, because it is not reexecuted during Replay. Side Effect function should be used to return a value.
+您不应修改 Side Effect 函数内的 Workflow 状态，因为它在重播期间不会重新执行。应使用 Side Effect 函数返回值。
 
 :::
 
-Use the [`SideEffect`](https://pkg.go.dev/go.temporal.io/sdk/workflow#SideEffect) function from the `go.temporal.io/sdk/workflow` package to execute a [Side Effect](/workflow-execution/event#side-effect) directly in your Workflow.
+使用 `go.Temporal.io/sdk/Workflow` 包中的 [`SideEffect`](https://pkg.go.dev/go.temporal.io/sdk/workflow#SideEffect) 函数直接在 Workflow 中执行 [Side Effect](/workflow-execution/event#side-effect)。
 
-Pass it an instance of `context.Context` and the function to execute.
+向其传递 `context.Context` 的实例和要执行的函数。
 
-The `SideEffect` API returns a Future, an instance of [`converter.EncodedValue`](https://pkg.go.dev/go.temporal.io/sdk/workflow#SideEffect).
+`SideEffect` API 返回一个 Future，即 [`converter.EncodedValue`](https://pkg.go.dev/go.temporal.io/sdk/workflow#SideEffect) 的实例。
 
-Use the `Get` method on the Future to retrieve the result of the Side Effect.
+在 Future 上使用 `Get` 方法来检索 Side Effect 的结果。
 
-**Correct implementation**
+**正确实施**
 
-The following example demonstrates the correct way to use `SideEffect`:
+下面的例子演示了`SideEffect`的正确使用方法：
 
 ```go
 encodedRandom := workflow.SideEffect(ctx, func(ctx workflow.Context) interface{} {
@@ -50,9 +50,9 @@ encodedRandom.Get(&random)
 }
 ```
 
-**Incorrect implementation**
+**不正确的实施**
 
-The following example demonstrates how NOT to use `SideEffect`:
+以下示例演示了如何不使用 `SideEffect`：
 
 ```go
 // Warning: This is an incorrect example.
@@ -65,26 +65,26 @@ workflow.SideEffect(func(ctx workflow.Context) interface{} {
 // random will always be 0 in replay, so this code is non-deterministic.
 ```
 
-On replay the provided function is not executed, the random number will always be 0, and the Workflow Execution could take a different path, breaking determinism.
+重播时，所提供的函数不会被执行，随机数将始终为 0，并且 Workflow Execution 可能会采取不同的路径，从而破坏确定性。
 
-## Mutable Side Effects {#mutable-side-effects}
+## 可变 Side Effects {#mutable-side-effects}
 
-Mutable Side Effects execute the provided function once, and then it looks up the History of the value with the given Workflow ID.
+可变的 Side Effect 执行提供的函数一次，然后查找具有给定 Workflow ID 的值的历史记录。
 
-- If there is no existing value, then it records the function result as a value with the given Workflow Id on the History.
-- If there is an existing value, then it compares whether the existing value from the History has changed from the new function results, by calling the equals function.
-  - If the values are equal, then it returns the value without recording a new Marker Event
-  - If the values aren't equal, then it records the new value with the same ID on the History.
+- 如果不存在现有值，则它将函数结果记录为历史记录中具有给定 Workflow Id 的值。
+- 如果存在现有值，则通过调用 equals 函数来比较历史记录中的现有值是否与新函数结果发生更改。
+  - 如果值相等，则返回该值而不记录新的标记事件
+  - 如果值不相等，则会在历史记录中记录具有相同 ID 的新值。
 
 :::note
 
-During a Workflow Execution, every new Side Effect call results in a new Marker recorded on the Workflow History; whereas Mutable Side Effects only records a new Marker on the Workflow History if the value for the Side Effect ID changes or is set the first time.
+在 Workflow Execution 期间，每个新的 Side Effect 调用都会在 Workflow 历史记录中记录一个新的标记；而可变 Side Effects 仅在 Side Effect ID 的值更改或第一次设置时才在 Workflow 历史记录中记录新标记。
 
-During a Replay, Mutable Side Effects will not execute the function again. Instead, it returns the exact same value that was returned during the Workflow Execution.
+在重放期间，可变 Side Effect 将不会再次执行该函数。相反，它返回与 Workflow Execution 期间返回的值完全相同的值。
 
 :::
 
-To use [`MutableSideEffect()`](https://pkg.go.dev/go.temporal.io/sdk/workflow#MutableSideEffect) in Go, provide a unique name within the scope of the workflow.
+要在 Go 中使用 [`MutableSideEffect()`](https://pkg.go.dev/go.temporal.io/sdk/workflow#MutableSideEffect)，请在 Workflow 范围内提供唯一名称。
 
 ```go
 if err := workflow.MutableSideEffect(ctx, "configureNumber", get, eq).Get(&number); err != nil {

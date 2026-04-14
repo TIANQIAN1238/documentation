@@ -1,0 +1,126 @@
+---
+id: child-workflows
+title: Child Workflows - TypeScript SDK
+sidebar_label: Child Workflows
+slug: /develop/typescript/workflows/child-workflows
+toc_max_heading_level: 2
+keywords:
+  - child-workflows
+tags:
+  - Workflows
+  - Child Workflows
+  - TypeScript SDK
+  - Temporal SDKs
+description: 使用 Temporal 的 Child Workflow API 启动和管理子 Workflow Execution，包括设置父关闭策略、处理事件和高级 Child Workflow 选项。
+---
+
+## 如何启动子 Workflow Execution {#child-Workflows}
+
+[Child Workflow Execution](/child-Workflows) 是使用 Child Workflow API 从另一个 Workflow 内部生成 Scheduled 的 Workflow Execution。
+
+使用 Child Workflow API 时，Child Workflow 相关事件（例如 [StartChildWorkflowExecutionInitiated](/references/events#startchildWorkflowexecutioninitied)、[ChildWorkflowExecutionStarted](/references/events#childWorkflowexecutionstarted) 和[ChildWorkflowExecutionCompleted](/references/events#childWorkflowexecutioncompleted)) 记录在子 Workflow Execution 的 Event History 中。
+
+始终阻止进度，直到 [ChildWorkflowExecutionStarted](/references/events#childWorkflowexecutionstarted) 事件记录到 Event History，以确保子 Workflow Execution 已启动。
+之后，可以使用 Child Workflow 选项中设置的“放弃”[父关闭策略](/parent-close-policy) 放弃子 Workflow Execution。
+
+要确保 Child Workflow Execution 已启动，请首先在 Child Workflow future 实例上调用 Child Workflow Execution 方法，该方法将返回不同的 future。
+
+然后获取一个对象的值，该对象充当最初未知的结果的代理，这就是等待子 Workflow Execution 生成的结果。
+
+要启动子 Workflow Execution 并向其返回 [句柄](https://typescript.Temporal.io/api/interfaces/Workflow.ChildWorkflowHandle/)，请使用 [startChild](https://typescript.Temporal.io/api/Namespaces/Workflow/#startchild)。
+
+```ts
+import { startChild } from '@temporalio/workflow';
+
+export async function parentWorkflow(names: string[]) {
+  const childHandle = await startChild(childWorkflow, {
+    args: [name],
+    // workflowId, // add business-meaningful workflow id here
+    // // regular workflow options apply here, with two additions (defaults shown):
+    // cancellationType: ChildWorkflowCancellationType.WAIT_CANCELLATION_COMPLETED,
+    // parentClosePolicy: ParentClosePolicy.PARENT_CLOSE_POLICY_TERMINATE
+  });
+  // you can use childHandle to signal or get result here
+  await childHandle.signal('anySignal');
+  const result = childHandle.result();
+  // you can use childHandle to signal, query, cancel, terminate, or get result here
+}
+```
+
+要启动子 Workflow Execution 并等待其完成，请使用 [executeChild](https://typescript.Temporal.io/api/Namespaces/Workflow/#executechild)。
+
+默认情况下，子级是与父级相同的 Task Queue 上的 Scheduled。
+
+<!--SNIPSTART typescript-child-Workflow -->
+[child-Workflows/src/Workflows.ts](https://github.com/Temporalio/samples-typescript/blob/main/child-Workflows/src/Workflows.ts)
+```ts
+import { executeChild } from '@temporalio/workflow';
+
+export async function parentWorkflow(...names: string[]): Promise<string> {
+  const responseArray = await Promise.all(
+    names.map((name) =>
+      executeChild(childWorkflow, {
+        args: [name],
+        // workflowId, // add business-meaningful workflow id here
+        // // regular workflow options apply here, with two additions (defaults shown):
+        // cancellationType: ChildWorkflowCancellationType.WAIT_CANCELLATION_COMPLETED,
+        // parentClosePolicy: ParentClosePolicy.PARENT_CLOSE_POLICY_TERMINATE
+      }),
+    ),
+  );
+  return responseArray.join('\n');
+}
+```
+<!--SNIPEND-->
+
+要从 Workflow 内部控制任何正在运行的 Workflow，请使用 [getExternalWorkflowHandle(WorkflowId)](https://typescript.Temporal.io/api/Namespaces/Workflow/#getexternalWorkflowhandle)。
+
+```ts
+import { getExternalWorkflowHandle, workflowInfo } from '@temporalio/workflow';
+
+export async function terminateWorkflow() {
+  const { workflowId } = workflowInfo(); // no await needed
+  const handle = getExternalWorkflowHandle(workflowId); // sync function, not async
+  await handle.cancel();
+}
+```
+
+如果未显式设置 Child Workflow 选项，它们将从父 Workflow 选项继承其值。
+Child Workflow 独有的两个高级选项：
+
+- [cancellationType](https://typescript.Temporal.io/api/enums/proto.coresdk.child_Workflow.ChildWorkflowCancellationType)：控制取消 Child Workflow 时何时抛出 `CanceledFailure` 异常。
+- `parentClosePolicy`：在下一节中解释。
+
+如果您需要取消子 Workflow Execution，请使用 [取消范围](/develop/typescript/Workflows/cancellation-scopes)。
+当取消其包含范围时，子 Workflow Execution 将自动取消。
+
+### 如何设置父关闭策略 {#parent-close-policy}
+
+“sleep”和“condition”的真正价值在于了解如何使用它们来建模异步业务逻辑。
+以下是我们最常用的一些示例；如果您能想到的话，我们欢迎更多！
+
+默认“父关闭策略”选项设置为终止子 Workflow Execution。
+
+要指定 Child Workflow 如何对父级 Workflow 达到关闭状态做出反应，请使用 [`parentClosePolicy`](https://typescript.Temporal.io/api/interfaces/Workflow.ChildWorkflowOptions#parentclosepolicy) 选项。
+
+<!--SNIPSTART typescript-child-Workflow -->
+[child-Workflows/src/Workflows.ts](https://github.com/Temporalio/samples-typescript/blob/main/child-Workflows/src/Workflows.ts)
+```ts
+import { executeChild } from '@temporalio/workflow';
+
+export async function parentWorkflow(...names: string[]): Promise<string> {
+  const responseArray = await Promise.all(
+    names.map((name) =>
+      executeChild(childWorkflow, {
+        args: [name],
+        // workflowId, // add business-meaningful workflow id here
+        // // regular workflow options apply here, with two additions (defaults shown):
+        // cancellationType: ChildWorkflowCancellationType.WAIT_CANCELLATION_COMPLETED,
+        // parentClosePolicy: ParentClosePolicy.PARENT_CLOSE_POLICY_TERMINATE
+      }),
+    ),
+  );
+  return responseArray.join('\n');
+}
+```
+<!--SNIPEND-->

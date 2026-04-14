@@ -1,8 +1,8 @@
 ---
 id: commands
-title: Temporal Commands reference
-sidebar_label: Commands
-description: Discover the range of Commands Workers can issue to the Temporal Service after Workflow Task Execution, from Completing Workflow Execution to Start Timer and Signal External Workflow Execution.
+title: "Temporal 命令参考"
+sidebar_label: "命令"
+description: "了解 Worker 在 Workflow 任务执行后可以向 Temporal 服务发出的命令范围，从完成 Workflow Execution 到启动 Timer 和 Signal 外部 Workflow Execution。"
 toc_max_heading_level: 4
 keywords:
   - reference
@@ -10,132 +10,145 @@ tags:
   - Reference
 ---
 
-A [Command](/workflow-execution#command) is a requested action issued by a [Worker](/workers#worker) to the [Temporal Service](/temporal-service) after a [Workflow Task Execution](/tasks#workflow-task-execution) completes.
+[命令](/workflow-execution#command) 是 [Workflow 任务执行](/workers#worker) 完成后由 [Worker](/temporal-service) 向 [Temporal 服务](/tasks#workflow-task-execution) 发出的请求操作。
 
-The following is a complete list of possible Commands.
+以下是可能命令的完整列表。
 
-### CompleteWorkflowExecution
+<a id="completeworkflowexecution"></a>
+### 完成Workflow执行 {#completeworkflowexecution}
 
-This Command is triggered when the Workflow Function Execution returns.
-It indicates to the Temporal Service that the [Workflow Execution](/workflow-execution) is complete.
-The corresponding [Event](/workflow-execution/event#event) for this Command is one of the few Events that will be the last in a Workflow Execution [Event History](/workflow-execution/event#event-history).
+当 Workflow 函数执行返回时，会触发此命令。
+它向 Temporal 服务指示 [Workflow Execution](/workflow-execution) 已完成。
+该命令对应的 [事件](/workflow-execution/event#event) 是 Workflow Execution [Event History](/workflow-execution/event#event-history) 中最后的少数事件之一。
 
-- Awaitable: No, a Workflow Execution can not await on the action resulting from this Command.
-- Corresponding Event: [WorkflowExecutionCompleted](/references/events#workflowexecutioncompleted)
+- 可等待：不，Workflow Execution 不能等待此命令产生的操作。
+- 对应事件：[Workflow执行已完成](/references/events#workflowexecutioncompleted)
 
 ### ContinueAsNewWorkflowExecution
 
-This Command is triggered when there is a call to [Continue-As-New](/workflow-execution/continue-as-new) from within the [Workflow](/workflows).
-The corresponding Event for this Command is one of the few Events that will be the last in a Workflow Execution Event History.
+当从 [Workflow](/workflow-execution/continue-as-new) 内部调用 [Continue-As-New](/workflows) 时，会触发此命令。
+该命令的相应事件是 Workflow Execution Event History 中最后一个事件的少数事件之一。
 
-- Awaitable: No, a Workflow Execution can not await on the action resulting from this Command.
-- Corresponding Event: [WorkflowExecutionContinuedAsNew](/references/events#workflowexecutioncontinuedasnew)
+- 可等待：不，Workflow Execution 不能等待此命令产生的操作。
+- 对应事件：[Workflow执行继续为新](/references/events#workflowexecutioncontinuedasnew)
 
-### FailWorkflowExecution
+<a id="failworkflowexecution"></a>
+### 失败Workflow执行 {#failworkflowexecution}
 
-This Command is triggered when the Workflow Execution returns an error or an exception is thrown.
+当 Workflow Execution 返回错误或抛出异常时，会触发此命令。
 
-- Awaitable: No, a Workflow Execution can not await on the action resulting from this Command.
-- Corresponding Event: [WorkflowExecutionFailed](/references/events#workflowexecutionfailed)
+- 可等待：不，Workflow Execution 不能等待此命令产生的操作。
+- 对应事件：[Workflow执行失败](/references/events#workflowexecutionfailed)
 
-### CancelWorkflowExecution
+<a id="cancelworkflowexecution"></a>
+### 取消Workflow执行 {#cancelworkflowexecution}
 
-This Command is triggered when the Workflow has successfully cleaned up after receiving a Cancellation Request (which will be present as [WorkflowExecutionCancelRequestedEvent](/references/events#workflowexecutioncancelrequested) in the Event History).
-The Corresponding Event for this Command is one of the few Events that will be the last in a Workflow Execution Event History.
+当 Workflow 在收到取消请求（将在 Event History 中显示为 [WorkflowExecutionCancelRequestedEvent](/references/events#workflowexecutioncancelrequested)）后成功清理时，会触发此命令。
+此命令的相应事件是 Workflow Execution Event History 中最后一个事件的少数事件之一。
 
-- Awaitable: No, a Workflow Execution can not await on the action resulting from this Command.
-- Corresponding Event: [WorkflowExecutionCanceled](/references/events#workflowexecutioncanceled)
+- 可等待：不，Workflow Execution 不能等待此命令产生的操作。
+- 对应事件：[Workflow执行取消](/references/events#workflowexecutioncanceled)
 
-### StartChildWorkflowExecution
+<a id="startchildworkflowexecution"></a>
+### StartChildWorkflow执行 {#startchildworkflowexecution}
 
-This Command is triggered by a call to spawn a [Child Workflow Execution](/child-workflows).
+该命令由生成 [儿童 Workflow Execution](/child-workflows) 的调用触发。
 
-- Awaitable: Yes, a Workflow Execution can await on the action resulting from this Command.
-- Corresponding Event: [ChildWorkflowExecutionStarted](/references/events#childworkflowexecutionstarted)
+- 可等待：是的，Workflow Execution 可以等待此命令产生的操作。
+- 对应事件：[子WorkflowExecutionStarted](/references/events#childworkflowexecutionstarted)
 
-By default, you cannot have more than 2,000 pending Child Workflows.
+默认情况下，待处理的 Child Workflow 不能超过 2,000 个。
 
-### SignalExternalWorkflowExecution
+<a id="signalexternalworkflowexecution"></a>
+### Signal外部Workflow执行 {#signalexternalworkflowexecution}
 
-This Command is triggered by a call to [Signal](/sending-messages#sending-signals) another Workflow Execution.
+该命令由调用 [Signal](/sending-messages#sending-signals) 和另一个 Workflow Execution 触发。
 
-- Awaitable: Yes, a Workflow Execution can await on the action resulting from this Command.
-- Corresponding Event: [SignalExternalWorkflowExecutionInitiated](/references/events#signalexternalworkflowexecutioninitiated)
+- 可等待：是的，Workflow Execution 可以等待此命令产生的操作。
+- 对应事件：[Signal外部Workflow执行已启动](/references/events#signalexternalworkflowexecutioninitiated)
 
-By default, you cannot have more than 2,000 pending Signals to other Workflows.
+默认情况下，与其他 Workflow 的待处理 Signal 不能超过 2,000 个。
 
 ### RequestCancelExternalWorkflowExecution
 
-This Command is triggered by a call to request cancellation of another Workflow Execution.
+该命令由请求取消另一个 Workflow Execution 的调用触发。
 
-- Awaitable: Yes, a Workflow Execution can await on the action resulting from this Command.
-- Corresponding Event: [RequestCancelExternalWorkflowExecutionInitiated](/references/events#requestcancelexternalworkflowexecutioninitiated)
+- 可等待：是的，Workflow Execution 可以等待此命令产生的操作。
+- 对应事件：[请求取消外部WorkflowExecutionInitiated](/references/events#requestcancelexternalworkflowexecutioninitiated)
 
-By default, you cannot have more than 2,000 pending Signals to other Workflows.
+默认情况下，与其他 Workflow 的待处理 Signal 不能超过 2,000 个。
 
-### ScheduleActivityTask
+<a id="scheduleactivitytask"></a>
+### ScheduleActivity任务 {#scheduleactivitytask}
 
-This Command is triggered by a call to execute an [Activity](/activities).
+该命令由执行 [Activity](/activities) 的调用触发。
 
-- Awaitable: Yes, a Workflow Execution can await on the action resulting from this Command.
-- Corresponding Event: [ActivityTaskScheduled](/references/events#activitytaskscheduled)
+- 可等待：是的，Workflow Execution 可以等待此命令产生的操作。
+- 对应事件：[Activity任务Scheduled](/references/events#activitytaskscheduled)
 
-By default, you cannot schedule more than 2,000 Activities concurrently.
+默认情况下，您不能同时执行超过 2,000 个 Schedule 活动。
 
-### RequestCancelActivityTask
+<a id="requestcancelactivitytask"></a>
+### 请求取消Activity任务 {#requestcancelactivitytask}
 
-This Command is triggered by a call to request the cancellation of an [Activity Task](/tasks#activity-task).
+该命令由请求取消 [Activity 任务](/tasks#activity-task) 的调用触发。
 
-- Awaitable: No, a Workflow Execution can not await on the action resulting from this Command.
-- Corresponding Event: [ActivityTaskCancelRequested](/references/events#activitytaskcancelrequested)
+- 可等待：不，Workflow Execution 不能等待此命令产生的操作。
+- 对应事件：[Activity任务取消请求](/references/events#activitytaskcancelrequested)
 
-### StartTimer
+<a id="starttimer"></a>
+### 开始Timer {#starttimer}
 
-This Command is triggered by a call to start a Timer.
+该命令由启动 Timer 的调用触发。
 
-- Awaitable: Yes, a Workflow Execution can await on the action resulting from this Command.
-- Corresponding Event: [TimerStarted](/references/events#timerstarted)
+- 可等待：是的，Workflow Execution 可以等待此命令产生的操作。
+- 对应事件：[Timer开始](/references/events#timerstarted)
 
-### CancelTimer
+<a id="canceltimer"></a>
+### 取消Timer {#canceltimer}
 
-This Command is triggered by a call to cancel a Timer.
+该命令由取消 Timer 的调用触发。
 
-- Awaitable: No, a Workflow Execution can not await on the action resulting from this Command.
-- Corresponding Event: [TimerCanceled](/references/events#timercanceled)
+- 可等待：不，Workflow Execution 不能等待此命令产生的操作。
+- 对应事件：[Timer已取消](/references/events#timercanceled)
 
-### RecordMarker
+<a id="recordmarker"></a>
+### 记录标记 {#recordmarker}
 
-This Command is triggered by the SDK.
+该命令由SDK触发。
 
-- Awaitable: No, a Workflow Execution can not await on the action resulting from this Command.
-- Corresponding Event: [MarkerRecorded](/references/events#markerrecorded)
+- 可等待：不，Workflow Execution 不能等待此命令产生的操作。
+- 对应事件：[标记记录](/references/events#markerrecorded)
 
 ### UpsertWorkflowSearchAttributes
 
-This Command is triggered by a call to "upsert" Workflow [Search Attributes](/search-attribute).
+该命令由调用“upsert”Workflow [Search Attributes](/search-attribute) 触发。
 
-- Awaitable: No, a Workflow Execution can not await on the action resulting from this Command.
-- Corresponding Event: [UpsertWorkflowSearchAttributes](/references/events#upsertworkflowsearchattributes)
+- 可等待：不，Workflow Execution 不能等待此命令产生的操作。
+- 对应事件：[更新插入WorkflowSearchAttributes](/references/events#upsertworkflowsearchattributes)
 
-### ProtocolMessageCommand
+<a id="protocolmessagecommand"></a>
+### 协议消息命令 {#protocolmessagecommand}
 
-This Command helps guarantee ordering constraints for features such as Updates.
+此命令有助于保证 Update 等功能的排序约束。
 
-This Command points at the message from which the Event is created.
-Therefore, just from the Command, you can't predict the resulting Event type.
+该命令指向创建事件的消息。
+因此，仅从命令中，您无法预测生成的事件类型。
 
-### ScheduleNexusOperation
+<a id="schedulenexusoperation"></a>
+### ScheduleNexus操作 {#schedulenexusoperation}
 
-This Command is triggered by a call to execute a Nexus Operation in the caller Workflow.
+该命令由调用者 Workflow 中执行 Nexus 操作的调用触发。
 
-- Awaitable: Yes, a Workflow Execution can await on the action resulting from this Command.
-- Corresponding Event: [NexusOperationScheduled](/references/events#nexusoperationscheduled)
+- 可等待：是的，Workflow Execution 可以等待此命令产生的操作。
+- 对应事件：[Nexus操作Scheduled](/references/events#nexusoperationscheduled)
 
-By default, you can't schedule more than 30 Nexus Operations concurrently, see [Limits](/workflow-execution/limits#workflow-execution-nexus-operation-limits) for details.
+默认情况下，您不能同时执行超过 30 个 Nexus 操作，详细信息请参见 [限制](/workflow-execution/limits#workflow-execution-nexus-operation-limits)。
 
-### CancelNexusOperation
+<a id="cancelnexusoperation"></a>
+### 取消Nexus操作 {#cancelnexusoperation}
 
-This Command is triggered by a call to request the cancellation of a Nexus Operation.
+该命令由请求取消 Nexus 操作的调用触发。
 
-- Awaitable: No, a Workflow Execution can not await on the action resulting from this Command.
-- Corresponding Event: [NexusOperationCancelRequested](/references/events#nexusoperationcancelrequested)
+- 可等待：不，Workflow Execution 不能等待此命令产生的操作。
+- 对应事件：[Nexus操作取消请求](/references/events#nexusoperationcancelrequested)

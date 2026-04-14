@@ -1,0 +1,58 @@
+---
+id: dataconverter
+title: tctl v1.17 数据转换器命令参考
+sidebar_label: 数据转换器
+description: 探索 Temporal CLI 的新公共预览版并提供您的反馈。使用 tctl dataconverter 命令通过 Temporal Web 自定义 Data Converter 操作。
+toc_max_heading_level: 4
+keywords:
+  - cli
+  - cli reference
+  - tctl
+  - temporal
+  - temporal cli
+  - temporal server
+---
+
+:::info tctl is deprecated
+
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议转换到 [Temporal CLI](/cli) 以继续使用和访问新功能。
+
+感谢您成为 Temporal 社区的重要组成部分。
+
+:::
+
+`tctl dataconverter` 命令启用自定义 [Data Converter](/dataconversion) 操作。
+
+- [tctl 数据转换器网络](#web)
+
+## 网络
+
+`tctl dataconverter web` 命令指定与 Temporal Web 一起使用的自定义 [Data Converter](/dataconversion) 的 WebSocket URL。
+
+`tctl dataconverter web --web_ui_url <url>`
+
+以下修饰符控制命令的行为。
+
+＃＃＃  - 港口
+
+指定自定义 [Data Converter](/dataconversion) 的 WebSocket URL 的端口。
+默认值为 0。
+
+**例子**
+
+```bash
+tctl dataconverter web --web_ui_url <url> --port <value>
+```
+
+### --web_ui_url
+
+_所需修饰符_
+
+指定自定义 [Data Converter](/dataconversion) 的 WebSocket URL。
+
+**例子**
+
+```bash
+tctl dataconverter web --web_ui_url <url>
+```

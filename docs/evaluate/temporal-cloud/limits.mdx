@@ -1,9 +1,9 @@
 ---
 id: limits
-title: System limits - Temporal Cloud
-sidebar_label: Limits
+title: "Temporal Cloud 系统限制"
+sidebar_label: "限制"
 slug: /cloud/limits
-description: Learn about Temporal Cloud limits, including accounts, namespaces, throughput, retention, task pollers, batch jobs, gRPC, search attributes, and more.
+description: "了解 Temporal Cloud 的各项限制，包括账户、Namespace、吞吐量、保留期、任务轮询器、批处理作业、gRPC、Search Attribute 等。"
 toc_max_heading_level: 3
 keywords:
   - capacity
@@ -23,20 +23,20 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-Temporal Cloud enforces a variety of limits to keep the service reliable, including rate limits (how often something may occur in a unit of time), resource limits (how many of a given resource may exist at any one time), and configuration limits (minimum or maximum values for a setting)
+Temporal Cloud 通过多种限制来保障服务可靠性，包括速率限制（单位时间内可发生某操作的次数）、资源限制（某类资源可同时存在的数量）以及配置限制（某项设置的最小值或最大值）。
 
-Every limit applies at a specific scope (level of the application):
+每一类限制都作用于特定范围（应用层级）：
 
-- At the Temporal Cloud [Account level](#account-level)
-- At the [Namespace level](#namespace-level)
-- At the [Nexus endpoint level](#nexus-endpoint-level)
-- Within the [programming model](#programming-model-level) itself
+- 在 Temporal Cloud [账户级别](#account-level)
+- 在 [Namespace 级别](#namespace-level)
+- 在 [Nexus 端点级别](#nexus-endpoint-level)
+- 在 [编程模型层面](#programming-model-level)
 
-## Account level
+## 账户级别 {#account-level}
 
-The following limits apply at the Temporal Cloud Account level (per account).
+以下限制适用于 Temporal Cloud 账户级别（每个账户）。
 
-### Users
+### 用户 {#users}
 
 - Scope: Account
 - Default limit: 300 users

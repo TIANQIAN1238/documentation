@@ -1,7 +1,7 @@
 ---
 id: interceptors
-title: Manage Interceptors - TypeScript SDK
-sidebar_label: Interceptors
+title: "管理拦截器 - TypeScript SDK"
+sidebar_label: "拦截器"
 toc_max_heading_level: 2
 keywords:
   - interceptors
@@ -9,47 +9,48 @@ tags:
   - Interceptors
   - TypeScript SDK
   - Temporal SDKs
-description:
+description: Implement Interceptors in TypeScript using the Temporal TypeScript SDK to manage inbound and outbound SDK calls,
   Implement Interceptors in TypeScript using the Temporal TypeScript SDK to manage inbound and outbound SDK calls,
   enhance tracing, and add authorization to your Workflows and Activities.
 ---
 
-Interceptors are SDK hooks that let you intercept inbound and outbound Temporal calls. You use them to apply shared
-behavior across many calls, such as tracing and authorization, before calls reach the application code and after they return.
-This is similar to middleware in other frameworks.
+拦截器是 SDK 挂钩，可让您拦截入站和出站 Temporal 调用。您使用它们来应用共享
+在调用到达应用程序代码之前和返回之后，跨许多调用的行为，例如跟踪和授权。
+这与其他框架中的中间件类似。
 
-There are two main types of interceptors--inbound and outbound.
+拦截器主要有两种类型：入站拦截器和出站拦截器。
 
-* Outbound interceptors wrap network calls, running before they reach the network and after they return.
-* Inbound interceptors run after the network hop, wrapping application code and running before it starts and after it returns.
+* 出站拦截器包装网络调用，在到达网络之前和返回之后运行。
+* 入站拦截器在网络跃点之后运行，包装应用程序代码并在启动之前和返回之后运行。
 
-Those further break down into concrete Interceptor types--see below.
+这些进一步细分为具体的拦截器类型——见下文。
 
-## How to implement interceptors in TypeScript {#interceptors}
+## 如何在 TypeScript 中实现拦截器 {#interceptors}
 
-Interceptors run as a chain.  Each interceptor wraps the entire inner call: your code runs before the call, invokes `next` to execute the rest of the chain, and then runs after the call completes. This means you can inspect or modify both the `input` and the result, handle errors, and perform side effects at either stage.
+拦截器作为一条链运行。  每个拦截器都包装整个内部调用：您的代码在调用之前运行，调用 `next` 来执行链的其余部分，然后在调用完成后运行。这意味着您可以检查或修改 `input` 和结果、处理错误并在任一阶段执行 Side Effect。
 
-The TypeScript SDK comes with an optional interceptor package that adds tracing with
-[OpenTelemetry](https://www.npmjs.com/package/@temporalio/interceptors-opentelemetry). See how to use it in the
-[interceptors-opentelemetry](https://github.com/temporalio/samples-typescript/tree/main/interceptors-opentelemetry) code
-sample.
+TypeScript SDK 附带一个可选的拦截器包，可添加跟踪功能
+[开放式遥测](https://www.npmjs.com/package/@temporalio/interceptors-opentelemetry)。查看如何使用它
+[拦截器-开放遥测](https://github.com/temporalio/samples-typescript/tree/main/interceptors-opentelemetry)代码
+样品。
 
-- [WorkflowInboundCallsInterceptor](https://typescript.temporal.io/api/interfaces/workflow.WorkflowInboundCallsInterceptor/):
-  Intercept Workflow inbound calls like execution, Signals, and Queries.
-- [WorkflowOutboundCallsInterceptor](https://typescript.temporal.io/api/interfaces/workflow.WorkflowOutboundCallsInterceptor/):
-  Intercept Workflow outbound calls to Temporal APIs like scheduling Activities and starting Timers.
-- [ActivityInboundCallsInterceptor](https://typescript.temporal.io/api/interfaces/worker.ActivityInboundCallsInterceptor):
-  Intercept inbound calls to an Activity (such as `execute`).
-- [WorkflowClientInterceptor](https://typescript.temporal.io/api/interfaces/client.WorkflowClientInterceptor/):
-  Intercept workflow-related methods of [`Client`](https://typescript.temporal.io/api/classes/client.Client/) and
-  [`WorkflowHandle`](https://typescript.temporal.io/api/interfaces/client.WorkflowHandle) like starting or signaling a
-  Workflow.
+- [WorkflowInboundCallsInterceptor](https://typescript.temporal.io/api/interfaces/workflow.WorkflowInboundCallsInterceptor/)：
+  拦截 Workflow 入站调用，例如执行、Signal 和查询。
+- [WorkflowOutboundCallsInterceptor](https://typescript.temporal.io/api/interfaces/workflow.WorkflowOutboundCallsInterceptor/)：
+  拦截 Workflow 对 Temporal API 的出站调用，例如调度活动和启动 Timer。
+- [ActivityInboundCallsInterceptor](https://typescript.temporal.io/api/interfaces/worker.ActivityInboundCallsInterceptor)：
+  拦截对 Activity（例如 `execute`）的入站呼叫。
+- [WorkflowClient拦截器](https://typescript.temporal.io/api/interfaces/client.WorkflowClientInterceptor/)：
+  拦截[`Client`](https://typescript.temporal.io/api/classes/client.Client/)的Workflow相关方法和
+  [`WorkflowHandle`](https://typescript.temporal.io/api/interfaces/client.WorkflowHandle) 就像启动或 Signaling
+  Workflow。
 
-All interceptor methods are optional—it's up to the implementor to choose which methods to intercept.
+所有拦截器方法都是可选的——由实现者选择拦截哪些方法。
 
-## Interceptor examples
+<a id="interceptor-examples"></a>
+## 拦截器示例 {#interceptor-examples}
 
-**Log start and completion of Activities**
+**记录活动的开始和完成**
 
 ```ts
 import { ActivityInput, Next, WorkflowOutboundCallsInterceptor } from '@temporalio/workflow';
@@ -74,35 +75,38 @@ export class ActivityLogInterceptor implements WorkflowOutboundCallsInterceptor 
 }
 ```
 
-## Register an Interceptor {#register-interceptor}
+## 注册一个拦截器 {#register-interceptor}
 
-Registering an interceptor means providing it to the SDK so Temporal can invoke it when matching Client or Worker calls occur. Once registered, it runs in the call path and can observe or modify request and response data.
+注册拦截器意味着将其提供给 SDK，以便 Temporal 可以在匹配的 Client 或 Worker 调用发生时调用它。一旦注册，它就在调用路径中运行，并且可以观察或修改请求和响应数据。
 
-### Register via a Plugin
+<a id="register-via-a-plugin"></a>
+### 通过插件注册 {#register-via-a-plugin}
 
-If you're building a reusable library or want to bundle interceptors with other primitives, you can register them
-through a [Plugin](/develop/plugins-guide#interceptors).
+如果您正在构建可重用库或想要将拦截器与其他原语捆绑在一起，您可以注册它们
+通过 [插件](/develop/plugins-guide#interceptors)。
 
-### Activity and client interceptors registration
+<a id="activity-and-client-interceptors-registration"></a>
+### Activity 和客户端拦截器注册 {#activity-and-client-interceptors-registration}
 
-- Activity interceptors are registered on Worker creation by passing an array of
-  [ActivityInboundCallsInterceptor factory functions](https://typescript.temporal.io/api/interfaces/worker.ActivityInboundCallsInterceptorFactory)
-  through [WorkerOptions](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions#interceptors).
+- Activity 拦截器通过传递数组来注册 Worker 创建
+  [ActivityInboundCallsInterceptor 工厂函数](https://typescript.temporal.io/api/interfaces/worker.ActivityInboundCallsInterceptorFactory)
+  通过 [Worker选项](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions#interceptors)。
 
-- Client interceptors are registered on `Client` construction by passing an array of
-  [WorkflowClientInterceptor](https://typescript.temporal.io/api/interfaces/client.WorkflowClientInterceptor) via
-  [ClientOptions.interceptors](https://typescript.temporal.io/api/interfaces/client.ClientOptions#interceptors).
+- 客户端拦截器通过传递数组来注册在 `Client` 构造上
+  [WorkflowClient拦截器](https://typescript.temporal.io/api/interfaces/client.WorkflowClientInterceptor) 通过
+  [ClientOptions.拦截器](https://typescript.temporal.io/api/interfaces/client.ClientOptions#interceptors)。
 
-### Workflow interceptors registration
+<a id="workflow-interceptors-registration"></a>
+### Workflow 拦截器注册 {#workflow-interceptors-registration}
 
-Workflow interceptor registration is different from the other interceptors because they run in the Workflow isolate. To
-register Workflow interceptors, export an `interceptors` function from a file located in the `workflows` directory and
-provide the name of that file to the Worker on creation via
-[WorkerOptions](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions#interceptors).
+Workflow 拦截器注册与其他拦截器不同，因为它们在 Workflow 隔离中运行。至
+注册 Workflow 拦截器，从位于 `Workflows` 目录中的文件导出 `interceptors` 函数，并
+在创建时将该文件的名称提供给 Worker
+[Worker选项](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions#interceptors)。
 
-At the time of construction, the Workflow context is already initialized for the current Workflow. You may call the
-[`workflowInfo()`](https://typescript.temporal.io/api/namespaces/workflow#workflowinfo) function to access
-Workflow-specific information from an interceptor.
+在构造时，Workflow 上下文已经针对当前 Workflow 进行了初始化。您可以致电
+[`WorkflowInfo()`](https://typescript.temporal.io/api/namespaces/workflow#workflowinfo)函数访问
+Workflow 来自拦截器的特定信息。
 
 `src/workflows/your-interceptors.ts`
 
@@ -115,7 +119,7 @@ export const interceptors = () => ({
 });
 ```
 
-`src/worker/index.ts`
+`src/Worker/index.ts`
 
 ```ts
 const worker = await Worker.create({

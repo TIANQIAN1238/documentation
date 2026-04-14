@@ -1,0 +1,205 @@
+---
+id: index
+title: tctl v1.17 命令参考
+sidebar_label: CLI (tctl)
+description: Temporal CLI (tctl) 允许与 Temporal 集群无缝交互，支持 Namespace 和 Workflow 操作； Temporal CLI v1.0 发布后它将弃用。
+slug: /tctl-v1
+toc_max_heading_level: 4
+keywords:
+  - cli
+  - cli reference
+  - tctl
+  - term
+---
+
+:::info tctl is deprecated
+
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议转换到 [Temporal CLI](/cli) 以继续使用和访问新功能。
+
+感谢您成为 Temporal 社区的重要组成部分。
+
+:::
+
+:::note
+
+本文档反映的是 tctl 版本 1.17。
+
+:::
+
+Temporal CLI (tctl) 是一个命令行工具，可用于与 Temporal 集群交互。
+它可以执行 [Namespace](/Namespaces) 操作（例如寄存器、Update 和描述）和 [Workflow](/Workflows) 操作（例如启动
+Workflow，显示 Workflow 历史记录和 Signal Workflow）。
+
+**例子**
+
+## tctl 命令
+
+- [tctl Activity](/tctl-v1/Activity/)
+- [tctl 管理](/tctl-v1/admin/)
+- [tctl 批次](/tctl-v1/batch/)
+- [tctl集群](/tctl-v1/cluster/)
+- [tctl 数据转换器](/tctl-v1/dataconverter/)
+- [tctl Namespace](/tctl-v1/Namespace/)
+- [tctl 任务队列](/tctl-v1/taskqueue/)
+- [tctl Workflow](/tctl-v1/Workflow/)
+
+## 如何安装 tctl {#install}
+
+> Temporal tctl 文档涵盖 Temporal CLI 版本 1.17。
+
+您可以通过以下方式安装[tctl](/tctl-v1)。
+
+- 使用 [Homebrew](https://brew.sh/) 在本地安装：`brew install tctl`
+- 在 [Docker Compose](https://github.com/Temporalio/docker-compose) 中与 Temporal Server 一起在本地运行： `docker exec Temporal-admin-tools tctl 您的命令在此处`
+  - 要像本地安装一样调用 [tctl](/tctl-v1)（例如“tctl Namespace 描述”），请设置别名：“alias tctl=”docker exec Temporal-admin-tools tctl“”
+- 运行 [Temporal-admin-tools](https://hub.docker.com/r/Temporalio/admin-tools) Docker 映像：
+  - 在 Linux 上：`docker run --rm -it --entrypoint tctl --network host --env Temporal_CLI_ADDRESS=localhost:7233 Temporalio/admin-tools:1.14.0`
+  - 在 macOS 或 Windows 上：`docker run --rm -it --entrypoint tctl --env Temporal_CLI_ADDRESS=host.docker.internal:7233 Temporalio/admin-tools:1.14.0`
+  - 如果您的 Temporal Server 在远程主机上运行，请更改“Temporal_CLI_ADDRESS”的值。
+  - 要简化命令行，请创建“tctl”别名。
+- 在“GOPATH”中安装最新版本的 tctl：“go install github.com/Temporalio/tctl/cmd/tctl@latest”
+
+任务队列
+
+要查看 [tctl](/tctl-v1) 命令的帮助，请输入以下命令。
+
+|命令|描述 |
+| ------------------- | ------------------------------------------------------ |
+| `tctl -h` |显示顶级命令和全局选项的帮助 |
+| `tctl Namespace -h` |显示 [Namespace](/Namespaces) 操作的帮助 |
+| `tctl Workflow -h` |显示 [Workflow](/Workflows) 操作的帮助 |
+| `tctl 任务队列 -h` |显示 [Task Queue](/task-queue) 操作的帮助 |
+
+## 全局修饰符
+
+您可以通过设置 [环境变量](#environment-variables) 来为其中许多修饰符提供值，而不是在 tctl 命令中包含修饰符。
+
+＃＃＃  - 地址
+
+指定前端服务的主机和端口。
+默认值为“127.0.0.1:7233”。
+
+### --自动确认
+
+自动确认所有提示。
+
+### --context_timeout
+
+指定 RPC 调用上下文的超时（以秒为单位）。
+默认值为 5。
+
+### --data_converter_plugin
+
+指定自定义 Data Converter 插件的可执行文件的名称。
+
+### --headers_provider_plugin
+
+指定标头提供程序插件的可执行文件的名称。
+
+＃＃＃  - 帮助
+
+在 CLI 中显示 tctl 的帮助。
+
+别名：`-h`
+
+### --Namespace
+
+指定 Namespace。
+通过使用此修饰符，您无需为子命令指定“--Namespace”修饰符。
+默认的 Namespace 是“default”。
+
+`XPROT044X 任务队列列表分区 --taskqueue <值>`
+
+### --tls_ca_path
+
+指定服务器证书颁发机构 (CA) 证书文件的路径。
+
+### --tls_cert_path
+
+指定用于相互 TLS 身份验证的公共 X.509 证书文件的路径。
+如果使用此修饰符，则还必须使用 `--tls_key_path` 修饰符。
+
+### --tls_disable_host_verification
+
+禁用服务器证书的验证（以及主机验证）。
+
+### --tls_key_path
+
+指定用于双向 TLS 身份验证的私钥文件的路径。
+如果使用此修饰符，则还必须使用 `--tls_cert_path` 修饰符。
+
+### --tls_服务器_名称
+
+指定用于 TLS 主机验证的目标服务器名称的替代。
+该名称必须是服务器 TLS 证书中列出的 DNS 名称之一。
+指定此修饰符还可以启用主机验证。
+
+＃＃＃  - 版本
+
+在 CLI 中显示 tctl 的版本。
+
+### --codec_端点
+
+Codec Server 的 URL 和端口号。
+
+## 环境变量
+
+为重复参数设置环境变量可以缩短tctl命令。
+
+### Temporal_CLI_ADDRESS
+
+指定前端服务的主机和端口。
+默认值为“127.0.0.1:7233”。
+
+### Temporal_CLI_AUTHORIZATION_TOKEN
+
+指定 HTTP 基本授权插件要使用的令牌。
+
+{/* TODO：添加指向“保护 tctl”页面或其等效页面（如果存在）的链接。 */}
+
+### Temporal_CLI_AUTH
+
+指定要为 gRPC 请求设置的授权标头。
+
+### Temporal_CLI_Namespace
+
+指定 Namespace。
+通过设置此变量，您无需在 tctl 命令中指定 `--Namespace` 修饰符。
+默认的 Namespace 是“default”。
+
+### Temporal_CLI_PLUGIN_DATA_CONVERTER
+
+指定自定义 Data Converter 插件的可执行文件的名称。
+
+### Temporal_CLI_PLUGIN_HEADERS_PROVIDER
+
+指定标头提供程序插件的可执行文件的名称。
+
+### Temporal_CLI_TLS_CA
+
+指定服务器证书颁发机构 (CA) 证书文件的路径。
+
+### Temporal_CLI_TLS_CERT
+
+指定用于相互 TLS 身份验证的公共 X.509 证书文件的路径。
+
+### Temporal_CLI_TLS_DISABLE_HOST_VERIFICATION
+
+设置为禁用服务器证书验证（以及主机验证）。
+
+### Temporal_CLI_TLS_KEY
+
+指定用于双向 TLS 身份验证的私钥文件的路径。
+如果设置此变量，则还必须设置“Temporal_CLI_TLS_CERT”变量。
+
+### Temporal_CLI_TLS_SERVER_NAME
+
+指定用于 TLS 主机验证的目标服务器名称的替代。
+该名称必须是服务器 TLS 证书中列出的 DNS 名称之一。
+设置此变量还可以启用主机验证。
+
+### Temporal_CONTEXT_TIMEOUT
+
+指定 RPC 调用上下文的超时（以秒为单位）。
+默认值为 5。

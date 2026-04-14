@@ -1,8 +1,8 @@
 ---
 id: taskqueue
-title: tctl v1.17 taskqueue command reference
-sidebar_label: taskqueue
-description: Try the new Temporal CLI public preview! Replace tctl with the v1.0 release. Use tctl taskqueue describe for Task Queue details and tctl taskqueue list-partition for partition info.
+title: "tctl v1.17 任务队列命令参考"
+sidebar_label: "任务队列"
+description: "尝试新的 Temporal CLI 公共预览版！将 tctl 替换为 v1.0 版本。使用 tctl 任务队列描述获取 Task Queue 详细信息，使用 tctl 任务队列列表分区获取分区信息。"
 toc_max_heading_level: 4
 keywords:
   - cli
@@ -15,71 +15,75 @@ keywords:
 
 :::info tctl is deprecated
 
-The tctl command line utility has been deprecated and is no longer actively supported.
-We recommend transitioning to [Temporal CLI](/cli) for continued use and access to new features.
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议过渡到 [Temporal CLI](/cli) 以继续使用和访问新功能。
 
-Thank you for being a valued part of the Temporal community.
+感谢您成为 Temporal 社区的重要组成部分。
 
 :::
 
-The `tctl taskqueue` command enables [Task Queue](/task-queue) operations.
+`tctl taskqueue` 命令启用 [Task Queue](/task-queue) 操作。
 
-Alias: `t`
+别名：`t`
 
-- [tctl taskqueue describe](#describe)
-- [tctl taskqueue list-partition](#list-partition)
+- [tctl任务队列描述](#describe)
+- [tctl 任务队列列表分区](#list-partition)
 
-## describe
+## 描述 {#describe}
 
-The `tctl taskqueue describe` command describes the poller information of a [Task Queue](/task-queue).
+`tctl taskqueue describe`命令描述了[Task Queue](/task-queue)的轮询器信息。
 
 `tctl taskqueue describe <modifiers> <value>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --taskqueue
+<a id="describe"></a>
+### --任务队列 {#taskqueue}
 
-_Required modifier_
+_所需修饰符_
 
-Specify a [Task Queue](/task-queue).
+指定 [Task Queue](/task-queue)。
 
-Alias: `--t`
+别名：`--t`
 
-**Example**
+**例子**
 
 ```bash
 tctl taskqueue describe --taskqueue <value>
 ```
 
-### --taskqueuetype
+<a id="taskqueue"></a>
+### --任务队列类型 {#taskqueuetype}
 
-Specify the type of a [Task Queue](/task-queue).
-The type can be `workflow` or `activity`.
-The default is `workflow`.
+指定 [Task Queue](/task-queue) 的类型。
+类型可以是 `Workflow` 或 `Activity`。
+默认值为 `Workflow`。
 
-**Example**
+**例子**
 
 ```bash
 tctl taskqueue describe --taskqueue <value> --taskqueuetype <type>
 ```
 
-## list-partition
+<a id="taskqueuetype"></a>
+## 列表分区 {#list-partition}
 
-The `tctl taskqueue list-partition` command lists the partitions of a [Task Queue](/task-queue) and the hostname for the partitions.
+`tctl taskqueue list-partition` 命令列出 [Task Queue](/task-queue) 的分区以及分区的主机名。
 
 `tctl taskqueue list-partition --taskqueue <value>`
 
-The following modifier controls the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --taskqueue
+<a id="list-partition"></a>
+### --任务队列 {#taskqueue}
 
-_Required modifier_
+_所需修饰符_
 
-Specify a [Task Queue](/task-queue) description.
+指定 [Task Queue](/task-queue) 描述。
 
-Alias: `--t`
+别名：`--t`
 
-**Example**
+**例子**
 
 ```bash
 tctl taskqueue list-partition --taskqueue <value>

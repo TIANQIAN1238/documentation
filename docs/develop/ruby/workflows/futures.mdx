@@ -1,8 +1,8 @@
 ---
 id: futures
-title: Workflow futures - Ruby SDK
-sidebar_label: Workflow futures
-description: This section explains Workflow futures with the Ruby SDK
+title: "Workflow 期货 - Ruby SDK"
+sidebar_label: "Workflow 期货"
+description: "本节介绍 Workflow 与 Ruby SDK 的期货"
 toc_max_heading_level: 4
 keywords:
   - Ruby SDK
@@ -11,15 +11,16 @@ tags:
   - Temporal SDKs
 ---
 
-## Workflow Futures {#workflow-futures}
+<a id="workflow-futures"></a>
+## Workflow 期货 {#workflow-futures}
 
-`Temporalio::Workflow::Future` can be used for running things in the background or concurrently.
-Temporal provides Workflow-safe wrappers around some core language features in cases like these.
-`Temporalio::Workflow::Future` is a safe wrapper around `Fiber.schedule` for running multiple Activities at once.
-The Ruby SDK also provides `Workflow.wait_condition` for awaiting a result.
+`Temporalio::Workflow::Future` 可用于在后台运行或同时运行。
+在此类情况下，Temporal 围绕某些核心语言功能提供了 Workflow 安全包装器。
+`Temporalio::Workflow::Future` 是 `Fiber.Schedule` 的安全包装，用于一次运行多个活动。
+Ruby SDK 还提供 `Workflow.wait_condition` 用于等待结果。
 
-Futures are never used implicitly, but they work with all Workflow code and constructs.
-For instance, to run 3 activities and wait for them all to complete, something like this can be written:
+期货永远不会隐式使用，但它们适用于所有 Workflow 代码和构造。
+例如，要运行 3 个活动并等待它们全部完成，可以编写如下内容：
 
 ```ruby
 # Start 3 activities in background
@@ -39,7 +40,7 @@ Temporalio::Workflow::Future.all_of(fut1, fut2, fut3).wait
 Temporalio::Workflow.logger.info("Got: #{fut1.result}, #{fut2.result}, #{fut3.result}")
 ```
 
-Or, say, to wait on the first of 5 activities or a timeout to complete:
+或者，比如说，等待 5 个活动中的第一个或超时完成：
 
 ```ruby
 # Start 5 activities
@@ -59,5 +60,5 @@ raise Temporalio::Error::ApplicationError, 'Timer expired' if sleep_fut.done?
 Temporalio::Workflow.logger.info("Act result: #{act_result}")
 ```
 
-There are several other details not covered here about futures, such as how exceptions are handled, how to use a setter
-proc instead of a block, etc. See the [API documentation](https://ruby.temporal.io/Temporalio/Workflow/Future.html) for details.
+关于 future，还有其他几个细节没有在这里讨论，比如如何处理异常、如何使用 setter
+proc 而不是块等。有关详细信息，请参阅 [API文档](https://ruby.temporal.io/temporalio/Workflow/Future.html)。

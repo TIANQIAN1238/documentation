@@ -1,0 +1,101 @@
+---
+id: run-worker-process
+title: Worker 流程 - .NET SDK
+description: 展示如何使用 .NET SDK 运行 Worker 进程
+sidebar_label: Worker 流程
+slug: /develop/dotnet/workers/run-worker-process
+toc_max_heading_level: 3
+tags:
+  - .NET SDK
+  - Temporal SDKs
+  - Worker
+---
+
+## 运行Worker进程
+
+启动子 XPROT002X 并使用 Temporal .NET SDK 设置父关闭策略。发现 ExecuteChildXPROT027XAsync 等方法并管理 XPROT027X 行为。
+
+[Worker Process](/Workers#Worker-process) 是执行 Workflow 函数和 Activity 函数的位置。
+
+- Worker 进程中的每个 [Worker 实体](/Workers#Worker-entity) 必须注册其可能执行的确切 Workflow Type 和 Activity 类型。
+- 每个 Worker 实体还必须将自己与一个 [Task Queue](/task-queue) 关联。
+- 轮询相同 Task Queue 的每个 Worker 实体必须使用相同的 Workflow Type 和 Activity 类型进行注册。
+
+[Worker 实体](/Workers#Worker-entity) 是 Worker 进程中侦听特定 Task Queue 的组件。
+
+尽管多个 Worker 实体可以位于单个 Worker 进程中，但单个 Worker 实体 Worker 进程可能就足够了。
+有关更多信息，请参阅 [Worker 调优指南](/develop/Worker-performance)。
+
+Worker 实体包含 Workflow Worker 和/或 Activity Worker，它们分别在 Workflow Execution 和 Activity 执行上取得进展。
+
+要开发 Worker，请创建一个新的“Temporalio.Worker.TemporalWorker”，提供客户端和 Worker 选项，其中包括 Task Queue、Workflow 和活动等。
+以下代码示例创建一个 Worker，该 Worker 轮询来自 Task Queue 的任务并执行 Workflow。
+创建 Worker 时，它接受 Workflow 列表、活动列表或两者。
+
+```csharp
+// Create a client to localhost on default namespace
+var client = await TemporalClient.ConnectAsync(new("localhost:7233")
+{
+    LoggerFactory = LoggerFactory.Create(builder =>
+        builder.
+            AddSimpleConsole(options => options.TimestampFormat = "[HH:mm:ss] ").
+            SetMinimumLevel(LogLevel.Information)),
+});
+
+// Cancellation token cancelled on ctrl+c
+using var tokenSource = new CancellationTokenSource();
+Console.CancelKeyPress += (_, eventArgs) =>
+{
+    tokenSource.Cancel();
+    eventArgs.Cancel = true;
+};
+
+// Create an activity instance with some state
+var activities = new MyActivities();
+
+// Run worker until cancelled
+Console.WriteLine("Running worker");
+using var worker = new TemporalWorker(
+    client,
+    new TemporalWorkerOptions(taskQueue: "my-task-queue").
+        AddAllActivities(activities).
+        AddWorkflow<MyWorkflow>());
+try
+{
+    await worker.ExecuteAsync(tokenSource.Token);
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine("Worker cancelled");
+}
+```
+
+所有监听相同 Task Queue 名称的 Worker 必须注册才能处理完全相同的 Workflow 类型和 Activity 类型。
+
+如果 Worker 轮询任务以查找它不知道的 Workflow Type 或 Activity 类型，则该任务将失败。
+但是，任务失败不会导致关联的 Workflow Execution 失败。
+
+### Worker 具有主机构建器和依赖项注入的进程
+
+[Temporalio.Extensions.Hosting](https://github.com/Temporalio/sdk-dotnet/tree/main/src/Temporalio.Extensions.Hosting) 扩展可供 .NET 开发人员支持 HostBuilder 和依赖注入方法。
+
+要使用此方法创建与之前相同的 Worker：
+
+```csharp
+var host = Host.CreateDefaultBuilder(args)
+    .ConfigureLogging(ctx => ctx.AddSimpleConsole().SetMinimumLevel(LogLevel.Information))
+    .ConfigureServices(ctx =>
+        ctx.
+            // Add the database client at the scoped level
+            AddScoped<IMyDatabaseClient, MyDatabaseClient>().
+            // Add the worker
+            AddHostedTemporalWorker(
+                clientTargetHost: "localhost:7233",
+                clientNamespace: "default",
+                taskQueue: "my-task-queue").
+            // Add the activities class at the scoped level
+            AddScopedActivities<MyActivities>().
+            AddWorkflow<MyWorkflow>())
+    .Build();
+await host.RunAsync();
+```

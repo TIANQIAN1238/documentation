@@ -1,8 +1,8 @@
 ---
 id: run-worker-process
-title: Worker processes - Java SDK
-sidebar_label: Worker processes
-description: This section explains how to implement a Worker with the Java SDK
+title: "Worker 流程 - Java SDK"
+sidebar_label: "Worker 流程"
+description: "本节介绍如何使用 Java SDK 实现 Worker"
 toc_max_heading_level: 4
 keywords:
   - Java SDK
@@ -11,25 +11,26 @@ tags:
   - Temporal SDKs
 ---
 
-## How to run Worker Processes {#run-a-dev-worker}
+<a id="run-a-dev-worker"></a>
+## 如何运行 Worker 进程 {#run-a-dev-worker}
 
-The [Worker Process](/workers#worker-process) is where Workflow Functions and Activity Functions are executed.
+[Worker 流程](/workers#worker-process) 是执行 Workflow 函数和 Activity 函数的地方。
 
-- Each [Worker Entity](/workers#worker-entity) in the Worker Process must register the exact Workflow Types and Activity Types it may execute.
-- Each Worker Entity must also associate itself with exactly one [Task Queue](/task-queue).
-- Each Worker Entity polling the same Task Queue must be registered with the same Workflow Types and Activity Types.
+- Worker 进程中的每个 [Worker 实体](/workers#worker-entity) 必须注册其可能执行的确切 Workflow 类型和 Activity 类型。
+- 每个 Worker 实体还必须将其自身与一个 [Task Queue](/task-queue) 关联起来。
+- 轮询相同 Task Queue 的每个 Worker 实体必须使用相同的 Workflow 类型和 Activity 类型进行注册。
 
-A [Worker Entity](/workers#worker-entity) is the component within a Worker Process that listens to a specific Task Queue.
+[Worker 实体](/workers#worker-entity) 是 Worker 进程中侦听特定 Task Queue 的组件。
 
-Although multiple Worker Entities can be in a single Worker Process, a single Worker Entity Worker Process may be perfectly sufficient.
-For more information, see the [Worker tuning guide](/develop/worker-performance).
+尽管多个 Worker 实体可以位于单个 Worker 进程中，但单个 Worker 实体 Worker 进程可能就足够了。
+有关详细信息，请参阅 [Worker 调音指南](/develop/worker-performance)。
 
-A Worker Entity contains a Workflow Worker and/or an Activity Worker, which makes progress on Workflow Executions and Activity Executions, respectively.
+Worker 实体包含 Workflow Worker 和/或 Activity Worker，它们分别在 Workflow Execution 和 Activity 执行上取得进展。
 
-Use the `newWorker` method on an instance of a [`WorkerFactory`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/WorkerFactory.html) to create a new Worker in Java.
+在 [`WorkerFactory`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/WorkerFactory.html) 实例上使用 `newWorker` 方法在 Java 中创建新的 Worker。
 
-A single Worker Entity can contain many Worker Objects.
-Call the `start()` method on the instance of the `WorkerFactory` to start all the Workers created in this process.
+单个 Worker 实体可以包含许多 Worker 对象。
+对 `WorkerFactory` 实例调用 `start()` 方法以启动在此过程中创建的所有 Worker。
 
 ```java
 // ...
@@ -55,30 +56,30 @@ public class YourWorker {
 }
 ```
 
-After creating the Worker entity, register all Workflow Types and all Activity Types that the Worker can execute.
-A Worker can be registered with just Workflows, just Activities, or both.
+创建 Worker 实体后，注册 Worker 可以执行的所有 Workflow 类型和所有 Activity 类型。
+Worker 可以仅使用 Workflow、仅使用活动或两者进行注册。
 
-**Operation guides:**
+**操作指南：**
 
-- [How to tune Workers](/develop/worker-performance)
+- [如何调整 Worker](/develop/worker-performance)
 
-## How to register types {#register-types}
+## 如何注册类型 {#register-types}
 
-All Workers listening to the same Task Queue name must be registered to handle the exact same Workflows Types and Activity Types.
+必须注册所有监听相同 Task Queue 名称的 Worker 才能处理完全相同的 Workflow 类型和 Activity 类型。
 
-If a Worker polls a Task for a Workflow Type or Activity Type it does not know about, it fails that Task.
-However, the failure of the Task does not cause the associated Workflow Execution to fail.
+如果 Worker 轮询任务以查找它不知道的 Workflow 类型或 Activity 类型，则该任务将失败。
+但是，任务失败不会导致关联的 Workflow Execution 失败。
 
-Use `worker.registerWorkflowImplementationTypes` to register Workflow Type and `worker.registerActivitiesImplementations` to register Activity implementation with Workers.
+使用 `Worker.registerWorkflowImplementationTypes` 注册 Workflow 类型，使用 `Worker.registerActivitiesImplementations` 注册 Activity 实现与 Worker。
 
-For Workflows, the Workflow Type is registered with a Worker.
-A Workflow Type can be registered only once per Worker entity.
-If you define multiple Workflow implementations of the same type, you get an exception at the time of registration.
+对于 Workflow，Workflow 类型已注册为 Worker。
+每个 Worker 实体只能注册一次 Workflow 类型。
+如果您定义同一类型的多个 Workflow 实现，则会在注册时出现异常。
 
-For Activities, Activity implementation instances are registered with a Worker because they are stateless and thread-safe.
-You can pass any number of dependencies in the Activity implementation constructor, such as the database connections, services, etc.
+对于活动，Activity 实现实例向 Worker 注册，因为它们是无状态且线程安全的。
+您可以在 Activity 实现构造函数中传递任意数量的依赖项，例如数据库连接、服务等。
 
-The following example shows how to register a Workflow and an Activity with a Worker.
+以下示例显示如何将 Workflow 和 Activity 注册到 Worker。
 
 ```java
 Worker worker = workerFactory.newWorker("your_task_queue");
@@ -89,11 +90,11 @@ worker.registerWorkflowImplementationTypes(GreetingWorkflowImpl.class);
 worker.registerActivitiesImplementations(new GreetingActivitiesImpl());
 ```
 
-When you register a single instance of an Activity, you can have multiple instances of Workflow Executions calling the same Activity.
-Activity code must be thread-safe because the same instance of the Activity code is run for every Workflow Execution that calls it.
+当您注册 Activity 的单个实例时，您可以让多个 Workflow Execution 实例调用同一个 Activity。
+Activity 代码必须是线程安全的，因为调用它的每个 Workflow Execution 都会运行 Activity 代码的同一实例。
 
-For `DynamicWorkflow`, only one Workflow implementation that extends `DynamicWorkflow` can be registered with a Worker.
-The following example shows how to register the `DynamicWorkflow` and `DynamicActivity` implementation with a Worker.
+对于 `DynamicWorkflow`，只能向 Worker 注册一个扩展 `DynamicWorkflow` 的 Workflow 实现。
+以下示例演示如何使用 Worker 注册 `DynamicWorkflow` 和 `DynamicActivity` 实现。
 
 ```java
   public static void main(String[] arg) {
@@ -134,5 +135,5 @@ The following example shows how to register the `DynamicWorkflow` and `DynamicAc
 }
 ```
 
-You can register multiple type-specific Workflow implementations alongside a single `DynamicWorkflow` implementation.
-You can register only one Activity instance that implements `DynamicActivity` with a Worker.
+您可以注册多个特定于类型的 Workflow 实现以及单个 `DynamicWorkflow` 实现。
+您只能注册一个使用 Worker 实现 `DynamicActivity` 的 Activity 实例。

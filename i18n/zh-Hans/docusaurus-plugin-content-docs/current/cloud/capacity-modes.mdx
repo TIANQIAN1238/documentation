@@ -1,0 +1,230 @@
+---
+id: capacity-modes
+title: 容量模式
+sidebar_label: 容量模式
+description: 通过容量模式控制如何将限制分配给 Namespace
+slug: /cloud/capacity-modes
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - how-to
+  - operations
+  - temporal cloud
+  - namespaces
+  - capacity modes
+  - on-demand capacity 
+  - provisioned capacity
+  - actions per second
+  - operations per second
+  - requests per second
+  - throttling
+  - temporal resource units
+  - trus
+tags:
+  - Capacity Modes
+  - On-Demand Capacity
+  - Provisioned Capacity
+  - TRUs
+---
+
+Temporal 中的每个 Namespace 都有速率限制，以每秒 [操作](/cloud/pricing#action) 为单位进行测量。 
+Temporal提供两种不同的容量调整模式：按需容量或预配置容量。
+通过按需容量，Namespace 容量会随着使用情况自动增加。
+借助预配置容量，您可以通过请求 Temporal 资源单元 (TRU) 来控制容量限制。
+
+## Namespace 容量
+
+Temporal 中的 Namespace 可以设置为 **按需** 或 **预配置容量** 模式。 
+这些模式控制如何将限制分配给 Namespace。
+
+每秒操作数 (APS) 是 Namespace 的主要限制，基于每秒发生的可计费操作数。
+某些操作可能会导致多个后端操作，因此还对每秒请求数 (RPS) 和每秒操作数 (OPS) 设置限制以保持可靠性。
+
+有关 RPS 的更多信息，请参阅[服务级别 RPS 限制](/references/dynamic-configuration#service-level-rps-limits)。
+有关操作列表，请参阅[操作列表](/references/operation-list)。
+有关操作列表，请参阅[操作页面](/cloud/actions)。
+
+:::tip Measuring throughput with APS, RPS, and OPS
+
+APS、RPS 和 OPS 都是适用于 Temporal 不同方面的吞吐量度量。
+
+APS（即每秒操作数）特定于 Temporal Cloud。 
+它测量在特定 Namespace 中执行操作（例如启动 Workflow 或 Signaling）的速率。 
+Temporal Cloud 使用 APS 来保护系统免受负载突然大幅增加的影响。
+
+RPS（即每秒请求数）用于 Temporal 服务，无论是在自托管 Temporal 还是 Temporal Cloud 中。 
+它测量和控制 gRPC 向服务请求的速率。 
+这是一种较低级别的措施，用于管理服务级别的费率。
+
+Temporal Cloud 使用 OPS（即每秒操作次数）。 
+操作是用户直接执行的任何操作，或者 Temporal 代表用户在后台执行的任何操作，这些操作会导致 Temporal Server 上的负载。 
+这是一个较低级别的措施，用于管理 Temporal Cloud 服务的费率。
+
+连接性
+
+:::
+
+### 当我的操作率超过我的限制时会发生什么？
+
+当您的操作速率超过配额时，Temporal Cloud 会限制操作。
+节流限制执行操作的速率，以防止 Namespace 超出其 APS 限制。
+
+**节流如何工作：**
+- 低优先级操作首先被限制；如果可能，更高优先级的操作（例如启动或 Signaling Workflow）将继续。
+- 速率限制不是即时的，因此在限制生效之前，使用量可能会短暂超出您的限制。
+- 受到限制时，服务器会返回“ResourceExhausted”错误，SDK 客户端会自动重试。
+- 如果限制持续超出 SDK 的重试限制，客户端调用可能会失败。
+
+**为了避免节流期间数据丢失：**
+- 记录任何失败的客户端调用（带有有效负载），以便您可以稍后重试或回填。
+- 设置[限制指标](/cloud/metrics/openmetrics/metrics-reference#limit-metrics)，以在接近限制时发出警报。
+
+有关更多详细信息，请参阅[限制行为](/cloud/limits#throtdling-behavior)。
+
+您的速率限制可以随着时间的推移自动调整，也可以通过容量模式手动配置。
+
+我们建议使用 Temporal 指标跟踪您的操作率和限制，以评估您的用例特定需求。
+请参阅[监控限制趋势](/cloud/service-health#rps-aps-rate-limits) 以跟踪使用趋势。
+
+对于使用预配置容量的 Namespace，按需包络指标显示在按需模式下运行时的限制。
+在切换模式之前，使用这些来评估按需容量是否满足您的需求。
+有关详细信息，请参阅[按需信封限制](/cloud/service-health#on-demand-envelope-limits)。
+
+:::note Actions that don't count against APS
+核心 Temporal 服务外部的操作不会对您的 APS 产生影响。这些电话包括：
+* [导出](/cloud/export)
+* 与容量相关的操作
+:::
+
+## 按需容量 {#on-demand-capacity}
+
+使用按需容量，您的速率限制会随着您的使用情况而自动增长。
+
+
+|               |每秒操作数 |每秒请求数 |每秒操作次数|
+|--------------|--------------------|---------------------|------------------------|
+|默认限制 | 500 | 500 2000 | 2000 4000 |
+
+
+缩放比例根据过去 7 天内 4 * APS Average 或 2 * APS P90 中的较小者自动调整。
+
+如果您遇到使用高峰，则可能会达到吞吐量限制。 
+在这种情况下，请考虑切换到[预配置容量](#provisioned-capacity)。 
+您还可以优化工作负载以保持在按需限制以下。有关详细信息，请参阅[管理 APS 限制的最佳实践](/best-practices/managing-aps-limits)。
+
+### 在具有按需容量的 Temporal Cloud 上可以获得什么样的吞吐量？
+
+每个 Namespace 都有一个速率限制，以每秒操作数 (APS) 来衡量。 
+Namespace 的默认限制设置为 500 APS，并根据比较过去 7 天内的平均使用情况和第 90 个百分位（即 P90）的使用情况的公式自动调整。 
+您的吞吐量限制永远不会低于默认值。 
+在按需容量下，您只需为您使用的操作付费。
+
+例如：如果您过去 7 天的平均 APS 为 200 APS，而您的 P90 为 500 APS，则您的限制将计算如下：
+较大者：
+* 默认限制为 500 APS
+* 较小者：
+  * 4 * 200 APS 平均值 = 800 APS
+  * 2 * 500 APS P90 = 1000 APS
+
+这意味着您的默认限制为 800 APS。
+
+![使用情况图显示 APS 使用量在一个月内不断增加，偶尔出现峰值，并且 APS 限制不断上升](/img/cloud/provisioned-capacity/usage_graph.png)
+
+## 预配置容量 {#provisioned-capacity}
+
+:::tip Support, stability, and dependency info
+
+预配置容量当前处于[公共预览](/evaluate/development-product-features/release-stages#public-preview)。
+
+:::
+
+预配置容量提供了按需容量的替代方案，允许您根据特定需求控制 Namespace 的限制。
+
+|               |每秒操作数 |每秒请求数 |每秒操作次数|
+|--------------|--------------------|---------------------|------------------------|
+|真实 | 500 | 500 1500 | 1500 4000 |
+
+客户可以根据可用性设置 2、3、4、6、8、10、12 个 TRU。 TRU 可以每小时调整一次。
+
+有关定价影响，请参阅[容量模式定价](/cloud/pricing#capacity-modes-pricing)。
+
+### 使用预置容量的 Temporal Cloud 可以获得什么样的吞吐量？
+
+借助预配置容量，您可以通过选择 Namespace 上的 Temporal 资源单元 (TRU) 数量来设置速率限制。
+每个 TRU 最多支持 500 个 APS，并且如果某个区域有可用容量，则可以按 2、3、4、6、8、10 或 12 个 TRU 的组进行配置。 
+当请求 TRU 时，我们的目标是在两分钟内提供额外的容量。
+
+:::tip Large TRU requests
+
+对于美国以外地区超过 4 个 TRU 的请求，我们建议提交支持票以确保容量可用性。
+
+:::
+
+### 预置容量可用性
+一个区域内的可用容量可能会有所不同。 
+Temporal 将在您请求时检查可用容量，并旨在在两分钟内提供请求的容量。 
+如果您需要的容量超出自助服务或某个区域可用的容量，请[提交支持票证](https://docs.Temporal.io/cloud/support#ticketing)，指明所需容量的限制、区域和时间范围。
+
+
+### 我什么时候应该使用预置容量？
+
+当您意识到 Namespace 上负载的特定增加时，预置容量会发挥良好作用。例如：
+
+* 计划的活动
+* 计划外事件/使用高峰
+* 已知但突然的系统峰值
+* 负载测试
+* 迁移工作负载
+
+根据您的使用模式和系统监控，您可以使用预配置容量来快速修复速率限制，而无需联系支持人员。
+如果您有已知事件或重复使用模式会产生可预测的使用峰值，您还可以自动更改容量。
+
+## 设置容量模式
+容量模式和 TRU 可以通过 Temporal Cloud UI、CLI 或 API 设置。 
+容量模式可以通过全局管理员和Namespace管理员进行设置和调整。
+
+### 从 UI 设置容量模式
+
+您可以通过导航到 Temporal Cloud UI 中的 Namespace 页面 (`https://cloud.Temporal.io/Namespaces/<Namespace ID>`) 来设置单个 Namespace 的容量模式。 
+要查看当前容量配置并更改容量模式，请导航至容量磁贴并单击*管理容量*。
+
+![Temporal UI 中的管理容量按钮](/img/cloud/provisioned-capacity/manage_capacity_button.png)
+
+在“管理容量”下，您可以在“按需”和“预配置容量”模式之间进行选择。 
+*按需*部分将显示您可用的按需容量。 
+*已配置*部分将显示所选 TRU 的可用限制以及每小时所需的包含操作。 [查看有关预配置容量定价的详细信息](/cloud/pricing#capacity-modes-pricing)。
+
+要切换到预配置容量：
+
+1. 选择*已配置*单选按钮。
+1. 使用滑块指定请求的 TRU 数量。
+1. 检查对话框，确认潜在的定价影响。
+1. 单击*确认*。
+
+除了容量模式选择之外，还包括过去 7 天内 APS 使用情况的摘要，以帮助您估计当前的使用情况。 
+有关更多详细信息，我们建议设置跟踪您的 APS 和限制的指标。 
+请参阅[监控限制趋势](/cloud/service-health#rps-aps-rate-limits) 以跟踪使用趋势。
+
+![Temporal UI 中的管理容量面板](/img/cloud/provisioned-capacity/manage_capacity_panel.png)
+
+### 从 CLI 设置容量模式
+
+```command
+tcld namespace capacity update --namespace <namespace_name> --capacity-mode <on_demand|provisioned> --capacity-value <tru value> [--request–id <request_id> --resource-version <resource-version>]
+```
+
+使用此命令指定 Namespace 名称并配置容量设置：
+
+* `--capacity-mode` 设置 Namespace 的计费模式。使用“on_demand”进行自动扩展，或使用“provisioned”进行固定容量分配。
+* `--capacity-value` 设置以 TRU（Temporal 资源单元）为单位的吞吐量值。
+
+可选标志：
+
+* `--request-id` 指定异步操作的请求标识符。如果未指定，服务器会自动分配一个。
+* `--resource-version` 指定 Update 的资源版本 (etag)。如果未设置，CLI 将使用最新版本。
+
+如果使用带有“--api-key”标志的 API 密钥身份验证，则必须将其直接添加到 tcld 命令之后、容量 Update 之前。
+
+### 从 API 设置容量模式
+
+创建 Namespace 后调用“UpdateNamespace”API，并将所需的容量状态定义为容量规范的一部分。

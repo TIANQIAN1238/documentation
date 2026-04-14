@@ -1,0 +1,29 @@
+---
+id: operation-list
+title: 运营
+sidebar_label: 运营
+description: Temporal Cloud 限制每个 Namespace 每秒的操作数，以保持服务可靠。此页面列出了所有这些操作。
+toc_max_heading_level: 4
+keywords:
+  - limits
+  - rate limiting
+tags:
+  - limits
+  - operations
+  - rate limiting
+---
+
+import OperationsTable from '@site/src/components/formatting/OperationsTable';
+
+＃ 运营
+
+Temporal Cloud [速率限制每 Namespace 每秒操作数 (OPS)](/cloud/limits#operations-per-second)。操作是指 1. 用户直接执行的任何操作，或 2. Temporal 代表用户在后台执行的导致 Temporal Server 上加载的任何操作。 Visibility 查询例外：它们确实命中服务器（Query 从服务器传递到 Visibility 存储），但主要负载位于 Visibility 系统上。 Visibility 速率限制与 OPS 速率限制是分开的。
+
+以下是操作列表，包括：
+- 操作名称
+- 描述
+- 优先级（前景优先级较高，背景优先级较低）
+- 该操作的效果被限制
+
+<OperationsTable />
+

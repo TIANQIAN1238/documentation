@@ -1,8 +1,8 @@
 ---
 id: debugging
-title: Debugging - Ruby SDK
-sidebar_label: Debugging
-description: Debug Workflows in development and production environments using Temporal Ruby SDK. Use logging, debugger, CLI, replay, tracing, and more.
+title: "调试-Ruby SDK"
+sidebar_label: "调试"
+description: "使用 Temporal Ruby SDK 在开发和生产环境中调试 Workflow。使用日志记录、调试器、CLI、重放、跟踪等。"
 toc_max_heading_level: 4
 keywords:
   - sdk
@@ -15,36 +15,37 @@ tags:
   - Errors
 ---
 
-## Debugging {#debug}
+## 调试 {#debug}
 
-This page shows how to do the following:
+此页面显示如何执行以下操作：
 
-- [Debug in a development environment](#debug-in-a-development-environment)
-- [Debug in a development production](#debug-in-a-development-environment)
+- [在开发环境中调试](#debug-in-a-development-environment)
+- [在开发生产中调试](#debug-in-a-development-environment)
 
-## Debug in a development environment {#debug-in-a-development-environment}
+## 在开发环境中调试 {#debug-in-a-development-environment}
 
-In developing Workflows, you can use the normal development tools of logging and a debugger to see what’s happening in your Workflow.
+在开发 Workflow 时，您可以使用常规开发工具日志记录和调试器来查看 Workflow 中发生了什么。
 
-In addition to the normal development tools of logging and a debugger, you can also see what’s happening in your Workflow by using the [Web UI](/web-ui) or [Temporal CLI](/cli).
-The Web UI provides insight into your Workflows, making it easier to identify issues and monitor the state of your Workflows in real time.
+除了日志记录和调试器等常规开发工具之外，您还可以使用 [网页用户界面](/web-ui) 或 [Temporal CLI](/cli) 查看 Workflow 中发生的情况。
+Web UI 可让您深入了解 Workflow，从而更轻松地识别问题并实时监控 Workflow 的状态。
 
-## Debug in a production environment {#debug-in-a-production-environment}
+<a id="debug-in-a-production-environment"></a>
+## 在生产环境中调试 {#debug-in-a-production-environment}
 
-For production Workflows, debugging options include:
+对于生产 Workflow，调试选项包括：
 
-- [Web UI](/web-ui)
+- [网页用户界面](/web-ui)
 - [Temporal CLI](/cli)
-- [Replay](/develop/ruby/best-practices/testing-suite#replay-test)
-- [Tracing](/develop/ruby/platform/observability#tracing)
-- [Logging](/develop/ruby/platform/observability#logging)
+- [重播](/develop/ruby/best-practices/testing-suite#replay-test)
+- [追踪](/develop/ruby/platform/observability#tracing)
+- [记录](/develop/ruby/platform/observability#logging)
 
-You can analyze Worker performance using:
+您可以使用以下方法分析 Worker 性能：
 
-- [Metrics](/develop/ruby/platform/observability#metrics)
-- [Worker performance guide](/develop/worker-performance)
+- [指标](/develop/ruby/platform/observability#metrics)
+- [Worker 性能指南](/develop/worker-performance)
 
-To monitor Server performance:
+监控服务器性能：
 
-- Use [Cloud metrics](/cloud/metrics/) if you're on Temporal Cloud
-- Or [self-hosted Server metrics](/self-hosted-guide/production-checklist#scaling-and-metrics) if running your own deployment
+- 如果您使用 Temporal Cloud，请使用 [云指标](/cloud/metrics/)
+- 如果运行您自己的部署，则为 [自托管服务器指标](/self-hosted-guide/production-checklist#scaling-and-metrics)

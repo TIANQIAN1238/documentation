@@ -1,0 +1,162 @@
+---
+id: versioning
+title: 版本控制 - TypeScript SDK
+sidebar_label: 版本控制
+slug: /develop/typescript/workflows/versioning
+description: Temporal TypeScript SDK 通过 Workflow 修补 API、Worker 构建 ID 和 Workflow 迁移策略等版本控制功能确保 Workflow 代码的确定性。
+toc_max_heading_level: 4
+keywords:
+  - patching
+  - typescript
+  - versioning
+  - workflow code
+tags:
+  - Patching
+  - Workflows
+  - Versioning
+  - TypeScript SDK
+  - Temporal SDKs
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+由于 Temporal 中的 Workflow Execution 可以运行很长时间（有时是几个月甚至几年），因此通常需要对 Workflow Definition 进行更改，即使特定的 Workflow Execution 正在运行也是如此。
+
+Temporal Platform 要求 Workflow 代码是[确定性](/Workflow-definition#definition-constraints)。
+如果您对 Workflow 代码进行的更改会导致重播时出现不确定行为，则您需要使用我们的版本控制方法之一来优雅地对正在运行的 Workflow 进行 Update。
+通过版本控制，您可以修改 Workflow Definition，以便新的执行使用 Updated 代码，而现有的执行继续运行原始版本。
+您可以使用两种主要的版本控制方法：
+
+- [Worker 版本控制](/生产部署/Worker-部署/Worker-版本控制)。 Worker 版本控制功能允许您标记 Worker 并以编程方式在版本化部署中推出它们，以便旧的 Worker 可以运行旧的代码路径，而新的 Worker 可以运行新的代码路径。
+- [使用补丁进行版本控制](#patching)。此方法的工作原理是向与特定修订版相关的代码添加分支。它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
+
+:::danger
+2025 年之前对实验性 Worker 版本控制方法的支持将于 2026 年 3 月从 Temporal Server 中删除。请参阅[最新 Worker 版本控制文档](/Worker-versioning) 以获取指导。如果需要，您仍然可以参考 [Worker Versioning Legacy](/develop/typescript/Worker-versioning-legacy) 文档。
+:::
+
+## 使用补丁进行版本控制 {#patching}
+
+### 添加补丁
+
+补丁在 Workflow 中定义特定更改的逻辑分支，类似于功能标志。
+它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
+当您想要进行可能影响现有 Workflow Execution 的实质性代码更改时，请创建补丁。请注意，无需修补 [固定 Workflows](/Worker-版本控制)。
+
+假设您有一个运行“ActivityA”的初始 Workflow：
+
+```ts
+// v1
+export async function myWorkflow(): Promise<void> {
+  await activityA();
+  await sleep('1 days'); // arbitrary long sleep to simulate a long running workflow we need to patch
+  await activityThatMustRunAfterA();
+}
+```
+
+现在，您希望 Update 您的代码来运行“ActivityB”。这代表您想要的最终状态。
+
+```ts
+// vFinal
+export async function myWorkflow(): Promise<void> {
+  await activityB();
+  await sleep('1 days');
+}
+```
+
+问题是，在确定不再有使用“v1”代码创建的正在运行的 Workflow 之前，您无法直接部署此“vFinal”修订版，否则可能会导致不确定性错误。
+相反，您需要使用 patched(https://typescript.Temporal.io/api/Namespaces/Workflow#patched) 函数来检查应执行哪个版本的代码。
+
+修补过程分为三个步骤：
+
+1. 使用“patched()”函数修补任何新的 Updated 代码。将新的修补代码与旧代码一起运行。
+2. 删除旧代码并使用 `deprecatePatch()` 将特定补丁标记为已弃用。
+3. 一旦不再有任何打开的先前版本代码的 Workflow Execution，请删除 `deprecatePatch()`。
+   让我们按顺序浏览一下这个过程。
+
+### 修补新代码
+
+使用“patched”将标记插入 Workflow 历史记录中。
+在重播期间，如果 Worker 遇到带有该标记的历史记录，当 Workflow 代码未生成相同的补丁标记（在本例中为“your-change-id”）时，Workflow Task 将会失败。
+这确保您可以安全地将“v2”中的代码作为“功能标志”与原始版本（“v1”）一起部署。
+
+```ts
+// v2
+import { patched } from '@temporalio/workflow';
+export async function myWorkflow(): Promise<void> {
+  if (patched('my-change-id')) {
+    await activityB();
+    await sleep('1 days');
+  } else {
+    await activityA();
+    await sleep('1 days');
+    await activityThatMustRunAfterA();
+  }
+}
+```
+
+### 弃用补丁 {#deprecated-patches}
+
+确保所有以“v1”代码启动的 Workflow 都保留保留后，您可以[弃用该补丁](https://typescript.Temporal.io/api/Namespaces/Workflow#deprecatepatch)。
+
+一旦您的 Workflow 不再运行补丁前代码路径，您就可以使用“deprecatePatch()”部署代码。
+这些 Worker 将运行最新版本的 Workflow 代码，不再需要补丁。
+已弃用的补丁充当修补过程的最后阶段和不再有补丁的最终状态之间的桥梁。它们的功能与常规补丁类似，通过在 Workflow 历史记录中添加标记来实现。但是，当 Workflow 代码不生成该标记时，该标记不会导致重放失败。
+
+```ts
+// v3
+import { deprecatePatch } from '@temporalio/workflow';
+
+export async function myWorkflow(): Promise<void> {
+  deprecatePatch('my-change-id');
+  await activityB();
+  await sleep('1 days');
+}
+```
+
+### 删除补丁 {#deploy-new-code}
+
+<!--SNIPSTART 打字稿加密-Worker -->
+[加密/src/Worker.ts](https://github.com/XPROT026Xio/samples-typescript/blob/main/encryption/src/Worker.ts)
+
+修补允许您对当前运行的 Workflow 进行更改。
+它是一种引入兼容更改而不引入非确定性错误的强大方法。
+
+### Workflow 转换
+
+要了解修补为何有用，演示剪切整个 Workflow 会很有帮助。
+
+由于不兼容的更改仅影响相同类型的打开的 Workflow Execution，因此您可以通过在进行更改时创建全新的 Workflow 来避免确定性错误。
+为此，您可以复制 Workflow Definition 函数，为其指定不同的名称，然后将这两个名称注册到您的 Worker。
+
+例如，您可以将“PizzaWorkflow”复制为“PizzaWorkflowV2”：
+
+```typescript
+function pizzaWorkflow(order: PizzaOrder): Promise<OrderConfirmation> {
+  // this function contains the original code
+}
+
+function pizzaWorkflowV2(order: PizzaOrder): Promise<OrderConfirmation> {
+  // this function contains the updated code
+}
+```
+
+然后，您需要 Update、Worker 配置以及任何其他标识符字符串来注册两个 Workflow Type：
+
+```typescript
+const worker = await Worker.create({
+  workflowsPath: require.resolve('./workflows'),
+  // other configurations
+});
+```
+
+此方法的缺点是，它需要您复制代码并向 Update 复制用于启动 Workflow 的任何命令。
+随着时间的推移，这可能变得不切实际。
+此方法也不提供对任何仍在运行的 Workflow 进行版本控制的方法——它本质上只是一个转换，与修补不同。
+
+### 测试 Workflow 的重放安全性
+
+要确定您的 Workflow 是否需要修补程序，或者您已成功修补它，您应该合并 [重放测试](/develop/typescript/best-practices/testing-suite#replay)。
+
+## Worker 版本控制
+
+Temporal 的 [Worker 版本控制](/生产部署/Worker-deployments/Worker-versioning) 功能允许您标记 Worker 并以编程方式在部署版本中推出它们，以便旧的 Worker 可以运行旧的代码路径，新的 Worker 可以运行新的代码路径。这样，您就可以将 Workflow 固定到特定版本，从而无需修补。

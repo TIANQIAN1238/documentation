@@ -1,38 +1,37 @@
 ---
 id: install-typescript-sdk
-title: Install the TypeScript SDK
-description: Shows how to install the TypeScript SDK
-sidebar_label: Install the TypeScript SDK
+title: "安装 TypeScript SDK"
+description: "显示如何安装 TypeScript SDK"
+sidebar_label: "安装 TypeScript SDK"
 toc_max_heading_level: 3
 tags:
   - TypeScript SDK
   - Temporal SDKs
 ---
 
-## How to install a Temporal SDK {#install-a-temporal-sdk}
+<a id="install-a-temporal-sdk"></a>
+## 如何安装 Temporal SDK {#install-a-temporal-sdk}
 
-A [Temporal SDK](/encyclopedia/temporal-sdks) provides a framework for
-[Temporal Application](/temporal#temporal-application) development.
+[Temporal SDK](/encyclopedia/temporal-sdks) 为开发 [Temporal 应用](/temporal#temporal-application) 提供了完整框架。
 
-An SDK provides you with the following:
+SDK 为您提供以下功能：
 
-- A [Temporal Client](/encyclopedia/temporal-sdks#temporal-client) to communicate with a
-  [Temporal Service](/temporal-service).
-- APIs to develop [Workflows](/workflows).
-- APIs to create and manage [Worker Processes](/workers#worker).
-- APIs to author [Activities](/activity-definition).
+- [Temporal Client](/encyclopedia/temporal-sdks#temporal-client) 与 [Temporal 服务](/temporal-service) 通信所需的 API。
+- 用于开发 [Workflows](/workflows) 的 API。
+- 用于创建和管理 [Worker](/workers#worker) 进程的 API。
+- 用于编写 [Activity](/activity-definition) 的 API。
 
-[![NPM](https://img.shields.io/npm/v/temporalio.svg?style=for-the-badge)](https://www.npmjs.com/search?q=author%3Atemporal-sdk-team)
+[npm 上的 Temporal 团队包列表](https://www.npmjs.com/search?q=author%3Atemporal-sdk-team)
 
-This project requires Node.js 18 or later.
+该项目需要 Node.js 18 或更高版本。
 
-**Create a project**
+**创建一个项目**
 
 ```bash
 npx @temporalio/create@latest ./your-app
 ```
 
-**Add to an existing project**
+**添加到现有项目**
 
 ```bash
 npm install @temporalio/client @temporalio/worker @temporalio/workflow @temporalio/activity @temporalio/common
@@ -40,49 +39,50 @@ npm install @temporalio/client @temporalio/worker @temporalio/workflow @temporal
 
 :::note
 
-The TypeScript SDK is designed with TypeScript-first developer experience in mind, but it works equally well with
-JavaScript.
+TypeScript SDK 的设计考虑了 TypeScript 优先的开发人员体验，但它同样适用于
+JavaScript。
 
 :::
 
-### How to find the TypeScript SDK API reference {#api-reference}
+### 如何查找 TypeScript SDK API 参考 {#api-reference}
 
-The Temporal TypeScript SDK API reference is published to [typescript.temporal.io](https://typescript.temporal.io).
+Temporal TypeScript SDK API 参考发布在 [typescript.temporal.io](https://typescript.temporal.io)。
 
-### Where are SDK-specific code examples? {#code-samples}
+<a id="code-samples"></a>
+### 在哪里可以找到 SDK 代码示例？ {#code-samples}
 
-You can find a complete list of executable code samples in
-[Temporal's GitHub repository](https://github.com/temporalio?q=samples-&type=all&language=&sort=).
+您可以在以下位置找到可执行代码示例的完整列表
+[Temporal 的 GitHub 仓库](https://github.com/temporalio?q=samples-&type=all&language=&sort=)。
 
-Additionally, several of the [Tutorials](https://learn.temporal.io) are backed by a fully executable template
-application.
+此外，多个 [教程](https://learn.Temporal.io) 均由完全可执行的模板支持
+应用程序。
 
-Use the [TypeScript samples library](https://github.com/temporalio/samples-typescript) stored on GitHub to demonstrate
-various capabilities of Temporal.
+使用GitHub上存储的[TypeScript 示例库](https://github.com/temporalio/samples-typescript)进行演示
+Temporal的各种功能。
 
-**Where can I find video demos?**
+**哪里可以找到视频演示？**
 
-[Temporal TypeScript YouTube playlist](https://www.youtube.com/playlist?list=PLl9kRkvFJrlTavecydpk9r6cF7qBmQJvb).
+[Temporal TypeScript YouTube 播放列表](https://www.youtube.com/playlist?list=PLl9kRkvFJrlTavecydpk9r6cF7qBmQJvb)。
 
-### How to import an ECMAScript module {#ecmascript-modules}
+### 如何导入 ECMAScript 模块 {#ecmascript-modules}
 
-The JavaScript ecosystem is quickly moving toward publishing ECMAScript modules (ESM) instead of CommonJS modules. For
-example, `node-fetch@3` is ESM, but `node-fetch@2` is CommonJS.
+JavaScript 生态系统正在迅速朝着发布 ECMAScript 模块 (ESM) 而不是 CommonJS 模块的方向发展。对于
+例如，`node-fetch@3` 是 ESM，但 `node-fetch@2` 是 CommonJS。
 
-For more information about importing a pure ESM dependency, see our
-[Fetch ESM](https://github.com/temporalio/samples-typescript/tree/main/fetch-esm) sample for the necessary configuration
-changes:
+有关导入纯 ESM 依赖项的更多信息，请参阅我们的
+[获取ESM](https://github.com/temporalio/samples-typescript/tree/main/fetch-esm) 必要配置的示例
+变化：
 
-- `package.json` must have include the `"type": "module"` attribute.
-- `tsconfig.json` should output in `esnext` format.
-- Imports must include the `.js` file extension.
+- `package.json` 必须包含 `"type": "module"` 属性。
+- `tsconfig.json` 应以 `esnext` 格式输出。
+- 导入必须包含 `.js` 文件扩展名。
 
-## Linting and types in TypeScript {#linting-and-types}
+## TypeScript 中的 Linting 和类型 {#linting-and-types}
 
-If you started your project with `@temporalio/create`, you already have our recommended TypeScript and ESLint
-configurations.
+如果您使用 `@Temporalio/create` 开始您的项目，那么您已经拥有我们推荐的 TypeScript 和 ESLint
+配置。
 
-If you incrementally added Temporal to an existing app, we do recommend setting up linting and types because they help
-catch bugs well before you ship them to production, and they improve your development feedback loop. Take a look at our
-recommended [.eslintrc](https://github.com/temporalio/samples-typescript/blob/main/.shared/.eslintrc.js) file and tweak
-to suit your needs.
+如果您将 Temporal 增量添加到现有应用程序中，我们建议您设置 linting 和类型，因为它们会有所帮助
+在将错误交付生产之前就捕获它们，它们可以改善您的开发反馈循环。看看我们的
+推荐的 [.eslintrc](https://github.com/temporalio/samples-typescript/blob/main/.shared/.eslintrc.js) 文件和调整
+以满足您的需求。

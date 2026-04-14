@@ -1,8 +1,8 @@
 ---
 id: visibility
-title: Visibility
-sidebar_label: Visibility
-description: The term Visibility, within the Temporal Platform, refers to the subsystems and APIs that enable an operator to view, filter, and search for Workflow Executions that currently exist within a Temporal Service.
+title: "Visibility"
+sidebar_label: "Visibility"
+description: "Temporal 平台中的术语 Visibility 是指使操作员能够查看、过滤和搜索当前存在于 Temporal 服务中的 Workflow Execution 的子系统和 API。"
 slug: /temporal-service/visibility
 toc_max_heading_level: 4
 keywords:
@@ -12,17 +12,18 @@ tags:
   - Temporal Service
 ---
 
-This page discusses [Visibility](#visibility).
+本页讨论 [Visibility](#visibility)。
 
-## What is Visibility? {#visibility}
+<a id="visibility"></a>
+## Visibility 是什么？ {#visibility}
 
-The term [Visibility](/visibility), within the Temporal Platform, refers to the subsystems and APIs that enable an operator to view, filter, and search for Workflow Executions that currently exist within a Temporal Service.
+Temporal 平台中的术语 [Visibility](/visibility) 是指使操作员能够查看、过滤和搜索当前存在于 Temporal 服务中的 Workflow Execution 的子系统和 API。
 
-The [Visibility store](/self-hosted-guide/visibility) in your Temporal Service stores persisted Workflow Execution Event History data and is set up as a part of your [Persistence store](/temporal-service/persistence) to enable listing and filtering details about Workflow Executions that exist on your Temporal Service.
+Temporal 服务中的 [Visibility 商店](/self-hosted-guide/visibility) 存储持久的 Workflow Execution Event History 数据，并设置为 [持久性存储](/temporal-service/persistence) 的一部分，以启用列出和过滤有关 Temporal 服务中存在的 Workflow Execution 的详细信息。
 
-- [How to set up a Visibility store](/self-hosted-guide/visibility)
+- [如何开设 Visibility 商店](/self-hosted-guide/visibility)
 
-With Temporal Server v1.21, you can set up [Dual Visibility](/dual-visibility) to migrate your Visibility store from one database to another.
+使用 Temporal Server v1.21，您可以设置 [双 Visibility](/dual-visibility) 将 Visibility 存储从一个数据库迁移到另一个数据库。
 
-Support for separate standard and advanced Visibility setups will be deprecated from Temporal Server v1.21 onwards.
-Check [Supported databases](/self-hosted-guide/visibility) for updates.
+从 Temporal Server v1.21 开始，将不再支持单独的标准和高级 Visibility 设置。
+检查 [支持的数据库](/self-hosted-guide/visibility) 中的 Update。

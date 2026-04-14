@@ -1,0 +1,111 @@
+---
+id: safe-deployments
+title: 安全部署对 Workflow 代码的更改
+description: 在部署到生产环境之前，首先验证确定性错误，安全地部署对现有 Workflow 代码的更改。
+sidebar_label: 安全部署
+toc_max_heading_level: 3
+tags:
+  - Workflows
+  - Deployment
+  - Replay
+---
+
+安全地更改现有 Workflow 代码需要小心。您的 Workflow 代码（与 Activity 代码相反）必须是[确定性](/Workflow-definition#definition-constraints)。这意味着您对该代码的更改也必须如此。对符合非确定性资格的 Workflow 代码的更改需要通过使用 [Worker 版本控制](/生产部署/Worker-deployments/Worker-versioning) 将 Workflow 固定到特定代码修订版，或使用 [修补Workflow 代码中的 API](/Workflow-definition#Workflow-versioning)。
+
+:::note
+我们强烈建议使用 Worker 版本控制，因为用户在采用它时会发现错误率得到了改善。
+:::
+
+在本文中，我们将提供一些关于如何安全地验证对 Workflow 代码的更改的建议，确保您在部署这些更改时不会在生产中遇到意外的非确定性错误。
+
+:::caution
+Eager start 不尊重 Worker 版本控制。急切启动的 Workflow 可以在任何可用的本地 Worker 上运行，即使该 Worker 不是其 Worker 部署的当前版本或渐变版本。
+:::
+
+## 在部署之前和期间使用重放测试
+
+验证代码在部署后不会导致非确定性错误的最佳方法是使用[重放测试](/Workflow-execution#replay)。
+
+重放测试采用针对先前版本的 Workflow 代码运行的一个或多个现有 [Workflow 历史记录](/Workflow-execution/event#event-history)，并针对您的_当前_ Workflow 代码运行它们，验证它是否与提供的历史记录兼容。
+
+对于 Worker 版本控制，您可能有一个[固定的 Workflow](/Worker-versioning#pinned)，您要切换到[当前的 Worker 部署版本](/Worker-versioning#versioning-definitions)，并且您希望确保更改不会引入非确定性错误。或者您可能想要对其运行自动测试以确保部署不会触发错误的[自动升级 Workflow](/Worker-versioning#auto-upgrade)。
+
+在您的开发生命周期中有多个点运行重播测试是有意义的。它们存在于一个范围内，一方面反馈时间最短，另一方面最具代表性的生产部署。
+
+- 在开发过程中，重播测试可以让您尽早获得有关您的更改是否兼容的反馈。例如，您可能会包含一些针对 Temporal 测试服务器运行 Workflow 的集成测试，以生成您随后签入的历史记录。您可以使用这些签入的历史记录进行重播测试，以验证您是否未进行重大更改。
+- 在部署前验证期间（例如在某些自动部署验证期间），您可以在更具代表性的环境中获得反馈。例如，您可以从实时 Temporal 环境（无论是生产环境还是某种预生产环境）获取历史记录，并在重放测试中使用它们。
+- 在部署时，您的环境是生产环境，但您正在使用新代码来重播最近的真实 Workflow 历史记录。
+
+当您对 Workflow 代码进行更改时，您可以从预生产或生产 Temporal 环境中获取一些代表性历史记录，并验证它们是否适用于您的更改。您可以对预合并 CI 管道执行相同的操作。但是，如果您使用加密的有效负载（这是生产中的典型且推荐的设置），您可能无法解密获取的历史记录。
+
+此外，如果您的 Workflow 包含任何 PII（应加密），请确保出于测试目的而删除此信息，否则请谨慎行事，不要使用此方法。
+考虑到这一限制，我们将重点关注如何使用新的 Workflow 代码在 Worker 的生产部署中执行重放测试。无论您选择何时进行重放测试，其核心都是相同的，因此您可以将此处的一些经验教训应用到开发过程的早期阶段。
+
+## 实施部署时重放测试
+
+成功安全部署的关键是将其分为两个阶段：验证阶段，您将运行重播测试，然后实际部署新的 Worker 代码。
+
+您可以通过使用一些代码包装 Worker 应用程序来实现此目的，这些代码可以选择它是在验证模式还是在生产模式下运行。如果您不将 Worker 与其他应用程序代码并行部署，则最容易完成此操作（这是推荐的最佳实践）。如果您确实将 Worker 部署为其他应用程序的一部分，则可能需要专门分离出一个不同的入口点以进行验证。
+
+### 使用相同的代码运行重播和真实的 Worker
+
+以下代码演示了如何使用相同的入口点通过重放测试来验证新代码，或实际运行 Worker。
+
+```python
+import argparse
+import asyncio
+from datetime import datetime, timedelta
+
+from temporalio.client import Client
+from temporalio.worker import Worker, Replayer
+
+async def main():
+    parser = argparse.ArgumentParser(prog='MyTemporalWorker')
+    parser.add_argument('mode', choices=['verify', 'run'])
+    args = parser.parse_args()
+
+    temporal_url = "localhost:7233"
+    task_queue = "your-task-queue"
+    my_workflows = [YourWorkflow]
+    my_activities = [your_activity]
+
+    client = await Client.connect(temporal_url)
+```
+
+到目前为止，一切都是标准的。您导入 Workflow 和 Activity 代码，实例化具有两种模式的解析器，并创建 Task Queue、Workflow 和 Activity。
+
+您可以从代码中的任何适当位置传入“args.mode”。如果模式设置为“验证”，则通过指定要测试的时间段并传入与该时间段相对应的 Workflow 来进行重放测试。请注意，Workflow 使用 [`map_histories()` 函数](https://python.Temporal.io/Temporalio.client.WorkflowExecutionAsyncIterator.html#map_histories) 作为历史记录使用。
+
+```python
+if args.mode == 'verify':
+    start_time = (datetime.now() - timedelta(hours=10)).isoformat(timespec='seconds')
+    workflows = client.list_workflows(
+     f"TaskQueue={task_queue} and StartTime > '{start_time}'",
+    limit = 100)
+    histories = workflows.map_histories()
+    replayer = Replayer(
+        workflows=my_workflows,
+    )
+    await replayer.replay_workflows(histories)
+    return
+```
+
+如果任何 Workflow 无法重播，则会抛出错误。如果没有发生错误，您可以在此处成功返回以指示成功，或者与您定义的端点通信以指示验证成功或失败。您可以切换到“运行”模式，并将 Worker 转换为真正的 Worker，它将开始从 Task Queue 拉取并处理 Workflow：
+
+```python
+    else:
+        worker = Worker(
+            client,
+            task_queue=task_queue,
+            workflows=my_workflows,
+            activities=my_activities,
+        )
+        await worker.run()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### 使用多模式 Worker
+
+使用此双模式 Worker 最直接的方法是在部署过程开始时在验证模式下部署它的一个实例，查看它是否通过，然后继续在运行模式下部署新 Worker 的其余部分。

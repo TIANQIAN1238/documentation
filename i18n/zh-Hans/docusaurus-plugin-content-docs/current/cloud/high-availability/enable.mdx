@@ -1,0 +1,175 @@
+---
+id: enable
+title: 启用高可用性
+sidebar_label: 启用高可用性
+slug: /cloud/high-availability/enable
+description: 开始使用 HA 功能
+---
+
+import { ToolTipTerm } from '@site/src/components';
+
+您可以通过添加新的或现有的 Namespace 来启用 [高可用性](/cloud/high-availability) 功能
+复制品。添加副本时，Temporal Cloud 开始异步复制正在进行的和现有的 Workflow
+处决。
+
+副本区域必须与主区域位于同一大陆。因此，并非所有复制选项在所有 Temporal Cloud 区域都可用。请参阅[服务区域](/cloud/regions) 页面，了解每个活动区域支持的副本区域。
+
+将专用网络连接与 HA Namespace 结合使用需要额外的设置。参见
+[HA 连接](/cloud/high-availability/ha-connectivity)。
+
+复制和启用高可用性功能需要付费。有关定价详情，请访问
+Temporal Cloud 的[定价](/cloud/pricing) 页面。
+
+## 创建具有高可用性功能的 Namespace {#create}
+
+要创建具有高可用性功能的新 Namespace，您可以使用 Temporal Cloud UI 或 tcld 命令行
+实用性。
+
+<Tabs>
+
+<TabItem value="webui" label="Web UI">
+
+1. 在 Web 浏览器中访问 Temporal Cloud。
+    1. 在创建 Namespace 期间，指定 Namespace 的主 [区域](/cloud/regions)。
+    1. 选择“添加副本”。
+    1. 选择副本的[区域](/cloud/regions)。
+
+Web 界面将显示复制完成的预计时间。
+    这个时间取决于您的选择以及 Namespace 中 Workflow 的尺寸和规模。
+
+</TabItem>
+
+<TabItem value="tcldcli" label="tcld">
+
+在命令行中输入：
+
+```
+tcld namespace create \
+   --namespace <namespace_id>.<account_id> \
+   --region <primary_region> \
+   --region <replica_region>
+```
+
+将[区域代码](/cloud/regions)指定为两个“--region”标志的参数。
+
+如果使用带有“--api-key”标志的 API 密钥身份验证，则必须将其直接添加到 tcld 命令之后和之前
+`Namespace 创建`。
+
+</TabItem>
+
+</Tabs>
+
+一旦您的 Namespace 副本可供使用，Temporal Cloud 就会向所有 Namespace 管理员发送电子邮件警报。
+
+## 为现有 Namespace 添加高可用性 {#upgrade}
+
+创建 Namespace 后可以添加副本。
+
+<Tabs>
+
+<TabItem value="webui" label="Web UI">
+
+1. 在 Web 浏览器中访问 Temporal Cloud Namespaces。
+1. 导航至Namespace详细信息页面。
+1. 选择“添加副本”按钮。
+1. 选择副本的[区域](/cloud/regions)。
+
+Web 界面将显示复制完成的预计时间。这次取决于您的选择和
+Namespace 中 Workflow 的尺寸和比例。
+
+一旦您的 Namespace 副本可供使用，Temporal Cloud 就会向所有 Namespace 管理员发送电子邮件警报。
+
+</TabItem>
+
+<TabItem value="tcldcli" label="tcld">
+
+在命令行中输入：
+
+```
+tcld namespace add-region \
+   --namespace <namespace_id>.<account_id> \
+   --region <replica_region>
+```
+
+指定要在其中创建副本的区域的区域名称（例如“us-east-1”）作为参数
+`--region` 标志。有关可用区域名称，请参阅[区域](/cloud/regions)。
+
+如果使用带有“--api-key”标志的 API 密钥身份验证，则必须将其直接添加到 tcld 命令之后和之前
+`Namespace 添加区域`。
+
+一旦您的 Namespace 可供使用，Temporal Cloud 就会发送电子邮件警报。
+
+</TabItem>
+
+</Tabs>
+
+## 更改副本位置 {#change}
+
+Temporal Cloud 无法直接更改副本位置。要更改副本的位置，您需要删除副本
+并添加一个新的。
+
+:::caution
+
+我们不鼓励更改已部署应用程序的副本位置，除非在特殊情况下。
+如果删除副本，您将失去 Namespace 的可用性保证，并且可能需要一些时间来添加另一个副本
+复制品。
+
+如果从某个区域中删除副本，则必须等待 7 天才能在该区域中重新启用高可用性 (HA)
+相同的位置。在此期间，您可以向其他区域添加副本，前提是您还没有副本
+过去 7 天内。
+
+:::
+
+请按照以下步骤更改副本位置：
+
+1. [删除您的副本](#disable)。这会禁用 Namespace 的高可用性。
+2. [添加新副本](#upgrade) 到您的 Namespace。
+
+当您的 Namespace 可供使用时，您将收到一封电子邮件提醒。
+
+## 禁用高可用性（删除副本）{#disable}
+
+要禁用 Namespace 上的高可用性功能，请从该 Namespace 中删除副本。删除副本
+禁用所有高可用性功能：
+
+- 停止在 Namespace 中复制 Workflow。
+- 禁用 Namespace 触发故障转移到不同区域或云的能力。
+- 结束高可用性费用。
+
+:::caution
+
+删除 Namespace 的副本后，您在 7 天内无法将新副本添加到同一区域。
+在此期间，您仍然可以将副本添加到任何其他区域。
+
+:::
+
+请按照以下步骤从 Namespace 中删除副本：
+
+<Tabs>
+
+<TabItem value="webui" label="Web UI">
+
+帐户所有者和全局管理员角色自动拥有帐户中所有 Namespace 的 Namespace 管理员权限，
+并且在不删除角色的情况下无法撤销这些权限。开发人员可以创建 Namespace，并拥有 Namespace
+他们创建的每个 Namespace 的管理员权限。该权限可以被撤销。开发者角色也没有
+自动访问他们未创建的 Namespace。
+
+</TabItem>
+
+<TabItem value="tcldcli" label="tcld">
+
+运行以下命令来删除副本：
+
+```
+tcld namespace delete-region \
+    --api-key <api_key> \
+    --namespace <namespace_id>.<account_id> \
+    --region <replica_region_name>
+```
+
+有关可用区域名称，请参阅[区域](/cloud/regions)。
+
+</TabItem>
+
+</Tabs>
+

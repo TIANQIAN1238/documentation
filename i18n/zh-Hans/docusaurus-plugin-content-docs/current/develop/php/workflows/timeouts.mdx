@@ -1,0 +1,73 @@
+---
+id: timeouts
+title: Workflow 超时 - PHP SDK
+sidebar_label: 超时
+description: 使用 Temporal PHP SDK 优化 Workflow Execution - 有效设置 Workflow 超时和重试策略。
+toc_max_heading_level: 4
+keywords:
+  - PHP
+  - failure detection
+  - timeouts
+tags:
+  - Activities
+  - Workflows
+  - Errors
+  - Failures
+  - PHP SDK
+  - Temporal SDKs
+---
+
+## Workflow 超时 {#Workflow-超时}
+
+每个 Workflow 超时控制 Workflow Execution 不同方面的最大持续时间。
+
+在继续之前，我们要注意，我们通常不建议设置 Workflow 超时，因为 Workflow 被设计为长期运行且具有弹性。
+相反，设置超时可能会限制其处理意外延迟或长时间运行的进程的能力。
+如果您需要在特定时间段后在 Workflow 内执行操作，我们建议使用 Timer。
+
+Workflow 超时在[启动 Workflow Execution](#Workflow-超时)时设置。
+
+- **[Workflow Execution Timeout](/encyclopedia/Detecting-Workflow-failures#Workflow-execution-timeout)** - 限制单个 Workflow Execution 可以执行的最长时间。
+- **[Workflow 运行超时](/encyclopedia/Detecting-Workflow-failures#Workflow-run-timeout)：**限制单次 Workflow 运行可以持续的最长时间。
+- **[Workflow Task 超时](/encyclopedia/Detecting-Workflow-failures#Workflow-task-timeout)：** 限制 Worker 可以执行 Workflow Task 的最长时间。
+
+在客户端代码中创建“WorkflowOptions”实例并设置超时。
+
+可用的超时有：
+
+- `withWorkflowExecutionTimeout()`
+- `withWorkflowRunTimeout()`
+- `withWorkflowTaskTimeout()`
+
+```php
+$workflow = $this->workflowClient->newWorkflowStub(
+    DynamicSleepWorkflowInterface::class,
+    WorkflowOptions::new()
+        ->withWorkflowId(DynamicSleepWorkflow::WORKFLOW_ID)
+        ->withWorkflowIdReusePolicy(WorkflowIdReusePolicy::WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE)
+        // Set Workflow Timeout duration
+        ->withWorkflowExecutionTimeout(CarbonInterval::minutes(2))
+        // ->withWorkflowRunTimeout(CarbonInterval::minute(2))
+        // ->withWorkflowTaskTimeout(CarbonInterval::minute(2))
+);
+```
+
+异步XPROT028X完成
+
+Retry Policy 可以与超时配合，提供精细控制以优化执行体验。
+
+如果发生故障，请使用 [Retry Policy](/encyclopedia/retry-policies) 重试 Workflow Execution。
+
+默认情况下，Workflow Execution 不会重试，并且仅在某些情况下才应将重试策略与 Workflow Execution 一起使用。
+
+Retry Policy 可以使用“RetryOptions”对象的实例进行配置。
+要启用 Workflow 的重试，您需要通过“ChildWorkflowOptions”（对于 Child Workflow）或通过“WorkflowOptions”（对于顶级 Workflow）提供 Retry Policy 对象。
+
+```php
+$workflow = $this->workflowClient->newWorkflowStub(
+      CronWorkflowInterface::class,
+      WorkflowOptions::new()->withRetryOptions(
+        RetryOptions::new()->withInitialInterval(120)
+      )
+);
+```

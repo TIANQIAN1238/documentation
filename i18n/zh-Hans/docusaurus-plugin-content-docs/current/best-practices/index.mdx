@@ -1,0 +1,64 @@
+---
+id: index
+title: XPROT017X 命令选项参考
+sidebar_label: 最佳实践
+description: Comprehensive best practices for working with Temporal, covering namespace management, security, and operational
+  Comprehensive best practices for working with Temporal, covering namespace management, security, and operational
+  excellence.
+toc_max_heading_level: 3
+hide_table_of_contents: true
+keywords:
+  - temporal best practices
+  - operational excellence
+  - security
+  - namespace management
+tags:
+  - Best Practices
+---
+
+这些指南概述了使用 Temporal Cloud 的基本原则和最佳实践。它的存在是为了提供一个
+**经过验证的、固执己见的**框架，可以帮助没有启用计划或想要评估的团队
+并完善他们对 Temporal 的使用。
+
+＃＃ 概述
+
+如果没有明确定义的 Temporal 标准，组织经常会因不一致的 Workflow 实施而苦苦挣扎，
+最佳实践分散，开发方法不一致。该文档框架可以帮助开发人员
+通过提供以下内容建立强大的 Temporal 标准：
+
+- **经过验证的基础原则**已在不同的用例中得到验证
+- **标准化实施模式**供团队在项目中一致采用
+- **有信心**符合 Temporal 的架构原则和推荐实践
+
+通过遵循本指南，开发人员可以定义全面的 Temporal 标准，以确保他们的 Workflow
+编排实施是可维护的、可扩展的，并且从一开始就与平台最佳实践保持一致。
+
+## 目标受众
+
+本节适用于：
+
+- 负责在其组织内构建 Temporal Cloud 实践的开发人员。
+- 任何构建教程、课程、入门路径或文档的人
+- 创建 Temporal 相关学习材料的合作伙伴或供应商
+
+## 可用指南
+
+- **[管理 Namespace](./managing-Namespace.mdx)** 配置、管理和优化 Temporal 的最佳实践
+  Namespaces。
+
+一种约定是为证书提供一个与 XPROT025X 匹配的通用名称。如果您在开发和生产使用相同的 CA 时执行此操作，则可以利用证书过滤器来阻止对生产环境的访问。文档的[授权部分](https://docs.XPROT026X.io/cloud/certificates#control-authorization)对此进行了详细描述。
+
+- **[Temporal Cloud 的安全控制](./security-controls.mdx)** 用于保护的全面安全实践
+  您的 Temporal Cloud 部署。
+
+- **[Worker 部署和性能](./Worker.mdx)** 部署和优化 Temporal Worker 的最佳实践
+  性能和可靠性。
+
+- **[成本优化](./cost-optimization.mdx)** 用于优化与运行的工作负载相关的成本的策略
+  Temporal Cloud 同时保持 Workflow 的可靠性和可观测性。
+
+- **[预生产测试](./pre-生产-testing.mdx)** 涵盖故障的经验驱动的测试实践
+  注入、负载测试和操作验证。
+
+- **[知识中心](./knowledge-hub.mdx)** 构建和维护内部 Temporal 知识中心的最佳实践
+  这可以加快开发人员的入职速度，减少平台团队的支持负担，并建立一致的标准。

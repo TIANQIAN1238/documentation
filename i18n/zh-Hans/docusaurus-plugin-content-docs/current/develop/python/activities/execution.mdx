@@ -1,0 +1,152 @@
+---
+id: execution
+title: Activity 执行 - Python SDK
+description: 展示如何使用 Python SDK 执行 Activity
+sidebar_label: Activity执行
+slug: /develop/python/activities/execution
+toc_max_heading_level: 3
+tags:
+  - Python SDK
+  - Temporal SDKs
+  - Activity
+---
+
+## 启动 Activity 执行 {#Activity-execution}
+
+**如何使用 Temporal Python SDK 启动 Activity 执行。**
+
+对生成 [Activity 执行](/Activity-执行) 的调用写入
+[Workflow Definition]（/Workflow-定义）。调用生成 Activity 执行会生成
+[ScheduleActivityTask](/references/commands#ScheduleActivitytask) 命令。这导致了三个集合
+[Activity 任务](/tasks#Activity-task) 相关事件 ([ActivityTaskScheduled](/references/events#ActivitytaskScheduled),
+Workflow Execution 事件中的 [ActivityTaskStarted](/references/events#Activitytaskstarted) 和 ActivityTask[Closed])
+历史。
+
+活动实现的单个实例在多个同时的 Activity 调用之间共享。 Activity
+实现代码应该是_幂等的_。
+
+通过调用参数传递给 Activity 的值或通过结果值返回的值都记录在
+执行历史记录。当执行时，整个执行历史记录将从 Temporal 服务传输到 Workflow Workers
+Workflow状态需要恢复。因此，大量执行历史记录可能会对 Workflow 的性能产生不利影响。
+
+因此，请注意通过 Activity 调用参数或返回值传输的数据量。
+除此之外，Activity 实现不存在其他限制。
+
+要生成 Activity 执行，请使用
+[`execute_Activity()`](https://python.Temporal.io/Temporalio.Workflow.html#execute_Activity) 从您的内部进行操作
+Workflow Definition。
+
+`execute_Activity()` 是一个快捷方式
+[`start_Activity()`](https://python.Temporal.io/Temporalio.Workflow.html#start_Activity) 等待其结果。
+
+要分别获取等待和取消的句柄，请使用“start_Activity()”。在大多数情况下，使用“execute_Activity()”
+除非需要高级任务能力。
+
+Activity 的一个参数是位置参数。类型安全形式不支持多个参数
+`start_Activity()` 或 `execute_Activity()` 必须由 `args` 关键字参数提供。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/your_app/your_Workflows_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    from your_activities_dacx import your_activity
+    from your_dataobject_dacx import YourParams
+# ...
+@workflow.defn(name="YourWorkflow")
+class YourWorkflow:
+    @workflow.run
+    async def run(self, name: str) -> str:
+        return await workflow.execute_activity(
+            your_activity,
+            YourParams("Hello", name),
+            start_to_close_timeout=timedelta(seconds=10),
+        )
+```
+
+### 设置所需的 Activity 超时 {#required-timeout}
+
+{/* SNIPSTART python-plugin-Activity */}
+[features/snippets/plugins/plugins.py](https://github.com/Temporalio/features/blob/main/features/snippets/plugins/plugins.py)
+
+Activity 执行语义依赖于多个参数。唯一需要设置的值是
+[Schedule-关闭超时](/encyclopedia/Detecting-Activity-failures#Schedule-to-close-timeout) 或
+[开始到关闭超时](/encyclopedia/Detecting-Activity-failures#start-to-close-timeout)。这些值设置在
+Activity 选项。
+
+Activity 选项在 Activity 参数之后设置为关键字参数。
+
+可用的超时有：
+
+- Schedule_to_close_timeout
+- Schedule_to_start_timeout
+- 开始到关闭超时
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/Activity_timeouts_retires/your_Workflows_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+# ...
+        activity_timeout_result = await workflow.execute_activity(
+            your_activity,
+            YourParams(greeting, "Activity Timeout option"),
+            # Activity Execution Timeout
+            start_to_close_timeout=timedelta(seconds=10),
+            # schedule_to_start_timeout=timedelta(seconds=10),
+            # schedule_to_close_timeout=timedelta(seconds=10),
+        )
+```
+
+### 获取 Activity 执行的结果 {#get-Activity-results}
+
+**如何使用 Temporal Python SDK 获取 Activity 执行的结果。**
+
+调用生成 [Activity Execution](/Activity-execution) 会生成
+[ScheduleActivityTask](/references/commands#ScheduleActivitytask) 命令并为 Workflow 提供 Awaitable。
+Workflow Execution 可以阻止进度，直到通过 Awaitable 获得结果为止，或者继续
+取得进展，并在结果可用时加以利用。
+
+使用 [`start_Activity()`](https://python.Temporal.io/Temporalio.Workflow.html#start_Activity) 启动 Activity 并
+返回其句柄，[`ActivityHandle`](https://python.Temporal.io/Temporalio.Workflow.ActivityHandle.html)。使用
+[`execute_Activity()`](https://python.Temporal.io/Temporalio.Workflow.html#execute_Activity) 返回结果。
+
+您必须提供“Schedule_to_close_timeout”或“start_to_close_timeout”。
+
+`execute_Activity()` 是 `await start_Activity()` 的快捷方式。提供了异步 `execute_Activity()` 帮助程序
+它采用与结果上的“start_Activity()”和“await”相同的参数。 `execute_Activity()` 应该用于
+大多数情况下，除非需要高级任务能力。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/your_app/your_Workflows_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    from your_activities_dacx import your_activity
+    from your_dataobject_dacx import YourParams
+# ...
+@workflow.defn(name="YourWorkflow")
+class YourWorkflow:
+    @workflow.run
+    async def run(self, name: str) -> str:
+        return await workflow.execute_activity(
+            your_activity,
+            YourParams("Hello", name),
+            start_to_close_timeout=timedelta(seconds=10),
+        )
+```

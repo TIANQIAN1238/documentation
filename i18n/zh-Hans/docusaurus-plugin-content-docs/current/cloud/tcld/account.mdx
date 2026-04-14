@@ -1,0 +1,617 @@
+---
+id: account
+title: tcld账户命令参考
+sidebar_label: 帐户
+description: 使用 tcld 命令管理 Temporal Cloud 帐户。获取帐户详细信息，配置和管理指标端点，并使用各种命令有效地处理最终实体证书。
+slug: /cloud/tcld/account
+toc_max_heading_level: 4
+keywords:
+  - cli reference
+  - tcld
+tags:
+  - Temporal Cloud
+  - tcld
+  - Accounts
+---
+
+`tcld account` 命令管理 Temporal Cloud 中的帐户。
+
+别名：`a`
+
+- [tcld 帐户审核日志](#audit-log)
+- [tcld账户获取](#get)
+- [tcld 帐户列表区域](#list-regions)
+- [tcld 账户指标](#metrics)
+
+## 审计日志
+
+“tcld 帐户审核日志”命令管理 Temporal Cloud 中的审核日志。
+
+别名：`al`
+
+- [tcld 帐户审核日志 kinesis](#kinesis)
+- [tcld 帐户审核日志 pubsub](#pubsub)
+
+### 运动
+
+“tcld accountaudit-log kinesis”命令管理 Kinesis 审计日志接收器。
+
+别名：`k`
+
+- [tcld 帐户审核日志 kinesis 创建](#create)
+- [tcld 帐户审核日志 kinesis 删除](#delete)
+- [tcld 帐户审核日志 kinesis 获取](#account-audit-log-kinesis-get)
+- [tcld 帐户审核日志 kinesis 列表](#list)
+- [tcld 帐户审核日志 kinesis Update](#Update)
+- [tcld 帐户审核日志 kinesis 验证](#validate)
+
+＃＃＃＃ 创造
+
+“tcld accountaudit-log kinesis”命令创建 Kinesis 审计日志接收器。
+
+别名：`c`
+
+##### --目标 uri
+
+审核日志接收器的目标 URI。
+
+别名：`杜`
+
+指定证书的有效期限。
+将值的格式设置为 d/h（例如，“30d10h”表示证书持续 30 天 10 小时）。
+
+用于请求的区域。
+
+别名：`re`
+
+##### --角色名称
+
+用于写入接收器的角色名称。
+
+别名：`rn`
+
+部署两组 XPROT017Xents：一组指向 XPROT005X，一组指向云 XPROT025X 端点。这个
+是推荐的选项，因为您的 XPROT027X 在移交过程中将继续取得进展，即使您的云
+XPROT017Xent 无法访问云（例如由于配置错误）。流程如下：
+
+提供水槽的名称。
+
+＃＃＃＃ 删除
+
+“tcld accountaudit-log kinesisdelete”命令删除审计日志接收器。
+
+别名：`d`
+
+##### --资源版本
+
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
+
+别名：`v`
+
+##### --接收器名称
+
+提供水槽的名称。
+
+#### 获取 {#account-audit-log-kinesis-get}
+
+“tcld accountaudit-log kinesis get”命令获取审计日志接收器。
+
+别名：`g`
+
+##### --接收器名称
+
+提供水槽的名称。
+
+＃＃＃＃ 列表
+
+“tcld accountaudit-log kinesis list”命令列出帐户上的审计日志接收器。
+
+别名：`l`
+
+##### --页面大小
+
+列表操作的页面大小。
+
+##### --页面令牌
+
+用于列表操作的页面令牌。
+
+#### Update
+
+“tcld 帐户审核日志 kinesis Update”命令 Update 是审核日志接收器。
+
+别名：`u`
+
+##### --目标 uri
+
+审核日志接收器的目标 URI。
+
+别名：`杜`
+
+##### --启用
+
+接收器是否启用。
+
+＃＃＃＃＃  - 地区
+
+用于请求的区域。
+
+别名：`re`
+
+##### --资源版本
+
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
+
+别名：`v`
+
+##### --角色名称
+
+用于写入接收器的角色名称。
+
+别名：`rn`
+
+##### --接收器名称
+
+提供水槽的名称。
+
+＃＃＃＃ 证实
+
+“tcld 帐户审计日志 kinesis validate”命令验证 Temporal Cloud 是否可以写入 Kinesis 接收器。
+
+别名：`v`
+
+##### --目标 uri
+
+审核日志接收器的目标 URI。
+
+别名：`杜`
+
+＃＃＃＃＃  - 地区
+
+用于请求的区域。
+
+别名：`re`
+
+##### --角色名称
+
+用于写入接收器的角色名称。
+
+别名：`rn`
+
+##### --接收器名称
+
+提供水槽的名称。
+
+### 发布订阅
+
+`tcld accountaudit-log pubsub`命令管理 Pub/Sub 审核日志接收器。
+
+别名：`ps`
+
+- [tcld 帐户审核日志 pubsub 创建](#create)
+- [tcld 帐户审核日志 pubsub 删除](#delete)
+- [tcld 帐户审核日志 pubsub 获取](#account-audit-log-pubsub-get)
+- [tcld 帐户审核日志 pubsub 列表](#list)
+- [tcld 帐户审核日志 pubsub Update](#Update)
+- [tcld 帐户审核日志 pubsub 验证](#validate)
+
+＃＃＃＃ 创造
+
+`tcld accountaudit-log pubsub`命令创建一个 Pub/Sub 审核日志接收器。
+
+别名：`c`
+
+##### --服务帐户电子邮件
+
+模拟写入接收器的服务帐户电子邮件。
+
+别名：`sae`
+
+##### --接收器名称
+
+提供水槽的名称。
+
+##### --主题名称
+
+要写入接收器的主题名称。
+
+别名：`tn`
+
+＃＃＃＃ 删除
+
+`tcld accountaudit-log pubsubdelete`命令删除审核日志接收器。
+
+别名：`d`
+
+##### --资源版本
+
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
+
+别名：`v`
+
+##### --接收器名称
+
+提供水槽的名称。
+
+#### 获取 {#account-audit-log-pubsub-get}
+
+“tcld accountaudit-log pubsub get”命令获取审核日志接收器。
+
+别名：`g`
+
+##### --接收器名称
+
+提供水槽的名称。
+
+＃＃＃＃ 列表
+
+“tcld accountaudit-log pubsub list”命令列出帐户上的审计日志接收器。
+
+别名：`l`
+
+##### --页面大小
+
+列表操作的页面大小。
+
+##### --页面令牌
+
+用于列表操作的页面令牌。
+
+#### Update
+
+“tcld 帐户审核日志 pubsub Update”命令 Update 是审核日志接收器。
+
+别名：`u`
+
+##### --启用
+
+接收器是否启用。
+
+##### --资源版本
+
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
+
+别名：`v`
+
+##### --服务帐户电子邮件
+
+模拟写入接收器的服务帐户电子邮件。
+
+别名：`sae`
+
+##### --接收器名称
+
+提供水槽的名称。
+
+##### --主题名称
+
+要写入接收器的主题名称。
+
+别名：`tn`
+
+＃＃＃＃ 证实
+
+“tcld 帐户审核日志 pubsub 验证”命令验证 Temporal Cloud 是否可以写入 Pub/Sub 接收器。
+
+别名：`v`
+
+##### --服务帐户电子邮件
+
+模拟写入接收器的服务帐户电子邮件。
+
+别名：`sae`
+
+##### --接收器名称
+
+提供水槽的名称。
+
+##### --主题名称
+
+要写入接收器的主题名称。
+
+别名：`tn`
+
+＃＃ 得到
+
+“tcld account get”命令获取有关您登录的 Temporal Cloud 帐户的信息。
+
+别名：`g`
+
+`tcld账户获取`
+
+该命令没有修饰符。
+
+## 列表区域
+
+“tcld 帐户列表区域”列出了帐户可以配置 Namespace 的所有区域。
+
+别名：`l`
+
+## 指标
+
+“tcld 帐户指标”命令配置当前登录的 Temporal Cloud 帐户的指标端点。
+
+别名：`m`
+
+- [tcld 账户指标启用](#enable)
+- [tcld 帐户指标禁用](#disable)
+- [tcld 帐户指标已接受-客户端-ca](#accepted-client-ca)
+
+### 接受-客户端-ca
+
+“tcld 帐户指标接受-客户端-ca”命令管理当前登录的 Temporal Cloud 帐户的指标端点的最终实体证书。
+
+:::info
+
+指标端点的最终实体证书必须链接到用于帐户的 CA 证书。有关更多信息，请参阅[证书要求](/cloud/certificates#certificate-requirements)。
+
+:::
+
+别名：`ca`
+
+- [tcld 帐户指标已接受-客户端-ca 添加](#add)
+- [tcld 帐户指标已接受-客户端-ca 列表](#list)
+- [tcld 帐户指标已接受-客户端-ca 集](#set)
+- [tcld 帐户指标已接受-客户端-ca 删除](#remove)
+
+＃＃＃＃ 添加
+
+“tcld 帐户指标接受-客户端-ca add”命令将终端实体证书添加到 Temporal Cloud 帐户的指标端点。
+
+:::info
+
+指标端点的最终实体证书必须链接到用于帐户的 CA 证书。有关更多信息，请参阅[证书要求](/cloud/certificates#certificate-requirements)。
+
+:::
+
+`tcld 帐户指标已接受-client-ca add --ca-certificate <值>`
+
+别名：`a`
+
+以下修饰符控制命令的行为。
+
+##### --请求 ID
+
+指定用于异步操作的请求标识符。如果未指定，服务器会分配一个请求标识符。
+
+别名：`-r`
+
+**例子**
+
+```bash
+tcld account metrics accepted-client-ca add --request-id <request_id> --ca-certificate <encoded_certificate>
+```
+
+##### --资源版本
+
+指定 Update 的资源版本 (ETag)。如果未指定，则使用最新版本。
+
+别名：`-v`
+
+**例子**
+
+```bash
+tcld account metrics accepted-client-ca add --resource-version <etag> --ca-certificate <encoded_certificate>
+```
+
+##### --ca 证书
+
+_必需的修饰符，除非指定了 `--ca-certificate-file` _
+
+指定 CA 证书 PEM 文件的 Base64 编码字符串。
+
+如果同时指定了“--ca-certificate”和“--ca-certificate-file”，则仅使用“--ca-certificate”。
+
+Alias: `-c`
+
+**Example**
+
+```bash
+tcld account metrics accepted-client-ca add --ca-certificate <encoded_certificate>
+```
+
+##### --ca-certificate-file
+
+_Required modifier unless `--ca-certificate` is specified_
+
+Specify a path to a CA certificate PEM file.
+
+If both `--ca-certificate` and `--ca-certificate-file` are specified, only `--ca-certificate` is used.
+
+Alias: `-f`
+
+**Example**
+
+```bash
+tcld account metrics accepted-client-ca add --ca-certificate-file <path>
+```
+
+#### list
+
+The `tcld account metrics accepted-client-ca list` command lists the end-entity certificates that are currently configured for the metrics endpoint of a Temporal Cloud account.
+
+`tcld account metrics accepted-client-ca list`
+
+Alias: `l`
+
+The command has no modifiers.
+
+#### remove
+
+The `tcld account metrics accepted-client-ca remove` command removes end-entity certificates from the metrics endpoint of a Temporal Cloud account.
+
+`tcld account metrics accepted-client-ca remove --ca-certificate <value>`
+
+Alias: `r`
+
+The following modifiers control the behavior of the command.
+
+##### --request-id
+
+Specify a request identifier to use for the asynchronous operation. If not specified, the server assigns a request identifier.
+
+Alias: `-r`
+
+**Example**
+
+```bash
+tcld account metrics accepted-client-ca remove --request-id <request_id> --ca-certificate <encoded_certificate>
+```
+
+##### --resource-version
+
+Specify a resource version (ETag) to Update from. If not specified, the latest version is used.
+
+Alias: `-v`
+
+**Example**
+
+```bash
+tcld account metrics accepted-client-ca remove --resource-version <etag> --ca-certificate <encoded_certificate>
+```
+
+##### --ca-certificate
+
+_Required modifier unless `--ca-certificate-fingerprint` or `--ca-certificate-file` is specified_
+
+Specify a base64-encoded string of a CA certificate PEM file.
+
+If `--ca-certificate-fingerprint` is also specified, both `--ca-certificate` and `--ca-certificate-file` are ignored.
+
+If `--ca-certificate-file` is also specified but `--ca-certificate-fingerprint` is not, only `--ca-certificate` is used.
+
+Alias: `-c`
+
+**Example**
+
+```bash
+tcld account metrics accepted-client-ca remove --ca-certificate <encoded_certificate>
+```
+
+##### --ca-certificate-file
+
+_Required modifier unless `--ca-certificate-fingerprint` or `--ca-certificate` is specified_
+
+Specify a path to a CA certificate PEM file.
+
+If `--ca-certificate-fingerprint` is also specified, both `--ca-certificate-file` and `--ca-certificate` are ignored.
+
+If `--ca-certificate` is also specified but `--ca-certificate-fingerprint` is not, only `--ca-certificate` is used.
+
+Alias: `-f`
+
+**Example**
+
+```bash
+tcld account metrics accepted-client-ca remove --ca-certificate-file <path>
+```
+
+##### --ca-certificate-fingerprint
+
+_Required modifier unless `--ca-certificate` or `--ca-certificate-file` is specified_
+
+Specify the fingerprint of a CA certificate.
+
+If `--ca-certificate`, `--ca-certificate-file`, or both are also specified, they are ignored.
+
+Alias: `--fp`
+
+**Example**
+
+```bash
+tcld account metrics accepted-client-ca remove --ca-certificate-fingerprint <fingerprint>
+```
+
+#### set
+
+The `tcld account metrics accepted-client-ca set` command sets the end-entity certificates for the metrics endpoint of a Temporal Cloud account.
+
+:::info
+
+The end-entity certificates for the metrics endpoint must chain up to the CA certificate used for the account. For more information, see [Certificate requirements](/cloud/certificates#certificate-requirements).
+
+:::
+
+`tcld account metrics accepted-client-ca set --ca-certificate <value>`
+
+Alias: `s`
+
+The following modifiers control the behavior of the command.
+
+##### --request-id
+
+Specify a request identifier to use for the asynchronous operation. If not specified, the server assigns a request identifier.
+
+Alias: `-r`
+
+**Example**
+
+```bash
+tcld account metrics accepted-client-ca set --request-id <request_id> --ca-certificate <encoded_certificate>
+```
+
+##### --resource-version
+
+Specify a resource version (ETag) to Update from. If not specified, the latest version is used.
+
+Alias: `-v`
+
+**Example**
+
+```bash
+tcld account metrics accepted-client-ca set --resource-version <etag> --ca-certificate <encoded_certificate>
+```
+
+##### --ca-certificate
+
+_Required modifier unless `--ca-certificate-file` is specified_
+
+Specify a base64-encoded string of a CA certificate PEM file.
+
+If both `--ca-certificate` and `--ca-certificate-file` are specified, only `--ca-certificate` is used.
+
+Alias: `-c`
+
+**Example**
+
+```bash
+tcld account metrics accepted-client-ca set --ca-certificate <encoded_certificate>
+```
+
+##### --ca-certificate-file
+
+_Required modifier unless `--ca-certificate` is specified_
+
+Specify a path to a CA certificate PEM file.
+
+If both `--ca-certificate` and `--ca-certificate-file` are specified, only `--ca-certificate` is used.
+
+Alias: `-f`
+
+**Example**
+
+```bash
+tcld account metrics accepted-client-ca set --ca-certificate-file <path>
+```
+
+### enable
+
+The `tcld account metrics enable` command enables the metrics endpoint for the Temporal Cloud account that is currently logged in.
+
+:::info
+
+The end-entity for the metrics endpoint _must_ be configured before the endpoint can be enabled. See the [tcld account metrics accepted-client-ca](#accepted-client-ca) commands.
+
+:::
+
+`tcld account metrics enable`
+
+The command has no modifiers.
+
+### disable
+
+The `tcld account metrics disable` command disables the metrics endpoint for the Temporal Cloud account that is currently logged in.
+
+`tcld account metrics disable`
+
+The command has no modifiers.

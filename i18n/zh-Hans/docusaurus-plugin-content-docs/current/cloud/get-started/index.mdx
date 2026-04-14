@@ -1,0 +1,82 @@
+---
+id: index
+title: 开始使用 Temporal Cloud
+sidebar_label: 开始使用
+slug: /cloud/get-started/
+description: Get started with Temporal Cloud. Sign up, verify your Account Owner or Global Admin role, set up authentication,
+  Get started with Temporal Cloud. Sign up, verify your Account Owner or Global Admin role, set up authentication,
+  create a Namespace, invite users, and connect your Temporal Client and Workers.
+toc_max_heading_level: 3
+keywords:
+  - introduction
+  - temporal cloud
+tags:
+  - Temporal Cloud
+  - Authentication
+  - API
+---
+
+import { DiscoverableDisclosure } from '@site/src/components';
+
+Temporal Cloud 入门涉及几个关键步骤：
+
+1. [注册Temporal Cloud](#sign-up-for-Temporal-cloud)
+1. [创建 Namespace](#create-a-Namespace)
+1. [设置您的客户端和 Workers](#set-up-your-clients-and-Workers)
+1. [运行您的第一个 Workflow](#run-your-first-Workflow)
+1. [邀请你的团队](#invite-your-team)
+
+## 注册 Temporal Cloud
+
+要创建 Temporal Cloud 帐户，您可以：
+
+- [直接]注册(https://Temporal.io/get-cloud)；或
+- 在 AWS Marketplace 订阅
+  [Temporal Cloud 即用即付](https://aws.amazon.com/marketplace/pp/prodview-xx2x66m6fp2lo)。通过以下方式注册
+  AWS Marketplace 类似于直接在 Temporal Cloud 网站上注册，但计费通过您的 AWS
+  帐户。
+- 要在 Google Cloud Marketplace 上购买 Temporal Cloud，请通过 sales@Temporal.io 联系我们的团队。
+
+有关 Temporal Cloud 定价的信息，请参阅我们的[定价页面](/cloud/pricing)。
+
+## 创建 Namespace
+
+请参阅[管理 Namespaces](/cloud/Namespaces#create-a-Namespace) 创建您的第一个 Namespace。
+
+Temporal Cloud 支持 [API 密钥](/cloud/api-keys) 或 [mTLS](/cloud/certificates) 身份验证
+Namespace。如果您不确定使用哪个，我们建议使用 [API 密钥](/cloud/api-keys)，因为它们更容易
+大多数团队的管理和轮换。如果您的组织已经拥有私钥基础设施 (PKI) 并且熟悉
+证书管理，那么[mTLS](/cloud/certificates)是一个很好的选择。
+
+## 设置您的客户端和 Worker
+
+### 生成 API 密钥
+
+- [在Go中连接到Temporal Cloud](/develop/go/client/Temporal-client#connect-to-Temporal-cloud)
+- [用Java连接到Temporal Cloud](/develop/java/client/Temporal-client#connect-to-Temporal-cloud)
+- [在Python中连接到Temporal Cloud](/develop/python/client/Temporal-client#connect-to-Temporal-cloud)
+- [在 TypeScript 中连接到 Temporal Cloud](/develop/typescript/client/Temporal-client#connect-to-Temporal-cloud)
+- [在.NET中连接到Temporal Cloud](/develop/dotnet/client/Temporal-client#connect-to-Temporal-cloud)
+- [在 PHP 中连接到 Temporal Cloud](/develop/php/client/Temporal-client#connect-to-Temporal-cloud)
+- [在 Ruby 中连接到 Temporal Cloud](/develop/ruby/client/Temporal-client#connect-to-Temporal-cloud)
+
+## 运行您的第一个 Workflow
+
+请参阅我们的指南，了解如何使用每个 SDK 启动 Workflow：
+
+- [在 Go 中启动 Workflow](/develop/go/client/Temporal-client#start-Workflow-execution)
+- [在Java中启动Workflow](/develop/java/client/Temporal-client#start-Workflow-execution)
+- [在Python中启动Workflow](/develop/python/client/Temporal-client#start-Workflow-execution)
+- [在 TypeScript 中启动 Workflow](/develop/typescript/client/Temporal-client#start-Workflow-execution)
+- [在.NET中启动Workflow](/develop/dotnet/client/Temporal-client#start-Workflow)
+- [在 PHP 中启动 Workflow](/develop/php/client/Temporal-client#start-Workflow-execution)
+- [在 Ruby 中启动 Workflow](/develop/ruby/client/Temporal-client#start-Workflow)
+
+## 邀请你的团队
+
+请参阅[管理用户](/cloud/users) 添加其他用户并为其分配角色。
+
+您还可以使用[服务帐户](/cloud/service-accounts)来表示机器身份。
+
+由于您在注册时创建了帐户，因此您的电子邮件地址是第一个
+您帐户的[帐户所有者](/cloud/manage-access/roles-and-permissions#account-level-roles)。

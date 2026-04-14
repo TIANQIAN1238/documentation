@@ -1,8 +1,8 @@
 ---
 id: workflow-execution
-title: Temporal Workflow Execution overview
-sidebar_label: Workflow Execution overview
-description: A Temporal Workflow Execution is a durable, reliable, and scalable function execution and the main unit of execution of a Temporal Application.
+title: "Temporal Workflow Execution 概述"
+sidebar_label: "Workflow Execution 概述"
+description: "Temporal Workflow Execution 是一种持久、可靠且可扩展的函数执行形式，也是 Temporal 应用的核心执行单元。"
 slug: /workflow-execution
 toc_max_heading_level: 4
 keywords:
@@ -15,190 +15,190 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-This page provides an overview of Workflow Execution:
+本页提供了 Workflow Execution 的概述：
 
-- [What is a Workflow Execution?](#workflow-execution)
+- [什么是 Workflow Execution？](#workflow-execution)
 - [Replay](#replay)
-- [Commands and awaitables](#commands-awaitables)
-- [What is a Command?](#command)
-- [Checking Workflow Execution Status](#workflow-execution-status)
-- [Workflow Execution Chain](#workflow-execution-chain)
+- [命令和等待](#commands-awaitables)
+- [什么是命令？](#command)
+- [检查Workflow Execution状态](#workflow-execution-status)
+- [Workflow Execution链](#workflow-execution-chain)
 - [Memo](#memo)
-- [State Transition](#state-transition)
+- [状态转换](#state-transition)
 
-## What is a Workflow Execution? {#workflow-execution}
+## 什么是Workflow Execution？ {#workflow-execution}
 
-While the Workflow Definition is the code that defines the Workflow, the Workflow Execution is created by executing that code.
-A Temporal Workflow Execution is a durable, reliable, and scalable function execution.
-It is the main unit of execution of a [Temporal Application](/temporal#temporal-application).
+虽然 Workflow Definition 是定义 Workflow 的代码，但 Workflow Execution 是通过执行该代码创建的。
+Temporal Workflow Execution 是持久、可靠且可扩展的功能执行。
+它是[Temporal应用程序](/temporal#temporal-application)的主要执行单元。
 
-- [How to start a Workflow Execution using temporal](/cli/workflow#start)
-- [How to start a Workflow Execution using the Go SDK](/develop/go/client/temporal-client#start-workflow-execution)
-- [How to start a Workflow Execution using the Java SDK](/develop/java/client/temporal-client#start-workflow-execution)
-- [How to start a Workflow Execution using the PHP SDK](/develop/php/client/temporal-client#start-workflow-execution)
-- [How to start a Workflow Execution using the Python SDK](/develop/python/client/temporal-client#start-workflow-execution)
+- [如何使用时间启动Workflow Execution](/cli/workflow#start)
+- [如何使用Go SDK启动Workflow Execution](/develop/go/client/temporal-client#start-workflow-execution)
+- [如何使用Java SDK启动Workflow Execution](/develop/java/client/temporal-client#start-workflow-execution)
+- [如何使用PHP SDK启动Workflow Execution](/develop/php/client/temporal-client#start-workflow-execution)
+- [如何使用Python SDK启动Workflow Execution](/develop/python/client/temporal-client#start-workflow-execution)
 - [How to start a Workflow Execution using the TypeScript SDK](/develop/typescript/client/temporal-client#start-workflow-execution)
-- [How to start a Workflow Execution using the .NET SDK](/develop/dotnet/client/temporal-client#start-workflow)
+- [如何使用.NET SDK启动Workflow Execution](/develop/dotnet/client/temporal-client#start-workflow)
 
-Each Temporal Workflow Execution has exclusive access to its local state.
-It executes concurrently to all other Workflow Executions, and communicates with other Workflow Executions through [Signals](/sending-messages#sending-signals) and the environment through [Activities](/activities).
-While a single Workflow Execution has limits on size and throughput, a Temporal Application can consist of millions to billions of Workflow Executions.
+每个 Temporal Workflow Execution 都可以独占访问其本地状态。
+它与所有其他 Workflow Execution 并发执行，并通过 [Signals](/sending-messages#sending-signals) 与其他 Workflow Execution 通信，并通过 [活动](/activities) 与环境通信。
+虽然单个 Workflow Execution 在大小和吞吐量上有限制，但 Temporal 应用程序可以由数百万到数十亿个 Workflow Execution 组成。
 
 **Durability**
 
-Durability is the absence of an imposed time limit.
+耐久性是指没有强加的时间限制。
 
-A Workflow Execution is durable because it executes a Temporal Workflow Definition (also called a Temporal Workflow Function), your application code, effectively once and to completion—whether your code executes for seconds or years.
+Workflow Execution 是持久的，因为它执行 Temporal Workflow Definition（也称为 Temporal Workflow 函数）、您的应用程序代码，一次有效并完成 — 无论您的代码执行几秒还是几年。
 
 **Reliability**
 
-Reliability is responsiveness in the presence of failure.
+可靠性是出现故障时的响应能力。
 
-A Workflow Execution is reliable, because it is fully recoverable after a failure.
-The Temporal Platform ensures the state of the Workflow Execution persists in the face of failures and outages and resumes execution from the latest state.
+Workflow Execution 是可靠的，因为它在发生故障后可以完全恢复。
+Temporal 平台确保 Workflow Execution 的状态在出现故障和中断时持续存在，并从最新状态恢复执行。
 
 **Scalability**
 
-Scalability is responsiveness in the presence of load.
+可扩展性是负载存在时的响应能力。
 
-A single Workflow Execution is limited in size and throughput but is scalable because it can [Continue-As-New](/workflow-execution/continue-as-new) in response to load.
-A Temporal Application is scalable because the Temporal Platform is capable of supporting millions to billions of Workflow Executions executing concurrently, which is realized by the design and nature of the [Temporal Service](/temporal-service) and [Worker Processes](/workers#worker-process).
+单个 Workflow Execution 的大小和吞吐量受到限制，但具有可扩展性，因为它可以 [Continue-As-New](/workflow-execution/continue-as-new) 响应负载。
+Temporal 应用程序是可扩展的，因为 Temporal 平台能够支持数百万至数十亿个 Workflow Execution 同时执行，这是通过 [Temporal 服务](/temporal-service) 和 [Worker 进程](/workers#worker-process) 的设计和性质实现的。
 
 ### Replays {#replay}
 
-A Replay is the method by which a Workflow Execution resumes making progress. During a Replay the Commands that are generated are checked against an existing Event History. Replays are necessary and often happen to give the effect that Workflow Executions are resumable, reliable, and durable.
+重播是 Workflow Execution 恢复进度的方法。在重放期间，将根据现有 Event History 检查生成的命令。重播是必要的，并且经常会产生 Workflow Execution 可恢复、可靠且持久的效果。
 
-For more information, see [Deterministic constraints](/workflow-definition#deterministic-constraints).
+有关更多信息，请参阅[确定性约束](/workflow-definition#deterministic-constraints)。
 
-If a failure occurs, the Workflow Execution picks up where the last recorded event occurred in the Event History.
+如果发生故障，Workflow Execution 将拾取 Event History 中最后记录的事件发生的位置。
 
-- [How to use Replay APIs using the Go SDK](/develop/go/best-practices/testing-suite#replay)
-- [How to use Replay APIs using the Java SDK](/develop/java/best-practices/testing-suite#replay)
-- [How to use Replay APIs using the Python SDK](/develop/python/best-practices/testing-suite#replay)
-- [How to use Replay APIs using the TypeScript SDK](/develop/typescript/best-practices/testing-suite#replay)
-- [How to use Replay APIs using the .NET SDK](/develop/dotnet/best-practices/testing-suite#replay)
+- [如何使用Go SDK使用Replay API](/develop/go/best-practices/testing-suite#replay)
+- [如何使用Java SDK使用Replay API](/develop/java/best-practices/testing-suite#replay)
+- [如何使用Python SDK使用Replay API](/develop/python/best-practices/testing-suite#replay)
+- [如何使用TypeScript SDK使用Replay API](/develop/typescript/best-practices/testing-suite#replay)
+- [如何使用.NET SDK使用Replay API](/develop/dotnet/best-practices/testing-suite#replay)
 
-### Commands and awaitables {#commands-awaitables}
+### 命令和等待 {#commands-awaitables}
 
-A Workflow Execution does two things:
+Workflow Execution 有两件事：
 
-1. Issue [Commands](#command).
-2. Wait on an Awaitables (often called Futures).
-
-<CaptionedImage
-    src="/diagrams/workflow-execution-progession-simple.svg"
-    title="Command generation and waiting" />
-
-Commands are issued and Awaitables are provided by the use of Workflow APIs in the [Workflow Definition](/workflow-definition).
-
-Commands are generated whenever the Workflow Function is executed.
-The Worker Process supervises the Command generation and makes sure that it maps to the current Event History.
-(For more information, see [Deterministic constraints](/workflow-definition#deterministic-constraints).)
-The Worker Process batches the Commands and then suspends progress to send the Commands to the Temporal Service whenever the Workflow Function reaches a place where it can no longer progress without a result from an Awaitable.
-
-A Workflow Execution may only ever block progress on an Awaitable that is provided through a Temporal SDK API.
-Awaitables are provided when using APIs for the following:
-
-- Awaiting: Progress can block using explicit "Await" APIs.
-- Requesting cancellation of another Workflow Execution: Progress can block on confirmation that the other Workflow Execution is cancelled.
-- Sending a [Signal](/sending-messages#sending-signals): Progress can block on confirmation that the Signal sent.
-- Spawning a [Child Workflow Execution](/child-workflows): Progress can block on confirmation that the Child Workflow Execution started, and on the result of the Child Workflow Execution.
-- Spawning an [Activity Execution](/activity-execution): Progress can block on the result of the Activity Execution.
-- Starting a Timer: Progress can block until the Timer fires.
-
-### What is a Command? {#command}
-
-A Command is a requested action issued by a [Worker](/workers#worker) to the [Temporal Service](/temporal-service) after a [Workflow Task Execution](/tasks#workflow-task-execution) completes.
-
-The action that the Temporal Service takes is recorded in the [Workflow Execution's](#workflow-execution) [Event History](/workflow-execution/event#event-history) as an [Event](/workflow-execution/event).
-The Workflow Execution can await on some of the Events that come as a result from some of the Commands.
-
-Commands are generated by the use of Workflow APIs in your code. During a Workflow Task Execution there may be several Commands that are generated.
-The Commands are batched and sent to the Temporal Service as part of the Workflow Task Execution completion request, after the Workflow Task has progressed as far as it can with the Workflow function.
-There will always be [WorkflowTaskStarted](/references/events#workflowtaskstarted) and [WorkflowTaskCompleted](/references/events#workflowtaskcompleted) Events in the Event History when there is a Workflow Task Execution completion request.
+1. 发出[命令](#command)。
+2. 等待 Awaitables（通常称为 Futures）。
 
 <CaptionedImage
-    src="/diagrams/commands.svg"
-    title="Commands are generated by the use of Workflow APIs in your code" />
+src="/diagrams/workflow-execution-progession-simple.svg"
+title="命令生成并等待" />
 
-Commands are described in the [Command reference](/references/commands) and are defined in the [Temporal gRPC API](https://github.com/temporalio/api/blob/master/temporal/api/command/v1/message.proto).
+通过使用 [Workflow Definition](/workflow-definition) 中的 Workflow API 来发出命令并提供等待。
 
-### Status {#workflow-execution-status}
+每当执行 Workflow 功能时都会生成命令。
+Worker 进程监督命令生成并确保其映射到当前的 Event History。
+（更多信息请参见[确定性约束](/workflow-definition#deterministic-constraints)。）
+Worker 进程对命令进行批处理，然后每当 Workflow 函数到达如果没有可等待结果就无法再继续进行的位置时，就会暂停进度以将命令发送到 Temporal 服务。
 
-A Workflow Execution can be either _Open_ or _Closed_.
+Workflow Execution 只能阻止通过 Temporal SDK API 提供的 Awaitable 的进度。
+使用 API 时会提供以下可等待项：
+
+- 等待：使用显式“等待”API 可以阻止进度。
+- 请求取消另一个 Workflow Execution：在确认另一个 Workflow Execution 已取消时，进度可能会阻塞。
+- 发送 [Signal](/sending-messages#sending-signals)：确认 Signal 发送后，进度可能会阻塞。
+- 生成 [子 Workflow Execution](/child-workflows)：在确认子 Workflow Execution 已启动以及子 Workflow Execution 的结果时，进度可能会阻塞。
+- 生成 [Activity 执行](/activity-execution)：进度可能会阻塞 Activity 执行的结果。
+- 启动 Timer：进程可能会阻塞，直到 Timer 触发。
+
+### 什么是命令？ {#command}
+
+命令是在 [Workflow 任务执行](/tasks#workflow-task-execution) 完成后，由 [Worker](/workers#worker) 向 [Temporal 服务](/temporal-service) 发出的请求操作。
+
+Temporal 服务采取的操作作为 [事件](/workflow-execution/event) 记录在 [Workflow Execution's](#workflow-execution) [Event History](/workflow-execution/event#event-history) 中。
+Workflow Execution 可以等待某些命令导致的某些事件。
+
+命令是通过在代码中使用 Workflow API 生成的。在 Workflow 任务执行期间可能会生成多个命令。
+在 Workflow 任务通过 Workflow 功能尽可能进展之后，命令将被批量发送到 Temporal 服务，作为 Workflow 任务执行完成请求的一部分。
+当有 Workflow 任务执行完成请求时，Event History 中总会有 [WorkflowTaskStarted](/references/events#workflowtaskstarted) 和 [WorkflowTaskCompleted](/references/events#workflowtaskcompleted) 事件。
 
 <CaptionedImage
-    src="/diagrams/workflow-execution-statuses.svg"
-    title="Workflow Execution statuses" />
+src="/diagrams/commands.svg"
+title="命令是通过在代码中使用 Workflow API 生成的" />
+
+命令在[命令参考](/references/commands)中描述，并在[Temporal gRPC API](https://github.com/temporalio/api/blob/master/temporal/api/command/v1/message.proto).
+
+### 地位 {#workflow-execution-status}
+
+Workflow Execution 可以是_Open_ 或_Closed_。
+
+<CaptionedImage
+src="/diagrams/workflow-execution-statuses.svg"
+title="Workflow Execution 状态" />
 
 #### Open
 
-An _Open_ status means that the Workflow Execution is able to make progress.
+_Open_ 状态意味着 Workflow Execution 能够取得进展。
 
-- Running: The only Open status for a Workflow Execution.
-  When the Workflow Execution is Running, it is either actively progressing or is waiting on something.
+- 运行中：Workflow Execution 的唯一开放状态。
+当 Workflow Execution 正在运行时，它要么正在积极进行，要么正在等待某些事情。
 
 #### Closed
 
-A _Closed_ status means that the Workflow Execution cannot make further progress because of one of the following reasons:
+_Closed_状态意味着Workflow Execution由于以下原因之一而无法取得进一步进展：
 
-- Cancelled: The Workflow Execution successfully handled a cancellation request.
-- Completed: The Workflow Execution has completed successfully.
-- Continued-As-New: The Workflow Execution [Continued-As-New](/workflow-execution/continue-as-new).
-- Failed: The Workflow Execution returned an error and failed.
-- Terminated: The Workflow Execution was terminated.
-- Timed Out: The Workflow Execution reached a timeout limit.
+- 已取消：Workflow Execution 成功处理取消请求。
+- 已完成：Workflow Execution 已成功完成。
+- 续如新：Workflow Execution [续如新](/workflow-execution/continue-as-new)。
+- 失败：Workflow Execution 返回错误并失败。
+- 终止：Workflow Execution 已终止。
+- 超时：Workflow Execution 达到超时限制。
 
-### Workflow Execution Chain {#workflow-execution-chain}
+### Workflow Execution链 {#workflow-execution-chain}
 
-A Workflow Execution Chain is a sequence of Workflow Executions that share the same Workflow Id.
-Each link in the Chain is often called a Workflow Run.
-Each Workflow Run in the sequence is connected by one of the following:
+Workflow Execution 链是共享相同 Workflow Id 的 Workflow Execution 序列。
+链中的每个环节通常称为 Workflow 运行。
+序列中的每个 Workflow Run 由以下之一连接：
 
 - [Continue-As-New](/workflow-execution/continue-as-new)
-- [Retries](/encyclopedia/retry-policies)
-- [Temporal Cron Job](/cron-job)
+- [重试](/encyclopedia/retry-policies)
+- [Temporal 定时作业](/cron-job)
 
-A Workflow Execution is uniquely identified by its [Namespace](/namespaces), [Workflow Id](/workflow-execution/workflowid-runid#workflow-id), and [Run Id](/workflow-execution/workflowid-runid#run-id).
+Workflow Execution 由其 [Namespace](/namespaces)、[Workflow Id](/workflow-execution/workflowid-runid#workflow-id) 和 [Run Id](/workflow-execution/workflowid-runid#run-id) 唯一标识。
 
-The [Workflow Execution Timeout](/encyclopedia/detecting-workflow-failures#workflow-execution-timeout) applies to a Workflow Execution Chain.
-The [Workflow Run Timeout](/encyclopedia/detecting-workflow-failures#workflow-run-timeout) applies to a single Workflow Execution (Workflow Run).
+[Workflow Execution 超时](/encyclopedia/detecting-workflow-failures#workflow-execution-timeout) 适用于 Workflow Execution 链。
+[Workflow 运行超时](/encyclopedia/detecting-workflow-failures#workflow-run-timeout) 适用于单个 Workflow Execution（Workflow 运行）。
 
-## What is a Memo? {#memo}
+## 什么是备忘录？ {#memo}
 
-A Memo is a non-indexed set of Workflow Execution metadata that developers supply at start time or in Workflow code and that is returned when you describe or list Workflow Executions.
+备忘录是一组非索引的 Workflow Execution 元数据，开发人员在启动时或在 Workflow 代码中提供，并在您描述或列出 Workflow Execution 时返回。
 
-The primary purpose of using a Memo is to enhance the organization and management of Workflow Executions.
-Add your own metadata, such as notes or descriptions, to a Workflow Execution, which lets you annotate and categorize Workflow Executions based on developer-defined criteria.
-This feature is particularly useful when dealing with numerous Workflow Executions because it facilitates the addition of context, reminders, or any other relevant information that aids in understanding or tracking the Workflow Execution.
+使用备忘录的主要目的是加强 Workflow Execution 的组织和管理。
+将您自己的元数据（例如注释或描述）添加到 Workflow Execution，这样您就可以根据开发人员定义的标准对 Workflow Execution 进行注释和分类。
+在处理大量 Workflow Execution 时，此功能特别有用，因为它有助于添加上下文、提醒或任何其他有助于理解或跟踪 Workflow Execution 的相关信息。
 
 :::note Use Memos judiciously
 
-Memos shouldn't store data that's critical to the execution of a Workflow, for some of the following reasons:
+备忘录不应存储对 Workflow 执行至关重要的数据，原因如下：
 
-- Unlike Workflow inputs, Memos lack type safety
-- Memos are subject to eventual consistency and may not be immediately available
-- Excessive reliance on Memos hides mutable state from the Workflow Execution History
+- 与 Workflow 输入不同，备忘录缺乏类型安全性
+- 备忘录取决于最终一致性，可能无法立即可用
+- 过度依赖备忘录隐藏了 Workflow Execution 历史中的可变状态
 
 :::
 
-## What is a State Transition? {#state-transition}
+## 什么是状态转换？ {#state-transition}
 
-A State Transition is a unit of progress made by a [Workflow Execution](#workflow-execution).
-Each State Transition is recorded in a persistence store.
+状态转换是 [Workflow Execution](#workflow-execution) 取得的进展单位。
+每个状态转换都记录在持久性存储中。
 
-Some operations, such as [Activity Heartbeats](/encyclopedia/detecting-activity-failures#activity-heartbeat), require only one or two State Transitions each. With an Activity Heartbeat, there are two: the Activity Heartbeat and a Timer.
+某些操作，例如 [Activity 心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat)，每个操作仅需要一到两个状态转换。对于 Activity 心跳，有两种：Activity 心跳和 Timer。
 
-Most operations require multiple State Transitions.
+大多数操作需要多个状态转换。
 
-For example, a simple Workflow with two sequential [Activity Tasks](/tasks#activity-task) (and no retries) produces 11 State Transitions: two for Workflow start, four for each Activity, and one for Workflow completion.
+例如，具有两个连续 [Activity 任务](/tasks#activity-task)（且无重试）的简单 Workflow 会产生 11 个状态转换：两个用于 Workflow 启动，四个用于每个 Activity，一个用于 Workflow 完成。
 
 :::tip NEXT STEPS
-For more information on Workflow Execution, please refer to the following subpages:
+有关Workflow Execution的更多信息，请参阅以下子页面：
 
-- [Event](/workflow-execution/event)
-- [Workflow Id and Run Id](/workflow-execution/workflowid-runid)
-- [Limits](/workflow-execution/limits)
-- [Continue-as-New](/workflow-execution/continue-as-new)
-- [Timers and Start Delay](/workflow-execution/timers-delays)
+- [活动](/workflow-execution/event)
+- [Workflow Id 和运行 Id](/workflow-execution/workflowid-runid)
+- [限制](/workflow-execution/limits)
+- [继续为新](/workflow-execution/continue-as-new)
+- [Timer 和启动延迟](/workflow-execution/timers-delays)
   :::

@@ -1,8 +1,8 @@
 ---
 id: nexus
-title:  Self-hosted Temporal Nexus
-sidebar_label: Temporal Nexus
-description: Use Nexus in your self-hosted Temporal Service.
+title:  "自托管 Temporal Nexus"
+sidebar_label: "Temporal Nexus"
+description: "在自托管 Temporal 服务中使用 Nexus。"
 toc_max_heading_level: 4
 keywords:
   - self-hosted
@@ -13,33 +13,34 @@ tags:
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal Nexus is now [Generally Available](/evaluate/development-production-features/release-stages#general-availability).
+Temporal Nexus 现在是 [一般可用](/evaluate/development-production-features/release-stages#general-availability)。
 
 :::
 
 :::info NEW TO NEXUS?
 
-This page explains how to self-host Nexus. To learn about Nexus, see the [how Nexus works page](/nexus). To evaluate whether Nexus fits your use case, see the [evaluation guide](/evaluate/nexus).
+本页介绍如何自行托管 Nexus。要了解 Nexus，请参阅 [Nexus 的工作原理页面](/nexus)。要评估 Nexus 是否适合您的使用案例，请参阅 [评估指南](/evaluate/nexus)。
 
 :::
 
-## Enable Nexus
+<a id="enable-nexus"></a>
+## 启用 Nexus {#enable-nexus}
 
-Nexus can be configured by setting static configuration and dynamic configuration entries.
+Nexus可以通过设置静态配置和动态配置条目进行配置。
 
 
 :::note
-Nexus is supported in single-cluster setups only. See [Nexus Architecture](https://github.com/temporalio/temporal/blob/main/docs/architecture/nexus.md) for operational details.
+Nexus 仅在单集群设置中受支持。有关操作详细信息，请参阅 [Nexus 架构](https://github.com/temporalio/temporal/blob/main/docs/architecture/nexus.md)。
 :::
 
 :::note
-Replace `$PUBLIC_URL` with a URL value that's accessible to external callers or internally within the cluster.
-Currently, external Nexus calls are considered experimental so it should be safe to use the address of an internal load balancer for the Frontend Service.
+将 `$PUBLIC_URL` 替换为外部调用者或集群内部可访问的 URL 值。
+目前，外部 Nexus 调用被视为实验性的，因此使用前端服务的内部负载均衡器的地址应该是安全的。
 :::
 
-To enable Nexus in your deployment:
+要在部署中启用 Nexus：
 
-1. Enable the HTTP API in the server's static configuration.
+1. 在服务器的静态配置中启用HTTP API。
 
    ```yaml
    services:
@@ -56,11 +57,11 @@ To enable Nexus in your deployment:
          httpAddress: $PUBLIC_URL:7243
    ```
 
-2. Set the required dynamic configuration
-    1. **Prior to version 1.30.X**, you must set the public callback URL and the allowed callback addresses.
+2. 设置所需的动态配置
+    1. **1.30.X之前版本**需要设置公共回调地址和允许的回调地址。
 
-       **NOTE**: the callback endpoint template and allowed addresses should be set when using the experimental
-       "external" endpoint targets.
+**注意**：使用实验时应设置回调端点模板和允许的地址
+       “外部”端点目标。
 
        ```yaml
        component.nexusoperations.callback.endpoint.template:
@@ -78,22 +79,23 @@ To enable Nexus in your deployment:
                AllowInsecure: true # In production, set to false and ensure traffic is HTTPS/TLS encrypted
        ```
 
-    2. **Version 1.30.X+**: Nexus is enabled by default. Only the system callback URL is needed.
+2. **版本1.30.X+**：默认启用Nexus。只需要系统回调 URL。
        ```yaml
        component.nexusoperations.useSystemCallbackURL:
          - value: true
        ```
 
-## Build and use Nexus Services
+<a id="build-and-use-nexus-services"></a>
+## 构建和使用 Nexus 服务 {#build-and-use-nexus-services}
 
-See [how Nexus works](/nexus) for an architectural overview, then follow an SDK guide to build your first Nexus Service.
+请参阅 [Nexus 的工作原理](/nexus) 了解架构概述，然后按照 SDK 指南构建您的第一个 Nexus 服务。
 
 :::tip SDK GUIDES
 
-- [Go](/develop/go/nexus/feature-guide) |
-  [Java](/develop/java/nexus) |
+- [去](/develop/go/nexus/feature-guide) |
+  [爪哇](/develop/java/nexus) |
   [Python](/develop/python/nexus) |
-  [TypeScript](/develop/typescript/nexus) |
-  [.NET](/develop/dotnet/nexus)
+  [打字稿](/develop/typescript/nexus) |
+  [。网](/develop/dotnet/nexus)
 
 :::

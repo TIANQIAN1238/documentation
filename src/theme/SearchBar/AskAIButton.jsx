@@ -8,7 +8,7 @@ function AskAIButton({ query, closeDocSearch }) {
   // Only show the button when there's an active query
   return query ? (
     <button className="ask-ai-button" onClick={handleClick}>
-      <span className="search-ask-ai-text">Ask AI about "{query}"</span>
+      <span className="search-ask-ai-text">向 AI 询问“{query}”</span>
     </button>
   ) : null;
 }

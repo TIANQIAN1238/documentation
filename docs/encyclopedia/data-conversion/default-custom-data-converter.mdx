@@ -1,8 +1,8 @@
 ---
 id: default-custom-data-converters
-title: Default and Custom Data Converters
-sidebar_label: Default and Custom Data Converters
-description: Learn about the default Data Converter in Temporal SDKs and how to implement a custom Data Converter for custom serialization and encoding needs.
+title: "默认和自定义 Data Converter"
+sidebar_label: "默认和自定义 Data Converter"
+description: "了解 Temporal SDK 中的默认 Data Converter 以及如何实现自定义 Data Converter 以满足自定义序列化和编码需求。"
 slug: /default-custom-data-converters
 toc_max_heading_level: 4
 keywords:
@@ -21,48 +21,50 @@ tags:
   - Security
 ---
 
-This page discusses the following:
+本页讨论以下内容：
 
-- [Default Data Converter](#default-data-converter)
-- [Custom Data Converter](#custom-data-converter)
+- [默认 Data Converter](#default-data-converter)
+- [定制Data Converter](#custom-data-converter)
 
-## What is a default Data Converter? {#default-data-converter}
+<a id="default-data-converter"></a>
+## 默认 Data Converter 是什么？ {#default-data-converter}
 
-Each Temporal SDK includes and uses a default Data Converter.
-The default Data Converter converts objects to bytes using a series of Payload Converters and supports binary, Protobufs, and JSON formats.
-It encodes values in the following order:
+每个 Temporal SDK 都包含并使用默认的 Data Converter。
+默认的 Data Converter 使用一系列有效负载转换器将对象转换为字节，并支持二进制、Protobuf 和 JSON 格式。
+它按以下顺序对值进行编码：
 
-- Null
-- Byte array
+- 空
+- 字节数组
 - Protobuf JSON
 - JSON
 
-In SDKs that cannot determine parameter types at runtime (for example, TypeScript), Protobufs aren't included in the default converter.
+在无法在运行时确定参数类型的 SDK（例如 TypeScript）中，Protobuf 不包含在默认转换器中。
 
-For example:
+例如：
 
-- If a value is an instance of a Protobuf message, it is encoded with [proto3 JSON](https://developers.google.com/protocol-buffers/docs/proto3#json).
-- If a value isn't null, binary, or a Protobuf, it is encoded as JSON. Most common input types — including strings, integers, floating point numbers, and booleans — are serializable as JSON. If any part of it is not serializable as JSON, {/* (for example, a Date—see JSON data types) */} an error is thrown.
+- 如果值是 Protobuf 消息的实例，则用 [原型3 JSON](https://developers.google.com/protocol-buffers/docs/proto3#json) 对其进行编码。
+- 如果值不为 null、二进制或 Protobuf，则将其编码为 JSON。最常见的输入类型（包括字符串、整数、浮点数和布尔值）可序列化为 JSON。如果它的任何部分不能序列化为 JSON，{/*（例如，日期 - 请参阅 JSON 数据类型）*/}，则会引发错误。
 
-The default Data Converter serializes objects based on their root type, rather than nested types.
-The JSON serializers of some SDKs cannot process lists with Protobuf children objects without implementing a [custom Data Converter](#custom-data-converter).
+默认的 Data Converter 根据对象的根类型而不是嵌套类型来序列化对象。
+某些 SDK 的 JSON 序列化程序无法在不实现 [定制Data Converter](#custom-data-converter) 的情况下处理具有 Protobuf 子对象的列表。
 
-## What is a custom Data Converter? {#custom-data-converter}
+<a id="custom-data-converter"></a>
+## 什么是自定义 Data Converter？ {#custom-data-converter}
 
-A custom Data Converter extends the default Data Converter with custom logic for [Payload](/dataconversion#payload) conversion or encoding.
+自定义 Data Converter 使用用于 [有效载荷](/dataconversion#payload) 转换或编码的自定义逻辑扩展了默认 Data Converter。
 
-You can create a custom Data Converter to alter formats (for example, using [MessagePack](https://msgpack.org/) instead of JSON) or add compression and encryption.
+您可以创建自定义 Data Converter 来更改格式（例如，使用 [消息包](https://msgpack.org/) 而不是 JSON）或添加压缩和加密。
 
-A Payload Codec encodes and decodes [Payloads](/dataconversion#payload), with bytes-to-bytes conversion.
-To use custom encryption or compression logic, create a custom Payload Codec with your encryption/compression logic in the `encode` function and your decryption/decompression logic in the `decode` function.
-To implement a custom Payload Codec, you can override the default Data Converter, or create a customized Data Converter that defines its own Payload Converter.
+有效负载编解码器通过字节到字节的转换对 [有效载荷](/dataconversion#payload) 进行编码和解码。
+要使用自定义加密或压缩逻辑，请使用 `encode` 函数中的加密/压缩逻辑和 `decode` 函数中的解密/解压缩逻辑创建自定义有效负载编解码器。
+要实现自定义有效负载编解码器，您可以覆盖默认的 Data Converter，或创建定义其自己的有效负载转换器的自定义 Data Converter。
 
-Custom Data Converters are not applied to all data; for example, [Search Attributes](/search-attribute) are persisted unencoded so they can be indexed for searching.
+自定义 Data Converter 并不适用于所有数据；例如，[Search Attributes](/search-attribute) 保持未编码状态，因此可以对其进行索引以进行搜索。
 
-A customized Data Converter can have the following three components:
+定制的Data Converter可以具有以下三个组件：
 
-- [Payload Converter](/payload-converter)
-- [Payload Codec](/payload-codec)
-- [Failure Converter](/failure-converter)
+- [有效负载转换器](/payload-converter)
+- [有效负载编解码器](/payload-codec)
+- [故障转换器](/failure-converter)
 
-For details on how to implement custom encryption and compression in your SDK, see [Data Encryption](/production-deployment/data-encryption).
+有关如何在 SDK 中实现自定义加密和压缩的详细信息，请参阅 [数据加密](/production-deployment/data-encryption)。

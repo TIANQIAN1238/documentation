@@ -1,0 +1,57 @@
+---
+id: remote-data-encoding
+title: 远程数据编码
+sidebar_label: 远程数据编码
+description: 使用远程编码转换 Temporal CLI 和 Web UI 的数据。
+slug: /remote-data-encoding
+toc_max_heading_level: 4
+keywords:
+  - encryption
+  - explanation
+  - keys
+  - payloads
+  - secrets
+  - data-converters
+  - remote-data-encoding
+tags:
+  - Concepts
+  - Encryption
+  - Data Converters
+  - Security
+---
+
+本页讨论[远程数据编码](#remote-data-encoding)。
+
+## 什么是远程数据编码？ {#远程数据编码}
+
+远程数据编码是通过 HTTP 端点公开您的 Payload Codec 以支持远程编码和解码。
+
+远程运行编码允许您将其与 [Temporal CLI](/cli) 一起使用来编码/解码多个命令的数据，包括“Temporal Workflow show”，并与 Temporal Web UI 一起使用来解码 Workflow Execution 详细信息视图中的数据。
+
+要远程运行数据编码/解码，请使用 [Codec Server](/codec-server)。 Codec Server 是一个 HTTP 服务器，它使用您的自定义编解码器逻辑来远程解码您的数据。
+Codec Server 独立于 Temporal 服务，并通过预定义端点解码您的加密有效负载。
+您可以在自己的环境中创建、操作和管理对 Codec Server 的访问。
+Temporal CLI 和 Web UI 反过来提供内置挂钩来调用 Codec Server 以按需解码加密的有效负载。
+
+### Encoding data on the Web UI and CLI
+
+You can perform some operations on your Workflow Execution using the Temporal CLI and the Web UI.
+For example, you can start or Signal an active Workflow Execution from the Temporal CLI or cancel a Workflow Execution from the Web UI, which might require inputs that contain sensitive data.
+
+To encode this data, specify your [Codec Server endpoints](/codec-server) with the `codec-endpoint` parameter in [the Temporal CLI](/cli) and configure your Web UI to use the Codec Server endpoints.
+
+### Decoding data on the Web UI and CLI
+
+If you use custom encoding, Payload data handled by the Temporal Service is stored encoded. Since the Web UI uses the [Visibility](/Temporal-service/Visibility) database to show events and data stored on the Temporal Server, all data in the Workflow Execution History in your Web UI is displayed in the encoded format.
+
+To decode output when using the Web UI and the Temporal CLI, use a [Codec Server](/codec-server).
+
+Note that a remote data encoder is a separate system with access to your encryption keys and exposes APIs to encode and decode any data.
+Evaluate and ensure that your remote data encoder endpoints are secured and only authorized users have access to them.
+
+Samples:
+
+- [Go](https://github.com/Temporalio/samples-go/tree/main/codec-server)
+- [Java](https://github.com/Temporalio/sdk-java/tree/master/Temporal-remote-data-encoder)
+- [Python](https://github.com/Temporalio/samples-python/tree/main/encryption)
+- [TypeScript](https://github.com/Temporalio/samples-typescript/tree/main/encryption)

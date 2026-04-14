@@ -1,0 +1,230 @@
+---
+id: upgrade-server
+title: 升级Temporal Server
+sidebar_label: 升级服务器
+description: Upgrade your Temporal Server effectively. Follow our step-by-step guide for seamless upgrades, ensuring data
+  Upgrade your Temporal Server effectively. Follow our step-by-step guide for seamless upgrades, ensuring data
+  compatibility and schema alignment.
+slug: /self-hosted-guide/upgrade-server
+toc_max_heading_level: 4
+keywords:
+  - how-to
+tags:
+  - Temporal Service
+  - Self-hosting
+---
+
+## 如何升级Temporal Server版本{#upgrade-server}
+
+根据您的基础设施和风险级别，限制 HTTP 进入您的 XPROT019X 可能就足够了（例如使用 [WireGuard](https://www.wireguard.com/) 等 VPN）。
+Temporal Web UI 可以与只能在“localhost”上访问的 XPROT019X 进行通信，因此这是一种合法的安全模式。
+但是，如果您的 XPROT019X 完全暴露在互联网上，您可能需要身份验证解决方案。
+
+:::info
+
+如果您使用的版本早于 1.0.0，请通过以下方式联系我们
+[community.Temporal.io](http://community.Temporal.io)询问如何升级。
+
+:::
+
+首先检查您要升级到的版本是否需要升级数据库架构。如果一个
+需要升级数据库模式，会直接在
+[发行说明](https://github.com/Temporalio/Temporal/releases)。有些版本需要更改架构，有些版本需要更改架构
+不。我们确保任何连续版本在数据库架构升级、功能和功能方面都是兼容的
+系统行为；但是，不能保证_任何_两个非连续版本之间存在兼容性。
+
+### 关键考虑因素
+
+升级 Temporal Server 时，需要牢记两个关键注意事项：
+
+1. **顺序升级：** Temporal Server 应顺序升级。也就是说，如果您使用的是版本 \(v1.n.x\)，
+   您的下一次升级应该是 \(v1.n+1.x\) 或最接近的可用后续版本。这个顺序应该是
+   重复直到达到您想要的版本。
+
+2. **数据兼容性：** 在升级过程中，Temporal Server 要么 Update 要么重构现有版本
+   数据以匹配新版本的数据格式。 Temporal Server 仅确保两个之间的向后兼容性
+   连续的小版本。因此，在升级过程中跳过版本可能会导致旧的数据格式变得更旧。
+   不可读。如果以前的数据格式无法解释并转换为新格式，则升级过程
+   将会不成功。
+
+### 逐步升级过程：
+
+升级 Temporal Server 需要有条不紊的方法来确保数据完整性、兼容性和无缝性
+版本之间的过渡。以下文档概述了成功升级您的系统的分步过程
+Temporal Server。
+
+升级 Temporal Server 版本时，请确保按顺序升级。
+
+1. **升级数据库架构：** 在启动 Temporal Server 升级之前，请使用推荐的升级工具之一
+   Update 您的数据库架构。这可确保它与您想要升级到的 Temporal Server 版本保持一致。
+2. **升级 Temporal Server：** 数据库架构为 Updated 后，继续升级 Temporal Server 部署
+   到下一个连续版本。
+3. **迭代升级**（可选）：迭代地继续此过程（步骤 1 和 2），直到达到所需的目标
+   Temporal Server 版本。
+
+通过遵守上述准则并遵循分步程序，您可以确保顺利成功
+升级您的 Temporal Server。
+
+Temporal Server 升级 Update 或使用新版本中引入的格式重写旧版本数据。
+因为 Temporal Server 保证了两个连续的次要版本之间的向后兼容性，并且因为旧版本
+代码的版本最终会从代码库中删除，升级时跳过版本可能会导致旧版本
+格式变得无法识别。如果旧格式的数据无法读取并重写为新格式，则
+升级失败。
+
+检查 [Temporal Server 版本](https://github.com/Temporalio/Temporal/releases) 并遵循这些版本
+订单。您可以跳过补丁版本；升级时请使用小版本的最新补丁。
+
+另外，请注意，每次升级都需要历史服务加载所有分片和 Update 分片元数据，因此允许
+每个版本大约需要 10 分钟才能完成这些过程，然后再升级到下一个版本。
+
+使用升级工具之一升级数据库架构，使其与正在使用的 Temporal Server 版本兼容
+升级为.
+
+### 升级 Cassandra 架构
+
+如果您使用 Cassandra 来实现 Temporal 服务的持久性，请使用“Temporal-cassandra-tool”来升级两者
+默认 Persistence 和 Visibility 架构。
+
+**默认架构升级示例：**
+
+```bash
+temporal_v1.2.1 $ temporal-cassandra-tool \
+   --tls \
+   --tls-ca-file <...> \
+   --user <cassandra-user> \
+   --password <cassandra-password> \
+   --endpoint <cassandra.example.com> \
+   --keyspace temporal \
+   --timeout 120 \
+   update \
+   --schema-dir ./schema/cassandra/temporal/versioned
+```
+
+**Visibility 架构升级示例：**
+
+```bash
+temporal_v1.2.1 $ temporal-cassandra-tool \
+   --tls \
+   --tls-ca-file <...> \
+   --user <cassandra-user> \
+   --password <cassandra-password> \
+   --endpoint <cassandra.example.com> \
+   --keyspace temporal_visibility \
+   --timeout 120 \
+   update \
+   --schema-dir ./schema/cassandra/visibility/versioned
+```
+
+### 升级 Elasticsearch 架构
+
+如果您的 Temporal 服务的 Visibility 使用 Elasticsearch，请使用“Temporal-elasticsearch-tool”进行升级
+架构。
+
+**架构升级示例：**
+
+```bash
+echo "Updating index mappings: $ES_VISIBILITY_INDEX"
+temporal-elasticsearch-tool \
+	--endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" \
+	--user "$ES_USER" \
+	--password "$ES_PWD" \
+	update-schema \
+	--index "$ES_VISIBILITY_INDEX"
+```
+
+### 升级 PostgreSQL 或 MySQL 架构
+
+如果您使用 MySQL 或 PostgreSQL，请使用“Temporal-sql-tool”，其工作原理与
+`Temporal-cassandra-工具`。
+
+请参阅此 [Makefile](https://github.com/Temporalio/Temporal/blob/v1.4.1/Makefile#L367-L383) 了解上下文。
+
+#### PostgreSQL
+
+**默认架构升级示例：**
+
+```bash
+./temporal-sql-tool \
+	--tls \
+	--tls-enable-host-verification \
+	--tls-cert-file <path to your client cert> \
+	--tls-key-file <path to your client key> \
+	--tls-ca-file <path to your CA> \
+	--ep localhost -p 5432 -u temporal -pw temporal --pl postgres --db temporal update-schema -d ./schema/postgresql/v96/temporal/versioned
+```
+
+**Visibility 架构升级示例：**
+
+```bash
+./temporal-sql-tool \
+	--tls \
+	--tls-enable-host-verification \
+	--tls-cert-file <path to your client cert> \
+	--tls-key-file <path to your client key> \
+	--tls-ca-file <path to your CA> \
+	--ep localhost -p 5432 -u temporal -pw temporal --pl postgres --db temporal_visibility update-schema -d ./schema/postgresql/v96/visibility/versioned
+```
+
+如果您要将 PostgreSQL 升级到 v12 或更高版本，以通过 Temporal Server v1.20 启用高级 Visibility 功能，
+首先升级您的 PostgreSQL 版本，然后使用“postgres12”插件运行“Temporal-sql-tool”，如下所示
+以下示例：
+
+```bash
+./temporal-sql-tool \
+	--tls \
+	--tls-enable-host-verification \
+	--tls-cert-file <path to your client cert> \
+	--tls-key-file <path to your client key> \
+	--tls-ca-file <path to your CA> \
+	--ep localhost -p 5432 -u temporal -pw temporal --pl postgres12 --db temporal_visibility update-schema -d ./schema/postgresql/v12/visibility/versioned
+```
+
+#### MySQL
+
+**默认架构升级示例：**
+
+```bash
+./temporal-sql-tool \
+	--tls \
+	--tls-enable-host-verification \
+	--tls-cert-file <path to your client cert> \
+	--tls-key-file <path to your client key> \
+	--tls-ca-file <path to your CA> \
+	--ep localhost -p 3036 -u root -pw root --pl mysql --db temporal update-schema -d ./schema/mysql/v57/temporal/versioned/
+```
+
+**Visibility 架构升级示例：**
+
+```bash
+./temporal-sql-tool \
+	--tls \
+	--tls-enable-host-verification \
+	--tls-cert-file <path to your client cert> \
+	--tls-key-file <path to your client key> \
+	--tls-ca-file <path to your CA> \
+	--ep localhost -p 3036 -u root -pw root --pl mysql --db temporal_visibility update-schema -d ./schema/mysql/v57/visibility/versioned/
+```
+
+如果您要将 MySQL 升级到 v8.0.17 或更高版本以通过 Temporal Server v1.20 启用高级 Visibility 功能，请升级
+首先使用您的 MySQL 版本，然后使用“mysql8”插件运行“Temporal-sql-tool”，如下例所示：
+
+```bash
+./temporal-sql-tool \
+	--tls \
+	--tls-enable-host-verification \
+	--tls-cert-file <path to your client cert> \
+	--tls-key-file <path to your client key> \
+	--tls-ca-file <path to your CA> \
+	--ep localhost -p 5432 -u temporal -pw temporal --pl mysql8 --db temporal_visibility update-schema -d ./schema/mysql/v8/visibility/versioned.
+```
+
+### 推出技术
+
+我们建议准备一个临时 Temporal 服务，然后执行以下操作来验证升级是否成功：
+
+1. 在登台 Temporal 服务上创建一些模拟负载。
+2. 升级暂存 Temporal 服务中的数据库架构。
+3. 等待并观察几分钟，以验证服务器和客户端均没有出现不稳定的行为
+   模拟加载逻辑。
+4. 升级服务器。
+5. 现在对实时环境 Temporal 服务执行相同的操作。

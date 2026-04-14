@@ -1,8 +1,8 @@
 ---
 id: workflow
-title: tctl v1.17 workflow command reference
-sidebar_label: workflow
-description: The public preview of Temporal CLI is now available! Begin using it and provide feedback. After the full release, tctl will deprecate. Perform various Workflow operations using tctl commands.
+title: "tctl v1.17 Workflow 命令参考"
+sidebar_label: "Workflow"
+description: "Temporal CLI 的公开预览版现已推出！开始使用它并提供反馈。完整发布后，tctl 将弃用。使用 tctl 命令执行各种 Workflow 操作。"
 toc_max_heading_level: 4
 keywords:
   - cli
@@ -15,362 +15,381 @@ keywords:
 
 :::info tctl is deprecated
 
-The tctl command line utility has been deprecated and is no longer actively supported.
-We recommend transitioning to [Temporal CLI](/cli) for continued use and access to new features.
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议过渡到 [Temporal CLI](/cli) 以继续使用和访问新功能。
 
-Thank you for being a valued part of the Temporal community.
+感谢您成为 Temporal 社区的重要组成部分。
 
 :::
 
-The `tctl workflow` commands enable [Workflow Execution](/workflow-execution) operations.
+`tctl Workflow` 命令启用 [Workflow Execution](/workflow-execution) 操作。
 
-- [tctl workflow cancel](#cancel)
-- [tctl workflow count](#count)
-- [tctl workflow describe](#describe)
-- [tctl workflow describeid](#describeid)
-- [tctl workflow list](#list)
-- [tctl workflow listall](#listall)
-- [tctl workflow listarchived](#listarchived)
-- [tctl workflow observe](#observe)
-- [tctl workflow observeid](#observeid)
-- [tctl workflow query](#query)
-- [tctl workflow reset](#reset)
-- [tctl workflow reset-batch](#reset-batch)
-- [tctl workflow run](#run)
-- [tctl workflow scan](#scan)
-- [tctl workflow show](#show)
-- [tctl workflow showid](#showid)
-- [tctl workflow signal](#signal)
-- [tctl workflow stack](#stack)
-- [tctl workflow start](#start)
-- [tctl workflow terminate](#terminate)
+- [tctl Workflow 取消](#cancel)
+- [tctl Workflow 计数](#count)
+- [tctl Workflow 描述](#describe)
+- [tctl Workflow 描述ID](#describeid)
+- [tctl Workflow 列表](#list)
+- [tctl Workflow 全部列表](#listall)
+- [tctl Workflow 列表已存档](#listarchived)
+- [tctl Workflow 观察](#observe)
+- [tctl Workflow 观察ID](#observeid)
+- [tctl Workflow Query](#Query)
+- [tctl Workflow 复位](#reset)
+- [tctl Workflow 重置批次](#reset-batch)
+- [tctl Workflow 运行](#run)
+- [tctl Workflow 扫描](#scan)
+- [tctl Workflow 显示](#show)
+- [tctl Workflow showid](#showid)
+- [tctl Workflow Signal](#Signal)
+- [tctl Workflow 堆栈](#stack)
+- [tctl Workflow 启动](#start)
+- [tctl Workflow 终止](#terminate)
 
-## cancel
+## 取消 {#cancel}
 
-The `tctl workflow cancel --query` command cancels a [Workflow Execution](/workflow-execution).
+`tctl Workflow cancel --Query` 命令取消 [Workflow Execution](/workflow-execution)。
 
-Canceling a running Workflow Execution records a `WorkflowExecutionCancelRequested` event in the History.
-A new [Workflow Task](/tasks#workflow-task) will be scheduled.
-After cancellation, the Workflow Execution can perform cleanup work.
+取消正在运行的 Workflow Execution 会在历史记录中记录 `WorkflowExecutionCancelRequested` 事件。
+新的 [Workflow 任务](/tasks#Workflow-task) 将是 Scheduled。
+取消后，Workflow Execution 可以执行清理工作。
 
-See also [`tctl workflow terminate --query`](#terminate).
+另请参见 [`tctl Workflow terminate --Query`](#terminate)。
 
-`tctl workflow cancel --query <query> <modifiers>`
+`tctl Workflow cancel --Query <Query> <modifiers>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --workflow_id
+<a id="cancel"></a>
+### --Workflow_id {#workflowid}
 
-Specify a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id).
+指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow cancel --workflow_id <id>
 ```
 
-### --run_id
+<a id="workflowid"></a>
+### --run_id {#runid}
 
-Specify a [Run Id](/workflow-execution/workflowid-runid#run-id).
+指定 [运行 ID](/workflow-execution/workflowid-runid#run-id)。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow cancel --run_id <id>
 ```
 
-## count
+## 计数 {#count}
 
-The `tctl workflow count` command counts [Workflow Executions](/workflow-execution).
-This command requires Elasticsearch to be enabled.
+`tctl Workflow count` 命令对 [Workflow Executions](/workflow-execution) 进行计数。
+此命令需要启用 Elasticsearch。
 
-`tctl workflow count <modifiers>`
+`tctl Workflow count <modifiers>`
 
-The following modifier controls the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --query
+<a id="runid"></a>
+### --Query {#query}
 
-_Required modifier_
+_所需修饰符_
 
-Specify an SQL-like query of [Search Attributes](/search-attribute).
+指定 [Search Attributes](/search-attribute) 的类似 SQL 的 Query。
 
-Alias: `-q`
+别名：`-q`
 
-**Example**
+**例子**
 
-To count all open [Workflow Executions](/workflow-execution):
+要计算所有打开的 [Workflow Executions](/workflow-execution)：
 
 ```bash
 tctl workflow count --query 'ExecutionStatus="Running"'
 ```
 
-## describe
+## 描述 {#describe}
 
-The `tctl workflow describe` command shows information about a [Workflow Execution](/workflow-execution).
-This information can be used to locate a failed Workflow Execution, for example.
+`tctl Workflow describe` 命令显示有关 [Workflow Execution](/workflow-execution) 的信息。
+例如，此信息可用于定位失败的 Workflow Execution。
 
-To find a Workflow with a given Run Id, refer to [`tctl workflow describeid`](#describeid).
+要查找具有给定运行 ID 的 Workflow，请参阅 [`tctl Workflow describeid`](#describeid)。
 
-`tctl workflow describe <modifiers>`
+`tctl Workflow describe <modifiers>`
 
-The following modifiers control the behavior of the command.
-Always include required modifiers when executing this command.
+以下修饰符控制命令的行为。
+执行此命令时始终包含所需的修饰符。
 
-### --workflow_id
+<a id="count"></a>
+### --Workflow_id {#workflowid}
 
-**This is a required modifier.**
+**这是必需的修饰符。**
 
-Specify a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id).
+指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow describe --workflow_id <id>
 ```
 
-### --run_id
+<a id="query"></a>
+### --run_id {#runid}
 
-Specify a [Run Id](/workflow-execution/workflowid-runid#run-id).
-If a Run Id is not provided, the command will show the latest Workflow Execution of that Workflow Id.
+指定 [运行 ID](/workflow-execution/workflowid-runid#run-id)。
+如果未提供运行 ID，该命令将显示该 Workflow Id 的最新 Workflow Execution。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow describe --run_id <id>
 ```
 
-### --print_raw
+<a id="describe"></a>
+### --print_raw {#printraw}
 
-Print properties exactly as they are stored.
+完全按照存储的方式打印属性。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow describe --print_raw
 ```
 
-### --reset_points_only
+<a id="workflowid"></a>
+### --仅重置点 {#resetpointsonly}
 
-Show only events that are eligible for reset.
-If successful, the command returns the Run Id of all deployments, and the times at which the Events were created.
+仅显示符合重置条件的事件。
+如果成功，该命令将返回所有部署的运行 ID 以及创建事件的时间。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow describe --reset_points_only
 ```
 
-## describeid
+<a id="runid"></a>
+## 描述id {#describeid}
 
-The `tctl workflow describeid` command shows information about a [Workflow Execution](/workflow-execution) for the specified [Workflow Id](/workflow-execution/workflowid-runid#workflow-id)and optional [Run Id](/workflow-execution/workflowid-runid#run-id).
+`tctl Workflow describeid` 命令显示有关指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id) 和可选 [运行 ID](/workflow-execution/workflowid-runid#run-id) 的 [Workflow Execution](/workflow-execution) 的信息。
 
-`tctl workflow describeid <workflow_id> <run_id> <modifiers>`
+`tctl Workflow describeid <Workflow_id> <run_id> <modifiers>`
 
-This command is a shortcut for `tctl workflow describe --workflow_id <workflowid> --run_id <runid>`.
+该命令是 `tctl Workflow describe --Workflow_id <Workflowid> --run_id <runid>` 的快捷方式。
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --print_raw
+### --print_raw {#printraw}
 
-Print properties exactly as they are stored.
+完全按照存储的方式打印属性。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow describeid <workflow_id> <id> --print_raw
 ```
 
-### --reset_points_only
+<a id="resetpointsonly"></a>
+### --仅重置点 {#resetpointsonly}
 
-Show only events that are eligible for reset.
+仅显示符合重置条件的事件。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow describeid <workflow_id> --reset_points_only
 ```
 
-## list
+## 列表 {#list}
 
-The `tctl workflow list` command lists open or closed [Workflow Executions](/workflow-execution).
+`tctl Workflow list` 命令列出打开或关闭的 [Workflow Executions](/workflow-execution)。
 
-By default, this command lists a maximum of 10 closed Workflow Executions.
+默认情况下，此命令最多列出 10 个已关闭的 Workflow Execution。
 
-- To set the size of a page, use the `--pagesize` option.
-- To list multiple pages, use the `--more` option.
-- To list open Workflow Executions, use the `--open` option.
+- 要设置页面大小，请使用 `--pagesize` 选项。
+- 要列出多个页面，请使用 `--more` 选项。
+- 要列出打开的 Workflow Execution，请使用 `--open` 选项。
 
-See also [`tctl workflow listall`](#listall), [`tctl workflow listarchived`](#listarchived), and [`tctl workflow scan`](#scan).
+另请参见 [`tctl Workflow listall`](#listall)、[`tctl Workflow listarchived`](#listarchived) 和 [`tctl Workflow scan`](#scan)。
 
-`tctl workflow list <modifiers>`
+`tctl Workflow list <modifiers>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --print_raw_time
+<a id="describeid"></a>
+### --print_raw_time {#printrawtime}
 
-Print the raw timestamp.
+打印原始时间戳。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow list --print_raw_time
 ```
 
-### --print_datetime
+<a id="printraw"></a>
+### --打印日期时间 {#printdatetime}
 
-Print the timestamp.
+打印时间戳。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow list --print_datetime
 ```
 
-### --print_memo
+<a id="resetpointsonly"></a>
+### --打印备忘录 {#printmemo}
 
-Print a memo.
+打印备忘录。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow list --print_memo
 ```
 
-### --print_search_attr
+<a id="list"></a>
+### --print_search_attr {#printsearchattr}
 
-Print the [Search Attributes](/search-attribute).
+打印 [Search Attributes](/search-attribute)。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow list --print_search_attr
 ```
 
-### --print_full
+<a id="printrawtime"></a>
+### --print_full {#printfull}
 
-Print the full message without table formatting.
+打印完整消息，无需表格格式。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow list --print_full
 ```
 
-### --print_json
+<a id="printdatetime"></a>
+### --print_json {#printjson}
 
-Print the raw JSON objects.
+打印原始 JSON 对象。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow list --print_json
 ```
 
-### --open
+### - 打开 {#open}
 
-List open [Workflow Executions](/workflow-execution).
-(By default, the `tctl workflow list` command lists closed Workflow Executions.)
+列表打开 [Workflow Executions](/workflow-execution)。
+（默认情况下，`tctl Workflow list` 命令列出已关闭的 Workflow Execution。）
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow list --open
 ```
 
-### --earliest_time
+<a id="printmemo"></a>
+### --最早时间 {#earliesttime}
 
-Specify the earliest start time to list.
-Supported format are as follows:
+指定列出的最早开始时间。
+支持的格式如下：
 
 - `<year>-<month>-<day>T<hour>:<minute>:<second><+|-><offsethours>:<offsetminutes>`
-- Raw Unix Epoch time (the number of milliseconds since 0000 UTC on January 1, 1970).
-- `<n><duration`, where `<n>` is a value between 0 and 1000000, and `<duration>` is one of the following:
-  - `second` or `s`
-  - `minute` or `m`
-  - `hour` or `h`
-  - `day` or `d`
-  - `week` or `w`
-  - `month` or `M`
-  - `year` or `y`
+- 原始 Unix 纪元时间（自 1970 年 1 月 1 日 0000 UTC 以来的毫秒数）。
+- `<n><duration`，其中 `<n>` 是 0 到 1000000 之间的值，`<duration>` 是以下之一：
+  - `second` 或 `s`
+  - `minute` 或 `m`
+  - `hour` 或 `h`
+  - `day` 或 `d`
+  - `week` 或 `w`
+  - `month` 或 `M`
+  - `year` 或 `y`
 
-**Examples**
+**示例**
 
-To specify 3:04:05 PM India Standard Time on January 2, 2022:
+要指定 2022 年 1 月 2 日印度标准时间下午 3:04:05：
 
 ```bash
 tctl workflow list --earliest-time '2022-01-02T15:04:05+05:30'
 ```
 
-To specify 15 minutes before the current time:
+要指定当前时间之前 15 分钟：
 
 ```bash
 tctl workflow list --earliest-time '15minute'
 ```
 
-### --latest_time
+<a id="printsearchattr"></a>
+### --latest_time {#latesttime}
 
-Specify the latest start time to list.
-Supported formats are as follows:
+指定列出的最晚开始时间。
+支持的格式如下：
 
 - `<year>-<month>-<day>T<hour>:<minute>:<second><+|-><offsethours>:<offsetminutes>`
-- Raw Unix Epoch time (the number of milliseconds since 0000 UTC on January 1, 1970).
-- `<n><duration`, where `<n>` is a value between 0 and 1000000, and `<duration>` is one of the following:
-  - `second` or `s`
-  - `minute` or `m`
-  - `hour` or `h`
-  - `day` or `d`
-  - `week` or `w`
-  - `month` or `M`
-  - `year` or `y`
+- 原始 Unix 纪元时间（自 1970 年 1 月 1 日 0000 UTC 以来的毫秒数）。
+- `<n><duration`，其中 `<n>` 是 0 到 1000000 之间的值，`<duration>` 是以下之一：
+  - `second` 或 `s`
+  - `minute` 或 `m`
+  - `hour` 或 `h`
+  - `day` 或 `d`
+  - `week` 或 `w`
+  - `month` 或 `M`
+  - `year` 或 `y`
 
-**Examples**
+**示例**
 
-To specify 11:02:17 PM Pacific Daylight Time on April 13, 2022:
+要指定 2022 年 4 月 13 日太平洋夏令时间晚上 11:02:17：
 
 ```bash
 tctl workflow list --latest_time '2022-04-13T23:02:17-07:00'
 ```
 
-To specify 10s before the current time:
+要指定当前时间之前 10 秒：
 
 ```bash
 tctl workflow list --latest_time '10second'
 ```
 
-### --workflow_id
+<a id="printfull"></a>
+### --Workflow_id {#workflowid}
 
-Specify a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id).
+指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow list --workflow_id <id>
 ```
 
-### --workflow_type
+<a id="printjson"></a>
+### --Workflow_type {#workflowtype}
 
-Specify the name of a [Workflow Type](/workflow-definition#workflow-type).
+指定 [Workflow型](/workflow-definition#Workflow-type) 的名称。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow list --workflow_type <name>
 ```
 
-### --status
+### - 地位 {#status}
 
-Specify the status of a [Workflow Execution](/workflow-execution).
-Supported values are as follows:
+指定 [Workflow Execution](/workflow-execution) 的状态。
+支持的值如下：
 
 - `completed`
 - `failed`
@@ -379,29 +398,30 @@ Supported values are as follows:
 - `continuedasnew`
 - `timedout`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow list --status <value>
 ```
 
-### --query
+<a id="open"></a>
+### --Query {#query}
 
-**How to list and filter Workflow Executions with a [List Filter](/list-filter) using tctl.**
+**如何使用 tctl 列出和过滤带有 [列表过滤器](/list-filter) 的 Workflow Execution。**
 
-The `--query` flag is supported only when [Advanced Visibility](/visibility#advanced-visibility) is configured with the Cluster.
+仅当使用集群配置 [高级Visibility](/visibility#advanced-Visibility) 时，才支持 `--Query` 标志。
 
-Using the `--query` option causes tctl to ignore all other filter options, including `open`, `earliest_time`, `latest_time`, `workflow_id`, and `workflow_type`.
+使用 `--Query` 选项会导致 tctl 忽略所有其他筛选器选项，包括 `open`、`earliest_time`、`latest_time`、`Workflow_id` 和 `Workflow_type`。
 
-Alias: `-q`
+别名：`-q`
 
-**Example**
+**例子**
 
 ```bashbash
 tctl workflow list --query "WorkflowId=<your-workflow-id>"
 ```
 
-More examples:
+更多示例：
 
 ```bashbash
 tctl workflow list \
@@ -430,198 +450,209 @@ tctl workflow list \
   --query 'WorkflowType = "main.Workflow" StartTime > "2019-06-07T16:46:34-08:00" and ExecutionStatus = "Running"'
 ```
 
-### --more
+### - 更多的 {#more}
 
-List more than one page.
-(By default, the `tctl workflow list` command lists one page of results.)
+列出不止一页。
+（默认情况下，`tctl Workflow list` 命令列出一页结果。）
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow list --more
 ```
 
-### --pagesize
+<a id="earliesttime"></a>
+### --页面大小 {#pagesize}
 
-Specify the maximum number of [Workflow Executions](/workflow-execution) to list on a page.
-(By default, the `tctl workflow list` command lists 10 Workflow Executions per page.)
+指定在页面上列出的 [Workflow Executions](/workflow-execution) 的最大数量。
+（默认情况下，`tctl Workflow list` 命令每页列出 10 个 Workflow Execution。）
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow list --pagesize <value>
 ```
 
-## listall
+<a id="latesttime"></a>
+## 全部列出 {#listall}
 
-The `tctl workflow listall` command lists all open or closed [Workflow Executions](/workflow-execution).
+`tctl Workflow listall` 命令列出所有打开或关闭的 [Workflow Executions](/workflow-execution)。
 
-By default, this command lists all closed Workflow Executions.
-To list open Workflow Executions, use the `--open` option.
+默认情况下，此命令列出所有已关闭的 Workflow Execution。
+要列出打开的 Workflow Execution，请使用 `--open` 选项。
 
-See also [`tctl workflow list`](#list), [`tctl workflow listarchived`](#listarchived), and [`tctl workflow scan`](#scan).
+另请参见 [`tctl Workflow list`](#list)、[`tctl Workflow listarchived`](#listarchived) 和 [`tctl Workflow scan`](#scan)。
 
-`tctl workflow listall <modifiers>`
+`tctl Workflow listall <modifiers>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
 ###`--print_raw_time
 
-Print the raw timestamp.
+打印原始时间戳。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listall --print_raw_time
 ```
 
-### --print_datetime
+<a id="workflowid"></a>
+### --打印日期时间 {#printdatetime}
 
-Print the timestamp.
+打印时间戳。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listall --print_datetime
 ```
 
-### --print_memo
+<a id="workflowtype"></a>
+### --打印备忘录 {#printmemo}
 
-Print a memo.
+打印备忘录。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listall --print_memo
 ```
 
-### --print_search_attr
+<a id="status"></a>
+### --print_search_attr {#printsearchattr}
 
-Print the [Search Attributes](/search-attribute).
+打印 [Search Attributes](/search-attribute)。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listall --print_search_attr
 ```
 
-### `--print_full`
+<a id="query"></a>
+### `--print_full` {#printfull}
 
-Print the full message without table formatting.
+打印完整消息，无需表格格式。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listall --print_full
 ```
 
-### --print_json
+<a id="more"></a>
+### --print_json {#printjson}
 
-Print the raw JSON objects.
+打印原始 JSON 对象。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listall --print_json
 ```
 
-### --open
+### - 打开 {#open}
 
-List open [Workflow Executions](/workflow-execution).
-(By default, the `tctl workflow listall` command lists closed Workflow Executions.)
+列表打开 [Workflow Executions](/workflow-execution)。
+（默认情况下，`tctl Workflow listall` 命令列出已关闭的 Workflow Execution。）
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listall --open
 ```
 
-### --earliest_time
+<a id="pagesize"></a>
+### --最早时间 {#earliesttime}
 
-Specify the earliest start time to list. Supported format are as follows:
+指定列出的最早开始时间。支持的格式如下：
 
 - `<year>-<month>-<day>T<hour>:<minute>:<second><+|-><offsethours>:<offsetminutes>`
-- Raw Unix Epoch time (the number of milliseconds since 0000 UTC on January 1, 1970).
-- `<n><duration`, where `<n>` is a value between 0 and 1000000, and `<duration>` is one of the following:
-  - `second` or `s`
-  - `minute` or `m`
-  - `hour` or `h`
-  - `day` or `d`
-  - `week` or `w`
-  - `month` or `M`
-  - `year` or `y`
+- 原始 Unix 纪元时间（自 1970 年 1 月 1 日 0000 UTC 以来的毫秒数）。
+- `<n><duration`，其中 `<n>` 是 0 到 1000000 之间的值，`<duration>` 是以下之一：
+  - `second` 或 `s`
+  - `minute` 或 `m`
+  - `hour` 或 `h`
+  - `day` 或 `d`
+  - `week` 或 `w`
+  - `month` 或 `M`
+  - `year` 或 `y`
 
-**Examples**
+**示例**
 
-To specify 3:04:05 PM India Standard Time on January 2, 2022:
+要指定 2022 年 1 月 2 日印度标准时间下午 3:04:05：
 
 ```bash
 tctl workflow listall --earliest-time '2022-01-02T15:04:05+05:30'
 ```
 
-To specify 15 minutes before the current time:
+要指定当前时间之前 15 分钟：
 
 ```bash
 tctl workflow listall --earliest-time '15minute'
 ```
 
-### --latest_time
+<a id="listall"></a>
+### --latest_time {#latesttime}
 
-Specify the latest start time to list. Supported formats are as follows:
+指定列出的最晚开始时间。支持的格式如下：
 
 - `<year>-<month>-<day>T<hour>:<minute>:<second><+|-><offsethours>:<offsetminutes>`
-- Raw Unix Epoch time (the number of milliseconds since 0000 UTC on January 1, 1970).
-- `<n><duration`, where `<n>` is a value between 0 and 1000000, and `<duration>` is one of the following:
-  - `second` or `s`
-  - `minute` or `m`
-  - `hour` or `h`
-  - `day` or `d`
-  - `week` or `w`
-  - `month` or `M`
-  - `year` or `y`
+- 原始 Unix 纪元时间（自 1970 年 1 月 1 日 0000 UTC 以来的毫秒数）。
+- `<n><duration`，其中 `<n>` 是 0 到 1000000 之间的值，`<duration>` 是以下之一：
+  - `second` 或 `s`
+  - `minute` 或 `m`
+  - `hour` 或 `h`
+  - `day` 或 `d`
+  - `week` 或 `w`
+  - `month` 或 `M`
+  - `year` 或 `y`
 
-Alias: `--lt`
+别名：`--lt`
 
-**Examples**
+**示例**
 
-To specify 11:02:17 PM Pacific Daylight Time on April 13, 2022:
+要指定 2022 年 4 月 13 日太平洋夏令时间晚上 11:02:17：
 
 ```bash
 tctl workflow listall --latest-time '2022-04-13T23:02:17-07:00'
 ```
 
-To specify 10 seconds before the current time:
+要指定当前时间之前 10 秒：
 
 ```bash
 tctl workflow listall --latest-time '10second'
 ```
 
-### --workflow_id
+<a id="printdatetime"></a>
+### --Workflow_id {#workflowid}
 
-Specify a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id).
+指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listall --workflow_id <id>
 ```
 
-### --workflow_type
+<a id="printmemo"></a>
+### --Workflow_type {#workflowtype}
 
-Specify the name of a [Workflow Type](/workflow-definition#workflow-type).
+指定 [Workflow型](/workflow-definition#Workflow-type) 的名称。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listall --workflow_type <name>
 ```
 
-### --status
+### - 地位 {#status}
 
-Specify the status of a [Workflow Execution](/workflow-execution).
-Supported values are as follows:
+指定 [Workflow Execution](/workflow-execution) 的状态。
+支持的值如下：
 
 - `completed`
 - `failed`
@@ -630,231 +661,248 @@ Supported values are as follows:
 - `continuedasnew`
 - `timedout`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listall --status <value>
 ```
 
-### --query
+<a id="printsearchattr"></a>
+### --Query {#query}
 
-Specify an SQL-like query of [Search Attributes](/search-attribute).
+指定 [Search Attributes](/search-attribute) 的类似 SQL 的 Query。
 
-Using the `--query` option causes tctl to ignore all other filter options, including `open`, `earliest_time`, `latest_time`, `workflow_id`, and `workflow_type`.
+使用 `--Query` 选项会导致 tctl 忽略所有其他筛选器选项，包括 `open`、`earliest_time`、`latest_time`、`Workflow_id` 和 `Workflow_type`。
 
-Alias: `-q`
+别名：`-q`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listall --query <value>
 ```
 
-## listarchived
+<a id="printfull"></a>
+## 已归档列表 {#listarchived}
 
-The `tctl workflow listarchived` command lists archived [Workflow Executions](/workflow-execution).
+`tctl Workflow listarchived` 命令列出已存档的 [Workflow Executions](/workflow-execution)。
 
-By default, this command lists a maximum of 100 Workflow Executions.
+默认情况下，此命令最多列出 100 个 Workflow Execution。
 
-- To set the size of a page, use the `--pagesize` option.
-- To list all pages, use the `--all` option.
+- 要设置页面大小，请使用 `--pagesize` 选项。
+- 要列出所有页面，请使用 `--all` 选项。
 
-See also [`tctl workflow list`](#list), [`tctl workflow listall`](#listall), and [`tctl workflow scan`](#scan).
+另请参见 [`tctl Workflow list`](#list)、[`tctl Workflow listall`](#listall) 和 [`tctl Workflow scan`](#scan)。
 
-`tctl workflow listarchived <modifiers>`
+`tctl Workflow listarchived <modifiers>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --print_raw_time
+<a id="printjson"></a>
+### --print_raw_time {#printrawtime}
 
-Print the raw timestamp.
+打印原始时间戳。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listarchived --print_raw_time
 ```
 
-### --print_datetime
+<a id="open"></a>
+### --打印日期时间 {#printdatetime}
 
-Print the timestamp.
+打印时间戳。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listarchived --print_datetime
 ```
 
-### --print_memo
+<a id="earliesttime"></a>
+### --打印备忘录 {#printmemo}
 
-Print a memo.
+打印备忘录。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listarchived --print_memo
 ```
 
-### --print_search_attr
+<a id="latesttime"></a>
+### --print_search_attr {#printsearchattr}
 
-Print the [Search Attributes](/search-attribute).
+打印 [Search Attributes](/search-attribute)。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listarchived --print_search_attr
 ```
 
-### --print_full
+<a id="workflowid"></a>
+### --print_full {#printfull}
 
-Print the full message without table formatting.
+打印完整消息，无需表格格式。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listarchived --print_full
 ```
 
-### --print_json
+<a id="workflowtype"></a>
+### --print_json {#printjson}
 
-Print the raw JSON objects.
+打印原始 JSON 对象。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listarchived --print_json
 ```
 
-### --query
+<a id="status"></a>
+### --Query {#query}
 
-Specify an SQL-like query of [Search Attributes](/search-attribute).
+指定 [Search Attributes](/search-attribute) 的类似 SQL 的 Query。
 
-Consult the documentation of the visibility archiver that is used by your [Namespace](/namespaces) for detailed instructions.
+有关详细说明，请参阅 [Namespace](/namespaces) 使用的 Visibility 存档器的文档。
 
-Alias: `-q`
+别名：`-q`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listarchived --query <value>
 ```
 
-### --pagesize
+<a id="query"></a>
+### --页面大小 {#pagesize}
 
-Specify the maximum number of [Workflow Executions](/workflow-execution) to list on a page.
-(By default, the `tctl workflow listarchived` command lists 100 Workflow Executions per page.)
+指定在页面上列出的 [Workflow Executions](/workflow-execution) 的最大数量。
+（默认情况下，`tctl Workflow listarchived` 命令每页列出 100 个 Workflow Execution。）
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listarchived --pagesize <value>
 ```
 
-### --all
+### - 全部 {#all}
 
-List all pages.
+列出所有页面。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow listarchived --all
 ```
 
-## observe
+## 观察 {#observe}
 
-The `tctl workflow observe` command shows the progress of the [Event History](/workflow-execution/event#event-history) of a [Workflow Execution](/workflow-execution).
+`tctl Workflow observe` 命令显示 [Workflow Execution](/workflow-execution) 的 [Event History](/workflow-execution/event#event-history) 的进度。
 
-See also [`tctl workflow observeid`](#observeid).
+另请参见 [`tctl Workflow observeid`](#observeid)。
 
-`tctl workflow observe <modifiers>`
+`tctl Workflow observe <modifiers>`
 
-Alias: `o`
+别名：`o`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --workflow_id
+<a id="listarchived"></a>
+### --Workflow_id {#workflowid}
 
-Specify a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id).
+指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow observe --workflow_id <id>
 ```
 
-### --run_id
+<a id="printrawtime"></a>
+### --run_id {#runid}
 
-Specify a [Run Id](/workflow-execution/workflowid-runid#run-id).
+指定 [运行 ID](/workflow-execution/workflowid-runid#run-id)。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow observe --run_id <id>
 ```
 
-### --show_detail
+<a id="printdatetime"></a>
+### --显示详细信息 {#showdetail}
 
-Show event details.
+显示活动详细信息。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow observe --show_detail
 ```
 
-### --max_field_length
+<a id="printmemo"></a>
+### --最大字段长度 {#maxfieldlength}
 
-Specify the maximum length for each attribute field.
-The default value is 0.
+指定每个属性字段的最大长度。
+默认值为 0。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow observe --max_field_length <length>
 ```
 
-## observeid
+<a id="printsearchattr"></a>
+## 观察值 {#observeid}
 
-The `tctl workflow observeid` command shows the progress of the [Event History](/workflow-execution/event#event-history) of a [Workflow Execution](/workflow-execution) for the specified [Workflow Id](/workflow-execution/workflowid-runid#workflow-id)and optional [Run Id](/workflow-execution/workflowid-runid#run-id).
+`tctl Workflow observeid` 命令显示指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id) 和可选 [运行 ID](/workflow-execution/workflowid-runid#run-id) 的 [Workflow Execution](/workflow-execution) 的 [Event History](/workflow-execution/event#event-history) 的进度。
 
-`tctl workflow observeid <workflow_id> [<run_id>] <modifiers>`
+`tctl Workflow observeid <Workflow_id> [<run_id>] <modifiers>`
 
-This command is a shortcut for `tctl workflow observe --workflow_id <workflowid> [--run_id <runid>]`.
+该命令是 `tctl Workflow observe --Workflow_id <Workflowid> [--run_id <runid>]` 的快捷方式。
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --show_detail
+<a id="printfull"></a>
+### --显示详细信息 {#showdetail}
 
-Show event details.
+显示活动详细信息。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow observeid --show_detail
 ```
 
-### --max_field_length
+<a id="printjson"></a>
+### --最大字段长度 {#maxfieldlength}
 
-Specify the maximum length for each attribute field.
-The default value is 0.
+指定每个属性字段的最大长度。
+默认值为 0。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow observeid --max_field_length <length>
 ```
 
-## query
+## Query {#query}
 
-Alias: `q`
+别名：`q`
 
-The `tctl workflow query` command sends a [Query](/sending-messages#sending-queries) to a [Workflow Execution](/workflow-execution).
+`tctl Workflow Query` 命令将 [Query](/sending-messages#sending-queries) 发送到 [Workflow Execution](/workflow-execution)。
 
-Queries can be used to retrieve all or part of the Workflow state with given parameters.
+查询可用于检索具有给定参数的全部或部分 Workflow 状态。
 
 ```bash
 $ tctl workflow query --workflow_id "HelloQuery" --query_type "getCount"
@@ -862,8 +910,8 @@ Query result as JSON:
 3
 ```
 
-Queries can also be used on completed Workflows.
-Let's complete a Workflow by updating its greeting, and then query the now-finished Workflow.
+查询也可用于已完成的 Workflow。
+让我们通过更新问候语来完成 Workflow，然后更新 Query 现已完成的 Workflow。
 
 ```bash
 $ tctl workflow signal --workflow_id "HelloQuery" --name "updateGreeting" --input \"Bye\"
@@ -873,428 +921,458 @@ Query result as JSON:
 4
 ```
 
-Queries are written as follows:
+查询写法如下：
 
-`tctl workflow query --workflow_id [modifiers]`
+`tctl Workflow Query --Workflow_id [modifiers]`
 
-The following modifiers control the behavior of the command.
-Always include required modifiers when executing this command.
+以下修饰符控制命令的行为。
+执行此命令时始终包含所需的修饰符。
 
-### --workflow_id
+<a id="pagesize"></a>
+### --Workflow_id {#workflowid}
 
-Specify a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id). **This modifier is required.**
+指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。 **此修饰符是必需的。**
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow query --workflow_id <id>
 ```
 
-### --run_id
+<a id="all"></a>
+### --run_id {#runid}
 
-Specify a [Run Id](/workflow-execution/workflowid-runid#run-id).
+指定 [运行 ID](/workflow-execution/workflowid-runid#run-id)。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow query --run_id <id>
 ```
 
-### --query_type
+<a id="observe"></a>
+### --Query_type {#querytype}
 
-Specify the type of Query to run.
+指定要运行的 Query 的类型。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow query --query_type <value>
 ```
 
-### --input
+### - 输入 {#input}
 
-Pass input for the Query.
-Input must be in JSON format.
-For multiple JSON objects, concatenate them and use spaces as separators.
+传递 Query 的输入。
+输入必须为 JSON 格式。
+对于多个 JSON 对象，将它们连接起来并使用空格作为分隔符。
 
-Alias: `-i`
+别名：`-i`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow query --input <json>
 ```
 
-### --input_file
+<a id="workflowid"></a>
+### --输入文件 {#inputfile}
 
-Pass input for the Query from a JSON file.
-For multiple JSON objects, concatenate them and use spaces or newline characters as separators.
-Input from the command line overwrites input from the file.
+从 JSON 文件传递​​ Query 的输入。
+对于多个 JSON 对象，将它们连接起来并使用空格或换行符作为分隔符。
+来自命令行的输入将覆盖来自文件的输入。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow query --input_file <filename>
 ```
 
-### --query_reject_condition
+<a id="runid"></a>
+### --Query_reject_condition {#queryrejectcondition}
 
-Reject Queries based on Workflow state.
-Valid values are `not_open` and `not_completed_cleanly`.
+拒绝基于 Workflow 状态的查询。
+有效值为 `not_open` 和 `not_completed_cleanly`。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow query --query_reject_condition <value>
 ```
 
-## reset
+## 重置 {#reset}
 
-The `tctl workflow reset` command resets a [Workflow Execution](/workflow-execution) by either [`eventId`](#--event_id)or [`resetType`](#--reset_type).
+`tctl Workflow reset` 命令通过 [`eventId`](#--event_id) 或 [`resetType`](#--reset_type) 重置 [Workflow Execution](/workflow-execution)。
 
-Resetting a Workflow allows the process to be resumed from a certain point without losing your parameters or Event History.
+重置 Workflow 允许从某个点恢复过程，而不会丢失参数或 Event History。
 
-To run multiple Reset operations at once, see [`tctl workflow reset-batch`](#reset-batch).
+要一次运行多个复位操作，请参阅 [`tctl Workflow reset-batch`](#reset-batch)。
 
-`tctl workflow reset <modifiers>`
+`tctl Workflow reset <modifiers>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --workflow_id
+<a id="showdetail"></a>
+### --Workflow_id {#workflowid}
 
-Specify a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id).
+指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset --workflow_id <id>
 ```
 
-### --run_id
+<a id="maxfieldlength"></a>
+### --run_id {#runid}
 
-Specify a [Run Id](/workflow-execution/workflowid-runid#run-id).
+指定 [运行 ID](/workflow-execution/workflowid-runid#run-id)。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset --run_id <id>
 ```
 
-### --event_id
+<a id="observeid"></a>
+### --event_id {#eventid}
 
-Specify the `eventId` of any event after `WorkflowTaskStarted` to which you want to reset.
-Valid values are `WorkflowTaskCompleted`, `WorkflowTaskFailed`, and `WorkflowTaskTimeout`.
+指定 `WorkflowTaskStarted` 之后要重置为的任何事件的 `eventId`。
+有效值为 `WorkflowTaskCompleted`、`WorkflowTaskFailed` 和 `WorkflowTaskTimeout`。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset --event_id <id>
 ```
 
-### --reason
+### - 原因 {#reason}
 
-Specify a reason for resetting the [Workflow Execution](/workflow-execution).
+指定重置 [Workflow Execution](/workflow-execution) 的原因。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset --reason <string>
 ```
 
-### --reset_type
+<a id="showdetail"></a>
+### --reset_type {#resettype}
 
-Specify the event type to which you want to reset.
+指定要重置为的事件类型。
 
-| Value                | Description                                                 |
+| 价值                | 描述                                                 |
 | -------------------- | ----------------------------------------------------------- |
-| `FirstWorkflowTask`  | Reset to the beginning of the Event History.                |
-| `LastWorkflowTask`   | Reset to the end of the Event History.                      |
-| `LastContinuedAsNew` | Reset to the end of the Event History for the previous Run. |
-| `BadBinary`          | Reset to the point where a bad binary was used.             |
+| `FirstWorkflowTask`  | 重置为 Event History 的开头。                |
+| `LastWorkflowTask`   | 重置为Event History 的末尾。                      |
+| `LastContinuedAsNew` | 重置为上次运行的 Event History 末尾。 |
+| `BadBinary`          | 重置到使用错误二进制文件的位置。             |
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset --reset_type <value>
 ```
 
-### --reset_reapply_type
+<a id="maxfieldlength"></a>
+### --reset_reapply_type {#resetreapplytype}
 
-Specify the types of events to reapply after the reset point.
-Valid values are `All`, `Signal`, and `None`. The default is `All`.
+指定重置点后要重新应用的事件类型。
+有效值为 `All`、`Signal` 和 `None`。默认值为 `All`。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset --reset_reapply_type <value>
 ```
 
-### --reset_bad_binary_checksum
+<a id="query"></a>
+### --reset_bad_binary_checksum {#resetbadbinarychecksum}
 
-Specify the binary checksum when using `--reset_type BadBinary`.
+使用 `--reset_type BadBinary` 时指定二进制校验和。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset --reset_bad_binary_checksum <value>
 ```
 
-## reset-batch
+<a id="workflowid"></a>
+## 重置批次 {#reset-batch}
 
-The `tctl workflow reset-batch` command resets a batch of [Workflow Executions](/workflow-execution) by [`resetType`](#--reset_type).
+`tctl Workflow reset-batch` 命令通过 [`resetType`](#--reset_type) 重置一批 [Workflow Executions](/workflow-execution)。
 
-Resetting a Workflow allows the process to be resumed from a certain point without losing your parameters or Event History.
+重置 Workflow 允许从某个点恢复过程，而不会丢失参数或 Event History。
 
-To reset individual Workflows, see [`tctl workflow reset`](#reset).
+要重置各个 Workflow，请参阅 [`tctl Workflow reset`](#reset)。
 
-`tctl workflow reset-batch <modifiers>`
+`tctl Workflow reset-batch <modifiers>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --input_file
+<a id="runid"></a>
+### --输入文件 {#inputfile}
 
-Provide an input file that specifies [Workflow Execution](/workflow-execution) to reset.
+提供指定要重置的 [Workflow Execution](/workflow-execution) 的输入文件。
 
-Each line contains one [Workflow Id](/workflow-execution/workflowid-runid#workflow-id)as the base Run and, optionally, a [Run Id](/workflow-execution/workflowid-runid#run-id).
-If a Run Id is not specified, the current Run Id is used.
+每行包含一个 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id) 作为基本运行，还可以选择包含一个 [运行 ID](/workflow-execution/workflowid-runid#run-id)。
+如果未指定运行 Id，则使用当前运行 Id。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset-batch --input_file <filename>
 ```
 
-### --query
+<a id="querytype"></a>
+### --Query {#query}
 
-Specify an SQL-like query of [Search Attributes](/search-attribute) describing the [Workflow Executions](/workflow-execution) to reset.
+指定类似 SQL 的 [Search Attributes](/search-attribute) 的 Query 来描述要重置的 [Workflow Executions](/workflow-execution)。
 
-Alias: `-q`
+别名：`-q`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset-batch --query <value>
 ```
 
-### --exclude_file
+<a id="input"></a>
+### --排除文件 {#excludefile}
 
-Provide an input file that specifies [Workflow Executions](/workflow-execution) to exclude from resetting.
+提供一个输入文件，指定要从重置中排除的 [Workflow Executions](/workflow-execution)。
 
-Each line contains one [Workflow Id](/workflow-execution/workflowid-runid#workflow-id).
+每行包含一个 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset-batch --exclude_file <filename>
 ```
 
-### --input_separator
+<a id="inputfile"></a>
+### --输入分隔符 {#inputseparator}
 
-Specify the separator for the input file.
-The default is a tab (`\t`).
+指定输入文件的分隔符。
+默认为选项卡 (`\t`)。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset-batch --input_separator <string>
 ```
 
-### --reason
+### - 原因 {#reason}
 
-Specify a reason for resetting the [Workflow Executions](/workflow-execution).
+指定重置 [Workflow Executions](/workflow-execution) 的原因。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset-batch --reason <string>
 ```
 
-### --input_parallism
+<a id="queryrejectcondition"></a>
+### --输入并行 {#inputparallism}
 
-Specify the number of goroutines to run in parallel.
-Each goroutine processes one line for every second.
-The default is 1.
+指定并行运行的 goroutine 数量。
+每个 goroutine 每秒处理一行。
+默认值为 1。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset-batch --input_parallism <value>
 ```
 
-### --skip_current_open
+<a id="reset"></a>
+### --skip_current_open {#skipcurrentopen}
 
-Indicate that a [Workflow Execution](/workflow-execution) should be skipped if the current Run is open for the same [Workflow Id](/workflow-execution/workflowid-runid#workflow-id)as the base Run.
+指示如果当前运行针对与基本运行相同的 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id) 打开，则应跳过 [Workflow Execution](/workflow-execution)。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset-batch --skip_current_open
 ```
 
-### --skip_base_is_not_current
+<a id="workflowid"></a>
+### --skip_base_is_not_current {#skipbaseisnotcurrent}
 
-Indicate that a [Workflow Execution](/workflow-execution) should be skipped if the base Run is not the current Run.
+指示如果基本运行不是当前运行，则应跳过 [Workflow Execution](/workflow-execution)。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset-batch --skip_base_is_not_current
 ```
 
-### --only_non_deterministic
+<a id="runid"></a>
+### --仅非确定性 {#onlynondeterministic}
 
-Indicate that a [Workflow Execution](/workflow-execution) should be reset only if its last event is `WorkflowTaskFailed` with a nondeterminism error.
+指示仅当 [Workflow Execution](/workflow-execution) 的最后一个事件是具有非确定性错误的 `WorkflowTaskFailed` 时，才应重置 [Workflow Execution](/workflow-execution)。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset-batch --only_non_deterministic
 ```
 
-### --dry_run
+<a id="eventid"></a>
+### --dry_run {#dryrun}
 
-Simulate use of the `tctl workflow reset-batch` command without resetting any [Workflow Executions](/workflow-execution).
-Output is logged to `stdout`.
+模拟使用 `tctl Workflow reset-batch` 命令，无需重置任何 [Workflow Executions](/workflow-execution)。
+输出记录到 `stdout`。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset-batch --dry_run
 ```
 
-### --reset_type
+<a id="reason"></a>
+### --reset_type {#resettype}
 
-Specify the event type to which you want to reset.
+指定要重置为的事件类型。
 
-| Value                | Description                                                 |
+| 价值                | 描述                                                 |
 | -------------------- | ----------------------------------------------------------- |
-| `FirstWorkflowTask`  | Reset to the beginning of the Event History.                |
-| `LastWorkflowTask`   | Reset to the end of the Event History.                      |
-| `LastContinuedAsNew` | Reset to the end of the Event History for the previous Run. |
-| `BadBinary`          | Reset to the point where a bad binary was used.             |
+| `FirstWorkflowTask`  | 重置为 Event History 的开头。                |
+| `LastWorkflowTask`   | 重置为Event History 的末尾。                      |
+| `LastContinuedAsNew` | 重置为上次运行的 Event History 末尾。 |
+| `BadBinary`          | 重置到使用错误二进制文件的位置。             |
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset-batch --reset_type <value>
 ```
 
-### --reset_bad_binary_checksum
+<a id="resettype"></a>
+### --reset_bad_binary_checksum {#resetbadbinarychecksum}
 
-Specify the binary checksum when using `--reset_type BadBinary`.
+使用 `--reset_type BadBinary` 时指定二进制校验和。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow reset-batch --reset_bad_binary_checksum <value>
 ```
 
-## run
+## 跑步 {#run}
 
-The `tctl workflow run` command starts a new [Workflow Execution](/workflow-execution) and can show the progress of a Workflow Execution.
-The command is entered in the following format:
+`tctl Workflow run` 命令启动新的 [Workflow Execution](/workflow-execution) 并可以显示 Workflow Execution 的进度。
+该命令按以下格式输入：
 
-`tctl workflow run <modifiers>`
+`tctl Workflow run <modifiers>`
 
-To run a Workflow, the user must specify the following:
+要运行 Workflow，用户必须指定以下内容：
 
-- Task queue name (`--taskqueue`)
-- Workflow Type (`--workflow_type`)
+- Task Queue 名称 (`--taskqueue`)
+- Workflow型(`--Workflow_type`)
 
 ```bash
 tctl workflow run --taskqueue your-task-queue-name --workflow_type YourWorkflowDefinitionName
 ```
 
-Single quotes (`''`) are used to wrap input as JSON.
-This command doesn't finish until the Workflow completes.
+单引号 (`''`) 用于将输入包装为 JSON。
+在 Workflow 完成之前，此命令不会完成。
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --taskqueue
+<a id="resetreapplytype"></a>
+### --任务队列 {#taskqueue}
 
-Specify a [Task Queue](/task-queue).
+指定 [Task Queue](/task-queue)。
 
-Alias: `--t`
+别名：`--t`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --taskqueue <name>
 ```
 
-### --workflow_id
+<a id="resetbadbinarychecksum"></a>
+### --Workflow_id {#workflowid}
 
-Specify a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id).
+指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --workflow_id <id>
 ```
 
-### --workflow_type
+<a id="reset-batch"></a>
+### --Workflow_type {#workflowtype}
 
-Specify the name of a [Workflow Type](/workflow-definition#workflow-type).
+指定 [Workflow型](/workflow-definition#Workflow-type) 的名称。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --workflow_type <name>
 ```
 
-### --execution_timeout
+<a id="inputfile"></a>
+### --执行超时 {#executiontimeout}
 
-Specify the [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout) of the [Workflow Execution](/workflow-execution) in seconds.
-The default value is 0.
+以秒为单位指定 [Workflow Execution](/workflow-execution) 的 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。
+默认值为 0。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --execution_timeout <seconds>
 ```
 
-### --workflow_task_timeout
+<a id="query"></a>
+### --Workflow_task_timeout {#workflowtasktimeout}
 
-Specify the [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout) of the [Workflow Task](/tasks#workflow-task) in seconds.
-The default value is 10.
+以秒为单位指定 [Workflow 任务](/tasks#Workflow-task) 的 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。
+默认值为 10。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --workflow_task_timeout <seconds>
 ```
 
-### --cron
+<a id="excludefile"></a>
+### --cron {#cron}
 
-Specify a [Cron Schedule](/cron-job#cron-schedules).
+指定 [克朗 Schedule](/cron-job#cron-Schedules)。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --cron <string>
 ```
 
-### --workflowidreusepolicy
+<a id="inputseparator"></a>
+### --Workflowid重用政策 {#workflowidreusepolicy}
 
-Specify a [Workflow Id Reuse Policy](/workflow-execution/workflowid-runid#workflow-id-reuse-policy).
-Configure if the same [Workflow Id](/workflow-execution/workflowid-runid#workflow-id)is allowed for use in new [Workflow Execution](/workflow-execution).
+指定 [Workflow ID 重用政策](/workflow-execution/workflowid-runid#Workflow-id-reuse-policy)。
+配置是否允许在新的 [Workflow Execution](/workflow-execution) 中使用相同的 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-There are three allowed values:
+共有三个允许值：
 
-- [AllowDuplicateFailedOnly](/workflow-execution/workflowid-runid#workflow-id-reuse-policy)
-- [AllowDuplicate](/workflow-execution/workflowid-runid#workflow-id-reuse-policy)
-- [RejectDuplicate](/workflow-execution/workflowid-runid#workflow-id-reuse-policy)
+- [仅允许重复失败](/workflow-execution/workflowid-runid#Workflow-id-reuse-policy)
+- [允许重复](/workflow-execution/workflowid-runid#Workflow-id-reuse-policy)
+- [拒绝重复](/workflow-execution/workflowid-runid#Workflow-id-reuse-policy)
 
-**Examples**
+**示例**
 
 ```bash
 tctl workflow run --workflowidreusepolicy AllowDuplicate
@@ -1302,344 +1380,371 @@ tctl workflow run --workflowidreusepolicy AllowDuplicateFailedOnly
 tctl workflow run --workflowidreusepolicy RejectDuplicate
 ```
 
-### --input
+### - 输入 {#input}
 
-Pass input for the Workflow.
-Input must be in JSON format.
-For multiple JSON objects, pass each in a separate `--input` option. Use `null` for null values.
+传递 Workflow 的输入。
+输入必须为 JSON 格式。
+对于多个 JSON 对象，请在单独的 `--input` 选项中传递每个对象。使用 `null` 作为空值。
 
-Alias: `-i`
+别名：`-i`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --input <json>
 ```
 
-### --input_file
+<a id="reason"></a>
+### --输入文件 {#inputfile}
 
-Pass input for the Workflow from a JSON file.
-For multiple JSON objects, concatenate them and use spaces or newline characters as separators.
-Input from the command line overwrites input from the file.
+从 JSON 文件传递​​ Workflow 的输入。
+对于多个 JSON 对象，将它们连接起来并使用空格或换行符作为分隔符。
+来自命令行的输入将覆盖来自文件的输入。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --input_file <filename>
 ```
 
-### --memo_key
+<a id="inputparallism"></a>
+### --memo_key {#memokey}
 
-Pass a key for a memo.
-For multiple keys, concatenate them and use spaces as separators.
+传递备忘录的密钥。
+对于多个键，将它们连接起来并使用空格作为分隔符。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --memo_key <key>
 ```
 
-### --memo
+<a id="skipcurrentopen"></a>
+### --备忘录 {#memo}
 
-Pass a memo.
-A memo is information in JSON format that can be shown when the Workflow is listed.
-For multiple memos, concatenate them and use spaces as separators.
-The order must match the order of keys in `--memo_key`.
+传递一份备忘录。
+备忘录是 JSON 格式的信息，可以在列出 Workflow 时显示。
+对于多个备忘录，请将它们连接起来并使用空格作为分隔符。
+该顺序必须与 `--memo_key` 中键的顺序匹配。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --memo <json>
 ```
 
-### --memo_file
+<a id="skipbaseisnotcurrent"></a>
+### --memo_file {#memofile}
 
-Pass information for a memo from a JSON file.
-For multiple JSON objects, concatenate them and use spaces or newline characters as separators.
-The order must match the order of keys in `--memo_key`.
+从 JSON 文件传递​​备忘录信息。
+对于多个 JSON 对象，将它们连接起来并使用空格或换行符作为分隔符。
+该顺序必须与 `--memo_key` 中键的顺序匹配。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --memo_file <filename>
 ```
 
-### --search_attr_key
+<a id="onlynondeterministic"></a>
+### --search_attr_key {#searchattrkey}
 
-Specify a [Search Attribute](/search-attribute) key.
-For multiple keys, concatenate them and use pipes (`|`) as separators.
+指定 [Search Attribute](/search-attribute) 密钥。
+对于多个键，将它们连接起来并使用管道 (`|`) 作为分隔符。
 
-To list valid keys, use the `tctl cluster get-search-attributes` command.
+要列出有效密钥，请使用 `tctl cluster get-search-attributes` 命令。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --search_attr_key <key>
 ```
 
-### --search_attr_value
+<a id="dryrun"></a>
+### --搜索属性值 {#searchattrvalue}
 
-Specify a [Search Attribute](/search-attribute) value.
-For multiple values, concatenate them and use pipes (`|`) as separators.
-If a value is an array, use JSON format, such as `["a","b"]`, `[1,2]`, `["true","false"]`, or `["2022-06-07T17:16:34-08:00","2022-06-07T18:16:34-08:00"]`.
+指定 [Search Attribute](/search-attribute) 值。
+对于多个值，将它们连接起来并使用管道 (`|`) 作为分隔符。
+如果值是数组，请使用 JSON 格式，例如 `["a","b"]`、`[1,2]`、`["true","false"]` 或 `["2022-06-07T17:16:34-08:00","2022-06-07T18:16:34-08:00"]`。
 
-To list valid keys and value types, use the `tctl cluster get-search-attributes` command.
+要列出有效的键和值类型，请使用 `tctl cluster get-search-attributes` 命令。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --search_attr_value <value>
 ```
 
-### --show_detail
+<a id="resettype"></a>
+### --显示详细信息 {#showdetail}
 
-Get event details.
+获取活动详情。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --show_detail
 ```
 
-### --max_field_length
+<a id="resetbadbinarychecksum"></a>
+### --最大字段长度 {#maxfieldlength}
 
-Specify the maximum length for each attribute field.
-The default value is 0.
+指定每个属性字段的最大长度。
+默认值为 0。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow run --max_field_length <length>
 ```
 
-## scan
+## 扫描 {#scan}
 
-The `tctl workflow scan` command lists [Workflow Executions](/workflow-execution).
-It is faster than the `tctl workflow listall` command, but the results are not sorted.
+`tctl Workflow scan` 命令列出 [Workflow Executions](/workflow-execution)。
+它比 `tctl Workflow listall` 命令更快，但结果未排序。
 
-By default, this command lists a maximum of 2000 Workflow Executions.
-To set the size of a page, use the `--pagesize` option.
+默认情况下，此命令最多列出 2000 个 Workflow Execution。
+要设置页面大小，请使用 `--pagesize` 选项。
 
-See also [`tctl workflow list`](#list), [`tctl workflow listall`](#listall), and [`tctl workflow listarchived`](#listarchived).
+另请参见 [`tctl Workflow list`](#list)、[`tctl Workflow listall`](#listall) 和 [`tctl Workflow listarchived`](#listarchived)。
 
-`tctl workflow scan <modifiers>`
+`tctl Workflow scan <modifiers>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --print_raw_time
+<a id="run"></a>
+### --print_raw_time {#printrawtime}
 
-Print the raw timestamp.
+打印原始时间戳。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow scan --print_raw_time
 ```
 
-### --print_datetime
+<a id="taskqueue"></a>
+### --打印日期时间 {#printdatetime}
 
-Print the timestamp.
+打印时间戳。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow scan --print_datetime
 ```
 
-### --print_memo
+<a id="workflowid"></a>
+### --打印备忘录 {#printmemo}
 
-Print a memo.
+打印备忘录。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow scan --print_memo
 ```
 
-### --print_search_attr
+<a id="workflowtype"></a>
+### --print_search_attr {#printsearchattr}
 
-Print the [Search Attributes](/search-attribute).
+打印 [Search Attributes](/search-attribute)。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow scan --print_search_attr
 ```
 
-### --print_full
+<a id="executiontimeout"></a>
+### --print_full {#printfull}
 
-Print the full message without table formatting.
+打印完整消息，无需表格格式。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow scan --print_full
 ```
 
-### --print_json
+<a id="workflowtasktimeout"></a>
+### --print_json {#printjson}
 
-Print the raw JSON objects.
+打印原始 JSON 对象。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow scan --print_json
 ```
 
-### --pagesize
+<a id="cron"></a>
+### --页面大小 {#pagesize}
 
-Specify the maximum number of [Workflow Execution](/workflow-execution) to list on a page.
-(By default, the `tctl workflow scan` command lists 2000 Workflow Executions per page.)
+指定在页面上列出的 [Workflow Execution](/workflow-execution) 的最大数量。
+（默认情况下，`tctl Workflow scan` 命令每页列出 2000 个 Workflow Execution。）
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow scan --pagesize <value>
 ```
 
-### --query
+<a id="workflowidreusepolicy"></a>
+### --Query {#query}
 
-Specify an SQL-like query of [Search Attributes](/search-attribute).
+指定 [Search Attributes](/search-attribute) 的类似 SQL 的 Query。
 
-Alias: `-q`
+别名：`-q`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow scan --query <value>
 ```
 
-## show
+## 展示 {#show}
 
-The `tctl workflow show` command shows the [Event History](/workflow-execution/event#event-history) for the specified [Workflow Execution](/workflow-execution).
+`tctl Workflow show` 命令显示指定 [Workflow Execution](/workflow-execution) 的 [Event History](/workflow-execution/event#event-history)。
 
-`tctl workflow show <modifiers>`
+`tctl Workflow show <modifiers>`
 
-See also [`tctl workflow showid`](#showid).
+另请参见 [`tctl Workflow showid`](#showid)。
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --workflow_id
+<a id="input"></a>
+### --Workflow_id {#workflowid}
 
-Show the History of a [Workflow Execution](/workflow-execution) by specifying a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id).
+通过指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id) 显示 [Workflow Execution](/workflow-execution) 的历史记录。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow show --workflow_id <id>
 ```
 
-### --run_id
+<a id="inputfile"></a>
+### --run_id {#runid}
 
-Show the History of a [Workflow Execution](/workflow-execution) by specifying a [Run Id](/workflow-execution/workflowid-runid#run-id).
+通过指定 [运行 ID](/workflow-execution/workflowid-runid#run-id) 显示 [Workflow Execution](/workflow-execution) 的历史记录。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow show --run_id <id>
 ```
 
-### --print_datetime
+<a id="memokey"></a>
+### --打印日期时间 {#printdatetime}
 
-Print the timestamp.
+打印时间戳。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow show --print_datetime
 ```
 
-### --print_raw_time
+<a id="memo"></a>
+### --print_raw_time {#printrawtime}
 
-Print the raw timestamp.
+打印原始时间戳。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow show --print_raw_time
 ```
 
-### --output_filename
+<a id="memofile"></a>
+### --输出文件名 {#outputfilename}
 
-Serialize an event to a file.
+将事件序列化到文件。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow show --output_filename <filename>
 ```
 
-### --print_full
+<a id="searchattrkey"></a>
+### --print_full {#printfull}
 
-Print full event details.
+打印完整的活动详细信息。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow show --print_full
 ```
 
-### --print_event_version
+<a id="searchattrvalue"></a>
+### --print_event_version {#printeventversion}
 
-Print the event version.
+打印事件版本。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow show --print_event_version
 ```
 
-### --event_id
+<a id="showdetail"></a>
+### --event_id {#eventid}
 
-Print the details of a specified event.
-The default value is 0.
+打印指定事件的详细信息。
+默认值为 0。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow show --event_id <id>
 ```
 
-### --max_field_length
+<a id="maxfieldlength"></a>
+### --最大字段长度 {#maxfieldlength}
 
-Specify the maximum length for each attribute field.
-The default value is 500.
+指定每个属性字段的最大长度。
+默认值为 500。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow show --max_field_length <length>
 ```
 
-### --reset_points_only
+<a id="scan"></a>
+### --仅重置点 {#resetpointsonly}
 
-Show only events that are eligible for reset.
+仅显示符合重置条件的事件。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow show --reset_points_only
 ```
 
-## showid
+<a id="printrawtime"></a>
+## 显示ID {#showid}
 
-The `tctl workflow showid` command shows the Workflow Execution Event History for the specified [Workflow Id](/workflow-execution/workflowid-runid#workflow-id)and optional [Run Id](/workflow-execution/workflowid-runid#run-id).
+`tctl Workflow showid` 命令显示指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id) 和可选 [运行 ID](/workflow-execution/workflowid-runid#run-id) 的 Workflow Execution Event History。
 
-`tctl workflow showid <workflow_id> [<run_id>] <modifiers>`
+`tctl Workflow showid <Workflow_id> [<run_id>] <modifiers>`
 
-This command is a shortcut for `tctl workflow show --workflow_id <workflowid> [--run_id <runid>]`.
+该命令是 `tctl Workflow show --Workflow_id <Workflowid> [--run_id <runid>]` 的快捷方式。
 
-Example:
+例子：
 
 ```bashbash
 tctl workflow showid <workflow_id>
 ```
 
-Example output:
+输出示例：
 
 ```bashtext
 1  WorkflowExecutionStarted    {WorkflowType:{Name:HelloWorld}, ParentInitiatedEventId:0,
@@ -1664,130 +1769,138 @@ Example output:
                                 WorkflowTaskCompletedEventId:4}
 ```
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --print_datetime
+<a id="printdatetime"></a>
+### --打印日期时间 {#printdatetime}
 
-Print the timestamp.
+打印时间戳。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow showid <workflow_id> --print_datetime
 ```
 
-### --print_raw_time
+<a id="printmemo"></a>
+### --print_raw_time {#printrawtime}
 
-Print the raw timestamp.
+打印原始时间戳。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow showid <workflow_id> --print_raw_time
 ```
 
-### --output_filename
+<a id="printsearchattr"></a>
+### --输出文件名 {#outputfilename}
 
-Serialize an event to a file.
+将事件序列化到文件。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow showid <workflow_id> --output_filename <filename>
 ```
 
-### --print_full
+### --print_full {#printfull}
 
-Print full event details.
+打印完整的活动详细信息。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow showid <workflow_id> --print_full
 ```
 
-### --print_event_version
+<a id="printjson"></a>
+### --print_event_version {#printeventversion}
 
-Print the event version.
+打印事件版本。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow showid <workflow_id> --print_event_version
 ```
 
-### --event_id
+<a id="pagesize"></a>
+### --event_id {#eventid}
 
-Print the details of a specified event.
-The default value is 0.
+打印指定事件的详细信息。
+默认值为 0。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow showid <workflow_id> --event_id <id>
 ```
 
-### --max_field_length
+<a id="query"></a>
+### --最大字段长度 {#maxfieldlength}
 
-Specify the maximum length for each attribute field.
-The default value is 500.
+指定每个属性字段的最大长度。
+默认值为 500。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow showid <workflow_id> --max_field_length <length>
 ```
 
-### --reset_points_only
+<a id="show"></a>
+### --仅重置点 {#resetpointsonly}
 
-Show only events that are eligible for reset.
+仅显示符合重置条件的事件。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow showid <workflow_id> --reset_points_only
 ```
 
-## signal
+<a id="workflowid"></a>
+## Signal {#signal}
 
-The `tctl workflow signal` command [Signals](/sending-messages#sending-signals) a [Workflow Execution](/workflow-execution).
+`tctl Workflow Signal` 命令 [Signals](/sending-messages#sending-Signals) 和 [Workflow Execution](/workflow-execution)。
 
-Workflows listen for Signals by their Signal name, and can be made to listen to one or more Signal names.
-Workflows can also listen for SQL queries.
+Workflow 通过 Signal 名称侦听 Signal，并且可以使其侦听一个或多个 Signal 名称。
+Workflow 还可以侦听 SQL 查询。
 
-The Workflow below listens for instances of "HelloSignal":
+下面的 Workflow 侦听“HelloSignal”的实例：
 
 ```bash
 tctl workflow start  --workflow_id "HelloSignal" --taskqueue HelloWorldTaskQueue --workflow_type HelloWorld --execution_timeout 3600 --input \"World\"
 ```
 
-The Worker would return this output upon receiving the Signal:
+Worker 将在收到 Signal 后返回此输出：
 
 ```text
 13:57:44.258 [workflow-method] INFO  c.t.s.javaquickstart.GettingStarted - 1: Hello World!
 ```
 
-Signals can also be used to change variable values.
+Signal 还可用于更改变量值。
 
 ```bash
 tctl workflow signal --workflow_id "HelloSignal" --name "updateGreeting" --input \"Hi\"
 ```
 
-The output would change from the first Signal received.
+输出将从收到的第一个 Signal 开始发生变化。
 
 ```text
 13:57:44.258 [workflow-method] INFO  c.t.s.javaquickstart.GettingStarted - 1: Hello World!
 13:58:22.352 [workflow-method] INFO  c.t.s.javaquickstart.GettingStarted - 2: Hi World!
 ```
 
-When a Signal is sent, an await condition is made to block any Signals that contain the same input value.
-However, changing the greeting in our example unblocks it:
+当发送 Signal 时，会产生一个等待条件来阻止任何包含相同输入值的 Signal。
+但是，在我们的示例中更改问候语可以解除阻止：
 
 ```bash
 tctl workflow signal --workflow_id "HelloSignal" --name "updateGreeting" --input \"Welcome\"
 ```
 
-Worker output:
+Worker 输出：
 
 ```text
 13:57:44.258 [workflow-method] INFO  c.t.s.javaquickstart.GettingStarted - 1: Hello World!
@@ -1795,277 +1908,291 @@ Worker output:
 13:59:29.097 [workflow-method] INFO  c.t.s.javaquickstart.GettingStarted - 3: Welcome World!
 ```
 
-Sending Signals does not require a running Worker.
+发送 Signal 不需要运行 Worker。
 
 ```bash
 tctl workflow signal --workflow_id "HelloSignal" --name "updateGreeting" --input \"Welcome\"
 ```
 
-CLI output:
+CLI 输出：
 
 ```text
 Signal workflow succeeded.
 ```
 
-The Signal request is queued inside the Temporal Server until the Worker is restarted.
-If the given Signal contains the same input as before, the queued Signal will be ignored.
+Signal 请求在 Temporal Server 内排队，直到 Worker 重新启动。
+如果给定的 Signal 包含与之前相同的输入，则排队的 Signal 将被忽略。
 
-Complete the Workflow by sending a Signal with a "Bye" greeting:
+通过发送带有“再见”问候语的 Signal 来完成 Workflow：
 
 ```bash
 tctl workflow signal --workflow_id "HelloSignal" --name "updateGreeting" --input \"Bye\"
 ```
 
-Check that the Workflow Execution has been completed.
+检查 Workflow Execution 是否已完成。
 
 ```bash
 tctl workflow showid HelloSignal
 ```
 
-Signals are written as follows:
+Signals的写法如下：
 
 ```bash
 tctl workflow signal --workflow_id <id> <modifiers>
 ```
 
-or
+或者
 
 ```bash
 tctl workflow signal --query <query> <modifiers>
 ```
 
-The following modifiers control the behavior of the command.
-Make sure to include required modifiers in all command executions.
+以下修饰符控制命令的行为。
+确保在所有命令执行中包含所需的修饰符。
 
-### --workflow_id
+<a id="runid"></a>
+### --Workflow_id {#workflowid}
 
-Specify a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id). **This modifier is required.**
+指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。 **此修饰符是必需的。**
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow signal --workflow_id <id>
 ```
 
-### --run_id
+<a id="printdatetime"></a>
+### --run_id {#runid}
 
-Specify a [Run Id](/workflow-execution/workflowid-runid#run-id).
+指定 [运行 ID](/workflow-execution/workflowid-runid#run-id)。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow signal --run_id <id>
 ```
 
-### --name
+### - 姓名 {#name}
 
-Specify the name of a [Signal](/sending-messages#sending-signals).
+指定 [Signal](/sending-messages#sending-Signals) 的名称。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow signal --query <query> --name <name>
 ```
 
-### --input
+### - 输入 {#input}
 
-Pass input for the [Signal](/sending-messages#sending-signals).
-Input must be in JSON format.
+传递 [Signal](/sending-messages#sending-Signals) 的输入。
+输入必须为 JSON 格式。
 
-Alias: `-i`
+别名：`-i`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow signal --query <query> --input <json>
 ```
 
-### --input_file
+<a id="printrawtime"></a>
+### --输入文件 {#inputfile}
 
-Pass input for the [Signal](/sending-messages#sending-signals) from a JSON file.
+从 JSON 文件传递​​ [Signal](/sending-messages#sending-Signals) 的输入。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow signal --query <query> --input_file <filename>
 ```
 
-## stack
+## 堆 {#stack}
 
-The `tctl workflow stack` command queries [Workflow Execution](/workflow-execution) with `__stack_trace` as the query type.
+`tctl Workflow stack` 命令以 `__stack_trace` 作为 Query 类型查询 [Workflow Execution](/workflow-execution)。
 
-This command can be used to locate errors and blocks in a [Workflow Definition](/workflow-definition).
+该命令可用于定位 [Workflow Definition](/workflow-definition) 中的错误和块。
 
-`tctl workflow stack <modifiers>`
+`tctl Workflow stack <modifiers>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --workflow_id
+<a id="outputfilename"></a>
+### --Workflow_id {#workflowid}
 
-**This is a required modifier.**
+**这是必需的修饰符。**
 
-Specify a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id).
+指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow stack --workflow_id <id>
 ```
 
-### --run_id
+<a id="printfull"></a>
+### --run_id {#runid}
 
-Specify a [Run Id](/workflow-execution/workflowid-runid#run-id).
+指定 [运行 ID](/workflow-execution/workflowid-runid#run-id)。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow stack --run_id <id>
 ```
 
-### --input
+### - 输入 {#input}
 
-Pass input for the query.
-Input must be in JSON format.
-For multiple JSON objects, concatenate them and use spaces as separators.
+传递 Query 的输入。
+输入必须为 JSON 格式。
+对于多个 JSON 对象，将它们连接起来并使用空格作为分隔符。
 
-Alias: `-i`
+别名：`-i`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow stack --input <json>
 ```
 
-### --input_file
+<a id="printeventversion"></a>
+### --输入文件 {#inputfile}
 
-Pass input for the query from a JSON file.
-For multiple JSON objects, concatenate them and use spaces or newline characters as separators.
-Input from the command line overwrites input from the file.
+从 JSON 文件传递​​ Query 的输入。
+对于多个 JSON 对象，将它们连接起来并使用空格或换行符作为分隔符。
+来自命令行的输入将覆盖来自文件的输入。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow stack --input_file <filename>
 ```
 
-### --query_reject_condition
+<a id="eventid"></a>
+### --Query_reject_condition {#queryrejectcondition}
 
-Reject queries based on Workflow state.
-Valid values are `not_open` and `not_completed_cleanly`.
+拒绝基于 Workflow 状态的查询。
+有效值为 `not_open` 和 `not_completed_cleanly`。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow stack --query_reject_condition <value>
 ```
 
-## start
+## 开始 {#start}
 
-The `tctl workflow start` command starts a new [Workflow Execution](/workflow-execution).
-Unlike `run`, this command returns the Workflow Id and Run Id immediately after starting the Workflow.
+`tctl Workflow start` 命令启动一个新的 [Workflow Execution](/workflow-execution)。
+与 `run` 不同，此命令在启动 Workflow 后立即返回 Workflow Id 和运行 Id。
 
-`tctl workflow start <modifiers>`
+`tctl Workflow start <modifiers>`
 
-The following modifiers control the behavior of the command.
-Always include required modifiers when executing this command.
+以下修饰符控制命令的行为。
+执行此命令时始终包含所需的修饰符。
 
-### --taskqueue
+<a id="maxfieldlength"></a>
+### --任务队列 {#taskqueue}
 
-Specify a [Task Queue](/task-queue).
+指定 [Task Queue](/task-queue)。
 
-Alias: `--t`
+别名：`--t`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start --taskqueue <name>
 ```
 
-### --workflow_id
+<a id="resetpointsonly"></a>
+### --Workflow_id {#workflowid}
 
-**This is a required modifier.**
+**这是必需的修饰符。**
 
-Specify a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id).
+指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start --workflow_id <id>
 ```
 
-If a Workflow is started without providing an Id, the Client generates one in the form of a UUID.
-Temporal recommends using a business id rather than the client-generated UUID.
+如果启动 Workflow 时未提供 Id，则客户端会生成 UUID 形式的 Id。
+Temporal 建议使用业务 ID，而不是客户端生成的 UUID。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start  --workflow_id "HelloTemporal1" --taskqueue HelloWorldTaskQueue --workflow_type HelloWorld --execution_timeout 3600 --input \"Temporal\"
 ```
 
-### --workflow_type
+<a id="showid"></a>
+### --Workflow_type {#workflowtype}
 
-Specify the name of a [Workflow Type](/workflow-definition#workflow-type).
+指定 [Workflow型](/workflow-definition#Workflow-type) 的名称。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start --workflow_type <name>
 ```
 
-### --execution_timeout
+<a id="printdatetime"></a>
+### --执行超时 {#executiontimeout}
 
-Specify the [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout) of the [Workflow Execution](/workflow-execution) in seconds.
-The default value is 0.
+以秒为单位指定 [Workflow Execution](/workflow-execution) 的 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。
+默认值为 0。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start --execution_timeout <seconds>
 ```
 
-### --workflow_task_timeout
+<a id="printrawtime"></a>
+### --Workflow_task_timeout {#workflowtasktimeout}
 
-Specify the [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout) of the [Workflow Task](/tasks#workflow-task) in seconds.
-The default value is 10.
+以秒为单位指定 [Workflow 任务](/tasks#Workflow-task) 的 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。
+默认值为 10。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start --workflow_task_timeout <seconds>
 ```
 
-### --cron
+<a id="outputfilename"></a>
+### --cron {#cron}
 
-Specify a [Cron Schedule](/cron-job#cron-schedules).
+指定 [克朗 Schedule](/cron-job#cron-Schedules)。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start --cron <string>
 ```
 
-### --workflowidreusepolicy
+<a id="printfull"></a>
+### --Workflowid重用政策 {#workflowidreusepolicy}
 
-Specify a [Workflow Id Reuse Policy](/workflow-execution/workflowid-runid#workflow-id-reuse-policy).
-Configure if the same [Workflow Id](/workflow-execution/workflowid-runid#workflow-id)is allowed for use in new [Workflow Execution](/workflow-execution).
+指定 [Workflow ID 重用政策](/workflow-execution/workflowid-runid#Workflow-id-reuse-policy)。
+配置是否允许在新的 [Workflow Execution](/workflow-execution) 中使用相同的 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-There are three allowed values:
+共有三个允许值：
 
-- [AllowDuplicateFailedOnly](/workflow-execution/workflowid-runid#workflow-id-reuse-policy)
-- [AllowDuplicate](/workflow-execution/workflowid-runid#workflow-id-reuse-policy)
-- [RejectDuplicate](/workflow-execution/workflowid-runid#workflow-id-reuse-policy)
+- [仅允许重复失败](/workflow-execution/workflowid-runid#Workflow-id-reuse-policy)
+- [允许重复](/workflow-execution/workflowid-runid#Workflow-id-reuse-policy)
+- [拒绝重复](/workflow-execution/workflowid-runid#Workflow-id-reuse-policy)
 
-**Examples**
+**示例**
 
 ```bash
 tctl workflow start --workflowidreusepolicy AllowDuplicate
@@ -2075,59 +2202,62 @@ tctl workflow start --workflowidreusepolicy RejectDuplicate
 
 :::note
 
-Multiple Workflows with the same Id cannot be run at the same time
+多个具有相同Id的Workflow不能同时运行
 
 :::
 
-### --input
+### - 输入 {#input}
 
-Pass input for the Workflow.
-Input must be in JSON format.
-For multiple JSON objects, pass each in a separate `--input` option.
-Use `null` for null values.
+传递 Workflow 的输入。
+输入必须为 JSON 格式。
+对于多个 JSON 对象，请在单独的 `--input` 选项中传递每个对象。
+使用 `null` 作为空值。
 
-Alias: `-i`
+别名：`-i`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start --input <json>
 ```
 
-### --input_file
+<a id="printeventversion"></a>
+### --输入文件 {#inputfile}
 
-Pass input for the Workflow from a JSON file.
-For multiple JSON objects, concatenate them and use spaces or newline characters as separators.
-Input from the command line overwrites input from the file.
+从 JSON 文件传递​​ Workflow 的输入。
+对于多个 JSON 对象，将它们连接起来并使用空格或换行符作为分隔符。
+来自命令行的输入将覆盖来自文件的输入。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start --input_file <filename>
 ```
 
-### --memo_key
+<a id="eventid"></a>
+### --memo_key {#memokey}
 
-Pass a key for a memo.
-For multiple keys, concatenate them and use spaces as separators.
+传递备忘录的密钥。
+对于多个键，将它们连接起来并使用空格作为分隔符。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start --memo_key <key>
 ```
 
-### --memo
+<a id="maxfieldlength"></a>
+### --备忘录 {#memo}
 
-Pass information for a [memo](/workflow-execution#memo) from a JSON file.
+从 JSON 文件传递​​ [备忘录](/workflow-execution#memo) 的信息。
 
-Memos are immutable key/value pairs that can be attached to a workflow run when starting the workflow.
-Memos are visible when listing workflows.
+备忘录是不可变的键/值对，可以在启动 Workflow 时附加到 Workflow 运行。
+列出 Workflow 时，备注可见。
 
-For multiple memos, concatenate them and use spaces as separators.
-The order must match the order of keys in `--memo_key`.
+对于多个备忘录，请将它们连接起来并使用空格作为分隔符。
+该顺序必须与 `--memo_key` 中键的顺序匹配。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start \
@@ -2139,91 +2269,97 @@ tctl workflow start \
   -memo '<value>'
 ```
 
-### --memo_file
+<a id="resetpointsonly"></a>
+### --memo_file {#memofile}
 
-Pass information for a memo from a JSON file.
-For multiple JSON objects, concatenate them and use spaces or newline characters as separators.
-The order must match the order of keys in `--memo_key`.
+从 JSON 文件传递​​备忘录信息。
+对于多个 JSON 对象，将它们连接起来并使用空格或换行符作为分隔符。
+该顺序必须与 `--memo_key` 中键的顺序匹配。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start --memo_file <filename>
 ```
 
-### --search_attr_key
+<a id="signal"></a>
+### --search_attr_key {#searchattrkey}
 
-Specify a [Search Attribute](/search-attribute) name.
-For multiple names, concatenate them and use pipes (`|`) as separators.
+指定 [Search Attribute](/search-attribute) 名称。
+对于多个名称，请将它们连接起来并使用管道 (`|`) 作为分隔符。
 
-To list valid Search Attributes, use the `tctl cluster get-search-attributes` command.
+要列出有效的 Search Attribute，请使用 `tctl cluster get-search-attributes` 命令。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start --search_attr_key <key>
 ```
 
-### --search_attr_value
+<a id="workflowid"></a>
+### --搜索属性值 {#searchattrvalue}
 
-Specify a [Search Attribute](/search-attribute) value.
-For multiple values, concatenate them and use pipes (`|`) as separators.
-If a value is an array, use JSON format, such as `["a","b"]`, `[1,2]`, `["true","false"]`, or `["2022-06-07T17:16:34-08:00","2022-06-07T18:16:34-08:00"]`.
+指定 [Search Attribute](/search-attribute) 值。
+对于多个值，将它们连接起来并使用管道 (`|`) 作为分隔符。
+如果值是数组，请使用 JSON 格式，例如 `["a","b"]`、`[1,2]`、`["true","false"]` 或 `["2022-06-07T17:16:34-08:00","2022-06-07T18:16:34-08:00"]`。
 
-To list valid Search Attributes and value types, use the `tctl cluster get-search-attributes` command.
+要列出有效的 Search Attribute 和值类型，请使用 `tctl cluster get-search-attributes` 命令。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow start --search_attr_value <value>
 ```
 
-## terminate
+<a id="runid"></a>
+## 终止 {#terminate}
 
-The `tctl workflow terminate` command terminates a [Workflow Execution](/workflow-execution).
+`tctl Workflow terminate` 命令终止 [Workflow Execution](/workflow-execution)。
 
-Terminating a running Workflow Execution records a `WorkflowExecutionTerminated` event as the closing event in the History.
-No more [Workflow Task](/tasks#workflow-task) will be scheduled.
+终止正在运行的 Workflow Execution 将 `WorkflowExecutionTerminated` 事件记录为历史记录中的关闭事件。
+[Workflow 任务](/tasks#Workflow-task) 将不再是 Scheduled。
 
-See also [`tctl workflow cancel`](#cancel).
+另请参见 [`tctl Workflow cancel`](#cancel)。
 
-`tctl workflow terminate --query <modifiers>`
+`tctl Workflow terminate --Query <modifiers>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --workflow_id
+<a id="name"></a>
+### --Workflow_id {#workflowid}
 
-_Required modifier_
+_所需修饰符_
 
-Specify a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id).
+指定 [Workflow ID](/workflow-execution/workflowid-runid#Workflow-id)。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow terminate --workflow_id <id>
 ```
 
-### --run_id
+<a id="input"></a>
+### --run_id {#runid}
 
-Specify a [Run Id](/workflow-execution/workflowid-runid#run-id).
+指定 [运行 ID](/workflow-execution/workflowid-runid#run-id)。
 
-If `run_id` is not specified, `tctl` terminates the last Workflow Execution for the specified `workflow_id`.
+如果未指定 `run_id`，则 `tctl` 终止指定 `Workflow_id` 的最后一个 Workflow Execution。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow terminate --run_id <id>
 ```
 
-### --reason
+### - 原因 {#reason}
 
-Specify a reason for terminating the [Workflow Execution](/workflow-execution).
+指定终止 [Workflow Execution](/workflow-execution) 的原因。
 
-**Example**
+**例子**
 
 ```bash
 tctl workflow terminate --workflow_id --reason <string>

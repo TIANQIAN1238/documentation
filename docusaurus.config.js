@@ -5,15 +5,20 @@ const FontPreloadPlugin = require('webpack-font-preload-plugin');
 
 module.exports = async function createConfigAsync() {
   return {
-    title: 'Temporal Platform Documentation',
-    tagline: 'Build invincible applications',
-    url: 'https://docs.temporal.io',
+    title: 'Temporal 中文文档',
+    tagline: '构建不可战胜的应用程序',
+    url: 'https://temporal-docs-zh.vercel.app',
     baseUrl: '/',
-    onBrokenLinks: 'throw',
-    onBrokenAnchors: 'throw',
+    onBrokenLinks: 'warn',
+    onBrokenAnchors: 'warn',
     favicon: 'img/favicon.ico',
-    organizationName: 'temporalio', // Usually your GitHub org/user name.
-    projectName: 'temporal-documentation', // Usually your repo name.
+    organizationName: 'TIANQIAN1238',
+    projectName: 'documentation',
+
+    i18n: {
+      defaultLocale: 'en',
+      locales: ['en'],
+    },
     headTags: [
       {
         tagName: 'link',
@@ -81,34 +86,34 @@ module.exports = async function createConfigAsync() {
         },
         items: [
           {
-            label: 'Home',
+            label: '首页',
             to: '/',
             position: 'left',
             activeBasePath: 'none',
           },
           {
-            label: 'Courses',
+            label: '课程',
             href: 'https://learn.temporal.io/getting_started/',
             right: 'left',
           },
           {
-            label: 'SDKs',
+            label: 'SDK 文档',
             href: '/develop',
             right: 'left',
           },
           {
-            label: 'AI Cookbook',
+            label: 'AI 手册',
             to: '/ai-cookbook',
             activeBasePath: 'ai-cookbook',
             position: 'left',
           },
           {
-            label: 'Code Exchange',
+            label: '代码示例',
             href: 'https://temporal.io/code-exchange',
             position: 'left',
           },
           {
-            label: 'Temporal Cloud',
+            label: '云服务',
             to: '/cloud',
             activeBasePath: 'cloud',
             position: 'left',
@@ -135,7 +140,7 @@ module.exports = async function createConfigAsync() {
                 href: 'https://github.com/temporalio',
               },
               {
-                label: 'Twitter',
+                label: 'X / Twitter',
                 href: 'https://twitter.com/temporalio',
               },
               {
@@ -143,7 +148,7 @@ module.exports = async function createConfigAsync() {
                 href: 'https://www.youtube.com/c/Temporalio',
               },
               {
-                label: 'About the docs',
+                label: '关于文档',
                 href: 'https://github.com/temporalio/documentation/blob/master/README.md',
               },
             ],
@@ -151,23 +156,23 @@ module.exports = async function createConfigAsync() {
           {
             items: [
               {
-                label: 'Temporal Cloud',
+                label: '云服务',
                 href: 'https://temporal.io/cloud',
               },
               {
-                label: 'Meetups',
+                label: '线下活动',
                 href: 'https://temporal.io/community#events',
               },
               {
-                label: 'Workshops',
+                label: '工作坊',
                 href: 'https://temporal.io/community#workshops',
               },
               {
-                label: 'Support forum',
+                label: '支持论坛',
                 href: 'https://community.temporal.io/',
               },
               {
-                label: 'Ask an expert',
+                label: '咨询专家',
                 href: 'https://pages.temporal.io/ask-an-expert',
               },
             ],
@@ -175,19 +180,19 @@ module.exports = async function createConfigAsync() {
           {
             items: [
               {
-                label: 'Learn Temporal',
+                label: '学习 Temporal',
                 href: 'https://learn.temporal.io',
               },
               {
-                label: 'Blog',
+                label: '博客',
                 href: 'https://temporal.io/blog',
               },
               {
-                label: 'Use cases',
+                label: '使用场景',
                 href: 'https://temporal.io/use-cases',
               },
               {
-                label: 'Newsletter signup',
+                label: '订阅新闻',
                 href: 'https://pages.temporal.io/newsletter-subscribe',
               },
             ],
@@ -195,19 +200,19 @@ module.exports = async function createConfigAsync() {
           {
             items: [
               {
-                label: 'Security',
+                label: '安全',
                 to: '/security',
               },
               {
-                label: 'Privacy policy',
+                label: '隐私政策',
                 to: 'https://temporal.io/global-privacy-policy',
               },
               {
-                label: 'Terms of service',
+                label: '服务条款',
                 href: 'https://docs.temporal.io/pdf/temporal-tos-2021-07-24.pdf',
               },
               {
-                label: "We're hiring",
+                label: '加入我们',
                 href: 'https://temporal.io/careers',
               },
             ],
@@ -245,7 +250,7 @@ module.exports = async function createConfigAsync() {
             sidebarPath: require.resolve('./sidebars.js'),
             routeBasePath: '/',
             exclude: ['**/clusters/**', '**/ai-cookbook/**'], // do not render context content
-            editUrl: 'https://github.com/temporalio/documentation/edit/main/docs/',
+            editUrl: 'https://github.com/TIANQIAN1238/documentation/edit/main/docs/',
             /**
              * Whether to display the author who last updated the doc.
              */

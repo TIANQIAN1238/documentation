@@ -1,0 +1,50 @@
+---
+id: rails-integration
+title: 导轨集成 - Ruby SDK
+sidebar_label: 导轨集成
+description: 将 Temporal Ruby SDK 与 Ruby on Rails 结合使用，包括 ActiveRecord、ActiveModel 的约定以及处理延迟/预加载。
+keywords:
+  - rails
+  - ruby on rails
+  - activerecord
+  - activemodel
+  - eager loading
+  - lazy loading
+  - bootsnap
+  - zeitwerk
+tags:
+  - Ruby SDK
+  - Temporal SDKs
+---
+
+Temporal Ruby SDK 是一个通用的 Ruby 库，可以在任何 Ruby 环境中工作。
+然而，Rails 用户需要注意一些常见的约定。
+
+有关从 Rails 使用 Temporal 的示例，请参阅 [rails_app 示例](https://github.com/Temporalio/samples-ruby/tree/main/rails_app)。
+
+## 活动记录
+
+对于 ActiveRecord 或用于不同目的的其他通用/ORM 模型，不建议尝试将它们重用为 Temporal 模型。
+最终模型用途会有所不同，出于清晰度和兼容性原因，Temporal Workflows/活动的模型应特定于其用途。
+此外，许多 Ruby ORM 做了很多偷懒的事情，因此提供了不明确的序列化语义。
+相反，请考虑使用特定于 Workflow/活动的模型，并根据需要与现有模型进行转换。
+请参阅 [ActiveModel 部分](/develop/ruby/best-practices/converters-and-encryption#active-model) 了解如何使用 ActiveModel 对象执行此操作。
+
+## 延迟/急切加载
+
+默认情况下，Rails 在生产环境中的应用程序启动时立即加载所有应用程序代码，但在非生产环境中延迟加载它。
+Temporal Workflow 默认情况下不允许在 Workflow 运行期间使用 IO。
+在开发/测试环境中启用延迟加载时，当 Activity 类在明确需要之前在 Workflow 中引用时，它可能会给出如下错误：
+
+```
+Cannot access File path from inside a workflow. If this is known to be safe, the code can be run in a Temporalio::Workflow::Unsafe.illegal_call_tracing_disabled block.
+```
+
+这来自通过 zeitwerk 的 bootsnap，因为它在 Workflow 运行时延迟加载类/模块。
+在 Workflow 运行期间延迟加载代码并不好，因为它可能是 Side Effecting。
+应立即加载 Workflow 及其引用的类。
+
+要解决此问题，要么始终急切加载（例如`config.eager_load = true`），要么明确要求文件顶部的 Workflow 使用的内容。
+
+请注意，这仅影响非生产环境。
+

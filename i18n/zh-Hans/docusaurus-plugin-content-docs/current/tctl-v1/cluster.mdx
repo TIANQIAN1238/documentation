@@ -1,0 +1,77 @@
+---
+id: cluster
+title: tctl v1.17 集群命令参考
+sidebar_label: 簇
+description: 探索 Temporal CLI 以改进 Temporal 集群操作。使用“tctl cluster health”和“tctl cluster get-search-attributes”等命令进行高效的 Workflow 管理。
+toc_max_heading_level: 4
+keywords:
+  - cli
+  - cli reference
+  - tctl
+  - temporal
+  - temporal cli
+  - temporal server
+---
+
+:::info tctl is deprecated
+
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议转换到 [Temporal CLI](/cli) 以继续使用和访问新功能。
+
+感谢您成为 Temporal 社区的重要组成部分。
+
+:::
+
+`tctl cluster` 命令启用 [Temporal Cluster](/Temporal-service) 操作。
+
+- [tctl 集群运行状况](#health)
+- [tctl 集群获取搜索属性](#get-search-attributes)
+
+## 获取搜索属性
+
+`tctl cluster get-search-attributes` 命令列出了可在 [`tctl Workflow list`](/tctl-v1/Workflow#list) 命令的 `--Query` 修饰符和 `--search_attr_key` 中使用的所有 [Search Attributes](/search-attribute) 和[`tctl Workflow run`](/tctl-v1/Workflow#run) 和 [`tctl Workflow start`](/tctl-v1/Workflow#start) 命令的 `--search_attr_value` 修饰符。
+
+**例子：**
+
+```bash
+tctl cluster get-search-attributes
+```
+
+该命令没有修饰符。
+
+输出示例：
+
+```text
++-----------------------+----------+
+|         NAME          |   TYPE   |
++-----------------------+----------+
+| BinaryChecksums       | Keyword  |
+| CloseTime             | Int      |
+| CustomBoolField       | Bool     |
+| CustomDatetimeField   | Datetime |
+| CustomDoubleField     | Double   |
+| CustomIntField        | Int      |
+| CustomKeywordField    | Keyword  |
+| CustomNamespace       | Keyword  |
+| CustomStringField     | String   |
+| ExecutionStatus       | Int      |
+| ExecutionTime         | Int      |
+| Operator              | Keyword  |
+| RunId                 | Keyword  |
+| StartTime             | Int      |
+| TaskQueue             | Keyword  |
+| TemporalChangeVersion | Keyword  |
+| WorkflowId            | Keyword  |
+| WorkflowType          | Keyword  |
++-----------------------+----------+
+```
+
+此命令的管理版本分别显示默认和自定义 Search Attribute，还显示底层 Elasticsearch 索引架构和系统 Workflow 状态。
+
+＃＃ 健康
+
+`tctl cluster health`命令检查[前端服务](/Temporal-service/Temporal-server#frontend-service)的运行状况。
+
+`tctl 集群运行状况`
+
+该命令没有修饰符。

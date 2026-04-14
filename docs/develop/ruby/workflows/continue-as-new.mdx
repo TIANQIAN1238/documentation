@@ -1,8 +1,8 @@
 ---
 id: continue-as-new
-title: Continue-As-New - Ruby SDK
-sidebar_label: Continue-As-New
-description: Use Continue-As-New with the Temporal Ruby SDK to manage Workflow Event Histories, ensuring optimal performance by starting new Executions seamlessly.
+title: "Continue-As-New - Ruby SDK"
+sidebar_label: "Continue-As-New"
+description: "将 Continue-As-New 与 Temporal Ruby SDK 一起使用来管理 Workflow 事件历史记录，通过无缝启动新执行来确保最佳性能。"
 keywords:
   - sdk
   - ruby
@@ -14,30 +14,31 @@ tags:
   - continue-as-new
 ---
 
-This page describes how to Continue-As-New using the Temporal Ruby SDK.
+本页介绍如何使用 Temporal Ruby SDK 进行 Continue-As-New。
 
-[Continue-As-New](/workflow-execution/continue-as-new) enables a Workflow Execution to close successfully and create a new Workflow Execution in a single atomic operation if the number of Events in the Event History is becoming too large.
-The Workflow Execution spawned from the use of Continue-As-New has the same Workflow Id, a new Run Id, and a fresh Event History and is passed all the appropriate parameters.
+如果 Event History 中的事件数量变得太大，[Continue-As-New](/workflow-execution/continue-as-new) 使 Workflow Execution 能够成功关闭并在单个原子操作中创建新的 Workflow Execution。
+使用 Continue-As-New 生成的 Workflow Execution 具有相同的 Workflow Id、新的运行 Id 和新的 Event History，并传递所有适当的参数。
 
 :::caution
 
-As a precautionary measure, the Workflow Execution's Event History is limited to [51,200 Events](https://github.com/temporalio/temporal/blob/e3496b1c51bfaaae8142b78e4032cc791de8a76f/service/history/configs/config.go#L382) or [50 MB](https://github.com/temporalio/temporal/blob/e3496b1c51bfaaae8142b78e4032cc791de8a76f/service/history/configs/config.go#L380) and will warn you after 10,240 Events or 10 MB.
+作为预防措施，Workflow Execution 的 Event History 仅限于 [51,200 场活动](https://github.com/temporalio/temporal/blob/e3496b1c51bfaaae8142b78e4032cc791de8a76f/service/history/configs/config.go#L382) 或 [50MB](https://github.com/temporalio/temporal/blob/e3496b1c51bfaaae8142b78e4032cc791de8a76f/service/history/configs/config.go#L380)，并将在 10,240 个事件或 10 MB 后向您发出警告。
 
 :::
 
-To prevent a Workflow Execution Event History from exceeding this limit and failing, use Continue-As-New to start a new Workflow Execution with a fresh Event History.
+要防止 Workflow Execution Event History 超出此限制并失败，请使用 Continue-As-New 以新的 Event History 启动新的 Workflow Execution。
 
-A very large Event History can adversely affect the performance of a Workflow Execution.
-For example, in the case of a Workflow Worker failure, the full Event History must be pulled from the Temporal Service and given to another Worker via a Workflow Task.
-If the Event history is very large, it may take some time to load it.
+非常大的 Event History 会对 Workflow Execution 的性能产生不利影响。
+例如，如果 Workflow Worker 发生故障，则必须从 Temporal 服务中提取完整的 Event History，并通过 Workflow 任务将其提供给另一个 Worker。
+如果 Event History 非常大，则加载可能需要一些时间。
 
-The Continue-As-New feature enables developers to complete the current Workflow Execution and start a new one atomically.
+Continue-As-New 功能使开发人员能够自动完成当前的 Workflow Execution 并启动新的 Workflow Execution。
 
-The new Workflow Execution has the same Workflow Id, but a different Run Id, and has its own Event History.
+新的 Workflow Execution 具有相同的 Workflow Id，但运行 Id 不同，并具有自己的 Event History。
 
-## Continue-As-New in Ruby {#continue-as-new}
+<a id="continue-as-new"></a>
+## Ruby 中的 Continue-As-New {#continue-as-new}
 
-To Continue-As-New in Ruby, raise a `Temporalio::Workflow::ContinueAsNewError` from inside your Workflow, which will stop the Workflow immediately and Continue-As-New.
+对于 Ruby 中的 Continue-As-New，从 Workflow 内部引发 `Temporalio::Workflow::ContinueAsNewError`，这将立即停止 Workflow 和 Continue-As-New。
 
 ```ruby
 raise Temporalio::Workflow::ContinueAsNewError.new('my-new-arg')
@@ -45,8 +46,8 @@ raise Temporalio::Workflow::ContinueAsNewError.new('my-new-arg')
 
 :::warning Using Continue-as-New and Updates
 
-- Temporal _does not_ support Continue-as-New functionality within Update handlers.
-- Complete all handlers _before_ using Continue-as-New.
-- Use Continue-as-New from your main Workflow Definition method, just as you would complete or fail a Workflow Execution.
+- Temporal_不_支持 Update 处理程序中的 Continue-As-New 功能。
+- 使用 Continue-As-New_之前_完成所有处理程序。
+- 从您的主要 Workflow Definition 方法中使用 Continue-As-New，就像完成或失败 Workflow Execution 一样。
 
 :::

@@ -1,8 +1,8 @@
 ---
 id: index
-title: Self-hosted Temporal Service guide
-sidebar_label: Self-hosted guide
-description:
+title: "自托管 Temporal 服务指南"
+sidebar_label: "自托管指南"
+description: Discover how to self-host the open-source Temporal Service to orchestrate durable applications, or consider using
   Discover how to self-host the open-source Temporal Service to orchestrate durable applications, or consider using
   Temporal Cloud for ease of use. Start with our tutorials and dev guide.
 slug: /self-hosted-guide
@@ -14,53 +14,56 @@ tags:
   - Self-hosting
 ---
 
-Welcome to the self-hosted Temporal Service guide. This guide shows you how to self-host open source infrastructure
-software that orchestrates your durable applications.
+欢迎使用自托管 Temporal 服务指南。本指南向您展示如何自行托管开源基础设施
+编排持久应用程序的软件。
 
 :::tip Do you need a production Temporal Service?
 
-If you're still developing and testing your application locally, you may not need a production Temporal Service. Use the
-[Temporal CLI development server](/cli/server#start-dev) — a single binary with no external dependencies:
+如果您仍在本地开发和测试应用程序，则可能不需要生产 Temporal 服务。使用
+[Temporal CLI开发服务器](/cli/server#start-dev) — 没有外部依赖项的单个二进制文件：
 
-`temporal server start-dev`
+`Temporal Server start-dev`
 
-This starts a complete Temporal Service with Web UI on your local machine. We recommend this for local development
-regardless of whether you plan to use Temporal Cloud or self-host in production. See the
-[Temporal CLI server](/cli/server) page for configuration options.
+这将在本地计算机上启动带有 Web UI 的完整 Temporal 服务。我们建议将此用于本地开发
+无论您计划在生产中使用 Temporal Cloud 还是自托管。请参阅
+[Temporal CLI 服务器](/cli/server) 配置选项页面。
 
 :::
 
-## Plan and deploy your service
+<a id="plan-and-deploy-your-service"></a>
+## 规划和部署您的服务 {#plan-and-deploy-your-service}
 
-- [Deployment](/self-hosted-guide/deployment): Choose a deployment approach (Docker, Kubernetes, or manual) and set up a
-  production-ready Temporal Service.
-- [Embedded server](/self-hosted-guide/embedded-server): Run Temporal in-process as a Go library for local development
-  and testing scenarios.
-- [Defaults](/self-hosted-guide/defaults): Review platform limits and default settings that can affect Workflow and
-  Activity behavior.
-- [Production checklist](/self-hosted-guide/production-checklist): Validate readiness for scale, reliability,
-  operations, and long-term maintainability.
+- [部署](/self-hosted-guide/deployment)：选择部署方法（Docker、Kubernetes 或手动）并设置
+  生产就绪 Temporal 服务。
+- [嵌入式服务器](/self-hosted-guide/embedded-server)：在进程中运行 Temporal 作为 Go 库以进行本地开发
+  和测试场景。
+- [默认值](/self-hosted-guide/defaults)：查看可能影响 Workflow 和的平台限制和默认设置
+  Activity 行为。
+- [生产清单](/self-hosted-guide/production-checklist)：验证规模、可靠性的准备情况，
+  操作和长期可维护性。
 
-## Operate your self-hosted service
+<a id="operate-your-self-hosted-service"></a>
+## 运营您的自托管服务 {#operate-your-self-hosted-service}
 
-- [Namespaces](/self-hosted-guide/namespaces): Create and manage Namespace isolation, retention, and related
-  configuration.
-- [Security](/self-hosted-guide/security): Configure TLS/mTLS, authentication, authorization, and related hardening
-  controls.
-- [Monitoring](/self-hosted-guide/monitoring): Collect and visualize service and SDK metrics to troubleshoot and track
-  health.
-- [Visibility](/self-hosted-guide/visibility): Configure Visibility storage so you can list, filter, and search Workflow
-  Executions.
-- [Upgrading server](/self-hosted-guide/upgrade-server#upgrade-server): Perform safe, sequential server and schema
-  upgrades.
+- [Namespaces](/self-hosted-guide/namespaces)：创建和管理 Namespace 隔离、保留和相关
+  配置。
+- [安全](/self-hosted-guide/security)：配置TLS/mTLS、身份验证、授权和相关强化
+  控制。
+- [监控](/self-hosted-guide/monitoring)：收集和可视化服务和 SDK 指标以进行故障排除和跟踪
+  健康。
+- [Visibility](/self-hosted-guide/visibility)：配置 Visibility 存储，以便您可以列出、过滤和搜索 Workflow
+  处决。
+- [升级服务器](/self-hosted-guide/upgrade-server#upgrade-server)：执行安全、顺序的服务器和模式
+  升级。
 
-## Protect data and enable advanced features
+<a id="protect-data-and-enable-advanced-features"></a>
+## 保护数据并启用高级功能 {#protect-data-and-enable-advanced-features}
 
-- [Data encryption](/production-deployment/data-encryption): Use Payload Codecs and Codec Server patterns to protect
-  sensitive Workflow data.
-- [Archival](/self-hosted-guide/archival): Move closed Event Histories and Visibility records to blob storage for longer
-  retention.
-- [Multi-Cluster Replication](/self-hosted-guide/multi-cluster-replication): Replicate Workflow state across clusters
-  for failover and disaster recovery.
-- [Temporal Nexus](/production-deployment/self-hosted-guide/nexus): Enable Nexus in self-hosted environments to connect
-  Temporal Applications across boundaries.
+- [数据加密](/production-deployment/data-encryption)：使用有效负载编解码器和 Codec Server 模式来保护
+  敏感 Workflow 数据。
+- [档案](/self-hosted-guide/archival)：将关闭的事件历史记录和 Visibility 记录移至 Blob 存储以延长时间
+  保留。
+- [多集群复制](/self-hosted-guide/multi-cluster-replication)：跨集群复制 Workflow 状态
+  用于故障转移和灾难恢复。
+- [Temporal Nexus](/production-deployment/self-hosted-guide/nexus)：在自托管环境中启用 Nexus 进行连接
+  Temporal 跨越边界的应用程序。

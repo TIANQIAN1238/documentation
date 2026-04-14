@@ -1,0 +1,41 @@
+---
+id: index
+title: Temporal Worker 部署
+sidebar_label: Worker 部署
+description: 使用我们提供的工具和最佳实践，以编程方式扩展 Temporal Worker 并将其部署到常见生产环境中。
+slug: /production-deployment/worker-deployments
+toc_max_heading_level: 4
+keywords:
+  - kubernetes
+  - scaling
+  - workers
+  - deploys
+  - versioning
+tags:
+  - Temporal Service
+  - Durable Execution
+---
+
+Temporal 的核心功能是您可以将 Worker 部署到 Workflow 和 Activity 代码实际运行的任何基础设施上。
+这样，您就可以完全控制运行时环境，并且可以响应随着时间的推移可能出现的任何安全或扩展需求，无论您是使用 Temporal Cloud 还是自托管 Temporal 服务。
+
+如果您刚刚入门，需要更多指导或重温 Temporal 概念，我们的[教程和课程](https://learn.Temporal.io/) 可以帮助您仅使用一两个 Temporal Worker 来演示核心功能。
+一旦您了解了核心概念，本节中的内容将清晰地介绍远远超出这些示例的实际部署。
+
+我们的 Worker 部署指南提供了 Temporal 产品功能的文档，使您可以更轻松地扩展和修改 Workflow。
+
+[Worker 版本控制](/生产部署/Worker-部署/Worker-版本控制) 是建议的默认值，以确保安全
+部署新的 Workflow 代码。它允许您将 Workflow 固定到 Worker 的各个版本，这些版本称为
+Worker 部署版本。
+
+如果您的环境尚不能支持版本化 Worker 部署，您可以回退到修补 Workflow 代码。
+但是，新的生产部署应尽可能首选 Worker 版本控制。
+
+您可以选择使用 Temporal [Worker 控制器](/生产部署/Worker-deployments/kubernetes-controller) 以编程方式管理和扩展 Kubernetes Pod 中的 Worker 部署。
+
+本节还介绍了特定的 Worker 部署示例：
+
+- [**将 Workers 部署到 Amazon EKS**](/生产部署/Worker-deployments/deploy-Workers-to-aws-eks)
+  将您的 Worker 容器化，将其发布到 Amazon Elastic Container Registry (ECR)，并使用 Temporal Python SDK 将其部署到 Amazon Elastic Kubernetes Service (EKS)。
+  本指南涵盖了完整的部署生命周期，并展示了如何使用 ConfigMaps 和 Secrets 等 Kubernetes 原生工具配置 Worker 以连接到 Temporal Cloud。
+  在 EKS 上运行 Worker 可以让您对扩展、资源分配和可用性进行细粒度控制，非常适合需要云中可靠性和灵活性的生产系统。

@@ -1,8 +1,8 @@
 ---
 id: versioning
-title: Versioning - Python SDK
-sidebar_label: Versioning
-description: Ensure deterministic Temporal Workflow execution and safely deploy updates using the Python SDK's patching and Worker Versioning APIs, for scalable long-running Workflows.
+title: 版本管理 - Python SDK
+sidebar_label: 版本管理
+description: 使用 Python SDK 的 patching 和 Worker Versioning API 确保 Temporal Workflow 执行的确定性并安全部署更新，适用于可扩展的长时间运行 Workflow。
 slug: /develop/python/workflows/versioning
 toc_max_heading_level: 4
 keywords:
@@ -30,39 +30,39 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-Since Workflow Executions in Temporal can run for long periods — sometimes months or even years — it's common to need to make changes to a Workflow Definition, even while a particular Workflow Execution is in progress.
+由于 Temporal 中的 Workflow Execution 可能会长期运行——有时长达数月甚至数年——即使在特定 Workflow Execution 进行期间，也经常需要对 Workflow Definition 进行修改。
 
-The Temporal Platform requires that Workflow code is [deterministic](/workflow-definition#deterministic-constraints).
-If you make a change to your Workflow code that would cause non-deterministic behavior on Replay, you'll need to use one of our Versioning methods to gracefully update your running Workflows.
-With Versioning, you can modify your Workflow Definition so that new executions use the updated code, while existing ones continue running the original version.
-There are two primary Versioning methods that you can use:
+Temporal Platform 要求 Workflow 代码具有[确定性](/workflow-definition#deterministic-constraints)。
+如果对 Workflow 代码的修改会在 Replay 时导致非确定性行为，则需要使用我们的某种版本管理方法来优雅地更新正在运行的 Workflow。
+使用版本管理，你可以修改 Workflow Definition，使新的执行使用更新后的代码，而现有的执行继续运行原始版本。
+主要有两种版本管理方法可供使用：
 
-- [Worker Versioning](/production-deployment/worker-deployments/worker-versioning). The Worker Versioning feature allows you to tag your Workers and programmatically roll them out in versioned deployments, so that old Workers can run old code paths and new Workers can run new code paths.
-- [Versioning with Patching](#patching). This method works by adding branches to your code tied to specific revisions. It applies a code change to new Workflow Executions while avoiding disruptive changes to in-progress Workflow Executions.
+- [Worker Versioning](/production-deployment/worker-deployments/worker-versioning)。Worker Versioning 功能允许你为 Worker 打标签，并以版本化部署的方式以编程方式滚动更新，使旧 Worker 能够运行旧代码路径，新 Worker 能够运行新代码路径。
+- [基于 Patching 的版本管理](#patching)。此方法通过在代码中添加绑定到特定版本的分支来实现。它将代码变更应用于新的 Workflow Execution，同时避免对进行中的 Workflow Execution 造成破坏性影响。
 
 :::danger
-Support for the experimental Worker Versioning method before 2025 will be removed from Temporal Server in March 2026. Refer to the [latest Worker Versioning docs](/worker-versioning) for guidance. You can still refer to the [Worker Versioning Legacy](worker-versioning-legacy) docs if needed. 
+2025 年之前实验性 Worker Versioning 方法的支持将于 2026 年 3 月从 Temporal Server 中移除。请参阅[最新的 Worker Versioning 文档](/worker-versioning)获取指导。如有需要，你仍可参阅 [Worker Versioning 旧版本](worker-versioning-legacy)文档。
 :::
 
 ## Worker Versioning
 
-Temporal's [Worker Versioning](/production-deployment/worker-deployments/worker-versioning) feature allows you to tag your Workers and programmatically roll them out in Deployment Versions, so that old Workers can run old code paths and new Workers can run new code paths. This way, you can pin your Workflows to specific revisions, avoiding the need for patching.
+Temporal 的 [Worker Versioning](/production-deployment/worker-deployments/worker-versioning) 功能允许你为 Worker 打标签，并以 Deployment Version 的方式以编程方式滚动更新，使旧 Worker 能够运行旧代码路径，新 Worker 能够运行新代码路径。这样，你可以将 Workflow 固定到特定版本，从而避免 patching 的需求。
 
-## Versioning with Patching {#patching}
+## 基于 Patching 的版本管理 {#patching}
 
-### Adding a patch
+### 添加 patch
 
-A Patch defines a logical branch in a Workflow for a specific change, similar to a feature flag.
-It applies a code change to new Workflow Executions while avoiding disruptive changes to in-progress Workflow Executions.
-When you want to make substantive code changes that may affect existing Workflow Executions, create a patch. Note that there's no need to patch [Pinned Workflows](/worker-versioning).
+Patch 在 Workflow 中为特定变更定义了一个逻辑分支，类似于功能开关。
+它将代码变更应用于新的 Workflow Execution，同时避免对进行中的 Workflow Execution 造成破坏性影响。
+当你想要对可能影响现有 Workflow Execution 的代码进行实质性修改时，请创建 patch。注意，[已固定的 Workflow](/worker-versioning) 无需 patch。
 
-Suppose you have an initial Workflow version called `pre_patch_activity`:
+假设你有一个名为 `pre_patch_activity` 的初始 Workflow 版本：
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/version_your_workflows/workflow_1_initial_dacx.py">
-    View the source code
+    查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+  以了解完整的应用程序代码上下文。
 </div>
 
 ```python
@@ -83,13 +83,13 @@ class MyWorkflow:
         )
 ```
 
-Now, you want to update your code to run `post_patch_activity` instead. This represents your desired end state.
+现在，你想更新代码以运行 `post_patch_activity`。这代表你期望的最终状态。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/version_your_workflows/workflow_4_patch_complete_dacx.py">
-    View the source code
+    查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+  以了解完整的应用程序代码上下文。
 </div>
 
 ```python
@@ -110,27 +110,27 @@ class MyWorkflow:
         )
 ```
 
-The problem is that you cannot deploy `post_patch_activity` directly until you're certain there are no more running Workflows created using the `pre_patch_activity` code, otherwise you are likely to cause a nondeterminism error.
-Instead, you'll need to deploy `post_patched_activity` and use the [patched](https://python.temporal.io/temporalio.workflow.html#patched) function to determine which version of the code to execute.
+问题在于，在确定没有更多使用 `pre_patch_activity` 代码创建的正在运行的 Workflow 之前，无法直接部署 `post_patch_activity`，否则很可能导致非确定性错误。
+因此，你需要部署 `post_patched_activity` 并使用 [patched](https://python.temporal.io/temporalio.workflow.html#patched) 函数来确定执行哪个版本的代码。
 
-Patching is a three-step process:
+Patching 是一个三步骤流程：
 
-1. Patch in any new, updated code using the `patched()` function. Run the new patched code alongside old code.
-2. Remove old code and use `deprecate_patch()` to mark a particular patch as deprecated.
-3. Once there are no longer any open Workflow Executions of the previous version of the code, remove `deprecate_patch()`.
-   Let's walk through this process in sequence.
+1. 使用 `patched()` 函数引入新的更新代码，与旧代码并行运行。
+2. 删除旧代码，并使用 `deprecate_patch()` 将特定 patch 标记为已废弃。
+3. 一旦不再有该代码之前版本的开放 Workflow Execution，移除 `deprecate_patch()`。
+   让我们按顺序逐步了解这一流程。
 
-### Patching in new code {#using-patched-for-workflow-history-markers}
+### 引入新代码的 patch {#using-patched-for-workflow-history-markers}
 
-Using `patched` inserts a marker into the Workflow History.
-During Replay, if a Worker encounters a history with that marker, it will fail the Workflow task when the Workflow code doesn't produce the same patch marker (in this case, `my-patch`).
-This ensures you can safely deploy code from `post_patch_activity` as a "feature flag" alongside the original version (`pre_patch_activity`).
+使用 `patched` 会在 Workflow History 中插入一个标记。
+在 Replay 过程中，如果 Worker 遇到含有该标记的历史记录，而 Workflow 代码未产生相同的 patch 标记（此处为 `my-patch`），则会导致 Workflow 任务失败。
+这确保你可以将 `post_patch_activity` 的代码作为"功能开关"与原始版本（`pre_patch_activity`）并行安全部署。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/version_your_workflows/workflow_2_patched_dacx.py">
-    View the source code
+    查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+  以了解完整的应用程序代码上下文。
 </div>
 
 ```python
@@ -151,19 +151,19 @@ class MyWorkflow:
             )
 ```
 
-### Deprecating patches {#deprecated-patches}
+### 废弃 patch {#deprecated-patches}
 
-After ensuring that all Workflows started with `pre_patch_activity` code have left retention, you can [deprecate the patch](https://python.temporal.io/temporalio.workflow.html#deprecate_patch).
+在确认所有使用 `pre_patch_activity` 代码启动的 Workflow 均已超出保留期后，你可以[废弃该 patch](https://python.temporal.io/temporalio.workflow.html#deprecate_patch)。
 
-Once your Workflows are no longer running the pre-patch code paths, you can deploy your code with `deprecate_patch()`.
-These Workers will be running the most up-to-date version of the Workflow code, which no longer requires the patch.
-Deprecated patches serve as a bridge between the final stage of the patching process and the final state that no longer has patches. They function similarly to regular patches by adding a marker to the Workflow History. However, this marker won't cause a replay failure when the Workflow code doesn't produce it.
+一旦你的 Workflow 不再运行 pre-patch 代码路径，就可以部署带有 `deprecate_patch()` 的代码。
+这些 Worker 将运行最新版本的 Workflow 代码，不再需要 patch。
+已废弃的 patch 作为 patching 流程最终阶段与不再含有 patch 的最终状态之间的过渡桥梁。其工作方式与普通 patch 类似，也会向 Workflow History 添加标记。但是，当 Workflow 代码未产生该标记时，不会导致 replay 失败。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/version_your_workflows/workflow_3_patch_deprecated_dacx.py">
-    View the source code
+    查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+  以了解完整的应用程序代码上下文。
 </div>
 
 ```python
@@ -179,15 +179,15 @@ class MyWorkflow:
         )
 ```
 
-### Removing a patch {#deploy-new-code}
+### 移除 patch {#deploy-new-code}
 
-Once your pre-patch Workflows have left retention, you can then safely deploy Workers that no longer use either the `patched()` or `deprecate_patch()` calls:
+一旦 pre-patch 的 Workflow 超出保留期，你就可以安全地部署不再使用 `patched()` 或 `deprecate_patch()` 调用的 Worker：
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/version_your_workflows/workflow_4_patch_complete_dacx.py">
-    View the source code
+    查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+  以了解完整的应用程序代码上下文。
 </div>
 
 ```python
@@ -202,12 +202,12 @@ class MyWorkflow:
         )
 ```
 
-Patching allows you to make changes to currently running Workflows.
-It is a powerful method for introducing compatible changes without introducing non-determinism errors.
+Patching 允许你对当前正在运行的 Workflow 进行修改。
+这是一种引入兼容性变更而不产生非确定性错误的强大方法。
 
-### Detailed Description of the Patched Function
+### Patched 函数详细说明
 
-This video provides an overview of how the `patched()` function works:
+以下视频概述了 `patched()` 函数的工作原理：
 
 <div style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
   <iframe
@@ -219,16 +219,16 @@ This video provides an overview of how the `patched()` function works:
   </iframe>
 </div>
 <br/>
-For a more in-depth explanation, refer to the [Patching](/patching) Encyclopedia entry.
+如需更深入的说明，请参阅 [Patching](/patching) 百科全书条目。
 
-### Workflow cutovers
+### Workflow 切换
 
-To understand why Patching is useful, it's helpful to demonstrate cutting over an entire Workflow.
+要理解 Patching 的用处，可以通过演示整个 Workflow 的切换来加以说明。
 
-Since incompatible changes only affect open Workflow Executions of the same type, you can avoid determinism errors by creating a whole new Workflow when making changes.
-To do this, you can copy the Workflow Definition function, giving it a different name, and register both names with your Workers.
+由于不兼容的变更只影响同类型的已开启的 Workflow Execution，你可以通过在进行变更时创建全新的 Workflow 来避免确定性错误。
+为此，你可以复制 Workflow Definition 函数并赋予不同的名称，然后在 Worker 中注册这两个名称。
 
-For example, you would duplicate `PizzaWorkflow` as `PizzaWorkflowV2`:
+例如，你可以将 `PizzaWorkflow` 复制为 `PizzaWorkflowV2`：
 
 ```python
 @workflow.defn(name="PizzaWorkflow")
@@ -244,7 +244,7 @@ class PizzaWorkflowV2:
         # this function contains the updated code
 ```
 
-You would then need to update the Worker configuration, and any other identifier strings, to register both Workflow Types:
+然后，你需要更新 Worker 配置以及其他标识符字符串，以注册这两种 Workflow 类型：
 
 ```python
 worker = Worker(
@@ -254,10 +254,10 @@ worker = Worker(
 )
 ```
 
-The downside of this method is that it requires you to duplicate code and to update any commands used to start the Workflow.
-This can become impractical over time.
-This method also does not provide a way to version any still-running Workflows -- it is essentially just a cutover, unlike Patching.
+此方法的缺点是需要复制代码，并且需要更新用于启动 Workflow 的所有命令。
+随着时间的推移，这可能变得不切实际。
+此方法也无法对仍在运行的 Workflow 进行版本管理——它本质上只是一次切换，而不像 Patching 那样具有版本管理能力。
 
-### Testing a Workflow for replay safety
+### 测试 Workflow 的 replay 安全性
 
-To determine whether your Workflow needs a patch, or that you've patched it successfully, you should incorporate [Replay Testing](/develop/python/best-practices/testing-suite#replay).
+要判断你的 Workflow 是否需要 patch，或者你的 patch 是否成功，应纳入 [Replay 测试](/develop/python/best-practices/testing-suite#replay)。

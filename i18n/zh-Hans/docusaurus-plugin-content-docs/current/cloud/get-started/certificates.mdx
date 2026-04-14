@@ -1,0 +1,500 @@
+---
+id: certificates
+title: 使用 mTLS 证书进行身份验证
+sidebar_label: 使用 mTLS 证书进行身份验证
+description: Temporal Cloud supports mTLS, which requires CA certificates for secure communication. Keep certificates updated to
+  Temporal Cloud supports mTLS, which requires CA certificates for secure communication. Keep certificates updated to
+  avoid disruptions in Workflow Execution. Manage and update certificates easily via the Temporal Cloud UI or tcld tool.
+slug: /cloud/certificates
+toc_max_heading_level: 4
+keywords:
+  - certificates
+  - explanation
+  - how-to
+  - introduction
+  - temporal cloud
+tags:
+  - Security
+  - Certificates
+  - Temporal Cloud
+---
+
+[Temporal Cloud](https://Temporal.io/cloud) 支持 mTLS 和 [API 密钥](/cloud/api-keys) 身份验证
+Namespace接入。
+
+使用 mTLS 身份验证时，每个 [Worker 进程](/Workers#Worker-process) 使用 CA 证书和私钥来
+连接到 Temporal Cloud。 Temporal Cloud 不需要交换秘密；仅由以下机构出具的证书
+私钥用于验证。
+
+:::caution Don't let your certificates expire
+
+过期的根 CA 证书会使所有下游证书失效。
+
+过期的终端实体证书会阻止 [Temporal CLIent](/encyclopedia/Temporal-sdks#Temporal-client)
+连接到 Namespace 或启动 Workflow Execution。如果客户端位于 Worker 上，则任何当前的 Workflow
+Worker 处理的执行要么无限期地运行而不会取得进展，直到 Worker 恢复，要么
+由于超时而失败。
+
+Temporal Cloud 在证书到期之前发送[礼貌电子邮件](/cloud/notifications#admin-notifications)。
+
+
+要 Update 证书，请参阅
+[如何在 Temporal Cloud Namespace 中添加 Update 和删除证书](#manage-certificates)。
+
+:::
+
+Temporal Cloud 使用的所有证书必须满足以下要求。
+
+## Temporal Cloud 中 CA 证书的要求 {#certificate-requirements}
+
+为您的 [Namespaces](/Namespaces) 向 Temporal 提供的证书_必须_满足以下要求。
+
+### CA 证书
+
+CA 证书是一种用于安全通信和身份验证的 X.509v3 证书。在Temporal Cloud中，
+配置 mTLS 需要 CA 证书。
+
+CA 证书_必须_满足以下标准：
+
+- 证书必须是 X.509v3。
+- 捆绑包中的每个证书必须是根证书或由捆绑包中的另一个证书颁发。
+- 捆绑包中的每个证书必须包含“CA: true”。
+- 证书不能是众所周知的 CA（例如 DigiCert 或 Let's Encrypt）_除非_用户也指定
+  证书过滤器。
+- 签名算法必须是 RSA 或 ECDSA，并且必须包括 SHA-256 或更强大的消息身份验证。 SHA-1
+  并且不能使用MD5。
+- 无法使用密码生成证书。
+
+:::info
+
+管理服务帐户
+
+:::
+
+### 最终实体证书
+
+终端实体证书是客户端用来验证自身身份的一种 X.509v3 证书。 Temporal Cloud
+允许您使用[证书过滤器](#manage-certificate-filters) 限制对特定最终实体证书的访问。
+
+最终实体（叶）证书_必须_满足以下标准：
+
+- 证书必须是 X.509v3。
+- 基本约束必须包括`CA: false`。
+- 密钥使用必须包含数字签名。
+- 签名算法必须是 RSA 或 ECDSA，并且必须包括 SHA-256 或更强大的消息身份验证。 SHA-1
+  并且不能使用MD5。
+
+当客户端提供终端实体证书并构建整个证书链时，每个证书中
+链（从终端实体到根）必须具有唯一的可分辨名称。
+
+:::caution
+
+专有名称_不_区分大小写；即大写字母（如 ABC）和小写字母（如
+abc) 是等价的。
+
+:::
+
+## 如何颁发根 CA 和最终实体证书 {#issue-certificates}
+
+Temporal Cloud 通过根据一个或多个 CA 验证客户端证书来验证客户端连接
+为指定的 Namespace 配置的证书。
+
+选择以下选项之一来生成和管理证书：
+
+### 选项 1：您已经拥有证书管理基础设施
+
+如果您有支持颁发 CA 和最终实体证书的现有证书管理基础设施，请导出
+CA 并使用现有工具生成最终实体证书。
+
+确保 CA 证书长期有效，并且最终实体证书先于 CA 证书到期。
+
+按照说明[上传 CA 证书](/cloud/certificates#Update-certificates-using-Temporal-cloud-ui)
+并使用最终实体[配置您的客户端](/cloud/certificates#configure-clients-to-use-client-certificates)
+证书。
+
+### 选项 2：您没有证书管理基础设施
+
+如果您没有现有的证书管理基础设施，我们建议使用 API 密钥进行身份验证
+相反。如果您不使用证书管理，API 密钥通常比 mTLS 证书更容易管理
+否则基础设施。
+
+如果您仍想使用 mTLS，请使用 [tcld](#use-tcld-to-generate-certificates) 颁发 CA 和最终实体证书
+或 OpenSSL 或 [step CLI](#use-step-cli-to-generate-certificates) 等开源工具。
+
+#### 使用tcld生成证书
+
+您可以使用 [tcld](/cloud/tcld) 生成 CA 和最终实体证书。
+
+尽管 Temporal Cloud 支持长期 CA 证书，但 [tcld](/cloud/tcld) 生成的 CA 证书具有
+最长持续时间为 1 年（`-d 1y`）。您必须将终端实体证书设置为在其根 CA 证书之前过期，
+因此请适当指定其持续时间。
+
+要创建新的 CA 证书，请使用“tcld gen ca”。
+
+```sh
+mkdir temporal-certs
+cd temporal-certs
+tcld gen ca --org temporal -d 1y --ca-cert ca.pem --ca-key ca.key
+```
+
+生成的“ca.pem”的内容应粘贴到 Namespace 设置的“身份验证”部分
+页。
+
+要创建新的终端实体证书，请使用“tcld gen leaf”。
+
+```sh
+tcld gen leaf --org temporal -d 364d --ca-cert ca.pem --ca-key ca.key --cert client.pem --key client.key
+```
+
+您现在可以将生成的 CA 证书 (`ca.pem`) 与 Temporal Cloud 结合使用，并使用这些证书配置您的客户端
+（`client.pem`、`client.key`）。
+
+将“ca.pem”文件的内容上传到 **Namespace** 设置的 **身份验证** 部分。
+
+按照说明[上传 CA 证书](/cloud/certificates#Update-certificates-using-Temporal-cloud-ui)
+并使用最终实体[配置您的客户端](/cloud/certificates#configure-clients-to-use-client-certificates)
+证书。
+
+#### 使用步骤CLI生成证书
+
+Temporal Cloud 需要客户端证书进行身份验证和安全通信。
+[step CLI](https://github.com/smallstep/cli)是一种流行且易于使用的证书颁发工具。
+
+在开始之前，请确保您已按照以下说明安装了smallstep/cli
+[安装指南](https://github.com/smallstep/cli#installation)。
+
+证书颁发机构 (CA) 是颁发数字证书的受信任实体。这些证书证明
+证书的指定主体对公钥的所有权。最终实体证书由
+CA，客户端使用它们向 Temporal Cloud 验证自己的身份。
+
+创建自签名 CA 证书并使用它为 Temporal Cloud Namespace 颁发最终实体证书。
+
+##### 1. 创建证书颁发机构 (CA)
+
+使用步骤 CLI 创建新的证书颁发机构 (CA)：
+
+```command
+step certificate create "CertAuth" CertAuth.crt CertAuth.key --profile root-ca --no-password --insecure
+```
+
+此命令创建一个名为“CertAuth.crt”的自签名 CA 证书和私钥“CertAuth.key”。该 CA 证书将用于签署和颁发最终实体证书。
+
+##### 2.设置Namespace名称
+
+将 Namespace 名称设置为最终实体证书的通用名称：
+
+<Tabs>
+  <TabItem value="macos" label="macOS" default>
+
+对于 Linux 或 macOS：
+
+```command
+export NAMESPACE_NAME=your-namespace
+```
+
+</TabItem>
+    <TabItem value="windows" label="Windows" default>
+
+对于 Windows：
+
+```command
+set NAMESPACE_NAME=your-namespace
+```
+
+</TabItem>
+</Tabs>
+
+将 `your-Namespace` 替换为您的 Temporal Cloud Namespace 的名称。
+
+##### 3. 创建并签署最终实体证书
+
+使用等于 Namespace 名称的通用名称创建并签署最终实体证书：
+
+```command
+step certificate create ${NAMESPACE_NAME} ${NAMESPACE_NAME}.crt ${NAMESPACE_NAME}.key --ca CertAuth.crt --ca-key CertAuth.key --no-password --insecure --not-after 8760h
+```
+
+此命令创建由您的 CA (`CertAuth`) 签名的最终实体证书 (`your-Namespace.crt`) 和私钥 (`your-Namespace.key`)。
+
+##### 4.（可选）转换为 Java SDK 的 PKCS8 格式
+
+如果您使用的是 Temporal Java SDK，则需要将 PKCS1 文件格式转换为 PKCS8 文件格式。导出
+PKCS8 文件的最终实体的私钥：
+
+```command
+openssl pkcs8 -topk8 -inform PEM -outform PEM -in ${NAMESPACE_NAME}.key -out ${NAMESPACE_NAME}.pkcs8.key -nocrypt
+```
+
+##### 5. 将证书与 Temporal Cloud 一起使用
+
+您现在可以使用生成的客户端证书 (`your-Namespace.crt`) 和 CA 证书 (`CertAuth.crt`)
+Temporal Cloud。
+
+将“CertAuth.crt”文件的内容上传到 **Namespace** 设置的 **CA 证书** 部分。
+
+按照说明[上传 CA 证书](/cloud/certificates#Update-certificates-using-Temporal-cloud-ui)
+并使用最终实体[配置您的客户端](/cloud/certificates#configure-clients-to-use-client-certificates)
+证书。
+
+## 如何控制 Temporal Cloud Namespaces 的授权 {#control-authorization}
+
+我们建议将最终实体证书的范围限定为特定 Namespace，以强制执行最小原则
+特权。 Temporal Cloud需要完整的CA链，因此您可以通过两种方式实现授权。
+
+### 选项 1：为每个 Namespace 颁发单独的根证书
+
+每个证书必须属于一直到根 CA 证书的链。 Temporal使用根CA证书作为
+访问您的 Namespace 的可信机构。
+
+1. 确保您的证书满足[证书要求](#certificate-requirements)。
+1. [将客户端CA证书添加到云Namespace](/cloud/tcld/Namespace/#add)。
+
+### 选项 2：对所有 Namespace 使用相同的根证书，但为每个 Namespace 创建单独的证书过滤器
+
+[如何在 Temporal Cloud 中管理证书过滤器](#manage-certificate-filters)
+
+## 如何接收有关证书过期的通知 {#expiration-notifications}
+
+为了确保您的 Namespace 安全并在线，您必须在证书之前为 Namespace Update Namespace CA 证书
+过期。
+
+为了帮助您记住这样做，Temporal Cloud 会发送[电子邮件通知](/cloud/notifications#admin-notifications)。
+
+## 如何处理受损的终端实体证书
+
+:::warning
+
+Temporal 不支持或检查证书吊销列表 (CRL)。客户应保留他们的
+证书是最新的。
+
+:::
+
+避免证书受损的建议方法是使用短期终端实体证书。一个
+短期受损证书可以自行过期。寻求信息安全团队的指导以确定
+适合您业务的“短暂”值。
+
+如果您怀疑或确认最终实体证书已被泄露，并且让其过期并不是一个明智的选择
+选项，立即采取措施保护您的 Temporal Cloud Namespace 并防止未经授权的访问。
+
+如果您使用证书过滤器，则可以设置过滤器来阻止受损的证书。按照说明操作
+在[如何在 Temporal Cloud 中管理证书过滤器](#manage-certificate-filters)。
+
+如果您需要手动替换受损的证书，请按照以下步骤操作：
+
+### 1.生成新的CA证书
+
+请按照[如何颁发 CA 和最终实体证书](#issue-certificates) 中的说明进行操作。所有最终实体
+必须重新生成先前 CA 可以访问的证书。确保新的CA证书符合
+[证书要求](#certificate-requirements)。
+
+### 2. 将新的 CA 证书部署到 Namespace
+
+请按照发布说明进行操作
+[Namespace 的新 CA 证书](#option-1-issue-a-separate-root-certificate-for-each-Namespace)。部署新的 CA
+证书与现有证书并存，这样您就不会在新证书之前失去与旧终端实体证书的连接
+已生成并部署。
+
+### 3. 使用新的 CA 证书重新生成终端实体证书
+
+[配置所有客户端](https://docs.Temporal.io/cloud/certificates#configure-clients-to-use-client-certificates)
+（Temporal CLI、SDK 或 Worker）将新证书和私钥与受损密钥一起使用。 Update 的
+客户端配置，如中所述
+[配置客户端以使用客户端证书](#configure-clients-to-use-client-certificates)。
+
+测试新证书以确认客户端可以毫无问题地连接到 Namespace。
+
+### 4. 删除受损的 CA 证书
+
+按照中的说明进行操作
+[如何在 Temporal Cloud Namespace 中添加、Update 和删除证书](#manage-certificates) 以删除
+Namespace 的 CA 证书遭到泄露。
+
+### 5. 监控和审计
+
+实施更改后，监控您的 Namespace 是否有未经授权的访问尝试或审计中异常的 Activity
+日志。检查您的证书管理实践以确定泄露是如何发生的。考虑实施
+更严格的控制，例如：
+
+- 将最终实体证书限制为特定 Namespace
+- 定期轮换证书作为预防措施
+- [常规 Schedule 上的审核日志](https://docs.Temporal.io/cloud/audit-logs)
+
+## 如何在 Temporal Cloud Namespace {#manage-certificates} 中添加 Update 和删除证书
+
+:::note
+
+要管理 Namespace 的证书，用户必须具有 [Namespace 管理员](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions)
+Namespace 的许可。
+
+:::
+
+要管理 Temporal Cloud Namespaces 的证书，请使用 Temporal Cloud UI 中的 **Namespaces** 页面或
+[tcld Namespace 接受-客户端-ca](/cloud/tcld/Namespace/#accepted-client-ca) 命令。
+
+不要让您的证书过期！在您的日历中添加提醒，以便在发布之前尽早颁发新的 CA 证书
+现有的到期日期。 Temporal Cloud 在到期前 15 天开始发送通知。对于
+详情请参阅上一节
+（[如何接收有关证书过期的通知](#expiration-notifications)）。
+
+更新 CA 证书时，遵循滚动更新过程（有时称为“证书更新”）非常重要。
+旋转”）。这样做可以使您的 Namespace 在一段时间内为两个 CA 证书提供服务，直到流量到达您的旧版本
+CA证书终止。这可以防止翻转过程中出现任何服务中断。
+
+{/* 如何使用 Temporal Cloud UI 在 Temporal Cloud 中获取 Update 证书 */}
+
+### 使用 Temporal Cloud UI 的 Update 证书
+
+使用以下策略更新证书可以实现证书的零停机轮换。
+
+1. 在窗口左侧，选择 **Namespaces**。
+
+2. 选择Namespace 至Update 的名称。
+
+3. 在 Namespace 页面的右上角，选择 **编辑**。
+
+4. 在 **编辑** 页面上，选择 **身份验证** 卡将其展开。
+
+5. 在证书框中，滚动到现有证书的末尾（即过去的“-----END CERTIFICATE-----”）。
+
+6. 在下面的新行中，粘贴新证书的整个 PEM 块。
+
+7. 选择**保存**。
+
+8. 等待所有 Worker 都使用新证书。
+
+9. 返回Namespace的**编辑**页面并选择**身份验证**卡。
+
+10. 在证书框中，删除旧证书，保留新证书。
+
+11. 选择**保存**。
+
+{/* 如何使用 tcld 在 Temporal Cloud 中获取 Update 证书 */}
+
+### 使用 tcld 的 Update 证书
+
+使用以下策略更新证书可以实现证书的零停机轮换。
+
+1. 创建一个包含新旧 CA 证书 PEM 块的单个文件。只需连接 PEM 块即可
+   在相邻的线上。
+
+   ```
+   -----BEGIN CERTIFICATE-----
+   ... old CA cert ...
+   -----END CERTIFICATE-----
+   -----BEGIN CERTIFICATE-----
+   ... new CA cert ...
+   -----END CERTIFICATE-----
+   ```
+
+1. 使用 CA 证书捆绑文件运行“tcld Namespace Accepted-client-ca set”命令。
+
+   ```bash
+   tcld namespace accepted-client-ca set --ca-certificate-file <path>
+   ```
+
+1. 监控旧证书的流量直至其停止。
+
+1. 创建另一个仅包含新 CA 证书的文件。
+
+1. 使用 Updated CA 证书捆绑文件再次运行“tcld Namespace Accepted-client-ca set”命令。
+
+## 如何在 Temporal Cloud 中管理证书过滤器 {#manage-certificate-filters}
+
+要限制对特定[最终实体证书](#end-entity-certificates) 的访问，请创建证书过滤器。每个过滤器
+包含以下一个或多个字段的值：
+
+RPO 和 RTO
+
+客户端证书中的相应字段必须与过滤器中的每个指定值匹配。
+
+字段的值不区分大小写。如果不使用通配符，则每个指定值必须与其字段匹配
+正是如此。
+
+要匹配子字符串，请在值的开头或结尾（但不是两者）放置一个“*”通配符。您不能使用
+`*` 通配符本身。
+
+您最多可以在 Namespace 中创建 25 个证书过滤器。
+
+如果您提供知名 CA 证书，则无法清除证书过滤器。众所周知的 CA 证书就是其中之一
+通常包含在操作系统的证书存储中。
+
+**示例**
+
+在以下示例中，仅检查证书主题的 CN 字段，并且它必须准确无误
+`code.example.com`。其他字段不检查。
+
+```json
+AuthorizedClientCertificate {
+  CN : "code.example.com"
+}
+```
+
+在以下示例中，CN 字段必须是“stage.example.com”，O 字段必须是“Example Code Inc.”
+
+```json
+AuthorizedClientCertificate {
+  CN : "stage.example.com"
+  O : "Example Code Inc."
+}
+```
+
+使用“*”通配符时，以下值有效：
+
+- `*.example.com` 匹配 `code.example.com` 和 `text.example.com`。
+- `Example Code*` 匹配 `Example Code` 和 `Example Code Inc`。
+
+以下值无效：
+
+- `.example.*`
+- `代码.*.com`
+- `*`
+
+{/* 如何使用 Temporal Cloud UI 管理 Temporal Cloud 中的证书过滤器 */}
+
+### 使用 Temporal Cloud UI 管理证书过滤器
+
+要添加或删除证书过滤器，请执行以下步骤：
+
+1. 在窗口左侧，单击 **Namespaces**。
+1. 在 **Namespaces** 页面上，单击要管理的 Namespace 的名称。
+1. 在所选Namespace的页面右侧，单击“**编辑**”。
+1. 在**编辑**页面上，单击**身份验证**卡。
+   - 要添加证书过滤器，请单击“**添加证书过滤器**”并在一个或多个字段中输入值。
+   - 要删除证书过滤器，请单击过滤器详细信息右上角的******。
+1. 要取消更改，请单击 **返回 Namespace**。要保存更改，请单击“**保存**”。
+
+{/* 如何使用 tcld 管理 Temporal Cloud 中的证书过滤器 */}
+
+### 使用 tcld 管理证书过滤器
+
+要设置或清除证书过滤器，请使用以下 [tcld](/cloud/tcld) 命令：
+
+- [tcld Namespace 证书过滤器导入](/cloud/tcld/Namespace/#import)
+- [tcld Namespace 证书过滤器清除](/cloud/tcld/Namespace/#clear)
+
+要查看当前的证书过滤器，请使用
+[tcld Namespace 证书过滤器导出](/cloud/tcld/Namespace/#export) 命令。
+
+## 配置客户端使用客户端证书 {#configure-clients-to-use-client-certificates}
+
+- [Go SDK](/develop/go/client/Temporal-client#connect-to-Temporal-cloud)
+- [Java SDK](/develop/java/client/Temporal-client#connect-to-Temporal-cloud)
+- [PHP SDK](/develop/php/client/Temporal-client#connect-to-a-dev-cluster)
+- [Python SDK](/develop/python/client/Temporal-client#connect-to-Temporal-cloud)
+- [TypeScript SDK](/develop/typescript/client/Temporal-client#connect-to-Temporal-cloud)
+- [.NET SDK](/develop/dotnet/client/Temporal-client#connect-to-Temporal-cloud)
+
+### 配置 Temporal CLI {#configure-Temporal-cli}
+
+要使用 Temporal CLI 和证书身份验证连接到 Temporal、Namespace，请指定您的凭据并
+TLS 服务器名称：
+
+```sh
+temporal <command> <subcommand> \
+    --tls-ca-path <Path to server CA certificate> \
+    --tls-cert-path <Path to x509 certificate> \
+    --tls-key-path <Path to private certificate key> \
+    --tls-server-name <Override for target TLS server name>
+```
+
+有关 Temporal CLI 环境变量的更多信息，请参阅[环境变量](/cli#environment-variables)。

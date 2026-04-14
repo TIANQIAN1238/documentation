@@ -1,8 +1,8 @@
 ---
 id: users
-title: Manage users
-sidebar_label: Manage users
-description:
+title: "管理用户"
+sidebar_label: "管理用户"
+description: Manage user invitations, account-level roles, and Namespace-level permissions in Temporal Cloud. Invite users, update
   Manage user invitations, account-level roles, and Namespace-level permissions in Temporal Cloud. Invite users, update
   roles, and delete users seamlessly using the Temporal Web UI, tcld, or the Cloud Ops API.
 slug: /cloud/users
@@ -22,59 +22,60 @@ tags:
   - Users
 ---
 
-Users are one of the primary access principals in Temporal Cloud. Each user is assigned one
-[account-level role](/cloud/manage-access/roles-and-permissions#account-level-roles), and each role has a set of
-permissions. In addition to account-level roles, users can also be assigned
-[Namespace-level permissions](/cloud/manage-access/roles-and-permissions#namespace-level-permissions) for specific
-Namespaces. Each user can only perform an action if they have a role that grants them the necessary permissions.
+用户是 Temporal Cloud 中的主要访问主体之一。每个用户被分配一个
+[账户级角色](/cloud/manage-access/roles-and-permissions#account-level-roles)，每个角色都有一套
+权限。除了帐户级角色外，还可以分配用户
+[Namespace级权限](/cloud/manage-access/roles-and-permissions#namespace-level-permissions)具体
+Namespace。每个用户只有拥有授予他们必要权限的角色才能执行操作。
 
-When you register for Temporal Cloud without joining an existing account, you are assigned the Account Owner role for a
-new account. You can then invite other users to join the account and assign them roles.
+当您注册 Temporal Cloud 而不加入现有帐户时，您将被分配一个帐户所有者角色
+新帐户。然后，您可以邀请其他用户加入该帐户并为他们分配角色。
 
-## Invite users to your Temporal Cloud account {#invite-users}
+## 邀请用户加入您的 Temporal Cloud 帐户 {#invite-users}
 
 import InvitationContent from '@site/docs/cloud/get-started/user-invite.mdx';
 
 <InvitationContent />
 
-Global Admin roles cannot assign the Account Owner role or the Finance Admin role to new users they invite to the
-account.
+全局管理员角色无法将帐户所有者角色或财务管理员角色分配给他们邀请加入的新用户
+帐户。
 
-## Update a user's account-level role {#update-roles}
+<a id="update-roles"></a>
+## Update 用户的账户级角色 {#update-roles}
 
-With Global Admin or Account Owner privileges, you can update any user's account-level
-[role](/cloud/manage-access/roles-and-permissions#account-level-roles). The Account Owner role can only be granted by
-existing Account Owners.
+凭借全局管理员或帐户所有者权限，您可以 Update 任何用户的帐户级别
+[角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。帐户所有者角色只能由以下人员授予
+现有帐户所有者。
 
-For security reasons, you cannot remove the Account Owner role from a user. Removing the Account Owner role must be made
-through Temporal Support. To remove the Account Owner role, you must submit a
-[support ticket](https://temporalsupport.zendesk.com/).
+出于安全原因，您无法删除用户的帐户所有者角色。必须删除帐户所有者角色
+通过 Temporal 支持。要删除帐户所有者角色，您必须提交
+[支持票](https://temporalsupport.zendesk.com/)。
 
 <Tabs>
 
 <TabItem value="update-role-webui" label="Web UI">
 
-1. In Temporal Web UI, select **Settings** in the left portion of the window.
-1. On the **Settings** page, select the user.
-1. On the user profile page, select **Edit User**.
-1. On the **Edit User** page in **Account Level Role**, select the role.
-1. Select **Save**.
+1. 在 Temporal Web UI 中，选择窗口左侧的 **设置**。
+1. 在**设置**页面上，选择用户。
+1. 在用户个人资料页面上，选择“**编辑用户**”。
+1. 在 **帐户级别角色** 的 **编辑用户** 页面上，选择角色。
+1. 选择**保存**。
 
 </TabItem>
 
 <TabItem value="update-role-tcld" label="tcld">
 
-Use the [`tcld user set-account-role`](/cloud/tcld/user/#set-account-role) command. Specify the user by email or ID and
-the new role.
+使用 [`tcld user set-account-role`](/cloud/tcld/user/#set-account-role) 命令。通过电子邮件或 ID 指定用户，并
+新角色。
 
-Available account roles: `admin` | `developer` | `read`. The Account Owner and Finance Admin roles cannot be assigned
-through tcld; use the Web UI or Cloud Ops API to assign these roles.
+可用帐户角色：`admin` | `developer` | `read`。无法分配账户所有者和财务管理员角色
+通过tcld；使用 Web UI 或 Cloud Ops API 来分配这些角色。
 
 ```command
 tcld user set-account-role --user-email <user@example.com> --account-role <role>
 ```
 
-You can also identify the user by ID:
+您还可以通过 ID 来识别用户：
 
 ```command
 tcld user set-account-role --user-id <user-id> --account-role <role>
@@ -84,65 +85,66 @@ tcld user set-account-role --user-id <user-id> --account-role <role>
 
 <TabItem value="update-role-api" label="Cloud Ops API">
 
-Use the [UpdateUser](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users) endpoint to update a user's account-level
-role.
+使用 [Update用户](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users) 端点到 Update 用户的帐户级别
+角色。
 
 ```
 POST /cloud/users/{userId}
 ```
 
-The request body includes a `spec` with the user's `access.account_access.role` field set to the desired role.
+请求正文包含 `spec`，其中用户的 `access.account_access.role` 字段设置为所需的角色。
 
-Available roles: `ROLE_OWNER` | `ROLE_ADMIN` | `ROLE_DEVELOPER` | `ROLE_FINANCE_ADMIN` | `ROLE_READ`.
+可用角色：`ROLE_OWNER` | `ROLE_ADMIN` | `ROLE_DEVELOPER` | `ROLE_FINANCE_ADMIN` | `ROLE_READ`。
 
 </TabItem>
 
 </Tabs>
 
-## Update a user's Namespace-level permissions {#update-permissions}
+<a id="update-permissions"></a>
+## Update 用户的 Namespace 级别权限 {#update-permissions}
 
-With Account Owner, Global Admin, or Namespace Admin privileges, you can update
-[Namespace-level permissions](/cloud/manage-access/roles-and-permissions#namespace-level-permissions) for users within
-Namespaces you administer. Account Owners and Global Admins have Namespace Admin permissions on all Namespaces
-automatically.
+凭借帐户所有者、全局管理员或 Namespace 管理员权限，您可以 Update
+[Namespace级权限](/cloud/manage-access/roles-and-permissions#namespace-level-permissions) 内的用户
+Namespace 由您管理。帐户所有者和全局管理员对所有 Namespace 拥有 Namespace 管理员权限
+自动。
 
 <Tabs>
 
 <TabItem value="update-perms-webui" label="Web UI">
 
-**Update a user's permissions across multiple Namespaces:**
+**Update 一个用户在多个 Namespace 上的权限：**
 
-1. In Temporal Web UI, select **Namespaces** in the left portion of the window.
-1. On the **Namespaces** page, select the Namespace.
-1. If necessary, scroll down to the list of permissions.
-1. On the user profile page in **Namespace permissions**, select the Namespace.
-1. On the Namespace page in **Account Level Role**, select the role.
-1. Select **Save**.
+1. 在 Temporal Web UI 中，选择窗口左侧的 **Namespaces**。
+1. 在 **Namespaces** 页面上，选择 Namespace。
+1. 如有必要，向下滚动至权限列表。
+1. 在用户个人资料页面的**Namespace 权限**中，选择Namespace。
+1. 在“Namespace”页面的“**账户级别角色**”中，选择角色。
+1. 选择**保存**。
 
-**Update permissions for multiple users within a single Namespace:**
+**单个 Namespace 内多个用户的 Update 权限：**
 
-1. In Temporal Web UI, select **Settings** in the left portion of the window.
-1. On the **Settings** page in the **Users** tab, select the user.
-1. On the user profile page, select **Edit User**.
-1. On the **Edit User** page in **Namespace permissions**, change the permissions for one or more Namespaces.
-1. Select **Save**.
+1. 在 Temporal Web UI 中，选择窗口左侧的 **设置**。
+1. 在 **设置** 页面的 **用户** 选项卡中，选择用户。
+1. 在用户个人资料页面上，选择“**编辑用户**”。
+1. 在**Namespace 权限**中的**编辑用户**页面，更改一个或多个Namespace 的权限。
+1. 选择**保存**。
 
 </TabItem>
 
 <TabItem value="update-perms-tcld" label="tcld">
 
-Use the [`tcld user set-namespace-permissions`](/cloud/tcld/user/#set-namespace-permissions) command. Specify the user
-by email or ID and one or more Namespace permissions.
+使用 [`tcld user set-Namespace-permissions`](/cloud/tcld/user/#set-namespace-permissions) 命令。指定用户
+通过电子邮件或 ID 以及一项或多项 Namespace 权限。
 
-Each permission value must be in the format `namespace=permission-type`.
+每个权限值必须采用 `Namespace=permission-type` 格式。
 
-Available Namespace permissions: `Admin` | `Write` | `Read`.
+可用的 Namespace 权限：`Admin` | `Write` | `Read`。
 
 ```command
 tcld user set-namespace-permissions --user-email <user@example.com> --namespace-permission <namespace>=<permission>
 ```
 
-You can set multiple Namespace permissions in a single request:
+您可以在单个请求中设置多个 Namespace 权限：
 
 ```command
 tcld user set-namespace-permissions --user-email <user@example.com> \
@@ -154,49 +156,49 @@ tcld user set-namespace-permissions --user-email <user@example.com> \
 
 <TabItem value="update-perms-api" label="Cloud Ops API">
 
-Use the [SetUserNamespaceAccess](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users) endpoint to set a user's
-permission for a specific Namespace.
+使用 [设置用户Namespace访问](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users) 端点设置用户的
+特定 Namespace 的权限。
 
 ```
 POST /cloud/namespaces/{namespace}/users/{userId}/access
 ```
 
-Set the `access.permission` field to the desired permission.
+将 `access.permission` 字段设置为所需的权限。
 
-Available permissions: `PERMISSION_ADMIN` | `PERMISSION_WRITE` | `PERMISSION_READ`.
+可用权限：`PERMISSION_ADMIN` | `PERMISSION_WRITE` | `PERMISSION_READ`。
 
 </TabItem>
 
 </Tabs>
 
-## Delete a user from your Temporal Cloud account {#delete-users}
+## 从您的 Temporal Cloud 帐户中删除用户 {#delete-users}
 
-With Account Owner or Global Admin privileges, you can delete a user from your Temporal Cloud account.
+凭借帐户所有者或全局管理员权限，您可以从 Temporal Cloud 帐户中删除用户。
 
 <Tabs>
 
 <TabItem value="delete-user-webui" label="Web UI">
 
-1. In Temporal Web UI, select **Settings** in the left portion of the window.
-1. On the **Settings** page, find the user and, on the right end of the row, select **Delete**.
-1. In the **Delete User** dialog, select **Delete**.
+1. 在 Temporal Web UI 中，选择窗口左侧的 **设置**。
+1. 在**设置**页面上，找到用户，然后在行的右端选择**删除**。
+1. 在 **删除用户** 对话框中，选择 **删除**。
 
-You can also delete a user in two other ways in Web UI:
+您还可以在 Web UI 中通过其他两种方式删除用户：
 
-- User profile page: Select the down arrow next to **Edit User** and then select **Delete**.
-- **Edit User** page: Select **Delete User**.
+- 用户个人资料页面：选择“**编辑用户**”旁边的向下箭头，然后选择“**删除**”。
+- **编辑用户**页面：选择**删除用户**。
 
 </TabItem>
 
 <TabItem value="delete-user-tcld" label="tcld">
 
-Use the [`tcld user delete`](/cloud/tcld/user/#delete) command. Specify the user by email or ID.
+使用 [`tcld user delete`](/cloud/tcld/user/#delete) 命令。通过电子邮件或 ID 指定用户。
 
 ```command
 tcld user delete --user-email <user@example.com>
 ```
 
-You can also identify the user by ID:
+您还可以通过 ID 来识别用户：
 
 ```command
 tcld user delete --user-id <user-id>
@@ -206,8 +208,8 @@ tcld user delete --user-id <user-id>
 
 <TabItem value="delete-user-api" label="Cloud Ops API">
 
-Use the [DeleteUser](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users) endpoint to remove a user from your
-account.
+使用 [删除用户](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users) 端点从您的帐户中删除用户
+帐户。
 
 ```
 DELETE /cloud/users/{userId}

@@ -1,0 +1,38 @@
+---
+id: dynamic-activity
+title: 动态活动 - Ruby SDK
+sidebar_label: 动态活动
+description: 本节介绍 Ruby SDK 的动态活动
+toc_max_heading_level: 4
+keywords:
+  - Ruby SDK
+tags:
+  - Ruby SDK
+  - Temporal SDKs
+---
+
+## 设置动态 Activity {#set-a-dynamic-Activity}
+
+Temporal 中的动态 Activity 是一个 Activity，如果没有注册其他同名的 Activity，则在运行时动态调用该 Activity。
+Activity 可以通过调用定义顶部的“Activity_dynamic”类方法来动态化。
+您必须先向 Worker 注册 Activity，然后才能调用它。
+Worker 上只能存在一个 Dynamic Activity。
+
+通常，动态与“Activity_raw_args”结合使用，它不转换参数而是传递它们
+作为“Temporalio::Converters::RawValue”实例的分散数组。
+
+```ruby
+class MyDynamicActivity < Temporalio::Activity::Definition
+  # Make this the dynamic activity and accept raw args
+  activity_dynamic
+  activity_raw_args
+
+  def execute(*raw_args)
+    raise Temporalio::Error::ApplicationError, 'One arg expected' unless raw_args.size == 1
+
+    # Use payload converter to convert it
+    input = Temporalio::Activity::Context.current.payload_converter.from_payload(raw_args.first.payload)
+    "#{input['greeting']}, #{input['name']}!"
+  end
+end
+```

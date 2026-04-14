@@ -1,0 +1,555 @@
+---
+id: configuration
+title: Temporal集群配置参考
+sidebar_label: 集群配置
+description: 使用development.yaml 文件配置 Temporal 集群以设置全局参数、指标、安全性、持久性和服务角色，确保简化的设置和管理流程。
+toc_max_heading_level: 4
+keywords:
+  - reference
+tags:
+  - Reference
+---
+
+Temporal 集群的大部分行为是使用“development.yaml”文件配置的，并且可能包含以下顶级部分：
+
+- [`全球`](#全球)
+- [`持久性`](#持久性)
+- [`日志`](#日志)
+- [`集群元数据`](#clustermetadata)
+- [`服务`](#服务)
+- [`publicClient`](#publicclient)
+- [`档案`](#档案)
+- [`Namespace默认值`](#Namespace默认值)
+- [`dcRedirectionPolicy`](#dcredirectionpolicy)
+- [`dynamicConfigClient`](#dynamicconfigclient)
+
+更改“development.yaml”文件中的任何属性都需要重新启动进程才能使更改生效。
+配置解析代码可在[此处](https://github.com/Temporalio/Temporal/blob/main/common/config/config.go)获得。
+
+＃＃ 全球的
+
+“global”部分包含进程范围的配置。请参阅下面的最小配置（可选参数已被注释掉。）
+
+```yaml
+global:
+  membership:
+    broadcastAddress: '127.0.0.1'
+  metrics:
+    prometheus:
+      framework: 'tally'
+      listenAddress: '127.0.0.1:8000'
+```
+
+### 会员资格
+
+“membership”部分控制以下成员资格层参数。
+
+#### 最大加入持续时间
+
+服务在失败之前尝试加入八卦层的时间。
+
+默认值为 10 秒。
+
+####广播地址
+
+由八卦协议用于与同一集群中的其他主机通信以获取成员信息。
+使用同一集群中其他主机可访问的 IP 地址。
+如果集群中只有一台主机，可以使用127.0.0.1。
+检查“net.ParseIP”是否支持语法，仅支持 IPv4。
+
+### 指标
+
+配置集群的指标子系统。
+使用提供程序名称作为键来配置特定提供程序。
+
+- [`统计数据`](#statsd)
+-`普罗米修斯`
+- `m3`
+
+#### 前缀
+
+应用于所有传出指标的前缀。
+
+####标签
+
+作为每个指标的一部分报告的键值对集。
+
+#### 排除标签
+
+从标签名称字符串到标签值字符串列表的映射。
+这对于排除一些可能具有无限基数的标签很有用。
+值字符串列表可用于将该排除标签的值列入白名单以继续包含在内。
+例如，如果您想排除“task_queue”，因为它具有无限基数，但您仍然希望查看“task_queue”的白名单值。
+
+#### 统计数据
+
+:::caution
+
+Temporal 本身不支持 `statsd`。
+
+:::
+
+`statsd` 部分支持以下设置：
+
+- `hostPort`：statsd 服务器的主机：端口。
+- `prefix`：向 `statsd` 报告时的特定前缀。
+- `flushInterval`: 发送数据包的最大间隔。 （_默认_300 毫秒）。
+- `flushBytes`：指定您希望发送的最大 UDP 数据包大小。 （_默认_1432 字节）。
+
+####普罗米修斯
+
+`prometheus` 部分支持以下设置：
+
+- `framework`: 使用的框架，目前支持`opentelemetry`和`tally`，默认是`tally`。我们计划在其 API 稳定后将默认值切换为“opentelemetry”。
+- `listenAddress`：Prometheus 从中抓取指标的地址。
+  Temporal Server使用Prometheus客户端API，“listenAddress”配置用于监听指标。
+- `handlerPath`：抓取工具的指标处理程序路径；默认为“/metrics”。
+
+#### 立方米
+
+`m3` 部分支持以下设置：
+
+- `hostPort`：M3 服务器的主机：端口。
+- `service`：该客户端发出的服务标签。
+- `queue`：M3 报告队列大小，默认为 4k。
+- `packetSize`：M3 报告器最大数据包大小，默认为 32k。
+
+### 教授
+
+- `port`：如果指定，这将在列出的端口上启动进程时初始化 pprof。
+
+### tls
+
+“tls”部分控制网络通信的 SSL/TLS 设置，并包含两个小部分：“internode”和“frontend”。
+“internode”部分管理角色之间的内部服务通信，其中“frontend”管理 SDK 客户端与前端服务角色的通信。
+
+每个小节都包含一个“服务器”部分和一个“客户端”部分。
+`server` 包含以下参数：
+
+- `certFile`：包含要使用的证书的 PEM 编码公钥的文件的路径。
+- `keyFile`：包含要使用的证书的 PEM 编码私钥的文件的路径。
+- `requireClientAuth`: _boolean_ - 要求客户端在连接时使用证书进行身份验证，也称为相互 TLS。
+- `clientCaFiles`：包含您希望信任进行客户端身份验证的证书颁发机构的 PEM 编码公钥的文件路径列表。如果未启用“requireClientAuth”，则忽略此值。
+
+:::tip
+
+有关示例 TLS 配置，请参阅[服务器示例存储库](https://github.com/Temporalio/samples-server/tree/master/tls)。
+
+:::
+
+以下是在 SDK 和前端 API 之间启用服务器 TLS (https) 的示例：
+
+```yaml
+global:
+  tls:
+    frontend:
+      server:
+        certFile: /path/to/cert/file
+        keyFile: /path/to/key/file
+      client:
+        serverName: dnsSanInFrontendCertificate
+```
+
+请注意，通常需要提供“client”部分，以通过“serverName”字段指定所提供的服务器证书中包含的预期 DNS 主题名称；这是必需的，因为 Temporal 使用 IP 到 IP 通信。
+如果您的服务器证书包含适当的 IP 使用者备用名称，您可以避免指定此项。
+
+此外，当客户端主机不信任服务器使用的根 CA 时，需要提供“rootCaFiles”字段。
+下面的示例扩展了上面的示例，以手动指定前端服务使用的根 CA：
+
+```yaml
+global:
+  tls:
+    frontend:
+      server:
+        certFile: /path/to/cert/file
+        keyFile: /path/to/key/file
+      client:
+        serverName: dnsSanInFrontendCertificate
+        rootCaFiles:
+          - /path/to/frontend/server/CA/files
+```
+
+下面是一个完全安全的集群的另一个示例，该集群使用双向 TLS 与手动指定的 CA 进行前端和节点间通信：
+
+```yaml
+global:
+  tls:
+    internode:
+      server:
+        certFile: /path/to/internode/cert/file
+        keyFile: /path/to/internode/key/file
+        requireClientAuth: true
+        clientCaFiles:
+          - /path/to/internode/serverCa
+      client:
+        serverName: dnsSanInInternodeCertificate
+        rootCaFiles:
+          - /path/to/internode/serverCa
+    frontend:
+      server:
+        certFile: /path/to/frontend/cert/file
+        keyFile: /path/to/frontend/key/file
+        requireClientAuth: true
+        clientCaFiles:
+          - /path/to/internode/serverCa
+          - /path/to/sdkClientPool1/ca
+          - /path/to/sdkClientPool2/ca
+      client:
+        serverName: dnsSanInFrontendCertificate
+        rootCaFiles:
+          - /path/to/frontend/serverCa
+```
+
+**注意：** 在启用客户端身份验证的情况下，“internode.server”证书将用作服务之间的客户端证书。这增加了以下要求：
+
+- 必须在所有角色上指定 `internode.server` 证书，即使对于仅前端配置也是如此。
+- 节点间服务器证书必须使用**无**扩展密钥用法或**同时使用** ServerAuth 和 ClientAuth EKU 来创建。
+- 如果您的证书颁发机构不受信任，例如前面的示例，则需要在以下位置指定节点间服务器 Ca：
+
+- `internode.server.clientCaFiles`
+  - `internode.client.rootCaFiles`
+  - `frontend.server.clientCaFiles`
+
+## 坚持
+
+“persistence”部分保存数据存储/持久层的配置。
+以下示例显示了使用 Cassandra 的密码保护集群的最低规范。
+
+```yaml
+persistence:
+  defaultStore: default
+  visibilityStore: cass-visibility # The primary Visibility store.
+  secondaryVisibilityStore: es-visibility # A secondary Visibility store added to enable Dual Visibility.
+  numHistoryShards: 512
+  datastores:
+    default:
+      cassandra:
+        hosts: '127.0.0.1'
+        keyspace: 'temporal'
+        user: 'username'
+        password: 'password'
+    cass-visibility:
+      cassandra:
+        hosts: '127.0.0.1'
+        keyspace: 'temporal_visibility'
+    es-visibility:
+      elasticsearch:
+        version: 'v7'
+        logLevel: 'error'
+        url:
+          scheme: 'http'
+          host: '127.0.0.1:9200'
+        indices:
+          visibility: temporal_visibility_v1_dev
+        closeIdleConnectionsInterval: 15s
+```
+
+使用 [XPROT007X](/XPROT027X-execution/XPROT007X) 的长期运行的 XPROT027X 可以升级到更新的 XPROT035X
+XPROT007X 边界的部署版本无需修补。
+
+### numHistoryShards
+
+_必需_ - 初始化集群时要创建的历史分片的数量。
+
+**警告：** 该值是不可变的，首次运行后将被忽略。
+请确保将此值设置得足够高，以便能够适应该集群最坏情况下的峰值负载。
+
+### 默认商店
+
+_必需_ - Temporal Server 应使用的数据存储定义的名称。
+
+### VisibilityStore
+
+_必需_ - 用于在 Temporal 集群上设置 [Visibility](/Temporal-service/Visibility) 的主数据存储定义的名称。
+
+### secondaryVisibilityStore
+
+_可选_ - 用于在 Temporal 集群上设置 [Dual Visibility](/dual-Visibility) 的辅助数据存储定义的名称。
+
+### 数据存储
+
+_必需_ - 包含要引用的命名数据存储定义。
+
+每个定义都使用声明名称的标题（即上面的“default:”和“Visibility:”）进行定义，其中包含数据存储定义。
+
+数据存储定义必须是“cassandra”或“sql”。
+
+#### 卡桑德拉
+
+“cassandra”数据存储定义可以包含以下值：
+
+- `hosts`：_必需_ - “,”分隔 Cassandra 端点，例如“192.168.1.2，192.168.1.3，192.168.1.4”。
+- `port`：默认：9042 - 用于 `gocql` 客户端连接的 Cassandra 端口。
+- `user`：`gocql` 客户端用于身份验证的 Cassandra 用户名。
+- `password`：`gocql` 客户端用于身份验证的 Cassandra 密码。
+- `keyspace`：_必需_ - Cassandra 键空间。
+- `datacenter`：Cassandra 的数据中心过滤器参数。
+- `maxConns`：单个 TLS 配置到此数据存储的最大连接数。
+- `tls`：请参阅下面的 TLS。
+
+#### sql
+
+“sql”数据存储定义可以包含以下值：
+
+- `user`：用于身份验证的用户名。
+- `password`：用于身份验证的密码。
+- `pluginName`：_必需_ - SQL 数据库类型。
+  - _有效值_：`mysql` 或 `postgres`。
+- `databaseName` - _required_ - 要连接的 SQL 数据库的名称。
+- `connectAddr` - _required_ - 数据库的远程地址，例如“192.168.1.2”。
+- `connectProtocol` - _required_ - 与 `connectAddr` 一起使用的协议
+  - _有效值_：`tcp` 或 `unix`
+- `connectAttributes` - 作为连接 `data_source_name` url 的一部分发送的键值属性映射。
+- `maxConns` - 与此数据存储的最大连接数。
+- `maxIdleConns` - 此数据存储的最大空闲连接数
+- `maxConnLifetime` - 是连接可以存活的最长时间。
+- `tls` - 见下文。
+
+#### tls
+
+`tls` 和 `mTLS` 部分可以包含以下值：
+
+- `启用` - _boolean_。
+- `serverName` - 托管数据存储的服务器的名称。
+- `certFile` - 证书文件的路径。
+- `keyFile` - 密钥文件的路径。
+- `caFile` - ca 文件的路径。
+- `enableHostVerification` - _boolean_ - `true` 用于验证主机名和服务器证书（如 Cassandra 集群的通配符）。此选项基本上与“InSecureSkipVerify”相反。有关更多信息，请参阅 http://golang.org/pkg/crypto/tls/ 中的“InSecureSkipVerify”。
+
+注意：“certFile”和“keyFile”是可选的，具体取决于服务器配置，但必须省略这两个字段以避免使用客户端证书。
+
+＃＃ 日志
+
+“log”部分是可选的，包含以下可能的值：
+
+- `stdout` - _boolean_ - 如果输出需要转到标准输出，则为`true`。
+- `level` - 设置日志记录级别。
+  - _有效值_ - 调试、信息、警告、错误或致命，默认为信息。
+- `outputFile` - 输出日志文件的路径。
+
+## 集群元数据
+
+`clusterMetadata` 包含本地集群信息。该信息用于[多集群复制](/Temporal-service/multi-cluster-replication)。
+
+`clusterMetadata` 部分示例：
+
+```yaml
+clusterMetadata:
+  enableGlobalNamespace: true
+  failoverVersionIncrement: 10
+  masterClusterName: 'active'
+  currentClusterName: 'active'
+  clusterInformation:
+    active:
+      enabled: true
+      initialFailoverVersion: 0
+      rpcAddress: '127.0.0.1:7233'
+  #replicationConsumer:
+  #type: kafka
+```
+
+- `currentClusterName` - _required_ - 当前集群的名称。 **警告：** 该值是不可变的，首次运行后将被忽略。
+- `enableGlobalNamespace` - _默认值：_ `false`。
+- `replicationConsumer` - 确定使用哪种方法来使用复制任务。类型可以是“kafka”或“rpc”。
+- `failoverVersionIncrement` - 发生故障转移时每个集群版本的增量。
+- `masterClusterName` - 主集群名称，只有主集群可以注册/Update Namespace。所有集群都可以进行 Namespace 故障转移。
+- `clusterInformation` - 包含 `ClusterInformation` 定义的本地集群名称。本地集群名称应与“currentClusterName”一致。 `ClusterInformation` 部分包括：
+  - `enabled` - _boolean_ - 是否启用远程集群进行复制。
+  - `初始故障转移版本`
+  - `rpcAddress` - 指示远程服务地址（主机：端口）。主机可以是 DNS 名称。使用 `dns:///` 前缀启用 DNS 名称的 IP 地址之间的循环。
+
+## 服务
+
+“services”部分包含按服务角色类型键入的配置。
+支持四种服务角色：
+
+- `前端`
+- `匹配`
+- `Worker`
+-`历史`
+
+以下是“services”下“frontend”服务定义的最小示例：
+
+```yaml
+services:
+  frontend:
+    rpc:
+      grpcPort: 8233
+      membershipPort: 8933
+      bindOnIP: '0.0.0.0'
+```
+
+每个服务标题下定义了两个部分：
+
+### 远程进程调用
+
+_必需的_
+
+`rpc` 包含与服务与其他服务交互的方式相关的设置。支持以下值：
+
+- `gRPCPort`：gRPC 将侦听的端口。
+- `membershipPort`：用于与同一集群中的其他主机通信以获取成员信息的端口。
+  每个服务应该使用不同的端口。
+  如果您的环境中有多个 Temporal 集群（例如 Kubernetes），并且它们可以相互进行网络访问，则每个集群应使用不同的成员身份端口。
+- `bindOnLocalHost`: 决定是否使用`127.0.0.1`作为监听地址。
+- `bindOnIP`：用于将服务绑定到特定IP，或`0.0.0.0`。
+  检查“net.ParseIP”是否支持语法，仅支持 IPv4，与“BindOnLocalHost”选项互斥。
+
+**注意：** 目前，所有主机的角色类型之间的端口值应保持一致。
+
+## 公共客户端
+
+`publicClient` 是必需的部分，描述 Worker 连接到 Temporal Server 进行后台服务器维护所需的配置。
+
+- `hostPort` IPv4 主机端口或 DNS 名称到达 Temporal 前端，[参考](https://github.com/gRPC/gRPC/blob/master/doc/naming.md)
+
+例子：
+
+```yaml
+publicClient:
+  hostPort: 'localhost:8933'
+```
+
+使用 `dns:///` 前缀启用 DNS 名称的 IP 地址之间的循环。
+
+## 档案
+
+_选修的_
+
+存档是设置[存档存储](/Temporal-service/archival) 所需的可选配置。
+它可以在“history”和“Visibility”数据上启用。
+
+以下列表描述了“history”和“Visibility”数据上每个配置支持的值。
+
+- `state`：存档设置的状态。支持的值为“启用”、“禁用”。必须“启用”此值才能将存档与集群中的任何 Namespace 一起使用。
+  - `enabled`：在集群设置中启用存档。当设置为“enabled”时，必须提供“URI”和“NamespaceDefaults”值。
+  - `disabled`：在集群设置中禁用存档。当设置为“disabled”时，“enableRead”值必须设置为“false”，并且在“NamespaceDefaults”下，“state”必须设置为“disabled”，并且没有为“provider”和“URI”字段设置值。
+- `enableRead`：支持的值为`true` 或`false`。设置为“true”以允许从存档的 Event History 数据进行读取操作。
+- `provider`：数据应存档的位置。子提供商配置为“filestore”、“gstorage”、“s3”或“your_custom_provider”。默认配置指定“filestore”。
+
+例子：
+
+- 要在集群配置中启用存档：
+
+  ```yaml
+  # Cluster-level Archival config enabled
+  archival:
+    # Event History configuration
+    history:
+      # Archival is enabled for the History Service data.
+      state: 'enabled'
+      enableRead: true
+      # Namespaces can use either the local filestore provider or the Google Cloud provider.
+      provider:
+        filestore:
+          fileMode: '0666'
+          dirMode: '0766'
+        gstorage:
+          credentialsPath: '/tmp/gcloud/keyfile.json'
+    # Configuration for archiving Visibility data.
+    visibility:
+      # Archival is enabled for Visibility data.
+      state: 'enabled'
+      enableRead: true
+      provider:
+        filestore:
+          fileMode: '0666'
+          dirMode: '0766'
+  ```
+
+- 要在集群配置中禁用存档：
+
+  ```yaml
+  # Cluster-level Archival config disabled
+  archival:
+    history:
+      state: 'disabled'
+      enableRead: false
+    visibility:
+      state: 'disabled'
+      enableRead: false
+
+  namespaceDefaults:
+    archival:
+      history:
+        state: 'disabled'
+      visibility:
+        state: 'disabled'
+  ```
+
+有关存档设置的更多详细信息，请参阅[设置存档](/self-hosted-guide/archival#set-up-archival)。
+
+## Namespace默认值
+
+_选修的_
+
+使用“历史记录”和“Visibility”数据的“NamespaceDefaults”为每个 Namespace 设置默认存档配置。
+
+- `state`：Namespace 存档的默认状态。支持的值为“启用”或“禁用”。
+- `URI`：Namespace 的默认 URI。
+
+#### [有效负载](/dataconversion#有效负载)
+
+例子：
+
+```yaml
+# Default values for a Namespace if none are provided at creation.
+namespaceDefaults:
+  # Archival defaults.
+  archival:
+    # Event History defaults.
+    history:
+      state: 'enabled'
+      # New Namespaces will default to the local provider.
+      URI: 'file:///tmp/temporal_archival/development'
+    visibility:
+      state: 'disabled'
+      URI: 'file:///tmp/temporal_vis_archival/development'
+```
+
+## dc重定向策略
+
+_选修的_
+
+包含可用于跨 DC 复制的前端数据中心 API 重定向策略。
+
+支持的值：
+
+- `policy`：支持的值为`noop`、`selected-apis-forwarding` 和`all-apis-forwarding`。
+  - `noop`：不设置值或设置`noop`表示不重定向。这是默认值。
+  - `selected-apis-forwarding`：设置以下 API 转发到基于 Namespace 的主集群。
+    - `启动Workflow执行`
+    - `SignalWithStartWorkflowExecution`
+    - `SignalWorkflow执行`
+    - `请求取消Workflow执行`
+    - `终止Workflow执行`
+    - `QueryWorkflow`
+  - `all-apis-forwarding`：为活动集群中 Namespace 上的所有 API 设置转发。
+
+例子：
+
+```yaml
+#...
+dcRedirectionPolicy:
+  policy: 'selected-apis-forwarding'
+#...
+```
+
+“XPROT044X admin db”命令在给定数据库上运行管理员级别的操作。
+
+_选修的_
+
+用于为集群设置基于文件的[动态配置](/Temporal-service/configuration#dynamic-configuration)客户端的配置。
+
+如果指定动态配置，则需要此设置。支持的配置值如下：
+
+- `filepath`：指定动态配置YAML文件的存储路径。该路径应该是相对于根目录的。
+- `pollInterval`：基于文件的客户端轮询检查动态配置 Update 之间的时间间隔。您可以设置的最短时间为 5 秒。
+
+例子：
+
+```yaml
+dynamicConfigClient:
+  filepath: 'config/dynamicconfig/development-cass.yaml'
+  pollInterval: '10s'
+```

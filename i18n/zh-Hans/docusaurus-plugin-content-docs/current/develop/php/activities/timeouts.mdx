@@ -1,0 +1,201 @@
+---
+id: timeouts
+title: Activity 超时 - PHP SDK
+sidebar_label: 超时
+description: 使用 Temporal PHP SDK 优化 Workflow Execution - 有效设置 Activity 超时和重试策略。
+toc_max_heading_level: 4
+keywords:
+  - PHP
+  - failure detection
+  - timeouts
+tags:
+  - Activities
+  - Workflows
+  - Errors
+  - Failures
+  - PHP SDK
+  - Temporal SDKs
+---
+
+## 如何设置 Activity 超时 {#Activity-timeouts}
+
+每个 Activity 超时控制 Activity 执行不同方面的最大持续时间。
+
+Activity 选项中提供以下超时。
+
+- **[Schedule-To-Close Timeout](/encyclopedia/Detecting-Activity-failures#Schedule-to-close-timeout)：** 是整个 [Activity 执行](/Activity-执行) 允许的最长时间。
+- **[Start-To-Close Timeout](/encyclopedia/Detecting-Activity-failures#start-to-close-timeout):** 是单个 [Activity 任务执行](/tasks#Activity-task-execution) 允许的最长时间。
+- **[Schedule-To-Start Timeout](/encyclopedia/Detecting-Activity-failures#Schedule-to-start-timeout):** 是从 [Activity 任务](/tasks#Activity-task) 执行 Scheduled 到执行[Worker](/Workers#Worker) 启动 Activity 任务。
+
+Activity 执行必须设置“开始到关闭”或“Schedule 到关闭超时”。
+
+由于活动是可重入的，因此只有一个存根可用于多个 Activity 调用。
+
+可用的超时有：
+
+- withScheduleToCloseTimeout()
+- withStartToCloseTimeout()
+- withScheduleToStartTimeout()
+
+```php
+$this->greetingActivity = Workflow::newActivityStub(
+    GreetingActivityInterface::class,
+    // Set Activity Timeout duration
+    ActivityOptions::new()
+        ->withScheduleToCloseTimeout(CarbonInterval::seconds(2))
+        // ->withStartToCloseTimeout(CarbonInterval::seconds(2))
+        // ->withScheduleToStartTimeout(CarbonInterval::seconds(10))
+);
+```
+
+### 如何设置 Activity Retry Policy {#Activity-重试}
+
+Retry Policy 与超时配合提供精细控制以优化执行体验。
+
+如果未提供自定义执行，Activity 执行将自动与默认 [Retry Policy](/encyclopedia/retry-policies) 关联。
+
+要设置 Activity 重试，请在“{@link ActivityOptions}”上设置“{@link RetryOptions}”。
+以下示例使用给定选项创建一个新的 Activity。
+
+```php
+$this->greetingActivity = Workflow::newActivityStub(
+    GreetingActivityInterface::class,
+    ActivityOptions::new()
+        ->withScheduleToCloseTimeout(CarbonInterval::seconds(10))
+        ->withRetryOptions(
+            RetryOptions::new()
+                ->withInitialInterval(CarbonInterval::seconds(1))
+                ->withMaximumAttempts(5)
+                ->withNonRetryableExceptions([\InvalidArgumentException::class])
+        )
+);
+}
+```
+
+有关可执行代码示例，请参阅 PHP 示例存储库中的 [ActivityRetry 示例](https://github.com/Temporalio/samples-php/tree/master/app/src/ActivityRetry)。
+
+### 如何设置所需的 Activity 超时 {#required-timeout}
+
+Activity 执行语义依赖于多个参数。
+唯一需要设置的值是 [Schedule-To-Close Timeout](/encyclopedia/Detecting-Activity-failures#start-to-close-timeout) 或 [Start-To-Close Timeout](/encyclopedia/Detecting-Activity-failures#start-to-close-timeout)。
+这些值在 Activity 选项中设置。
+
+## Activity 下一次重试延迟 {#Activity-next-retry-delay}
+
+**如何使用 Temporal PHP SDK 覆盖 Activity 故障后的下一次重试延迟**
+
+您可以抛出一个带有 `nextRetryDelay` 字段集的 [`ApplicationFailure`](/references/failures#application-failure)。
+该值将替换并覆盖 Retry Policy 上的任何重试间隔。
+
+例如，如果在 Activity 中，您希望间隔基于尝试次数，您可以执行以下操作：
+
+```php
+$attempt = \Temporal\Activity::getInfo()->attempt;
+
+throw new \Temporal\Exception\Failure\ApplicationFailure(
+    message: "Something bad happened on attempt $attempt",
+    type: 'my_failure_type',
+    nonRetryable: false,
+    nextRetryDelay: \DateInterval::createFromDateString(\sprintf('%d seconds', $attempt * 3)),
+);
+```
+
+## 如何对 Activity 进行心跳检测 {#Activity-heartbeats}
+
+[Activity 心跳](/encyclopedia/Detecting-Activity-failures#Activity-heartbeat) 是从正在执行 Activity 的 [Worker 进程](/Workers#Worker-process) 到 [Temporal] 的 ping服务](/Temporal-服务)。
+每个心跳都会通知 Temporal 服务 [Activity 执行](/Activity-执行) 正在取得进展，并且 Worker 尚未崩溃。
+如果 Temporal 服务在 [心跳超时](/encyclopedia/Detecting-Activity-failures#heartbeat-timeout) 时间内未收到心跳，则 Activity 将被视为失败，并且另一个 [Activity 任务执行](/tasks#Activity-task-execution) 可能会根据Retry Policy。
+
+心跳可能并不总是发送到 Temporal 服务 — 它们可能会被 Worker 限制。
+
+Activity 取消会在活动检测到时从 Temporal 服务传递到活动。没有心跳的活动无法收到取消。
+心跳限制可能会导致取消的发送时间晚于预期。
+
+心跳可以包含描述 Activity 当前进度的“详细信息”字段。
+如果 Activity 重试，Activity 可以访问发送到 Temporal 服务的最后一次心跳的“详细信息”。
+
+有些活动是长期运行的。
+要快速对崩溃做出反应，请使用心跳机制“Activity::heartbeat()”，它让 Temporal Server 知道 Activity 仍然存在。
+这充当 Activity 进度的定期检查点机制。
+
+您可以在 Activity 心跳上搭载“详细信息”。
+如果 Activity 超时，“details”的最后一个值将包含在传递给 Workflow 的“TimeoutFailure”中。
+然后 Workflow 可以将详细信息传递给下一个 Activity 调用。
+此外，您可以通过“Activity::getHeartbeatDetails”从 Activity 内部访问详细信息。
+当 Activity 失败后重试时，“getHeartbeatDetails”使您能够获取上次成功心跳的值。
+
+```php
+use Temporal\Activity;
+
+class FileProcessingActivitiesImpl implements FileProcessingActivities
+{
+    // ...
+    public function download(
+        string $bucketName,
+        string $remoteName,
+        string $localName
+    ): void
+    {
+        $this->dowloader->downloadWithProgress(
+            $bucketName,
+            $remoteName,
+            $localName,
+            // on progress
+            function ($progress) {
+                Activity::heartbeat($progress);
+            }
+        );
+
+        Activity::heartbeat(100); // download complete
+
+        // ...
+    }
+
+    // ...
+}
+```
+
+#### 如何设置心跳超时 {#heartbeat-timeout}
+
+[心跳超时](/encyclopedia/Detecting-Activity-failures#heartbeat-timeout) 与 [Activity 心跳](/encyclopedia/Detecting-Activity-failures#Activity-heartbeat) 结合使用。
+
+有些活动是长期运行的。
+要快速对崩溃做出反应，请使用心跳机制“Activity::heartbeat()”，它让 Temporal Server 知道 Activity 仍然存在。
+这充当 Activity 进度的定期检查点机制。
+
+您可以在 Activity 心跳上搭载“详细信息”。
+如果 Activity 超时，“details”的最后一个值将包含在传递给 Workflow 的“TimeoutFailure”中。
+然后 Workflow 可以将详细信息传递给下一个 Activity 调用。
+此外，您可以通过“Activity::getHeartbeatDetails”从 Activity 内部访问详细信息。
+当 Activity 失败后重试时，“getHeartbeatDetails”使您能够获取上次成功心跳的值。
+
+```php
+use Temporal\Activity;
+
+class FileProcessingActivitiesImpl implements FileProcessingActivities
+{
+    // ...
+    public function download(
+        string $bucketName,
+        string $remoteName,
+        string $localName
+    ): void
+    {
+        $this->dowloader->downloadWithProgress(
+            $bucketName,
+            $remoteName,
+            $localName,
+            // on progress
+            function ($progress) {
+                Activity::heartbeat($progress);
+            }
+        );
+
+        Activity::heartbeat(100); // download complete
+
+        // ...
+    }
+
+    // ...
+}
+```

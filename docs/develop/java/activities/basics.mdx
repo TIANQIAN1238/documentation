@@ -1,8 +1,8 @@
 ---
 id: basics
-title: Activity basics - Java SDK
-sidebar_label: Activity basics
-description: This section explains how to implement Activities with the Java SDK
+title: "Activity 基础知识 - Java SDK"
+sidebar_label: "Activity 基础知识"
+description: "本节介绍如何使用 Java SDK 实施活动"
 toc_max_heading_level: 4
 keywords:
   - Java SDK
@@ -11,17 +11,18 @@ tags:
   - Temporal SDKs
 ---
 
-## Develop an Activity
+<a id="develop-an-activity"></a>
+## 开发 Activity {#develop-an-activity}
 
-One of the primary things that Workflows do is orchestrate the execution of Activities.
-An Activity is a normal function or method execution that's intended to execute a single, well-defined action (either short or long-running), such as querying a database, calling a third-party API, or transcoding a media file.
-An Activity can interact with world outside the Temporal Platform or use a Temporal Client to interact with a Temporal Service.
-For the Workflow to be able to execute the Activity, we must define the [Activity Definition](/activity-definition).
+Workflow 所做的主要事情之一是协调活动的执行。
+Activity 是正常的函数或方法执行，旨在执行单个、明确定义的操作（短期或长期运行），例如 Query 数据库、调用第三方 API 或转码媒体文件。
+Activity 可以与 Temporal 平台之外的世界交互，或使用 Temporal CLIent 与 Temporal 服务交互。
+为了使 Workflow 能够执行 Activity，我们必须定义 [Activity Definition](/activity-definition)。
 
-An [Activity Definition](/activities) is a combination of the Temporal Java SDK [Activity](https://www.javadoc.io/static/io.temporal/temporal-sdk/0.19.0/io/temporal/activity/Activity.html) Class implementing a specially annotated interface.
+[Activity Definition](/activities) 是实现特殊注释接口的 Temporal Java SDK [Activity](https://www.javadoc.io/static/io.temporal/temporal-sdk/0.19.0/io/temporal/activity/Activity.html) 类的组合。
 
-An Activity interface is annotated with `@ActivityInterface` and an Activity implementation implements this Activity interface.
-To handle Activity types that do not have an explicitly registered handler, you can directly implement a dynamic Activity.
+Activity 接口用 `@ActivityInterface` 进行注释，并且 Activity 实现实现此 Activity 接口。
+要处理没有显式注册处理程序的 Activity 类型，您可以直接实现动态 Activity。
 
 ```java
 @ActivityInterface
@@ -30,9 +31,9 @@ public interface GreetingActivities {
 }
 ```
 
-Each method defined in the Activity interface defines a separate Activity method.
-You can annotate each method in the Activity interface with the `@ActivityMethod` annotation, but this is completely optional.
-The following example uses the `@ActivityMethod` annotation for the method defined in the previous example.
+Activity 接口中定义的每个方法都定义了单独的 Activity 方法。
+您可以使用 `@ActivityMethod` 注释来注释 Activity 接口中的每个方法，但这完全是可选的。
+以下示例对上一示例中定义的方法使用 `@ActivityMethod` 注释。
 
 ```java
 @ActivityInterface
@@ -42,7 +43,7 @@ public interface GreetingActivities {
 }
 ```
 
-An Activity implementation is a Java class that implements an Activity annotated interface.
+Activity 实现是一个实现 Activity 带注释的接口的 Java 类。
 
 ```java
 // Implementation for the GreetingActivities interface example from in the previous section
@@ -54,30 +55,31 @@ An Activity implementation is a Java class that implements an Activity annotated
   }
 ```
 
-## Define Activity parameters {#activity-parameters}
+<a id="activity-parameters"></a>
+## 定义 Activity 参数 {#activity-parameters}
 
-There is no explicit limit to the total number of parameters that an [Activity Definition](/activity-definition) may support.
-However, there is a limit to the total size of the data that ends up encoded into a gRPC message Payload.
+[Activity Definition](/activity-definition) 可以支持的参数总数没有明确的限制。
+但是，最终编码到 gRPC 消息有效负载中的数据的总大小是有限制的。
 
-A single argument is limited to a maximum size of 2 MB.
-And the total size of a gRPC message, which includes all the arguments, is limited to a maximum of 4 MB.
+单个参数的最大大小限制为 2 MB。
+gRPC 消息的总大小（包括所有参数）限制为最大 4 MB。
 
-Also, keep in mind that all Payload data is recorded in the [Workflow Execution Event History](/workflow-execution/event#event-history) and large Event Histories can affect Worker performance.
-This is because the entire Event History could be transferred to a Worker Process with a [Workflow Task](/tasks#workflow-task).
+另外，请记住，所有有效负载数据都记录在 [Workflow Execution Event History](/workflow-execution/event#event-history) 中，大型事件历史记录可能会影响 Worker 性能。
+这是因为整个 Event History 可以转移到带有 [Workflow 任务](/tasks#workflow-task) 的 Worker 进程。
 
 {/* TODO link to gRPC limit section when available */}
 
-Some SDKs require that you pass context objects, others do not.
-When it comes to your application data—that is, data that is serialized and encoded into a Payload—we recommend that you use a single object as an argument that wraps the application data passed to Activities.
-This is so that you can change what data is passed to the Activity without breaking a function or method signature.
+某些 SDK 要求您传递上下文对象，而其他 SDK 则不需要。
+当涉及到您的应用程序数据（即序列化并编码到有效负载中的数据）时，我们建议您使用单个对象作为包装传递给活动的应用程序数据的参数。
+这样您就可以更改传递给 Activity 的数据，而不会破坏函数或方法签名。
 
-An Activity interface can have any number of parameters.
-All inputs should be serializable by the default Jackson JSON Payload Converter.
+Activity 接口可以有任意数量的参数。
+所有输入都应该可以通过默认的 Jackson JSON 负载转换器进行序列化。
 
-When implementing Activities, be mindful of the amount of data that you transfer using the Activity invocation parameters or return values as these are recorded in the Workflow Execution Events History.
-Large Event Histories can adversely impact performance.
+实施活动时，请注意使用 Activity 调用参数或返回值传输的数据量，因为这些数据记录在 Workflow Execution 事件历史记录中。
+大型事件历史记录可能会对性能产生不利影响。
 
-You can create a custom object, and pass it to the Activity interface, as shown in the following example.
+您可以创建自定义对象，并将其传递到 Activity 接口，如以下示例所示。
 
 ```java
 @ActivityInterface
@@ -87,7 +89,7 @@ public interface YourActivities {
 }
 ```
 
-The `execute` method in the dynamic Activity interface implementation takes in `EncodedValues` that are inputs to the Activity Execution, as shown in the following example.
+动态 Activity 接口实现中的 `execute` 方法接受 `EncodedValues`，这些 `EncodedValues` 是 Activity 执行的输入，如以下示例所示。
 
 ```java
 // Dynamic Activity implementation
@@ -106,39 +108,42 @@ The `execute` method in the dynamic Activity interface implementation takes in `
  }
 ```
 
-For more details, see [Dynamic Activity Reference](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/DynamicActivity.html).
+有关更多详细信息，请参阅 [动态 Activity 参考](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/DynamicActivity.html)。
 
-## Define Activity return values {#activity-return-values}
+<a id="activity-return-values"></a>
+## 定义 Activity 返回值 {#activity-return-values}
 
-All data returned from an Activity must be serializable.
+从 Activity 返回的所有数据都必须是可序列化的。
 
-Activity return values are subject to payload size limits in Temporal. The default payload size limit is 2MB, and there is a hard limit of 4MB for any gRPC message size in the Event History transaction ([see Cloud limits here](https://docs.temporal.io/cloud/limits#per-message-grpc-limit)). Keep in mind that all return values are recorded in a [Workflow Execution Event History](/workflow-execution/event#event-history).
+Activity 返回值受 Temporal 中的有效负载大小限制。默认有效负载大小限制为 2MB，并且 Event History 事务 ([请参阅此处的云限制](https://docs.temporal.io/cloud/limits#per-message-grpc-limit)) 中的任何 gRPC 消息大小都有 4MB 的硬限制。请记住，所有返回值都记录在 [Workflow Execution Event History](/workflow-execution/event#event-history) 中。
 
-Activity return values must be serializable and deserializable by the provided [`DataConverter`](https://www.javadoc.io/static/io.temporal/temporal-sdk/1.17.0/io/temporal/common/converter/DataConverter.html).
+Activity 返回值必须可通过提供的 [`DataConverter`](https://www.javadoc.io/static/io.temporal/temporal-sdk/1.17.0/io/temporal/common/converter/DataConverter.html) 进行序列化和反序列化。
 
-The `execute` method for `DynamicActivity` can return type Object.
-Ensure that your Workflow or Client can handle an Object type return or is able to convert the Object type response.
+`DynamicActivity` 的 `execute` 方法可以返回 Object 类型。
+确保您的 Workflow 或客户端可以处理对象类型返回或能够转换对象类型响应。
 
 - [Data Converter](/dataconversion)
-- Java DataConverter reference: [https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/converter/DataConverter.html](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/converter/DataConverter.html)
+- Java DataConverter 参考：[https://www.javadoc.io/doc/io.Temporal/temporal-sdk/latest/io/temporal/common/converter/DataConverter.html](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/converter/DataConverter.html)
 
-## Customize your Activity Type {#activity-type}
+<a id="activity-type"></a>
+## 自定义您的 Activity 类型 {#activity-type}
 
-Each Activity has a Type, which may also be referred to as the Activity 'name'.
-This name appears in the Workflow Execution Event History in the Summary tab for each Activity Task.
-The name lets you identify Activity Types called during the Execution.
+每个 Activity 都有一个类型，也可以称为 Activity“名称”。
+此名称显示在每个 Activity 任务的“摘要”选项卡中的 Workflow Execution Event History 中。
+该名称可让您识别执行期间调用的 Activity 类型。
 
-Custom Activity Type names prevent name collisions across interfaces and Workflows.
-They offer descriptive Activity method names without concerns about re-using those names elsewhere in your project.
-They also support code management, especially in larger projects with many Activities.
-For example, you might use a prefix to group related activities together.
-Custom names also distinguish keys for gathering metrics without name conflicts.
+自定义 Activity 类型名称可防止接口和 Workflow 之间的名称冲突。
+它们提供描述性的 Activity 方法名称，无需担心在项目的其他地方重复使用这些名称。
+它们还支持代码管理，特别是在具有许多活动的大型项目中。
+例如，您可以使用前缀将相关活动分组在一起。
+自定义名称还可以区分用于收集指标的键，而不会发生名称冲突。
 
-The following examples show how to set custom names for your Activity Type.
+以下示例显示如何为 Activity 类型设置自定义名称。
 
-### Default behavior
+<a id="default-behavior"></a>
+### 默认行为 {#default-behavior}
 
-By default, an Activity Type is the method name with the first letter capitalized:
+默认情况下，Activity 类型是第一个字母大写的方法名称：
 
 ```java
 @ActivityInterface
@@ -150,14 +155,15 @@ public interface GreetingActivities {
 }
 ```
 
-- Method Name: `sendMessage`
-- Activity Type: `SendMessage`
-- Method Name: `composeGreeting`
-- Activity Type: `ComposeGreeting`
+- 方法名称：`sendMessage`
+- Activity 型号：`SendMessage`
+- 方法名称：`composeGreeting`
+- Activity 型号：`ComposeGreeting`
 
-### Custom Prefix
+<a id="custom-prefix"></a>
+### 自定义前缀 {#custom-prefix}
 
-Using the `namePrefix` parameter in the `@ActivityInterface` annotation adds a prefix to each Activity Type name mentioned in the interface, unless the prefix is specifically overridden:
+在 `@ActivityInterface` 注释中使用 `namePrefix` 参数会为接口中提到的每个 Activity 类型名称添加前缀，除非专门覆盖该前缀：
 
 ```java
 @ActivityInterface(namePrefix = "Messaging_")
@@ -169,16 +175,17 @@ public interface GreetingActivities {
 }
 ```
 
-- Method Name: `sendMessage`
-- Activity Type: `Messaging_SendMessage`
-- Method Name: `composeGreeting`
-- Activity Type: `Messaging_ComposeGreeting`
+- 方法名称：`sendMessage`
+- Activity 型号：`Messaging_SendMessage`
+- 方法名称：`composeGreeting`
+- Activity 型号：`Messaging_ComposeGreeting`
 
-The Activity Type is capitalized, even when using a prefix.
+即使使用前缀，Activity 类型也是大写的。
 
-### Custom Name
+<a id="custom-name"></a>
+### 自定义名称 {#custom-name}
 
-To override the default name and any inherited prefixes, use the `name` parameter in the `@ActivityMethod` annotation:
+要覆盖默认名称和任何继承的前缀，请在 `@ActivityMethod` 注释中使用 `name` 参数：
 
 ```java
 @ActivityInterface(namePrefix = "Messaging_")
@@ -192,14 +199,14 @@ public interface GreetingActivities {
 }
 ```
 
-Using the `name` parameter won't automatically capitalize the result:
+使用 `name` 参数不会自动将结果大写：
 
-- Method Name: `sendMessage`
-- Activity Type: `Messaging_SendMessage`
-- Method Name: `composeGreeting`
-- Activity Type: `Messaging_ComposeGreeting`
-- Method Name: `composeFarewell`
-- Activity Type: `farewell`
+- 方法名称：`sendMessage`
+- Activity 型号：`Messaging_SendMessage`
+- 方法名称：`composeGreeting`
+- Activity 型号：`Messaging_ComposeGreeting`
+- 方法名称：`composeFarewell`
+- Activity 型号：`farewell`
 
-Be cautious with names that contain special characters, as these can be used as metric tags.
-Systems such as Prometheus may ignore metrics with tags using unsupported characters.
+请谨慎对待包含特殊字符的名称，因为它们可以用作指标标签。
+Prometheus 等系统可能会忽略带有使用不受支持字符的标签的指标。

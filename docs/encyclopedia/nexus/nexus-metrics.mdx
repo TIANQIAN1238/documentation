@@ -1,9 +1,9 @@
 ---
 id: nexus-metrics
 slug: /nexus/metrics
-title: Nexus Metrics
-description: Learn about available metrics emitted by Temporal Nexus.
-sidebar_label: Nexus Metrics
+title: "Nexus 指标"
+description: "了解 Temporal Nexus 发出的可用指标。"
+sidebar_label: "Nexus 指标"
 tags:
   - Nexus
 keywords:
@@ -19,38 +19,41 @@ keywords:
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal Nexus is now [Generally Available](/evaluate/development-production-features/release-stages#general-availability) for [Temporal Cloud](/cloud/nexus) and [self-hosted deployments](/production-deployment/self-hosted-guide/nexus).
+[Temporal Cloud](/evaluate/development-production-features/release-stages#general-availability) 和 [自托管部署](/cloud/nexus) 的 Temporal Nexus 现在为 [一般可用](/production-deployment/self-hosted-guide/nexus)。
 
 :::
 
 
-Nexus provides SDK metrics, Cloud metrics, and OSS Cluster metrics in addition to integrated [execution debugging](/nexus/execution-debugging).
+Nexus除了集成的[执行调试](/nexus/execution-debugging)之外，还提供SDK指标、云指标和OSS集群指标。
 
-## SDK Metrics
+<a id="sdk-metrics"></a>
+## SDK 指标 {#sdk-metrics}
 
-[SDK metrics](/references/sdk-metrics) are emitted from a Nexus Worker, including:
+[SDK指标](/references/sdk-metrics) 从 Nexus Worker 发出，包括：
 
-- [nexus_poll_no_task](/references/sdk-metrics#nexus_poll_no_task)
-- [nexus_task_schedule_to_start_latency](/references/sdk-metrics#nexus_task_schedule_to_start_latency)
-- [nexus_task_execution_failed	Worker](/references/sdk-metrics#nexus_task_execution_failed)
-- [nexus_task_execution_latency](/references/sdk-metrics#nexus_task_execution_latency)
-- [nexus_task_endtoend_latency](/references/sdk-metrics#nexus_task_endtoend_latency)
+- [Nexus_poll_no_task](/references/sdk-metrics#nexus_poll_no_task)
+- [Nexus_task_Schedule_to_start_latency](/references/sdk-metrics#nexus_task_schedule_to_start_latency)
+- [Nexus_task_execution_failed Worker](/references/sdk-metrics#nexus_task_execution_failed)
+- [Nexus_task_execution_latency](/references/sdk-metrics#nexus_task_execution_latency)
+- [Nexus_task_endtoend_latency](/references/sdk-metrics#nexus_task_endtoend_latency)
 
-## Cloud Metrics
+<a id="cloud-metrics"></a>
+## 云指标 {#cloud-metrics}
 
-[Cloud metrics](/cloud/metrics/reference) are emitted by Temporal Cloud, including:
+[云指标](/cloud/metrics/reference) 由 Temporal Cloud 发出，包括：
 
-- Caller Namespace
-  - RespondWorkflowTaskCompleted \- schedule a Nexus Operation.
-- Handler Namespace
-  - PollNexusTaskQueue \- get a [Nexus Task](/tasks#nexus-task) to process, for example to start a Nexus Operation.
-  - RespondNexusTaskCompleted \- report the Nexus Task was successful.
-  - RespondNexusTaskFailed \- report the Nexus Task failed.
+- 呼叫者 Namespace
+  - 响应WorkflowTaskCompleted \- Schedule a Nexus 操作。
+- 处理程序 Namespace
+  - PollNexusTaskQueue \- 获取要处理的 [Nexus 任务](/tasks#nexus-task)，例如启动 Nexus 操作。
+  - RespondNexusTaskCompleted \- 报告 Nexus 任务成功。
+  - RespondNexusTaskFailed \- 报告 Nexus 任务失败。
 
-## OSS Cluster Metrics
+<a id="oss-cluster-metrics"></a>
+## OSS集群指标 {#oss-cluster-metrics}
 
-[Cluster metrics](/references/cluster-metrics#nexus-metrics) are emitted from an OSS Cluster, including:
+[集群指标](/references/cluster-metrics#nexus-metrics)是从OSS集群发出的，包括：
 
-- History Service metrics
-- Concurrency Limiter metrics
-- Frontend Service metrics
+- 历史服务指标
+- 并发限制器指标
+- 前端服务指标

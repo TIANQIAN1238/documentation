@@ -1,0 +1,820 @@
+---
+id: message-passing
+title: Workflow 消息传递 - TypeScript SDK
+sidebar_label: 消息传递
+description: 使用 Temporal TypeScript SDK 使用查询、Signal 和 Update 进行开发。
+toc_max_heading_level: 3
+keywords:
+  - temporal typescript signals
+  - send signal from client
+  - send signal from workflow
+  - signal with start
+  - workflow queries
+  - sending queries
+  - workflow updates
+  - dynamic workflows
+  - dynamic activities
+  - dynamic signals
+  - dynamic queries
+tags:
+  - Workflows
+  - Messages
+  - Signals
+  - Queries
+  - Updates
+  - TypeScript SDK
+  - Temporal SDKs
+---
+
+Workflow 可以像有状态 Web 服务一样接收消息：查询、Signal 和 Update。
+Workflow 实现通过处理程序方法定义这些端点，这些方法可以对传入消息和返回值做出反应。
+Temporal CLIents 使用消息读取 Workflow 状态并控制其执行。
+有关此主题的一般概述，请参阅 [Workflow 消息传递](/encyclopedia/Workflow-message-passing)。
+本页介绍 Temporal TypeScript SDK 的这些功能。
+
+## 编写消息处理程序 {#writing-message-handlers}
+
+:::info
+下面的代码是工作[消息传递示例](https://github.com/Temporalio/samples-typescript/tree/main/message-passing/introduction)的一部分。
+:::
+
+编写消息处理程序时请遵循以下准则：
+
+- 使用 [`defineQuery`](https://typescript.Temporal.io/api/Namespaces/Workflow#defineQuery) 将消息类型定义为全局变量， [`defineSignal`](https://typescript.Temporal.io/api/Namespaces/Workflow#defineSignal)，或[`defineUpdate`](https://typescript.Temporal.io/api/Namespaces/Workflow#defineUpdate)。
+  您的客户端代码将使用它向 Workflow 发送消息。
+- 消息处理程序是通过在 Workflow 函数中调用 [`Workflow.setHandler`](https://typescript.Temporal.io/api/Namespaces/Workflow#sethandler) 来定义的。
+- 处理程序和主 Workflow 函数的参数和返回值必须是 [serialized](/dataconversion)。
+- 优先使用单个对象而不是多个输入参数。
+  单个对象允许您添加字段而不更改签名。
+
+### Query 处理程序 {#queries}
+
+[Query](/sending-messages#sending-queries) 是从 Workflow Execution 检索状态的同步操作：
+
+```typescript
+export enum Language {
+  ARABIC = 'ARABIC',
+  CHINESE = 'CHINESE',
+  ENGLISH = 'ENGLISH',
+  FRENCH = 'FRENCH',
+  HINDI = 'HINDI',
+  PORTUGUESE = 'PORTUGUESE',
+  SPANISH = 'SPANISH',
+}
+
+interface GetLanguagesInput {
+  includeUnsupported: boolean;
+}
+
+// 👉 Use the object returned by defineQuery to set the query handler in
+// Workflow code, and when sending the Query in Client code.
+export const getLanguages = wf.defineQuery<Language[], [GetLanguagesInput]>('getLanguages');
+
+export async function greetingWorkflow(): Promise<string> {
+  const greetings: Partial<Record<Language, string>> = {
+    [Language.CHINESE]: '你好，世界',
+    [Language.ENGLISH]: 'Hello, world',
+  };
+
+  wf.setHandler(getLanguages, (input: GetLanguagesInput): Language[] => {
+    // 👉 A Query handler returns a value: it must not mutate the Workflow state
+    // and can't perform async operations.
+    if (input.includeUnsupported) {
+      return Object.values(Language);
+    } else {
+      return Object.keys(greetings) as Language[];
+    }
+  });
+
+  ...
+}
+```
+
+- Query 处理程序不能是“异步”的。
+  您无法执行异步操作，例如在 Query 处理程序中执行 Activity。
+
+- `setHandler` 可以采用 `QueryHandlerOptions` （例如 `description`），如 [`Workflow.setHandler`](https://typescript.Temporal.io/api/Namespaces/Workflow#sethandler) 的 API 参考文档中所述。
+
+### Signal 处理程序 {#Signals}
+
+Workflow Execution 在单独的 V8 隔离上下文中运行，以便提供
+[确定性运行时](/XPROT027X-definition#definition-constraints)。
+
+```typescript
+// 👉 Use the object returned by defineSignal to set the Signal handler in
+// Workflow code, and to send the Signal from Client code.
+export const approve = wf.defineSignal<[ApproveInput]>('approve');
+
+export async function greetingWorkflow(): Promise<string> {
+  let approvedForRelease = false;
+  let approverName: string | undefined;
+
+  wf.setHandler(approve, (input) => {
+    // 👉 A Signal handler mutates the Workflow state but cannot return a value.
+    approvedForRelease = true;
+    approverName = input.name;
+  });
+
+  ...
+}
+...
+```
+
+- 处理程序无法返回值。
+  服务器立即发送响应，无需等待 Workflow 处理 Signal。
+
+- Signal 和 Update 处理程序可以是“异步”。
+  这允许您使用活动、Child Workflows、持久的 [`Workflow.sleep`](https://typescript.Temporal.io/api/Namespaces/Workflow#sleep) Timers， [`Workflow.condition`](https://typescript.Temporal.io/api/Namespaces/Workflow#condition) 条件等。
+  有关安全使用异步 Signal 和 Update 处理程序的指南，请参阅[异步处理程序](#async-handlers) 和 [Workflow 消息传递](/encyclopedia/Workflow-message-passing)。
+
+- 如果您的 Workflow 需要在处理 Signal 或 Update 之前执行一些异步初始化，请在处理程序中使用 [`Workflow.condition`](https://typescript.Temporal.io/api/Namespaces/Workflow#condition) 等待初始化完成。
+
+- `setHandler` 可以采用 `SignalHandlerOptions`（例如 `description` 和 `unfinishedPolicy`），如 [`Workflow.setHandler`](https://typescript.Temporal.io/api/Namespaces/Workflow#sethandler) 的 API 参考文档中所述。
+
+### Update 处理程序和验证器 {#Updates}
+
+[Update](/sending-messages#sending-Updates) 是发送到正在运行的 Workflow Execution 的可跟踪同步请求。
+它可以更改 Workflow 状态、控制其流程并返回结果。
+发送方必须等待，直到 Worker 接受或拒绝 Update。
+如果出现问题，发送者可能会进一步等待接收返回值或异常：
+
+```typescript
+// 👉 Use the object returned by defineUpdate to set the Update handler in
+// Workflow code, and to send Updates from Client code.
+export const setLanguage = wf.defineUpdate<Language, [Language]>('setLanguage');
+
+export async function greetingWorkflow(): Promise<string> {
+  const greetings: Partial<Record<Language, string>> = {
+    [Language.CHINESE]: '你好，世界',
+    [Language.ENGLISH]: 'Hello, world',
+  };
+
+  let language = Language.ENGLISH;
+
+wf.setHandler(
+    setLanguage,
+    (newLanguage: Language) => {
+      // 👉 An Update handler can mutate the Workflow state and return a value.
+      const previousLanguage = language;
+      language = newLanguage;
+      return previousLanguage;
+    },
+    {
+      validator: (newLanguage: Language) => {
+        // 👉 Update validators are optional
+        if (!(newLanguage in greetings)) {
+          throw new Error(`${newLanguage} is not supported`);
+        }
+      },
+    }
+  );
+
+  ...
+}
+```
+
+- `setHandler` 可以采用 `UpdateHandlerOptions`（例如 `validator`、`description` 和 `unfinishedPolicy`），如 [`Workflow.setHandler`](https://typescript.Temporal.io/api/Namespaces/Workflow#sethandler) 的 API 参考文档中所述。
+
+- 关于验证器：
+  - 在写入历史记录之前，使用验证器拒绝 Update。
+    验证器始终是可选的。
+    如果您不需要拒绝 Update，则不需要验证器。
+  - 要设置验证器，请在调用 [`Workflow.setHandler`](https://typescript.Temporal.io/api/Namespaces/Workflow#sethandler) 时在`UpdateHandlerOptions` 中传递验证器函数。
+    验证器必须是非异步函数，它接受与处理程序相同的参数类型并返回“void”。
+
+- 使用验证器接受和拒绝 Update：
+  - 要拒绝 Update，请在验证器中抛出任何类型的错误。
+  - 如果没有验证器，Update 始终被接受。
+- 验证器和 Event History：
+  - 无论是自动接受还是由于验证器函数未抛出错误，“WorkflowExecutionUpdateAccepted”事件都会写入历史记录。
+  - 当验证器抛出错误时，Update 会被拒绝，并且“WorkflowExecutionUpdateAccepted”不会添加到 Event History。
+    调用者收到“Update 失败”错误。
+
+- 使用 [`Workflow.currentUpdateInfo`](https://typescript.Temporal.io/api/Namespaces/Workflow#current_Update_info) 获取有关当前 Update 的信息。
+  这包括 Update ID，它在使用 Continue-As-New 时可用于重复数据删除：请参阅[确保消息仅处理一次](/handling-messages#exactly-once-message-processing)。
+- Update 和 Signal 处理程序可以是“异步”，让它们使用活动、Child Workflows、持久的 [`Workflow.sleep`](https://typescript.Temporal.io/api/Namespaces/Workflow#sleep) Timers， [`Workflow.condition`](https://typescript.Temporal.io/api/Namespaces/Workflow#condition) 条件等。
+  有关安全使用指南，请参阅[异步处理程序](#async-handlers) 和[Workflow 消息传递](/encyclopedia/Workflow-message-passing)。
+- 如果您的 Workflow 需要在处理 Update 或 Signal 之前执行一些异步初始化，请在处理程序中使用 [`Workflow.condition`](https://typescript.Temporal.io/api/Namespaces/Workflow#condition) 等待初始化完成。
+
+## 发送消息 {#send-messages}
+
+要发送查询、Signal 或 Update，您可以调用 [WorkflowHandle](https://typescript.Temporal.io/api/Namespaces/client#Workflowhandle) 对象上的方法：
+
+- 使用 [`client.Workflow.start`](https://typescript.Temporal.io/api/classes/client.WorkflowClient#start) 并返回其句柄。
+
+- 使用 [`client.Workflow.getHandle`](https://typescript.Temporal.io/api/classes/client.WorkflowClient#gethandle) 通过 Workflow Id 检索 Workflow 句柄。
+
+例如：
+
+```typescript
+const handle = await client.workflow.start(greetingWorkflow, {
+  taskQueue: 'my-task-queue',
+  args: [myArg],
+  workflowId: 'my-workflow-id',
+});
+```
+
+要检查发送消息时所需的参数类型以及查询和 Update 的返回类型，请参阅 Workflow Definition 中相应的处理程序方法。
+
+:::warning Using Continue-as-New and Updates
+
+- Temporal_不_支持 Update 处理程序中的 Continue-As-New 功能。
+- 使用 Continue-As-New 之前完成所有处理程序。
+- 使用主要 Workflow Definition 方法中的 Continue-As-New，就像完成或失败 Workflow Execution 一样。
+
+:::
+
+### 发送 Query {#send-Query}
+
+使用 [`WorkflowHandle.Query`](https://typescript.Temporal.io/api/interfaces/client.WorkflowHandle/#Query) 将 Query 发送到 Workflow Execution：
+
+```typescript
+const supportedLanguages = await handle.query(getLanguages, {
+  includeUnsupported: false,
+});
+```
+
+- 发送 Query 不会将事件添加到 Workflow 的 Event History。
+
+- 您可以在 Namespace 的 Workflow 保留期内向已关闭的 Workflow Execution 发送查询。
+  这包括已完成、失败或超时的 Workflow。
+  Querying 终止的 Workflow 不安全，因此不受支持。
+
+- Worker 必须在线并轮询 Task Queue 才能处理 Query。
+
+### 发送 Signal {#send-Signal}
+
+您可以将 Signal 从 Temporal CLIent 或另一个 Workflow Execution 发送到 Workflow Execution。
+但是，您只能将 Signal 发送到尚未关闭的 Workflow Execution。
+
+#### 从客户端发送 Signal {#send-Signal-from-client}
+
+使用 [WorkflowHandle.Signal](https://typescript.Temporal.io/api/interfaces/client.WorkflowHandle#Signal) 发送 Signal：
+
+```typescript
+await handle.signal(greetingWorkflow.approve, { name: 'me' });
+```
+
+- 当服务器接受 Signal 时调用返回；它并不等待 Signal 被传送到 Workflow Execution。
+
+- [WorkflowExecutionSignaled](/references/events#WorkflowexecutionSignaled) 事件出现在 Workflow 的 Event History 中。
+
+### 从 Workflow 发送 Signal {#send-Signal-from-Workflow}
+
+Workflow 可以将 Signal 发送到另一个 Workflow，在这种情况下，它被称为_外部 Signal_。
+使用[`getExternalWorkflowHandle`](https://typescript.Temporal.io/api/Namespaces/Workflow#getExternalWorkflowHandle)：
+
+```typescript
+import { getExternalWorkflowHandle } from '@temporalio/workflow';
+import { joinSignal } from './other-workflow';
+
+export async function yourWorkflowThatSignals() {
+  const handle = getExternalWorkflowHandle('workflow-id-123');
+  await handle.signal(joinSignal, { userId: 'user-1', groupId: 'group-1' });
+}
+```
+
+当发送外部 Signal 时：
+
+- [SignalExternalWorkflowExecutionInitiated](/references/events#SignalexternalWorkflowexecutioninitied) 事件出现在发送者的 Event History 中。
+- [WorkflowExecutionSignaled](/references/events#WorkflowexecutionSignaled) 事件出现在收件人的 Event History 中。
+
+“getExternalWorkflowHandle”方法有助于确保 Workflow 保持确定性。
+回想一下，确定性 Workflow 的一方面意味着不直接从 Workflow 进行网络调用。
+这意味着开发人员无法直接在 Workflow 代码中使用 Temporal CLIent 来发送 Signal 或启动其他 Workflow。
+相反，为了在 Workflow 之间进行通信，我们使用“getExternalWorkflowHandle”来确保 Workflow 保持确定性，并且将这些交互记录为 Workflow 的 Event History 中的事件。
+
+### Signal-With-Start {#Signal-with-start}
+
+Signal-With-Start 允许客户端将 Signal 发送到 Workflow Execution，如果尚未运行则启动执行。
+使用 [`Client.Workflow.SignalWithStart`](https://typescript.Temporal.io/api/classes/client.WorkflowClient#Signalwithstart)：
+
+```typescript
+import { Client } from '@temporalio/client';
+import { joinSignal, yourWorkflow } from './workflows';
+
+const client = new Client();
+
+await client.workflow.signalWithStart(yourWorkflow, {
+  workflowId: 'workflow-id-123',
+  taskQueue: 'my-taskqueue',
+  args: [{ foo: 1 }],
+  signal: joinSignal,
+  signalArgs: [{ userId: 'user-1', groupId: 'group-1' }],
+});
+```
+
+Signal-With-Start 仅限客户端使用。
+无法从 Workflow 调用它。
+
+### 发送 Update {#send-Update-from-client}
+
+Update 是同步、阻塞调用，可以更改 Workflow 状态、控制其流程并返回结果。
+
+发送 Update 的客户端必须等待服务器将 Update 交付给 Worker。
+Worker 必须可用且响应迅速。
+如果服务器收到请求后需要立即响应，请改用 Signal。
+另请注意，您无法将 Update 发送到其他 Workflow Execution 或执行 Update 相当于 Signal-With-Start 的操作。
+
+- 当 Worker 确认 Update 通过验证时，将“WorkflowExecutionUpdateAccepted”添加到 Event History。
+- 当 Worker 确认 Update 已完成时，将“WorkflowExecutionUpdateCompleted”添加到 Event History。
+
+要将 Update 发送到 Workflow Execution，您可以：
+
+- 调用 [`WorkflowHandle.executeUpdate`](https://typescript.Temporal.io/api/interfaces/client.WorkflowHandle/#executeUpdate) 并等待 Update 完成。
+  此代码获取 Update 结果：
+
+  ```typescript
+  let previousLanguage = await handle.executeUpdate(setLanguage, {
+    args: [Language.CHINESE],
+  });
+  ```
+
+- 发送 [`WorkflowHandle.startUpdate`](https://typescript.Temporal.io/api/interfaces/client.WorkflowHandle/#startUpdate) 以接收一旦 Update 被接受或拒绝，[`WorkflowUpdateHandle`](https://typescript.Temporal.io/api/interfaces/client.WorkflowUpdateHandle)。
+
+- 稍后使用此“UpdateHandle”来获取结果。
+  -“异步”Update 处理程序通常执行长时间运行的异步操作，例如调用 Activity。
+  - `startUpdate` 仅等到 Worker 接受或拒绝 Update，而不是等到所有异步操作完成。
+
+例如：
+
+  ```typescript
+  const updateHandle = await handle.startUpdate(setLanguage, {
+    args: [Language.ENGLISH],
+    waitForStage: WorkflowUpdateStage.ACCEPTED,
+  });
+  previousLanguage = await updateHandle.result();
+  ```
+
+有关更多详细信息，请参阅“异步处理程序”部分。
+
+要获取 Update 手柄，您可以：
+
+- 使用 [`WorkflowHandle.startUpdate`](https://typescript.Temporal.io/api/interfaces/client.WorkflowHandle/#startUpdate) 启动 Update 并返回句柄，如前面的示例所示。
+- 使用 [`getUpdateHandle`](https://typescript.Temporal.io/api/interfaces/client.WorkflowHandle/#getUpdatehandle) 使用 Update ID 获取正在进行的 Update 的句柄。
+
+#### Update-带启动 {#Update-带启动}
+
+:::tip
+
+对于开源服务器用户，建议使用 Temporal Server 版本 [Temporal Server 版本 1.28](https://github.com/Temporalio/Temporal/releases/tag/v1.28.0)。
+
+:::
+
+[Update-with-Start](/sending-messages#Update-with-start) 让您
+[发送 Update](/develop/typescript/Workflows/message-passing#send-Update-from-client) 检查是否存在具有该 ID 的已运行 Workflow：
+
+- 如果 Workflow 存在，则处理 Update。
+- 如果 Workflow 不存在，则使用给定 ID 启动新的 Workflow Execution，并在主 Workflow 方法开始执行之前处理 Update。
+
+使用 [`executeUpdateWithStart`](https://typescript.Temporal.io/api/classes/client.WorkflowClient#executeUpdateWithStart) 启动 Update 并一次性等待结果。
+
+或者，使用 [`startUpdateWithStart`](https://typescript.Temporal.io/api/classes/client.WorkflowClient#startUpdateWithStart) 启动 Update 并接收[`WorkflowUpdateHandle`](https://typescript.Temporal.io/api/interfaces/client.WorkflowUpdateHandle)，然后使用`await UpdateHandle.result()`从Update检索结果。
+
+These calls return once the requested Update wait stage has been reached, or when the request times out.
+
+You will need to provide a [`WithStartWorkflowOperation`](https://typescript.Temporal.io/api/classes/client.WithStartWorkflowOperation) to define the Workflow that will be started if necessary, and its arguments.
+You must specify a [WorkflowIdConflictPolicy](/Workflow-execution/Workflowid-runid#Workflow-id-conflict-policy) when creating the `WithStartWorkflowOperation`.
+Note that a `WithStartWorkflowOperation` can only be used once.
+
+Here's an example taken from the [early-return](https://github.com/Temporalio/samples-typescript/tree/main/early-return) sample:
+
+```typescript
+const startWorkflowOperation = new WithStartWorkflowOperation.create(
+  transactionWorkflow,
+  {
+    workflowId,
+    args: [transactionID],
+    taskQueue: 'early-return',
+    workflowIdConflictPolicy: 'FAIL',
+  },
+);
+
+const earlyConfirmation = await client.workflow.executeUpdateWithStart(
+  getTransactionConfirmation,
+  {
+    startWorkflowOperation,
+  },
+);
+
+const wfHandle = await startWorkflowOperation.workflowHandle();
+const finalReport = await wfHandle.result();
+```
+
+:::info SEND MESSAGES WITHOUT TYPE SAFETY
+
+In real-world development, sometimes you may be unable to import message type objects defined by `defineQuery`, `defineSignal`, or `defineUpdate`.
+When you don't have access to the Workflow Definition or it isn't written in Typescript, you can still use APIs that aren't type-safe, and dynamic method invocation.
+Pass message type names instead of message type objects to:
+
+- [`client.Workflow.start`](https://typescript.Temporal.io/api/classes/client.WorkflowClient#start)
+- [`WorkflowHandle.Query`](https://typescript.Temporal.io/api/interfaces/client.WorkflowHandle/#Query)
+- [WorkflowHandle.Signal](https://typescript.Temporal.io/api/interfaces/client.WorkflowHandle#Signal)
+- [`WorkflowHandle.executeUpdate`](https://typescript.Temporal.io/api/interfaces/client.WorkflowHandle/#executeUpdate)
+- [`WorkflowHandle.startUpdate`](https://typescript.Temporal.io/api/interfaces/client.WorkflowHandle/#startUpdate)
+
+Pass Workflow Ids to these APIs to get Workflow handles:
+
+- [`client.Workflow.getHandle`](https://typescript.Temporal.io/api/classes/client.WorkflowClient#gethandle)
+- [`getExternalWorkflowHandle`](https://typescript.Temporal.io/api/Namespaces/Workflow#getExternalWorkflowHandle).
+
+:::
+
+## Message handler patterns {#message-handler-patterns}
+
+This section covers common write operations, such as Signal and Update handlers.
+It doesn't apply to pure read operations, like Queries or Update Validators.
+
+:::tip
+
+For additional information, see [Inject work into the main Workflow](/handling-messages#injecting-work-into-main-Workflow), [Ensuring your messages are processed exactly once](/handling-messages#exactly-once-message-processing), and [this sample](https://github.com/Temporalio/samples-typescript/blob/main/message-passing/safe-message-handlers/README.md) demonstrating safe `async` message handling.
+
+:::
+
+### Use async handlers {#async-handlers}
+
+Signal and Update handlers can be `async` functions.
+Using `async` allows you to use `await` with Activities, Child Workflows, durable [`Workflow.sleep`](https://typescript.Temporal.io/api/Namespaces/Workflow#sleep) Timers, [`Workflow.condition`](https://typescript.Temporal.io/api/Namespaces/Workflow#condition) conditions, etc.
+This expands the possibilities for what can be done by a handler but it also means that handler executions and your main Workflow method are all running concurrently, with switching occurring between them at `await` calls.
+It's essential to understand the things that could go wrong in order to use `async` handlers safely.
+See [Workflow message passing](/encyclopedia/Workflow-message-passing) for guidance on safe usage of async Signal and Update handlers, the [Safe message handlers](https://github.com/Temporalio/samples-typescript/blob/main/message-passing/safe-message-handlers/README.md) sample, and the [Controlling handler concurrency](#control-handler-concurrency) and [Waiting for message handlers to finish](#wait-for-message-handlers) sections below.
+
+The following code executes an Activity that makes a network call to a remote service.
+It modifies the Update handler from earlier on this page, turning it into an `async` function:
+
+```typescript
+// 👉 Use the objects returned by defineUpdate to set the Update handler in
+// Workflow code, and to send Updates from Client code.
+export const setLanguageUsingActivity = wf.defineUpdate<Language, [Language]>('setLanguageUsingActivity');
+
+export async function greetingWorkflow(): Promise<string> {
+  const greetings: Partial<Record<Language, string>> = {
+    [Language.CHINESE]: '你好，世界',
+    [Language.ENGLISH]: 'Hello, world',
+  };
+
+  let language = Language.ENGLISH;
+
+  const lock = new Mutex();
+  wf.setHandler(setLanguageUsingActivity, async (newLanguage) => {
+    // 👉 An Update handler can mutate the Workflow state and return a value.
+    // 👉 Since this update handler is async, it can execute an activity.
+    if (!(newLanguage in greetings)) {
+      // 👉 Do the following with the lock held to ensure that multiple calls to set_language are processed in order.
+      await lock.runExclusive(async () => {
+        if (!(newLanguage in greetings)) {
+          const greeting = await callGreetingService(newLanguage);
+          if (!greeting) {
+            // 👉 An update validator cannot be async, so cannot be used to check that the remote
+            // call_greeting_service supports the requested language. Raising ApplicationError
+            // will fail the Update, but the WorkflowExecutionUpdateAccepted event will still be
+            // added to history.
+            throw new wf.ApplicationFailure(`${newLanguage} is not supported by the greeting service`);
+          }
+          greetings[newLanguage] = greeting;
+        }
+      });
+    }
+    const previousLanguage = language;
+    language = newLanguage;
+    return previousLanguage;
+  });
+  ...
+}
+```
+
+After updating the code to use `async`, your Update handler can Schedule an Activity and await the result.
+Although an `async` Signal handler can also execute an Activity, using an Update handler allows the client to receive a result or error once the Activity completes.
+This lets your client track the progress of asynchronous work performed by the Update's Activities, Child Workflows, etc.
+
+### Add wait conditions to block
+
+Sometimes, `async` Signal or Update handlers need to meet certain conditions before they should continue.
+You can use [`Workflow.condition`](https://typescript.Temporal.io/api/Namespaces/Workflow#condition) to prevent the code from proceeding until a condition is true.
+You specify the condition by passing a function that returns `true` or `false`.
+This is an important feature that helps you control your handler logic.
+
+Here are three important use cases for `Workflow.condition`:
+
+- Waiting for a Signal or Update to arrive
+- Waiting in a handler until it is appropriate to continue.
+- Waiting in the main Workflow until all active handlers have finished.
+
+#### Wait for a Signal or Update to arrive
+
+It's common to use `Workflow.condition` to wait for a particular Signal or Update to be sent by a Client:
+
+```typescript
+export async function greetingWorkflow(): Promise<string> {
+  let approvedForRelease = false;
+  let approverName: string | undefined;
+
+  wf.setHandler(approve, (input) => {
+    approvedForRelease = true;
+    approverName = input.name;
+  });
+  ...
+
+  await wf.condition(() => approvedForRelease);
+  ...
+}
+```
+
+#### Use wait conditions in handlers
+
+It's common to use a Workflow wait condition in a handler.
+For example, suppose your Workflow has a mutable variable `readyForUpdateToExecute` that indicates whether your Update handler should be allowed to start executing.
+You can use `Workflow.condition` in the handler to make the handler pause until the condition is met:
+
+```typescript
+let readyForUpdateToExecute = false;
+
+wf.setHandler(myUpdate, async (input: MyUpdateInput): Promise<MyUpdateOutput> => {
+  await wf.condition(() => readyForUpdateToExecute);
+  ...
+});
+```
+
+Remember: handlers can execute before the main Workflow method starts.
+
+You can also use wait conditions anywhere else in the handler to wait for a specific condition to become true.
+This allows you to write handlers that pause at multiple points, each time waiting for a required condition to become true.
+
+#### Ensure your handlers finish before the Workflow completes {#wait-for-message-handlers}
+
+Workflow wait conditions can ensure your handler completes before a Workflow finishes.
+When your Workflow uses `async` Signal or Update handlers, your main Workflow method can return or Continue-As-New while a handler is still waiting on an async task, such as an Activity result.
+The Workflow completing may interrupt the handler before it finishes crucial work and cause client errors when trying retrieve Update results.
+Use [`Workflow.condition`](https://typescript.Temporal.io/api/Namespaces/Workflow#condition) and [`allHandlersFinished`](https://typescript.Temporal.io/api/Namespaces/Workflow#condition#allhandlersfinished) to address this problem and allow your Workflow to end smoothly:
+
+```typescript
+export async function myWorkflow(): Promise<MyWorkflowOutput> {
+  await wf.condition(wf.allHandlersFinished);
+  return workflowOutput;
+}
+```
+
+By default, your Worker will log a warning when you allow a Workflow Execution to finish with unfinished handler executions.
+You can silence these warnings on a per-handler basis by setting the `unfinishedPolicy` in `SignalHandlerOptions` or `UpdateHandlerOptions` when calling [`Workflow.setHandler`](https://typescript.Temporal.io/api/Namespaces/Workflow#sethandler)
+
+See [Finishing handlers before the Workflow completes](/handling-messages#finishing-message-handlers) for more information.
+
+### Use a lock to prevent concurrent handler execution {#control-handler-concurrency}
+
+Concurrent processes can interact in unpredictable ways.
+Incorrectly written [concurrent message-passing](/handling-messages#message-handler-concurrency) code may not work correctly when multiple handler instances run simultaneously.
+Here's an example of a pathological case:
+
+```typescript
+export async function myWorkflow(): Promise<MyWorkflowOutput> {
+  let x = 0;
+  let y = 0;
+  wf.setHandler(mySignal, async () => {
+    const data = await myActivity();
+    x = data.x;
+
+    // 🐛🐛 Bug!! If multiple instances of this handler are executing
+    // concurrently, then there may be times when the Workflow has x from one
+    // Activity execution and y from another.
+    await wf.sleep(500); // or await anything else
+
+    y = data.y;
+  });
+  ...
+}
+```
+
+Coordinating access using a lock (also known as a mutex) corrects this code.
+Locking makes sure that only one handler instance can execute a specific section of code at any given time:
+
+```typescript
+import { Mutex } from 'async-mutex';  // https://github.com/DirtyHairy/async-mutex
+
+...
+
+export async function myWorkflow(): Promise<MyWorkflowOutput> {
+  let x = 0;
+  let y = 0;
+  const lock = new Mutex();
+
+  wf.setHandler(mySignal, async () => {
+    await lock.runExclusive(async () => {
+      const data = await myActivity();
+      x = data.x;
+
+      // ✅ OK: node's event loop may switch now to a different handler
+      // execution, or to the main workflow function, but no other execution of
+      // this handler can run until this execution finishes.
+      await wf.sleep(500); // or await anything else
+
+      y = data.y;
+    });
+  });
+  return {
+    name: 'hello',
+  };
+}
+```
+
+## Message handler troubleshooting {#message-handler-troubleshooting}
+
+When sending a Signal, Update, or Query to a Workflow, your Client might encounter the following errors:
+
+- **The client can't contact the server**:
+  You'll receive a [`client.ServiceError`](https://typescript.Temporal.io/api/classes/client.ServiceError) on which the `cause.code` attribute is [gRPC status code](https://gRPC.io/docs/guides/status-codes/) 14 `UNAVAILABLE` (after some retries).
+
+- **The Workflow does not exist**:
+  You'll receive an [`common.WorkflowNotFoundError`](https://typescript.Temporal.io/api/classes/common.WorkflowNotFoundError) error.
+
+### Problems when sending a Signal {#Signal-problems}
+
+When using Signal, the two errors described above are the only errors that will result from your requests.
+
+For Queries and Updates, the client waits for a response from the Worker and therefore additional errors may occur during the handler Execution by the Worker.
+
+### Problems when sending an Update {#Update-problems}
+
+When working with Updates, you may encounter these problems:
+
+- **No Workflow Workers are polling the Task Queue**:
+  Your request will be retried by the SDK Client indefinitely.
+
+- **Update failed**: You'll receive a [`client.WorkflowUpdateFailedError`](https://typescript.Temporal.io/api/classes/client.WorkflowUpdateFailedError) exception.
+  There are two ways this can happen:
+
+  - The Update was rejected by an Update validator defined in the Workflow alongside the Update handler.
+
+  - The Update failed after having been accepted.
+
+  Update failures are like [Workflow failures](/references/failures#errors-in-Workflows).
+  Issues that cause a Workflow failure in the main method also cause Update failures in the Update handler.
+  These might include:
+
+      - A failed Child Workflow
+      - A failed Activity (if the Activity retries have been set to a finite number)
+      - The Workflow author raising `ApplicationFailure`
+
+- **The handler caused the Workflow Task to fail**:
+  A [Workflow Task Failure](/references/failures#errors-in-Workflows) causes the server to retry Workflow Tasks indefinitely. What happens to your Update request depends on its stage:
+  - If the request hasn't been accepted by the server, you receive a [`client.ServiceError`](https://typescript.Temporal.io/api/classes/client.ServiceError) on which the `cause.code` attribute is [gRPC status code](https://gRPC.io/docs/guides/status-codes/) 9 `FAILED_PRECONDITION` (after some retries).
+  - If the request has been accepted, it is durable.
+    Once the Workflow is healthy again after a code deploy, use an [`WorkflowUpdateHandle`](https://typescript.Temporal.io/api/interfaces/client.WorkflowUpdateHandle) to fetch the Update result.
+
+- **The Workflow finished while the Update handler execution was in progress**:
+  You'll receive a [`client.ServiceError`](https://typescript.Temporal.io/api/classes/client.ServiceError) on which the `cause.code` attribute is [gRPC status code](https://gRPC.io/docs/guides/status-codes/) 5 `NOT_FOUND`.
+  This happens if the Workflow finished while the Update handler execution was in progress, for example because
+
+  - The Workflow was canceled or failed.
+
+  - The Workflow completed normally or continued-as-new and the Workflow author did not [wait for handlers to be finished](/handling-messages#finishing-message-handlers).
+
+### Problems when sending a Query {#Query-problems}
+
+When working with Queries, you may encounter these errors:
+
+- **There is no Workflow Worker polling the Task Queue**:
+  You'll receive a [`client.ServiceError`](https://typescript.Temporal.io/api/classes/client.ServiceError) on which the `cause.code` attribute is [gRPC status code](https://gRPC.io/docs/guides/status-codes/) 9 `FAILED_PRECONDITION`.
+
+- **Query failed**:
+  You'll receive a [`client.QueryNotRegisteredError`](https://typescript.Temporal.io/api/classes/client.QueryNotRegisteredError) exception if something goes wrong during a Query.
+  Any error in a Query handler will trigger this error.
+  This differs from Signal and Update requests, where errors can lead to Workflow Task Failure instead.
+
+- **The handler caused the Workflow Task to fail.**
+  This would happen, for example, if the Query handler blocks the thread for too long without yielding.
+
+## Define Signals and Queries statically or dynamically {#dynamic-handler}
+
+- Handlers for both Signals and Queries can take arguments, which can be used inside `setHandler` logic.
+- Only Signal Handlers can mutate state, and only Query Handlers can return values.
+
+* [Define Signals and Queries statically](#static-Signals-and-queries)
+* [Define Signals and Queries dynamically](#dynamic-Signals-and-queries)
+
+### Define Signals and Queries statically {#static-Signals-and-queries}
+
+If you know the name of your Signals and Queries upfront, we recommend declaring them outside the Workflow Definition.
+
+<!--SNIPSTART typescript-blocked-Workflow-->
+[Signals-queries/src/Workflows.ts](https://github.com/Temporalio/samples-typescript/blob/main/Signals-queries/src/Workflows.ts)
+```ts
+import * as wf from '@temporalio/workflow';
+
+export const unblockSignal = wf.defineSignal('unblock');
+export const isBlockedQuery = wf.defineQuery<boolean>('isBlocked');
+
+export async function unblockOrCancel(): Promise<void> {
+  let isBlocked = true;
+  wf.setHandler(unblockSignal, () => void (isBlocked = false));
+  wf.setHandler(isBlockedQuery, () => isBlocked);
+  wf.log.info('Blocked');
+  try {
+    await wf.condition(() => !isBlocked);
+    wf.log.info('Unblocked');
+  } catch (err) {
+    if (err instanceof wf.CancelledFailure) {
+      wf.log.info('Cancelled');
+    }
+    throw err;
+  }
+}
+```
+<!--SNIPEND-->
+
+This technique helps provide type safety because you can export the type signature of the Signal or Query to be called by the Client.
+
+### Define Signals and Queries dynamically {#dynamic-Signals-and-queries}
+
+For more flexible use cases, you might want a dynamic Signal (such as a generated ID).
+You can handle it in two ways:
+
+- Avoid making it dynamic by collapsing all Signals into one handler and move the ID to the payload.
+- Actually make the Signal name dynamic by inlining the Signal definition per handler.
+
+```ts
+import * as wf from '@temporalio/workflow';
+
+// "fat handler" solution
+wf.setHandler(`genericSignal`, (payload) => {
+  switch (payload.taskId) {
+    case taskAId:
+      // do task A things
+      break;
+    case taskBId:
+      // do task B things
+      break;
+    default:
+      throw new Error('Unexpected task.');
+  }
+});
+
+// "inline definition" solution
+wf.setHandler(wf.defineSignal(`task-${taskAId}`), (payload) => {
+  /* do task A things */
+});
+wf.setHandler(wf.defineSignal(`task-${taskBId}`), (payload) => {
+  /* do task B things */
+});
+
+// utility "inline definition" helper
+const inlineSignal = (signalName, handler) =>
+  wf.setHandler(wf.defineSignal(signalName), handler);
+inlineSignal(`task-${taskBId}`, (payload) => {
+  /* do task B things */
+});
+```
+
+<details>
+  <summary>
+    API Design FAQs
+  </summary>
+
+**Why not "new Signal" and "new Query"?**
+
+The semantic of `defineSignal` and `defineQuery` is intentional.
+They return Signal and Query **definitions**, not unique instances of Signals and Queries themselves
+The following is their [entire source code](https://github.com/Temporalio/sdk-typescript/blob/fc658d3760e6653aec47732ab17a0062b7dd23fc/packages/Workflow/src/Workflow.ts#L883-L907):
+
+```ts
+/**
+ * Define a signal method for a Workflow.
+ */
+export function defineSignal<Args extends any[] = []>(
+  name: string,
+): SignalDefinition<Args> {
+  return {
+    type: 'signal',
+    name,
+  };
+}
+
+/**
+ * Define a query method for a Workflow.
+ */
+export function defineQuery<Ret, Args extends any[] = []>(
+  name: string,
+): QueryDefinition<Ret, Args> {
+  return {
+    type: 'query',
+    name,
+  };
+}
+```
+
+Signals and Queries are instantiated only in `setHandler` and are specific to particular Workflow Executions.
+
+These distinctions might seem minor, but they model how Temporal works under the hood, because Signals and Queries are messages identified by "just strings" and don't have meaning independent of the Workflow having a listener to handle them.
+This will be clearer if you refer to the Client-side APIs.
+
+**Why setHandler and not OTHER_API?**
+
+We named it `setHandler` instead of `subscribe` because a Signal or Query can have only one "handler" at a time, whereas `subscribe` could imply an Observable with multiple consumers and is a higher-level construct.
+
+```ts
+wf.setHandler(MySignal, handlerFn1);
+wf.setHandler(MySignal, handlerFn2); // replaces handlerFn1
+```
+
+If you are familiar with [RxJS](https://rxjs.dev/), you are free to wrap your Signals and Queries into Observables if you want, or you could dynamically reassign the listener based on your business logic or Workflow state.
+
+</details>

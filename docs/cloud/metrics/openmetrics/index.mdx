@@ -1,8 +1,8 @@
 ---
 id: index
-title: Temporal Cloud OpenMetrics
-sidebar_label: OpenMetrics
-description: Export metrics from Temporal Cloud using the OpenMetrics standard and third party integrations.
+title: "Temporal Cloud OpenMetrics"
+sidebar_label: "开放指标"
+description: "使用 OpenMetrics 标准和第三方集成从 Temporal Cloud 导出指标。"
 slug: /cloud/metrics/openmetrics/
 toc_max_heading_level: 4
 keywords:
@@ -25,33 +25,39 @@ tags:
 
 :::tip PRICING
 
-Future pricing may apply to high-volume usage that exceeds standard [limits](/cloud/metrics/openmetrics/api-reference#api-limits).
+未来的定价可能适用于超过标准 [限制](/cloud/metrics/openmetrics/api-reference#api-limits) 的大批量使用。
 
 :::
 
-Temporal Cloud's [OpenMetrics](https://openmetrics.io/) endpoint provides operational metrics for your Temporal Cloud workloads in industry-standard Prometheus format, enabling comprehensive monitoring across Namespaces, Workflows, and Task Queues with your existing observability stack.
+Temporal Cloud 的 [开放指标](https://openmetrics.io/) 端点以行业标准 Prometheus 格式为您的 Temporal Cloud 工作负载提供操作指标，从而利用现有的可观测性堆栈实现跨 Namespace、Workflow 和 Task Queue 的全面监控。
 
-## Quick Links
-* [Integrations](/cloud/metrics/openmetrics/metrics-integrations) - Get started exporting metrics with common integrations
-* [API Documentation](/cloud/metrics/openmetrics/api-reference) - Endpoint specification and advanced configuration
-* [Metrics Reference](/cloud/metrics/openmetrics/metrics-reference) - Complete catalog of all metrics with descriptions and labels
-* [Migration Guide](/cloud/metrics/openmetrics/migration-guide) - Guide on how to transition from the Prometheus query endpoint
+<a id="quick-links"></a>
+## 快速链接 {#quick-links}
+* [集成](/cloud/metrics/openmetrics/metrics-integrations) - 开始通过常见集成导出指标
+* [API文档](/cloud/metrics/openmetrics/api-reference) - 端点规范和高级配置
+* [指标参考](/cloud/metrics/openmetrics/metrics-reference) - 所有指标的完整目录以及描述和标签
+* [迁移指南](/cloud/metrics/openmetrics/migration-guide) - 有关如何从 Prometheus Query 端点进行转换的指南
 
-## Overview
-Temporal Cloud OpenMetrics exposes 50+ metrics covering workflow lifecycles, task queue operations, service performance, and system limits. All metrics are aggregated over one-minute windows and available for scraping within three minutes.
+<a id="overview"></a>
+## 概述 {#overview}
+Temporal Cloud OpenMetrics 公开了 50 多个指标，涵盖 Workflow 生命周期、Task Queue 操作、服务性能和系统限制。所有指标均在一分钟窗口内聚合，并可在三分钟内进行抓取。
 
-* [Set up authentication and scraping](/cloud/metrics/openmetrics/api-reference#authentication) with the API documentation. 
-* Browse the [complete metrics catalog](/cloud/metrics/openmetrics/metrics-reference) for descriptions and labels. 
-* Teams using the query endpoint should review the [migration guide](/cloud/metrics/openmetrics/migration-guide).
+* [设置身份验证和抓取](/cloud/metrics/openmetrics/api-reference#authentication) 以及 API 文档。 
+* 浏览 [完整的指标目录](/cloud/metrics/openmetrics/metrics-reference) 的说明和标签。 
+* 使用 Query 端点的团队应查看 [迁移指南](/cloud/metrics/openmetrics/migration-guide)。
 
-## API key authentication
-Create a [service account](/cloud/metrics/openmetrics/migration-guide#create-an-api-key) with the "Metrics Read-Only" role, generate an API key, and start scraping immediately - no certificate rotation or distribution required.
+<a id="api-key-authentication"></a>
+## API密钥认证 {#api-key-authentication}
+创建具有“Metrics Read-Only”角色的 [服务帐户](/cloud/metrics/openmetrics/migration-guide#create-an-api-key)，生成 API 密钥，并立即开始抓取 - 无需证书轮换或分发。
 
-## Global endpoint
-This is a single endpoint at `metrics.temporal.io` which serves all metrics across your entire account with API key authentication and standard HTTPS.
+<a id="global-endpoint"></a>
+## 全局端点 {#global-endpoint}
+这是 `metrics.Temporal.io` 的单个端点，它通过 API 密钥身份验证和标准 HTTPS 为您的整个帐户中的所有指标提供服务。
 
-## Namespace and metric filtering
-You can use query parameters to enable selective scraping to manage data volume and costs, which support wildcards for flexible namespace selection and specific metric filtering.
+<a id="namespace-and-metric-filtering"></a>
+## Namespace 和指标过滤 {#namespace-and-metric-filtering}
+您可以使用 Query 参数启用选择性抓取来管理数据量和成本，支持通配符以实现灵活的 Namespace 选择和特定指标过滤。
 
-## Dashboard templates
-Production-ready [Grafana dashboards](https://github.com/grafana/jsonnet-libs/blob/master/temporal-mixin/dashboards/temporal-overview.json) provide immediate visibility with pre-built queries and visualizations.
+<a id="dashboard-templates"></a>
+## 仪表板模板 {#dashboard-templates}
+生产就绪的 [Grafana 仪表板](https://github.com/grafana/jsonnet-libs/blob/master/temporal-mixin/dashboards/temporal-overview.json) 为 Visibility 提供即时的预构建查询和可视化。

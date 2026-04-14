@@ -1,8 +1,8 @@
 ---
 id: child-workflows
-title: Child Workflows - Ruby SDK
-sidebar_label: Child Workflows
-description: Start a Child Workflow Execution and set a Parent Close Policy using Temporal Ruby SDK.
+title: "Child Workflows - Ruby SDK"
+sidebar_label: "Child Workflows"
+description: "启动子项 Workflow Execution 并使用 Temporal Ruby SDK 设置父项关闭策略。"
 keywords:
   - start child workflow execution
   - temporal ruby sdk
@@ -18,27 +18,28 @@ tags:
   - Child Workflows
 ---
 
-This page shows how to do the following:
+此页面显示如何执行以下操作：
 
-- [Start a Child Workflow Execution](#child-workflows) using the Ruby SDK
-- [Set a Parent Close Policy](#parent-close-policy) using the Ruby SDK
+- [开始一个孩子 Workflow Execution](#child-workflows) 使用 Ruby SDK
+- [设置父关闭策略](#parent-close-policy) 使用 Ruby SDK
 
-## Start a Child Workflow Execution {#child-workflows}
+<a id="child-workflows"></a>
+## 启动一个子 Workflow Execution {#child-workflows}
 
-A [Child Workflow Execution](/child-workflows) is a Workflow Execution that is scheduled from within another Workflow using a Child Workflow API.
+[儿童 Workflow Execution](/child-workflows) 是一个 Workflow Execution，它是使用 Child Workflow API 来自另一个 Workflow 的 Scheduled。
 
-When using a Child Workflow API, Child Workflow related Events ([StartChildWorkflowExecutionInitiated](/references/events#startchildworkflowexecutioninitiated), [ChildWorkflowExecutionStarted](/references/events#childworkflowexecutionstarted), [ChildWorkflowExecutionCompleted](/references/events#childworkflowexecutioncompleted), etc...) are logged in the Workflow Execution Event History.
+使用 Child Workflow API 时，Child Workflow 相关事件（[StartChildWorkflowExecutionInitiated](/references/events#startchildworkflowexecutioninitiated)、[子WorkflowExecutionStarted](/references/events#childworkflowexecutionstarted)、[ChildWorkflowExecutionCompleted](/references/events#childworkflowexecutioncompleted) 等）将记录在 Workflow Execution Event History 中。
 
-Always block progress until the [ChildWorkflowExecutionStarted](/references/events#childworkflowexecutionstarted) Event is logged to the Event History to ensure the Child Workflow Execution has started.
-After that, Child Workflow Executions may be abandoned using the _Abandon_ [Parent Close Policy](/parent-close-policy) set in the Child Workflow Options.
+始终阻止进度，直到 [子WorkflowExecutionStarted](/references/events#childworkflowexecutionstarted) 事件记录到 Event History，以确保子 Workflow Execution 已启动。
+此后，可以使用 Child Workflow 选项中设置的 _Abandon_ [家长关闭政策](/parent-close-policy) 放弃子 Workflow Execution。
 
-To spawn a Child Workflow Execution in Ruby, use the `execute_child_workflow` method which starts the Child Workflow and waits for completion or
-use the `start_child_workflow` method to start a Child Workflow and return its handle.
-This is useful if you want to do something after it has only started, or to get the Workflow/Run ID, or to be able to signal it while running.
+要在 Ruby 中生成子 Workflow Execution，请使用 `execute_child_Workflow` 方法，该方法启动 Child Workflow 并等待完成或
+使用 `start_child_Workflow` 方法启动 Child Workflow 并返回其句柄。
+如果您想在启动后执行某些操作，或者获取 Workflow/Run ID，或者能够在运行时执行 Signal，则这非常有用。
 
 :::note
 
-`execute_child_workflow` is a helper method for `start_child_workflow(...).result`.
+`execute_child_Workflow` 是 `start_child_Workflow(...).result` 的辅助方法。
 
 :::
 
@@ -46,13 +47,13 @@ This is useful if you want to do something after it has only started, or to get 
 Temporalio::Workflow.execute_child_workflow(MyChildWorkflow, 'my-workflow-arg')
 ```
 
-## Set a Parent Close Policy {#parent-close-policy}
+## 设置父关闭策略 {#parent-close-policy}
 
-A [Parent Close Policy](/parent-close-policy) determines what happens to a Child Workflow Execution if its Parent changes to a Closed status (Completed, Failed, or Timed Out).
+[家长关闭政策](/parent-close-policy) 确定如果子 Workflow Execution 的父级更改为关闭状态（已完成、失败或超时），子级 Workflow Execution 会发生什么情况。
 
-The default Parent Close Policy option is set to terminate the Child Workflow Execution.
+默认“父关闭策略”选项设置为终止子 Workflow Execution。
 
-Set the `parent_close_policy` parameter for `execute_child_workflow` or `start_child_workflow` to specify the behavior of the Child Workflow when the Parent Workflow closes.
+设置 `execute_child_Workflow` 或 `start_child_Workflow` 的 `parent_close_policy` 参数以指定父 Workflow 关闭时 Child Workflow 的行为。
 
 ```ruby
 Temporalio::Workflow.execute_child_workflow(

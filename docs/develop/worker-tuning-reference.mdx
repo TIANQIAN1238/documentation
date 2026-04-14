@@ -1,8 +1,8 @@
 ---
 id: worker-tuning-reference
-title: Worker tuning quick reference
-sidebar_label: Worker tuning reference
-description: A quick reference guide for Temporal Worker configuration defaults across SDKs, organized by resource type (compute, memory, IO) with key metrics for each.
+title: "Worker 调音快速参考"
+sidebar_label: "Worker 调音参考"
+description: "跨 SDK 的 Temporal Worker 配置默认值的快速参考指南，按资源类型（计算、内存、IO）组织，并包含每种资源类型的关键指标。"
 toc_max_heading_level: 4
 keywords:
   - worker tuning
@@ -16,20 +16,21 @@ tags:
   - Reference
 ---
 
-This page provides a quick reference for Worker configuration options and their default values across Temporal SDKs.
-Use this guide alongside the comprehensive [Worker performance](/develop/worker-performance) documentation for detailed tuning guidance.
+本页面提供 Worker 配置选项及其在 Temporal SDK 中的默认值的快速参考。
+将本指南与综合 [Worker性能](/develop/worker-performance) 文档一起使用以获得详细的调整指导。
 
-Worker performance is constrained by three primary resources:
+Worker 性能受到三个主要资源的限制：
 
-| Resource | Description |
+| 资源 | 描述 |
 |----------|-------------|
-| **Compute** | CPU-bound operations, concurrent Task execution |
-| **Memory** | Workflow cache, thread pools |
-| **IO** | Network calls to Temporal Service, polling |
+| **计算** | CPU 密集型操作、并发任务执行 |
+| **记忆** | Workflow 缓存、线程池 |
+| **IO** | 网络调用 Temporal 服务，轮询 |
 
-## How a Worker works
+<a id="how-a-worker-works"></a>
+## Worker 的工作原理 {#how-a-worker-works}
 
-Workers poll a [Task Queue](/task-queue) in Temporal Cloud or a self-hosted Temporal Service, execute Tasks, and respond with the result.
+Worker 轮询 Temporal Cloud 中的 [Task Queue](/task-queue) 或自托管 Temporal 服务、执行任务并响应结果。
 
 ```
 ┌─────────────────┐     Poll for Tasks       ┌──────────────────┐
@@ -39,177 +40,196 @@ Workers poll a [Task Queue](/task-queue) in Temporal Cloud or a self-hosted Temp
 └─────────────────┘   Respond with results   └──────────────────┘
 ```
 
-Multiple Workers can poll the same Task Queue, providing horizontal scalability.
+多个 Worker 可以轮询同一个 Task Queue，从而提供水平可扩展性。
 
-### How Worker failure recovery works
+<a id="how-worker-failure-recovery-works"></a>
+### Worker 故障恢复的工作原理 {#how-worker-failure-recovery-works}
 
-When a Worker crashes or experiences a host outage:
+当 Worker 崩溃或遇到主机中断时：
 
-1. The Workflow Task times out
-2. Another available Worker picks up the Task
-3. The new Worker replays the Event History to reconstruct state
-4. Execution continues from where it left off
+1、Workflow任务超时
+2.另一个可用的Worker接任务
+3.新的Worker重放Event History以重建状态
+4. 从中断处继续执行
 
-For more details on Worker architecture, see [What is a Temporal Worker?](/workers)
+有关 Worker 架构的更多详细信息，请参阅 [什么是 Temporal Worker？](/workers)
 
-## Compute settings
+<a id="compute-settings"></a>
+## 计算设置 {#compute-settings}
 
-Compute settings control how many Tasks a Worker can execute concurrently.
+计算设置控制 Worker 可以同时执行的任务数。
 
-### Compute configuration options
+<a id="compute-configuration-options"></a>
+### 计算配置选项 {#compute-configuration-options}
 
-| Setting | Description |
+| 环境 | 描述 |
 |---------|-------------|
-| `MaxConcurrentWorkflowTaskExecutionSize` | Maximum concurrent Workflow Tasks |
-| `MaxConcurrentActivityTaskExecutionSize` | Maximum concurrent Activity Tasks |
-| `MaxConcurrentLocalActivityTaskExecutionSize` | Maximum concurrent Local Activities |
-| `MaxWorkflowThreadCount` / `workflowThreadPoolSize` | Thread pool for Workflow execution |
+| `MaxConcurrentWorkflowTaskExecutionSize` | 最大并发任务数 Workflow |
+| `MaxConcurrentActivityTaskExecutionSize` | 最大并发任务数 Activity |
+| `MaxConcurrentLocalActivityTaskExecutionSize` | 最大并发本地活动数 |
+| `MaxWorkflowThreadCount` / `WorkflowThreadPoolSize` | Workflow Execution 的线程池 |
 
-### Compute defaults by SDK
+<a id="compute-defaults-by-sdk"></a>
+### 通过 SDK 计算默认值 {#compute-defaults-by-sdk}
 
-| SDK | MaxConcurrentWorkflowTaskExecutionSize | MaxConcurrentActivityTaskExecutionSize | MaxConcurrentLocalActivityTaskExecutionSize | MaxWorkflowThreadCount |
+| 软件开发工具包 | 最大并发WorkflowTaskExecutionSize | 最大并发ActivityTaskExecutionSize | MaxConcurrentLocalActivityTaskExecutionSize | 最大Workflow线程计数 |
 |-----|----------------------------------------|----------------------------------------|---------------------------------------------|------------------------|
-| **Go** | 1,000 | 1,000 | 1,000 | - |
+| **去** | 1,000 | 1,000 | 1,000 | - |
 | **Java** | 200 | 200 | 200 | 600 |
-| **TypeScript** | 40 | 100 | 100 | 1 (reuseV8Context) |
+| **打字稿** | 40 | 100 | 100 | 1（重用V8Context） |
 | **Python** | 100 | 100 | 100 | - |
-| **.NET** | 100 | 100 | 100 | - |
+| **。网** | 100 | 100 | 100 | - |
 
-### Resource-based slot suppliers
+<a id="resource-based-slot-suppliers"></a>
+### 基于资源的老虎机供应商 {#resource-based-slot-suppliers}
 
-Instead of fixed slot counts, you can use resource-based slot suppliers that automatically adjust available Task slots based on CPU and memory utilization.
-For implementation details, see [Slot suppliers](/develop/worker-performance#slot-suppliers).
+您可以使用基于资源的插槽供应商，而不是固定的插槽数量，这些供应商会根据 CPU 和内存利用率自动调整可用的任务插槽。
+有关实现详细信息，请参阅 [老虎机供应商](/develop/worker-performance#slot-suppliers)。
 
-## Memory settings
+<a id="memory-settings"></a>
+## 内存设置 {#memory-settings}
 
-Memory settings control the Workflow cache size and thread pool allocation.
+内存设置控制 Workflow 缓存大小和线程池分配。
 
-### Memory configuration options
+<a id="memory-configuration-options"></a>
+### 内存配置选项 {#memory-configuration-options}
 
-| Setting | Description |
+| 环境 | 描述 |
 |---------|-------------|
-| `MaxCachedWorkflows` / `StickyWorkflowCacheSize` | Number of Workflows to keep in cache |
-| `MaxWorkflowThreadCount` | Thread pool size |
-| `reuseV8Context` (TypeScript) | Reuse V8 context for Workflows |
+| `MaxCachedWorkflows` / `StickyWorkflowCacheSize` | 要保留在缓存中的 Workflow 数量 |
+| `MaxWorkflowThreadCount` | 线程池大小 |
+| `reuseV8Context`（打字稿） | 为 Workflow 重用 V8 上下文 |
 
-### Memory defaults by SDK
+<a id="memory-defaults-by-sdk"></a>
+### SDK 默认内存 {#memory-defaults-by-sdk}
 
-| SDK | MaxCachedWorkflows / StickyWorkflowCacheSize |
+| 软件开发工具包 | MaxCachedWorkflows / StickyWorkflowCacheSize |
 |-----|----------------------------------------------|
-| **Go** | 10,000 |
+| **去** | 10,000 |
 | **Java** | 600 |
-| **TypeScript** | Dynamic (e.g., 2000 for 4 GiB RAM) |
+| **打字稿** | 动态（例如，4 GiB RAM 为 2000） |
 | **Python** | 1,000 |
-| **.NET** | 10,000 |
+| **。网** | 10,000 |
 
-For cache tuning guidance, see [Workflow cache tuning](/develop/worker-performance#workflow-cache-tuning).
+有关缓存调整指南，请参阅 [Workflow 缓存调整](/develop/worker-performance#workflow-cache-tuning)。
 
-## IO settings
+##IO设置
 
-IO settings control the number of pollers and rate limits for Task Queue interactions.
+IO 设置控制轮询器的数量和 Task Queue 交互的速率限制。
 
-### IO configuration options
+<a id="io-settings"></a>
+### IO 配置选项 {#io-settings}
 
-| Setting | Description |
+| 环境 | 描述 |
 |---------|-------------|
-| `MaxConcurrentWorkflowTaskPollers` | Number of concurrent Workflow pollers |
-| `MaxConcurrentActivityTaskPollers` | Number of concurrent Activity pollers |
-| `Namespace APS` | Actions per second limit for Namespace |
-| `TaskQueueActivitiesPerSecond` | Activity rate limit per Task Queue |
+| `MaxConcurrentWorkflowTaskPollers` | 并发 Workflow 轮询器数量 |
+| `MaxConcurrentActivityTaskPollers` | 并发 Activity 轮询器数量 |
+| `Namespace APS` | Namespace 的每秒操作数限制 |
+| `TaskQueueActivitiesPerSecond` | Activity 按 Task Queue 的速率限制 |
 
-### IO defaults by SDK
+<a id="io-configuration-options"></a>
+### SDK默认IO {#io-configuration-options}
 
-| SDK | MaxConcurrentWorkflowTaskPollers | MaxConcurrentActivityTaskPollers | Namespace APS | TaskQueueActivitiesPerSecond |
+| 软件开发工具包 | MaxConcurrentWorkflowTaskPollers | MaxConcurrentActivityTaskPollers | Namespace APS | 任务队列每秒活动数 |
 |-----|----------------------------------|----------------------------------|---------------|------------------------------|
-| **Go** | 2 | 2 | 400 | Unlimited |
+| **去** | 2 | 2 | 400 | 无限 |
 | **Java** | 5 | 5 | - | - |
-| **TypeScript** | 10 | 10 | - | - |
+| **打字稿** | 10 | 10 | - | - |
 | **Python** | 5 | 5 | - | - |
-| **.NET** | 5 | 5 | - | - |
+| **。网** | 5 | 5 | - | - |
 
-### Poller autoscaling
+<a id="io-defaults-by-sdk"></a>
+### 轮询器自动缩放 {#io-defaults-by-sdk}
 
-Use poller autoscaling to automatically adjust the number of concurrent polls based on workload.
-For configuration details, see [Configuring poller options](/develop/worker-performance#configuring-poller-options).
+使用轮询器自动缩放可根据工作负载自动调整并发轮询的数量。
+有关配置详细信息，请参阅 [配置轮询器选项](/develop/worker-performance#configuring-poller-options)。
 
-## Metrics reference by resource type
+<a id="poller-autoscaling"></a>
+## 按资源类型划分的指标参考 {#poller-autoscaling}
 
-Use these metrics to identify bottlenecks and guide tuning decisions.
-For the complete metrics reference, see [SDK metrics](/references/sdk-metrics).
+使用这些指标来识别瓶颈并指导调整决策。
+有关完整的指标参考，请参阅 [SDK指标](/references/sdk-metrics)。
 
-### Compute-related metrics
+<a id="metrics-reference-by-resource-type"></a>
+### 计算相关指标 {#metrics-reference-by-resource-type}
 
-| Worker configuration option | SDK metric |
+| Worker 配置选项 | SDK指标 |
 |-----------------------------|------------|
-| `MaxConcurrentWorkflowTaskExecutionSize` | [`worker_task_slots_available {worker_type = WorkflowWorker}`](/references/sdk-metrics#worker_task_slots_available) |
-| `MaxConcurrentActivityTaskExecutionSize` | [`worker_task_slots_available {worker_type = ActivityWorker}`](/references/sdk-metrics#worker_task_slots_available) |
-| `MaxWorkflowThreadCount` | [`workflow_active_thread_count`](/references/sdk-metrics#workflow_active_thread_count) (Java only) |
-| CPU-intensive logic | [`workflow_task_execution_latency`](/references/sdk-metrics#workflow_task_execution_latency) |
+| `MaxConcurrentWorkflowTaskExecutionSize` | [`Worker_task_slots_available {Worker_type = WorkflowWorker}`](/references/sdk-metrics#worker_task_slots_available) |
+| `MaxConcurrentActivityTaskExecutionSize` | [`Worker_task_slots_available {Worker_type = ActivityWorker}`](/references/sdk-metrics#worker_task_slots_available) |
+| `MaxWorkflowThreadCount` | [`Workflow_active_thread_count`](/references/sdk-metrics#workflow_active_thread_count)（仅限 Java） |
+| CPU密集型逻辑 | [`Workflow_task_execution_latency`](/references/sdk-metrics#workflow_task_execution_latency) |
 
-Also monitor your machine's CPU consumption (for example, `container_cpu_usage_seconds_total` in Kubernetes).
+还可以监视机器的 CPU 消耗（例如 Kubernetes 中的 `container_cpu_usage_seconds_total`）。
 
-### Memory-related metrics
+<a id="compute-related-metrics"></a>
+### 内存相关指标 {#compute-related-metrics}
 
-| Worker configuration option | SDK metric |
+| Worker 配置选项 | SDK指标 |
 |-----------------------------|------------|
-| `StickyWorkflowCacheSize` | [`sticky_cache_total_forced_eviction`](/references/sdk-metrics#sticky_cache_total_forced_eviction), [`sticky_cache_size`](/references/sdk-metrics#sticky_cache_size), [`sticky_cache_hit`](/references/sdk-metrics#sticky_cache_hit), [`sticky_cache_miss`](/references/sdk-metrics#sticky_cache_miss) |
+| `StickyWorkflowCacheSize` | [`sticky_cache_total_forced_eviction`](/references/sdk-metrics#sticky_cache_total_forced_eviction)、[`sticky_cache_size`](/references/sdk-metrics#sticky_cache_size)、[`sticky_cache_hit`](/references/sdk-metrics#sticky_cache_hit)、[`sticky_cache_miss`](/references/sdk-metrics#sticky_cache_miss) |
 
-Also monitor your machine's memory consumption (for example, `container_memory_usage_bytes` in Kubernetes).
+还可以监视机器的内存消耗（例如 Kubernetes 中的 `container_memory_usage_bytes`）。
 
-### IO-related metrics
+<a id="memory-related-metrics"></a>
+### IO 相关指标 {#memory-related-metrics}
 
-| Worker configuration option | SDK metric |
+| Worker 配置选项 | SDK指标 |
 |-----------------------------|------------|
-| `MaxConcurrentWorkflowTaskPollers` | [`num_pollers {poller_type = workflow_task}`](/references/sdk-metrics#num_pollers) |
-| `MaxConcurrentActivityTaskPollers` | [`num_pollers {poller_type = activity_task}`](/references/sdk-metrics#num_pollers) |
-| Network latency | [`request_latency {namespace, operation}`](/references/sdk-metrics#request_latency) |
+| `MaxConcurrentWorkflowTaskPollers` | [`num_pollers {poller_type = Workflow_task}`](/references/sdk-metrics#num_pollers) |
+| `MaxConcurrentActivityTaskPollers` | [`num_pollers {poller_type = Activity_task}`](/references/sdk-metrics#num_pollers) |
+| 网络延迟 | [`request_latency {Namespace, operation}`](/references/sdk-metrics#request_latency) |
 
-### Task Queue metrics
+<a id="io-related-metrics"></a>
+### Task Queue 指标 {#io-related-metrics}
 
-| Metric | Description |
+| 公制 | 描述 |
 |--------|-------------|
-| [`poll_success_sync_count`](/cloud/metrics/reference#temporal_cloud_v0_poll_success_sync_count) | Sync match rate (Tasks immediately assigned to Workers) |
-| [`approximate_backlog_count`](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_approximate_backlog_count) | Approximate number of Tasks in a Task Queue |
+| [`poll_success_sync_count`](/cloud/metrics/reference#temporal_cloud_v0_poll_success_sync_count) | 同步匹配率（立即分配给 Worker 的任务） |
+| [`approximate_backlog_count`](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_approximate_backlog_count) | Task Queue 中任务的大约数量 |
 
-Task Queue statistics are also available via the `DescribeTaskQueue` API:
+Task Queue 统计数据也可通过 `DescribeTaskQueue` API 获得：
 - `ApproximateBacklogCount`
 - `ApproximateBacklogAge`
 - `TasksAddRate`
 - `TasksDispatchRate`
 - `BacklogIncreaseRate`
 
-For more on Task Queue metrics, see [Available Task Queue information](/develop/worker-performance#task-queue-metrics).
+有关 Task Queue 指标的更多信息，请参阅 [可用的 Task Queue 信息](/develop/worker-performance#task-queue-metrics)。
 
-### Failure metrics
+<a id="task-queue-metrics"></a>
+### 失败指标 {#task-queue-metrics}
 
-| Metric | Description |
+| 公制 | 描述 |
 |--------|-------------|
-| [`long_request_failure`](/references/sdk-metrics#long_request_failure) | Failures for long-running operations (polling, history retrieval) |
-| [`request_failure`](/references/sdk-metrics#request_failure) | Failures for standard operations (Task completion responses) |
+| [`long_request_failure`](/references/sdk-metrics#long_request_failure) | 长时间运行的操作失败（轮询、历史检索） |
+| [`request_failure`](/references/sdk-metrics#request_failure) | 标准操作失败（任务完成响应） |
 
-Common failure codes:
-- `RESOURCE_EXHAUSTED` - Rate limits exceeded
-- `DEADLINE_EXCEEDED` - Operation timeout
-- `NOT_FOUND` - Resource not found
+常见故障代码：
+- `RESOURCE_EXHAUSTED` - 超出速率限制
+- `DEADLINE_EXCEEDED` - 操作超时
+- `NOT_FOUND` - 找不到资源
 
-## Worker tuning tips
+<a id="failure-metrics"></a>
+## Worker 调音技巧 {#failure-metrics}
 
-1. **Scale test before production**: Validate your configuration under realistic load.
-2. **Infrastructure matters**: Workers don't operate in a vacuum. Consider network latency, database performance, and external service dependencies.
-3. **Tune and observe**: Make incremental changes and monitor metrics before making additional adjustments.
-4. **Identify the bottleneck**: Use the [theory of constraints](https://en.wikipedia.org/wiki/Theory_of_constraints). Improving non-bottleneck resources won't improve overall throughput.
+1. **生产前进行规模测试**：在实际负载下验证您的配置。
+2. **基础设施很重要**：Worker 不会在真空中运行。考虑网络延迟、数据库性能和外部服务依赖性。
+3. **调整和观察**：在进行额外调整之前进行增量更改并监控指标。
+4. **识别瓶颈**：使用 [约束理论](https://en.wikipedia.org/wiki/Theory_of_constraints)。改善非瓶颈资源不会提高整体吞吐量。
 
-For detailed tuning guidance, see:
-- [Worker performance](/develop/worker-performance)
-- [Worker deployment and performance best practices](/best-practices/worker)
-- [Performance bottlenecks troubleshooting](/troubleshooting/performance-bottlenecks)
+详细的调优指导请参见：
+- [Worker性能](/develop/worker-performance)
+- [Worker 部署和性能最佳实践](/best-practices/worker)
+- [性能瓶颈故障排除](/troubleshooting/performance-bottlenecks)
 
-## Related resources
+<a id="worker-tuning-tips"></a>
+## 相关资源 {#worker-tuning-tips}
 
-- [What is a Temporal Worker?](/workers) - Conceptual overview
-- [Worker performance](/develop/worker-performance) - Comprehensive tuning guide
-- [Worker deployment and performance](/best-practices/worker) - Best practices
-- [SDK metrics reference](/references/sdk-metrics) - Complete metrics documentation
-- [Worker Versioning](/production-deployment/worker-deployments/worker-versioning) - Safe deployments
-- [Workers in production](https://temporal.io/blog/workers-in-production) - Blog post
-- [Introduction to Worker Tuning](https://temporal.io/blog/an-introduction-to-worker-tuning) - Blog post
+- [什么是 Temporal Worker？](/workers) - 概念概述
+- [Worker性能](/develop/worker-performance) - 综合调音指南
+- [Worker部署和性能](/best-practices/worker) - 最佳实践
+- [SDK指标参考](/references/sdk-metrics) - 完整的指标文档
+- [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning) - 安全部署
+- [Worker 正在生产中](https://temporal.io/blog/workers-in-production) - 博客文章
+- [Worker调音简介](https://temporal.io/blog/an-introduction-to-worker-tuning) - 博客文章

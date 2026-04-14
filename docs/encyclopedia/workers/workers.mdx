@@ -1,8 +1,8 @@
 ---
 id: workers
-title: What is a Temporal Worker?
+title: 什么是 Temporal Worker？
 sidebar_label: Workers
-description: Temporal Workers are tightly coupled with Task Queues and Worker Processes.
+description: Temporal Worker 与 Task Queue 和 Worker Process 紧密耦合。
 slug: /workers
 toc_max_heading_level: 4
 keywords:
@@ -15,7 +15,7 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-This page discusses the following:
+本页讨论以下内容：
 
 - [Worker](#worker)
 - [Worker Program](#worker-program)
@@ -23,125 +23,125 @@ This page discusses the following:
 - [Worker Identity](#worker-identity)
 - [Worker Process](#worker-process)
 
-## What is a Worker? {#worker}
+## 什么是 Worker？{#worker}
 
-In day-to-day conversations, the term Worker is used to denote either a [Worker Program](#worker-program), a [Worker Process](#worker-process), or a [Worker Entity](/workers#worker-entity).
-Temporal documentation aims to be explicit and differentiate between them.
+在日常对话中，Worker 一词用于指代 [Worker Program](#worker-program)、[Worker Process](#worker-process) 或 [Worker Entity](/workers#worker-entity)。
+Temporal 文档旨在明确区分这三者。
 
-## What is a Worker Program? {#worker-program}
+## 什么是 Worker Program？{#worker-program}
 
-A Worker Program is the static code that defines the constraints of the Worker Process, developed using the APIs of a Temporal SDK.
+Worker Program 是定义 Worker Process 约束的静态代码，使用 Temporal SDK 的 API 开发。
 
 :::info
 
-- [How to run a development Worker using the Go SDK](/develop/go/workers/run-worker-process#develop-worker)
-- [How to run a development Worker using the Java SDK](/develop/java/workers/run-worker-process)
-- [How to run a development Worker using the PHP SDK](/develop/php/workers/run-worker-process#run-a-dev-worker)
-- [How to run a development Worker using the Python SDK](/develop/python/workers/run-worker-process#run-a-dev-worker)
-- [How to run a development Worker using the TypeScript SDK](/develop/typescript/workers/run-worker-process#run-a-dev-worker)
-- [How to run a development Worker using the .NET SDK](/develop/dotnet/workers/run-worker-process)
+- [如何使用 Go SDK 运行开发 Worker](/develop/go/workers/run-worker-process#develop-worker)
+- [如何使用 Java SDK 运行开发 Worker](/develop/java/workers/run-worker-process)
+- [如何使用 PHP SDK 运行开发 Worker](/develop/php/workers/run-worker-process#run-a-dev-worker)
+- [如何使用 Python SDK 运行开发 Worker](/develop/python/workers/run-worker-process#run-a-dev-worker)
+- [如何使用 TypeScript SDK 运行开发 Worker](/develop/typescript/workers/run-worker-process#run-a-dev-worker)
+- [如何使用 .NET SDK 运行开发 Worker](/develop/dotnet/workers/run-worker-process)
 
-- [How to run a Temporal Cloud Worker using the Go SDK](/develop/go/workers/cloud-worker)
-- [How to run a Temporal Cloud Worker using the TypeScript SDK](/develop/typescript/workers/run-worker-process#run-a-temporal-cloud-worker)
+- [如何使用 Go SDK 运行 Temporal Cloud Worker](/develop/go/workers/cloud-worker)
+- [如何使用 TypeScript SDK 运行 Temporal Cloud Worker](/develop/typescript/workers/run-worker-process#run-a-temporal-cloud-worker)
 
 :::
 
-## What is a Worker Entity? {#worker-entity}
+## 什么是 Worker Entity？{#worker-entity}
 
-A Worker Entity is the individual Worker within a Worker Process that listens to a specific Task Queue.
+Worker Entity 是 Worker Process 中监听特定 Task Queue 的单个 Worker。
 
-A Worker Entity listens and polls on a single Task Queue.
-A Worker Entity contains a Workflow Worker and/or an Activity Worker, which makes progress on Workflow Executions and Activity Executions, respectively.
+Worker Entity 监听并轮询单个 Task Queue。
+Worker Entity 包含 Workflow Worker 和/或 Activity Worker，分别推进 Workflow Execution 和 Activity Execution 的进展。
 
-**Can a Worker handle more Workflow Executions than its cache size or number of supported threads?**
+**Worker 能处理比其缓存大小或支持线程数更多的 Workflow Execution 吗？**
 
-Yes it can.
-However, the trade off is added latency.
+可以。
+但代价是增加了延迟。
 
-Workers are stateless, so any Workflow Execution in a blocked state can be safely removed from a Worker.
-Later on, it can be resurrected on the same or different Worker when the need arises (in the form of an external event).
-Therefore, a single Worker can handle millions of open Workflow Executions, assuming it can handle the update rate and that a slightly higher latency is not a concern.
+Worker 是无状态的，因此任何处于阻塞状态的 Workflow Execution 都可以从 Worker 中安全地移除。
+之后，当需要时（以外部事件的形式），它可以在相同或不同的 Worker 上恢复。
+因此，单个 Worker 可以处理数百万个开放的 Workflow Execution，前提是它可以处理更新速率，且稍高的延迟不是问题。
 
-**Operation guides:**
+**操作指南：**
 
-- [How to tune Workers](/develop/worker-performance)
-- [Worker tuning quick reference](/develop/worker-tuning-reference) - SDK defaults and metrics
+- [如何调优 Worker](/develop/worker-performance)
+- [Worker 调优快速参考](/develop/worker-tuning-reference) - SDK 默认值和指标
 
-## What is a Worker Identity? {#worker-identity}
+## 什么是 Worker Identity？{#worker-identity}
 
-Workers have an associated identifier that helps identify the specific Worker instance.
-By default, Temporal SDKs set a Worker Identity to `${process.pid}@${os.hostname()}`, which combines the Worker's process ID (`process.pid`) and the hostname of the machine running the Worker (`os.hostname()`).
+Worker 有一个关联的标识符，用于帮助识别特定的 Worker 实例。
+默认情况下，Temporal SDK 将 Worker Identity 设置为 `${process.pid}@${os.hostname()}`，它结合了 Worker 的进程 ID（`process.pid`）和运行 Worker 的机器的主机名（`os.hostname()`）。
 
-The Worker Identity is visible in various contexts, such as Workflow History and the list of pollers on a Task Queue.
+Worker Identity 在各种上下文中可见，例如 Workflow 历史记录和 Task Queue 上的轮询器列表。
 
-You can use the Worker Identity to aid in debugging operational issues.
-By providing a user assigned identifier, you can trace issues back to specific Worker instances.
+您可以使用 Worker Identity 来帮助调试操作问题。
+通过提供用户分配的标识符，您可以将问题追溯到特定的 Worker 实例。
 
-**What are some limitations of the default identity?**
+**默认 Identity 有哪些限制？**
 
-While the default identity format may seem sensible, it often proves to be of limited usefulness in cloud environments.
-Some common issues include:
+虽然默认的 Identity 格式看似合理，但在云环境中通常用处有限。
+一些常见问题包括：
 
-- **Docker containers**: When running Workers inside Docker containers, the process ID is always `1`, as each container typically runs a single process. This makes the process identifier meaningless for identification purposes.
-- **Random hostnames**: In some cloud environments, such as Amazon ECS (Elastic Container Service), the hostname is a randomly generated string that does not provide any meaningful information about the Worker's execution context.
-- **Ephemeral IP addresses**: In certain cases, the hostname might be set to an ephemeral IP address, which can change over time and does not uniquely identify a Worker instance.
+- **Docker 容器**：在 Docker 容器内运行 Worker 时，进程 ID 始终是 `1`，因为每个容器通常运行单个进程。这使得进程标识符对于识别目的毫无意义。
+- **随机主机名**：在某些云环境中，例如 Amazon ECS（弹性容器服务），主机名是随机生成的字符串，不提供有关 Worker 执行上下文的任何有意义信息。
+- **临时 IP 地址**：在某些情况下，主机名可能被设置为临时 IP 地址，该地址可能随时间变化且不能唯一标识 Worker 实例。
 
-**What are some recommended approaches?**
+**有哪些推荐方法？**
 
-It is recommended that you ensure that the Worker Identity can be linked back to the corresponding machine, process, execution context, or log stream.
-In some execution environments, this might require that you explicitly specify the Worker Identity.
+建议您确保 Worker Identity 可以链接回相应的机器、进程、执行上下文或日志流。
+在某些执行环境中，这可能需要您明确指定 Worker Identity。
 
-Here are some approaches:
+以下是一些方法：
 
-- **Use environment-specific identifiers**: Choose an identifier that is specific to your execution environment. For example, when running Workers on Amazon ECS, you can set the Worker Identity to the ECS Task ID, which uniquely identifies the task running the Worker.
-- **Include relevant context**: Incorporate information that helps establish the context of the Worker, such as the deployment environment (`staging` or `production`), region, or any other relevant details.
-- **Ensure uniqueness**: Make sure that the Worker Identity is unique within your system to avoid ambiguity when debugging issues.
-- **Keep it concise**: While including relevant information is important, try to keep the Worker Identity concise and easily readable to facilitate quick identification and troubleshooting.
+- **使用特定于环境的标识符**：选择特定于您的执行环境的标识符。例如，在 Amazon ECS 上运行 Worker 时，您可以将 Worker Identity 设置为 ECS Task ID，它唯一标识运行 Worker 的任务。
+- **包含相关上下文**：纳入有助于建立 Worker 上下文的信息，例如部署环境（`staging` 或 `production`）、区域或其他相关详情。
+- **确保唯一性**：确保 Worker Identity 在您的系统中是唯一的，以避免在调试问题时出现歧义。
+- **保持简洁**：虽然包含相关信息很重要，但请尽量保持 Worker Identity 简洁且易于阅读，以便快速识别和故障排除。
 
-## What is a Worker Process? {#worker-process}
+## 什么是 Worker Process？{#worker-process}
 
 <CaptionedImage
     src="/diagrams/worker-and-server-component.svg"
-    title="Component diagram of a Worker Process and the Temporal Server"
+    title="Worker Process 和 Temporal Server 的组件图"
     />
 
-A Worker Process is responsible for polling a [Task Queue](/task-queue), dequeueing a [Task](/tasks#task), executing your code in response to a Task, and responding to the [Temporal Service](/temporal-service) with the results.
+Worker Process 负责轮询 [Task Queue](/task-queue)、出队 [Task](/tasks#task)、执行您的代码以响应 Task，并将结果返回给 [Temporal Service](/temporal-service)。
 
-More formally, a Worker Process is any process that implements the Task Queue Protocol and the Task Execution Protocol.
+更正式地说，Worker Process 是任何实现了 Task Queue 协议和 Task Execution 协议的进程。
 
-- A Worker Process is a Workflow Worker Process if the process implements the Workflow Task Queue Protocol and executes the Workflow Task Execution Protocol to make progress on a Workflow Execution.
-  A Workflow Worker Process can listen on an arbitrary number of Workflow Task Queues and can execute an arbitrary number of Workflow Tasks.
-- A Worker Process is an Activity Worker Process if the process implements the Activity Task Queue Protocol and executes the Activity Task Processing Protocol to make progress on an Activity Execution.
-  An Activity Worker Process can listen on an arbitrary number of Activity Task Queues and can execute an arbitrary number of Activity Tasks.
+- 如果进程实现了 Workflow Task Queue 协议并执行 Workflow Task Execution 协议以推进 Workflow Execution 的进展，则该进程是 Workflow Worker Process。
+  Workflow Worker Process 可以监听任意数量的 Workflow Task Queue，并可以执行任意数量的 Workflow Task。
+- 如果进程实现了 Activity Task Queue 协议并执行 Activity Task Processing 协议以推进 Activity Execution 的进展，则该进程是 Activity Worker Process。
+  Activity Worker Process 可以监听任意数量的 Activity Task Queue，并可以执行任意数量的 Activity Task。
 
-**Worker Processes are external to a Temporal Service.**
-Temporal Application developers are responsible for developing [Worker Programs](#worker-program) and operating Worker Processes.
-Said another way, the [Temporal Service](/temporal-service) (including the Temporal Cloud) doesn't execute any of your code (Workflow and Activity Definitions) on Temporal Service machines. The Temporal Service is solely responsible for orchestrating [State Transitions](/workflow-execution#state-transition) and providing Tasks to the next available [Worker Entity](/workers#worker-entity).
+**Worker Process 在 Temporal Service 外部运行。**
+Temporal 应用程序开发者负责开发 [Worker Program](#worker-program) 和运营 Worker Process。
+换句话说，[Temporal Service](/temporal-service)（包括 Temporal Cloud）不会在 Temporal Service 机器上执行您的任何代码（Workflow 和 Activity 定义）。Temporal Service 仅负责编排[状态转换](/workflow-execution#state-transition)并将 Task 提供给下一个可用的 [Worker Entity](/workers#worker-entity)。
 
-While data transferred in Event Histories is [secured by mTLS](/self-hosted-guide/security#encryption-in-transit-with-mtls), by default, it is still readable at rest in the Temporal Service.
+虽然 Event 历史记录中传输的数据[通过 mTLS 进行了安全保护](/self-hosted-guide/security#encryption-in-transit-with-mtls)，但默认情况下，它在 Temporal Service 中静止时仍然是可读的。
 
-To solve this, Temporal SDKs offer a [Data Converter API](/dataconversion) that you can use to customize the serialization of data going out of and coming back in to a Worker Entity, with the net effect of guaranteeing that the Temporal Service cannot read sensitive business data.
+为了解决这个问题，Temporal SDK 提供了一个 [Data Converter API](/dataconversion)，您可以使用它来自定义进出 Worker Entity 的数据序列化，其净效果是保证 Temporal Service 无法读取敏感业务数据。
 
-In many of our tutorials, we show you how to run both a Temporal Service and one Worker on the same machine for local development.
-However, a production-grade Temporal Application typically has a _fleet_ of Worker Processes, all running on hosts external to the Temporal Service.
-A Temporal Application can have as many Worker Processes as needed.
+在我们的许多教程中，我们展示了如何在本地开发时在同一台机器上同时运行 Temporal Service 和一个 Worker。
+但是，生产级 Temporal 应用程序通常拥有一个_集群_的 Worker Process，所有这些进程都在 Temporal Service 外部的主机上运行。
+Temporal 应用程序可以根据需要拥有任意数量的 Worker Process。
 
-A Worker Process can be both a Workflow Worker Process and an Activity Worker Process.
-Many SDKs support the ability to have multiple Worker Entities in a single Worker Process.
-(Worker Entity creation and management differ between SDKs.)
-A single Worker Entity can listen to only a single Task Queue.
-But if a Worker Process has multiple Worker Entities, the Worker Process could be listening to multiple Task Queues.
+Worker Process 既可以是 Workflow Worker Process，也可以是 Activity Worker Process。
+许多 SDK 支持在单个 Worker Process 中拥有多个 Worker Entity 的能力。
+（Worker Entity 的创建和管理在不同 SDK 之间有所不同。）
+单个 Worker Entity 只能监听单个 Task Queue。
+但如果一个 Worker Process 有多个 Worker Entity，则该 Worker Process 可以监听多个 Task Queue。
 
 <CaptionedImage
     src="/diagrams/worker-and-server-entity-relationship.svg"
-    title="Entity relationship diagram (meta model) of Worker Processes, Task Queues, and Tasks"
+    title="Worker Process、Task Queue 和 Task 的实体关系图（元模型）"
 />
 
-Worker Processes executing Activity Tasks must have access to any resources needed to execute the actions that are defined in Activity Definitions, such as the following:
+执行 Activity Task 的 Worker Process 必须能够访问执行 Activity 定义中定义的操作所需的任何资源，例如：
 
-- Network access for external API calls.
-- Credentials for infrastructure provisioning.
-- Specialized GPUs for machine learning utilities.
+- 用于外部 API 调用的网络访问。
+- 用于基础设施配置的凭证。
+- 用于机器学习工具的专用 GPU。
 
-The Temporal Service itself has [internal workers](https://temporal.io/blog/workflow-engine-principles/#system-workflows-1910) for system Workflow Executions.
-However, these internal workers are not visible to the developer.
+Temporal Service 本身有用于系统 Workflow Execution 的[内部 Worker](https://temporal.io/blog/workflow-engine-principles/#system-workflows-1910)。
+但是，这些内部 Worker 对开发者不可见。

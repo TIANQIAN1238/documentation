@@ -1,8 +1,8 @@
 ---
 id: multi-tenancy
-title: Multi-tenancy - Temporal feature
-description: Learn about Temporal's namespace isolation for multi-tenancy and how to build multi-tenant applications.
-sidebar_label: Multi-tenancy
+title: "多租户 - Temporal 功能"
+description: "了解 Temporal 的 Namespace 多租户隔离以及如何构建多租户应用程序。"
+sidebar_label: "多租户"
 tags:
 - Temporal Cloud
 - Multitenancy
@@ -16,38 +16,41 @@ keywords:
 
 import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
 
-Multi-tenancy in Temporal operates at two levels:
+Temporal 中的多租户在两个级别上运行：
 
-## Namespace isolation
+<a id="namespace-isolation"></a>
+## Namespace 隔离 {#namespace-isolation}
 
-[Namespaces](/namespaces) are Temporal's unit of isolation, providing logical separation for multi-tenant deployments in both open source Temporal and Temporal Cloud.
+[Namespaces](/namespaces) 是 Temporal 的隔离单元，为开源 Temporal 和 Temporal Cloud 中的多租户部署提供逻辑分离。
 
-### Open source Temporal
+<a id="open-source-temporal"></a>
+### 开源 Temporal {#open-source-temporal}
 
-Namespaces in self-hosted Temporal provide:
+自托管 Temporal 中的 Namespace 提供：
 
-- **Workflow ID uniqueness**: Temporal guarantees unique Workflow IDs within a Namespace. Different Namespaces can have Workflows with the same ID without conflict.
-- **Resource isolation**: Traffic from one Namespace does not impact other Namespaces on the same Temporal Service.
-- **Configuration boundaries**: Settings like [Retention Period](/temporal-service/temporal-server#retention-period) and [Archival](/temporal-service/archival) destination are configured per Namespace.
-- **Access control**: Use a custom [Authorizer](/self-hosted-guide/security#authorization) on your Frontend Service to restrict who can access each Namespace.
-- **Inter-namespace communication**: Use [Nexus](/evaluate/nexus) for controlled communication between Namespaces.
+- **Workflow ID 唯一性**：Temporal 保证 Namespace 内的 Workflow ID 唯一。不同的Namespace可以有相同ID的Workflow，不会发生冲突。
+- **资源隔离**：来自一个 Namespace 的流量不会影响同一 Temporal 服务上的其他 Namespace。
+- **配置边界**：[保留期限](/temporal-service/temporal-server#retention-period) 和 [档案](/temporal-service/archival) 目标等设置是根据 Namespace 配置的。
+- **访问控制**：在前端服务上使用自定义 [授权人](/self-hosted-guide/security#authorization) 来限制谁可以访问每个 Namespace。
+- **Namespace 间通信**：使用 [Nexus](/evaluate/nexus) 进行 Namespace 之间的受控通信。
 
 ### Temporal Cloud
 
-Temporal Cloud builds on these capabilities with additional isolation guarantees:
+Temporal Cloud 基于这些功能构建，并提供额外的隔离保证：
 
-- **Independent authentication** via [API keys](/cloud/api-keys) or [mTLS certificates](/cloud/certificates)
-- **Built-in [role-based access controls](/cloud/manage-access/roles-and-permissions#namespace-level-permissions)** without custom Authorizer configuration
-- **Separate [rate limits](/cloud/limits#namespace-level)** to prevent noisy neighbor problems
-- **[High availability replication](/cloud/high-availability)** across regions
+- **通过 [API 密钥](/cloud/api-keys) 或 [mTLS 证书](/cloud/certificates) 进行独立身份验证**
+- **内置 [基于角色的访问控制](/cloud/manage-access/roles-and-permissions#namespace-level-permissions)** 无需自定义授权者配置
+- **单独的 [速率限制](/cloud/limits#namespace-level)** 以防止吵闹的邻居问题
+- **[高可用性复制](/cloud/high-availability)** 跨地区
 
 <RelatedReadContainer>
   <RelatedReadItem path="/cloud/security#namespace-isolation" text="Namespace Isolation Details" archetype="cloud-guide" />
   <RelatedReadItem path="/cloud/pricing" text="Temporal Cloud Pricing" archetype="cloud-guide" />
 </RelatedReadContainer>
 
-## Application multi-tenancy
+<a id="application-multi-tenancy"></a>
+## 应用程序多租户 {#application-multi-tenancy}
 
-Many organizations use Temporal to power their own multi-tenant SaaS applications, isolating their customers' workloads using Task Queues, Search Attributes, and Worker design patterns.
+许多组织使用 Temporal 来支持自己的多租户 SaaS 应用程序，并使用 Task Queue、Search Attribute 和 Worker 设计模式隔离客户的工作负载。
 
-See the [multi-tenant application patterns guide](/production-deployment/multi-tenant-patterns) for detailed recommendations on architecting multi-tenant applications with Temporal.
+有关使用 Temporal 构建多租户应用程序的详细建议，请参阅 [多租户应用程序模式指南](/production-deployment/multi-tenant-patterns)。

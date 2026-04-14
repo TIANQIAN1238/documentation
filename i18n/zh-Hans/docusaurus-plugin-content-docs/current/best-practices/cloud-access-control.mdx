@@ -1,0 +1,61 @@
+---
+id: cloud-access-control
+title: XPROT017X 配置命令参考
+sidebar_label: 管理云访问控制
+description: Temporal Cloud 中管理访问控制、权限和用户管理的最佳实践。
+toc_max_heading_level: 4
+keywords:
+  - temporal cloud
+  - access control
+  - permissions
+  - user management
+  - best practices
+tags:
+  - Best Practices
+  - Temporal Cloud
+  - Security
+---
+
+本指南介绍了知识中心的内容、如何传达知识以及如何保持其有用性。
+要引导您的知识中心，请使用
+[XPROT003X Hub](https://go.XPROT026X.io/platform-hub) 模板作为起点。
+
+这两个选项都有助于保护 Worker 和 Temporal Cloud 之间的通信。选择正确的方法并正确管理它是维护安全和最大限度减少停机时间的关键。
+
+高层端到端轮换流程为：
+
+1. **生成新凭证**：在当前证书或 API 密钥过期之前在 Temporal Cloud 中创建新证书或 API 密钥
+2. **支持双凭证**：Update Temporal Cloud 同时支持新旧凭证
+3. **迁移 Workers**：将 Worker 应用程序从旧凭证过渡到新凭证
+4. **验证连接**：确认所有 Worker 都可以进行身份验证，并且业务流程使用新凭据正常运行
+5. **删除旧凭据**：确认迁移成功后，从您的密钥提供程序中删除旧证书和 API 密钥
+
+这种方法可确保近乎零的停机时间轮换，并防止可能影响 Workflow 运行的身份验证失败。有关轮换 mTLS 证书和 API 密钥的具体指南，请参阅：
+- https://docs.Temporal.io/cloud/certificates#manage-certificates 
+- https://docs.Temporal.io/cloud/api-keys#rotate-an-api-key 
+- https://github.com/Temporal-sa/Temporal-Worker-cert-rotation
+
+对于相互 TLS (mTLS) 实现，不建议使用 Let's Encrypt，因为它主要是为面向公众的服务而设计的，缺乏对内部证书要求的支持。
+
+虽然我们没有提出具体的产品推荐，但有多种有效的证书管理选项。许多组织选择 AWS Private CA、Sectigo、Microsoft Certification Authority 或 DigiCert 等供应商解决方案，因为它们具有强大的集成和生命周期功能。或者，自签名证书是一种有效且常用的方法，即使在生产环境中也是如此。如果您选择自签名，[OpenSSL](https://openssl-library.org/)、[CFSSL](https://github.com/cloudflare/cfssl) 或 [step CLI](https://github.com/smallstep/cli) 等工具可以帮助有效生成和管理证书。
+
+选择最适合您的基础设施、安全要求和运营需求的选项。
+
+如果您使用由同一 CA 签名的多个证书，并且其中一些证书用于生产环境，则您可以采用一些解决方法。
+
+一种约定是为证书提供一个与 Namespace 匹配的通用名称。如果您在开发和生产使用相同的 CA 时执行此操作，则可以利用证书过滤器来阻止对生产环境的访问。文档的[授权部分](https://docs.Temporal.io/cloud/certificates#control-authorization)对此进行了详细描述。
+
+## 最佳实践： 
+#### 1. 建立有关身份验证方法的明确指南：团队应针对以下操作对 [mTLS 证书](https://docs.Temporal.io/cloud/certificates) 或 [API 密钥](https://docs.Temporal.io/cloud/api-keys) 进行标准化：
+- 将 Temporal CLIents 连接到 Temporal Cloud（例如 Worker 进程）
+- 自动化（例如 Temporal Cloud [操作 API](https://docs.Temporal.io/ops)、[Terraform 提供程序](https://docs.Temporal.io/cloud/terraform-provider)、[Temporal CLI](https://docs.Temporal.io/cli/setup-cli))
+
+默认情况下，建议团队对这两项操作使用 API 密钥和[服务帐户](https://docs.Temporal.io/cloud/service-accounts)，因为对于大多数团队来说，API 密钥更易于管理和轮换。此外，您还可以控制服务帐户的帐户级别和 Namespace 级别角色。
+
+如果您的组织需要相互身份验证和更强的加密保证，那么建议您的团队使用 mTLS 证书来向 Temporal Cloud 验证 Temporal CLIents 并使用 API 密钥进行自动化（因为 Temporal Cloud [操作 API](https://docs.Temporal.io/ops) 和 [Terraform 提供程序](https://docs.Temporal.io/cloud/terraform-provider)仅支持 API 密钥进行身份验证）
+
+#### 2. 使用共享 CA 时使用证书过滤器来限制访问（例如，“dev”与“prod”）：
+
+证书过滤器是使用客户端身份验证期间提供的客户端证书进行验证的另一种方法。为证书指定一个与 Namespace 匹配的通用名称。这不是一个要求。
+
+如果您在开发和生产环境中使用相同的 CA 时执行此操作，则可以利用证书过滤器来阻止对生产的访问。

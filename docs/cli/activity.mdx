@@ -1,8 +1,8 @@
 ---
 id: activity
-title: Temporal CLI activity command reference
-sidebar_label: activity
-description: Learn how to use Temporal Activity commands for completing or failing Activity Executions in your Workflow. Optimize your Temporal Workflow management effectively.
+title: "Temporal CLI Activity 命令参考"
+sidebar_label: "Activity"
+description: "了解如何使用 Temporal Activity 命令在 Workflow 中完成或失败 Activity 执行。有效优化您的 Temporal Workflow 管理。"
 toc_max_heading_level: 4
 keywords:
   - activity
@@ -23,16 +23,16 @@ tags:
 ---
 
 {/* NOTE: This is an auto-generated file. Any edit to this file will be overwritten.
-This file is generated from https://github.com/temporalio/cli/blob/main/internal/commandsgen/commands.yml via internal/cmd/gen-docs */}
+该文件是通过内部/cmd/gen-docs 从 https://github.com/temporalio/cli/blob/main/internal/commandsgen/commands.yml 生成的 */}
 
-This page provides a reference for the `temporal` CLI `activity` command. The flags applicable to each subcommand are presented in a table within the heading for the subcommand. Refer to [Global Flags](#global-flags) for flags that you can use with every subcommand.
+本页提供 `Temporal` CLI `Activity` 命令的参考。适用于每个子命令的标志显示在子命令标题内的表格中。请参阅 [全球旗帜](#global-flags) 了解可与每个子命令一起使用的标志。
 
-To use the CLI with Standalone Activities, see the CLI commands in the [Go](/docs/develop/go/activities/standalone-activities.mdx) and [Python](/docs/develop/python/activities/standalone-activities.mdx) Standalone Activity guides.
+要将 CLI 与独立活动结合使用，请参阅 [去](/docs/develop/go/activities/standalone-activities.mdx) 和 [Python](/docs/develop/python/activities/standalone-activities.mdx) 独立 Activity 指南中的 CLI 命令。
 
-## complete
+## 完全的 {#complete}
 
-Complete an Activity, marking it as successfully finished. Specify the
-Activity ID and include a JSON result for the returned value:
+完成 Activity，将其标记为成功完成。指定
+Activity ID 并包含返回值的 JSON 结果：
 
 ```
 temporal activity complete \
@@ -41,19 +41,19 @@ temporal activity complete \
     --result '{"YourResultKey": "YourResultVal"}'
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--activity-id` | Yes | **string** Activity ID to complete. |
-| `--result` | Yes | **string** Result `JSON` to return. |
-| `--run-id`, `-r` | No | **string** Run ID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--Activity-id` | 是的 | **字符串** Activity ID 完成。 |
+| `--result` | 是的 | **字符串** 要返回的结果 `JSON`。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## fail
+## 失败 {#fail}
 
-Fail an Activity, marking it as having encountered an error. Specify the
-Activity and Workflow IDs:
+使 Activity 失败，将其标记为遇到错误。指定
+Activity 和 Workflow ID：
 
 ```
 temporal activity fail \
@@ -61,32 +61,32 @@ temporal activity fail \
     --workflow-id YourWorkflowId
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--activity-id` | Yes | **string** Activity ID to fail. |
-| `--detail` | No | **string** Reason for failing the Activity (JSON). |
-| `--reason` | No | **string** Reason for failing the Activity. |
-| `--run-id`, `-r` | No | **string** Run ID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--Activity-id` | 是的 | **字符串** Activity 失败的 ID。 |
+| `--detail` | 不 | **字符串** Activity (JSON) 失败的原因。 |
+| `--reason` | 不 | **字符串** Activity 失败的原因。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## pause
+## 暂停 {#pause}
 
-Pause an Activity.
+暂停 Activity。
 
-If the Activity is not currently running (e.g. because it previously
-failed), it will not be run again until it is unpaused.
+如果 Activity 当前未运行（例如，因为它之前
+失败），除非取消暂停，否则不会再次运行。
 
-However, if the Activity is currently running, it will run until the next
-time it fails, completes, or times out, at which point the pause will kick in.
+但是，如果 Activity 当前正在运行，它将运行到下一个
+失败、完成或超时的时间，此时将开始暂停。
 
-If the Activity is on its last retry attempt and fails, the failure will
-be returned to the caller, just as if the Activity had not been paused.
+如果 Activity 正在进行最后一次重试并失败，则失败将
+返回给调用者，就像 Activity 没有被暂停一样。
 
-Activities should be specified either by their Activity ID or Activity Type.
+活动应通过其 Activity ID 或 Activity 类型指定。
 
-For example, specify the Activity and Workflow IDs like this:
+例如，指定 Activity 和 Workflow ID，如下所示：
 
 ```
 temporal activity pause \
@@ -94,51 +94,52 @@ temporal activity pause \
     --workflow-id YourWorkflowId
 ```
 
-To later unpause the activity, see [unpause](#unpause). You may also want to
-[reset](#reset) the activity to unpause it while also starting it from the beginning.
+要稍后取消暂停 Activity，请参阅 [取消暂停](#unpause)。您可能还想
+[重置](#reset) Activity 取消暂停，同时从头开始。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--activity-id`, `-a` | No | **string** The Activity ID to pause. Either `activity-id` or `activity-type` must be provided, but not both. |
-| `--activity-type` | No | **string** All activities of the Activity Type will be paused. Either `activity-id` or `activity-type` must be provided, but not both. Note: Pausing Activity by Type is an experimental feature and may change in the future. |
-| `--identity` | No | **string** The identity of the user or client submitting this request. |
-| `--run-id`, `-r` | No | **string** Run ID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--Activity-id`、`-a` | 不 | **字符串** 要暂停的 Activity ID。必须提供 `Activity-id` 或 `Activity-type` 之一，但不能同时提供两者。 |
+| `--Activity-type` | 不 | **字符串** Activity 类型的所有活动都将暂停。必须提供 `Activity-id` 或 `Activity-type` 之一，但不能同时提供两者。注意：按类型暂停 Activity 是一项实验性功能，将来可能会发生变化。 |
+| `--identity` | 不 | **字符串** 提交此请求的用户或客户端的身份。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## reset
+## 重置 {#reset}
 
-Reset an activity. This restarts the activity as if it were first being
-scheduled. That is, it will reset both the number of attempts and the
-activity timeout, as well as, optionally, the
-[heartbeat details](#reset-heartbeats).
+重置 Activity。这将重新启动 Activity，就像它第一次被启动一样。
+Scheduled。也就是说，它将重置尝试次数和
+Activity 超时，以及可选的
+[心跳详情](#reset-heartbeats)。
 
-If the activity may be executing (i.e. it has not yet timed out), the
-reset will take effect the next time it fails, heartbeats, or times out.
-If is waiting for a retry (i.e. has failed or timed out), the reset
-will apply immediately.
+如果 Activity 可能正在执行（即尚未超时），则
+重置将在下次失败、心跳或超时时生效。
+如果正在等待重试（即失败或超时），则重置
+将立即申请。
 
-If the activity is already paused, it will be unpaused by default.
-You can specify `keep_paused` to prevent this.
+如果Activity已经暂停，则默认取消暂停。
+您可以指定 `keep_paused` 来防止这种情况。
 
-If the activity is paused and the `keep_paused` flag is not provided,
-it will be unpaused. If the activity is paused and `keep_paused` flag
-is provided - it will stay paused.
+如果 Activity 已暂停且未提供 `keep_paused` 标志，
+它将不再暂停。如果 Activity 已暂停并且 `keep_paused` 标志
+已提供 - 它将保持暂停状态。
 
-Activities can be specified by their Activity ID or Activity Type.
+活动可以通过其 Activity ID 或 Activity 类型来指定。
 
-### Resetting activities that heartbeat {#reset-heartbeats}
+<a id="complete"></a>
+### 重置心跳活动 {#reset-heartbeats}
 
-Activities that heartbeat will receive a [Canceled failure](/references/failures#cancelled-failure)
-the next time they heartbeat after a reset.
+心跳活动将收到 [取消失败](/references/failures#cancelled-failure)
+重置后下次心跳时。
 
-If, in your Activity, you need to do any cleanup when an Activity is
-reset, handle this error and then re-throw it when you've cleaned up.
+如果在您的 Activity 中，当 Activity 出现时您需要进行任何清理
+重置，处理此错误，然后在清理后重新抛出它。
 
-If the `reset_heartbeats` flag is set, the heartbeat details will also be cleared.
+如果设置了 `reset_heartbeats` 标志，则心跳详细信息也将被清除。
 
-Specify the Activity Type of ID and Workflow IDs:
+指定 Activity ID 类型和 Workflow ID：
 
 ```
 temporal activity reset \
@@ -148,55 +149,56 @@ temporal activity reset \
     --reset-heartbeats
 ```
 
-Either `activity-id`, `activity-type`, or `--match-all` must be specified.
+必须指定 `Activity-id`、`Activity-type` 或 `--match-all`。
 
-Activities can be reset in bulk with a visibility query list filter.
-For example, if you want to reset activities of type Foo:
+可以使用 Visibility Query 列表过滤器批量重置活动。
+例如，如果您想重置 Foo 类型的活动：
 
 ```
 temporal activity reset \
     --query 'TemporalResetInfo="property:activityType=Foo"'
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--activity-id`, `-a` | No | **string** The Activity ID to reset.  Mutually exclusive with `--query`, `--match-all`, and `--activity-type`. Requires `--workflow-id` to be specified. |
-| `--activity-type` | No | **string** Activities of this Type will be reset. Mutually exclusive with `--match-all` and `activity-id`. Note: Resetting Activity by Type is an experimental feature and may change in the future. |
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--jitter` | No | **duration** The activity will reset at random a time within the specified duration. Can only be used with --query. |
-| `--keep-paused` | No | **bool** If the activity was paused, it will stay paused. |
-| `--match-all` | No | **bool** Every activity should be reset. Every activity should be updated. Mutually exclusive with `--activity-id` and `--activity-type`. Note: This is an experimental feature and may change in the future. |
-| `--query`, `-q` | No | **string** Content for an SQL-like `QUERY` List Filter. You must set either --workflow-id or --query. Note: Using --query for batch activity operations is an experimental feature and may change in the future. |
-| `--reason` | No | **string** Reason for batch operation. Only use with --query. Defaults to user name. |
-| `--reset-attempts` | No | **bool** Reset the activity attempts. |
-| `--reset-heartbeats` | No | **bool** Reset the Activity's heartbeats. Only works with --reset-attempts. |
-| `--restore-original-options` | No | **bool** Restore the original options of the activity. |
-| `--rps` | No | **float** Limit batch's requests per second. Only allowed if query is present. |
-| `--run-id`, `-r` | No | **string** Run ID. Only use with --workflow-id. Cannot use with --query. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. You must set either --workflow-id or --query. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm signaling. Only allowed when --query is present. |
+| `--Activity-id`、`-a` | 不 | **字符串** 要重置的 Activity ID。  与 `--Query`、`--match-all` 和 `--Activity-type` 互斥。需要指定 `--Workflow-id`。 |
+| `--Activity-type` | 不 | **字符串** 此类型的活动将被重置。与 `--match-all` 和 `Activity-id` 互斥。注意：按类型重置 Activity 是一项实验性功能，将来可能会发生变化。 |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--jitter` | 不 | **持续时间** Activity 将在指定持续时间内随机重置。只能与 --Query 一起使用。 |
+| `--keep-paused` | 不 | **bool** 如果 Activity 已暂停，它将保持暂停状态。 |
+| `--match-all` | 不 | **bool** 每个 Activity 都应该重置。每个 Activity 都应该是 Updated。与 `--Activity-id` 和 `--Activity-type` 互斥。注意：这是一项实验性功能，将来可能会发生变化。 |
+| `--Query`、`-q` | 不 | **字符串** 类似 SQL `Query` 列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。注意：使用 --Query 进行批量 Activity 操作是一项实验性功能，将来可能会发生变化。 |
+| `--reason` | 不 | **字符串** 批量操作的原因。仅与--Query 一起使用。默认为用户名。 |
+| `--reset-attempts` | 不 | **布尔** 重置 Activity 尝试。 |
+| `--reset-heartbeats` | 不 | **bool** 重置 Activity 的心跳。仅适用于 --reset-attempts。 |
+| `--restore-original-options` | 不 | **bool** 恢复 Activity 的原始选项。 |
+| `--rps` | 不 | **float** 限制每秒的批次请求数。仅当存在 Query 时才允许。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。仅与 --Workflow-id 一起使用。不能与 --Query 一起使用。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。您必须设置 --Workflow-id 或 --Query。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认 Signaling。仅当存在 --Query 时才允许。 |
 
-## unpause
+<a id="fail"></a>
+## 取消暂停 {#unpause}
 
-Re-schedule a previously-paused Activity for execution.
+将 Schedule 重新执行为先前暂停的 Activity。
 
-If the Activity is not running and is past its retry timeout, it will be
-scheduled immediately. Otherwise, it will be scheduled after its retry
-timeout expires.
+如果 Activity 未运行并且已超过重试超时，则它将
+立即Scheduled。否则重试后将是Scheduled
+超时到期。
 
-Use `--reset-attempts` to reset the number of previous run attempts to
-zero. For example, if an Activity is near the maximum number of attempts
-N specified in its retry policy, `--reset-attempts` will allow the
-Activity to be retried another N times after unpausing.
+使用 `--reset-attempts` 重置先前运行尝试的次数
+零。例如，如果 Activity 接近最大尝试次数
+N 在其 Retry Policy 中指定，`--reset-attempts` 将允许
+Activity 取消暂停后再重试 N 次。
 
-Use `--reset-heartbeat` to reset the Activity's heartbeats.
+使用 `--reset-heartbeat` 重置 Activity 的心跳。
 
-Activities can be specified by their Activity ID or Activity Type.
-One of those parameters must be provided.
+活动可以通过其 Activity ID 或 Activity 类型来指定。
+必须提供这些参数之一。
 
-Specify the Activity ID or Type and Workflow IDs:
+指定 Activity ID 或类型以及 Workflow ID：
 
 ```
 temporal activity unpause \
@@ -206,39 +208,40 @@ temporal activity unpause \
     --reset-heartbeats
 ```
 
-Activities can be unpaused in bulk via a visibility Query list filter.
-For example, if you want to unpause activities of type Foo that you
-previously paused, do:
+可以通过 Visibility Query 列表过滤器批量取消暂停活动。
+例如，如果您想要取消暂停 Foo 类型的活动，您可以
+之前暂停，执行：
 
 ```
 temporal activity unpause \
     --query 'TemporalPauseInfo="property:activityType=Foo"'
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--activity-id`, `-a` | No | **string** The Activity ID to unpause.  Mutually exclusive with `--query`, `--match-all`, and `--activity-type`. Requires `--workflow-id` to be specified. |
-| `--activity-type` | No | **string** Activities of this Type will unpause. Can only be used without --match-all. Either `activity-id` or `activity-type` must be provided, but not both. Note: Unpausing Activity by Type is an experimental feature and may change in the future. |
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--jitter` | No | **duration** The activity will start at random a time within the specified duration. Can only be used with --query. |
-| `--match-all` | No | **bool** Every paused activity should be unpaused. This flag is ignored if activity-type is provided. Note: This is an experimental feature and may change in the future. |
-| `--query`, `-q` | No | **string** Content for an SQL-like `QUERY` List Filter. You must set either --workflow-id or --query. Note: Using --query for batch activity operations is an experimental feature and may change in the future. |
-| `--reason` | No | **string** Reason for batch operation. Only use with --query. Defaults to user name. |
-| `--reset-attempts` | No | **bool** Reset the activity attempts. |
-| `--reset-heartbeats` | No | **bool** Reset the Activity's heartbeats. Only works with --reset-attempts. |
-| `--rps` | No | **float** Limit batch's requests per second. Only allowed if query is present. |
-| `--run-id`, `-r` | No | **string** Run ID. Only use with --workflow-id. Cannot use with --query. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. You must set either --workflow-id or --query. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm signaling. Only allowed when --query is present. |
+| `--Activity-id`、`-a` | 不 | **字符串** 要取消暂停的 Activity ID。  与 `--Query`、`--match-all` 和 `--Activity-type` 互斥。需要指定 `--Workflow-id`。 |
+| `--Activity-type` | 不 | **字符串** 此类型的活动将取消暂停。只能在没有 --match-all 的情况下使用。必须提供 `Activity-id` 或 `Activity-type` 之一，但不能同时提供两者。注意：按类型取消暂停 Activity 是一项实验性功能，将来可能会发生变化。 |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--jitter` | 不 | **持续时间** Activity 将在指定持续时间内随机启动。只能与 --Query 一起使用。 |
+| `--match-all` | 不 | **bool** 每个暂停的 Activity 都应该取消暂停。如果提供了 Activity-type，则忽略此标志。注意：这是一项实验性功能，将来可能会发生变化。 |
+| `--Query`、`-q` | 不 | **字符串** 类似 SQL `Query` 列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。注意：使用 --Query 进行批量 Activity 操作是一项实验性功能，将来可能会发生变化。 |
+| `--reason` | 不 | **字符串** 批量操作的原因。仅与--Query 一起使用。默认为用户名。 |
+| `--reset-attempts` | 不 | **布尔** 重置 Activity 尝试。 |
+| `--reset-heartbeats` | 不 | **bool** 重置 Activity 的心跳。仅适用于 --reset-attempts。 |
+| `--rps` | 不 | **float** 限制每秒的批次请求数。仅当存在 Query 时才允许。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。仅与 --Workflow-id 一起使用。不能与 --Query 一起使用。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。您必须设置 --Workflow-id 或 --Query。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认 Signaling。仅当存在 --Query 时才允许。 |
 
-## update-options
+<a id="pause"></a>
+## Update-选项 {#update-options}
 
-Update the options of a running Activity that were passed into it from
-a Workflow. Updates are incremental, only changing the specified options.
+Update 正在运行的 Activity 的选项，这些选项是从
+Workflow。 Update 是增量的，仅更改指定的选项。
 
-For example:
+例如：
 
 ```
 temporal activity update-options \
@@ -255,12 +258,12 @@ temporal activity update-options \
     --retry-maximum-attempts NewMaximumAttempts
 ```
 
-You may follow this command with `temporal activity reset`, and the new values will apply after the reset.
+您可以使用 `Temporal Activity reset` 执行此命令，重置后将应用新值。
 
-Either `activity-id`, `activity-type`, or `--match-all` must be specified.
+必须指定 `Activity-id`、`Activity-type` 或 `--match-all`。
 
-Activity options can be updated in bulk with a visibility query list filter.
-For example, if you want to reset for activities of type Foo, do:
+Activity 选项可以通过 Visibility Query 列表过滤器批量为 Updated。
+例如，如果您想重置 Foo 类型的活动，请执行以下操作：
 
 ```
 temporal activity update-options \
@@ -268,67 +271,68 @@ temporal activity update-options \
     ...
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--activity-id`, `-a` | No | **string** The Activity ID to update options. Mutually exclusive with `--query`, `--match-all`, and `--activity-type`. Requires `--workflow-id` to be specified. |
-| `--activity-type` | No | **string** Activities of this Type will be updated. Mutually exclusive with `--match-all` and `activity-id`. Note: Updating Activity options by Type is an experimental feature and may change in the future. |
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--heartbeat-timeout` | No | **duration** Maximum permitted time between successful worker heartbeats. |
-| `--match-all` | No | **bool** Every activity should be updated. Mutually exclusive with `--activity-id` and `--activity-type`. Note: This is an experimental feature and may change in the future. |
-| `--query`, `-q` | No | **string** Content for an SQL-like `QUERY` List Filter. You must set either --workflow-id or --query. Note: Using --query for batch activity operations is an experimental feature and may change in the future. |
-| `--reason` | No | **string** Reason for batch operation. Only use with --query. Defaults to user name. |
-| `--restore-original-options` | No | **bool** Restore the original options of the activity. |
-| `--retry-backoff-coefficient` | No | **float** Coefficient used to calculate the next retry interval. The next retry interval is previous interval multiplied by the backoff coefficient. Must be 1 or larger. |
-| `--retry-initial-interval` | No | **duration** Interval of the first retry. If retryBackoffCoefficient is 1.0 then it is used for all retries. |
-| `--retry-maximum-attempts` | No | **int** Maximum number of attempts. When exceeded the retries stop even if not expired yet. Setting this value to 1 disables retries. Setting this value to 0 means unlimited attempts(up to the timeouts). |
-| `--retry-maximum-interval` | No | **duration** Maximum interval between retries. Exponential backoff leads to interval increase. This value is the cap of the increase. |
-| `--rps` | No | **float** Limit batch's requests per second. Only allowed if query is present. |
-| `--run-id`, `-r` | No | **string** Run ID. Only use with --workflow-id. Cannot use with --query. |
-| `--schedule-to-close-timeout` | No | **duration** Indicates how long the caller is willing to wait for an activity completion. Limits how long retries will be attempted. |
-| `--schedule-to-start-timeout` | No | **duration** Limits time an activity task can stay in a task queue before a worker picks it up. This timeout is always non retryable, as all a retry would achieve is to put it back into the same queue. Defaults to the schedule-to-close timeout or workflow execution timeout if not specified. |
-| `--start-to-close-timeout` | No | **duration** Maximum time an activity is allowed to execute after being picked up by a worker. This timeout is always retryable. |
-| `--task-queue` | No | **string** Name of the task queue for the Activity. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. You must set either --workflow-id or --query. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm signaling. Only allowed when --query is present. |
+| `--Activity-id`、`-a` | 不 | **字符串** Activity ID 到 Update 选项。与 `--Query`、`--match-all` 和 `--Activity-type` 互斥。需要指定 `--Workflow-id`。 |
+| `--Activity-type` | 不 | **字符串** 此类型的活动将为 Updated。与 `--match-all` 和 `Activity-id` 互斥。注意：按类型更新 Activity 选项是一项实验性功能，将来可能会发生变化。 |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--heartbeat-timeout` | 不 | **持续时间** 成功的 Worker 心跳之间允许的最大时间。 |
+| `--match-all` | 不 | **bool** 每个 Activity 都应该是 Updated。与 `--Activity-id` 和 `--Activity-type` 互斥。注意：这是一项实验性功能，将来可能会发生变化。 |
+| `--Query`、`-q` | 不 | **字符串** 类似 SQL `Query` 列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。注意：使用 --Query 进行批量 Activity 操作是一项实验性功能，将来可能会发生变化。 |
+| `--reason` | 不 | **字符串** 批量操作的原因。仅与--Query 一起使用。默认为用户名。 |
+| `--restore-original-options` | 不 | **bool** 恢复 Activity 的原始选项。 |
+| `--retry-backoff-coefficient` | 不 | **float** 用于计算下一次重试间隔的系数。下一个重试间隔是上一个间隔乘以退避系数。必须为 1 或更大。 |
+| `--retry-initial-interval` | 不 | **持续时间** 第一次重试的时间间隔。如果 retryBackoffCoefficient 为 1.0，则它将用于所有重试。 |
+| `--retry-maximum-attempts` | 不 | **int** 最大尝试次数。当超过时，即使尚未过期，重试也会停止。将此值设置为 1 将禁用重试。将此值设置为 0 表示无限制尝试（直到超时）。 |
+| `--retry-maximum-interval` | 不 | **持续时间** 重试之间的最大间隔。指数退避导致间隔增加。该值是增量的上限。 |
+| `--rps` | 不 | **float** 限制每秒的批次请求数。仅当存在 Query 时才允许。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。仅与 --Workflow-id 一起使用。不能与 --Query 一起使用。 |
+| `--Schedule-to-close-timeout` | 不 | **持续时间** 指示调用者愿意等待 Activity 完成的时间。限制重试的时间长度。 |
+| `--Schedule-to-start-timeout` | 不 | **持续时间** 限制 Activity 任务在 Worker 拿起它之前可以在 Task Queue 中停留的时间。此超时始终不可重试，因为重试所能实现的只是将其放回到同一队列中。如果未指定，则默认为 Schedule 关闭超时或 Workflow Execution 超时。 |
+| `--start-to-close-timeout` | 不 | **持续时间** Activity 在被 Worker 选取后允许执行的最长时间。此超时始终可重试。 |
+| `--task-queue` | 不 | **字符串** Activity 的 Task Queue 名称。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。您必须设置 --Workflow-id 或 --Query。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认 Signaling。仅当存在 --Query 时才允许。 |
 
-## Global Flags
+<a id="reset"></a>
+## 全局标志 {#global-flags}
 
-The following options can be used with any command.
+以下选项可与任何命令一起使用。
 
-| Flag | Required | Description | Default |
+| 旗帜 | 必需的 | 描述 | 默认 |
 |------|----------|-------------|--------|
-| `--address` | No | **string** Temporal Service gRPC endpoint. | `localhost:7233` |
-| `--api-key` | No | **string** API key for request. |  |
-| `--client-authority` | No | **string** Temporal gRPC client :authority pseudoheader. |  |
-| `--client-connect-timeout` | No | **duration** The client connection timeout. 0s means no timeout. |  |
-| `--codec-auth` | No | **string** Authorization header for Codec Server requests. |  |
-| `--codec-endpoint` | No | **string** Remote Codec Server endpoint. |  |
-| `--codec-header` | No | **string[]** HTTP headers for requests to codec server. Format as a `KEY=VALUE` pair. May be passed multiple times to set multiple headers. |  |
-| `--color` | No | **string-enum** Output coloring. Accepted values: always, never, auto. | `auto` |
-| `--command-timeout` | No | **duration** The command execution timeout. 0s means no timeout. |  |
-| `--config-file` | No | **string** File path to read TOML config from, defaults to `$CONFIG_PATH/temporalio/temporal.toml` where `$CONFIG_PATH` is defined as `$HOME/.config` on Unix, `$HOME/Library/Application Support` on macOS, and `%AppData%` on Windows. _(Experimental)_ |  |
-| `--disable-config-env` | No | **bool** If set, disables loading environment config from environment variables. _(Experimental)_ |  |
-| `--disable-config-file` | No | **bool** If set, disables loading environment config from config file. _(Experimental)_ |  |
-| `--env` | No | **string** Active environment name (`ENV`). | `default` |
-| `--env-file` | No | **string** Path to environment settings file. Defaults to `$HOME/.config/temporalio/temporal.yaml`. |  |
-| `--grpc-meta` | No | **string[]** HTTP headers for requests. Format as a `KEY=VALUE` pair. May be passed multiple times to set multiple headers. Can also be made available via environment variable as `TEMPORAL_GRPC_META_[name]`. |  |
-| `--identity` | No | **string** The identity of the user or client submitting this request. Defaults to "temporal-cli:$USER@$HOST". |  |
-| `--log-format` | No | **string-enum** Log format. Accepted values: text, json. | `text` |
-| `--log-level` | No | **string-enum** Log level. Default is "info" for most commands and "warn" for "server start-dev". Accepted values: debug, info, warn, error, never. | `info` |
-| `--namespace`, `-n` | No | **string** Temporal Service Namespace. | `default` |
-| `--no-json-shorthand-payloads` | No | **bool** Raw payload output, even if the JSON option was used. |  |
-| `--output`, `-o` | No | **string-enum** Non-logging data output format. Accepted values: text, json, jsonl, none. | `text` |
-| `--profile` | No | **string** Profile to use for config file. _(Experimental)_ |  |
-| `--time-format` | No | **string-enum** Time format. Accepted values: relative, iso, raw. | `relative` |
-| `--tls` | No | **bool** Enable base TLS encryption. Does not have additional options like mTLS or client certs. This is defaulted to true if api-key or any other TLS options are present. Use --tls=false to explicitly disable. |  |
-| `--tls-ca-data` | No | **string** Data for server CA certificate. Can't be used with --tls-ca-path. |  |
-| `--tls-ca-path` | No | **string** Path to server CA certificate. Can't be used with --tls-ca-data. |  |
-| `--tls-cert-data` | No | **string** Data for x509 certificate. Can't be used with --tls-cert-path. |  |
-| `--tls-cert-path` | No | **string** Path to x509 certificate. Can't be used with --tls-cert-data. |  |
-| `--tls-disable-host-verification` | No | **bool** Disable TLS host-name verification. |  |
-| `--tls-key-data` | No | **string** Private certificate key data. Can't be used with --tls-key-path. |  |
-| `--tls-key-path` | No | **string** Path to x509 private key. Can't be used with --tls-key-data. |  |
-| `--tls-server-name` | No | **string** Override target TLS server name. |  |
+| `--address` | 不 | **字符串** Temporal 服务 gRPC 端点。 | `localhost:7233` |
+| `--api-key` | 不 | **字符串** 请求的 API 密钥。 |  |
+| `--client-authority` | 不 | **字符串** Temporal gRPC 客户端：权限伪标头。 |  |
+| `--client-connect-timeout` | 不 | **持续时间** 客户端连接超时。 0s表示没有超时。 |  |
+| `--codec-auth` | 不 | **字符串** Codec Server 请求的授权标头。 |  |
+| `--codec-endpoint` | 不 | **字符串** 远程 Codec Server 端点。 |  |
+| `--codec-header` | 不 | **string[]** 向 Codec Server 发出请求的 HTTP 标头。格式为 `KEY=VALUE` 对。可以多次传递以设置多个标头。 |  |
+| `--color` | 不 | **字符串枚举** 输出着色。接受的值：始终、从不、自动。 | `auto` |
+| `--command-timeout` | 不 | **持续时间** 命令执行超时。 0s表示没有超时。 |  |
+| `--config-file` | 不 | **字符串** 从中读取 TOML 配置的文件路径，默认为 `$CONFIG_PATH/temporalio/temporal.toml`，其中 `$CONFIG_PATH` 在 Unix 上定义为 `$HOME/.config`，在 macOS 上定义为 `$HOME/Library/Application Support`，在 Windows 上定义为 `%AppData%`。 _（实验性）_ |  |
+| `--disable-config-env` | 不 | **bool** 如果设置，则禁用从环境变量加载环境配置。 _（实验性）_ |  |
+| `--disable-config-file` | 不 | **bool** 如果设置，则禁用从配置文件加载环境配置。 _（实验性）_ |  |
+| `--env` | 不 | **字符串** 活动环境名称 (`ENV`)。 | `default` |
+| `--env-file` | 不 | **字符串** 环境设置文件的路径。默认为 `$HOME/.config/temporalio/temporal.yaml`。 |  |
+| `--gRPC-meta` | 不 | **string[]** 请求的 HTTP 标头。格式为 `KEY=VALUE` 对。可以多次传递以设置多个标头。也可以通过环境变量 `Temporal_gRPC_META_[name]` 提供。 |  |
+| `--identity` | 不 | **字符串** 提交此请求的用户或客户端的身份。默认为“Temporal-cli:$USER@$HOST”。 |  |
+| `--log-format` | 不 | **字符串枚举** 日志格式。接受的值：文本、json。 | `text` |
+| `--log-level` | 不 | **字符串枚举** 日志级别。大多数命令的默认值为“info”，“server start-dev”的默认值为“warn”。接受的值：调试、信息、警告、错误、从不。 | `info` |
+| `--Namespace`、`-n` | 不 | **字符串** Temporal 服务 Namespace。 | `default` |
+| `--no-json-shorthand-payloads` | 不 | **bool** 原始负载输出，即使使用了 JSON 选项。 |  |
+| `--output`、`-o` | 不 | **字符串枚举** 非日志数据输出格式。接受的值：text、json、jsonl、none。 | `text` |
+| `--profile` | 不 | **字符串** 用于配置文件的配置文件。 _（实验性）_ |  |
+| `--time-format` | 不 | **字符串枚举** 时间格式。接受的值：relative、iso、raw。 | `relative` |
+| `--tls` | 不 | **布尔** 启用基本 TLS 加密。没有 mTLS 或客户端证书等附加选项。如果存在 api-key 或任何其他 TLS 选项，则默认为 true。使用 --tls=false 显式禁用。 |  |
+| `--tls-ca-data` | 不 | **字符串** 服务器 CA 证书的数据。不能与 --tls-ca-path 一起使用。 |  |
+| `--tls-ca-path` | 不 | **字符串** 服务器 CA 证书的路径。不能与 --tls-ca-data 一起使用。 |  |
+| `--tls-cert-data` | 不 | **字符串** x509 证书的数据。不能与 --tls-cert-path 一起使用。 |  |
+| `--tls-cert-path` | 不 | **字符串** x509 证书的路径。不能与 --tls-cert-data 一起使用。 |  |
+| `--tls-disable-host-verification` | 不 | **bool** 禁用 TLS 主机名验证。 |  |
+| `--tls-key-data` | 不 | **字符串** 私有证书密钥数据。不能与 --tls-key-path 一起使用。 |  |
+| `--tls-key-path` | 不 | **字符串** x509 私钥的路径。不能与 --tls-key-data 一起使用。 |  |
+| `--tls-server-name` | 不 | **字符串** 覆盖目标 TLS 服务器名称。 |  |
 

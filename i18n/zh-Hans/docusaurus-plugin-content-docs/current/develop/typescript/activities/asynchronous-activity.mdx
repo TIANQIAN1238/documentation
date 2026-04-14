@@ -1,0 +1,67 @@
+---
+id: asynchronous-activity
+title: 异步 Activity - TypeScript SDK
+sidebar_label: 异步Activity
+slug: /develop/typescript/activities/asynchronous-activity
+toc_max_heading_level: 2
+keywords:
+  - asynchronous-activity-completion
+tags:
+  - Activities
+  - TypeScript SDK
+  - Temporal SDKs
+description: 使用 AsyncCompletionClient，使 Activity 函数在 Activity 执行完成之前返回，从而异步完成 Temporal 中的 Activity。
+---
+
+## 如何异步完成 Activity {#asynchronous-Activity-completion}
+
+[异步 Activity 完成](/Activity-execution#asynchronous-Activity-completion) 使 Activity 函数能够在 Activity 执行完成的情况下返回。
+
+需要遵循三个步骤：
+
+1. Activity 向外部系统提供完成 Activity 执行所需的识别信息。
+   标识信息可以是[任务令牌](/Activity-execution#task-token)，也可以是 Namespace、Workflow Id 和 Activity Id 的组合。
+2. Activity 函数以将其标识为等待外部系统完成的方式完成。
+3. Temporal CLIent用于Heartbeat并完成Activity。
+
+要异步完成 Activity，请调用 [`AsyncCompletionClient.complete`](https://typescript.Temporal.io/api/classes/client.AsyncCompletionClient#complete)。
+
+<!--SNIPSTART typescript-Activity-complete-async -->
+[activities-examples/src/activities/async-completion.ts](https://github.com/Temporalio/samples-typescript/blob/main/activities-examples/src/activities/async-completion.ts)
+```ts
+import { CompleteAsyncError, activityInfo } from '@temporalio/activity';
+import { Client } from '@temporalio/client';
+
+export async function doSomethingAsync(): Promise<string> {
+  const taskToken = activityInfo().taskToken;
+  setTimeout(() => doSomeWork(taskToken), 1000);
+  throw new CompleteAsyncError();
+}
+
+// this work could be done in a different process or on a different machine
+async function doSomeWork(taskToken: Uint8Array): Promise<void> {
+  const client = new Client();
+  // does some work...
+  await client.activity.complete(taskToken, "Job's done!");
+}
+```
+<!--SNIPEND-->
+
+## 本地活动 {#local-activities}
+
+要在 TypeScript 中调用 [本地活动](/local-Activity)，请使用 [`proxyLocalActivities`](https://typescript.Temporal.io/api/Namespaces/Workflow/#proxylocalactivities)。
+
+```ts
+import * as workflow from '@temporalio/workflow';
+
+const { getEnvVar } = workflow.proxyLocalActivities({
+  startToCloseTimeout: '2 seconds',
+});
+
+export async function yourWorkflow(): Promise<void> {
+  const someSetting = await getEnvVar('SOME_SETTING');
+  // ...
+}
+```
+
+本地活动必须像非本地活动一样在 Worker 上注册。

@@ -1,6 +1,6 @@
 ---
 id: worker-health
-title: Monitor worker health
+title: "监控 Worker 健康状况"
 sidebar_label: Monitor worker health
 description: Detect and configure for Task backlogs, greedy Worker resources, misconfigured Workers, and Sticky cache settings. Optimize alert systems and get actionable insights on metrics like Schedule-To-Start latency, Sync Match Rate, and Poll Success Rate for improved application health.
 toc_max_heading_level: 4
@@ -446,7 +446,7 @@ Set it to `0` to disable heartbeating.
 
 _Available since .NET SDK v1.10.0_
 
-Set the `WorkerHeartbeatInterval` property on [`TemporalRuntimeOptions`](https://dotnet.temporal.io/api/Temporalio.Runtime.TemporalRuntimeOptions.html) to adjust the heartbeat interval.
+Set the `WorkerHeartbeatInterval` property on [`TemporalRuntimeOptions`](https://dotnet.temporal.io/api/temporalio.Runtime.TemporalRuntimeOptions.html) to adjust the heartbeat interval.
 Set it to `null` to disable heartbeating.
 
 </SdkTabs.DotNet>
@@ -454,7 +454,7 @@ Set it to `null` to disable heartbeating.
 
 _Available since Ruby SDK v1.1.0_
 
-Add configurations to `Runtime()` to adjust heartbeat settings. See the [Ruby SDK documentation](https://ruby.temporal.io/Temporalio/Runtime.html) for more details.
+Add configurations to `Runtime()` to adjust heartbeat settings. See the [Ruby SDK documentation](https://ruby.temporal.io/temporalio/Runtime.html) for more details.
 
 </SdkTabs.Ruby>
 </SdkTabs>

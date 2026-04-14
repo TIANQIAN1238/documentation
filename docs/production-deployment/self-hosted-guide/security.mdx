@@ -1,8 +1,8 @@
 ---
 id: security
-title: Temporal Platform security features
-sidebar_label: Security
-description: Discover comprehensive security features of the Temporal Platform, including secure network communication with TLS and mTLS, robust authentication, customizable authorization, and single sign-on integration to protect your data and operations.
+title: Temporal Platform 安全功能
+sidebar_label: 安全
+description: 了解 Temporal Platform 的全面安全功能，包括使用 TLS 和 mTLS 的安全网络通信、强大的认证、可自定义的授权和单点登录集成，以保护您的数据和操作。
 slug: /self-hosted-guide/security
 toc_max_heading_level: 4
 keywords:
@@ -20,107 +20,107 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-:::info General company security
+:::info 公司整体安全
 
-For information about the general security habits of Temporal Technologies, see our [trust page](https://trust.temporal.io).
+有关 Temporal Technologies 一般安全实践的信息，请参阅我们的[信任页面](https://trust.temporal.io)。
 
 :::
 
-:::info Cloud security
+:::info Cloud 安全
 
-For information about Temporal Cloud security features, see our [Cloud security page](/cloud/security)
+有关 Temporal Cloud 安全功能的信息，请参阅我们的 [Cloud 安全页面](/cloud/security)
 :::
 
-The Temporal Platform is designed with security in mind, and there are many features that you can use to keep both the Platform itself and your user's data secure.
+Temporal Platform 在设计时考虑了安全性，您可以使用许多功能来保护平台本身和用户数据的安全。
 
-A secured Temporal Server has its network communication encrypted and has authentication and authorization protocols set up for API calls made to it.
-Without these, your server could be accessed by unwanted entities.
+安全的 Temporal Server 对其网络通信进行了加密，并为其接收的 API 调用设置了认证和授权协议。
+没有这些措施，您的服务器可能会被未经授权的实体访问。
 
-What is documented on this page are the built-in opt-in security measures that come with Temporal.
-However users may also choose to design their own security architecture with reverse proxies or run unsecured instances inside of a VPC environment.
+本页记录的是 Temporal 内置的可选安全措施。
+但用户也可以选择使用反向代理设计自己的安全架构，或在 VPC 环境中运行不安全的实例。
 
-### Server Samples
+### 服务器示例
 
-The https://github.com/temporalio/samples-server repo offers two examples, which are further explained below:
+https://github.com/temporalio/samples-server 仓库提供了两个示例，下面将进一步说明：
 
-- **TLS:** how to configure Transport Layer Security (TLS) to secure network communication with and within a Temporal Service.
-- **Authorizer:** how to inject a low-level authorizer component that can control access to all API calls.
+- **TLS：** 如何配置传输层安全（TLS）以加密与 Temporal Service 之间以及 Temporal Service 内部的网络通信。
+- **Authorizer：** 如何注入一个低级授权器组件，该组件可以控制对所有 API 调用的访问。
 
-### Encryption in transit with mTLS
+### 使用 mTLS 加密传输中的数据
 
-Temporal supports Mutual Transport Layer Security (mTLS) as a way of encrypting network traffic between the services of a Temporal Service and also between application processes and a Temporal Service.
-Self-signed or properly minted certificates can be used for mTLS.
-mTLS is set in Temporal's [TLS configuration](/references/configuration#tls).
-The configuration includes two sections such that intra-Temporal Service and external traffic can be encrypted with different sets of certificates and settings:
+Temporal 支持双向传输层安全（mTLS）作为加密 Temporal Service 各服务之间以及应用程序进程与 Temporal Service 之间网络流量的方式。
+自签名或正式颁发的证书都可以用于 mTLS。
+mTLS 在 Temporal 的 [TLS 配置](/references/configuration#tls)中设置。
+该配置包含两个部分，使得 Temporal Service 内部流量和外部流量可以使用不同的证书集和设置进行加密：
 
-- `internode`: Configuration for encrypting communication between nodes in the Temporal Service.
-- `frontend`: Configuration for encrypting the Frontend's public endpoints.
+- `internode`：用于加密 Temporal Service 节点之间通信的配置。
+- `frontend`：用于加密 Frontend 公共端点的配置。
 
-A customized configuration can be passed using either the [WithConfig](/references/server-options#withconfig) or [WithConfigLoader](/references/server-options#withconfigloader) Server options.
+可以使用 [WithConfig](/references/server-options#withconfig) 或 [WithConfigLoader](/references/server-options#withconfigloader) Server 选项传入自定义配置。
 
-See [TLS configuration reference](/references/configuration#tls) for more details.
+有关更多详情，请参阅 [TLS 配置参考](/references/configuration#tls)。
 
-### Authentication
+### 认证
 
-There are a few authentication protocols available to prevent unwanted access such as authentication of servers, clients, and users.
+有几种认证协议可用于防止未授权访问，例如服务器、客户端和用户的认证。
 
-### Servers
+### 服务器
 
-To prevent spoofing and [MITM attacks](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) you can specify the `serverName` in the `client` section of your respective mTLS configuration.
-This enables established connections to authenticate the endpoint, ensuring that the server certificate presented to any connecting Client has the appropriate server name in its CN property.
-It can be used for both `internode` and `frontend` endpoints.
+为了防止欺骗和[中间人攻击](https://en.wikipedia.org/wiki/Man-in-the-middle_attack)，您可以在各自 mTLS 配置的 `client` 部分指定 `serverName`。
+这使已建立的连接能够对端点进行认证，确保呈现给任何连接客户端的服务器证书在其 CN 属性中具有适当的服务器名称。
+它可以用于 `internode` 和 `frontend` 端点。
 
-More guidance on mTLS setup can be found in [the `samples-server` repo](https://github.com/temporalio/samples-server/tree/main/tls) and you can reach out to us for further guidance.
+有关 mTLS 设置的更多指导，请参阅 [`samples-server` 仓库](https://github.com/temporalio/samples-server/tree/main/tls)，您也可以联系我们获取进一步指导。
 
-### Client connections
+### 客户端连接
 
-To restrict a client's network access to Temporal Service endpoints you can limit it to clients with certificates issued by a specific Certificate Authority (CA).
-Use the `clientCAFiles`/ `clientCAData` and `requireClientAuth` properties in both the `internode` and `frontend` sections of the [mTLS configuration](/references/configuration#tls).
+为了限制客户端对 Temporal Service 端点的网络访问，您可以将其限制为仅允许具有特定证书颁发机构（CA）颁发证书的客户端。
+在 [mTLS 配置](/references/configuration#tls)的 `internode` 和 `frontend` 部分中使用 `clientCAFiles`/`clientCAData` 和 `requireClientAuth` 属性。
 
-### Users
+### 用户
 
-To restrict access to specific users, authentication and authorization is performed through extensibility points and plugins as described in the [Authorization](#authorization) section below.
+为了限制特定用户的访问，认证和授权通过可扩展点和插件执行，如下面的[授权](#authorization)部分所述。
 
-#### Authorization
+#### 授权
 
 :::note
-Information regarding [`Authorizer`](#authorizer-plugin) and [`ClaimMapper`](#claim-mapper) has been moved to another location.
+关于 [`Authorizer`](#authorizer-plugin) 和 [`ClaimMapper`](#claim-mapper) 的信息已移至另一位置。
 :::
 
-Temporal offers two plugin interfaces for implementing API call authorization:
+Temporal 提供两个插件接口用于实现 API 调用授权：
 
 - [`ClaimMapper`](#claim-mapper)
 - [`Authorizer`](#authorizer-plugin)
 
-The authorization and claim mapping logic is customizable, making it available to a variety of use cases and identity schemes.
-When these are provided the frontend invokes the implementation of these interfaces before executing the requested operation.
+授权和声明映射逻辑是可自定义的，使其适用于各种用例和身份方案。
+提供这些接口时，Frontend 会在执行请求的操作之前调用这些接口的实现。
 
-See https://github.com/temporalio/samples-server/blob/main/extensibility/authorizer for a sample implementation.
+请参阅 https://github.com/temporalio/samples-server/blob/main/extensibility/authorizer 获取示例实现。
 
 <CaptionedImage
     src="/diagrams/frontend-authorization-order-of-operations.png"
-    title="Front-end authorization order of operations"
+    title="前端授权操作顺序"
 />
 
-### Single sign-on integration
+### 单点登录集成
 
-Temporal can be integrated with a single sign-on (SSO) experience by using the `ClaimMapper` and `Authorizer` plugins.
-The default JWT `ClaimMapper` implementation can be used as is or as a base for a custom implementation of a similar plugin.
+Temporal 可以通过使用 `ClaimMapper` 和 `Authorizer` 插件与单点登录（SSO）体验集成。
+默认的 JWT `ClaimMapper` 实现可以直接使用，也可以作为类似插件的自定义实现的基础。
 
 ### Temporal UI
 
-To enable SSO authentication in the Temporal UI using environment credentials, you need to configure the UI container with specific environment variables that define your identity provider and OAuth settings.
-In your docker-compose.yaml, set `TEMPORAL_AUTH_ENABLED=true` to activate authentication.
-Next, specify the required OAuth credentials and endpoints using environment variables such as:
+要在 Temporal UI 中使用环境凭证启用 SSO 认证，您需要使用定义身份提供者和 OAuth 设置的特定环境变量来配置 UI 容器。
+在您的 docker-compose.yaml 中，设置 `TEMPORAL_AUTH_ENABLED=true` 以激活认证。
+接下来，使用以下环境变量指定所需的 OAuth 凭证和端点：
 
 - `TEMPORAL_AUTH_CLIENT_ID`
 - `TEMPORAL_AUTH_CLIENT_SECRET`
 - `TEMPORAL_AUTH_PROVIDER_URL`
 - `TEMPORAL_AUTH_CALLBACK_URL`
 
-These values correspond to the client credentials and endpoints provided by your OAuth identity provider (such as Google, Auth0, Okta).
-When properly configured, Temporal UI will redirect users to your SSO login page and enforce authentication on access.
-This approach does not require any additional configuration files, making it ideal for containerized environments using secure environment variable injection.
+这些值对应于您的 OAuth 身份提供者（如 Google、Auth0、Okta）提供的客户端凭证和端点。
+正确配置后，Temporal UI 将将用户重定向到您的 SSO 登录页面并强制执行访问认证。
+这种方法不需要任何额外的配置文件，非常适合使用安全环境变量注入的容器化环境。
 
 ```yaml
 temporal-ui:
@@ -143,66 +143,66 @@ temporal-ui:
     - 8080:8080
 ```
 
-For more general guidance for configuration, refer to the [Temporal UI README](https://github.com/temporalio/ui?tab=readme-ov-file#configuration).
-For more details on configuration with Docker, refer to [Temporal UI Config](https://github.com/temporalio/ui/blob/c95265ee6431fd0f6cf78ae06373885d66a8ee0c/server/docker/config-template.yaml).
+有关配置的更多一般指导，请参阅 [Temporal UI README](https://github.com/temporalio/ui?tab=readme-ov-file#configuration)。
+有关 Docker 配置的更多详情，请参阅 [Temporal UI 配置](https://github.com/temporalio/ui/blob/c95265ee6431fd0f6cf78ae06373885d66a8ee0c/server/docker/config-template.yaml)。
 
-## Temporal Service plugins {#plugins}
+## Temporal Service 插件 {#plugins}
 
-The Temporal Service supports some pluggable components.
+Temporal Service 支持一些可插拔组件。
 
-### What is a ClaimMapper Plugin? {#claim-mapper}
+### 什么是 ClaimMapper 插件？{#claim-mapper}
 
-The Claim Mapper component is a pluggable component that extracts Claims from JSON Web Tokens (JWTs).
+Claim Mapper 组件是一个可插拔组件，用于从 JSON Web Token（JWT）中提取声明（Claims）。
 
-This process is achieved with the method `GetClaims`, which translates `AuthInfo` structs from the caller into `Claims` about the caller's roles within Temporal.
+该过程通过 `GetClaims` 方法实现，该方法将来自调用方的 `AuthInfo` 结构体转换为关于调用方在 Temporal 中角色的 `Claims`。
 
-A `Role` (within Temporal) is a bit mask that combines one or more of the role constants.
-In the following example, the role is assigned constants that allow the caller to read and write information.
+Temporal 中的 `Role` 是一个位掩码，组合了一个或多个角色常量。
+在以下示例中，角色被分配了允许调用方读取和写入信息的常量。
 
 ```go
 role := authorization.RoleReader | authorization.RoleWriter
 ```
 
-`GetClaims` is customizable and can be modified with the `temporal.WithClaimMapper` server option.
-Temporal also offers a default JWT `ClaimMapper` for your use.
+`GetClaims` 是可自定义的，可以通过 `temporal.WithClaimMapper` 服务器选项进行修改。
+Temporal 还为您提供了一个默认的 JWT `ClaimMapper`。
 
-A typical approach is for `ClaimMapper` to interpret custom `Claims` from a caller's JWT, such as membership in groups, and map them to Temporal roles for the user.
-The subject information from the caller's mTLS certificate can also be a parameter in determining roles.
+典型的方法是让 `ClaimMapper` 解释来自调用方 JWT 的自定义 `Claims`（例如群组成员身份），并将其映射到用户的 Temporal 角色。
+来自调用方 mTLS 证书的主体信息也可以作为确定角色的参数。
 
 #### `AuthInfo`
 
-`AuthInfo` is a struct that is passed to `GetClaims`. `AuthInfo` contains an authorization token extracted from the `authorization` header of the gRPC request.
+`AuthInfo` 是传递给 `GetClaims` 的结构体。`AuthInfo` 包含从 gRPC 请求的 `authorization` 标头中提取的授权令牌。
 
-`AuthInfo` includes a pointer to the `pkix.Name` struct.
-This struct contains an [x.509](https://www.ibm.com/docs/en/ibm-mq/7.5?topic=certificates-distinguished-names) Distinguished Name from the caller's mTLS certificate.
+`AuthInfo` 包含一个指向 `pkix.Name` 结构体的指针。
+此结构体包含来自调用方 mTLS 证书的 [x.509](https://www.ibm.com/docs/en/ibm-mq/7.5?topic=certificates-distinguished-names) 可分辨名称（Distinguished Name）。
 
 #### `Claims`
 
-`Claims` is a struct that contains information about permission claims granted to the caller.
+`Claims` 是包含授予调用方的权限声明信息的结构体。
 
-`Authorizer` assumes that the caller has been properly authenticated, and trusts the `Claims` when making an authorization decision.
+`Authorizer` 假设调用方已经正确认证，并在做出授权决定时信任 `Claims`。
 
-#### Default JWT ClaimMapper
+#### 默认 JWT ClaimMapper
 
-Temporal offers a default JWT `ClaimMapper` that extracts the information needed to form Temporal `Claims`.
-This plugin requires a public key to validate digital signatures.
+Temporal 提供了一个默认的 JWT `ClaimMapper`，用于提取形成 Temporal `Claims` 所需的信息。
+此插件需要一个公钥来验证数字签名。
 
-To get an instance of the default JWT `ClaimMapper`, call `NewDefaultJWTClaimMapper` and provide it with the following:
+要获取默认 JWT `ClaimMapper` 的实例，请调用 `NewDefaultJWTClaimMapper` 并提供：
 
-- a `TokenKeyProvider` instance
-- a `config.Authorization` pointer
-- a logger
+- 一个 `TokenKeyProvider` 实例
+- 一个 `config.Authorization` 指针
+- 一个日志记录器
 
-The code for the default `ClaimMapper` can also be used to build a custom `ClaimMapper`.
+默认 `ClaimMapper` 的代码也可以用于构建自定义 `ClaimMapper`。
 
-#### Token key provider
+#### Token 密钥提供者
 
-A `TokenKeyProvider` obtains public keys from specified issuers' URIs that adhere to a specific format.
-The default JWT `ClaimMapper` uses this component to obtain and refresh public keys over time.
+`TokenKeyProvider` 从指定发行者的 URI 获取公钥，这些 URI 遵循特定格式。
+默认的 JWT `ClaimMapper` 使用此组件随时间获取和刷新公钥。
 
-Temporal provides a `defaultTokenKeyProvider`.
-This component dynamically obtains public keys that follow the [JWKS format](https://tools.ietf.org/html/rfc7517).
-It supports formats such as `RSA` and `ECDSA`.
+Temporal 提供了一个 `defaultTokenKeyProvider`。
+该组件动态获取遵循 [JWKS 格式](https://tools.ietf.org/html/rfc7517)的公钥。
+它支持 `RSA` 和 `ECDSA` 等格式。
 
 ```go
 provider := authorization.NewDefaultTokenKeyProvider(cfg, logger)
@@ -210,42 +210,42 @@ provider := authorization.NewDefaultTokenKeyProvider(cfg, logger)
 
 :::note
 
-`KeySourceURIs` are the HTTP endpoints that return public keys of token issuers in the [JWKS format](https://tools.ietf.org/html/rfc7517).
-`RefreshInterval` defines how frequently keys should be refreshed.
-For example, [Auth0](https://auth0.com/) exposes endpoints such as `https://YOUR_DOMAIN/.well-known/jwks.json`.
+`KeySourceURIs` 是返回 [JWKS 格式](https://tools.ietf.org/html/rfc7517)令牌发行者公钥的 HTTP 端点。
+`RefreshInterval` 定义刷新密钥的频率。
+例如，[Auth0](https://auth0.com/) 公开了 `https://YOUR_DOMAIN/.well-known/jwks.json` 等端点。
 
 :::
 
-By default, "permissions" is used to name the `permissionsClaimName` value.
+默认情况下，使用"permissions"作为 `permissionsClaimName` 值的名称。
 
-Configure the plugin with `config.Config.Global.Authorization.JWTKeyProvider`.
+使用 `config.Config.Global.Authorization.JWTKeyProvider` 配置插件。
 
-#### JSON Web Token format
+#### JSON Web Token 格式
 
-The default JWT `ClaimMapper` expects authorization tokens to be formatted as follows:
+默认的 JWT `ClaimMapper` 期望授权令牌格式如下：
 
 ```
 Bearer <token>
 ```
 
-The Permissions Claim in the JWT Token is expected to be a collection of Individual Permission Claims.
-Each Individual Permission Claim must be formatted as follows:
+JWT Token 中的权限声明（Permissions Claim）预期为单个权限声明（Individual Permission Claim）的集合。
+每个单个权限声明的格式必须如下：
 
 ```
 <namespace> : <permission>
 ```
 
-These permissions are then converted into Temporal roles for the caller.
-This can be one of Temporal's four values:
+然后，这些权限将被转换为调用方的 Temporal 角色。
+可以是 Temporal 的以下四个值之一：
 
-- read
-- write
-- worker
-- admin
+- read（读取）
+- write（写入）
+- worker（Worker）
+- admin（管理员）
 
-Multiple permissions for the same Namespace are overridden by the `ClaimMapper`.
+同一 Namespace 的多个权限将被 `ClaimMapper` 覆盖。
 
-##### Example of a payload for the default JWT ClaimMapper
+##### 默认 JWT ClaimMapper 的有效负载示例
 
 ```
 {
@@ -261,39 +261,36 @@ Multiple permissions for the same Namespace are overridden by the `ClaimMapper`.
 }
 ```
 
-### What is an Authorizer Plugin? {#authorizer-plugin}
+### 什么是 Authorizer 插件？{#authorizer-plugin}
 
-The `Authorizer` plugin contains a single `Authorize` method, which is invoked for each incoming API call.
-`Authorize` receives information about the API call, along with the role and permission claims of the caller.
+`Authorizer` 插件包含一个 `Authorize` 方法，该方法对每个传入的 API 调用进行调用。
+`Authorize` 接收有关 API 调用的信息，以及调用方的角色和权限声明。
 
-`Authorizer` allows for a wide range of authorization logic, including call target, role/permissions claims, and other data available to the system.
+`Authorizer` 允许广泛的授权逻辑，包括调用目标、角色/权限声明以及系统可用的其他数据。
 
-#### Configuration
+#### 配置
 
-The following arguments must be passed to `Authorizer`:
+必须将以下参数传递给 `Authorizer`：
 
-- `context.Context`: General context of the call.
-- `authorization.Claims`: Claims about the roles assigned to the caller. Its intended use is described in the [`Claims`](#claims) section earlier on this page.
-- `authorization.CallTarget`: Target of the API call.
+- `context.Context`：调用的一般上下文。
+- `authorization.Claims`：关于分配给调用方的角色的声明。其预期用途在本页前面的 [`Claims`](#claims) 部分中描述。
+- `authorization.CallTarget`：API 调用的目标。
 
-`Authorizer` then returns one of two decisions:
+然后 `Authorizer` 返回以下两个决定之一：
 
-- `DecisionDeny`: the requested API call is not invoked and an error is returned to the caller.
-- `DecisionAllow`: the requested API call is invoked.
+- `DecisionDeny`：不调用请求的 API 调用，并向调用方返回错误。
+- `DecisionAllow`：调用请求的 API 调用。
 
-:::warning Security Warning
+:::warning 安全警告
 
-If you do **not** explicitly configure an `Authorizer`, Temporal uses the default `noopAuthorizer`. This default allows **every** API request,
-with no authentication or access control. Anyone who can reach your Temporal Server can invoke any API, including sensitive administrative operations.
-This is **not secure** for production or for any environment that is accessible to untrusted clients (such as over the internet).
+如果您**没有**明确配置 `Authorizer`，Temporal 将使用默认的 `noopAuthorizer`。此默认设置允许**每个** API 请求，没有任何认证或访问控制。任何能够访问您的 Temporal Server 的人都可以调用任何 API，包括敏感的管理操作。
+这对生产环境或任何可被不可信客户端访问的环境（例如通过互联网）**都是不安全的**。
 
-**To protect your Temporal Server, you must configure an `Authorizer` plugin with a corresponding `ClaimMapper`.** Without this, your deployment is
-effectively open to anyone with network access.
+**要保护您的 Temporal Server，您必须配置带有相应 `ClaimMapper` 的 `Authorizer` 插件。** 没有这些配置，您的部署实际上对任何具有网络访问权限的人都是开放的。
 
 :::
 
-Configure your `Authorizer` with the [`temporal.WithAuthorizer`](/references/server-options#withauthorizer) server option, and your `ClaimMapper` with
-the [`temporal.WithClaimMapper`](/references/server-options#withclaimmapper) server option.
+使用 [`temporal.WithAuthorizer`](/references/server-options#withauthorizer) 服务器选项配置您的 `Authorizer`，使用 [`temporal.WithClaimMapper`](/references/server-options#withclaimmapper) 服务器选项配置您的 `ClaimMapper`。
 
 ```go
 temporalServer, err := temporal.NewServer(
@@ -304,23 +301,23 @@ temporalServer, err := temporal.NewServer(
 )
 ```
 
-#### How to authorize SDK API calls {#authorize-api-calls}
+#### 如何授权 SDK API 调用 {#authorize-api-calls}
 
-When authentication is enabled, you can authorize API calls made to the Frontend Service.
+启用认证后，您可以授权对 Frontend Service 进行的 API 调用。
 
-The Temporal Server [expects](#authentication) an `authorization` gRPC header with an authorization token to be passed with API calls if [requests authorization](#authorization) is configured.
+如果配置了[请求授权](#authorization)，Temporal Server [期望](#authentication) API 调用时在 gRPC 标头中传递带有授权令牌的 `authorization` 标头。
 
-Authorization Tokens may be provided to the Temporal Java SDK by implementing a `io.temporal.authorization.AuthorizationTokenSupplier` interface.
-The implementation should be used to create `io.temporal.authorization.AuthorizationGrpcMetadataProvider` that may be configured on ServiceStub gRPC interceptors list.
+通过实现 `io.temporal.authorization.AuthorizationTokenSupplier` 接口，可以向 Temporal Java SDK 提供授权令牌。
+该实现应用于创建 `io.temporal.authorization.AuthorizationGrpcMetadataProvider`，可以在 ServiceStub gRPC 拦截器列表上配置。
 
-The implementation is called for each SDK gRPC request and may supply dynamic tokens.
+该实现对每个 SDK gRPC 请求调用，可以提供动态令牌。
 
 **JWT**
 
-One of the token types that may be passed this way are JWT tokens.
-Temporal Server provides a [default implementation of JWT authentication](#default-jwt-claimmapper).
+可以通过这种方式传递的令牌类型之一是 JWT 令牌。
+Temporal Server 提供了 [JWT 认证的默认实现](#default-jwt-claimmapper)。
 
-**Example**
+**示例**
 
 ```java
 AuthorizationTokenSupplier tokenSupplier =
@@ -335,29 +332,29 @@ WorkflowServiceStubs service = WorkflowServiceStubs.newServiceStubs(serviceStubO
 WorkflowClient client = WorkflowClient.newInstance(service);
 ```
 
-Related read:
+相关阅读：
 
-- [How to secure a Temporal Service](/security)
+- [如何保护 Temporal Service](/security)
 
 ## Data Converter {#data-converter}
 
-Each Temporal SDK provides a [Data Converter](/dataconversion) that can be customized with a custom [Payload Codec](/payload-codec) to encode and secure your data.
+每个 Temporal SDK 都提供一个 [Data Converter](/dataconversion)，可以使用自定义 [Payload Codec](/payload-codec) 进行自定义，以编码和保护您的数据。
 
-For details on what data can be encoded, how to secure it, and what to consider when using encryption, see [Data encryption](/production-deployment/data-encryption).
+有关可以编码哪些数据、如何保护数据以及使用加密时需要考虑的内容，请参阅[数据加密](/production-deployment/data-encryption)。
 
 #### Codec Server
 
-You can use a [Codec Server](/codec-server) with your custom Payload Codec to decode the data you see on your Web UI and CLI locally through remote endpoints.
-However, ensure that you consider all security implications of [remote data encoding](/remote-data-encoding) before using a Codec Server.
+您可以使用带有自定义 Payload Codec 的 [Codec Server](/codec-server)，通过远程端点在本地解码您在 Web UI 和 CLI 上看到的数据。
+但是，在使用 Codec Server 之前，请确保您考虑了[远程数据编码](/remote-data-encoding)的所有安全影响。
 
-For details on how to set up a Codec Server, see [Codec Server setup](/production-deployment/data-encryption#codec-server-setup).
+有关如何设置 Codec Server 的详情，请参阅 [Codec Server 设置](/production-deployment/data-encryption#codec-server-setup)。
 
-## Configuration Options for Restricting and Securing Access  
+## 限制和保护访问的配置选项
 
-Temporal provides extensive configuration options to limit and control which callers can access your services and how those services behave in different environments. These options help you enforce stricter security boundaries in self-hosted deployments and tune behavior for production use cases. For more details on available settings and how to configure them, see the following references:
+Temporal 提供了大量配置选项，用于限制和控制哪些调用方可以访问您的服务以及这些服务在不同环境中的行为方式。这些选项帮助您在自托管部署中强制执行更严格的安全边界，并为生产用例调整行为。有关可用设置及其配置方法的更多详情，请参阅以下参考资料：
 
-- [Cluster & Server configuration](/references/configuration) — Static configuration settings for servers and services.  
+- [Cluster 和 Server 配置](/references/configuration) — 服务器和服务的静态配置设置。
 
-- [Dynamic configuration](/references/dynamic-configuration) — Runtime-updatable settings for tuning and behavior control.  
+- [动态配置](/references/dynamic-configuration) — 用于调优和行为控制的运行时可更新设置。
 
-- [Client environment configuration](/references/client-environment-configuration) — Environment variable settings for configuring Temporal clients.  
+- [客户端环境配置](/references/client-environment-configuration) — 用于配置 Temporal 客户端的环境变量设置。

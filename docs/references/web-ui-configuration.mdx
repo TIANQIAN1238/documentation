@@ -1,8 +1,8 @@
 ---
 id: web-ui-configuration
-title: Temporal Web UI configuration reference
-sidebar_label: Web UI config
-description:  Manage your Temporal Server efficiently with development.yaml. Set parameters for Auth, TLS, ports, and more.
+title: "Temporal Web UI 配置参考"
+sidebar_label: "网页界面配置"
+description:  "使用development.yaml 高效管理您的Temporal Server。设置 Auth、TLS、端口等参数。"
 toc_max_heading_level: 4
 keywords:
   - reference
@@ -12,16 +12,17 @@ tags:
   - Temporal Web UI
 ---
 
-The Temporal Web UI Server uses a configuration file for many of the UI's settings.
+Temporal Web UI 服务器使用配置文件来进行许多 UI 设置。
 
-An example development.yaml file can be found in the [temporalio/ui-server repo](https://github.com/temporalio/ui-server/blob/main/config/development.yaml).
+可以在 [Temporalio/ui-server 存储库](https://github.com/temporalio/ui-server/blob/main/config/development.yaml) 中找到示例development.yaml 文件。
 
-Multiple configuration files can be created for configuring specific areas of the UI, such as Auth or TLS.
+可以创建多个配置文件来配置 UI 的特定区域，例如 Auth 或 TLS。
 
-## auth
+<a id="auth"></a>
+## 授权 {#auth}
 
-Configures authorization for the Temporal Server.
-Settings apply when Auth is enabled.
+配置 Temporal Server 的授权。
+设置在启用身份验证时应用。
 
 ```yaml
 auth:
@@ -40,25 +41,28 @@ auth:
       - email
 ```
 
-## batchActionsDisabled
+<a id="batchactionsdisabled"></a>
+## 批量操作禁用 {#batchactionsdisabled}
 
-Prevents the execution of Batch actions.
+阻止执行批处理操作。
 
 ```yaml
 batchActionsDisabled: false
 ```
 
-## cloudUi
+<a id="cloudui"></a>
+## 云UI {#cloudui}
 
-Enables the Cloud UI.
+启用云 UI。
 
 ```yaml
 cloudUi: false
 ```
 
-## codec
+<a id="codec"></a>
+## 编解码器 {#codec}
 
-Codec Server configuration.
+Codec Server 配置。
 
 ```yaml
 codec:
@@ -68,10 +72,11 @@ codec:
   decodeEventHistoryDownload: false
 ```
 
-## cors
+<a id="cors"></a>
+## 科尔斯 {#cors}
 
-The name of the `cors` field stands for Cross-Origin Resource Sharing.
-Use this field to provide a list of domains that are authorized to access the UI Server APIs.
+`cors` 字段的名称代表跨源资源共享。
+使用此字段提供有权访问 UI 服务器 API 的域列表。
 
 ```yaml
 cors:
@@ -80,130 +85,143 @@ cors:
     - http://localhost:3000 # used at development by https://github.com/temporalio/ui
 ```
 
-## defaultNamespace
+<a id="defaultnamespace"></a>
+## 默认Namespace {#defaultnamespace}
 
-The default Namespace that the UI loads data for.
-Defaults to `default`.
+UI 为其加载数据的默认 Namespace。
+默认为 `default`。
 
 ```yaml
 defaultNamespace: default
 ```
 
-## disableWriteActions
+<a id="disablewriteactions"></a>
+## 禁用写入操作 {#disablewriteactions}
 
-Prevents the user from executing Workflow Actions on the Web UI.
+阻止用户在 Web UI 上执行 Workflow 操作。
 
-This option affects Bulk Actions for Recent Workflows as well as Workflow Actions on the Workflow Details page.
+此选项影响最近 Workflow 的批量操作以及 Workflow 详细信息页面上的 Workflow 操作。
 
 ```yaml
 disableWriteActions: false
 ```
 
 :::note
-`disableWriteActions` overrides the configuration values of each individual Workflow Action.
-Setting this variable to `true` disables all Workflow Actions on the Web UI.
+`disableWriteActions` 会覆盖每个单独的 Workflow 操作的配置值。
+将此变量设置为 `true` 将禁用 Web UI 上的所有 Workflow 操作。
 :::
 
-## enableUi
+<a id="enableui"></a>
+## 启用用户界面 {#enableui}
 
-Enables the browser UI.
-This configuration can be set dynamically with the [TEMPORAL_UI_ENABLED](/references/web-ui-environment-variables#temporal_ui_enabled) environment variable.
-If disabled—that is, set to `false`—the UI server APIs remain available.
+启用浏览器 UI。
+可以使用 [Temporal_UI_ENABLED](/references/web-ui-environment-variables#temporal_ui_enabled) 环境变量动态设置此配置。
+如果禁用（即设置为 `false`），UI 服务器 API 仍然可用。
 
 ```yaml
 enableUi: true
 ```
 
-## feedbackUrl
+<a id="feedbackurl"></a>
+## 反馈网址 {#feedbackurl}
 
-The URL to direct users to when they click on the Feedback button in the UI.
-If not specified, it defaults to the UI's GitHub Issue page.
+当用户单击 UI 中的“反馈”按钮时将用户引导至的 URL。
+如果未指定，则默认为 UI 的 GitHub Issue 页面。
 
 ```yaml
 feedbackUrl: https://github.com/temporalio/ui/issues/new/choose
 ```
 
-## forwardHeaders
+<a id="forwardheaders"></a>
+## 转发头 {#forwardheaders}
 
-Configures headers for forwarding.
+配置转发标头。
 
 ```yaml
 forwardHeaders:
   -
 ```
 
-## hideLogs
+<a id="hidelogs"></a>
+## 隐藏日志 {#hidelogs}
 
-If enabled, disables any server logs from being printed to the console.
+如果启用，将禁止将任何服务器日志打印到控制台。
 
 ```yaml
 hideLogs: true
 ```
 
-## hideWorkflowQueryErrors
+<a id="hideworkflowqueryerrors"></a>
+## 隐藏WorkflowQuery错误 {#hideworkflowqueryerrors}
 
-Hides any errors resulting from a Query to the Workflow.
+隐藏从 Query 到 Workflow 产生的任何错误。
 
 ```yaml
 hideWorkflowQueryErrors: false
 ```
 
-## notifyOnNewVersion
+<a id="notifyonnewversion"></a>
+## 通知新版本 {#notifyonnewversion}
 
-When enabled—that is, when set to `true`—a notification appears in the UI when a newer version of the [Temporal Server](/temporal-service/temporal-server) is available.
+启用后（即设置为 `true` 时），当 [Temporal Server](/temporal-service/temporal-server) 的较新版本可用时，UI 中会显示一条通知。
 
 ```yaml
 notifyOnNewVersion: true
 ```
 
-## port
+＃＃ 港口
 
-The port used by the Temporal Web UI Server and any APIs.
+Temporal Web UI 服务器和任何 API 使用的端口。
 
 ```yaml
 port: 8080
 ```
 
-## publicPath
+<a id="port"></a>
+## 公共路径 {#port}
 
-The path used by the Temporal Web UI Server and any APIs.
+Temporal Web UI 服务器和任何 API 使用的路径。
 
 ```yaml
 publicPath: ''
 ```
 
-## refreshInterval
+<a id="publicpath"></a>
+## 刷新间隔 {#publicpath}
 
-How often the configuration UI Server reads the configuration file for new values.
-Currently, only [tls](#tls) configuration values are propagated during a refresh.
+配置 UI 服务器读取配置文件中新值的频率。
+目前，刷新期间仅传播 [tls](#tls) 配置值。
 
 ```yaml
 refreshInterval: 1m
 ```
 
-## showTemporalSystemNamespace
+<a id="refreshinterval"></a>
+## 显示Temporal系统Namespace {#refreshinterval}
 
-When enabled—that is, when set to `true`—the Temporal System Namespace becomes visible in the UI.
-The Temporal System Namespace lists Workflow Executions used by the Temporal Platform.
+启用后（即设置为 `true` 时），Temporal 系统 Namespace 在 UI 中变得可见。
+Temporal 系统 Namespace 列出了 Temporal 平台使用的 Workflow Execution。
 
 ```yaml
 showTemporalSystemNamespace: false
 ```
 
-## temporalGrpcAddress
+<a id="showtemporalsystemnamespace"></a>
+## TemporalgRPC地址 {#showtemporalsystemnamespace}
 
-The frontend address for the Temporal Cluster.
+Temporal 集群的前端地址。
 
-The default address is localhost (127.0.0.1:7233).
+默认地址是 localhost (127.0.0.1:7233)。
 
 ```yaml
 temporalGrpcAddress: default
 ```
 
-## tls
+<a id="temporalgrpcaddress"></a>
+## tls {#temporalgrpcaddress}
 
-Transport Layer Security (TLS) configuration for the Temporal Server.
-Settings apply when TLS is enabled.
+Temporal Server 的传输层安全 (TLS) 配置。
+启用 TLS 时应用设置。
 
 ```yaml
 tls:
@@ -217,33 +235,37 @@ tls:
   serverName: tls-server
 ```
 
-## workflowCancelDisabled
+<a id="tls"></a>
+## WorkflowCancelDisabled {#tls}
 
-Prevents the user from canceling Workflow Executions from the Web UI.
+防止用户从 Web UI 取消 Workflow Execution。
 
 ```yaml
 workflowCancelDisabled: false
 ```
 
-## workflowResetDisabled
+<a id="workflowcanceldisabled"></a>
+## WorkflowResetDisabled {#workflowcanceldisabled}
 
-Prevents the user from resetting Workflows from the Web UI.
+阻止用户从 Web UI 重置 Workflow。
 
 ```yaml
 workflowResetDisabled: false
 ```
 
-## workflowSignalDisabled
+<a id="workflowresetdisabled"></a>
+## WorkflowSignal禁用 {#workflowresetdisabled}
 
-Prevents the user from signaling Workflow Executions from the Web UI.
+防止用户从 Web UI 中 Signaling Workflow Execution。
 
 ```yaml
 workflowSignalDisabled: false
 ```
 
-## workflowTerminateDisabled
+<a id="workflowsignaldisabled"></a>
+## WorkflowTerminateDisabled {#workflowsignaldisabled}
 
-Prevents the user from terminating Workflow Executions from the Web UI.
+防止用户从 Web UI 终止 Workflow Execution。
 
 ```yaml
 workflowTerminateDisabled: false

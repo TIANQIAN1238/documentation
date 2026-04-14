@@ -1,8 +1,8 @@
 ---
 id: basics
-title: Workflow basics - Ruby SDK
-sidebar_label: Workflow basics
-description: This section explains Workflow basics with the Ruby SDK
+title: "Workflow 基础知识 - Ruby SDK"
+sidebar_label: "Workflow 基础知识"
+description: "本节介绍 Workflow 的基础知识和 Ruby SDK"
 toc_max_heading_level: 4
 keywords:
   - Ruby SDK
@@ -11,15 +11,16 @@ tags:
   - Temporal SDKs
 ---
 
-## Develop a Workflow {#develop-workflow}
+<a id="develop-workflow"></a>
+## 开发 Workflow {#develop-workflow}
 
-Workflows are the fundamental unit of a Temporal Application, and it all starts with the development of a [Workflow Definition](/workflow-definition).
+Workflow 是 Temporal 应用程序的基本单元，这一切都始于 [Workflow Definition](/workflow-definition) 的开发。
 
-In the Temporal Ruby SDK programming model, Workflows are defined as classes.
+在 Temporal Ruby SDK 编程模型中，Workflow 被定义为类。
 
-Have the Workflow class extend `Temporalio::Workflow::Definition` to define a Workflow.
+让 Workflow 类扩展 `Temporalio::Workflow::Definition` 以定义 Workflow。
 
-The entrypoint is the `execute` method.
+入口点是 `execute` 方法。
 
 ```ruby
 class MyWorkflow < Temporalio::Workflow::Definition
@@ -33,33 +34,35 @@ class MyWorkflow < Temporalio::Workflow::Definition
 end
 ```
 
-Temporal Workflows may have any number of custom parameters.
-However, we strongly recommend that hashes or objects are used as parameters, so that the object's individual fields may be altered without breaking the signature of the Workflow.
+Temporal Workflow 可以具有任意数量的自定义参数。
+但是，我们强烈建议使用哈希值或对象作为参数，以便可以在不破坏 Workflow 签名的情况下更改对象的各个字段。
 
-### Workflow Logic Requirements {#workflow-logic-requirements}
+<a id="workflow-logic-requirements"></a>
+### Workflow 逻辑要求 {#workflow-logic-requirements}
 
-Temporal Workflows [must be deterministic](https://docs.temporal.io/workflows#deterministic-constraints), which includes
-Ruby workflows. This means there are several things workflows cannot do such as:
+Temporal Workflows [必须是确定性的](https://docs.temporal.io/workflows#deterministic-constraints)，其中包括
+红宝石 Workflow。这意味着 Workflows 无法执行多项操作，例如：
 
-- Perform IO (network, disk, stdio, etc)
-- Access/alter external mutable state
-- Do any threading
-- Do anything using the system clock (e.g. `Time.Now`)
-- Make any random calls
-- Make any not-guaranteed-deterministic calls
+- 执行 IO（网络、磁盘、stdio 等）
+- 访问/改变外部可变状态
+- 进行任何线程处理
+- 使用系统时钟执行任何操作（例如 `Time.Now`）
+- 随机拨打电话
+- 进行任何非保证确定性调用
 
-To prevent illegal workflow calls, a call tracer is put on the workflow thread that raises an exception if any illegal
-calls are made.
-Which calls are illegal is configurable in the worker options.
+为了防止非法的 Workflow 调用，在 Workflow 线程上放置了一个调用跟踪器，如果有任何非法调用，该调用跟踪器将引发异常
+拨打电话。
+哪些调用是非法的可以在 Worker 选项中配置。
 
-### Customize Workflow Type {#workflow-type}
+<a id="workflow-type"></a>
+### 自定义 Workflow 类型 {#workflow-type}
 
-Workflows have a Type that are referred to as the Workflow name.
+Workflow 具有称为 Workflow 名称的类型。
 
-The following examples demonstrate how to set a custom name for your Workflow Type.
+以下示例演示如何为 Workflow 类型设置自定义名称。
 
-You can customize the Workflow name with a custom name in a `workflow_name` class method call on the class.
-The Workflow name defaults to the unqualified class name.
+您可以在类的 `Workflow_name` 类方法调用中使用自定义名称来自定义 Workflow 名称。
+Workflow 名称默认为非限定类名称。
 
 ```ruby
 class MyWorkflow < Temporalio::Workflow::Definition

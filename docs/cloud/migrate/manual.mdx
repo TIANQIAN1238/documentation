@@ -1,8 +1,8 @@
 ---
 id: manual
-title: Manual migration
-sidebar_label: Manual migration
-description: Migrating to Temporal Cloud from self-hosted Temporal Service varies by Workflow requirements. This guide covers changing Client code, Workflow migration strategies, and necessary code adjustments.
+title: "手动迁移"
+sidebar_label: "手动迁移"
+description: "从自托管 Temporal 服务迁移到 Temporal Cloud 的过程因 Workflow 要求而异。本指南涵盖更改客户端代码、Workflow 迁移策略以及必要的代码调整。"
 slug: /cloud/migrate/manual
 toc_max_heading_level: 4
 keywords:
@@ -16,81 +16,87 @@ tags:
   - Production
 ---
 
-Migrating to Temporal Cloud from a self-hosted Temporal Service will have different requirements depending on your usage.
-This guide provides some guidance based on our experience helping customers of all sizes successfully migrate.
+从自托管 Temporal 服务迁移到 Temporal Cloud 将有不同的要求，具体取决于您的使用情况。
+本指南根据我们帮助各种规模的客户成功迁移的经验提供了一些指导。
 
-### What to expect from a migration
+<a id="what-to-expect-from-a-migration"></a>
+### 迁移会发生什么 {#what-to-expect-from-a-migration}
 
-Depending on your Workflows' requirements, the migration process may be as simple as changing a few parameters, or may require more extensive code changes.
-There are two aspects to consider when migrating: your Temporal Client connection code and your Workflow Executions.
-Here's a high-level overview of what you can expect:
+根据您的 Workflow 的要求，迁移过程可能就像更改几个参数一样简单，也可能需要更广泛的代码更改。
+迁移时需要考虑两个方面：Temporal CLIent 连接代码和 Workflow Execution。
+以下是您可以期待的内容的高级概述：
 
-- **Introduce another Temporal Client to your Starter and Worker Processes:** Configure and deploy a new Temporal Client so that Temporal Cloud becomes responsible for new Workflow Executions.
-- **Migrate Workflow Executions:** There are different approaches for new, running, and completed Workflow Executions.
-  - **New Workflow Executions:** When you no longer need to send Signals or Queries to your self-hosted Temporal Service, you can deprecate your old Client code. Until then, your self-hosted Temporal Service can receive relevant traffic, while new Workflow Executions are sent to Temporal Cloud.
-  - **Running Workflow Executions:** Short-running Workflows can often be drained and then started again on Temporal Cloud. Long-running Workflows that cannot be drained might require you to implement more code changes to pass the state of the currently running Workflow to Temporal Cloud.
-  - **Completed Workflow Executions:** Completed Workflow Execution History cannot be automatically migrated to Temporal Cloud. Refer to [Multi-Cluster Replication](#multi-cluster-replication) for more information.
+- **将另一个 Temporal CLIent 引入您的 Starter 和 Worker 进程：** 配置并部署新的 Temporal CLIent，以便 Temporal Cloud 负责新的 Workflow Execution。
+- **迁移 Workflow Execution：** 新的、正在运行的和已完成的 Workflow Execution 有不同的方法。
+  - **新 Workflow Execution：** 当您不再需要向自托管 Temporal 服务发送 Signal 或查询时，您可以弃用旧的客户端代码。在此之前，您的自托管 Temporal 服务可以接收相关流量，同时新的 Workflow Execution 会发送到 Temporal Cloud。
+  - **运行 Workflow Execution：** 短期运行的 Workflow 通常可以被耗尽，然后在 Temporal Cloud 上再次启动。无法耗尽的长时间运行的 Workflow 可能需要您实现更多代码更改，以将当前运行的 Workflow 的状态传递到 Temporal Cloud。
+  - **已完成的 Workflow Execution：** 已完成的 Workflow Execution 历史记录无法自动迁移到 Temporal Cloud。请参阅 [多集群复制](#multi-cluster-replication) 了解更多信息。
 
-### Updating Client connection code in your Workers
+<a id="updating-client-connection-code-in-your-workers"></a>
+### 更新 Worker 中的客户端连接代码 {#updating-client-connection-code-in-your-workers}
 
-Whether you're self-hosting Temporal or using Temporal Cloud, you manage runtime of your code.
-To migrate your Workflows to Temporal Cloud, you need to change some parameters in the Client connection code, such as updating the namespace and gRPC endpoint.
+无论您是自托管 Temporal 还是使用 Temporal Cloud，您都可以管理代码的运行时。
+要将 Workflow 迁移到 Temporal Cloud，您需要更改客户端连接代码中的一些参数，例如更新 Namespace 和 gRPC 端点。
 
-The changes needed to direct your Workflow to your Temporal Cloud
-Namespace are only a few lines of code, including:
+将 Workflow 定向到 Temporal Cloud 所需的更改
+Namespace只有几行代码，包括：
 
-- [Add your SSL certificate and private key](/cloud/saml) associated with your Namespace.
-- [Copy the Cloud-hosted endpoint](/cloud/namespaces#temporal-cloud-grpc-endpoint) from the Namespace detail Web page.
-  The endpoint uses this format: `<namespace_id>.<account_id>.tmprl.cloud:port`.
-- [Connect to Temporal Cloud](/cloud/get-started) with your Client.
-- [Configure tcld, the Cloud CLI](/cloud/tcld), with the same address, Namespace, and
-  certificate used to create a Client through code.
+- [添加您的 SSL 证书和私钥](/cloud/saml) 与您的 Namespace 关联。
+- [复制云托管端点](/cloud/namespaces#temporal-cloud-grpc-endpoint) 来自 Namespace 详细信息网页。
+  端点使用以下格式：`<Namespace_id>.<account_id>.tmprl.cloud:port`。
+- [连接到 Temporal Cloud](/cloud/get-started) 与您的客户。
+- [配置 tcld（云 CLI）](/cloud/tcld)，具有相同的地址，Namespace，以及
+  用于通过代码创建客户端的证书。
 
-### Migrating your Workflow Executions
+<a id="migrating-your-workflow-executions"></a>
+### 迁移您的 Workflow Execution {#migrating-your-workflow-executions}
 
-A Temporal Service stores the complete Event History for the entire lifecycle of a
-Workflow Execution.
-To migrate from a self-hosted Temporal Service to Temporal Cloud, take into account the current state, Event History, and any future expectations of your Workflow Executions.
+Temporal 服务存储整个生命周期的完整 Event History
+Workflow Execution。
+要从自托管 Temporal 服务迁移到 Temporal Cloud，请考虑当前状态、Event History 以及 Workflow Execution 的任何未来期望。
 
-**New Workflows are automatically executed on Temporal Cloud.**
-Once you've made the code changes in Step 1, and your new code is deployed, new Workflow Executions will be sent to Temporal Cloud.
-Existing Workflows must receive Signals to migrate and re-execute on Cloud.
-If you maintain your self-hosted instance, you will still be able to use it to access any execution history from before your migration.
-You can also export JSON from your previous execution history, that you can then import into your own analytics system.
+**新的 Workflow 会在 Temporal Cloud 上自动执行。**
+在步骤 1 中进行代码更改并部署新代码后，新的 Workflow Execution 将发送到 Temporal Cloud。
+现有的 Workflow 必须接收 Signal 才能在云上迁移并重新执行。
+如果您维护自托管实例，您仍然可以使用它来访问迁移之前的任何执行历史记录。
+您还可以从之前的执行历史记录中导出 JSON，然后将其导入到您自己的分析系统中。
 
-**Running Workflows can either be drained or migrated.**
-If your Workflow can be completed before any compelling event which drives a move to Temporal Cloud, those Workflows can be automatically restarted on Temporal Cloud.
-If your Workflows need to run continuously, you must migrate Workflows while they are running.
-To accomplish this migration, cancel your current Workflow and pass the current state to a new Workflow in Temporal Cloud.
-Refer to [this repository](https://github.com/temporalio/temporal-migration) for an example of migrating running Workflows in Java.
+**正在运行的 Workflow 可以被排空或迁移。**
+如果您的 Workflow 可以在任何促使移动到 Temporal Cloud 的引人注目的事件之前完成，那么这些 Workflow 可以在 Temporal Cloud 上自动重新启动。
+如果您的 Workflow 需要连续运行，则必须在 Workflow 运行时迁移它们。
+要完成此迁移，请取消当前的 Workflow 并将当前状态传递到 Temporal Cloud 中的新 Workflow。
+有关在 Java 中迁移正在运行的 Workflow 的示例，请参阅 [这个存储库](https://github.com/temporalio/temporal-migration)。
 
-When performing a live migration, make sure your Worker capacity can support the migration load.
-Both a [Signal](/sending-messages#sending-signals) and a [Query](/sending-messages#sending-queries) will be executed during the course of the migration.
-Also, the Query API loads the entire history of Workflows into Workers to compute the result (if they are not already cached).
-That means that your self-hosted Temporal Service Worker capacity will need to support having those executions in memory to serve those requests.
-The volume of these requests might be high to execute against all the matches to a `ListFilter`.
+执行实时迁移时，请确保您的 Worker 容量可以支持迁移负载。
+[Signal](/sending-messages#sending-signals) 和 [Query](/sending-messages#sending-queries) 都将在迁移过程中执行。
+此外，Query API 将 Workflow 的整个历史记录加载到 Worker 中以计算结果（如果尚未缓存）。
+这意味着您的自托管 Temporal 服务 Worker 容量将需要支持在内存中执行这些操作来满足这些请求。
+针对 `ListFilter` 的所有匹配项执行这些请求的量可能很大。
 
-### Considerations when resuming Workflows on a new Temporal Service or Namespace
+<a id="considerations-when-resuming-workflows-on-a-new-temporal-service-or-namespace"></a>
+### 在新的 Temporal 服务或 Namespace 上恢复 Workflow 时的注意事项 {#considerations-when-resuming-workflows-on-a-new-temporal-service-or-namespace}
 
-- **Skipping Steps:** If your Workflow steps cannot guarantee idempotency, determine whether you need to skip those steps when resuming the execution in the target Namespace.
-- **Elapsed Time:** If your Workflow is “resuming sleep” when in the target Namespace, determine how you will calculate the delta for the sleep invocation in the new execution.
-- **Child Relationships:** If your Workflow has Child Workflow relationships (other than Detached Parent Close Policy children), determine how you can pass the state of those children into the parent to execute the child in a resumed state.
-- **Heartbeat state:** If you have long running activities relying on heartbeat state, determine how you can resume these activities in the target Namespace.
-- Child Workflows with the same type as their Parent types are returned in List Filters used to gather relevant executions. Unless these are Detached `ParentClosePolicy` children, this is not what you want since the Parent/Child relationship will not be carried over to the target Namespace.
-- Long running activities that use heartbeat details will not receive the latest details in the target Namespace.
-- Duration between Awaitables inside a Workflow definition needs to be considered for elapsed time accuracy when resuming in the target Namespace.
-- When Signaling directly from one Workflow to another, make sure to handle `NotFound` executions in the target Namespace. The Workflows may resume out of order.
+- **跳过步骤：** 如果您的 Workflow 步骤不能保证幂等性，请确定在目标 Namespace 中恢复执行时是否需要跳过这些步骤。
+- **经过时间：** 如果您的 Workflow 在目标 Namespace 中“恢复睡眠”，请确定如何计算新执行中睡眠调用的增量。
+- **子关系：** 如果您的 Workflow 具有 Child Workflow 关系（分离父关闭策略子项除外），请确定如何将这些子项的状态传递给父项以在恢复状态下执行子项。
+- **检测信号状态：** 如果您有依赖检测信号状态的长时间运行的活动，请确定如何在目标 Namespace 中恢复这些活动。
+- 与其父类型具有相同类型的 Child Workflow 在用于收集相关执行的列表过滤器中返回。除非这些是分离的 `ParentClosePolicy` 子项，否则这不是您想要的，因为父/子关系不会转移到目标 Namespace。
+- 使用心跳详细信息的长时间运行的活动将不会收到目标 Namespace 中的最新详细信息。
+- 在目标 Namespace 中恢复时，需要考虑 Workflow Definition 内的等待之间的持续时间以确保经过时间的准确性。
+- 当 Signal 直接从一个 Workflow 到另一个 Workflow 时，请确保在目标 Namespace 中处理 `NotFound` 执行。 Workflow 可能会无序恢复。
 
-### Other considerations when migrating
+<a id="other-considerations-when-migrating"></a>
+### 迁移时的其他注意事项 {#other-considerations-when-migrating}
 
-- Have you added an mTLS certificate to your Temporal Namespace? Review our [documentation for adding a certificate to your Temporal Cloud account](/cloud/certificates) for more information.
-- There are differences in how metrics are generated in self-hosted Temporal and Temporal Cloud. Review the [documentation on Temporal Cloud metrics](/cloud/metrics/) for more information.
-- Consider the implications for [security and access to your Temporal Service](/cloud/security).
-- Review your current load (actions per second) and speak to your Account Executive and Solutions Architect so we can set appropriate [Namespace limits](/cloud/limits).
+- 您是否已将 mTLS 证书添加到您的 Temporal Namespace 中？查看我们的 [将证书添加到您的 Temporal Cloud 帐户的文档](/cloud/certificates) 了解更多信息。
+- 自托管 Temporal 和 Temporal Cloud 中指标的生成方式存在差异。查看 [有关 Temporal Cloud 指标的文档](/cloud/metrics/) 了解更多信息。
+- 考虑对 [安全性和对 Temporal 服务的访问](/cloud/security) 的影响。
+- 检查您当前的负载（每秒操作数）并与您的客户主管和解决方案架构师联系，以便我们可以设置适当的 [Namespace 限制](/cloud/limits)。
 
-### Multi-Cluster Replication
+<a id="multi-cluster-replication"></a>
+### 多集群复制 {#multi-cluster-replication}
 
-[Multi-Cluster Replication](/self-hosted-guide/multi-cluster-replication) is an experimental feature which asynchronously replicates Workflow Executions from active Clusters to other passive Clusters for backup and state reconstruction.
-Migrating Execution History from a self-hosted Temporal Service to Temporal Cloud is not currently supported.
-However, a migration tool based on Multi-Cluster Replication, which will enable this, is currently in development for Temporal Cloud.
-If you have used this feature locally or you are interested in using it to migrate to Temporal Cloud, [create a support ticket](https://docs.temporal.io/cloud/support) or watch this space for more information about public availability.
+[多集群复制](/self-hosted-guide/multi-cluster-replication) 是一项实验性功能，可将 Workflow Execution 从主动集群异步复制到其他被动集群以进行备份和状态重建。
+目前不支持将执行历史记录从自托管 Temporal 服务迁移到 Temporal Cloud。
+然而，目前正在为 Temporal Cloud 开发基于多集群复制的迁移工具，该工具将实现这一点。
+如果您已在本地使用此功能，或者有兴趣使用它迁移到 Temporal Cloud、[创建支持票](https://docs.temporal.io/cloud/support) 或观看此空间以获取有关公开可用性的更多信息。

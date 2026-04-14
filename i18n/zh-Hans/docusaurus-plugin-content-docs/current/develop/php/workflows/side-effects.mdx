@@ -1,0 +1,45 @@
+---
+id: side-effects
+title: Side Effects - PHP SDK
+sidebar_label: Side Effects
+slug: /develop/php/workflows/side-effects
+toc_max_heading_level: 2
+keywords:
+  - side-effects
+tags:
+  - Side-effects
+  - PHP SDK
+  - Temporal SDKs
+description: 在 PHP 中使用 Side Effect 执行非确定性代码，例如在 Workflow 中生成 UUID 或随机数，而不会影响其确定性。
+---
+
+## 如何在 PHP 中使用 Side Effects {#side-effects}
+
+Side Effect 用于执行非确定性代码，例如生成 UUID 或随机数，而不影响 Workflow 的确定性。这是通过将 Side Effect 的结果存储到 Workflow [Event History](/Workflow-execution/event#event-history) 中来完成的。
+
+Side Effect 在重放期间不会重新执行。相反，它返回 Workflow Execution Event History 的记录结果。
+
+Side Effects 不应出现故障。 Side Effect 引发的异常会导致当前 Workflow Task 失败并重试。
+
+也可以使用 Activity 或本地 Activity 代替 Side Effect，因为其结果也保留在 Workflow Execution 历史记录中。
+
+:::note
+
+您不应修改 Side Effect 内的 Workflow 状态，因为它们在重播期间不会重新执行。 Side Effect 函数应该只返回一个值，并且该值可以在 Workflow 代码中使用来更改状态。
+
+:::
+
+要在 PHP 中使用 Side Effect，请使用 Workflow Definition 中的“Workflow::sideEffect()”函数来运行非确定性代码并返回一个值。
+
+```php
+#[Workflow\WorkflowMethod]
+public function run()
+{
+    $random = yield Workflow::sideEffect(fn() => random_int(0, 100));
+    if ($random < 50) {
+        // ...
+    } else {
+        // ...
+    }
+}
+```

@@ -1,0 +1,121 @@
+---
+id: index
+title: 账户访问
+slug: /cloud/manage-access/
+description: 管理对您的 Temporal Cloud 帐户的访问
+toc_max_heading_level: 3
+keywords:
+  - introduction
+  - temporal cloud
+tags:
+  - API
+  - Certificates
+  - Security
+  - Temporal Cloud
+  - User groups
+  - Users
+---
+
+对 Temporal Cloud 的访问由基于角色的访问控制 (RBAC) 控制。在帐户内，每个访问主体，例如
+作为用户、用户组或服务帐户，具有一个帐户级角色，并且可选地具有一个或多个 Namespace 级角色
+权限。每个主体只能执行其分配的角色和权限允许的操作。
+
+Temporal Cloud 支持安全断言标记语言 (SAML) 和跨域身份管理系统 (SCIM)
+用于与您组织的身份提供商 (IdP) 集成。 SAML 通过允许您的
+身份提供者对 Temporal Cloud 中的用户进行身份验证。 SCIM 自动创建 Update，并删除用户和
+根据身份提供商的更改在 Temporal Cloud 中进行分组。
+
+## Temporal Cloud 帐户
+
+帐户是访问控制的顶级容器。每个帐户至少有一个分配了帐户所有者的用户
+角色，拥有整个帐户的完整管理权限，包括用户、计费和使用情况。一个帐户是
+**不是**访问主体本身。
+
+当您注册 Temporal Cloud 而不加入现有帐户时，系统会自动为您分配该帐户
+新帐户的所有者角色。然后，您可以邀请其他用户加入该帐户并为他们分配角色。如果你的
+组织拥有 IdP，我们建议使用 [SAML 集成](/cloud/saml) 进行企业身份管理。
+
+:::info
+
+多个帐户可以共存于同一电子邮件域中。每个帐户可以有自己独立的SAML配置，
+绑定到其唯一的帐户 ID。
+
+但是，每个电子邮件地址只能与一个 Temporal Cloud 帐户关联。如果您需要访问多个
+帐户，您需要使用不同的电子邮件地址为每个帐户发出单独的邀请。
+
+:::
+
+## 访问主体
+
+Temporal Cloud 提供以下访问控制原则：
+
+- [**用户**](/cloud/users) - 管理个人用户帐户和权限
+- [**用户组**](/cloud/user-groups) - 将用户分组以简化访问管理
+- [**服务帐户**](/cloud/service-accounts) - 配置服务帐户以进行自动访问
+
+这些主体可以承担[帐户级别角色](/cloud/manage-access/roles-and-permissions#account-level-roles)并且可以
+授予 [Namespace 级别权限](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions) 执行
+分别在帐户和 Namespace 内执行操作。
+
+## 角色和权限
+
+Temporal Cloud 的 RBAC 模型以分层方式工作。帐户级角色授予执行操作的权限
+在帐户内，Namespace 级别权限授予在 Namespace 内执行操作的权限。参考
+[角色和权限](/cloud/manage-access/roles-and-permissions) 页面了解更多详细信息。
+
+## 与身份提供商集成
+
+Temporal Cloud 支持 SAML 和 SCIM 与您组织的身份提供商 (IDP) 集成。
+
+- [**SAML**](/cloud/saml) - 配置基于 SAML 的 SSO 集成
+- [**SCIM**](/cloud/scim) - 使用您的 IDP 管理 Temporal Cloud 用户并通过 SCIM 集成进行访问
+
+## 解决帐户访问问题
+
+### 在失去对身份验证器应用的访问权限后恢复您的帐户 {#mfa-recovery}
+
+使用电子邮件和密码注册的帐户需要使用身份验证器应用程序进行多重身份验证 (MFA)。如果你
+无法访问您的身份验证器应用程序，您仍然可以通过单击 MFA 屏幕上的 **尝试其他方法** 来登录。来自
+在那里，您可以：
+
+- 输入您的恢复代码（首次设置 MFA 时提供）
+- 通过电子邮件接收验证码
+
+登录后，您可以通过导航至 **我的个人资料** > **密码和
+身份验证**，然后单击 **身份验证器应用程序** > **删除方法**。
+
+### 重置您的密码 {#reset-password}
+
+如果您当前已登录并想要更改密码，请点击右上角的个人资料图标
+Temporal Cloud UI，导航到 **我的个人资料** > **密码和身份验证**，然后单击 **重置密码**。
+
+如果您当前尚未登录，请导航至 Temporal Cloud UI 的登录页面，输入您的电子邮件地址，然后单击
+**继续**，然后选择**忘记密码**。在这两种情况下，您都会收到一封电子邮件，其中包含有关如何进行操作的说明
+重置您的密码。
+
+Grafana 为 Grafana Cloud 提供与 OpenMetrics 端点的无服务器集成。此集成将抓取指标，将其存储在 Grafana Cloud 中，并提供默认仪表板
+用于可视化 Grafana Cloud 中的指标。请参阅[集成页面](https://grafana.com/docs/grafana-cloud/monitor-infrastruct/integrations/integration-reference/integration-XPROT026X/)
+ 了解更多详情。
+
+如果您的组织更改了其电子邮件域（例如，从“@oldcompany.com”更改为“@newcompany.com”），您可能会
+无法使用您现有的帐户登录 Temporal Cloud。
+
+**为什么会发生这种情况：** 当您使用“继续使用 Google”或“继续使用 Microsoft”登录时，Temporal Cloud
+通过您的电子邮件地址识别您的帐户。如果您的电子邮件地址发生变化，Temporal Cloud 会将其视为不同的
+身份，无法将其与您现有的帐户相匹配。
+
+**如何解决此问题：** [创建支持票证](/cloud/support#support-ticket)，其中包含以下信息：
+
+- 您之前的电子邮件地址（最初用于访问 Temporal Cloud 的电子邮件地址）
+- 您的新电子邮件地址
+- 您的 Temporal Cloud 帐户 ID（如果已知）
+
+Temporal 支持可以在 Update 您的帐户中使用您的新电子邮件地址。
+
+:::tip Use SAML for enterprise identity management
+
+如果您的组织经常更改电子邮件域或希望集中控制用户身份验证，请考虑
+使用[SAML身份验证](/cloud/saml)。通过 SAML，您的身份提供商 (IdP) 可以管理用户身份和电子邮件
+域更改可以在 IdP 内处理，而不会影响 Temporal Cloud 访问。
+
+:::

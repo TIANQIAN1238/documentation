@@ -1,0 +1,61 @@
+---
+id: asynchronous-activity
+title: 异步 Activity 完成 - .NET SDK
+sidebar_label: 异步Activity完成
+description: 在 Temporal 中异步完成 Activity。按照简单的步骤即可允许 Activity 函数返回，而无需 Activity 执行完成。
+toc_max_heading_level: 4
+keywords:
+  - asynchronous activity completion
+  - temporal
+  - activity function
+  - task token
+  - workflow id
+  - activity id
+  - temporal client
+  - heartbeatasync
+  - completeasync
+  - failasync
+  - reportcancellationasync
+  - csharp code examples
+  - external system completion
+  - activity execution
+  - completeasyncexception
+  - getasyncactivityhandle
+tags:
+  - Activities
+  - .Net SDK
+  - Temporal SDKs
+---
+
+本页介绍如何异步完成 Activity。
+
+[异步 Activity 完成](/Activity-execution#asynchronous-Activity-completion) 使 Activity 函数能够在 Activity 执行完成的情况下返回。
+
+需要遵循三个步骤：
+
+1. Activity 向外部系统提供完成 Activity 执行所需的识别信息。
+   标识信息可以是[任务令牌](/Activity-execution#task-token)，也可以是 Namespace、Workflow Id 和 Activity Id 的组合。
+2. Activity 函数以将其标识为等待外部系统完成的方式完成。
+3. Temporal CLIent用于Heartbeat并完成Activity。
+
+要将 Activity 标记为异步完成，请在 Activity 内执行以下操作。
+
+```csharp
+// Capture token for later completion
+capturedToken = ActivityExecutionContext.Current.Info.TaskToken;
+
+// Throw special exception that says an activity will be completed somewhere else
+throw new CompleteAsyncException();
+```
+
+对于 Update 和 Activity 之外的 Activity，请使用[GetAsyncActivityHandle()](https://dotnet.Temporal.io/api/Temporalio.Client.ITemporalClient.html#Temporalio_Client_ITemporalClient_GetAsyncActivityHandle_System_Byte___)方法获取Activity的句柄。
+
+```csharp
+var handle = myClient.GetAsyncActivityHandle(capturedToken);
+```
+
+然后，在该句柄上，您可以将 Activity、“HeartbeatAsync”、“CompleteAsync”、“FailAsync”或“ReportCancellationAsync”方法的结果调用到 Update 和 Activity。
+
+```csharp
+await handle.CompleteAsync("Completion value.");
+```

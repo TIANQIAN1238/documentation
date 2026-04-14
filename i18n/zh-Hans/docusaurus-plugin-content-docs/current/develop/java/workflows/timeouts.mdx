@@ -1,0 +1,83 @@
+---
+id: timeouts
+title: Workflow 超时 - Java SDK
+sidebar_label: 超时
+description: 使用 Temporal Java SDK 优化 Workflow Execution - 有效设置 Workflow 超时和重试策略。
+toc_max_heading_level: 4
+keywords:
+  - Java
+  - failure detection
+  - timeouts
+tags:
+  - Activities
+  - Workflows
+  - Errors
+  - Failures
+  - Java SDK
+  - Temporal SDKs
+---
+
+## Workflow 超时 {#Workflow-超时}
+
+每个 Workflow 超时控制 Workflow Execution 不同方面的最大持续时间。
+
+Workflow 超时在[启动 Workflow Execution](#Workflow-超时)时设置。
+
+在继续之前，我们要注意，我们通常不建议设置 Workflow 超时，因为 Workflow 被设计为长期运行且具有弹性。
+相反，设置超时可能会限制其处理意外延迟或长时间运行的进程的能力。
+如果您需要在特定时间段后在 Workflow 内执行操作，我们建议使用 Timer。
+
+- **[Workflow Execution Timeout](/encyclopedia/Detecting-Workflow-failures#Workflow-execution-timeout)** - 限制单个 Workflow Execution 可以执行的最长时间。
+- **[Workflow 运行超时](/encyclopedia/Detecting-Workflow-failures#Workflow-run-timeout)：**限制单次 Workflow 运行可以持续的最长时间。
+- **[Workflow Task 超时](/encyclopedia/Detecting-Workflow-failures#Workflow-task-timeout)：** 限制 Worker 可以执行 Workflow Task 的最长时间。
+
+在客户端代码中创建 [`WorkflowStub`](https://www.javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/client/WorkflowStub.html) 的实例并设置超时。
+
+可用的超时有：
+
+- [setWorkflowExecutionTimeout()](https://www.javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/client/WorkflowOptions.Builder.html#setWorkflowExecutionTimeout(java.time.Duration))
+- [setWorkflowRunTimeout()](https://www.javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/client/WorkflowOptions.Builder.html#setWorkflowRunTimeout(java.time.Duration))
+- [setWorkflowTaskTimeout()](https://www.javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/client/WorkflowOptions.Builder.html#setWorkflowTaskTimeout(java.time.Duration))
+
+```java
+//create Workflow stub for YourWorkflowInterface
+YourWorkflowInterface workflow1 =
+    WorkerGreet.greetclient.newWorkflowStub(
+        GreetWorkflowInterface.class,
+        WorkflowOptions.newBuilder()
+                .setWorkflowId("YourWorkflow")
+                .setTaskQueue(WorkerGreet.TASK_QUEUE)
+                // Set Workflow Timeout duration
+                .setWorkflowExecutionTimeout(Duration.ofSeconds(10))
+                // .setWorkflowRunTimeout(Duration.ofSeconds(10))
+                // .setWorkflowTaskTimeout(Duration.ofSeconds(10))
+                .build());
+```
+
+## Workflow Retry Policy {#Workflow-重试}
+
+**如何在 Java 中设置 Workflow Retry Policy。**
+
+Retry Policy 可以与超时配合，提供精细控制以优化执行体验。
+
+如果发生故障，请使用 [Retry Policy](/encyclopedia/retry-policies) 重试 Workflow Execution。
+
+默认情况下，Workflow Execution 不会重试，并且仅在某些情况下才应将重试策略与 Workflow Execution 一起使用。
+
+要在 [`WorkflowStub`](https://www.javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/client/WorkflowStub.html) 实例中设置 Workflow 重试选项，请使用[`WorkflowOptions.Builder.setWorkflowRetryOptions`](https://www.javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/client/WorkflowOptions.Builder.html)。
+
+- 输入：“重试选项”
+- 默认值：“Null”，这意味着不会尝试重试。
+
+```java
+//create Workflow stub for GreetWorkflowInterface
+GreetWorkflowInterface workflow1 =
+    WorkerGreet.greetclient.newWorkflowStub(
+        GreetWorkflowInterface.class,
+        WorkflowOptions.newBuilder()
+                .setWorkflowId("GreetWF")
+                .setTaskQueue(WorkerGreet.TASK_QUEUE)
+                // Set Workflow Retry Options
+                .setRetryOptions(RetryOptions.newBuilder()
+                .build());
+```

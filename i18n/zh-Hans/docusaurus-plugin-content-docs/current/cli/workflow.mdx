@@ -1,0 +1,909 @@
+---
+id: workflow
+title: Temporal CLI Workflow 命令参考
+sidebar_label: Workflow
+description: Temporal Workflow 命令支持对 Workflow Execution 进行操作，例如取消、计数、删除、描述、执行、列表、Update-选项、Query、重置、重置批量、显示、Signal、堆栈、启动、终止、跟踪和 Update，从而提高效率和控制。
+toc_max_heading_level: 4
+keywords:
+  - call stack
+  - cancellation
+  - child workflows
+  - cli reference
+  - command-line-interface-cli
+  - event history
+  - query
+  - resets-feature
+  - signals
+  - signals-feature
+  - stack trace
+  - temporal cli
+  - termination
+  - workflow
+  - workflow cancel
+  - workflow count
+  - workflow delete
+  - workflow describe
+  - workflow execute
+  - workflow execution
+  - workflow list
+  - workflow metadata
+  - workflow query
+  - workflow reset
+  - workflow reset-batch
+  - workflow show
+  - workflow signal
+  - workflow stack
+  - workflow start
+  - workflow terminate
+  - workflow trace
+  - workflow update-options
+tags:
+  - Temporal CLI
+  - Workflows
+---
+
+{/* 注意：这是一个自动生成的文件。对此文件的任何编辑都将被覆盖。
+该文件是通过内部/cmd/gen-docs 从 https://github.com/Temporalio/cli/blob/main/internal/commandsgen/commands.yml 生成的 */}
+
+本页提供“Temporal”CLI“Workflow”命令的参考。适用于每个子命令的标志显示在子命令标题内的表格中。请参阅 [全局标志](#global-flags) 了解可与每个子命令一起使用的标志。
+
+＃＃ 取消
+
+取消正在运行的 Workflow Execution 记录
+Event History 中的“WorkflowExecutionCancelRequested”事件。服务
+Schedule 是一个新的命令任务，Workflow Execution 执行任何清理
+其实施所支持的工作。
+
+使用 Workflow Id 取消执行：
+
+```
+temporal workflow cancel \
+    --workflow-id YourWorkflowId
+```
+
+Visibility Query 可让您向 Workflow Execution 发送批量取消订单
+匹配结果：
+
+```
+temporal workflow cancel \
+    --query YourQuery
+```
+
+访问 https://docs.Temporal.io/Visibility 了解有关 Search Attribute 的更多信息
+和 Query 的创建。请参阅“Temporal 批处理 --help”以获取快速参考。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--Query`、`-q` |没有 | **字符串** 类似 SQL“Query”列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。 |
+| `--原因` |没有 | **字符串** 批量操作的原因。仅与--Query 一起使用。默认为用户名。 |
+| `--rps` |没有 | **float** 限制每秒的批次请求数。仅当 Query 存在时才允许。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。仅与--Workflow-id 一起使用。不能与 --Query 一起使用。 |
+| `--Workflow-id`、`-w` |没有 | **字符串** Workflow Id。您必须设置 --Workflow-id 或 --Query。 |
+| `--是`、`-y` |没有 | **bool** 不提示确认 Signaling。仅当存在 --Query 时才允许。 |
+
+＃＃ 数数
+
+显示 Workflow Execution 的计数，无论执行状态如何（正在运行、
+终止等）。使用 `--Query` 选择 Workflow Execution 的子集：
+
+```
+temporal workflow count \
+    --query YourQuery
+```
+
+访问 https://docs.Temporal.io/Visibility 了解有关 Search Attribute 的更多信息
+和 Query 的创建。请参阅“Temporal 批处理 --help”以获取快速参考。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--Query`、`-q` |没有 | **字符串** 类似 SQL“Query”列表过滤器的内容。 |
+
+＃＃ 删除
+
+删除 Workflow Executions 及其 Event History：
+
+```
+temporal workflow delete \
+    --workflow-id YourWorkflowId
+```
+
+删除操作异步执行。如果执行正在运行，则服务
+在删除之前终止它。
+
+访问 https://docs.Temporal.io/Visibility 了解有关 Search Attribute 的更多信息
+和 Query 的创建。请参阅“Temporal 批处理 --help”以获取快速参考。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--Query`、`-q` |没有 | **字符串** 类似 SQL“Query”列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。 |
+| `--原因` |没有 | **字符串** 批量操作的原因。仅与--Query 一起使用。默认为用户名。 |
+| `--rps` |没有 | **float** 限制每秒的批次请求数。仅当 Query 存在时才允许。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。仅与--Workflow-id 一起使用。不能与 --Query 一起使用。 |
+| `--Workflow-id`、`-w` |没有 | **字符串** Workflow Id。您必须设置 --Workflow-id 或 --Query。 |
+| `--是`、`-y` |没有 | **bool** 不提示确认 Signaling。仅当存在 --Query 时才允许。 |
+
+＃＃ 描述
+
+显示有关特定 Workflow Execution 的信息：
+
+```
+temporal workflow describe \
+    --workflow-id YourWorkflowId
+```
+
+显示 Workflow Execution 的自动重置点：
+
+```
+temporal workflow describe \
+    --workflow-id YourWorkflowId \
+    --reset-points true
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--原始` |没有 | **bool** 打印属性而不更改其格式。 |
+| `--重置点` |没有 | **布尔** 仅显示自动重置点。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+＃＃ 执行
+
+建立一个新的 Workflow Execution 并将其进度定向到标准输出。的
+命令块并在 Workflow Execution 完成时返回。如果你的
+Workflow 需要输入，传递有效的 JSON：
+
+```
+temporal workflow execute
+    --workflow-id YourWorkflowId \
+    --type YourWorkflow \
+    --task-queue YourTaskQueue \
+    --input '{"some-key": "some-value"}'
+```
+
+使用 `--event-details` 将 Updates 中继到 JSON 中的命令行输出
+格式。当使用 JSON 输出（`--output json`）时，这包括整个
+运行的“历史记录”JSON 密钥。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--cron` |没有 | **字符串** Workflow 的 Cron Schedule。 |
+| `--详细` |没有 | **bool** 将事件显示为部分而不是表格。不适用于 JSON 输出。 |
+| `--执行超时` |没有 | **持续时间** 如果 WorkflowExecution 持续时间超过“DURATION”，则该执行失败。此超时包括重试和ContinueAsNew 任务。 |
+| `--失败存在` |没有 | **bool** 如果 Workflow 已存在，则失败。 |
+| `--公平关键` |没有 | **字符串** 用于按比例分配任务的公平键（最大 64 字节）。具有相同密钥的任务根据其权重共享容量。 |
+| `--公平权重` |没有 | **float** 此公平键的权重 [0.001-1000]。密钥根据其权重按比例分配。 |
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--id-冲突-策略` |没有 | **字符串枚举** 确定在生成新 Workflow Execution 与现有 Open Workflow Execution 使用的特定 Workflow Id 时如何解决冲突。接受的值：失败、UseExisting、TerminateExisting。 |
+| `--id-重用策略` |没有 | **字符串枚举** 在新的 Workflow Execution 中重复使用 Workflow Id 的策略。接受的值：AllowDuplicate、AllowDuplicateFailedOnly、RejectDuplicate、TerminateIfRunning。 |
+| `--input`, `-i` |没有 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` |没有 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--输入元` |没有 | **string[]** 以“KEY=VALUE”对的形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--备忘录` |没有 | **字符串[]** 使用“KEY =“VALUE”对的备忘录。使用 JSON 值。 |
+| `--优先键` |没有 | **int** 优先级键（1-5，数字越小=优先级越高）。队列中的任务应按接近优先级的顺序进行处理。未指定时默认为 3。 |
+| `--运行超时` |没有 | **持续时间** 如果 Workflow 运行持续时间超过“DURATION”，则 Workflow 运行失败。 |
+| `--搜索属性` |没有 | **字符串[]** Search Attribute，格式为“KEY=VALUE”。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--开始延迟` |没有 | **持续时间** 启动 Workflow Execution 之前的延迟。不能与 cron Schedules 一起使用。如果 Workflow 在此时间之前收到 Signal 或 Update，则 Workflow Execution 立即启动。 |
+| `--静态详细信息` |没有 | **字符串** 供用户在 UI 中使用的静态 Workflow 详细信息。使用 Temporal Markdown 格式，可能是多行。 _（实验）_ |
+| `--static-summary` |没有 | **字符串** UI 中人类消耗的静态 Workflow 摘要。使用 Temporal Markdown 格式，应该是单行。 _（实验）_ |
+| `--任务队列`、`-t` |是的 | **字符串** Workflow Task 队列。 |
+| `--任务超时` |没有 | **持续时间** 如果 Workflow Task 持续时间超过“DURATION”，则 Workflow Task 失败。这是 Workflow Task 的启动到关闭超时。 |
+| `--类型` |是的 | **字符串** Workflow Type 名称。 |
+| `--Workflow-id`、`-w` |没有 | **字符串** Workflow Id。如果未提供，服务将生成一个唯一的 ID。 |
+
+## 执行-Update-with-start
+
+向 Workflow Execution 发送消息以调用 Update 处理程序，并等待
+Update 来完成。如果 Workflow Execution 未运行，则新的 Workflow
+开始执行并发送 Update。
+
+实验性的。
+
+```
+temporal workflow execute-update-with-start \
+  --update-name YourUpdate \
+  --update-input '{"update-key": "update-value"}' \
+  --workflow-id YourWorkflowId \
+  --type YourWorkflowType \
+  --task-queue YourTaskQueue \
+  --id-conflict-policy Fail \
+  --input '{"wf-key": "wf-value"}'
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--cron` |没有 | **字符串** Workflow 的 Cron Schedule。 |
+| `--执行超时` |没有 | **持续时间** 如果 WorkflowExecution 持续时间超过“DURATION”，则该执行失败。此超时包括重试和ContinueAsNew 任务。 |
+| `--失败存在` |没有 | **bool** 如果 Workflow 已存在，则失败。 |
+| `--公平关键` |没有 | **字符串** 用于按比例分配任务的公平键（最大 64 字节）。具有相同密钥的任务根据其权重共享容量。 |
+| `--公平权重` |没有 | **float** 此公平键的权重 [0.001-1000]。密钥根据其权重按比例分配。 |
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--id-冲突-策略` |没有 | **字符串枚举** 确定在生成新 Workflow Execution 与现有 Open Workflow Execution 使用的特定 Workflow Id 时如何解决冲突。接受的值：失败、UseExisting、TerminateExisting。 |
+| `--id-重用策略` |没有 | **字符串枚举** 在新的 Workflow Execution 中重复使用 Workflow Id 的策略。接受的值：AllowDuplicate、AllowDuplicateFailedOnly、RejectDuplicate、TerminateIfRunning。 |
+| `--input`, `-i` |没有 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` |没有 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--输入元` |没有 | **string[]** 以“KEY=VALUE”对的形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--备忘录` |没有 | **字符串[]** 使用“KEY =“VALUE”对的备忘录。使用 JSON 值。 |
+| `--优先键` |没有 | **int** 优先级键（1-5，数字越小=优先级越高）。队列中的任务应按接近优先级的顺序进行处理。未指定时默认为 3。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。如果未设置，则根据当前运行的 Workflow Execution 查找 Update。 |
+| `--运行超时` |没有 | **持续时间** 如果 Workflow 运行持续时间超过“DURATION”，则 Workflow 运行失败。 |
+| `--搜索属性` |没有 | **字符串[]** Search Attribute，格式为“KEY=VALUE”。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--开始延迟` |没有 | **持续时间** 启动 Workflow Execution 之前的延迟。不能与 cron Schedules 一起使用。如果 Workflow 在此时间之前收到 Signal 或 Update，则 Workflow Execution 立即启动。 |
+| `--静态详细信息` |没有 | **字符串** 供用户在 UI 中使用的静态 Workflow 详细信息。使用 Temporal Markdown 格式，可能是多行。 _（实验）_ |
+| `--static-summary` |没有 | **字符串** UI 中人类消耗的静态 Workflow 摘要。使用 Temporal Markdown 格式，应该是单行。 _（实验）_ |
+| `--任务队列`、`-t` |是的 | **字符串** Workflow Task 队列。 |
+| `--任务超时` |没有 | **持续时间** 如果 Workflow Task 持续时间超过“DURATION”，则 Workflow Task 失败。这是 Workflow Task 的启动到关闭超时。 |
+| `--类型` |是的 | **字符串** Workflow Type 名称。 |
+| `--Update-第一次执行-运行-id` |没有 | **字符串** 父运行 ID。 Update 被发送到以此运行 ID 开始的链中的最后一个 Workflow Execution。 |
+| `--Update-id` |没有 | **字符串** Update ID。如果未设置，则默认为 UUID。 |
+| `--Update-输入` |没有 | **字符串[]** Update 输入值。使用 JSON 内容或设置 --Update-input-meta 进行覆盖。不能与 --Update-input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--Update-输入-base64` |没有 | **bool** 假设 Update 输入采用 Base64 编码并尝试对其进行解码。 |
+| `--Update-输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --Update-input-meta 进行覆盖。不能与--Update-输入结合使用。可以多次传递以传递多个参数。 |
+| `--Update-输入元` |没有 | **string[]** 输入 Update 有效负载元数据作为“KEY=VALUE”对。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。 |
+| `--Update-名称` |是的 | **字符串** Update 名称。 |
+| `--Workflow-id`、`-w` |没有 | **字符串** Workflow Id。如果未提供，服务将生成一个唯一的 ID。 |
+
+## 修复历史记录 json
+
+重新序列化 Event History JSON 文件：
+
+```
+temporal workflow fix-history-json \
+    --source /path/to/original.json \
+    --target /path/to/reserialized.json
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--source`、`-s` |是的 | **字符串** 原始文件的路径。 |
+| `--target`、`-t` |没有 | **字符串** 结果文件的路径。省略时，输出将发送到 stdout。 |
+
+＃＃ 列表
+
+列出 Workflow Execution。可选的“--Query”将输出限制为
+Workflow 与 Query 匹配：
+
+```
+temporal workflow list \
+    --query YourQuery
+```
+
+访问 https://docs.Temporal.io/Visibility 了解有关 Search Attribute 的更多信息
+和 Query 的创建。请参阅“Temporal 批处理 --help”以获取快速参考。
+
+查看存档的 Workflow Execution 列表：
+
+```
+temporal workflow list \
+    --archived
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--存档` |没有 | **bool** 将输出限制为存档的 Workflow Execution。 _（实验）_ |
+| `--限制` |没有 | **int** 要显示的 Workflow Execution 的最大数量。 |
+| `--页面大小` |没有 | **int** 一次从服务器获取的 Workflow Execution 的最大数量。 |
+| `--Query`、`-q` |没有 | **字符串** 类似 SQL“Query”列表过滤器的内容。 |
+
+## 元数据
+
+发出 Query 并显示用户设置的元数据，例如摘要和
+特定 Workflow Execution 的详细信息：
+
+```
+temporal workflow metadata \
+    --workflow-id YourWorkflowId
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--拒绝条件` |没有 | **字符串枚举** 用于拒绝基于 Workflow 状态的查询的可选标志。接受的值：not_open、not_completed_cleanly。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+＃＃ 暂停
+
+暂停 Workflow Execution。
+注意：这是一项实验性功能，将来可能会发生变化。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--原因` |没有 | **字符串** 暂停 Workflow Execution 的原因。默认为带有当前用户名的消息。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+## Query
+
+通过 Workflow Id 将 Query 发送到 Workflow Execution 以检索其状态。
+此同步操作公开了正在运行的 Workflow 的内部状态
+执行，不断变化。您可以将Query同时运行并完成
+Workflow Executions：
+
+```
+temporal workflow query \
+    --workflow-id YourWorkflowId
+    --type YourQueryType
+    --input '{"YourInputKey": "YourInputValue"}'
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--input`, `-i` |没有 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` |没有 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--输入元` |没有 | **string[]** 以“KEY=VALUE”对的形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--名称` |是的 | **字符串** Query 类型/名称。 |
+| `--拒绝条件` |没有 | **字符串枚举** 用于拒绝基于 Workflow 状态的查询的可选标志。接受的值：not_open、not_completed_cleanly。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+＃＃ 重置
+
+重置 Workflow Execution，以便它可以从 Event History 中的某个点恢复
+不丢失迄今为止的进度：
+
+```
+temporal workflow reset \
+    --workflow-id YourWorkflowId \
+    --event-id YourLastEvent
+```
+
+从 Workflow Execution 最后的位置开始继续作为新的：
+
+```
+temporal workflow reset \
+    --workflow-id YourWorkflowId \
+    --type LastContinuedAsNew
+```
+
+对于批量重置，请将重置限制为 FirstWorkflowTask、LastWorkflowTask 或
+构建 ID。请勿将 Workflow Id、运行 ID 或事件 ID 与此命令一起使用。
+
+访问 https://docs.Temporal.io/Visibility 了解有关搜索的更多信息
+属性和 Query 创建。
+
+### 带有-Workflow-Update-选项
+
+重置 Workflow 后自动运行 Workflow Update 选项。
+由复位命令选择的 Workflow 被转发到子命令。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--版本控制覆盖行为` |是的 | **字符串枚举** 覆盖 Workflow 的版本控制行为。接受的值：固定、自动升级。 |
+| `--versioning-override-build-id` |没有 | **字符串** 当覆盖“固定”行为时，指定目标版本的构建 ID。 |
+| `--版本控制覆盖部署名称` |没有 | **字符串** 当覆盖“固定”行为时，指定要定位的版本的部署名称。 |
+
+＃＃ 结果
+
+等待并打印 Workflow Execution 的结果：
+
+```
+temporal workflow result \
+    --workflow-id YourWorkflowId
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+＃＃ 展示
+
+显示 Workflow Execution 的 Event History。
+当使用 JSON 输出（`--output json`）时，您可以将结果传递给 SDK
+执行重播：
+
+```
+temporal workflow show \
+    --workflow-id YourWorkflowId
+    --output json
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--详细` |没有 | **bool** 将事件显示为详细部分而不是表格。不适用于 JSON 输出。 |
+| `--follow`、`-f` |没有 | **bool** 实时关注 Workflow Execution 进度。不适用于 JSON 输出。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+## Signal
+
+通过以下方式向正在运行的 Workflow Execution 发送异步通知 (Signal)：
+它是Workflow Id。 Signal 被载入史册。当你包括
+`--input`，该数据可供 Workflow Execution 使用：
+
+```
+temporal workflow signal \
+    --workflow-id YourWorkflowId \
+    --name YourSignal \
+    --input '{"YourInputKey": "YourInputValue"}'
+```
+
+访问 https://docs.Temporal.io/Visibility 了解有关 Search Attribute 的更多信息
+和 Query 的创建。请参阅“Temporal 批处理 --help”以获取快速参考。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--input`, `-i` |没有 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` |没有 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--输入元` |没有 | **string[]** 以“KEY=VALUE”对的形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--名称` |是的 | **字符串** Signal 名称。 |
+| `--Query`、`-q` |没有 | **字符串** 类似 SQL“Query”列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。 |
+| `--原因` |没有 | **字符串** 批量操作的原因。仅与--Query 一起使用。默认为用户名。 |
+| `--rps` |没有 | **float** 限制每秒的批次请求数。仅当 Query 存在时才允许。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。仅与--Workflow-id 一起使用。不能与 --Query 一起使用。 |
+| `--Workflow-id`、`-w` |没有 | **字符串** Workflow Id。您必须设置 --Workflow-id 或 --Query。 |
+| `--是`、`-y` |没有 | **bool** 不提示确认 Signaling。仅当存在 --Query 时才允许。 |
+
+## Signal-带启动
+
+向 Workflow Execution 发送异步通知 (Signal)。
+如果 Workflow Execution 未运行或未找到，它将启动
+Workflow 然后发送 Signal。
+
+```
+temporal workflow signal-with-start \
+  --signal-name YourSignal \
+  --signal-input '{"some-key": "some-value"}' \
+  --workflow-id YourWorkflowId \
+  --type YourWorkflowType \
+  --task-queue YourTaskQueue \
+  --input '{"some-key": "some-value"}'
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--cron` |没有 | **字符串** Workflow 的 Cron Schedule。 |
+| `--执行超时` |没有 | **持续时间** 如果 WorkflowExecution 持续时间超过“DURATION”，则该执行失败。此超时包括重试和ContinueAsNew 任务。 |
+| `--失败存在` |没有 | **bool** 如果 Workflow 已存在，则失败。 |
+| `--公平关键` |没有 | **字符串** 用于按比例分配任务的公平键（最大 64 字节）。具有相同密钥的任务根据其权重共享容量。 |
+| `--公平权重` |没有 | **float** 此公平键的权重 [0.001-1000]。密钥根据其权重按比例分配。 |
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--id-冲突-策略` |没有 | **字符串枚举** 确定在生成新 Workflow Execution 与现有 Open Workflow Execution 使用的特定 Workflow Id 时如何解决冲突。接受的值：失败、UseExisting、TerminateExisting。 |
+| `--id-重用策略` |没有 | **字符串枚举** 在新的 Workflow Execution 中重复使用 Workflow Id 的策略。接受的值：AllowDuplicate、AllowDuplicateFailedOnly、RejectDuplicate、TerminateIfRunning。 |
+| `--input`, `-i` |没有 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` |没有 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--输入元` |没有 | **string[]** 以“KEY=VALUE”对的形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--备忘录` |没有 | **字符串[]** 使用“KEY =“VALUE”对的备忘录。使用 JSON 值。 |
+| `--优先键` |没有 | **int** 优先级键（1-5，数字越小=优先级越高）。队列中的任务应按接近优先级的顺序进行处理。未指定时默认为 3。 |
+| `--运行超时` |没有 | **持续时间** 如果 Workflow 运行持续时间超过“DURATION”，则 Workflow 运行失败。 |
+| `--搜索属性` |没有 | **字符串[]** Search Attribute，格式为“KEY=VALUE”。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--Signal-输入` |没有 | **字符串[]** Signal 输入值。使用 JSON 内容或设置 --Signal-input-meta 进行覆盖。无法与 --Signal-input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--Signal-输入-base64` |没有 | **bool** 假设 Signal 输入采用 Base64 编码并尝试对其进行解码。 |
+| `--Signal-输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --Signal-input-meta 进行覆盖。不能与--Signal-输入结合使用。可以多次传递以传递多个参数。 |
+| `--Signal-输入元` |没有 | **string[]** 输入 Signal 有效负载元数据作为“KEY=VALUE”对。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。 |
+| `--Signal-名称` |是的 | **字符串** Signal 名称。 |
+| `--开始延迟` |没有 | **持续时间** 启动 Workflow Execution 之前的延迟。不能与 cron Schedules 一起使用。如果 Workflow 在此时间之前收到 Signal 或 Update，则 Workflow Execution 立即启动。 |
+| `--静态详细信息` |没有 | **字符串** 供用户在 UI 中使用的静态 Workflow 详细信息。使用 Temporal Markdown 格式，可能是多行。 _（实验）_ |
+| `--static-summary` |没有 | **字符串** UI 中人类消耗的静态 Workflow 摘要。使用 Temporal Markdown 格式，应该是单行。 _（实验）_ |
+| `--任务队列`、`-t` |是的 | **字符串** Workflow Task 队列。 |
+| `--任务超时` |没有 | **持续时间** 如果 Workflow Task 持续时间超过“DURATION”，则 Workflow Task 失败。这是 Workflow Task 的启动到关闭超时。 |
+| `--类型` |是的 | **字符串** Workflow Type 名称。 |
+| `--Workflow-id`、`-w` |没有 | **字符串** Workflow Id。如果未提供，服务将生成一个唯一的 ID。 |
+
+＃＃ 堆
+
+使用“__stack_trace”类型 Query 在 Workflow Execution 上执行 Query。
+显示当前正在使用的线程和例程的堆栈跟踪
+Workflow 用于故障排除：
+
+```
+temporal workflow stack \
+    --workflow-id YourWorkflowId
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--拒绝条件` |没有 | **字符串枚举** 用于拒绝基于 Workflow 状态的查询的可选标志。接受的值：not_open、not_completed_cleanly。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+＃＃ 开始
+
+启动新的 Workflow Execution。返回 Workflow- 和 Run-ID：
+
+```
+temporal workflow start \
+    --workflow-id YourWorkflowId \
+    --type YourWorkflow \
+    --task-queue YourTaskQueue \
+    --input '{"some-key": "some-value"}'
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--cron` |没有 | **字符串** Workflow 的 Cron Schedule。 |
+| `--执行超时` |没有 | **持续时间** 如果 WorkflowExecution 持续时间超过“DURATION”，则该执行失败。此超时包括重试和ContinueAsNew 任务。 |
+| `--失败存在` |没有 | **bool** 如果 Workflow 已存在，则失败。 |
+| `--公平关键` |没有 | **字符串** 用于按比例分配任务的公平键（最大 64 字节）。具有相同密钥的任务根据其权重共享容量。 |
+| `--公平权重` |没有 | **float** 此公平键的权重 [0.001-1000]。密钥根据其权重按比例分配。 |
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--id-冲突-策略` |没有 | **字符串枚举** 确定在生成新 Workflow Execution 与现有 Open Workflow Execution 使用的特定 Workflow Id 时如何解决冲突。接受的值：失败、UseExisting、TerminateExisting。 |
+| `--id-重用策略` |没有 | **字符串枚举** 在新的 Workflow Execution 中重复使用 Workflow Id 的策略。接受的值：AllowDuplicate、AllowDuplicateFailedOnly、RejectDuplicate、TerminateIfRunning。 |
+| `--input`, `-i` |没有 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` |没有 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--输入元` |没有 | **string[]** 以“KEY=VALUE”对的形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--备忘录` |没有 | **字符串[]** 使用“KEY =“VALUE”对的备忘录。使用 JSON 值。 |
+| `--优先键` |没有 | **int** 优先级键（1-5，数字越小=优先级越高）。队列中的任务应按接近优先级的顺序进行处理。未指定时默认为 3。 |
+| `--运行超时` |没有 | **持续时间** 如果 Workflow 运行持续时间超过“DURATION”，则 Workflow 运行失败。 |
+| `--搜索属性` |没有 | **字符串[]** Search Attribute，格式为“KEY=VALUE”。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--开始延迟` |没有 | **持续时间** 启动 Workflow Execution 之前的延迟。不能与 cron Schedules 一起使用。如果 Workflow 在此时间之前收到 Signal 或 Update，则 Workflow Execution 立即启动。 |
+| `--静态详细信息` |没有 | **字符串** 供用户在 UI 中使用的静态 Workflow 详细信息。使用 Temporal Markdown 格式，可能是多行。 _（实验）_ |
+| `--static-summary` |没有 | **字符串** UI 中人类消耗的静态 Workflow 摘要。使用 Temporal Markdown 格式，应该是单行。 _（实验）_ |
+| `--任务队列`、`-t` |是的 | **字符串** Workflow Task 队列。 |
+| `--任务超时` |没有 | **持续时间** 如果 Workflow Task 持续时间超过“DURATION”，则 Workflow Task 失败。这是 Workflow Task 的启动到关闭超时。 |
+| `--类型` |是的 | **字符串** Workflow Type 名称。 |
+| `--Workflow-id`、`-w` |没有 | **字符串** Workflow Id。如果未提供，服务将生成一个唯一的 ID。 |
+
+## 启动-Update-with-start
+
+向 Workflow Execution 发送消息以调用 Update 处理程序，并等待
+Update 被接受或拒绝。如果 Workflow Execution 未运行，
+然后启动新的 Workflow Execution 并发送 Update。
+
+实验性的。
+
+```
+temporal workflow start-update-with-start \
+  --update-name YourUpdate \
+  --update-input '{"update-key": "update-value"}' \
+  --update-wait-for-stage accepted \
+  --workflow-id YourWorkflowId \
+  --type YourWorkflowType \
+  --task-queue YourTaskQueue \
+  --id-conflict-policy Fail \
+  --input '{"wf-key": "wf-value"}'
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--cron` |没有 | **字符串** Workflow 的 Cron Schedule。 |
+| `--执行超时` |没有 | **持续时间** 如果 WorkflowExecution 持续时间超过“DURATION”，则该执行失败。此超时包括重试和ContinueAsNew 任务。 |
+| `--失败存在` |没有 | **bool** 如果 Workflow 已存在，则失败。 |
+| `--公平关键` |没有 | **字符串** 用于按比例分配任务的公平键（最大 64 字节）。具有相同密钥的任务根据其权重共享容量。 |
+| `--公平权重` |没有 | **float** 此公平键的权重 [0.001-1000]。密钥根据其权重按比例分配。 |
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--id-冲突-策略` |没有 | **字符串枚举** 确定在生成新 Workflow Execution 与现有 Open Workflow Execution 使用的特定 Workflow Id 时如何解决冲突。接受的值：失败、UseExisting、TerminateExisting。 |
+| `--id-重用策略` |没有 | **字符串枚举** 在新的 Workflow Execution 中重复使用 Workflow Id 的策略。接受的值：AllowDuplicate、AllowDuplicateFailedOnly、RejectDuplicate、TerminateIfRunning。 |
+| `--input`, `-i` |没有 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` |没有 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--输入元` |没有 | **string[]** 以“KEY=VALUE”对的形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--备忘录` |没有 | **字符串[]** 使用“KEY =“VALUE”对的备忘录。使用 JSON 值。 |
+| `--优先键` |没有 | **int** 优先级键（1-5，数字越小=优先级越高）。队列中的任务应按接近优先级的顺序进行处理。未指定时默认为 3。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。如果未设置，则根据当前运行的 Workflow Execution 查找 Update。 |
+| `--运行超时` |没有 | **持续时间** 如果 Workflow 运行持续时间超过“DURATION”，则 Workflow 运行失败。 |
+| `--搜索属性` |没有 | **字符串[]** Search Attribute，格式为“KEY=VALUE”。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--开始延迟` |没有 | **持续时间** 启动 Workflow Execution 之前的延迟。不能与 cron Schedules 一起使用。如果 Workflow 在此时间之前收到 Signal 或 Update，则 Workflow Execution 立即启动。 |
+| `--静态详细信息` |没有 | **字符串** 供用户在 UI 中使用的静态 Workflow 详细信息。使用 Temporal Markdown 格式，可能是多行。 _（实验）_ |
+| `--static-summary` |没有 | **字符串** UI 中人类消耗的静态 Workflow 摘要。使用 Temporal Markdown 格式，应该是单行。 _（实验）_ |
+| `--任务队列`、`-t` |是的 | **字符串** Workflow Task 队列。 |
+| `--任务超时` |没有 | **持续时间** 如果 Workflow Task 持续时间超过“DURATION”，则 Workflow Task 失败。这是 Workflow Task 的启动到关闭超时。 |
+| `--类型` |是的 | **字符串** Workflow Type 名称。 |
+| `--Update-第一次执行-运行-id` |没有 | **字符串** 父运行 ID。 Update 被发送到以此运行 ID 开始的链中的最后一个 Workflow Execution。 |
+| `--Update-id` |没有 | **字符串** Update ID。如果未设置，则默认为 UUID。 |
+| `--Update-输入` |没有 | **字符串[]** Update 输入值。使用 JSON 内容或设置 --Update-input-meta 进行覆盖。不能与 --Update-input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--Update-输入-base64` |没有 | **bool** 假设 Update 输入采用 Base64 编码并尝试对其进行解码。 |
+| `--Update-输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --Update-input-meta 进行覆盖。不能与--Update-输入结合使用。可以多次传递以传递多个参数。 |
+| `--Update-输入元` |没有 | **string[]** 输入 Update 有效负载元数据作为“KEY=VALUE”对。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。 |
+| `--Update-名称` |是的 | **字符串** Update 名称。 |
+| `--Update-等待阶段` |是的 | **字符串枚举** Update 等待阶段。唯一的选项是“accepted”，但此选项是必需的。这是为了允许 CLI 的未来版本选择默认值。接受值：接受。 |
+| `--Workflow-id`、`-w` |没有 | **字符串** Workflow Id。如果未提供，服务将生成一个唯一的 ID。 |
+
+## 终止
+
+终止 Workflow Execution：
+
+```
+temporal workflow terminate \
+    --reason YourReasonForTermination \
+    --workflow-id YourWorkflowId
+```
+
+原因是可选的，默认为当前用户的名称。原因
+作为“WorkflowExecutionTermulated”的一部分存储在 Event History 中
+事件。这成为 Workflow Execution 历史上的结束事件。
+
+可以通过 Visibility Query 列表过滤器批量终止执行：
+
+```
+temporal workflow terminate \
+    --query YourQuery \
+    --reason YourReasonForTermination
+```
+
+Workflow 代码无法查看或响应终止。进行清理工作
+在您的 Workflow 代码中，请改用“Temporal Workflow cancel”。
+
+访问 https://docs.Temporal.io/Visibility 了解有关 Search Attribute 的更多信息
+和 Query 的创建。请参阅“Temporal 批处理 --help”以获取快速参考。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--Query`、`-q` |没有 | **字符串** 类似 SQL“Query”列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。 |
+| `--原因` |没有 | **字符串** 终止原因。默认为带有当前用户名的消息。 |
+| `--rps` |没有 | **float** 限制每秒的批次请求数。仅当 Query 存在时才允许。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。只能使用 --Workflow-id 设置。请勿与 --Query 一起使用。 |
+| `--Workflow-id`、`-w` |没有 | **字符串** Workflow Id。您必须设置 --Workflow-id 或 --Query。 |
+| `--是`、`-y` |没有 | **bool** 不提示确认终止。只能与--Query 一起使用。 |
+
+＃＃ 痕迹
+
+显示 Workflow Execution 及其 Child Workflow 的进度
+实时追踪。此视图可帮助您了解 Workflow 的运行情况：
+
+```
+temporal workflow trace \
+    --workflow-id YourWorkflowId
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--并发` |没有 | **int** 一次获取的 Workflow 历史记录数。 |
+| `--深度` |没有 | **int** 设置 Child Workflow 提取的深度。传递 -1 以获取任意深度的 Child Workflow。 |
+| `--折叠` |没有 | **字符串[]** 折叠具有指定状态的 Child Workflow。不区分大小写。如果提供 --no-fold 则忽略。可用值：正在运行、已完成、失败、已取消、已终止、超时、继续新。可以多次通过。 |
+| `--无折叠` |没有 | **布尔** 禁用折叠。获取并显示设定深度内的Child Workflow。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+## 取消暂停
+
+取消暂停之前暂停的 Workflow Execution。
+注意：这是一项实验性功能，将来可能会发生变化。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--原因` |没有 | **字符串** 取消暂停 Workflow Execution 的原因。默认为带有当前用户名的消息。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+## Update
+
+Update 是对 Workflow Execution 的同步调用，可以更改其
+状态，控制其流程，并返回结果。
+
+＃＃＃ 描述
+
+给定 Workflow Execution 和 Update ID，返回有关其当前状态的信息，包括
+如果已完成则结果。
+
+```
+temporal workflow update describe \
+    --workflow-id YourWorkflowId \
+    --update-id YourUpdateId
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。如果未设置，Update 将作为当前运行的 Workflow Execution。 |
+| `--Update-id` |是的 | **字符串** Update ID。每个 Workflow Execution 必须是唯一的。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+＃＃＃ 执行
+
+向 Workflow Execution 发送消息以调用 Update 处理程序，并等待
+Update 完成或失败。您还可以使用它来等待现有的
+Update 通过提交现有的 Update ID 来完成。
+
+```
+temporal workflow update execute \
+    --workflow-id YourWorkflowId \
+    --name YourUpdate \
+    --input '{"some-key": "some-value"}'
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--first-execution-run-id` |没有 | **字符串** 父运行 ID。 Update 被发送到以此运行 ID 开始的链中的最后一个 Workflow Execution。 |
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--input`, `-i` |没有 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` |没有 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--输入元` |没有 | **string[]** 以“KEY=VALUE”对的形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--名称` |是的 | **字符串** 处理程序方法名称。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。如果未设置，则根据当前运行的 Workflow Execution 查找 Update。 |
+| `--Update-id` |没有 | **字符串** Update ID。如果未设置，则默认为 UUID。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+＃＃＃ 结果
+
+给定 Workflow Execution 和 Update ID，等待 Update 完成或失败，然后
+打印结果。
+
+```
+temporal workflow update result \
+    --workflow-id YourWorkflowId \
+    --update-id YourUpdateId
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。如果未设置，Update 将作为当前运行的 Workflow Execution。 |
+| `--Update-id` |是的 | **字符串** Update ID。每个 Workflow Execution 必须是唯一的。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+＃＃＃ 开始
+
+向 Workflow Execution 发送消息以调用 Update 处理程序，并等待
+Update 被接受或拒绝。随后您可以等待 Update
+通过使用“Temporal Workflow Update执行”来完成。
+
+```
+temporal workflow update start \
+    --workflow-id YourWorkflowId \
+    --name YourUpdate \
+    --input '{"some-key": "some-value"}'
+    --wait-for-stage accepted
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--first-execution-run-id` |没有 | **字符串** 父运行 ID。 Update 被发送到以此运行 ID 开始的链中的最后一个 Workflow Execution。 |
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--input`, `-i` |没有 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` |没有 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--输入元` |没有 | **string[]** 以“KEY=VALUE”对的形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--名称` |是的 | **字符串** 处理程序方法名称。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。如果未设置，则根据当前运行的 Workflow Execution 查找 Update。 |
+| `--Update-id` |没有 | **字符串** Update ID。如果未设置，则默认为 UUID。 |
+| `--等待阶段` |是的 | **字符串枚举** Update 等待阶段。唯一的选项是“accepted”，但此选项是必需的。这是为了允许 CLI 的未来版本选择默认值。接受值：接受。 |
+| `--Workflow-id`、`-w` |是的 | **字符串** Workflow Id。 |
+
+## Update-选项
+
+修改Workflow Executions的属性：
+
+```
+temporal workflow update-options [options]
+```
+
+它可以覆盖 Worker 部署配置
+Workflow Execution，控制 Worker 版本控制。
+
+例如，要强制当前部署中的 Worker 执行以下命令
+接下来 Workflow Task 将行为更改为“auto_upgrade”：
+
+```
+temporal workflow update-options \
+    --workflow-id YourWorkflowId \
+    --versioning-override-behavior auto_upgrade
+```
+
+或者将 Workflow Execution 固定到 Worker 部署，设置行为
+到“固定”：
+
+```
+temporal workflow update-options \
+    --workflow-id YourWorkflowId \
+    --versioning-override-behavior pinned \
+    --versioning-override-deployment-name YourDeploymentName \
+    --versioning-override-build-id YourDeploymentBuildId
+```
+
+要删除任何以前的覆盖，请将行为设置为
+`未指定`:
+
+```
+temporal workflow update-options \
+    --workflow-id YourWorkflowId \
+    --versioning-override-behavior unspecified
+```
+
+要查看当前覆盖，请使用“Temporal Workflow 描述”
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--Query`、`-q` |没有 | **字符串** 类似 SQL“Query”列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。 |
+| `--原因` |没有 | **字符串** 批量操作的原因。仅与--Query 一起使用。默认为用户名。 |
+| `--rps` |没有 | **float** 限制每秒的批次请求数。仅当 Query 存在时才允许。 |
+| `--run-id`、`-r` |没有 | **字符串** 运行 ID。仅与--Workflow-id 一起使用。不能与 --Query 一起使用。 |
+| `--版本控制覆盖行为` |是的 | **字符串枚举** 覆盖 Workflow 的版本控制行为。接受的值：未指定、固定、自动升级。 |
+| `--versioning-override-build-id` |没有 | **字符串** 当覆盖“固定”行为时，指定目标版本的构建 ID。 |
+| `--版本控制覆盖部署名称` |没有 | **字符串** 当覆盖“固定”行为时，指定要定位的版本的部署名称。 |
+| `--Workflow-id`、`-w` |没有 | **字符串** Workflow Id。您必须设置 --Workflow-id 或 --Query。 |
+| `--是`、`-y` |没有 | **bool** 不提示确认 Signaling。仅当存在 --Query 时才允许。 |
+
+## 全局标志
+
+以下选项可与任何命令一起使用。
+
+|旗帜|必填 |描述 |默认 |
+|------|----------|-------------|--------|
+| `--地址` |没有 | **字符串** Temporal 服务 gRPC 端点。 | `本地主机：7233` |
+| `--api-key` |没有 | **字符串** 请求的 API 密钥。 |  |
+| `--客户端权限` |没有 | **字符串** Temporal gRPC 客户端：权限伪标头。 |  |
+| `--客户端连接超时` |没有 | **持续时间** 客户端连接超时。 0s表示没有超时。 |  |
+| `--codec-auth` |没有 | **字符串** Codec Server 请求的授权标头。 |  |
+| `--编解码器端点` |没有 | **字符串** 远程 Codec Server 端点。 |  |
+| `--编解码器头` |没有 | **string[]** 向 Codec Server 发出请求的 HTTP 标头。格式为“KEY=VALUE”对。可以多次传递以设置多个标头。 |  |
+| `--颜色` |没有 | **字符串枚举** 输出着色。接受的值：始终、从不、自动。 | `自动` |
+| `--命令超时` |没有 | **持续时间** 命令执行超时。 0s表示没有超时。 |  |
+| `--config 文件` |没有 | **字符串** 从中读取 TOML 配置的文件路径，默认为 `$CONFIG_PATH/Temporalio/Temporal.toml`，其中 `$CONFIG_PATH` 在 Unix 上定义为 `$HOME/.config`，在 macOS 上定义为 `$HOME/Library/Application Support`，在 Windows 上定义为 `%AppData%`。 _（实验）_ |  |
+| `--disable-config-env` |没有 | **bool** 如果设置，则禁用从环境变量加载环境配置。 _（实验）_ |  |
+| `--禁用配置文件` |没有 | **bool** 如果设置，则禁用从配置文件加载环境配置。 _（实验）_ |  |
+| `--env` |没有 | **字符串** 活动环境名称（`ENV`）。 | `默认` |
+| `--env-file` |没有 | **字符串** 环境设置文件的路径。默认为“$HOME/.config/Temporalio/Temporal.yaml”。 |  |
+| `--gRPC-元` |没有 | **string[]** 请求的 HTTP 标头。格式为“KEY=VALUE”对。可以多次传递以设置多个标头。也可以通过环境变量“Temporal_gRPC_META_[name]”提供。 |  |
+| `--身份` |没有 | **字符串** 提交此请求的用户或客户端的身份。默认为“Temporal-cli:$USER@$HOST”。 |  |
+| `--日志格式` |没有 | **字符串枚举** 日志格式。接受的值：文本、json。 | `文本` |
+| `--日志级别` |没有 | **字符串枚举** 日志级别。大多数命令的默认值为“info”，“server start-dev”的默认值为“warn”。接受的值：调试、信息、警告、错误、从不。 | `信息` |
+| `--Namespace`、`-n` |没有 | **字符串** Temporal 服务 Namespace。 | `默认` |
+| `--no-json-shorthand-payloads` |没有 | **bool** 原始负载输出，即使使用了 JSON 选项。 |  |
+| `--output`、`-o` |没有 | **字符串枚举** 非日志数据输出格式。接受的值：text、json、jsonl、none。 | `文本` |
+| `--个人资料` |没有 | **字符串** 用于配置文件的配置文件。 _（实验）_ |  |
+| `--时间格式` |没有 | **字符串枚举** 时间格式。接受的值：relative、iso、raw。 | `亲戚` |
+| `--tls` |没有 | **布尔** 启用基本 TLS 加密。没有 mTLS 或客户端证书等其他选项。如果存在 api-key 或任何其他 TLS 选项，则默认为 true。使用 --tls=false 显式禁用。 |  |
+| `--tls-ca-data` |没有 | **字符串** 服务器 CA 证书的数据。不能与 --tls-ca-path 一起使用。 |  |
+| `--tls-ca-path` |没有 | **字符串** 服务器 CA 证书的路径。不能与 --tls-ca-data 一起使用。 |  |
+| `--tls-cert-data` |没有 | **字符串** x509 证书的数据。不能与 --tls-cert-path 一起使用。 |  |
+| `--tls-cert-path` |没有 | **字符串** x509 证书的路径。不能与 --tls-cert-data 一起使用。 |  |
+| `--tls-disable-host-verification` |没有 | **bool** 禁用 TLS 主机名验证。 |  |
+| `--tls-key-data` |没有 | **字符串** 私有证书密钥数据。不能与 --tls-key-path 一起使用。 |  |
+| `--tls-key-path` |没有 | **字符串** x509 私钥的路径。不能与 --tls-key-data 一起使用。 |  |
+| `--tls-服务器名称` |没有 | **字符串** 覆盖目标 TLS 服务器名称。 |  |
+

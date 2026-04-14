@@ -1,9 +1,9 @@
 ---
 id: versioning
-title: Versioning - TypeScript SDK
-sidebar_label: Versioning
+title: "版本控制 - TypeScript SDK"
+sidebar_label: "版本控制"
 slug: /develop/typescript/workflows/versioning
-description: Temporal TypeScript SDK ensures deterministic Workflow code with versioning features like Workflow Patching APIs, Worker Build IDs, and Workflow migration strategies.
+description: "Temporal TypeScript SDK 通过 Workflow 修补 API、Worker 构建 ID 和 Workflow 迁移策略等版本控制功能确保 Workflow 代码的确定性。"
 toc_max_heading_level: 4
 keywords:
   - patching
@@ -20,29 +20,30 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-Since Workflow Executions in Temporal can run for long periods — sometimes months or even years — it's common to need to make changes to a Workflow Definition, even while a particular Workflow Execution is in progress.
+由于 Temporal 中的 Workflow Execution 可以运行很长时间（有时是几个月甚至几年），因此通常需要对 Workflow Definition 进行更改，即使特定的 Workflow Execution 正在进行中也是如此。
 
-The Temporal Platform requires that Workflow code is [deterministic](/workflow-definition#deterministic-constraints).
-If you make a change to your Workflow code that would cause non-deterministic behavior on Replay, you'll need to use one of our Versioning methods to gracefully update your running Workflows.
-With Versioning, you can modify your Workflow Definition so that new executions use the updated code, while existing ones continue running the original version.
-There are two primary Versioning methods that you can use:
+Temporal 平台要求 Workflow 代码为 [确定性的](/workflow-definition#deterministic-constraints)。
+如果您对 Workflow 代码进行的更改会导致重播时出现不确定行为，则您需要使用我们的版本控制方法之一来优雅地 Update 您正在运行的 Workflow。
+通过版本控制，您可以修改 Workflow Definition，以便新执行使用 Updated 代码，而现有执行继续运行原始版本。
+您可以使用两种主要的版本控制方法：
 
-- [Worker Versioning](/production-deployment/worker-deployments/worker-versioning). The Worker Versioning feature allows you to tag your Workers and programmatically roll them out in versioned deployments, so that old Workers can run old code paths and new Workers can run new code paths.
-- [Versioning with Patching](#patching). This method works by adding branches to your code tied to specific revisions. It applies a code change to new Workflow Executions while avoiding disruptive changes to in-progress Workflow Executions.
+- [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning)。 Worker 版本控制功能允许您标记 Worker 并以编程方式在版本化部署中推出它们，以便旧的 Worker 可以运行旧的代码路径，而新的 Worker 可以运行新的代码路径。
+- [通过补丁进行版本控制](#patching)。此方法的工作原理是向与特定修订版相关的代码添加分支。它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
 
 :::danger
-Support for the experimental Worker Versioning method before 2025 will be removed from Temporal Server in March 2026. Refer to the [latest Worker Versioning docs](/worker-versioning) for guidance. You can still refer to the [Worker Versioning Legacy](/develop/typescript/worker-versioning-legacy) docs if needed. 
+2025 年之前对实验性 Worker 版本控制方法的支持将于 2026 年 3 月从 Temporal Server 中删除。请参阅 [最新的 Worker 版本控制文档](/worker-versioning) 获取指导。如果需要，您仍然可以参考 [Worker 版本控制旧版](/develop/typescript/worker-versioning-legacy) 文档。
 :::
 
-## Versioning with Patching {#patching}
+## 使用补丁进行版本控制 {#patching}
 
-### Adding a patch
+<a id="adding-a-patch"></a>
+### 添加补丁 {#adding-a-patch}
 
-A Patch defines a logical branch in a Workflow for a specific change, similar to a feature flag.
-It applies a code change to new Workflow Executions while avoiding disruptive changes to in-progress Workflow Executions.
-When you want to make substantive code changes that may affect existing Workflow Executions, create a patch. Note that there's no need to patch [Pinned Workflows](/worker-versioning).
+补丁在 Workflow 中为特定更改定义逻辑分支，类似于功能标志。
+它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
+当您想要进行可能影响现有 Workflow Execution 的实质性代码更改时，请创建补丁。请注意，无需修补 [固定 Workflow](/worker-versioning)。
 
-Suppose you have an initial Workflow that runs `activityA`:
+假设您有一个运行 `ActivityA` 的初始 Workflow：
 
 ```ts
 // v1
@@ -53,7 +54,7 @@ export async function myWorkflow(): Promise<void> {
 }
 ```
 
-Now, you want to update your code to run `activityB` instead. This represents your desired end state.
+现在，您想要 Update 您的代码来运行 `ActivityB`。这代表您想要的最终状态。
 
 ```ts
 // vFinal
@@ -63,21 +64,22 @@ export async function myWorkflow(): Promise<void> {
 }
 ```
 
-The problem is that you cannot deploy this `vFinal` revision directly until you're certain there are no more running Workflows created using the `v1` code, otherwise you are likely to cause a nondeterminism error.
-Instead, you'll need to use the [`patched`](https://typescript.temporal.io/api/namespaces/workflow#patched) function to check which version of the code should be executed.
+问题是，在确定不再有使用 `v1` 代码创建的正在运行的 Workflow 之前，您无法直接部署此 `vFinal` 修订版，否则可能会导致不确定性错误。
+相反，您需要使用 [`patched`](https://typescript.temporal.io/api/namespaces/workflow#patched) 函数来检查应执行哪个版本的代码。
 
-Patching is a three-step process:
+修补过程分为三个步骤：
 
-1. Patch in any new, updated code using the `patched()` function. Run the new patched code alongside old code.
-2. Remove old code and use `deprecatePatch()` to mark a particular patch as deprecated.
-3. Once there are no longer any open Workflow Executions of the previous version of the code, remove `deprecatePatch()`.
-   Let's walk through this process in sequence.
+1. 使用 `patched()` 函数修补任何新的 Updated 代码。将新的修补代码与旧代码一起运行。
+2. 删除旧代码并使用 `deprecatePatch()` 将特定补丁标记为已弃用。
+3. 一旦不再有任何打开的先前版本代码的 Workflow Execution，请删除 `deprecatePatch()`。
+   让我们按顺序浏览一下这个过程。
 
-### Patching in new code
+<a id="patching-in-new-code"></a>
+### 修补新代码 {#patching-in-new-code}
 
-Using `patched` inserts a marker into the Workflow History.
-During Replay, if a Worker encounters a history with that marker, it will fail the Workflow task when the Workflow code doesn't produce the same patch marker (in this case `your-change-id`).
-This ensures you can safely deploy code from `v2` as a "feature flag" alongside the original version (`v1`).
+使用 `patched` 将标记插入到 Workflow 历史记录中。
+在重播期间，如果 Worker 遇到带有该标记的历史记录，则当 Workflow 代码不生成相同的补丁标记（在本例中为 `your-change-id`）时，Workflow 任务将会失败。
+这确保您可以安全地将 `v2` 中的代码作为“功能标志”与原始版本 (`v1`) 一起部署。
 
 ```ts
 // v2
@@ -94,13 +96,13 @@ export async function myWorkflow(): Promise<void> {
 }
 ```
 
-### Deprecating patches {#deprecated-patches}
+### 弃用补丁 {#deprecated-patches}
 
-After ensuring that all Workflows started with `v1` code have left retention, you can [deprecate the patch](https://typescript.temporal.io/api/namespaces/workflow#deprecatepatch).
+确保以 `v1` 代码开头的所有 Workflow 均已保留保留后，您可以使用 [弃用该补丁](https://typescript.temporal.io/api/namespaces/workflow#deprecatepatch)。
 
-Once your Workflows are no longer running the pre-patch code paths, you can deploy your code with `deprecatePatch()`.
-These Workers will be running the most up-to-date version of the Workflow code, which no longer requires the patch.
-Deprecated patches serve as a bridge between the final stage of the patching process and the final state that no longer has patches. They function similarly to regular patches by adding a marker to the Workflow History. However, this marker won't cause a replay failure when the Workflow code doesn't produce it.
+一旦您的 Workflow 不再运行修补程序前的代码路径，您就可以使用 `deprecatePatch()` 部署代码。
+这些 Worker 将运行最新版本的 Workflow 代码，不再需要补丁。
+已弃用的补丁充当修补过程的最后阶段和不再有补丁的最终状态之间的桥梁。它们的功能与常规补丁类似，通过在 Workflow 历史记录中添加标记来实现。但是，当 Workflow 代码不生成该标记时，该标记不会导致重放失败。
 
 ```ts
 // v3
@@ -113,21 +115,22 @@ export async function myWorkflow(): Promise<void> {
 }
 ```
 
-### Removing a patch {#deploy-new-code}
+### 删除补丁 {#deploy-new-code}
 
-Once your pre-patch Workflows have left retention, you can then safely deploy Workers that no longer use either the `patched()` or `deprecatePatch()` calls:
+一旦预补丁 Workflow 保留，您就可以安全地部署不再使用 `patched()` 或 `deprecatePatch()` 调用的 Worker：
 
-Patching allows you to make changes to currently running Workflows.
-It is a powerful method for introducing compatible changes without introducing non-determinism errors.
+修补允许您对当前运行的 Workflow 进行更改。
+它是一种引入兼容更改而不引入非确定性错误的强大方法。
 
-### Workflow cutovers
+<a id="workflow-cutovers"></a>
+### Workflow 切换 {#workflow-cutovers}
 
-To understand why Patching is useful, it's helpful to demonstrate cutting over an entire Workflow.
+要了解修补为何有用，演示剪切整个 Workflow 会很有帮助。
 
-Since incompatible changes only affect open Workflow Executions of the same type, you can avoid determinism errors by creating a whole new Workflow when making changes.
-To do this, you can copy the Workflow Definition function, giving it a different name, and register both names with your Workers.
+由于不兼容的更改仅影响相同类型的打开的 Workflow Execution，因此您可以在进行更改时通过创建全新的 Workflow 来避免确定性错误。
+为此，您可以复制 Workflow Definition 函数，为其指定一个不同的名称，然后将这两个名称注册到您的 Worker 中。
 
-For example, you would duplicate `PizzaWorkflow` as `PizzaWorkflowV2`:
+例如，您可以将 `PizzaWorkflow` 复制为 `PizzaWorkflowV2`：
 
 ```typescript
 function pizzaWorkflow(order: PizzaOrder): Promise<OrderConfirmation> {
@@ -139,7 +142,7 @@ function pizzaWorkflowV2(order: PizzaOrder): Promise<OrderConfirmation> {
 }
 ```
 
-You would then need to update the Worker configuration, and any other identifier strings, to register both Workflow Types:
+然后，您需要 Update、Worker 配置以及任何其他标识符字符串来注册这两种 Workflow 类型：
 
 ```typescript
 const worker = await Worker.create({
@@ -148,14 +151,16 @@ const worker = await Worker.create({
 });
 ```
 
-The downside of this method is that it requires you to duplicate code and to update any commands used to start the Workflow.
-This can become impractical over time.
-This method also does not provide a way to version any still-running Workflows -- it is essentially just a cutover, unlike Patching.
+此方法的缺点是它需要您复制代码以及用于启动 Workflow 的任何命令到 Update。
+随着时间的推移，这可能变得不切实际。
+此方法也不提供对任何仍在运行的 Workflow 进行版本控制的方法——它本质上只是一个转换，与修补不同。
 
-### Testing a Workflow for replay safety
+<a id="testing-a-workflow-for-replay-safety"></a>
+### 测试 Workflow 的重放安全性 {#testing-a-workflow-for-replay-safety}
 
-To determine whether your Workflow your needs a patch, or that you've patched it successfully, you should incorporate [Replay Testing](/develop/typescript/best-practices/testing-suite#replay).
+要确定您的 Workflow 是否需要修补程序，或者您已成功修补它，您应该合并 [重播测试](/develop/typescript/best-practices/testing-suite#replay)。
 
-## Worker Versioning
+<a id="worker-versioning"></a>
+## Worker 版本控制 {#worker-versioning}
 
-Temporal's [Worker Versioning](/production-deployment/worker-deployments/worker-versioning) feature allows you to tag your Workers and programmatically roll them out in Deployment Versions, so that old Workers can run old code paths and new Workers can run new code paths. This way, you can pin your Workflows to specific revisions, avoiding the need for patching.
+Temporal 的 [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning) 功能允许您标记 Worker 并以编程方式在部署版本中推出它们，以便旧的 Worker 可以运行旧的代码路径，而新的 Worker 可以运行新的代码路径。这样，您就可以将 Workflow 固定到特定版本，从而无需修补。

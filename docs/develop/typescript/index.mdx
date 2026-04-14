@@ -1,8 +1,8 @@
 ---
 id: index
-title: TypeScript SDK developer guide
-sidebar_label: TypeScript SDK
-description:
+title: "TypeScript SDK 开发人员指南"
+sidebar_label: "TypeScript SDK"
+description: This guide offers a thorough overview of structures, features, and best practices for developing with Temporal's
   This guide offers a thorough overview of structures, features, and best practices for developing with Temporal's
   TypeScript SDK, including Workflows, Client, Testing, Failure Detection, and more.
 toc_max_heading_level: 4
@@ -15,91 +15,98 @@ tags:
 
 import * as Components from '@site/src/components';
 
-![TypeScript SDK Banner](/img/assets/banner-typescript-temporal.png)
+![TypeScript SDK 横幅](/img/assets/banner-typescript-temporal.png)
 
-## Install and get started
+<a id="install-and-get-started"></a>
+## 安装并开始 {#install-and-get-started}
 
-You can find detailed installation instructions for the TypeScript SDK in the [Quickstart](/develop/typescript/set-up-your-local-typescript).
+您可以在 [快速入门](/develop/typescript/set-up-your-local-typescript) 中找到 TypeScript SDK 的详细安装说明。
 
-There's also a short walkthrough of how to use the Temporal primitives (Activities, Workflows, and Workers) to build and run a Temporal application to get you up and running.
+还有一个关于如何使用 Temporal 原语（活动、Workflow 和 Worker）来构建和运行 Temporal 应用程序的简短演练，以帮助您启动和运行。
 
-Once your local Temporal Service is set up, continue building with the following resources:
+设置本地 Temporal 服务后，请使用以下资源继续构建：
 
-- [Develop a Workflow](/develop/typescript/workflows/basics)
-- [Develop an Activity](/develop/typescript/activities/basics)
-- [Start an Activity execution](/develop/typescript/activities/execution)
-- [Run Worker processes](/develop/typescript/workers/run-worker-process)
+- [开发 Workflow](/develop/typescript/workflows/basics)
+- [开发 Activity](/develop/typescript/activities/basics)
+- [启动 Activity 执行](/develop/typescript/activities/execution)
+- [运行 Worker 进程](/develop/typescript/workers/run-worker-process)
 
 ## [Workflows](/develop/typescript/workflows)
 
-- [Workflow basics](/develop/typescript/workflows/basics)
+- [Workflow 基础知识](/develop/typescript/workflows/basics)
 - [Child Workflows](/develop/typescript/workflows/child-workflows)
 - [Continue-As-New](/develop/typescript/workflows/continue-as-new)
-- [Message passing](/develop/typescript/workflows/message-passing)
-- [Cancellation](/develop/typescript/workflows/cancellation)
-- [Cancellation scopes](/develop/typescript/workflows/cancellation-scopes)
-- [Timeouts](/develop/typescript/workflows/timeouts)
+- [消息传递](/develop/typescript/workflows/message-passing)
+- [消除](/develop/typescript/workflows/cancellation)
+- [取消范围](/develop/typescript/workflows/cancellation-scopes)
+- [超时](/develop/typescript/workflows/timeouts)
 - [Schedules](/develop/typescript/workflows/schedules)
 - [Timers](/develop/typescript/workflows/timers)
-- [Versioning](/develop/typescript/workflows/versioning)
+- [版本控制](/develop/typescript/workflows/versioning)
 
-## [Activities](/develop/typescript/activities)
+<a id="activities"></a>
+## [活动](/develop/typescript/activities) {#activities}
 
-- [Activity basics](/develop/typescript/activities/basics)
-- [Activity execution](/develop/typescript/activities/execution)
-- [Timeouts](/develop/typescript/activities/timeouts)
-- [Asynchronous Activity](/develop/typescript/activities/asynchronous-activity)
-- [Benign exceptions](/develop/typescript/activities/benign-exceptions)
+- [Activity 基础知识](/develop/typescript/activities/basics)
+- [Activity 执行](/develop/typescript/activities/execution)
+- [超时](/develop/typescript/activities/timeouts)
+- [异步 Activity](/develop/typescript/activities/asynchronous-activity)
+- [良性异常](/develop/typescript/activities/benign-exceptions)
 
 ## [Workers](/develop/typescript/workers)
 
-- [Worker processes](/develop/typescript/workers/run-worker-process)
-- [Interceptors](/develop/typescript/workers/interceptors)
+- [Worker 流程](/develop/typescript/workers/run-worker-process)
+- [拦截器](/develop/typescript/workers/interceptors)
 
-## [Temporal Client](/develop/typescript/client)
+## [Temporal CLIent](/develop/typescript/client)
 
-- [Temporal Client](/develop/typescript/client/temporal-client)
+- [Temporal CLIent](/develop/typescript/client/temporal-client)
 - [Namespaces](/develop/typescript/client/namespaces)
 
 ## [Temporal Nexus](/develop/typescript/nexus)
 
-- [Quickstart](/develop/typescript/nexus/quickstart)
-- [Feature guide](/develop/typescript/nexus/feature-guide)
+- [快速入门](/develop/typescript/nexus/quickstart)
+- [功能指南](/develop/typescript/nexus/feature-guide)
 
-## [Platform](/develop/typescript/platform)
+<a id="platform"></a>
+## [平台](/develop/typescript/platform) {#platform}
 
-- [Observability](/develop/typescript/platform/observability)
-- [Enriching the UI](/develop/typescript/platform/enriching-ui)
+- [可观察性](/develop/typescript/platform/observability)
+- [丰富用户界面](/develop/typescript/platform/enriching-ui)
 
-## [Best practices](/develop/typescript/best-practices)
+<a id="best-practices"></a>
+## [最佳实践](/develop/typescript/best-practices) {#best-practices}
 
-- [Testing](/develop/typescript/best-practices/testing-suite)
-- [Debugging](/develop/typescript/best-practices/debugging)
-- [Converters and encryption](/develop/typescript/converters-and-encryption)
-- [Entity pattern](/develop/typescript/best-practices/entity-pattern)
+- [测试](/develop/typescript/best-practices/testing-suite)
+- [调试](/develop/typescript/best-practices/debugging)
+- [转换器和加密](/develop/typescript/converters-and-encryption)
+- [实体模式](/develop/typescript/best-practices/entity-pattern)
 
-## [Vercel AI SDK Integration](/develop/typescript/integrations/ai-sdk)
+<a id="vercel-ai-sdk-integration"></a>
+## [Vercel AI SDK 集成](/develop/typescript/integrations/ai-sdk) {#vercel-ai-sdk-integration}
 
-Integrate the Vercel AI SDK with Temporal to build durable AI agents and AI-powered applications.
+将 Vercel AI SDK 与 Temporal 集成，构建持久的 AI 代理和 AI 驱动的应用程序。
 
-- [Vercel AI SDK Integration](/develop/typescript/integrations/ai-sdk)
+- [Vercel AI SDK 集成](/develop/typescript/integrations/ai-sdk)
 
-## Temporal TypeScript Technical Resources
+<a id="temporal-typescript-technical-resources"></a>
+## Temporal TypeScript 技术资源 {#temporal-typescript-technical-resources}
 
-- [TypeScript SDK Quickstart - Setup Guide](/develop/typescript/set-up-your-local-typescript)
-- [TypeScript API Documentation](https://typescript.temporal.io)
-- [TypeScript SDK Code Samples](https://github.com/temporalio/samples-typescript)
+- [TypeScript SDK 快速入门 - 设置指南](/develop/typescript/set-up-your-local-typescript)
+- [TypeScript API 文档](https://typescript.temporal.io)
+- [TypeScript SDK 代码示例](https://github.com/temporalio/samples-typescript)
 - [TypeScript SDK GitHub](https://github.com/temporalio/sdk-typescript)
-- [Temporal 101 in TypeScript Free Course](https://learn.temporal.io/courses/temporal_101/typescript/)
+- [Temporal 101 TypeScript 免费课程](https://learn.temporal.io/courses/temporal_101/typescript/)
 
-### Get Connected with the Temporal TypeScript Community
+<a id="get-connected-with-the-temporal-typescript-community"></a>
+### 与 Temporal TypeScript 社区建立联系 {#get-connected-with-the-temporal-typescript-community}
 
-- [Temporal TypeScript Community Slack](https://temporalio.slack.com/archives/C01DKSMU94L)
-- [TypeScript SDK Forum](https://community.temporal.io/tag/typescript-sdk)
+- [Temporal TypeScript 社区 Slack](https://temporalio.slack.com/archives/C01DKSMU94L)
+- [TypeScript SDK 论坛](https://community.temporal.io/tag/typescript-sdk)
 
-## Linting and types in TypeScript {#linting-and-types}
+## TypeScript 中的 Linting 和类型 {#linting-and-types}
 
-If you started your project with `@temporalio/create`, you already have our recommended TypeScript and ESLint
-configurations.
+如果您使用 `@Temporalio/create` 开始您的项目，那么您已经拥有我们推荐的 TypeScript 和 ESLint
+配置。
 
-If you incrementally added Temporal to an existing app, we do recommend setting up linting and types because they help catch bugs well before you ship them to production, and they improve your development feedback loop. Take a look at our recommended [.eslintrc](https://github.com/temporalio/samples-typescript/blob/main/.shared/.eslintrc.js) file and tweak to suit your needs.
+如果您将 Temporal 增量添加到现有应用程序中，我们建议您设置 linting 和类型，因为它们有助于在将错误交付到生产之前捕获错误，并且可以改善您的开发反馈循环。查看我们推荐的 [.eslintrc](https://github.com/temporalio/samples-typescript/blob/main/.shared/.eslintrc.js) 文件并进行调整以满足您的需求。

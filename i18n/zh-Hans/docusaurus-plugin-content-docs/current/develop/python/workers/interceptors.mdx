@@ -1,0 +1,283 @@
+---
+id: interceptors
+title: 拦截器 - Python SDK
+sidebar_label: 拦截器
+description: Implement Interceptors in the Temporal Python SDK to manage inbound and outbound SDK calls, enhance tracing, and add
+  Implement Interceptors in the Temporal Python SDK to manage inbound and outbound SDK calls, enhance tracing, and add
+  authorization to your Workflows and Activities.
+toc_max_heading_level: 2
+keywords:
+  - interceptors
+tags:
+  - Interceptors
+  - Python SDK
+  - Temporal SDKs
+---
+
+拦截器是 SDK 挂钩，可让您拦截入站和出站 Temporal 调用。您使用它们来添加常见的
+跨许多调用的行为，例如跟踪和上下文传播。 
+这类似于在 Web 框架中使用中间件，例如
+[Django](https://docs.djangoproject.com/en/5.2/topics/http/middleware/),
+[Starlette](https://www.starlette.io/middleware/)，以及
+[Flask](https://flask.palletsprojects.com/en/stable/lifecycle/#middleware)。
+
+有两种类型的拦截器——入站拦截器和出站拦截器。
+
+* 出站拦截器包装网络调用，在到达网络之前和返回之后运行。
+* 入站拦截器在网络跃点之后运行，包装应用程序代码并在启动之前和返回之后运行。
+
+具体来说，您可以通过这种方式修改五类入站和出站呼叫：
+
+| | [出站客户端](https://python.Temporal.io/Temporalio.client.OutboundInterceptor.html) | [入站 Workflow](https://python.Temporal.io/Temporalio.Worker.WorkflowInboundInterceptor.html) | [出站 Workflow](https://python.Temporal.io/Temporalio.Worker.WorkflowOutboundInterceptor.html) | [入站 Activity](https://python.Temporal.io/Temporalio.Worker.ActivityInboundInterceptor.html) | [出站 Activity](https://python.Temporal.io/Temporalio.Worker.ActivityOutboundInterceptor.html) |
+| --- | --- | --- | --- | --- | --- |
+| **描述** |将应用程序的调用包装到 Temporal CLIent 以启动 Workflow 或向其发送 [消息](/encyclopedia/Workflow-message-passing/) |将到达 [Workflow Execution](/Workflow-execution) 的调用包装起来，例如执行 Workflow、处理 [Messages](/encyclopedia/Workflow-message-passing/) | Wraps 调用 [Workflow](/Workflow-definition) 对 SDK 进行的操作，例如调度 [Activities](/activities)、启动 [Child Workflows](/child-Workflows) 以及调用 [Nexus Operations](/Nexus) |将到达的呼叫包装到 [Activity 执行](/Activity-执行) | Wraps 调用 [Activity](/activities) 对 SDK 进行的操作，例如发送 [Heartbeats](/encyclopedia/Detecting-Activity-failures#Activity-heartbeat) 和读取 Activity 信息 |
+| **运行于** |客户| Worker (Workflow 沙盒) | Worker (Workflow 沙盒) | Worker（Activity 上下文）| Worker（Activity 上下文）|
+| **方法示例** | `start_Workflow()`、`Signal_Workflow()`、`list_Workflows()` | `execute_Workflow()`、`handle_Query()`、`handle_Signal()`、`handle_Update_handler()` | `start_Activity()`、`start_child_Workflow()`、`Signal_child_Workflow()`、`start_Nexus_operation()` | `execute_Activity()` | `信息()`、`心跳()` |
+
+这些并不是详尽的清单；请参阅每个类别的链接 API 文档。
+
+:::warning Workflow interceptors and replay
+
+Workflow 入站和出站拦截器方法也会在[重放](/develop/python/best-practices/testing-suite#replay) 期间执行。在这些拦截器中使用重放安全 API 来记录日志、随机性和时间。
+有关详细信息，请参阅[开发 Workflow 逻辑](/develop/python/Workflows/basics#Workflow-logic-requirements)。
+
+如果您想要编写由所有入站 Workflow 调用处理程序共享的通用代码，但想要跳过只读操作，请选中“Workflow.unsafe.is_read_only()”。
+
+Activity 和客户端拦截器不受重放的影响。
+
+:::
+
+## 注册一个拦截器 {#register}
+
+注册拦截器意味着向 SDK 提供拦截器实例，以便 Temporal 在匹配时可以调用它
+发生客户端或 Worker 调用。一旦注册，拦截器将作为调用路径的一部分运行，并且可以观察或修改
+请求和响应数据。
+
+### 在客户端注册
+
+在“Client.connect()”的“interceptors”参数中传递拦截器。客户端拦截器修改出站调用，例如
+作为起始和 Signaling Workflow。
+
+```python
+client = await Client.connect(
+    "localhost:7233",
+    interceptors=[TracingInterceptor()],
+)
+```
+
+“拦截器”列表可以包含多个拦截器。
+在这种情况下，它们形成一条链：在列表中的拦截器实例上实现的方法可以执行 Side Effect，并修改数据，然后将其传递给列表中下一个拦截器上的相应方法。
+
+### 通过插件注册
+
+如果您正在构建可重用的库或想要将拦截器与其他原语捆绑在一起，您可以通过[插件](/develop/plugins-guide#interceptors) 注册它们。
+
+### 仅在 Worker 上注册
+
+如果您的拦截器不影响客户端，您可以在“Worker()”的“interceptors”参数中传递拦截器。
+Worker 拦截器修改入站和出站 Workflow 和 Activity 调用。
+
+```python
+worker = Worker(
+    client,
+    task_queue="my-task-queue",
+    interceptors=[SomeWorkerInterceptor()],
+    # ...
+)
+```
+
+:::note
+
+如果您的拦截器类继承自“client.Interceptor”和“Worker.Interceptor”，请将其传递给
+`Client.connect()` 而不是 `Worker()` 构造函数。 Worker 将使用来自其底层客户端的拦截器
+自动。
+
+:::
+
+## 注册一个拦截器 {#register}
+
+注册拦截器意味着向 SDK 提供拦截器实例，以便 Temporal 在匹配时可以调用它
+发生客户端或 Worker 调用。一旦注册，拦截器将作为调用路径的一部分运行，并且可以观察或修改
+请求和响应数据。
+
+### 在客户端注册
+
+在“Client.connect()”的“interceptors”参数中传递拦截器。客户端拦截器修改出站调用，例如
+作为起始和 Signaling Workflow。
+
+```python
+client = await Client.connect(
+    "localhost:7233",
+    interceptors=[TracingInterceptor()],
+)
+```
+
+“拦截器”列表可以包含多个拦截器。在这种情况下，它们形成了一条链：在
+列表中的拦截器实例可以执行 Side Effect，并修改数据，然后再将其传递给
+列表中下一个拦截器的相应方法。
+
+### 通过插件注册
+
+如果您正在构建可重用库或想要将拦截器与其他原语捆绑在一起，您可以注册它们
+通过[插件](/develop/plugins-guide#interceptors)。
+
+### 仅在 Worker 上注册
+
+如果您的拦截器不影响客户端，您可以在“Worker()”的“interceptors”参数中传递拦截器。
+Worker 拦截器修改入站和出站 Workflow 和 Activity 调用。
+
+```python
+worker = Worker(
+    client,
+    task_queue="my-task-queue",
+    interceptors=[SomeWorkerInterceptor()],
+    # ...
+)
+```
+
+:::note
+
+如果您的拦截器类继承自“client.Interceptor”和“Worker.Interceptor”，请将其传递给
+`Client.connect()` 而不是 `Worker()` 构造函数。 Worker 将使用来自其底层客户端的拦截器
+自动。
+
+:::
+
+## 如何在Python中实现拦截器
+
+拦截器作为一条链运行。  每个拦截器都包装整个内部调用：您的代码在调用之前运行，调用“next”来执行链的其余部分，然后在调用完成后运行。这意味着您可以检查或修改“输入”和结果、处理错误并在任一阶段执行 Side Effect。
+
+
+### 实现客户端调用拦截器
+
+要修改出站客户端调用，请定义一个继承自的类
+[`client.Interceptor`](https://python.Temporal.io/Temporalio.client.Interceptor.html)，并实现该方法
+`intercept_client()` 返回一个实例
+[`OutboundInterceptor`](https://python.Temporal.io/Temporalio.client.OutboundInterceptor.html) 实现
+您希望修改的出站客户端呼叫的子集。
+
+此示例在出站客户端调用上实现拦截器，该拦截器在出站“headers”字段中设置某个键。
+用户 ID 通过在出站请求的标头字段中发送来进行上下文传播：
+
+```python
+class ContextPropagationInterceptor(
+    temporalio.client.Interceptor, temporalio.worker.Interceptor
+):
+    def __init__(
+        self,
+        payload_converter: temporalio.converter.PayloadConverter = temporalio.converter.default().payload_converter,
+    ) -> None:
+        self._payload_converter = payload_converter
+
+    def intercept_client(
+        self, next: temporalio.client.OutboundInterceptor
+    ) -> temporalio.client.OutboundInterceptor:
+        return _ContextPropagationClientOutboundInterceptor(
+            next, self._payload_converter
+        )
+
+def set_header_from_context(
+    input: _InputWithHeaders, payload_converter: temporalio.converter.PayloadConverter
+) -> None:
+    user_id_val = user_id.get()
+    if user_id_val:
+        input.headers = {
+            **input.headers,
+            HEADER_KEY: payload_converter.to_payload(user_id_val),
+        }
+
+class _ContextPropagationClientOutboundInterceptor(
+    temporalio.client.OutboundInterceptor
+):
+    def __init__(
+        self,
+        next: temporalio.client.OutboundInterceptor,
+        payload_converter: temporalio.converter.PayloadConverter,
+    ) -> None:
+        super().__init__(next)
+        self._payload_converter = payload_converter
+
+    async def start_workflow(
+        self, input: temporalio.client.StartWorkflowInput
+    ) -> temporalio.client.WorkflowHandle[Any, Any]:
+        set_header_from_context(input, self._payload_converter)
+        return await super().start_workflow(input)
+```
+
+您的 Worker 和客户端拦截器经常会共享代码，因为它们实现了密切相关的逻辑。
+在 Python SDK 中，您通常需要创建一个继承自 _both_ `client.Interceptor` 的拦截器类
+和上面的“Worker.Interceptor”，因为它们的方法集不重叠。
+
+然后，您可以在客户端/起始代码中[注册](#register)此拦截器。
+
+您的拦截器类不需要实现每个方法；默认实现始终是将数据传递给拦截器链中的下一个方法。
+在执行过程中，当 SDK 遇到入站 Activity 调用时，它将查找第一个拦截器实例，获取适当的拦截方法并调用它。
+被拦截的方法将执行其功能，然后在链中的下一个拦截器上调用相同的方法。
+在链的末端，SDK 将调用“真正的”SDK 方法。
+
+### 实现 Worker 调用拦截器
+
+要修改入站和出站 Workflow 和 Activity 调用，请定义一个继承自“Worker.Interceptor”的类。这是
+具有两个名为“intercept_Activity”和“Workflow_interceptor_class”的方法的接口，您可以使用它们
+分别配置 Activity 和 Workflow 调用的拦截。 `intercept_Activity` 返回一个
+`ActivityInboundInterceptor`。
+
+此示例演示使用拦截器来测量 [Schedule-To-Start](/encyclopedia/Detecting-Activity-failures#Schedule-to-start-timeout) 和 Schedule-To-Close 延迟。
+请注意拦截器如何包装调用：它在 `execute_Activity` 之前记录 Schedule-To-Start，然后在完成后记录 Schedule-To-Close：
+
+```python
+from datetime import datetime, timezone
+from temporalio import activity
+from temporalio.worker import (
+    ActivityInboundInterceptor,
+    ExecuteActivityInput,
+    Interceptor,
+    Worker,
+)
+
+class SimpleWorkerInterceptor(Interceptor):
+    def intercept_activity(
+        self, next: ActivityInboundInterceptor
+    ) -> ActivityInboundInterceptor:
+        return ActivityMetricsInterceptor(next)
+
+
+class ActivityMetricsInterceptor(ActivityInboundInterceptor):
+    async def execute_activity(self, input: ExecuteActivityInput):
+        info = activity.info()
+        meter = activity.metric_meter()
+        attrs = {"workflow_type": info.workflow_type}
+
+        # Before the activity executes: record Schedule-To-Start
+        schedule_to_start = info.started_time - info.current_attempt_scheduled_time
+        meter.create_histogram_timedelta(
+            "custom_activity_schedule_to_start_latency",
+            description="Time between activity scheduling and start",
+            unit="duration",
+        ).record(schedule_to_start, attrs)
+
+        # Execute the activity
+        result = await self.next.execute_activity(input)
+
+        # After the activity completes: record Schedule-To-Close
+        elapsed = datetime.now(timezone.utc) - info.current_attempt_scheduled_time
+        meter.create_histogram_timedelta(
+            "custom_activity_schedule_to_close_latency",
+            description="Time between activity scheduling and completion",
+            unit="duration",
+        ).record(elapsed, attrs)
+
+        return result
+
+client = await Client.connect(
+    "localhost:7233",
+)
+worker = Worker(
+    client,
+    interceptors=[SimpleWorkerInterceptor()],
+    # ...
+)
+```
+
+“Workflow_interceptor_class”返回一个“WorkflowInboundInterceptor”，其工作方式类似于
+`ActivityInboundInterceptor`。

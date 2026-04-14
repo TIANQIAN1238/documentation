@@ -124,7 +124,7 @@ function SearchResultsList() {
   if (!query) {
     return (
       <div className="search-page-empty">
-        Enter a search term to find documentation
+        输入关键词以搜索文档
       </div>
     );
   }
@@ -132,7 +132,7 @@ function SearchResultsList() {
   if (items.length === 0) {
     return (
       <div className="search-page-no-results">
-        No results found for "{query}"
+        未找到“{query}”的相关结果
       </div>
     );
   }
@@ -140,7 +140,7 @@ function SearchResultsList() {
   return (
     <>
       <div className="search-page-stats">
-        {nbHits.toLocaleString()} documents found
+        {nbHits.toLocaleString()} 篇文档
       </div>
       <div className="search-page-results">
         {items.map((hit: any) => (
@@ -150,7 +150,7 @@ function SearchResultsList() {
       {/* Sentinel element for infinite scroll */}
       <div ref={sentinelRef} className="search-page-sentinel">
         {!isLastPage && (
-          <div className="search-page-loading">Loading more results...</div>
+          <div className="search-page-loading">正在加载更多结果...</div>
         )}
       </div>
     </>
@@ -194,7 +194,7 @@ function SearchInput() {
         type="search"
         value={inputValue}
         onChange={handleInputChange}
-        placeholder="Search documentation..."
+        placeholder="搜索文档..."
         className="search-page-input"
         autoFocus
       />
@@ -225,14 +225,14 @@ function LanguageFilter({ selectedLanguages, onLanguageChange }: {
   return (
     <div className="search-page-language-filter">
       <div className="search-page-language-filter-header">
-        <span className="search-page-language-filter-title">Filter by SDK</span>
+        <span className="search-page-language-filter-title">按 SDK 筛选</span>
         {selectedLanguages.length > 0 && (
           <button
             className="search-page-language-filter-clear"
             onClick={clearAll}
             type="button"
           >
-            Clear all
+            清除全部
           </button>
         )}
       </div>
@@ -250,7 +250,7 @@ function LanguageFilter({ selectedLanguages, onLanguageChange }: {
       </div>
       {selectedLanguages.length > 0 && (
         <div className="search-page-language-filter-note">
-          Showing {selectedLabels} and language-agnostic content
+          正在显示 {selectedLabels} 以及与语言无关的内容
         </div>
       )}
     </div>

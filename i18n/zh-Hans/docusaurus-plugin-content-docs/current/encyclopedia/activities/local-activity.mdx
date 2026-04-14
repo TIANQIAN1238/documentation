@@ -1,0 +1,48 @@
+---
+id: local-activity
+title: 本地Activity
+sidebar_label: 本地Activity
+description: 了解 Temporal 中的本地活动、其优点、执行模型以及何时使用它们。
+slug: /local-activity
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - term
+  - timeouts
+tags:
+  - Concepts
+  - Activities
+  - Durable Execution
+---
+
+本页讨论 [本地 Activity](#local-Activity)。
+
+## 什么是本地 Activity？ {#local-Activity}
+
+本地 Activity 是一个 [Activity 执行](/Activity-execution)，它与生成它的 [Workflow Execution](/Workflow-execution) 在同一进程中执行。
+
+一些 Activity 执行的生命周期非常短，不需要排队语义、流量控制、速率限制和路由功能。
+对于这种情况，Temporal 支持本地 Activity 功能。
+
+与正常的 Activity 执行相比，本地活动的主要好处是它们使用更少的 Temporal 服务资源（例如，更少的历史事件）并且延迟开销更低（因为不需要往返到 Temporal 服务）。
+然而，本地活动的持续时间较短且缺乏速率限制。
+
+考虑将本地活动用于以下功能：
+
+- 可以在与调用它们的 Workflow 相同的二进制文件中实现。
+- 不需要全局速率限制。
+- 不需要路由到特定的 Worker 或 Worker 池。
+- 不超过几秒钟，包括重试。
+
+如果花费的时间超过 Workflow Task 超时的 80%（默认情况下为 10 秒），Worker 将要求 Temporal 服务创建新的 Workflow Task 以延长处理本地 Activity 的“租用”。
+Worker 将继续这样做，直到本地 Activity 完成。
+这称为 Workflow Task 心跳。
+长期运行的本地活动的缺点是：
+
+- 每个新的 Workflow Task 都会导致历史上多 3 个事件。
+- 在下一个 Workflow Task 心跳之前，Workflow 不会收到 Signal 等新事件和完成情况的通知。
+- 在本地 Activity 完成或下一个 Workflow Task 心跳之前，Workflow 与本地 Activity 同时创建的新命令不会发送到 Temporal 服务。
+
+在不了解其局限性的情况下使用本地 Activity 可能会导致各种生产问题。
+**我们建议使用常规活动，除非您的用例需要非常高的吞吐量和非常短暂的活动的大 Activity 扇出。**
+我们的论坛提供了在 [Local Activity 与 Activity](https://community.Temporal.io/t/local-Activity-vs-Activity/290/3) 之间进行选择的更多指南。

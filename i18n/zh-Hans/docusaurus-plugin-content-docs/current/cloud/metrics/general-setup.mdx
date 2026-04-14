@@ -1,0 +1,146 @@
+---
+id: general-setup
+title: 带有指标的一般可观察性设置
+sidebar_label: 一般设置
+description: 了解如何使用 UI 或 tcld CLI 在 Temporal Cloud 中配置指标端点、分配证书以及与 Grafana 等可观察性工具集成。
+keywords:
+  - temporal cloud metrics configuration
+  - configure metrics endpoint
+  - temporal cloud observability
+  - tcld CLI guide
+  - temporal cloud UI setup
+  - assign metrics certificate
+  - grafana temporal integration
+  - prometheus metrics endpoint
+  - observability tools integration
+  - manage temporal cloud settings
+  - tcld account metrics commands
+tags:
+  - Metrics
+  - Observability
+  - Temporal Cloud
+---
+
+import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
+
+:::danger PromQL endpoint deprecated
+
+PromQL 端点及其“Temporal_cloud_v0_*”指标已于 2026 年 4 月 2 日弃用，并且不再接受新用户。
+将于 **2026 年 10 月 5 日**对所有用户禁用 PromQL 端点。
+
+新用户应设置 [OpenMetrics 端点](/cloud/metrics/openmetrics)。
+现有用户应遵循[迁移指南](/cloud/metrics/openmetrics/migration-guide) 过渡到 OpenMetrics 端点。
+
+:::
+
+您将学习如何执行以下操作：
+
+- [使用 UI 配置端点](#configure-via-ui)
+- [使用 tcld 配置端点](#configure-via-cli-tcld)
+- [Query 用于具有 PromQL 端点的指标](#Query-promql)
+
+## 使用 UI {#configure-via-ui} 配置
+
+**如何使用 Temporal Cloud UI 配置指标端点**
+
+:::note
+
+要查看和管理第三方集成设置，您的用户帐户必须具有帐户所有者或全局管理员[角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。
+
+:::
+
+要分配证书并生成指标端点，请按照以下步骤操作：
+
+1. 使用帐户所有者或全局管理员 [角色](/cloud/manage-access/roles-and-permissions#account-level-roles) 登录 Temporal Cloud UI。
+2. 转至 **设置** 并选择 **可观察性**。
+4. 添加您的根 CA 证书 (.pem) 并保存。
+   请注意，如果已设置可观察性端点，您可以在此处附加根 CA 证书，以在可观察性工具中使用生成的可观察性端点。
+5. 要测试您的端点，请在主机上运行以下命令：
+   ```
+   curl -v --cert <path to your client-cert.pem> --key <path to your client-cert.key> "<your generated Temporal Cloud prometheus_endpoint>/api/v1/query?query=temporal_cloud_v0_state_transition_count"
+   ```
+如果您的 Temporal Cloud 实例中的 Namespace 上运行着 Workflow，则运行此命令后您应该会看到一些数据。
+
+页面刷新后，新的指标端点将显示在 **Endpoint** 下方，格式为“https://<account-id>.tmprl.cloud/prometheus”。
+使用端点来配置您的可观察性工具。
+例如，如果您使用Grafana，请参阅[Grafana数据源配置](/cloud/metrics/prometheus-grafana#grafana-data-source-configuration)。
+
+您还可以通过 [Prometheus HTTP API](https://prometheus.io/docs/prometheus/latest/Querying/api/) 访问 Query，网址如下：
+
+```
+https://<account-id>.tmprl.cloud/prometheus/api/v1/query?query=temporal_cloud_v0_state_transition_count
+```
+
+例如：
+
+```
+$ curl --cert client.pem --key client-key.pem "https://<account-id>.tmprl.cloud/prometheus/api/v1/query?query=temporal_cloud_v0_state_transition_count" | jq .
+{
+  "status": "success",
+  "data": {
+    "resultType": "vector",
+    "result": [
+      {
+        "metric": {
+          "__name__": "temporal_cloud_v0_state_transition_count",
+          "__rollup__": "true",
+          "operation": "WorkflowContext",
+          "temporal_account": "your-account",
+          "temporal_namespace": "your-namespace.your-account-is",
+          "temporal_service_type": "history"
+        },
+        "value": [
+          1672347471.2,
+          "0"
+        ]
+      },
+      ...
+}
+```
+
+## 使用 tcld 配置端点 {#configure-via-cli-tcld}
+
+**如何使用 tcld CLI 配置指标端点。**
+
+要将证书添加到指标端点，请使用 [`tcld 帐户指标接受-客户端-ca add`](/cloud/tcld/account#add)。
+
+要启用指标端点，请使用 [`tcld 帐户指标启用`](/cloud/tcld/account#enable)。
+
+要禁用指标端点，请使用 [`tcld 帐户指标禁用`](/cloud/tcld/account#disable)。
+
+有关更多信息，请参阅[tcld 帐户指标命令](/cloud/tcld/account#metrics)。
+
+## Query 用于具有 PromQL 端点的指标 {#Query-promql}
+
+Temporal Cloud 以 Prometheus 支持的格式发出指标。
+Prometheus 是一个用于警报和监控的开源工具包。
+Temporal 服务通过 [Prometheus HTTP API 端点](https://prometheus.io/docs/prometheus/latest/Querying/api/) 公开云指标。
+Temporal Cloud 指标为可视化、监控和可观察性平台提供兼容的数据源。
+
+您可以使用 [rate](https://prometheus.io/docs/prometheus/latest/Querying/functions/#rate) 或 [increase](https://prometheus.io/docs/prometheus/latest/Querying/functions/#increase) 等函数来计算 Temporal Cloud 指标的增长率：
+
+```
+rate(temporal_cloud_v0_frontend_service_request_count[$__rate_interval])
+```
+
+或者您可以使用 Prometheus 计算平均延迟或直方图四分位数：
+
+```
+# Average latency
+rate(temporal_cloud_v0_service_latency_sum[$__rate_interval])
+/ rate(temporal_cloud_v0_service_latency_count[$__rate_interval])
+
+# Approximate 99th percentile latency broken down by operation
+histogram_quantile(0.99, sum(rate(temporal_cloud_v0_service_latency_bucket[$__rate_interval])) by (le, operation))
+```
+
+每 30 秒抓取一次指标，并以 1 分钟的滞后时间暴露给指标端点。\
+端点以 15 秒的分辨率返回数据，这会导致相同的值显示两次。
+
+设置具有 Temporal Cloud 可观察性的 Grafana，通过创建或获取 Temporal Cloud 指标的 Prometheus 端点并启用 SDK 指标来查看指标。
+
+<RelatedReadContainer>
+  <RelatedReadItem path="/cloud/metrics/prometheus-grafana" text="How to set up Grafana with Temporal Cloud observability" archetype="feature-guide" />
+  <RelatedReadItem path="/cloud/worker-health" text="How to monitor Worker Health with Temporal Cloud Metrics" archetype="feature-guide" />
+  <RelatedReadItem path="/cloud/service-health" text="How to monitor Service Health with Temporal Cloud Metrics" archetype="feature-guide" />
+</RelatedReadContainer>

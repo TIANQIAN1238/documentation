@@ -1,8 +1,8 @@
 ---
 id: detecting-workflow-failures
-title: Detecting Workflow failures
-sidebar_label: Workflows
-description: Learn about Workflow Execution Timeout, Workflow Run Timeout, and Workflow Task Timeout in Temporal. Maximize Workflow efficiency and manage durations effectively.
+title: "检测 Workflow 故障"
+sidebar_label: "Workflow 故障检测"
+description: "了解 Temporal 中的 Workflow Execution Timeout、Workflow Run Timeout 与 Workflow Task Timeout，帮助你正确管理 Workflow 的执行时长。"
 toc_max_heading_level: 4
 keywords:
   - workflows
@@ -17,21 +17,21 @@ tags:
 
 import { RelatedReadContainer, RelatedReadItem, CaptionedImage } from '@site/src/components';
 
-Each Workflow Timeout controls the maximum duration of a different aspect of a Workflow Execution. Workflow Timeouts are set when starting the Workflow Execution.
+每个 Workflow 超时控制 Workflow Execution 不同方面的最大持续时间。 Workflow 超时在启动 Workflow Execution 时设置。
 
-Before we continue, we want to note that we generally do not recommend setting Workflow Timeouts, because Workflows are designed to be long-running and resilient.
-Instead, setting a Timeout can limit its ability to handle unexpected delays or long-running processes.
-If you need to perform an action inside your Workflow after a specific period of time, we recommend using a Timer.
+在继续之前，我们要注意的是，我们通常不建议设置 Workflow 超时，因为 Workflow 被设计为长期运行且具有弹性。
+相反，设置超时可能会限制其处理意外延迟或长时间运行的进程的能力。
+如果您需要在特定时间段后在 Workflow 内执行操作，我们建议使用 Timer。
 
-- [Workflow Execution Timeout](#workflow-execution-timeout)
-- [Workflow Run Timeout](#workflow-run-timeout)
-- [Workflow Task Timeout](#workflow-task-timeout)
+- [Workflow Execution 超时](#workflow-execution-timeout)
+- [Workflow 运行超时](#workflow-run-timeout)
+- [Workflow 任务超时](#workflow-task-timeout)
 
-## Workflow Execution Timeout {#workflow-execution-timeout}
+## Workflow Execution 超时 {#workflow-execution-timeout}
 
-**What is a Workflow Execution Timeout in Temporal?**
+**Temporal 中的 Workflow Execution 超时是什么？**
 
-A Workflow Execution Timeout is the maximum time that a Workflow Execution can be executing (have an Open status) including retries and any usage of Continue As New.
+Workflow Execution 超时是 Workflow Execution 可以执行（具有“打开”状态）的最长时间，包括重试和“继续作为新”的任何使用。
 
 <RelatedReadContainer>
     <RelatedReadItem path="/develop/go/workflows/timeouts" text="Set a Workflow Execution Timeout using the Go SDK" archetype="feature-guide" />
@@ -43,23 +43,23 @@ A Workflow Execution Timeout is the maximum time that a Workflow Execution can b
 </RelatedReadContainer>
 
 <CaptionedImage
-    src="/diagrams/workflow-execution-timeout.svg"
-    title="Workflow Execution Timeout period" />
+src="/diagrams/workflow-execution-timeout.svg"
+title="Workflow Execution 超时时间" />
 
-**The default value is ∞ (infinite).**
-If this timeout is reached, the Workflow Execution changes to a Timed Out status.
-This timeout is different from the [Workflow Run Timeout](#workflow-run-timeout).
-This timeout is most commonly used for stopping the execution of a [Temporal Cron Job](/cron-job) after a certain amount of time has passed.
+**默认值为 ∞（无限）。**
+如果达到此超时，Workflow Execution 将更改为超时状态。
+此超时与 [Workflow 运行超时](#workflow-run-timeout) 不同。
+此超时最常用于在经过一定时间后停止 [Temporal Cron Job](/cron-job) 的执行。
 
-## Workflow Run Timeout {#workflow-run-timeout}
+## Workflow 运行超时 {#workflow-run-timeout}
 
-**What is a Workflow Run Timeout in Temporal?**
+**什么是 Temporal 中的 Workflow 运行超时？**
 
-A Workflow Run is the instance of a specific Workflow Execution.
+Workflow 运行是特定 Workflow Execution 的实例。
 
-Due to the potential for Workflow Retries or Continue-as-New, a Workflow Execution may have multiple Workflow runs. For example, if a Workflow that specifies a Retry Policy initially fails and then succeeds during the next retry attempt, there is a single Workflow Execution that spans two Workflow Runs. Both runs will share the same Workflow ID but have a unique Run ID to distinguish them.
+由于 Workflow 重试或继续为新的可能性，Workflow Execution 可能有多次 Workflow 运行。例如，如果指定 Retry Policy 的 Workflow 最初失败，然后在下一次重试尝试期间成功，则有一个 Workflow Execution 跨越两次 Workflow 运行。两次运行将共享相同的 Workflow ID，但有一个唯一的运行 ID 来区分它们。
 
-A Workflow Run Timeout restricts the maximum duration of a single Workflow Run. If the Workflow Run Timeout is reached, the Workflow Execution will be Timed Out. Because this Timeout only applies to an individual Workflow Run, this does not include retries or Continue-As-New.
+Workflow 运行超时限制单次 Workflow 运行的最大持续时间。如果达到 Workflow 运行超时，Workflow Execution 将超时。由于此超时仅适用于单个 Workflow 运行，因此不包括重试或 Continue-As-New。
 
 <RelatedReadContainer>
     <RelatedReadItem path="/develop/go/workflows/timeouts" text="Set a Workflow Run Timeout using the Go SDK" archetype="feature-guide" />
@@ -71,21 +71,21 @@ A Workflow Run Timeout restricts the maximum duration of a single Workflow Run. 
 </RelatedReadContainer>
 
 <CaptionedImage
-    src="/diagrams/workflow-run-timeout.svg"
-    title="Workflow Run Timeout period" />
+src="/diagrams/workflow-run-timeout.svg"
+title="Workflow 运行超时时间" />
 
-**The default is set to the same value as the [Workflow Execution Timeout](#workflow-execution-timeout).**
-This timeout is most commonly used to limit the execution time of a single [Temporal Cron Job Execution](/cron-job).
+**默认设置为与 [Workflow Execution 超时](#workflow-execution-timeout) 相同的值。**
+此超时最常用于限制单个 [Temporal Cron 作业执行](/cron-job) 的执行时间。
 
-If the Workflow Run Timeout is reached, the Workflow Execution will be Timed Out.
+如果达到 Workflow 运行超时，Workflow Execution 将超时。
 
-## Workflow Task Timeout {#workflow-task-timeout}
+## Workflow 任务超时 {#workflow-task-timeout}
 
-**What is a Workflow Task Timeout in Temporal?**
+**Temporal 中的 Workflow 任务超时是什么？**
 
-A Workflow Task Timeout is the maximum amount of time allowed for a [Worker](/workers#worker) to execute a [Workflow Task](/tasks#workflow-task) after the Worker has pulled that Workflow Task from the [Task Queue](/task-queue).
+Workflow 任务超时是 Worker 从 [Task Queue](/task-queue) 中提取 Workflow 任务后允许 [Worker](/workers#worker) 执行 [Workflow 任务](/tasks#workflow-task) 的最大时间量。
 
-This Timeout is primarily available to recognize whether a Worker has gone down so that the Workflow Execution can be recovered on a different Worker.
+该超时主要用于识别 Worker 是否已关闭，以便可以在不同的 Worker 上恢复 Workflow Execution。
 
 <RelatedReadContainer>
     <RelatedReadItem path="/develop/go/workflows/timeouts" text="Set a Workflow Task Timeout using the Go SDK" archetype="feature-guide" />
@@ -97,27 +97,27 @@ This Timeout is primarily available to recognize whether a Worker has gone down 
 </RelatedReadContainer>
 
 <CaptionedImage
-    src="/diagrams/workflow-task-timeout.svg"
-    title="Workflow Task Timeout period" />
+src="/diagrams/workflow-task-timeout.svg"
+title="Workflow 任务超时时间" />
 
-**The default value is 10 seconds.**
-This timeout is primarily available to recognize whether a Worker has gone down so that the Workflow Execution can be recovered on a different Worker.
-The main reason for increasing the default value is to accommodate a Workflow Execution that has an extensive Workflow Execution History, requiring more than 10 seconds for the Worker to load.
-It's worth mentioning that although you can extend the timeout up to the maximum value of 120 seconds, it's not recommended to move beyond the default value.
+**默认值为 10 秒。**
+该超时主要用于识别 Worker 是否已关闭，以便可以在不同的 Worker 上恢复 Workflow Execution。
+增加默认值的主要原因是为了容纳具有广泛 Workflow Execution 历史记录的 Workflow Execution，Worker 加载需要 10 秒以上。
+值得一提的是，虽然您可以将超时时间延长至最大值 120 秒，但不建议超出默认值。
 
-## Detecting Workflow Task Failures
+## 检测Workflow任务失败
 
-Use the `TemporalReportedProblems` Search Attribute to detect Workflows with failed Workflow Tasks. 
-A failed Workflow Task does not cause the Workflow to fail. Some Tasks within a Workflow may be intended to fail.
-For example, a Workflow Task may check a remote data source for new messages. If there aren't any, the Task will fail as intended.
-If your Task has code to handle the failure, the Workflow will proceed.
-However, if your Workflow has a Task that fails and the failure is not handled, the Workflow will continue to run, but will not complete.
-Detecting Workflows in this state is a common troubleshooting issue.
+使用 `TemporalReportedProblems` Search Attribute 检测 Workflow 任务失败的 Workflow。
+失败的 Workflow 任务不会导致 Workflow 失败。 Workflow 中的某些任务可能会失败。
+例如，Workflow 任务可以检查远程数据源中是否有新消息。如果没有，任务将按预期失败。
+如果您的任务有处理失败的代码，Workflow 将继续。
+但是，如果您的 Workflow 有一个任务失败并且未处理该失败，则 Workflow 将继续运行，但不会完成。
+检测此状态下的 Workflow 是常见的故障排除问题。
 
-To identify Workflows with Task failures, you can use the Temporal Web UI. See [Task Failures View](/web-ui/#task-failures-view) for more details.
+要识别任务失败的 Workflow，您可以使用 Temporal Web UI。更多详情请参见[任务失败视图](/web-ui/#task-failures-view)。
 
-You can also detect Workflows with Task failures by searching for the `TemporalReportedProblems` search attribute with your observability tools.
+您还可以通过使用可观察性工具搜索 `TemporalReportedProblems` 搜索属性来检测任务失败的 Workflow。
 
 :::warning Activating Workflow Task Failure
-To enable the Task Failures View for a Namespace, you need to update the Dynamic Config for that Namespace. See [Activating Task Failures View](/web-ui/#activate-task-failures-view).
+要启用 Namespace 的任务失败视图，您需要更新该 Namespace 的动态配置。请参阅[激活任务失败视图](/web-ui/#activate-task-failures-view)。
 :::

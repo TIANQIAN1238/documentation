@@ -1,8 +1,8 @@
 ---
 id: users-invite
-title: User management
-sidebar_label: Users-invite
-description: Learn how to manage user invitations for Temporal Cloud
+title: "用户管理"
+sidebar_label: "用户邀请"
+description: "了解如何管理 Temporal Cloud 的用户邀请"
 slug: /cloud/users-invite
 toc_max_heading_level: 4
 keywords:
@@ -24,28 +24,28 @@ tags:
 
 <TabItem value="invite-webui" label="Web UI">
 
-To invite users using the Temporal Cloud UI:
+要使用 Temporal Cloud UI 邀请用户：
 
-1. In Temporal Web UI, select **Settings** in the left portion of the window.
-1. On the **Settings** page, select **Create Users** in the upper-right portion of the window.
-1. On the **Create Users** page in the **Email Addresses** box, type or paste one or more email addresses.
-1. In **Account-Level Role**, select a [Role](/cloud/manage-access/roles-and-permissions#account-level-roles). The Role
-   applies to all users whose email addresses appear in **Email Addresses**.
-1. If the account has any Namespaces, they are listed under **Grant access to Namespaces**. To add a permission, select
-   the checkbox next to a Namespace, and then select a
-   [permission](/cloud/manage-access/roles-and-permissions#namespace-level-permissions). Repeat as needed.
-1. When all permissions are assigned, select **Send Invite**.
+1. 在 Temporal Web UI 中，选择窗口左侧的 **设置**。
+1. 在**设置**页面上，选择窗口右上角的**创建用户**。
+1. 在 **创建用户** 页面的 **电子邮件地址** 框中，键入或粘贴一个或多个电子邮件地址。
+1. 在**账户级角色**中，选择 [角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。角色
+   适用于电子邮件地址出现在**电子邮件地址**中的所有用户。
+1. 如果帐户有任何 Namespace，它们会列在 **授予对 Namespace 的访问权限**下。要添加权限，请选择
+   Namespace 旁边的复选框，然后选择
+   [允许](/cloud/manage-access/roles-and-permissions#namespace-level-permissions)。根据需要重复。
+1. 分配所有权限后，选择 **发送邀请**。
 
 </TabItem>
 
 <TabItem value="invite-tcld" label="tcld">
 
-Use the [`tcld user invite`](/cloud/tcld/user/#invite) command. Specify the user's email, an account-level role, and
-optionally one or more Namespace permissions.
+使用 [`tcld user invite`](/cloud/tcld/user/#invite) 命令。指定用户的电子邮件、帐户级角色，以及
+（可选）一项或多项 Namespace 权限。
 
-Available account roles: `admin` | `developer` | `read`.
+可用帐户角色：`admin` | `developer` | `read`。
 
-Available Namespace permissions: `Admin` | `Write` | `Read`.
+可用的 Namespace 权限：`Admin` | `Write` | `Read`。
 
 ```command
 tcld user invite \
@@ -53,8 +53,8 @@ tcld user invite \
   --account-role <role> \
   --namespace-permission <namespace>=<permission>
 ```
-  
-You can invite multiple users and assign multiple Namespace permissions in a single command:
+
+您可以在单个命令中邀请多个用户并分配多个 Namespace 权限：
 
 
 ```command
@@ -70,36 +70,36 @@ tcld user invite \
 
 <TabItem value="invite-ops-api" label="Cloud Ops API">
 
-Use the [CreateUser](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users) endpoint to invite a user.
+使用 [创建用户](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users) 端点邀请用户。
 
 ```
 POST /cloud/users
 ```
 
-The request body includes a `spec` with the following fields:
+请求正文包含 `spec` 和以下字段：
 
-- `spec.email` — The email address of the user to invite.
-- `spec.access.account_access.role` — The account-level role to assign.
-- `spec.access.namespace_accesses` — A map of Namespace names to permissions.
+- `spec.email` — 要邀请的用户的电子邮件地址。
+- `spec.access.account_access.role` — 要分配的账户级角色。
+- `spec.access.Namespace_accesses` — Namespace 名称到权限的映射。
 
-Available roles: `ROLE_ADMIN` | `ROLE_DEVELOPER` | `ROLE_READ` | `ROLE_OWNER` | `ROLE_FINANCE_ADMIN`.
+可用角色：`ROLE_ADMIN` | `ROLE_DEVELOPER` | `ROLE_READ` | `ROLE_OWNER` | `ROLE_FINANCE_ADMIN`。
 
-Available Namespace permissions: `PERMISSION_ADMIN` | `PERMISSION_WRITE` | `PERMISSION_READ`.
+可用的 Namespace 权限：`PERMISSION_ADMIN` | `PERMISSION_WRITE` | `PERMISSION_READ`。
 
 </TabItem>
 
 </Tabs>
 
-The new users receive an email with a link to accept the invitation and complete their setup. The new user must use this
-link to sign up to be added to your account unless the account has a SAML configuration. If your account has a SAML
-configuration, the new user can sign in using their existing SAML credentials and be included in the account
-automatically.
+新用户会收到一封电子邮件，其中包含接受邀请并完成设置的链接。新用户必须使用此
+注册链接将添加到您的帐户，除非该帐户具有 SAML 配置。如果您的帐户有 SAML
+配置中，新用户可以使用其现有的 SAML 凭据登录并包含在帐户中
+自动。
 
 :::caution
 
-The new user must use the same authentication method they originally signed up with to sign in to Temporal Cloud. If
-they used single sign-on (SSO), they must use the same SSO provider to sign in to Temporal Cloud. If they used email and
-password authentication, they must use the same email and password to sign in to Temporal Cloud, and cannot use SSO,
-even if the underlying email address is the same.
+新用户必须使用最初注册时使用的相同身份验证方法来登录 Temporal Cloud。如果
+他们使用单点登录 (SSO)，因此必须使用相同的 SSO 提供商才能登录到 Temporal Cloud。如果他们使用电子邮件并且
+密码身份验证，必须使用相同的电子邮件和密码登录 Temporal Cloud，并且不能使用 SSO，
+即使底层电子邮件地址相同。
 
 :::

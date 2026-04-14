@@ -1,10 +1,10 @@
 ---
 id: regions
-title: Service regions - Temporal Cloud
-sidebar_label: Service regions
+title: "服务区域 - Temporal Cloud"
+sidebar_label: "服务区域"
 slug: /cloud/regions
 toc_max_heading_level: 3
-description: Temporal Cloud offers high availability and low latency across multiple cloud provider regions with adjustable throughput limits and robust latency targets. Contact us for more details.
+description: "Temporal Cloud 跨多个云提供商区域提供高可用性和低延迟，并具有可调整的吞吐量限制和强大的延迟目标。联系我们了解更多详情。"
 keywords:
   - explanation
   - operations
@@ -14,30 +14,32 @@ tags:
   - Temporal Cloud
 ---
 
-You can access Temporal Cloud from anywhere with Internet connectivity, no matter where your Temporal Cloud Namespaces are physically located.
-Your applications can live in the cloud environment or data center of your choice.
-With that in mind, you _will_ reduce latency by creating Namespaces in a region close to where you host your Workers.
+您可以从具有 Internet 连接的任何地方访问 Temporal Cloud，无论您的 Temporal Cloud Namespace 实际位于何处。
+您的应用程序可以驻留在您选择的云环境或数据中心中。
+考虑到这一点，您_将_通过在靠近您托管 Worker 的区域中创建 Namespace 来减少延迟。
 
-This page enumerates the current regions supported by Temporal Cloud Namespaces.
+此页面枚举了 Temporal Cloud Namespaces 当前支持的区域。
 
 :::tip Service Availability
 
-Visit [status.temporal.io](https://status.temporal.io) to check the status of our supported regions.
-On that page, you can also subscribe to updates to receive email notifications whenever Temporal creates, updates or resolves an incident.
+请访问 [状态.Temporal.io](https://status.temporal.io) 查看我们支持的区域的状态。
+在该页面上，您还可以订阅 Update，以便在 Temporal 创建、Update 或解决事件时接收电子邮件通知。
 
 :::
 
-### AWS Service Regions
+<a id="aws-service-regions"></a>
+### AWS 服务区域 {#aws-service-regions}
 
-Temporal Cloud operates in the following Amazon Web Services (AWS) regions:
+Temporal Cloud 在以下 Amazon Web Services (AWS) 区域运营：
 
 import AWSRegions from '@site/docs/cloud/references/regions/awsregions.md';
 
 <AWSRegions />
 
-### GCP Service Regions
+<a id="gcp-service-regions"></a>
+### GCP 服务区域 {#gcp-service-regions}
 
-Temporal Cloud operates the following Google Cloud (GCP) regions:
+Temporal Cloud 运营以下 Google Cloud (GCP) 区域：
 
 import GCPRegions from '@site/docs/cloud/references/regions/gcpregions.md';
 

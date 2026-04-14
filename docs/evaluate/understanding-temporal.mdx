@@ -1,8 +1,8 @@
 ---
 id: understanding-temporal
-title: Understanding Temporal
-sidebar_label: Understanding Temporal
-description: This page provides a short overview of how Temporal works.
+title: "了解 Temporal"
+sidebar_label: "了解 Temporal"
+description: "本页简要概述了 Temporal 的工作原理。"
 toc_max_heading_level: 4
 keywords:
   - durable execution
@@ -14,162 +14,173 @@ tags:
 
 import { CaptionedImage } from "@site/src/components";
 
-Temporal offers an entirely new way to build scalable and reliable applications.
+Temporal 提供了一种构建可扩展且可靠的应用程序的全新方法。
 
-## Build Invincible Apps
+<a id="build-invincible-apps"></a>
+## 构建无敌的应用程序 {#build-invincible-apps}
 
-In any complex system, failures are bound to happen.
-Software engineers spend a lot of time ensuring that what they build can withstand potential failures.
-Temporal makes your code execution reliable and durable by default.
+在任何复杂的系统中，故障都是必然会发生的。
+软件工程师花费大量时间来确保他们构建的内容能够承受潜在的故障。
+默认情况下，Temporal 使您的代码执行可靠且持久。
 
-Normally, if a crash occurs then the state of your application's execution is lost.
-The application has no memory of what happened before the failure, requiring extensive error handling logic and complex recovery code to resume.
-The process is time-consuming and error-prone, making it difficult to ensure reliability.
+通常，如果发生崩溃，那么应用程序的执行状态就会丢失。
+应用程序不记得故障之前发生的情况，需要大量的错误处理逻辑和复杂的恢复代码才能恢复。
+该过程耗时且容易出错，难以确保可靠性。
 
-Temporal tracks the progress of your application.
-If something goes wrong, like a power outage, it guarantees that your application can pick up right where it left off — it’s like having the ultimate autosave.
-Offloading the responsibility of failure management from the application to the platform removes the need for extensive recovery coding, testing, and maintenance tasks.
+Temporal 跟踪您的申请进度。
+如果出现问题（例如断电），它可以保证您的应用程序可以从中断处继续运行 - 就像拥有终极自动保存功能一样。
+将故障管理的责任从应用程序转移到平台，无需进行大量的恢复编码、测试和维护任务。
 
-### Durable Execution
+<a id="durable-execution"></a>
+### 持久执行 {#durable-execution}
 
-Temporal is a Durable Execution Platform.
-Durable Execution ensures that your application behaves correctly despite adverse conditions by guaranteeing that it will run to completion.
-This shift simplifies the development process. If a failure or a crash happens, your business processes keep running seamlessly without interruptions.
-Developers shift their focus to business logic rather than infrastructure concerns and create applications that are inherently scalable and maintainable.
+Temporal 是一个耐用的执行平台。
+持久执行通过保证应用程序运行完成，确保应用程序在不利条件下仍能正确运行。
+这种转变简化了开发过程。如果发生故障或崩溃，您的业务流程将继续无缝运行而不会中断。
+开发人员将注意力转移到业务逻辑而不是基础设施问题上，并创建本质上可扩展和可维护的应用程序。
 
-Thousands of developers trust Temporal for use cases like order processing, customer onboarding, and payment handling because it enables them to build invincible applications that are resilient, durable, and _just work_.
-With Temporal, your applications keep running, no matter what happens.
+成千上万的开发人员信任 Temporal 的订单处理、客户引导和付款处理等用例，因为它使他们能够构建坚韧、耐用且“正常工作”的无敌应用程序。
+有了 Temporal，无论发生什么情况，您的应用程序都可以保持运行。
 
-## Temporal Application: The Building Blocks
+<a id="temporal-application-the-building-blocks"></a>
+## Temporal 应用：构建块 {#temporal-application-the-building-blocks}
 
 ### Workflow
 
-Conceptually, a Workflow is a sequence of steps.
-You've likely encountered Workflows in your daily life, whether it's:
+从概念上讲，Workflow 是一系列步骤。
+您可能在日常生活中遇到过 Workflow，无论是：
 
-- Using a mobile app to transfer money
-- Booking a vacation
-- Filing an expense report
-- Creating a new employee onboarding process
-- Deploying cloud infrastructure
-- Training an AI model
+- 使用移动应用程序转账
+- 预订假期
+- 提交费用报告
+- 创建新员工入职流程
+- 部署云基础设施
+- 训练人工智能模型
 
-A Temporal Workflow is your business logic, defined in code, outlining each step in your process.
+Temporal Workflow 是您的业务逻辑，在代码中定义，概述了流程中的每个步骤。
 
-Temporal isn’t a no-code Workflow engine — it is **Workflows-as-Code**.
-Instead of dragging and dropping steps in a visual interface, you write your Workflows in code in your favorite programming language, code editor, and other tools.
-No-code engines eventually hit their limitations however, Temporal gives you full control and flexibility over your business processes.
-This allows you to build exactly what you need.
+Temporal 不是无代码 Workflow 引擎 - 它是 **Workflows-as-Code**。
+您无需在可视化界面中拖放步骤，而是使用您最喜欢的编程语言、代码编辑器和其他工具编写 Workflow 代码。
+无代码引擎最终会达到其局限性，但是，Temporal 使您可以完全控制业务流程并具有灵活性。
+这使您能够准确构建您需要的内容。
 
-### Activities
+＃＃＃ 活动
 
-Activities are the individual units of work in your Workflow.
-Activities are defined as either functions or methods, depending on the programming language.
-Activities often involve interacting with the outside world, such as sending emails, making network requests, writing to a database, or calling an API, which are prone to failure.
-You can call Activities directly from your Workflow code.
+活动是 Workflow 中的各个工作单元。
+活动被定义为函数或方法，具体取决于编程语言。
+活动通常涉及与外界交互，例如发送电子邮件、发出网络请求、写入数据库或调用 API，这些都容易失败。
+您可以直接从 Workflow 代码调用活动。
 
-If an Activity fails, Temporal automatically retries it based on your configuration.
-Since Activities often rely on external systems, transient issues can occur.
-These include temporary but critical problems like network failures, timeouts, or service outages.
-You have full control over how often and how many times these retries should happen for each Activity.
+如果 Activity 失败，Temporal 会根据您的配置自动重试。
+由于 Activity 通常依赖于外部系统，因此可能会出现暂时性问题。
+其中包括临时但关键的问题，例如网络故障、超时或服务中断。
+您可以完全控制每个 Activity 重试的频率和次数。
 
-### SDK
+<a id="activities"></a>
+### SDK {#activities}
 
-Developers create Temporal applications by writing code, just like you would to create any other software.
+开发人员通过编写代码来创建 Temporal 应用程序，就像创建任何其他软件一样。
 
-A Temporal SDK (software development kit) is an open-source library that developers add to their application to use Temporal.
-It provides everything needed to build Workflows, Activities, and various other Temporal features in a specific programming language.
+Temporal SDK（软件开发套件）是一个开源库，开发人员将其添加到其应用程序中以使用 Temporal。
+它提供了以特定编程语言构建 Workflow、活动和各种其他 Temporal 功能所需的一切。
 
-Temporal offers seven SDKs: .NET, Go, Java, PHP, Python, Ruby, TypeScript.
-Since Temporal supports multiple programming languages, you can mix-and-match between languages for polyglot teams.
-You can easily add any Temporal SDK to your current projects without changing the tools you're already using to build and deploy.
-Temporal fits right into your existing tech stack.
+Temporal 提供七种 SDK：.NET、Go、Java、PHP、Python、Ruby、TypeScript。
+由于 Temporal 支持多种编程语言，因此您可以为多语言团队混合搭配多种语言。
+您可以轻松地将任何 Temporal SDK 添加到当前项目中，而无需更改已用于构建和部署的工具。
+Temporal 非常适合您现有的技术堆栈。
 
-## Temporal Service
+<a id="sdk"></a>
+## Temporal 服务 {#sdk}
 
-Temporal has two main parts:
+Temporal 有两个主要部分：
 
-1. Your application
-2. The Temporal Service (a set of services and components)
+1. 您的申请
+2. Temporal 服务（一组服务和组件）
 
-At the heart of Temporal architecture is the Temporal Service, which provides durability, scalability, and reliability for your application.
-Your application communicates with the Temporal Service and the Temporal Service oversees the execution of critical tasks such as making an API call, then records their completion.
-It maintains a detailed history of each event, which it reliably persists to a database.
+Temporal 架构的核心是 Temporal 服务，它为您的应用程序提供耐用性、可扩展性和可靠性。
+您的应用程序与 Temporal 服务通信，Temporal 服务监督关键任务的执行，例如进行 API 调用，然后记录其完成情况。
+它维护每个事件的详细历史记录，并将其可靠地保存到数据库中。
 
-One of the biggest advantages of the Temporal Service is how it handles failures.
-The Temporal Service maintains a meticulous record of every step in your Workflows.
-By keeping a history of every step in your Workflow, it ensures that even if something goes wrong your Workflow can continue from the last successful point.
-The Temporal Service knows exactly where to resume without losing any work.
-This saves you from having to write complex error handling code or painstaking recovery mechanisms yourself.
+Temporal 服务的最大优势之一是它处理故障的方式。
+Temporal 服务会详细记录您 Workflow 中的每一步。
+通过保留 Workflow 中每一步的历史记录，它可以确保即使出现问题，您的 Workflow 也可以从上一个成功点继续。
+Temporal 服务确切地知道在哪里恢复，而不会丢失任何工作。
+这使您不必自己编写复杂的错误处理代码或艰苦的恢复机制。
 
-You can run the Temporal Service on your own infrastructure or use Temporal Cloud, a managed service that handles operational overhead and offers scalability and expert support.
+您可以在自己的基础设施上运行 Temporal 服务，或使用 Temporal Cloud，这是一项托管服务，可处理运营开销并提供可扩展性和专家支持。
 
-## Workers
+<a id="temporal-service"></a>
+## Workers {#temporal-service}
 
-The real strength of Temporal comes from the combination of your application and the Temporal Service.
-Whenever your application needs to perform a task, like sending a notification or processing a payment, the Temporal Service orchestrates what needs to be done.
-Workers, which are part of your application and provided by the Temporal SDK, then carry out the tasks defined in your Workflow.
+Temporal 的真正优势来自于您的应用程序和 Temporal 服务的结合。
+每当您的应用程序需要执行任务（例如发送通知或处理付款）时，Temporal 服务都会协调需要完成的操作。
+Worker 是您的应用程序的一部分，由 Temporal SDK 提供，然后执行 Workflow 中定义的任务。
 
-The Worker polls the Temporal Service to see if there are tasks available and the Temporal Service matches the task with the Worker.
-The Worker runs the Workflow code based on the details specified in the task.
+Worker 轮询 Temporal 服务以查看是否有可用任务，以及 Temporal 服务将该任务与 Worker 相匹配。
+Worker 根据任务中指定的详细信息运行 Workflow 代码。
 
-This collaboration is crucial for building reliable, scalable, and durable applications.
-You can run multiple Workers — often dozens, hundreds, or even thousands — to improve application performance and scalability.
+这种协作对于构建可靠、可扩展且持久的应用程序至关重要。
+您可以运行多个 Worker（通常是数十个、数百个甚至数千个）来提高应用程序性能和可扩展性。
 
-A common misconception is that the Temporal Service runs your code.
-In fact, the Worker runs your code and works with your data directly.
-Temporal applications are secure by design.
-Workflows and Activities are seamlessly deployed within your infrastructure, fully integrated into your application.
-Your data is also protected with your encryption libraries and keys.
-You maintain full control over the security of your application from end to end.
+一个常见的误解是 Temporal 服务运行您的代码。
+事实上，Worker 运行您的代码并直接处理您的数据。
+Temporal 应用程序的设计是安全的。
+Workflow 和活动无缝部署在您的基础设施中，并完全集成到您的应用程序中。
+您的数据还受到加密库和密钥的保护。
+您可以从头到尾保持对应用程序安全性的完全控制。
 
-## Visibility
+<a id="workers"></a>
+## Visibility {#workers}
 
-There are two tools provided by Temporal that allow you to see behind the scenes and interact with your Workflows.
-These are powerful for debugging uses and provide real-time monitoring of your applications.
+Temporal 提供了两个工具，可让您了解幕后情况并与 Workflow 进行交互。
+它们对于调试用途非常强大，并提供对应用程序的实时监控。
 
-### Temporal UI
+<a id="visibility"></a>
+### Temporal 用户界面 {#visibility}
 
-The Temporal UI is a browser-based user interface that allows you to see the progress of your application.
-Also known as the Web UI, it can also help you to quickly isolate, debug, and resolve production problems.
+Temporal UI 是一个基于浏览器的用户界面，可让您查看应用程序的进度。
+也称为 Web UI，它还可以帮助您快速隔离、调试和解决生产问题。
 
 <CaptionedImage src="/img/webui/workflow-details-page-hiw.avif" title="Recent Workflows page" />
 
-### Temporal CLI
+<a id="temporal-ui"></a>
+### Temporal CLI {#temporal-ui}
 
-The Temporal CLI is a command-line interface tool for managing, monitoring, and debugging Temporal Applications.
-Through your terminal, you can:
+Temporal CLI 是一个命令行界面工具，用于管理、监控和调试 Temporal 应用程序。
+通过您的终端，您可以：
 
-- Start a Workflow
-- Trace the progress of a Workflow
-- Cancel or terminate a Workflow
-- And perform other operations
+- 启动 Workflow
+- 追踪 Workflow 的进度
+- 取消或终止 Workflow
+- 并执行其他操作
 
-The Temporal CLI provides developers with direct access to a Temporal Service for local development purposes.
+Temporal CLI 使开发人员可以直接访问 Temporal 服务以进行本地开发。
 
-### Event History
+<a id="temporal-cli"></a>
+### Event History {#temporal-cli}
 
-With Temporal, your Workflows can seamlessly recover from crashes. This is made possible by the [Event History](https://docs.temporal.io/workflow-execution/event), a complete and durable log of everything that has happened in the lifecycle of a Workflow Execution, as well as the ability of the Temporal Service to durably persist the Events during Replay.
+借助 Temporal，您的 Workflow 可以从崩溃中无缝恢复。这是通过 [Event History](https://docs.Temporal.io/workflow-execution/event) 实现的，[Event History](https://docs.Temporal.io/workflow-execution/event) 是 Workflow Execution 生命周期中发生的所有事件的完整且持久的日志，以及 Temporal 服务在重播期间持久保留事件的能力。
 
-Temporal uses the Event History to record every step taken along the way. Each time your Workflow Definition makes an API call to execute an Activity or start a Timer for instance, it doesn’t perform the action directly. Instead, it sends a Command to the Temporal Service.
+Temporal 使用 Event History 记录沿途采取的每一步。例如，每次 Workflow Definition 进行 API 调用以执行 Activity 或启动 Timer 时，它不会直接执行该操作。相反，它会向 Temporal 服务发送命令。
 
-A Command is a requested action issued by a Worker to the Temporal Service after a Workflow Task Execution completes. The Temporal Service will act on these Commands such as scheduling an Activity or scheduling a timer. These Commands are then mapped to Events which are persisted in case of failure. For example, if the Worker crashes, the Worker uses the Event History to replay the code and recreate the state of the Workflow Execution to what it was immediately before the crash. It then resumes progress from the point of failure as if the failure never occurred.
+命令是 Workflow 任务执行完成后由 Worker 向 Temporal 服务发出的请求操作。 Temporal 服务将根据这些命令执行操作，例如调度 Activity 或调度 Timer。然后，这些命令被映射到事件，这些事件在发生故障时会被保留。例如，如果 Worker 崩溃，Worker 使用 Event History 重播代码并将 Workflow Execution 的状态重新创建为崩溃前的状态。然后，它从故障点恢复进度，就好像故障从未发生过一样。
 
-For a deep dive into the Event History or Commands, visit the Temporal [Encyclopedia page](/encyclopedia/event-history) or enroll in one of [our courses](https://learn.temporal.io/courses/).
+要深入了解 Event History 或命令，请访问 Temporal [百科页面](/encyclopedia/event-history) 或注册 [我们的课程](https://learn.Temporal.io/courses/) 之一。
 
-## Reliable as Gravity
+<a id="event-history"></a>
+## 像重力一样可靠 {#event-history}
 
-Temporal provides effortless durability, allowing applications to run for days, weeks, or even years without interruption even if the underlying infrastructure fails.
-This is what we call _Durable Execution_. Temporal also represents a paradigm shift in software development.
-It's not just about making existing patterns more reliable; it's about enabling entirely new approaches to building complex, distributed systems.
+Temporal 提供轻松的耐用性，即使底层基础设施发生故障，应用程序也可以不间断地运行数天、数周甚至数年。
+这就是我们所说的_持久执行_。 Temporal 还代表了软件开发的范式转变。
+这不仅仅是为了让现有的模式更加可靠；而是为了让现有的模式变得更加可靠。它是关于启用全新的方法来构建复杂的分布式系统。
 
-Temporal simplifies state management and developers don't have to write tons of extra code to handle every possible thing that could go wrong.
-With built-in scalability, Temporal ensures that your application runs smoothly, no matter its size or complexity.
+Temporal 简化了状态管理，开发人员不必编写大量额外的代码来处理所有可能出错的事情。
+凭借内置的可扩展性，Temporal 可确保您的应用程序顺利运行，无论其大小或复杂程度如何。
 
 :::tip
 
-Follow one of our tutorials to [Get Started](https://learn.temporal.io/getting_started/) learning how to use a Temporal SDK.
-Or, jump straight into an [Introduction to Temporal 101](https://learn.temporal.io/courses/temporal_101/) course.
+按照我们的 [开始使用](https://learn.Temporal.io/getting_started/) 教程之一学习如何使用 Temporal SDK。
+或者，直接跳入 [Temporal 101简介](https://learn.Temporal.io/courses/temporal_101/) 课程。
 
-Looking for more? Explore Temporal's [Resource Library](https://temporal.io/resources).
+寻找更多？探索 Temporal 的 [资源库](https://temporal.io/resources)。
 :::

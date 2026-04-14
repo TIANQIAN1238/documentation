@@ -1,8 +1,8 @@
 ---
 id: gcp-export-gcs
-title: Exporting Workflow Event History to GCS
-sidebar_label: GCP Export to GCS
-description: Export Workflow History to GCS
+title: "将 Workflow Event History 导出到 GCS"
+sidebar_label: "GCP 导出到 GCS"
+description: "将 Workflow 历史记录导出到 GCS"
 slug: /cloud/export/gcp-export-gcs
 toc_max_heading_level: 4
 keywords:
@@ -22,80 +22,83 @@ tags:
 
 import * as Components from '@site/src/components';
 
-## Prerequisites {#prerequisites}
+## 先决条件 {#prerequisites}
 
-Before configuring the Export sink, complete the following steps in Google Cloud.
+在配置导出接收器之前，请在 Google Cloud 中完成以下步骤。
 
-1. Create a GCS bucket and take note of its bucket name, for example, "test-export"
+1. 创建GCS存储桶并记下其存储桶名称，例如“test-export”
 
-- Enable customer-managed encryption keys (CMEK) if you need additional security for your GCS bucket.
-- Currently, only single region buckets are supported (choose "Region" option when creating the bucket in GCS, not "Multi-region" or "Same-region")
-- The region of the bucket must be the same as the region of your Temporal Cloud Namespace.
+- 如果您的 GCS 存储桶需要额外的安全性，请启用客户管理的加密密钥 (CMEK)。
+- 目前仅支持单区域存储桶（在GCS中创建存储桶时选择“区域”选项，而不是“多区域”或“同区域”）
+- 存储桶的区域必须与您的 Temporal Cloud Namespace 的区域相同。
 
-2. Record the GCP Project ID that owns the bucket.
-3. Create a service account in the same project that grants Temporal permission to write to your GCS bucket.
-4. Follow the instructions in the Temporal Cloud UI. There are two ways to set up this service account:
-   - Manual Setup:
-     - Input the service account ID, GCP project ID and GCS bucket name.
-     - Follow the instructions, manually set up a new service account.
-   - Automated Setup:
-     - Use the [Terraform template](https://github.com/temporalio/terraform-modules/tree/main/modules/export-sa) to create the service account.
+2. 记录拥有该存储桶的 GCP 项目 ID。
+3. 在同一项目中创建一个服务帐户，授予 Temporal 写入 GCS 存储桶的权限。
+4. 按照 Temporal Cloud UI 中的说明进行操作。有两种方法可以设置此服务帐户：
+   - 手动设置：
+     - 输入服务帐户 ID、GCP 项目 ID 和 GCS 存储桶名称。
+     - 按照说明手动设置新的服务帐户。
+   - 自动设置：
+     - 使用 [地形模板](https://github.com/temporalio/terraform-modules/tree/main/modules/export-sa) 创建服务帐户。
 
-## Configure Workflow History Export
+<a id="configure-workflow-history-export"></a>
+## 配置 Workflow 历史记录导出 {#configure-workflow-history-export}
 
-There are multiple ways to configure export: through the [Temporal Cloud UI](#using-temporal-cloud-ui), [`tcld`](#using-tcld), or [`terraform`](#using-terraform).
+配置导出的方法有多种：通过 [Temporal Cloud 用户界面](#using-temporal-cloud-ui)、[`tcld`](#using-tcld) 或 [`terraform`](#using-terraform)。
 
 
 :::note Why does Temporal Cloud provision multiple service accounts for Export?
 
-Temporal Cloud creates multiple intermediary service accounts for export operations primarily for security purposes. The system randomly selects from these accounts when writing to your storage sink, which provides several benefits:
+Temporal Cloud 为导出操作创建多个中间服务帐户，主要是出于安全目的。系统在写入存储接收器时从这些帐户中随机选择，这提供了几个好处：
 
-- **Security isolation**: If one service account is compromised or needs to be decommissioned, other accounts remain available
-- **Load distribution**: Prevents exclusively using a single account, reducing security risk
-- **Warm standby**: Keeps multiple accounts active to avoid potential throttling when switching between accounts
-- **Reliability**: Provides resilience against cloud provider account-level issues that could affect a single service account
+- **安全隔离**：如果一个服务帐户受到威胁或需要停用，其他帐户仍然可用
+- **负载分配**：防止独占使用单个帐户，降低安全风险
+- **热待机**：保持多个帐户处于活动状态，以避免在帐户之间切换时潜在的限制
+- **可靠性**：针对可能影响单个服务帐户的云提供商帐户级问题提供弹性
 
-This approach prioritizes security and availability, ensuring robust export operations even if individual service accounts encounter issues.
+这种方法优先考虑安全性和可用性，即使个别服务帐户遇到问题也能确保稳健的导出操作。
 :::
 
-### Using Temporal Cloud UI
+<a id="using-temporal-cloud-ui"></a>
+### 使用 Temporal Cloud 用户界面 {#using-temporal-cloud-ui}
 
-The following steps guide you through setting up Workflow History Export using the Temporal Cloud UI.
+以下步骤指导您使用 Temporal Cloud UI 设置 Workflow 历史记录导出。
 
 ![](/img/cloud/gcp/export-sink-ui-gcp.png)
 
-1. In the Cloud UI, navigate to the Namespaces section. Confirm that the Export feature is visible and properly displayed.
-2. Configure the Export sink for a Namespace:
-   1. Choose GCS as the sink type.
-   2. Provide the following information:
-      1. Name
-      2. Service account ID
-      3. GCP Project ID
-      4. GCS bucket name
-3. After inputting the necessary values, click on **Verify**.
-   You should be able to write to the sink successfully.
-   If not, please fix any errors or reach out to support for help.
-   - If you just created the GCS bucket and granted permission for your service account, it may take some time for the permission to propagate. You may need to wait up to 5 minutes before clicking the **Verify** button to verify the connection.
-4. Clicking **Create** will complete the Export sink setup.
-5. The page will auto-refresh and you should see the status “Enabled” on the Export screen.
-   You are now ready to export Workflow histories.
-6. You can toggle the enable button if you want to stop export and resume in the future.
-   **Note**: when you re-enable the feature, it will start from the current point in time, and not from the time when you disabled export.
-7. You can also delete export by clicking **Delete**.
+1. 在云 UI 中，导航到 Namespaces 部分。确认导出功能可见并正确显示。
+2. 为 Namespace 配置导出接收器：
+   1. 选择 GCS 作为接收器类型。
+   2. 提供以下信息：
+      1. 姓名
+      2.服务帐号ID
+      3.GCP项目ID
+      4.GCS存储桶名称
+3. 输入必要的值后，单击“**验证**”。
+   您应该能够成功写入接收器。
+   如果没有，请修复任何错误或联系支持人员寻求帮助。
+   - 如果您刚刚创建了 GCS 存储桶并为您的服务帐户授予了权限，则权限传播可能需要一些时间。您可能需要等待最多 5 分钟，然后才能单击 **验证** 按钮来验证连接。
+4. 单击**创建**将完成导出接收器设置。
+5. 页面将自动刷新，您应该在导出屏幕上看到状态“已启用”。
+   您现在已准备好导出 Workflow 历史记录。
+6. 如果您想停止导出并在将来恢复，您可以切换启用按钮。
+   **注意**：当您重新启用该功能时，它将从当前时间点开始，而不是从您禁用导出的时间开始。
+7. 您还可以通过单击“**删除**”来删除导出。
 
 :::tip
 
-Don't forget to click Create at the end of your setup to confirm your export.
+不要忘记在设置结束时单击“创建”以确认导出。
 
 :::
 
-### Using tcld
+<a id="using-tcld"></a>
+### 使用 tcld {#using-tcld}
 
-To access export-related commands in tcld, please follow these steps:
+要在 tcld 中访问导出相关命令，请按照以下步骤操作：
 
-1. [Download the latest version of tcld](https://docs.temporal.io/cloud/tcld/#install-tcld).
-2. Make sure your tcld version is v0.35.0 or above.
-3. Run the command: `tcld n export gcs`:
+1.[下载最新版本的tcld](https://docs.temporal.io/cloud/tcld/#install-tcld)。
+2. 确保您的tcld版本为v0.35.0或更高版本。
+3. 运行命令：`tcld n export gcs`：
    ```bash
    NAME:
       tcld namespace export gcs - Manage GCS export sink
@@ -116,18 +119,18 @@ To access export-related commands in tcld, please follow these steps:
       --help, -h  show help
    ```
 
-4. Run the `tcld n export gcs create` command and provide the following information:
-   - `--namespace`: The Namespace to configure export for.
-   - `--sink-name`: The name of the export sink.
-   - `--service-account-email`: The service account that has access to the sink.
-   - `--gcs-bucket`: The name of the GCP GCS bucket.
-   
-   For example:
+4. 运行 `tcld n export gcs create` 命令并提供以下信息：
+   - `--Namespace`：要为其配置导出的 Namespace。
+   - `--sink-name`：导出接收器的名称。
+   - `--service-account-email`：有权访问接收器的服务帐户。
+   - `--gcs-bucket`：GCP GCS 存储桶的名称。
+
+例如：
 
    ```bash
    tcld n export gcs create -n test.ns --sink-name test-sink --service-account-email test-sink@test-export-sink.iam.gserviceaccount.com --gcs-bucket test-export-validation
    ```
-5. Check the status of this command by either viewing the Namespace Export status in the Temporal Cloud UI or using the following command and looking for the state of "Active":
+5. 通过在 Temporal Cloud UI 中查看 Namespace 导出状态或使用以下命令并查找“活动”状态来检查此命令的状态：
 
 ```bash
 tcld n export gcs g -n test.ns --sink-name test-sink
@@ -153,13 +156,15 @@ tcld n export gcs g -n test.ns --sink-name test-sink
 }
 ```
 
-### Using `terraform`
+<a id="using-terraform"></a>
+### 使用 `terraform` {#using-terraform}
 
-See the [Terraform export support](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs/resources/namespace_export_sink) for setup instructions.
+请参阅 [Terraform 导出支持](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs/resources/namespace_export_sink) 了解设置说明。
 
 
-### Next Steps
+<a id="next-steps"></a>
+### 后续步骤 {#next-steps}
 
-- [Verify export setup](/cloud/export#verify)
-- [Monitor export progress](/cloud/export#monitor)
-- [Work with exported files](/cloud/export#working-with-exported-files)
+- [验证导出设置](/cloud/export#verify)
+- [监控导出进度](/cloud/export#monitor)
+- [处理导出的文件](/cloud/export#working-with-exported-files)

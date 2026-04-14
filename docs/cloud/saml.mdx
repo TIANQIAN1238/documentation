@@ -1,8 +1,8 @@
 ---
 id: saml
-title: SAML authentication
-sidebar_label: SAML authentication
-description:
+title: "SAML 身份验证"
+sidebar_label: "SAML 身份验证"
+description: Integrate SAML 2.0 with your Temporal Cloud account for secure user authentication. Connect via Microsoft Entra ID or
   Integrate SAML 2.0 with your Temporal Cloud account for secure user authentication. Connect via Microsoft Entra ID or
   Okta and ensure seamless SSO. Charges apply.
 slug: /cloud/saml
@@ -18,156 +18,157 @@ tags:
   - Users
 ---
 
-Integrating with your organization's identity provider (IdP) with Temporal Cloud through Security Assertion Markup
-Language (SAML) 2.0 allows you to authenticate users of your Temporal Cloud account using your organization's IdP. This
-allows you to enforce your corporate identity policies, such as multi-factor authentication (MFA), password complexity,
-and reduces the risk of credential theft.
+通过安全断言标记与 Temporal Cloud 与组织的身份提供商 (IdP) 集成
+语言 (SAML) 2.0 允许您使用组织的 IdP 对 Temporal Cloud 帐户的用户进行身份验证。这个
+允许您强制执行企业身份策略，例如多重身份验证 (MFA)、密码复杂性、
+并降低凭证被盗的风险。
 
-SAML is included in the Business, Enterprise, and Mission Critical plans. For more details, refer to
-[Temporal Cloud pricing](/cloud/pricing#base_plans).
+SAML 包含在商业、企业和关键任务计划中。欲了解更多详情，请参阅
+[Temporal Cloud 定价](/cloud/pricing#base_plans)。
 
-## Integrate SAML with your Temporal Cloud account
+<a id="integrate-saml-with-your-temporal-cloud-account"></a>
+## 将 SAML 与您的 Temporal Cloud 帐户集成 {#integrate-saml-with-your-temporal-cloud-account}
 
-1. Locate your [Temporal Cloud Account Id](/cloud/namespaces#temporal-cloud-account-id). Your Account Id can be viewed
-   and copied from the Temporal Cloud user profile dropdown menu in the top right corner. Alternatively, find your
-   [Namespace Id](/cloud/namespaces#temporal-cloud-namespace-id). The Account Id is the five or six characters following
-   the period (.), such as `f45a2`. You will need the Account Id to construct your callback URL and your entity
-   identifier.
-1. Configure SAML with your IdP by following one of these sets of instructions:
-   - [Microsoft Entra ID](#configure-saml-with-azure-ad)
-   - [Okta](#configure-saml-with-okta)
-1. [Share your connection information with us and test your connection.](#finish-saml-configuration)
+1. 找到您的 [Temporal Cloud 帐户 ID](/cloud/namespaces#temporal-cloud-account-id)。可以查看您的帐户 ID
+   并从右上角的 Temporal Cloud 用户配置文件下拉菜单复制。或者，找到您的
+   [Namespace ID](/cloud/namespaces#temporal-cloud-namespace-id)。帐户 ID 是以下五或六个字符
+   句点 (.)，例如 `f45a2`。您将需要帐户 ID 来构建您的回调 URL 和您的实体
+   标识符。
+1. 按照以下一组说明为您的 IdP 配置 SAML：
+   - [微软Entra ID](#configure-saml-with-azure-ad)
+   - [奥克塔](#configure-saml-with-okta)
+1.[与我们分享您的连接信息并测试您的连接。](#finish-saml-configuration)
 
-## How to configure SAML with Microsoft Entra ID {#configure-saml-with-azure-ad}
+## 如何使用 Microsoft Entra ID 配置 SAML {#configure-saml-with-azure-ad}
 
-If you want to use the general Microsoft login mechanism, you don't need to set up SAML with Entra ID. Just select
-**Continue with Microsoft** on the Temporal Cloud sign-in page.
+如果您想使用通用的 Microsoft 登录机制，则无需使用 Entra ID 设置 SAML。只需选择
+**在 Temporal Cloud 登录页面上继续使用 Microsoft**。
 
-To use Entra ID as your SAML IdP, create a Microsoft Entra ID Enterprise application.
+要将 Entra ID 用作 SAML IdP，请创建 Microsoft Entra ID Enterprise 应用程序。
 
-1. Sign in to the [Microsoft Entra ID](https://portal.azure.com/).
-1. On the home page, under **Manage Microsoft Entra ID**, select **View**.
-1. On the **Overview** page near the top, select **Add > Enterprise application**.
-1. On the **Browse Microsoft Entra ID Gallery** page near the top, select **Create your own application**.
-1. In the **Create your own application** pane, provide a name for your application (such as `temporal-cloud`) and
-   select **Integrate any other application you don't find in the gallery**.
-1. Select **Save**.
-1. In the **Getting Started** section, select **2. Set up single sign on**.
-1. On the **Single sign-on** page, select **SAML**.
-1. In the **Basic SAML Configuration** section of the **SAML-based Sign-on** page, select **Edit**.
-1. In **Identifier (Entity ID)**, enter the following entity identifier, including your Account Id where indicated:
+1. 登录[微软Entra ID](https://portal.azure.com/)。
+1. 在主页的“**管理 Microsoft Entra ID**”下，选择“**查看**”。
+1. 在顶部附近的**概述**页面上，选择**添加 > 企业应用程序**。
+1. 在顶部附近的 **浏览 Microsoft Entra ID Gallery** 页面上，选择 **创建您自己的应用程序**。
+1. 在 **创建您自己的应用程序** 窗格中，提供您的应用程序的名称（例如 `Temporal-cloud`）并
+   选择**集成您在库中找不到的任何其他应用程序**。
+1. 选择**保存**。
+1. 在 **入门** 部分中，选择 **2。设置单点登录**。
+1. 在**单点登录**页面上，选择**SAML**。
+1. 在“基于 SAML 的登录”页面的“基本 SAML 配置”部分中，选择“编辑”。
+1. 在 **标识符（实体 ID）** 中，输入以下实体标识符，包括您的帐户 ID（如注明）：
 
    ```bash
    urn:auth0:prod-tmprl:ACCOUNT_ID-saml
    ```
 
-   A correctly formed entity identifier looks like this:
+正确形成的实体标识符如下所示：
 
    ```bash
    urn:auth0:prod-tmprl:f45a2-saml
    ```
 
-1. In **Reply URL (Assertion Consumer Service URL)**, enter the following callback URL, including your Account Id where
-   indicated:
+1. 在**回复 URL（断言消费者服务 URL）**中，输入以下回调 URL，包括您的帐户 ID，其中
+   表示：
 
    ```bash
    https://login.tmprl.cloud/login/callback?connection=ACCOUNT_ID-saml
    ```
 
-   A correctly formed callback URL looks like this:
+正确形成的回调 URL 如下所示：
 
    ```bash
    https://login.tmprl.cloud/login/callback?connection=f45a2-saml
    ```
 
-1. In **Sign on URL**, enter the following login url, including your Account Id where indicated:
+1. 在 **登录 URL** 中，输入以下登录 URL，包括您的帐户 ID（如所示）：
 
    ```bash
    https://cloud.temporal.io/login/saml?connection=ACCOUNT_ID-saml
    ```
 
-   A correctly formed login URL looks like this:
+正确形成的登录 URL 如下所示：
 
    ```bash
    https://cloud.temporal.io/login/saml?connection=f45a2-saml
    ```
 
-1. You can leave the other fields blank. Near the top of the pane, select **Save**.
-1. In the **Attributes & Claims** section, select **Edit**. Configure the following settings. Under **Required claim**:
-   - Set **Unique User Identifier (NameID)** to `user.userprincipalname`
-   - Set the **NameID format** to `emailAddress`
+1. 其他字段可以留空。在窗格顶部附近，选择“**保存**”。
+1. 在 **属性和声明** 部分中，选择 **编辑**。配置以下设置。在**所需索赔**下：
+   - 将**唯一用户标识符 (NameID)** 设置为 `user.userprincipalname`
+   - 将 **NameID 格式** 设置为 `emailAddress`
 
-   These are the default settings for Microsoft Entra ID. Then under **Additional claims**, ensure **Email** and
-   **Name** are present.
+这些是 Microsoft Entra ID 的默认设置。然后在**其他索赔**下，确保**电子邮件**和
+   **姓名** 存在。
 
-1. Collect information that you need to send to us:
-   - In the **SAML Certificates** section of the **SAML-based Sign-on** page, select the download link for **Certificate
-     (Base64)**.
-   - In the **Set up _APPLICATION_NAME_** section of the **SAML-based Sign-on** page, copy the value of **Login URL**.
+1. 收集您需要发送给我们的信息：
+   - 在 **基于 SAML 的登录** 页面的 **SAML 证书** 部分中，选择 **证书的下载链接
+     (Base64)**。
+   - 在 **基于 SAML 的登录** 页面的 **设置 _APPLICATION_NAME_** 部分中，复制 **登录 URL** 的值。
 
-To finish setting up Microsoft Entra ID as your SAML IdP, see [Finish SAML configuration](#finish-saml-configuration).
+要完成将 Microsoft Entra ID 设置为 SAML IdP，请参阅 [完成SAML配置](#finish-saml-configuration)。
 
-## How to configure SAML with Okta {#configure-saml-with-okta}
+## 如何使用 Okta 配置 SAML {#configure-saml-with-okta}
 
-To use Okta as your SAML IdP, configure a new Okta application integration.
+要将 Okta 用作 SAML IdP，请配置新的 Okta 应用程序集成。
 
-1. Sign in to the [Okta Admin Console](https://www.okta.com/login/).
-1. In the left navigation pane, select **Applications > Applications**.
-1. On the **Applications** page, select **Create App Integration**.
-1. In the **Create a new app integration** dialog, select **SAML 2.0** and then select **Next**.
-1. On the **Create SAML Integration** page in the **General Settings** section, provide a name for your application
-   (such as `temporal-cloud`) and then select **Next**.
-1. In the **Configure SAML** section in **Single sign on URL**, enter the following callback URL, including your Account
-   Id where indicated:
+1. 登录[Okta 管理控制台](https://www.okta.com/login/)。
+1. 在左侧导航窗格中，选择“**应用程序 > 应用程序**”。
+1. 在 **应用程序** 页面上，选择 **创建应用程序集成**。
+1. 在 **创建新的应用程序集成** 对话框中，选择 **SAML 2.0**，然后选择 **下一步**。
+1. 在 **创建 SAML 集成** 页面的 **常规设置** 部分中，提供应用程序的名称
+   （例如 `Temporal-cloud`），然后选择 **下一步**。
+1. 在 **单点登录 URL** 的 **配置 SAML** 部分中，输入以下回调 URL，包括您的帐户
+   标明 ID 的位置：
 
    ```bash
    https://login.tmprl.cloud/login/callback?connection=ACCOUNT_ID-saml
    ```
 
-   A correctly formed callback URL looks like this:
+正确形成的回调 URL 如下所示：
 
    ```bash
    https://login.tmprl.cloud/login/callback?connection=f45a2-saml
    ```
 
-1. In **Audience URI (SP Entity ID)**, enter the following entity identifier, including your Account Id where indicated:
+1. 在 **受众 URI（SP 实体 ID）** 中，输入以下实体标识符，包括您的帐户 ID（如注明）：
 
    ```bash
    urn:auth0:prod-tmprl:ACCOUNT_ID-saml
    ```
 
-   A correctly formed entity identifier looks like this:
+正确形成的实体标识符如下所示：
 
    ```bash
    urn:auth0:prod-tmprl:f45a2-saml
    ```
 
-1. We require the user's full email address when connecting to Temporal.
-   - In **Name ID format**, select `EmailAddress`.
-   - In **Attribute Statements**, set **email** and **name**.
-1. Select **Next**.
-1. In the **Feedback** section, select **Finish**.
-1. On the **Applications** page, select the name of the application integration you just created.
-1. On the application integration page, select the **Sign On** tab.
-1. Under **SAML Setup**, select **View SAML setup instructions**.
-1. Collect information that you need to send to us:
-   - Copy the IdP settings.
-   - Download the active certificate.
+1. 连接到 Temporal 时，我们需要用户的完整电子邮件地址。
+   - 在**名称 ID 格式**中，选择 `EmailAddress`。
+   - 在**属性语句**中，设置**电子邮件**和**姓名**。
+1. 选择**下一步**。
+1. 在 **反馈** 部分中，选择 **完成**。
+1. 在 **应用程序** 页面上，选择您刚刚创建的应用程序集成的名称。
+1. 在应用程序集成页面上，选择“**登录**”选项卡。
+1. 在 **SAML 设置**下，选择 **查看 SAML 设置说明**。
+1. 收集您需要发送给我们的信息：
+   - 复制 IdP 设置。
+   - 下载有效证书。
 
-To finish setting up Okta as your SAML IdP, see the next section,
-[Finish SAML configuration](#finish-saml-configuration).
+要完成将 Okta 设置为 SAML IdP，请参阅下一部分：
+[完成SAML配置](#finish-saml-configuration)。
 
-## How to finish your SAML configuration {#finish-saml-configuration}
+## 如何完成 SAML 配置 {#finish-saml-configuration}
 
-After you configure SAML with your IdP, we can finish the configuration on our side.
-[Create a support ticket](/cloud/support#support-ticket) that includes the following information:
+在您使用 IdP 配置 SAML 后，我们就可以完成我们这边的配置。
+[创建支持票](/cloud/support#support-ticket) 包括以下信息：
 
-- The sign-in URL from your application
-- The X.509 SAML sign-in certificate in PEM format
-- One or more IdP domains to map to the SAML connection
+- 您的应用程序中的登录 URL
+- PEM 格式的 X.509 SAML 登录证书
+- 一个或多个 IdP 域映射到 SAML 连接
 
-Generally, the provided IdP domain is the same as the domain for your email address. You can provide multiple IdP
-domains.
+通常，提供的 IdP 域与您的电子邮件地址的域相同。您可以提供多个 IdP
+域。
 
-When you receive confirmation from us that we have finished configuration, log in to Temporal Cloud. This time, though,
-enter your email address and click **Continue**. You will be directed to the authentication page of your IdP.
+当您收到我们确认我们已完成配置时，请登录 Temporal Cloud。不过这一次，
+输入您的电子邮件地址，然后单击“**继续**”。您将被引导至 IdP 的身份验证页面。

@@ -1,7 +1,7 @@
 ---
-title: Workflow cost optimization
-sidebar_label: Cost Optimization
-description: Strategies for optimizing costs associated with workloads running on Temporal Cloud while maintaining workflow reliability and observability.
+title: "Workflow 成本优化"
+sidebar_label: "成本优化"
+description: "优化与 Temporal Cloud 上运行的工作负载相关的成本的策略，同时保持 Workflow 的可靠性和可观察性。"
 toc_max_heading_level: 4
 keywords:
   - cost optimization
@@ -14,267 +14,298 @@ tags:
   - Temporal Cloud
 ---
 
-This guide provides strategies for optimizing costs associated with workloads running on Temporal Cloud while maintaining Workflow reliability and observability.
+本指南提供了优化与 Temporal Cloud 上运行的工作负载相关的成本的策略，同时保持 Workflow 的可靠性和可观察性。
 
-## Overview
+＃＃ 概述
 
-Temporal Cloud uses consumption-based pricing with two primary cost components: [Actions and Storage](/cloud/pricing#action).
-Optimization opportunities vary significantly based on your workload characteristics - Workflows with high signal volume face different cost drivers than long-running Workflows with large payloads.
+Temporal Cloud 使用基于消耗的定价，其中包含两个主要成本组成部分：[操作和存储](/cloud/pricing#action)。
+根据您的工作负载特征，优化机会会有很大差异 - 具有高 Signal 容量的 Workflow 与具有大负载的长期运行的 Workflow 面临着不同的成本驱动因素。
 
 :::important
-Build Workflows following best practices first, then optimize based on observed costs.
-Premature optimization can compromise observability and create operational challenges.
+首先按照最佳实践构建 Workflow，然后根据观察到的成本进行优化。
+过早的优化可能会损害可观测性并带来运营挑战。
 :::
 
-Every optimization involves tradeoffs.
-This guide helps you make informed decisions about where and how to optimize based on your specific requirements.
+每次优化都涉及权衡。
+本指南可帮助您根据您的具体要求就优化位置和方式做出明智的决策。
 
-Should you need additional guidance on Workflow design considerations, please reach out to a Temporal Solutions Architect.
+如果您需要有关 Workflow 设计注意事项的更多指导，请联系 Temporal 解决方案架构师。
 
-## Common anti-patterns
+<a id="overview"></a>
+## 常见的反模式 {#overview}
 
-Avoid these patterns that either inflate costs unnecessarily or create problems through aggressive optimization:
+避免这些模式，这些模式要么不必要地增加成本，要么通过积极的优化产生问题：
 
-### Premature Activity consolidation
+<a id="common-anti-patterns"></a>
+### 过早的 Activity 整合 {#common-anti-patterns}
 
-Combining Activities before understanding failure modes reduces observability and retry control.
-Activities should be split based on failure boundaries and retry requirements, not cost optimization alone.
-See [How many Activities should I use in my Temporal Workflow](https://temporal.io/blog/how-many-activities-should-i-use-in-my-temporal-workflow) for a decision framework.
+在了解故障模式之前组合活动会降低可观察性和重试控制。
+应根据故障边界和重试要求来划分活动，而不仅仅是成本优化。
+请参阅 [我应该在 Temporal Workflow 中使用多少个活动](https://temporal.io/blog/how-many-activities-should-i-use-in-my-temporal-workflow) 了解决策框架。
 
-### Inappropriate use of Local Activities
+<a id="premature-activity-consolidation"></a>
+### 不当使用本地活动 {#premature-activity-consolidation}
 
-Using Local Activities for all operations without understanding their failure semantics and limitations.
-Local Activities don't provide Worker-level isolation and have different retry behavior.
-See [Local Activities](/local-activity) for guidance.
+将本地活动用于所有操作，而不了解其故障语义和限制。
+本地活动不提供 Worker 级别的隔离，并且具有不同的重试行为。
+请参阅 [当地活动](/local-activity) 获取指导。
 
-### Missing Continue-As-New
+<a id="inappropriate-use-of-local-activities"></a>
+### 缺少 Continue-As-New {#inappropriate-use-of-local-activities}
 
-Long-running Workflows that don't implement Continue-As-New accumulate large Event Histories, increasing storage costs and impacting performance.
-Workflows running days or weeks or processing thousands of events require [Continue-As-New](/workflow-execution/continue-as-new).
+未实现 Continue-As-New 的长期运行的 Workflow 会积累大量事件历史记录，从而增加存储成本并影响性能。
+Workflow 运行数天或数周或处理数千个事件需要 [Continue-As-New](/workflow-execution/continue-as-new)。
 
-### High volume of Activity retries
+<a id="missing-continue-as-new"></a>
+### Activity 重试次数较多 {#missing-continue-as-new}
 
-Generally, the default values for [Activity retries](/encyclopedia/retry-policies) are quite good.
-However, excessive Activity retries often indicate underlying issues like timeouts that are too short or Activities that frequently fail.
-Detect Activity retry frequency and if high, consider increasing retry intervals or Activity timeouts before failures occur.
-See [Spooky Stories: Chilling Temporal Anti-Patterns](https://temporal.io/blog/spooky-stories-chilling-temporal-anti-patterns-part-2#2-hiding-behind-the-chainsaws) for guidance on retry defaults and patterns.
+一般来说，[Activity 重试](/encyclopedia/retry-policies) 的默认值相当不错。
+但是，过多的 Activity 重试通常表明存在潜在问题，例如超时太短或活动频繁失败。
+检测 Activity 重试频率，如果较高，请考虑在发生故障之前增加重试间隔或 Activity 超时。
+有关重试默认值和模式的指南，请参阅 [恐怖故事：令人毛骨悚然的 Temporal 反模式](https://temporal.io/blog/spooky-stories-chilling-temporal-anti-patterns-part-2#2-hiding-behind-the-chainsaws)。
 
-### Large payloads in Workflow History
+<a id="high-volume-of-activity-retries"></a>
+### Workflow 历史中的大有效负载 {#high-volume-of-activity-retries}
 
-Passing multi-megabyte payloads through Workflows when external storage (S3, blob storage) is more appropriate.
-Use [compression](/troubleshooting/blob-size-limit-error#why-does-this-error-occur) or the [claim check pattern](https://dataengineering.wiki/Concepts/Software+Engineering/Claim+Check+Pattern) for large data.
+当外部存储（S3、blob 存储）更合适时，通过 Workflow 传递多兆字节的有效负载。
+对于大数据，请使用 [压缩](/troubleshooting/blob-size-limit-error#why-does-this-error-occur) 或 [索赔检查模式](https://dataengineering.wiki/Concepts/Software+Engineering/Claim+Check+Pattern)。
 
-### Over-optimization at the expense of observability
+<a id="large-payloads-in-workflow-history"></a>
+### 以牺牲可观察性为代价的过度优化 {#large-payloads-in-workflow-history}
 
-Aggressively optimizing costs without maintaining sufficient visibility for debugging and operational needs.
-Balance cost reduction with your team's observability requirements.
+积极优化成本，而无需维护足够的 Visibility 来满足调试和操作需求。
+平衡成本降低与团队的可观察性要求。
 
-For example, merging five separate Activities (validate input, call payment API, update database, send notification, generate receipt) into a single "processOrder" Activity reduces from 5 Actions to 1, but you lose per-step visibility in the Temporal UI.
-When the notification step fails, you can't see which of the five steps failed, you lose independent retry control (a notification failure retries the entire flow including the payment call), and you can't filter Workflows by failure stage.
+例如，将五个单独的活动（验证输入、调用支付 API、Update 数据库、发送通知、生成收据）合并到单个“processOrder”Activity 中，操作数从 5 个减少到 1 个，但会丢失 Temporal UI 中的每步骤 Visibility。
+当通知步骤失败时，您无法看到五个步骤中哪一个失败，您将失去独立的重试控制（通知失败会重试包括付款调用在内的整个流程），并且您无法按失败阶段过滤 Workflow。
 
-Similarly, removing [Heartbeats](/encyclopedia/detecting-activity-failures#activity-heartbeat) from a long-running data processing Activity saves Actions, but means you can't detect a stuck Worker until the full Activity timeout expires and you lose progress tracking (for example, "processed 500 of 1,000 records").
+同样，从长时间运行的数据处理 Activity 中删除 [心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 可以保存操作，但这意味着您无法检测到卡住的 Worker，直到完整的 Activity 超时到期并且您失去进度跟踪（例如，“已处理 1,000 条记录中的 500 条记录”）。
 
-### Excessive Activity Heartbeats
+<a id="over-optimization-at-the-expense-of-observability"></a>
+### Activity 心跳过多 {#over-optimization-at-the-expense-of-observability}
 
-Each Heartbeat counts as one Action.
-Only use Heartbeats for long-running Activities (10+ minutes) where you need to detect Worker failures and track progress.
-Short-running Activities that complete in seconds or minutes don't need Heartbeats.
-See [Activity Heartbeat documentation](/encyclopedia/detecting-activity-failures#which-activities-should-heartbeat) for guidance.
+每一次心跳都算作一次行动。
+仅将心跳用于需要检测 Worker 故障并跟踪进度的长时间运行的活动（10 分钟以上）。
+在几秒钟或几分钟内完成的短期运行活动不需要心跳。
+请参阅 [Activity 心跳文档](/encyclopedia/detecting-activity-failures#which-activities-should-heartbeat) 获取指导。
 
-## Understanding cost drivers
+<a id="excessive-activity-heartbeats"></a>
+## 了解成本驱动因素 {#excessive-activity-heartbeats}
 
-Temporal Cloud pricing consists of Actions, Storage, and Support.
-If you are new to Temporal Cloud, see the [pricing documentation](/cloud/pricing#action) to learn more and familiarize yourself with [what results in a billable Action](/cloud/actions) in Temporal Cloud.
+Temporal Cloud 定价由操作、存储和支持组成。
+如果您是 Temporal Cloud 的新手，请参阅 [定价文件](/cloud/pricing#action) 以了解更多信息并熟悉 Temporal Cloud 中的 [什么会导致计费操作](/cloud/actions)。
 
-### Cost distribution
+<a id="understanding-cost-drivers"></a>
+### 成本分配 {#understanding-cost-drivers}
 
-For most workloads, Actions represent the majority of total costs, with storage typically accounting for 10% or less of a monthly bill.
-Focus optimization efforts on what's driving costs with a specific workload:
+对于大多数工作负载，操作占总成本的大部分，而存储通常占每月账单的 10% 或更少。
+将优化工作重点放在特定工作负载的成本驱动因素上：
 
-**High Actions costs generally indicate**:
+**高行动成本通常表明**：
 
-- [Many Activities per Workflow](https://temporal.io/blog/how-many-activities-should-i-use-in-my-temporal-workflow)
-- Frequent [Signals, Queries, or Updates](/encyclopedia/workflow-message-passing#choosing-messages)
-- Long-running Activities with [Heartbeats](/cloud/worker-health#manage-worker-heartbeating)
-- High [Activity retry rates](/develop/activity-retry-simulator)
-- Extensive Query usage
+- [Workflow 有许多活动](https://temporal.io/blog/how-many-activities-should-i-use-in-my-temporal-workflow)
+- 频繁 [Signal、查询或 Update](/encyclopedia/workflow-message-passing#choosing-messages)
+- 使用 [心跳](/cloud/worker-health#manage-worker-heartbeating) 进行长期活动
+- 高[Activity 重试率](/develop/activity-retry-simulator)
+- 广泛使用Query
 
-**High Storage costs generally indicate**:
+**高存储成本通常表明**：
 
-- Large payloads in Workflow inputs, outputs, or Activity results
-- Long retention periods with high Workflow volume
-- Long-running Workflows without Continue-As-New
-- Workflows accumulating large Event Histories
+- Workflow 输入、输出或 Activity 结果中的大有效负载
+- Workflow 体积大，保留时间长
+- 长期运行的 Workflow，不带 Continue-As-New
+- Workflows积累大量事件历史
 
-### Optimization priority
+<a id="cost-distribution"></a>
+### 优化优先级 {#cost-distribution}
 
-1. **Actions optimization**: Usually provides the largest cost reduction opportunity
-2. **Active Storage optimization**: Relevant for long-running Workflows or large payloads
-3. **Retained Storage optimization**: Relevant for high volume combined with long retention periods
+1. **行动优化**：通常提供最大的成本降低机会
+2. **主动存储优化**：与长时间运行的 Workflow 或大负载相关
+3. **保留存储优化**：与高容量和长保留期相关
 
-## Measuring
+<a id="optimization-priority"></a>
+## 测量 {#optimization-priority}
 
-Establish [baseline metrics](https://docs.temporal.io/cloud/metrics/reference) before optimizing and be sure to validate impact after implementation.
-Specifically:
+在优化之前建立 [基线指标](https://docs.temporal.io/cloud/metrics/reference)，并确保在实施后验证影响。
+具体来说：
 
-- Actions consumption (per Workflow, per day/month, by Namespace)
-- Storage consumption (Active and Retained)
-- Monthly costs (total, per Namespace, per Workflow Type)
-- Observability metrics (time to debug, incident detection)
+- 操作消耗（根据 Workflow，每天/月，按 Namespace）
+- 存储消耗（活动和保留）
+- 每月费用（总计，每个 Namespace、每个 Workflow 类型）
+- 可观察性指标（调试时间、事件检测）
 
-## Actions optimization
+<a id="measuring"></a>
+## 动作优化 {#measuring}
 
-[Actions](https://docs.temporal.io/cloud/actions) encompass Workflow operations, Activity Executions, Signals, Queries, and other interactions with Temporal.
-Each represents a unit of consumption.
+[行动](https://docs.temporal.io/cloud/actions) 包含 Workflow 操作、Activity 执行、Signal、查询以及与 Temporal 的其他交互。
+每个代表一个消耗单位。
 
-### Activity granularity
+<a id="actions-optimization"></a>
+### Activity 粒度 {#actions-optimization}
 
-Activity granularity is a fundamental architectural decision that impacts both costs and observability.
-More Activities provide better visibility and retry control but increase the Action count.
-Fewer Activities reduce costs but limit observability.
+Activity 粒度是影响成本和可观察性的基本架构决策。
+更多活动提供更好的 Visibility 和重试控制，但会增加操作计数。
+较少的活动降低了成本，但限制了可观察性。
 
-For detailed discussion of this tradeoff, see [How many Activities should I use in my Temporal Workflow?](https://temporal.io/blog/how-many-activities-should-i-use-in-my-temporal-workflow)
+有关此权衡的详细讨论，请参阅 [我应该在 Temporal Workflow 中使用多少个活动？](https://temporal.io/blog/how-many-activities-should-i-use-in-my-temporal-workflow)
 
-### Child Workflows vs Activities
+<a id="activity-granularity"></a>
+### Child Workflow 与活动 {#activity-granularity}
 
-[Child Workflows cost 2 Actions](/cloud/actions#child-workflows) compared to an Activity's 1 Action.
-See [Child Workflows documentation](/child-workflows) for detailed comparison of capabilities and use cases.
+[Child Workflow 需要 2 次操作](/cloud/actions#child-workflows) 与 Activity 的 1 动作相比。
+有关功能和用例的详细比较，请参阅 [Child Workflows 文档](/child-workflows)。
 
-### Retry Policies
+<a id="child-workflows-vs-activities"></a>
+### 重试策略 {#child-workflows-vs-activities}
 
-Each Activity retry counts as one Action.
-Default [Retry Policies](/encyclopedia/retry-policies) can be aggressive, which is appropriate for most operations but costly for expensive external operations.
+每次 Activity 重试都算作一次操作。
+默认的 [重试策略](/encyclopedia/retry-policies) 可以是激进的，这适用于大多数操作，但对于昂贵的外部操作来说成本高昂。
 
-For example, consider an Activity that calls a third-party payment API.
-With Temporal's default Retry Policy (1s initial interval, 2.0 backoff coefficient, unlimited maximum attempts), if that API goes down for 30 minutes, the Activity retries approximately 20 times before reaching the 100s maximum interval cap, then continues retrying every 100 seconds.
-Each retry counts as 1 Action.
-Across 1,000 concurrent Workflows hitting the same outage, that produces 20,000+ extra Actions from retries alone.
+例如，考虑调用第三方支付 API 的 Activity。
+使用 Temporal 的默认 Retry Policy（1 秒初始间隔、2.0 退避系数、无限最大尝试次数），如果该 API 关闭 30 分钟，Activity 在达到 100 秒最大间隔上限之前会重试大约 20 次，然后继续每 100 秒重试一次。
+每次重试算作 1 个操作。
+在 1,000 个并发 Workflow 遭遇相同中断的情况下，仅重试就会产生 20,000 多个额外操作。
 
-For expensive external operations like this, consider:
+对于像这样昂贵的外部操作，请考虑：
 
-- Setting `MaximumAttempts` to cap total retries
-- Increasing `InitialInterval` (for example, to 10s) to reduce retry frequency
-- Adding error types to `NonRetryableErrorTypes` for errors that won't resolve on retry (such as 4xx HTTP status codes)
-- Using [next retry delay](/encyclopedia/retry-policies#per-error-next-retry-delay) to dynamically control retry timing based on failure types (for example, respecting rate-limit headers)
-- Implementing an [Activity pause pattern](/cli/activity#pause) to wait for manual intervention rather than automatic retries
+- 设置 `MaximumAttempts` 限制总重试次数
+- 增加`InitialInterval`（例如，增加到10秒）以减少重试频率
+- 将错误类型添加到 `NonRetryableErrorTypes`，以解决重试时无法解决的错误（例如 4xx HTTP 状态代码）
+- 使用 [下次重试延迟](/encyclopedia/retry-policies#per-error-next-retry-delay) 根据故障类型动态控制重试时间（例如，遵守速率限制标头）
+- 实施 [Activity 暂停模式](/cli/activity#pause) 来等待手动干预而不是自动重试
 
-Use the [Activity Retry Simulator](/develop/activity-retry-simulator) to visualize how different Retry Policy configurations affect retry behavior and Action consumption.
+使用 [Activity 重试模拟器](/develop/activity-retry-simulator) 可视化不同的 Retry Policy 配置如何影响重试行为和操作消耗。
 
-Refer to this blog post on [Mastering Workflow retry logic for resilient applications](https://temporal.io/blog/failure-handling-in-practice) for additional guidance.
+请参阅有关 [掌握 Workflow 重试逻辑以实现弹性应用程序](https://temporal.io/blog/failure-handling-in-practice) 的博客文章以获取更多指导。
 
-### Local Activities
+<a id="retry-policies"></a>
+### 当地活动 {#retry-policies}
 
-A [Local Activity](/local-activity#local-activity) is an Activity Execution that executes in the same process as the Workflow Execution that spawns it.
-Therefore, multiple Local Activities that run back-to-back only [count as a single billable action](/cloud/actions#activities), whereas each regular Activity counts as a billable action.
-However, there are tradeoffs to converting regular Activities to Local Activities.
-For example, if a specific Local Activity fails, *all* of them will be retried together.
-Review [the docs](/local-activity) or reach out to your account team to learn more.
+[本地 Activity](/local-activity#local-activity) 是 Activity 执行，它与生成它的 Workflow Execution 在同一进程中执行。
+因此，连续运行的多个本地活动仅 [算作一次计费操作](/cloud/actions#activities)，而每个常规 Activity 都算作计费操作。
+然而，将常规活动转换为本地活动需要权衡。
+例如，如果特定的本地 Activity 失败，*所有*它们将一起重试。
+查看 [文档](/local-activity) 或联系您的客户团队以了解更多信息。
 
-#### When to stick with Regular Activities
+<a id="local-activities"></a>
+#### 何时坚持常规活动 {#local-activities}
 
-Use Regular Activities instead of Local Activities if you require any of the following:
+如果您需要以下任何一项，请使用常规活动而不是本地活动：
 
-- Activities may take more than 10 seconds to complete
-- Independent retry control for each Activity
-- Need to avoid re-running expensive Activities when unrelated Activities fail
-- Immediate Signal/Update handling during execution
-- Separate resource management (like rate limits) for each Activity
+- 活动可能需要 10 秒以上才能完成
+- 每个Activity的独立重试控制
+- 当不相关的活动失败时需要避免重新运行昂贵的活动
+- 执行期间立即处理 Signal/Update
+- 每个 Activity 的单独资源管理（如速率限制）
 
-### Batching operations
+<a id="when-to-stick-with-regular-activities"></a>
+### 批处理操作 {#when-to-stick-with-regular-activities}
 
-#### Search Attributes
+<a id="batching-operations"></a>
+#### Search Attributes {#batching-operations}
 
-1. [Search Attributes](/search-attribute#custom-search-attribute) provided at Workflow start do not count as billable Actions.
-   If Search Attribute values are known before starting the Workflow, provide them at Workflow start to eliminate these costs entirely.
-2. For Search Attributes that must be updated during Workflow Execution, each `UpsertSearchAttributes` call counts as 1 Action regardless of how many attributes are updated.
-   Batch multiple related attribute updates into single operations to reduce Actions consumed.
+1. Workflow 开始时提供的 [Search Attributes](/search-attribute#custom-search-attribute) 不算作计费操作。
+   如果在启动 Workflow 之前已知 Search Attribute 值，请在 Workflow 启动时提供这些值，以完全消除这些成本。
+2. 对于在 Workflow Execution 期间必须为 Updated 的 Search Attribute，无论有多少个属性是 Updated，每个 `UpsertSearchAttributes` 调用都计为 1 个操作。
+   将多个相关属性 Update 批处理为单个操作，以减少消耗的操作。
 
-See the [Temporal Cloud Action Documentation](/cloud/actions#workflows) for details.
+有关详细信息，请参阅 [Temporal Cloud 操作文档](/cloud/actions#workflows)。
 
-#### Signal handling
+<a id="search-attributes"></a>
+#### Signal 处理 {#search-attributes}
 
-Where feasible, implement deduplication logic client-side or aggregate data into fewer Signals.
-Use `SignalWithStart` instead of separate `StartWorkflow` and `SignalWorkflow` calls when initiating Workflows with Signals.
+在可行的情况下，在客户端实施重复数据删除逻辑或将数据聚合到更少的 Signal 中。
+当使用 Signal 启动 Workflow 时，使用 `SignalWithStart` 而不是单独的 `StartWorkflow` 和 `SignalWorkflow` 调用。
 
-## Storage optimization
+<a id="signal-handling"></a>
+## 存储优化 {#signal-handling}
 
-[Storage costs](/cloud/pricing#storage) are divided into Active Storage (open Workflows) and Retained Storage (closed Workflow History during retention period).
-Active Storage is significantly more expensive than Retained Storage.
+[仓储成本](/cloud/pricing#storage) 分为活动存储（打开 Workflow）和保留存储（保留期间关闭 Workflow 历史记录）。
+活动存储比保留存储昂贵得多。
 
-### Active Storage
+<a id="storage-optimization"></a>
+### 主动存储 {#storage-optimization}
 
-Active Storage applies to open Workflows and their Event Histories.
-The following sections detail optimization opportunities for Active Storage.
+Active Storage 适用于打开的 Workflow 及其事件历史记录。
+以下部分详细介绍了 Active Storage 的优化机会。
 
-#### Continue-As-New
+<a id="active-storage"></a>
+#### Continue-As-New {#active-storage}
 
-For long-running Workflows with extended sleep/wait periods, calling Continue-As-New before sleeping closes the current execution (moving to cheaper Retained Storage) and starts fresh when work resumes, reducing Active Storage costs.
-See [Continue-As-New documentation](/workflow-execution/continue-as-new) to learn more.
+对于具有延长睡眠/等待时间的长时间运行的 Workflow，在睡眠前调用 Continue-As-New 会关闭当前执行（移至更便宜的保留存储）并在工作恢复时重新开始，从而降低活动存储成本。
+请参阅 [Continue-As-New 文档](/workflow-execution/continue-as-new) 了解更多信息。
 
-#### Compression
+＃＃＃＃ 压缩
 
-Large payloads increase Active Storage costs.
-Implement a custom Data Converter with compression for moderately large payloads (100KB-1MB).
-See the [Data Converter documentation](/default-custom-data-converters#custom-data-converter) to learn more.
+大有效负载会增加 Active Storage 成本。
+实现自定义 Data Converter，并针对中等大小的有效负载 (100KB-1MB) 进行压缩。
+请参阅 [Data Converter 文档](/default-custom-data-converters#custom-data-converter) 了解更多信息。
 
-#### Claim check pattern
+<a id="continue-as-new"></a>
+#### 声明检查模式 {#continue-as-new}
 
-For very large payloads or binary data, store data externally (S3 or GCS) and pass references through Workflows.
+对于非常大的有效负载或二进制数据，请在外部存储数据（S3 或 GCS）并通过 Workflow 传递引用。
 
-### Retained Storage
+<a id="compression"></a>
+### 保留存储 {#compression}
 
-Retained Storage applies to closed Workflow History during the retention period.
-The following sections detail optimization opportunities for Retained Storage.
+保留存储适用于保留期内关闭的 Workflow 历史记录。
+以下部分详细介绍了保留存储的优化机会。
 
-#### Retention periods
+<a id="claim-check-pattern"></a>
+#### 保留期限 {#claim-check-pattern}
 
-The default Namespace retention is 30 days (configurable between 1 and 90 days).
-Adjust based on operational and compliance requirements.
+默认 Namespace 保留期为 30 天（可在 1 到 90 天之间配置）。
+根据运营和合规要求进行调整。
 
-**Considerations**:
+**注意事项**：
 
-- Shorter retention reduces costs but limits historical analysis
-- Audit investigation patterns before shortening retention
-- Ensure compliance requirements are met
+- 较短的保留时间可降低成本，但限制历史分析
+- 在缩短保留时间之前审核调查模式
+- 确保满足合规要求
 
-See [Namespace retention documentation](/temporal-service/temporal-server#retention-period) for configuration details.
+有关配置详细信息，请参阅 [Namespace 保留文档](/temporal-service/temporal-server#retention-period)。
 
-#### Workflow export
+<a id="retained-storage"></a>
+#### Workflow 导出 {#retained-storage}
 
-Temporal Cloud supports exporting Workflow Histories to external storage for compliance while maintaining shorter retention periods.
-Note that Workflow export costs one Action per export.
+Temporal Cloud 支持将 Workflow 历史记录导出到外部存储以确保合规性，同时保持更短的保留期。
+请注意，Workflow 导出每次导出需要执行一次操作。
 
-See the [Workflow History export documentation](/cloud/export) for more details.
-Alternatively, if you are looking to do analysis on closed Workflow Executions, [review this blog post to learn how to gain insights from exported Workflow Histories](https://temporal.io/blog/get-insights-from-workflow-histories-export-on-temporal-cloud).
+有关详细信息，请参阅 [Workflow 历史导出文档](/cloud/export)。
+或者，如果您希望对封闭的 Workflow Execution 进行分析，请使用 [查看此博文，了解如何从导出的 Workflow 历史记录中获取见解](https://temporal.io/blog/get-insights-from-workflow-histories-export-on-temporal-cloud)。
 
-## Validation
+＃＃ 验证
 
-### Validation approach
+<a id="retention-periods"></a>
+### 验证方法 {#retention-periods}
 
-1. **Test in non-production**: Validate functional correctness before production deployment
-2. **Monitor comprehensively**: Leverage the [Usage dashboard](/cloud/actions#usage) in the Cloud UI to track the impact on Actions and Storage after optimizations are made
-3. **Progressive rollout**: Deploy to a small percentage, validate, then expand. Review the [Worker Versioning documentation](/production-deployment/worker-deployments/worker-versioning) to learn about rolling out changes to Workflows
-4. **Continuous review**: Re-evaluate optimization effectiveness quarterly as system evolves
+1. **非生产测试**：在生产部署之前验证功能正确性
+2. **全面监控**：利用云UI中的[使用情况仪表板](/cloud/actions#usage)跟踪优化后对Actions和Storage的影响
+3. **渐进式部署**：部署到一小部分，验证，然后扩展。查看 [Worker 版本控制文档](/production-deployment/worker-deployments/worker-versioning) 以了解如何对 Workflow 进行更改
+4. **持续审查**：随着系统的发展，每季度重新评估优化效果
 
-### Success criteria
+<a id="workflow-export"></a>
+### 成功标准 {#workflow-export}
 
-- Cost reduced without increasing mean time to repair (MTTR)
-- Workflow success rates maintained or improved
-- Reduced observability does not increase mean time to detect (MTTD) incidents
+- 在不增加平均修复时间 (MTTR) 的情况下降低成本
+- Workflow 成功率保持或提高
+- 降低可观测性并不会增加平均事件检测时间 (MTTD)
 
-### Tools
+＃＃＃ 工具
 
-- Temporal Cloud Usage dashboard for Actions and Storage metrics
-- Workflow History for per-Workflow billable Actions estimates
-- Export metrics to observability platforms (Datadog, Grafana, etc.) for custom monitoring
+- Temporal Cloud 操作和存储指标的使用仪表板
+- Workflow 按 Workflow 计费操作估算的历史记录
+- 将指标导出到可观察平台（Datadog、Grafana 等）以进行自定义监控
 
-## When to get help
+<a id="validation"></a>
+## 何时寻求帮助 {#validation}
 
-Engage the Temporal team for Workflow audits when experiencing:
+当遇到以下情况时，请联系 Temporal 团队进行 Workflow 审核：
 
-- Complex Workflow patterns with unclear optimization paths
-- Compliance requirements limiting optimization options
-- Need for custom DataConverters or advanced patterns
-- Desire for expert validation of optimization strategies
+- 复杂的 Workflow 模式，优化路径不明确
+- 合规性要求限制了优化选项
+- 需要自定义数据转换器或高级模式
+- 渴望专家验证优化策略
 
-Contact your Temporal Account Representative or [Temporal support](http://support.temporal.io) to discuss optimization services.
+请联系您的 Temporal 客户代表或 [Temporal 支持](http://support.temporal.io) 讨论优化服务。

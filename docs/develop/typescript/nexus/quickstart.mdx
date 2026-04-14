@@ -1,8 +1,8 @@
 ---
 id: quickstart
-title: Nexus TypeScript Quickstart
-sidebar_label: Quickstart
-description: Build a Nexus Service that wraps an existing Temporal Workflow using the TypeScript SDK
+title: "Nexus TypeScript 快速入门"
+sidebar_label: "快速入门"
+description: "使用 TypeScript SDK 构建一个 Nexus 服务来包装现有的 Temporal Workflow"
 keywords:
   - nexus
   - typescript
@@ -18,32 +18,34 @@ hide_table_of_contents: true
 
 import { SetupSteps, SetupStep, CodeSnippet } from '@site/src/components/elements/SetupSteps';
 
-# Nexus TypeScript Quickstart
+<a id="nexus-typescript-quickstart"></a>
+# Nexus TypeScript 快速入门 {#nexus-typescript-quickstart}
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal TypeScript SDK support for Nexus is in [Public Preview](/evaluate/development-production-features/release-stages#public-preview).
+Temporal TypeScript SDK 对 Nexus 的支持位于 [公开预览](/evaluate/development-production-features/release-stages#public-preview) 中。
 
 :::
 
-[Temporal Nexus](/evaluate/nexus) connects Temporal Applications within and across Namespaces using a Nexus Endpoint, a Nexus Service contract, and Nexus Operations. Build a Nexus Service that wraps an existing Temporal Workflow, then invoke it from a caller Workflow.
+[Temporal Nexus](/evaluate/nexus) 使用 Nexus 端点、Nexus 服务合同和 Nexus 操作连接 Namespace 内部和之间的 Temporal 应用程序。构建一个包装现有 Temporal Workflow 的 Nexus 服务，然后从调用者 Workflow 调用它。
 
 :::info NEW TO NEXUS?
-This page will help you get a working sample running in TypeScript.
-To evaluate whether Nexus fits your use case, see the [evaluation guide](/evaluate/nexus) and to learn more about Nexus features, click [here](/nexus).
+此页面将帮助您获得在 TypeScript 中运行的工作示例。
+要评估 Nexus 是否适合您的使用案例，请参阅 [评估指南](/evaluate/nexus)，要了解有关 Nexus 功能的更多信息，请单击 [这里](/nexus)。
 :::
 
-**Prerequisites:** Complete the [TypeScript SDK Quickstart](/develop/typescript/set-up-your-local-typescript) first.
-You should have `activities.ts`, `workflows.ts`, `worker.ts`, and `client.ts` from that guide.
+**先决条件：** 首先完成 [TypeScript SDK 快速入门](/develop/typescript/set-up-your-local-typescript)。
+您应该从该指南中获得 `activities.ts`、`Workflows.ts`、`Worker.ts` 和 `client.ts`。
 
-## What you'll build
+<a id="what-youll-build"></a>
+## 你将构建什么 {#what-youll-build}
 
-You have `example` running in the `default` Namespace.
-By the end of this guide:
+您有 `example` 在 `default` Namespace 中运行。
+在本指南结束时：
 
-1. A Nexus Service will expose `example` as an Operation.
-2. A second Namespace will contain a Workflow that calls that Operation.
-3. The caller Workflow will get back `"Hello, Temporal!"` — the same result, but across Namespaces.
+1. Nexus 服务将 `example` 公开为操作。
+2. 第二个 Namespace 将包含调用该操作的 Workflow。
+3. 调用者 Workflow 将返回 `"Hello, Temporal!"` — 相同的结果，但跨越 Namespace。
 
 <SetupSteps>
 
@@ -65,15 +67,16 @@ export const sayHelloService = nexus.service('say-hello', {
 </>
 }>
 
-## 1. Define the Nexus Service
+<a id="1-define-the-nexus-service"></a>
+## 1.定义Nexus服务 {#1-define-the-nexus-service}
 
-Create a file called `service.ts` that defines the Nexus Service contract.
+创建一个名为 `service.ts` 的文件，用于定义 Nexus 服务合同。
 
-Creating a Nexus Service establishes the contract between your implementation and any callers.
-It provides type safety when invoking Nexus Operations and ensures that Operation Handlers fulfill the contract.
+创建 Nexus 服务会在您的实现和任何调用者之间建立契约。
+它在调用 Nexus 操作时提供类型安全，并确保操作处理程序履行合同。
 
-`nexus.service()` declares a named service, and `nexus.operation<I, O>()` defines a typed operation.
-The `example` Workflow returns `string`, so the operation output type is `string`.
+`Nexus.service()` 声明命名服务，`Nexus.operation<I, O>()` 定义类型化操作。
+`example` Workflow 返回 `string`，因此运算输出类型为 `string`。
 
 </SetupStep>
 
@@ -104,14 +107,15 @@ export const sayHelloHandler = nexus.serviceHandler(sayHelloService, {
 </>
 }>
 
-## 2. Define the Nexus Operation handlers
+<a id="2-define-the-nexus-operation-handlers"></a>
+## 2. 定义 Nexus 操作处理程序 {#2-define-the-nexus-operation-handlers}
 
-Create a file called `handler.ts` that implements the Nexus Operation handler.
+创建一个名为 `handler.ts` 的文件，该文件实现 Nexus 操作处理程序。
 
-Operation handlers contain the logic that runs when a caller invokes a Nexus Operation.
+操作处理程序包含调用者调用 Nexus 操作时运行的逻辑。
 
-`WorkflowRunOperationHandler` creates an asynchronous Nexus Operation that starts a Workflow.
-The handler bridges the Nexus `MyInput` interface to the `example` Workflow's `string` parameter by extracting `input.name`.
+`WorkflowRunOperationHandler` 创建启动 Workflow 的异步 Nexus 操作。
+该处理程序通过提取 `input.name` 将 Nexus `MyInput` 接口桥接到 `example` Workflow 的 `string` 参数。
 
 </SetupStep>
 
@@ -151,14 +155,15 @@ run().catch((err) => {
 </>
 }>
 
-## 3. Register the Nexus Service handler in a Worker
+<a id="3-register-the-nexus-service-handler-in-a-worker"></a>
+## 3. 在 Worker 中注册 Nexus 服务处理程序 {#3-register-the-nexus-service-handler-in-a-worker}
 
-Update your existing `worker.ts` to register the Nexus Service Handler.
+Update 您现有的 `Worker.ts` 用于注册 Nexus 服务处理程序。
 
-A Worker will only poll for and process incoming Nexus requests if the Nexus Service Handlers are registered.
-This is the same Worker concept used for Workflows and Activities.
+如果注册了 Nexus 服务处理程序，Worker 将仅轮询并处理传入的 Nexus 请求。
+这与用于 Workflow 和活动的 Worker 概念相同。
 
-The `nexusServices` parameter registers the handler so it can receive Nexus Operation requests.
+`NexusServices` 参数注册处理程序，以便它可以接收 Nexus 操作请求。
 
 </SetupStep>
 
@@ -195,16 +200,17 @@ export async function callerWorkflow(name: string): Promise<string> {
 </>
 }>
 
-## 4. Develop the caller Workflow
+<a id="4-develop-the-caller-workflow"></a>
+## 4.开发调用者Workflow {#4-develop-the-caller-workflow}
 
-Update your existing `workflows.ts` file with a Workflow which invokes the Nexus Operation.
+Update 现有的 `Workflows.ts` 文件，其中包含调用 Nexus 操作的 Workflow。
 
-The caller Workflow demonstrates the consumer side of Nexus.
-Instead of importing handler code directly, the caller only depends on the Service contract.
-This keeps the caller and handler decoupled so they can live in separate Namespaces, repositories, or even teams.
+调用者Workflow演示了Nexus的消费者端。
+调用者只依赖于服务合约，而不是直接导入处理程序代码。
+这使调用者和处理程序保持解耦，以便他们可以生活在单独的 Namespace、存储库甚至团队中。
 
-The `wf.createNexusClient()` method creates a client bound to your Nexus Service and Endpoint.
-`executeOperation` starts the operation and waits for the result.
+`wf.createNexusClient()` 方法创建绑定到 Nexus 服务和端点的客户端。
+`executeOperation`开始运算并等待结果。
 
 </SetupStep>
 
@@ -225,16 +231,17 @@ temporal operator namespace create --namespace my-caller-namespace
 </>
 }>
 
-## 5. Create the caller Namespace and Nexus Endpoint
+<a id="5-create-the-caller-namespace-and-nexus-endpoint"></a>
+## 5. 创建调用者 Namespace 和 Nexus 端点 {#5-create-the-caller-namespace-and-nexus-endpoint}
 
-Before running the application, create a caller Namespace and a Nexus Endpoint to route requests from the caller to the handler.
-The handler uses the `default` Namespace that was created when you started the dev server.
+在运行应用程序之前，创建一个调用者 Namespace 和一个 Nexus 端点以将请求从调用者路由到处理程序。
+该处理程序使用启动开发服务器时创建的 `default` Namespace。
 
-Namespaces provide isolation between the caller and handler sides.
-The Nexus Endpoint acts as a routing layer that connects the caller Namespace to the handler's target Namespace and Task Queue.
-The endpoint name must match the variable defined in `caller.ts` from step 4.
+Namespace 在调用方和处理程序方之间提供隔离。
+Nexus 端点充当路由层，将调用方 Namespace 连接到处理程序的目标 Namespace 和 Task Queue。
+端点名称必须与步骤 4 中 `caller.ts` 中定义的变量匹配。
 
-Make sure your local Temporal dev server is running (`temporal server start-dev`).
+确保您的本地 Temporal 开发服务器正在运行 (`Temporal Server start-dev`)。
 
 </SetupStep>
 
@@ -292,48 +299,50 @@ main().catch((err) => {
 </>
 }>
 
-## 6. Run and Verify
+<a id="6-run-and-verify"></a>
+## 6. 运行并验证 {#6-run-and-verify}
 
-Create a file called `caller-starter.ts` to start the caller Worker and execute the Workflow.
+创建一个名为 `caller-starter.ts` 的文件来启动调用者 Worker 并执行 Workflow。
 
-This step brings everything together: the caller Worker hosts `callerWorkflow`, which uses the Nexus client to invoke `sayHello` on the handler side.
-The full request flows from the caller Workflow, through the Nexus Endpoint, to the handler Worker running the `example` Workflow, and back to the caller.
+此步骤将所有内容整合在一起：调用者 Worker 托管 `callerWorkflow`，后者使用 Nexus 客户端调用处理程序端的 `sayHello`。
+完整请求从调用者 Workflow 通过 Nexus 端点流向运行 `example` Workflow 的处理程序 Worker，然后返回调用者。
 
-**Run the application:**
+**运行应用程序：**
 
-1. Start the handler Worker in one terminal:
+1. 在一个终端中启动处理程序 Worker：
 
 ```bash
 npx ts-node src/worker.ts
 ```
 
-2. Run the caller in another terminal:
+2. 在另一个终端中运行调用程序：
 
 ```bash
 npx ts-node src/caller-starter.ts
 ```
 
-You should see:
+你应该看到：
 
 ```
 Workflow result: Hello, Temporal!
 ```
 
-Open the [Temporal Web UI](http://localhost:8233) and find the `callerWorkflow` execution.
-You should see `NexusOperationScheduled`, `NexusOperationStarted`, and `NexusOperationCompleted` events in the Workflow history.
+打开[Temporal 网页用户界面](http://localhost:8233)并找到`callerWorkflow`执行。
+您应该在 Workflow 历史记录中看到 `NexusOperationScheduled`、`NexusOperationStarted` 和 `NexusOperationCompleted` 事件。
 
 </SetupStep>
 </SetupSteps>
 
-## Next Steps
+<a id="next-steps"></a>
+## 后续步骤 {#next-steps}
 
-Now that you have a working Nexus Service, here are some resources to deepen your understanding:
+现在您已经有了一个正在运行的 Nexus 服务，这里有一些资源可以加深您的理解：
 
-- **[TypeScript Nexus Feature Guide](/develop/typescript/nexus)**: Covers synchronous and asynchronous Operations, error handling, cancellation, and cross-Namespace calls.
-- **[Nexus Operations](/nexus/operations)**: The full Operation lifecycle, including retries, timeouts, and execution semantics.
-- **[Nexus Services](/nexus/services)**: Designing Service contracts and registering multiple Services per Worker.
-- **[Nexus Patterns](/nexus/patterns)**: Comparing the collocated and router-queue deployment patterns.
-- **[Error Handling in Nexus](/nexus/error-handling)**: Handling retryable and non-retryable errors across caller and handler boundaries.
-- **[Execution Debugging](/nexus/execution-debugging)**: Bi-directional linking and OpenTelemetry tracing for debugging Nexus calls.
-- **[Nexus Endpoints](/nexus/endpoints)**: Managing Endpoints and understanding how they route requests.
-- **[Temporal Nexus on Temporal Cloud](/cloud/nexus)**: Deploying Nexus in a production Temporal Cloud environment with built-in access controls and multi-region connectivity.
+- **[TypeScript Nexus 功能指南](/develop/typescript/nexus)**：涵盖同步和异步操作、错误处理、取消和跨 Namespace 调用。
+- **[Nexus 操作](/nexus/operations)**：完整的操作生命周期，包括重试、超时和执行语义。
+- **[Nexus 服务](/nexus/services)**：根据 Worker 设计服务合同并注册多个服务。
+- **[Nexus 图案](/nexus/patterns)**：比较并置部署模式和路由器队列部署模式。
+- **[Nexus 中的错误处理](/nexus/error-handling)**：跨调用者和处理程序边界处理可重试和不可重试的错误。
+- **[执行调试](/nexus/execution-debugging)**：用于调试 Nexus 调用的双向链接和 OpenTelemetry 跟踪。
+- **[Nexus 端点](/nexus/endpoints)**：管理端点并了解它们如何路由请求。
+- **[Temporal Nexus 上 Temporal Cloud](/cloud/nexus)**：在具有内置访问控制和多区域连接的生产 Temporal Cloud 环境中部署 Nexus。

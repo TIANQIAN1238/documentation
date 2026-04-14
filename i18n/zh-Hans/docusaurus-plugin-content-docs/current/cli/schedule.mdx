@@ -1,0 +1,342 @@
+---
+id: schedule
+title: Temporal CLI Schedule 命令参考
+sidebar_label: Schedule
+description: Temporal 的 Schedule 命令允许用户无缝创建、Update 和管理 Workflow Execution 以实现自动化，支持创建、回填、删除等命令。
+toc_max_heading_level: 4
+keywords:
+  - backfill
+  - cli reference
+  - command-line-interface-cli
+  - schedule
+  - schedule backfill
+  - schedule create
+  - schedule delete
+  - schedule describe
+  - schedule list
+  - schedule toggle
+  - schedule trigger
+  - schedule update
+  - temporal cli
+  - updates
+tags:
+  - Temporal CLI
+  - Schedules
+---
+
+{/* 注意：这是一个自动生成的文件。对此文件的任何编辑都将被覆盖。
+该文件是通过内部/cmd/gen-docs 从 https://github.com/Temporalio/cli/blob/main/internal/commandsgen/commands.yml 生成的 */}
+
+本页提供“Temporal”CLI“Schedule”命令的参考。适用于每个子命令的标志显示在子命令标题内的表格中。请参阅 [全局标志](#global-flags) 了解可与每个子命令一起使用的标志。
+
+## 回填
+
+批量执行在指定时间间隔内运行的操作。
+使用此命令填写 Workflow 从 Schedule 暂停时开始运行的信息，
+在创建 Schedule 之前，从未来开始，或者重新处理以前的
+执行间隔。
+
+回填需要 Schedule ID 和请求涵盖的时间段。
+最好使用 `BufferAll` 或 `AllowAll` 策略以避免冲突
+并确保没有跳过 Workflow Execution。
+
+例如：
+
+```
+temporal schedule backfill \
+    --schedule-id "YourScheduleId" \
+    --start-time "2022-05-01T00:00:00Z" \
+    --end-time "2022-05-31T23:59:59Z" \
+    --overlap-policy BufferAll
+```
+
+这些政策包括：
+
+* **AllowAll**：允许无限并发 Workflow Execution。这个
+  显着加快支持系统的回填过程
+  并发。您必须确保运行 Workflow Execution 不会干扰
+  与彼此。
+* **BufferAll**：在等待时缓冲所有传入的 Workflow Execution
+  运行Workflow Execution来完成。
+* **跳过**：如果之前的 Workflow Execution 仍在运行，则丢弃新的
+  Workflow Executions。
+* **BufferOne**：与“跳过”相同，但缓冲单个 Workflow Execution
+  在上一个执行完成后运行。丢弃其他 Workflow
+  处决。
+* **CancelOther**：取消正在运行的Workflow Execution，并将其替换为
+  即将推出的新 Workflow Execution。
+* **TerminateOther**：终止正在运行的Workflow Execution并替换
+  它与即将推出的新 Workflow Execution 一起使用。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--结束时间` |是的 | **时间戳** 回填结束时间。 |
+| `--重叠策略` |没有 | **字符串枚举** 用于处理重叠 Workflow Execution 的策略。接受的值：Skip、BufferOne、BufferAll、CancelOther、TerminateOther、AllowAll。 |
+| `--Schedule-id`、`-s` |是的 | **字符串** Schedule ID。 |
+| `--开始时间` |是的 | **时间戳** 回填开始时间。 |
+
+＃＃ 创造
+
+在 Temporal 服务上创建新的 Schedule。 Schedule 自动启动
+在您指定的时间购买新的 Workflow Execution。
+
+例如：
+
+```
+  temporal schedule create \
+    --schedule-id "YourScheduleId" \
+    --calendar '{"dayOfWeek":"Fri","hour":"3","minute":"30"}' \
+    --workflow-id YourBaseWorkflowIdName \
+    --task-queue YourTaskQueue \
+    --type YourWorkflowType
+```
+
+Schedules 支持 `--calendar`、`--interval` 和 `--cron` 的任意组合：
+
+* 简写 `--interval` 字符串。
+  例如：45m（每45分钟一班）或6h/5h（每6小时一班，在顶部
+  第5个小时）。
+* JSON `--calendar`，如前面的示例所示。
+* Unix 风格的 `--cron` 字符串和 robfig 声明
+  （@每日/@每周/@每X/等）。
+  例如，每周五中午 12:30：“30 12 * * Fri”。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--日历` |没有 | **字符串[]** JSON 格式的日历规范。例如：`{“dayOfWeek”：“星期五”，“小时”：“17”，“分钟”：“5”}`。 |
+| `--catchup-window` |没有 | **持续时间** 服务不可用时的最大追赶时间。 |
+| `--cron` |没有 | **字符串[]** cron 字符串格式的日历规范。例如：“30 12 * * 星期五”。 |
+| `--结束时间` |没有 | **时间戳** Schedule 结束时间。 |
+| `--执行超时` |没有 | **持续时间** 如果 WorkflowExecution 持续时间超过“DURATION”，则该执行失败。此超时包括重试和ContinueAsNew 任务。 |
+| `--公平关键` |没有 | **字符串** 用于按比例分配任务的公平键（最大 64 字节）。具有相同密钥的任务根据其权重共享容量。 |
+| `--公平权重` |没有 | **float** 此公平键的权重 [0.001-1000]。密钥根据其权重按比例分配。 |
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--input`, `-i` |没有 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` |没有 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--输入元` |没有 | **string[]** 以“KEY=VALUE”对的形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--间隔` |没有 | **字符串[]** 间隔持续时间。例如，90m 或 60m/15m 以包括相位偏移。 |
+| `--抖动` |没有 | **持续时间** 与规范的最大时间差异。在此量内随机改变开始时间。 |
+| `--备忘录` |没有 | **字符串[]** 使用“KEY =“VALUE”对的备忘录。使用 JSON 值。 |
+| `--注释` |没有 | **字符串** 初始注释字段值。 |
+| `--重叠策略` |没有 | **字符串枚举** 用于处理重叠 Workflow Execution 的策略。接受的值：Skip、BufferOne、BufferAll、CancelOther、TerminateOther、AllowAll。 |
+| `--失败时暂停` |没有 | **布尔** Workflow 失败后暂停 Schedule。 |
+| `--暂停` |没有 | **布尔** 创建后立即暂停 Schedule。 |
+| `--优先键` |没有 | **int** 优先级键（1-5，数字越小=优先级越高）。队列中的任务应按接近优先级的顺序进行处理。未指定时默认为 3。 |
+| `--剩余操作` |没有 | **int** 允许的操作总数。默认值为零（无限制）。 |
+| `--运行超时` |没有 | **持续时间** 如果 Workflow 运行持续时间超过“DURATION”，则 Workflow 运行失败。 |
+| `--Schedule-id`、`-s` |是的 | **字符串** Schedule ID。 |
+| `--Schedule-备忘录` |没有 | **string[]** 使用 `KEY="VALUE` 对设置 Schedule 备忘录。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次传递。 |
+| `--Schedule-搜索属性` |没有 | **string[]** 使用“KEY=”VALUE”对设置 Schedule Search Attribute。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--搜索属性` |没有 | **字符串[]** Search Attribute，格式为“KEY=VALUE”。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--开始时间` |没有 | **时间戳** Schedule 开始时间。 |
+| `--静态详细信息` |没有 | **字符串** 供用户在 UI 中使用的静态 Workflow 详细信息。使用 Temporal Markdown 格式，可能是多行。 _（实验）_ |
+| `--static-summary` |没有 | **字符串** UI 中人类消耗的静态 Workflow 摘要。使用 Temporal Markdown 格式，应该是单行。 _（实验）_ |
+| `--任务队列`、`-t` |是的 | **字符串** Workflow Task 队列。 |
+| `--任务超时` |没有 | **持续时间** 如果 Workflow Task 持续时间超过“DURATION”，则 Workflow Task 失败。这是 Workflow Task 的启动到关闭超时。 |
+| `--时区` |没有 | **字符串** 使用“TZ”时区解释日历规范。有关时区列表，请参阅：https://en.wikipedia.org/wiki/List_of_tz_database_time_zones。 |
+| `--类型` |是的 | **字符串** Workflow Type 名称。 |
+| `--Workflow-id`、`-w` |没有 | **字符串** Workflow Id。如果未提供，服务将生成一个唯一的 ID。 |
+
+＃＃ 删除
+
+删除前端服务上的Schedule：
+
+```
+temporal schedule delete \
+    --schedule-id YourScheduleId
+```
+
+删除 Schedule 不会影响它启动的 Workflow Execution
+仍在运行。要取消或终止这些 Workflow Execution，请使用“Temporal
+Workflow 删除`，改为`TemporalScheduledById` Search Attribute。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--Schedule-id`、`-s` |是的 | **字符串** Schedule ID。 |
+
+＃＃ 描述
+
+显示 Schedule 配置，包括有关过去、当前和的信息
+未来的 Workflow 运行：
+
+```
+temporal schedule describe \
+    --schedule-id YourScheduleId
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--Schedule-id`、`-s` |是的 | **字符串** Schedule ID。 |
+
+＃＃ 列表
+
+列出 Namespace 托管的 Schedule：
+
+```
+temporal schedule list \
+    --namespace YourNamespace
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--long`、`-l` |没有 | **布尔** 显示详细信息。 |
+| `--Query`、`-q` |没有 | **字符串** 使用给定列表过滤器过滤结果。 |
+| `--真的很长` |没有 | **bool** 以非表格形式显示广泛信息。 |
+
+## 切换
+
+通过传递带有您所需状态的标志来暂停或取消暂停 Schedule：
+
+```
+temporal schedule toggle \
+    --schedule-id "YourScheduleId" \
+    --pause \
+    --reason "YourReason"
+```
+
+和
+
+```
+temporal schedule toggle
+    --schedule-id "YourScheduleId" \
+    --unpause \
+    --reason "YourReason"
+```
+
+Update 的“--reason”文本与 Schedule 的操作“notes”字段相同
+沟通。如果省略，则默认为“（未提供原因）”。该字段是
+在服务 Web UI 上也可见。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--暂停` |没有 | **布尔** 暂停 Schedule。 |
+| `--原因` |没有 | **字符串** 暂停或取消暂停 Schedule 的原因。 |
+| `--Schedule-id`、`-s` |是的 | **字符串** Schedule ID。 |
+| `--取消暂停` |没有 | **布尔** 取消暂停 Schedule。 |
+
+＃＃ 扳机
+
+触发Schedule立即运行：
+
+```
+temporal schedule trigger \
+    --schedule-id "YourScheduleId"
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--重叠策略` |没有 | **字符串枚举** 用于处理重叠 Workflow Execution 的策略。接受的值：Skip、BufferOne、BufferAll、CancelOther、TerminateOther、AllowAll。 |
+| `--Schedule-id`、`-s` |是的 | **字符串** Schedule ID。 |
+
+## Update
+
+Update 是现有的 Schedule，具有新的配置详细信息，包括时间
+规范、行动和政策：
+
+```
+temporal schedule update \
+    --schedule-id "YourScheduleId" \
+    --workflow-type "NewWorkflowType"
+```
+
+此命令执行 Schedule 的完全替换
+配置。任何未提供的选项将重置为默认值
+价值观。您必须重新指定所有选项，而不仅仅是您想要的选项
+改变。要查看 Schedule 的当前配置，请使用
+更新前的“Temporal Schedule 描述”。
+
+Schedule 备忘录和 Search Attributes 不能与此成为 Updated
+命令。它们仅在 Schedule 创建期间设置，不受影响
+由 Updates 提供。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--日历` |没有 | **字符串[]** JSON 格式的日历规范。例如：`{“dayOfWeek”：“星期五”，“小时”：“17”，“分钟”：“5”}`。 |
+| `--catchup-window` |没有 | **持续时间** 服务不可用时的最大追赶时间。 |
+| `--cron` |没有 | **字符串[]** cron 字符串格式的日历规范。例如：“30 12 * * 星期五”。 |
+| `--结束时间` |没有 | **时间戳** Schedule 结束时间。 |
+| `--执行超时` |没有 | **持续时间** 如果 WorkflowExecution 持续时间超过“DURATION”，则该执行失败。此超时包括重试和ContinueAsNew 任务。 |
+| `--公平关键` |没有 | **字符串** 用于按比例分配任务的公平键（最大 64 字节）。具有相同密钥的任务根据其权重共享容量。 |
+| `--公平权重` |没有 | **float** 此公平键的权重 [0.001-1000]。密钥根据其权重按比例分配。 |
+| `--headers` |没有 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 接头，而不是 gRPC 接头。 |
+| `--input`, `-i` |没有 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` |没有 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--输入文件` |没有 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--输入元` |没有 | **string[]** 以“KEY=VALUE”对的形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--间隔` |没有 | **字符串[]** 间隔持续时间。例如，90m 或 60m/15m 以包括相位偏移。 |
+| `--抖动` |没有 | **持续时间** 与规范的最大时间差异。在此量内随机改变开始时间。 |
+| `--备忘录` |没有 | **字符串[]** 使用“KEY =“VALUE”对的备忘录。使用 JSON 值。 |
+| `--注释` |没有 | **字符串** 初始注释字段值。 |
+| `--重叠策略` |没有 | **字符串枚举** 用于处理重叠 Workflow Execution 的策略。接受的值：Skip、BufferOne、BufferAll、CancelOther、TerminateOther、AllowAll。 |
+| `--失败时暂停` |没有 | **布尔** Workflow 失败后暂停 Schedule。 |
+| `--暂停` |没有 | **布尔** 创建后立即暂停 Schedule。 |
+| `--优先键` |没有 | **int** 优先级键（1-5，数字越小=优先级越高）。队列中的任务应按接近优先级的顺序进行处理。未指定时默认为 3。 |
+| `--剩余操作` |没有 | **int** 允许的操作总数。默认值为零（无限制）。 |
+| `--运行超时` |没有 | **持续时间** 如果 Workflow 运行持续时间超过“DURATION”，则 Workflow 运行失败。 |
+| `--Schedule-id`、`-s` |是的 | **字符串** Schedule ID。 |
+| `--搜索属性` |没有 | **字符串[]** Search Attribute，格式为“KEY=VALUE”。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--开始时间` |没有 | **时间戳** Schedule 开始时间。 |
+| `--静态详细信息` |没有 | **字符串** 供用户在 UI 中使用的静态 Workflow 详细信息。使用 Temporal Markdown 格式，可能是多行。 _（实验）_ |
+| `--static-summary` |没有 | **字符串** UI 中人类消耗的静态 Workflow 摘要。使用 Temporal Markdown 格式，应该是单行。 _（实验）_ |
+| `--任务队列`、`-t` |是的 | **字符串** Workflow Task 队列。 |
+| `--任务超时` |没有 | **持续时间** 如果 Workflow Task 持续时间超过“DURATION”，则 Workflow Task 失败。这是 Workflow Task 的启动到关闭超时。 |
+| `--时区` |没有 | **字符串** 使用“TZ”时区解释日历规范。有关时区列表，请参阅：https://en.wikipedia.org/wiki/List_of_tz_database_time_zones。 |
+| `--类型` |是的 | **字符串** Workflow Type 名称。 |
+| `--Workflow-id`、`-w` |没有 | **字符串** Workflow Id。如果未提供，服务将生成一个唯一的 ID。 |
+
+## 全局标志
+
+以下选项可与任何命令一起使用。
+
+|旗帜|必填 |描述 |默认 |
+|------|----------|-------------|--------|
+| `--地址` |没有 | **字符串** Temporal 服务 gRPC 端点。 | `本地主机：7233` |
+| `--api-key` |没有 | **字符串** 请求的 API 密钥。 |  |
+| `--客户端权限` |没有 | **字符串** Temporal gRPC 客户端：权限伪标头。 |  |
+| `--客户端连接超时` |没有 | **持续时间** 客户端连接超时。 0s表示没有超时。 |  |
+| `--codec-auth` |没有 | **字符串** Codec Server 请求的授权标头。 |  |
+| `--编解码器端点` |没有 | **字符串** 远程 Codec Server 端点。 |  |
+| `--编解码器头` |没有 | **string[]** 向 Codec Server 发出请求的 HTTP 标头。格式为“KEY=VALUE”对。可以多次传递以设置多个标头。 |  |
+| `--颜色` |没有 | **字符串枚举** 输出着色。接受的值：始终、从不、自动。 | `自动` |
+| `--命令超时` |没有 | **持续时间** 命令执行超时。 0s表示没有超时。 |  |
+| `--config 文件` |没有 | **字符串** 从中读取 TOML 配置的文件路径，默认为 `$CONFIG_PATH/Temporalio/Temporal.toml`，其中 `$CONFIG_PATH` 在 Unix 上定义为 `$HOME/.config`，在 macOS 上定义为 `$HOME/Library/Application Support`，在 Windows 上定义为 `%AppData%`。 _（实验）_ |  |
+| `--disable-config-env` |没有 | **bool** 如果设置，则禁用从环境变量加载环境配置。 _（实验）_ |  |
+| `--禁用配置文件` |没有 | **bool** 如果设置，则禁用从配置文件加载环境配置。 _（实验）_ |  |
+| `--env` |没有 | **字符串** 活动环境名称（`ENV`）。 | `默认` |
+| `--env-file` |没有 | **字符串** 环境设置文件的路径。默认为“$HOME/.config/Temporalio/Temporal.yaml”。 |  |
+| `--gRPC-元` |没有 | **string[]** 请求的 HTTP 标头。格式为“KEY=VALUE”对。可以多次传递以设置多个标头。也可以通过环境变量“Temporal_gRPC_META_[name]”提供。 |  |
+| `--身份` |没有 | **字符串** 提交此请求的用户或客户端的身份。默认为“Temporal-cli:$USER@$HOST”。 |  |
+| `--日志格式` |没有 | **字符串枚举** 日志格式。接受的值：文本、json。 | `文本` |
+| `--日志级别` |没有 | **字符串枚举** 日志级别。大多数命令的默认值为“info”，“server start-dev”的默认值为“warn”。接受的值：调试、信息、警告、错误、从不。 | `信息` |
+| `--Namespace`、`-n` |没有 | **字符串** Temporal 服务 Namespace。 | `默认` |
+| `--no-json-shorthand-payloads` |没有 | **bool** 原始负载输出，即使使用了 JSON 选项。 |  |
+| `--output`、`-o` |没有 | **字符串枚举** 非日志数据输出格式。接受的值：text、json、jsonl、none。 | `文本` |
+| `--个人资料` |没有 | **字符串** 用于配置文件的配置文件。 _（实验）_ |  |
+| `--时间格式` |没有 | **字符串枚举** 时间格式。接受的值：relative、iso、raw。 | `亲戚` |
+| `--tls` |没有 | **布尔** 启用基本 TLS 加密。没有 mTLS 或客户端证书等其他选项。如果存在 api-key 或任何其他 TLS 选项，则默认为 true。使用 --tls=false 显式禁用。 |  |
+| `--tls-ca-data` |没有 | **字符串** 服务器 CA 证书的数据。不能与 --tls-ca-path 一起使用。 |  |
+| `--tls-ca-path` |没有 | **字符串** 服务器 CA 证书的路径。不能与 --tls-ca-data 一起使用。 |  |
+| `--tls-cert-data` |没有 | **字符串** x509 证书的数据。不能与 --tls-cert-path 一起使用。 |  |
+| `--tls-cert-path` |没有 | **字符串** x509 证书的路径。不能与 --tls-cert-data 一起使用。 |  |
+| `--tls-disable-host-verification` |没有 | **bool** 禁用 TLS 主机名验证。 |  |
+| `--tls-key-data` |没有 | **字符串** 私有证书密钥数据。不能与 --tls-key-path 一起使用。 |  |
+| `--tls-key-path` |没有 | **字符串** x509 私钥的路径。不能与 --tls-key-data 一起使用。 |  |
+| `--tls-服务器名称` |没有 | **字符串** 覆盖目标 TLS 服务器名称。 |  |
+

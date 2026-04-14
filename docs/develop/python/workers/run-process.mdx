@@ -1,8 +1,8 @@
 ---
 id: run-worker-process
-title: Worker processes - Python SDK
-description: Shows how to run Worker processes with the Python SDK
-sidebar_label: Worker processes
+title: "Worker 流程 - Python SDK"
+description: "演示如何使用 Python SDK 运行 Worker 进程"
+sidebar_label: "Worker 流程"
 slug: /develop/python/workers/run-worker-process
 toc_max_heading_level: 3
 tags:
@@ -11,36 +11,37 @@ tags:
   - Worker
 ---
 
-## Run a Worker Process {#run-a-dev-worker}
+<a id="run-a-dev-worker"></a>
+## 运行 Worker 进程 {#run-a-dev-worker}
 
-**How to run a Worker Process using the Temporal Python SDK.**
+**如何使用 Temporal Python SDK 运行 Worker 进程。**
 
-The [Worker Process](/workers#worker-process) is where Workflow Functions and Activity Functions are executed.
+[Worker 流程](/workers#worker-process) 是执行 Workflow 函数和 Activity 函数的地方。
 
-- Each [Worker Entity](/workers#worker-entity) in the Worker Process must register the exact Workflow Types and Activity
-  Types it may execute.
-- Each Worker Entity must also associate itself with exactly one [Task Queue](/task-queue).
-- Each Worker Entity polling the same Task Queue must be registered with the same Workflow Types and Activity Types.
+- Worker 进程中的每个 [Worker 实体](/workers#worker-entity) 必须注册准确的 Workflow 类型和 Activity
+  它可以执行的类型。
+- 每个 Worker 实体还必须将其自身与一个 [Task Queue](/task-queue) 关联起来。
+- 轮询相同 Task Queue 的每个 Worker 实体必须使用相同的 Workflow 类型和 Activity 类型进行注册。
 
-A [Worker Entity](/workers#worker-entity) is the component within a Worker Process that listens to a specific Task
-Queue.
+[Worker 实体](/workers#worker-entity) 是 Worker 进程中侦听特定任务的组件
+队列。
 
-Although multiple Worker Entities can be in a single Worker Process, a single Worker Entity Worker Process may be
-perfectly sufficient. For more information, see the [Worker tuning guide](/develop/worker-performance).
+虽然多个 Worker 实体可以位于单个 Worker 进程中，但单个 Worker 实体 Worker 进程可以是
+完全足够了。有关详细信息，请参阅 [Worker 调音指南](/develop/worker-performance)。
 
-A Worker Entity contains a Workflow Worker and/or an Activity Worker, which makes progress on Workflow Executions and
-Activity Executions, respectively.
+Worker 实体包含 Workflow Worker 和/或 Activity Worker，这在 Workflow Execution 上取得了进展，并且
+Activity 分别执行。
 
-To develop a Worker, use the `Worker()` constructor and add your Client, Task Queue, Workflows, and Activities as
-arguments. The following code example creates a Worker that polls for tasks from the Task Queue and executes the
-Workflow. When a Worker is created, it accepts a list of Workflows in the workflows parameter, a list of Activities in
-the activities parameter, or both.
+要开发 Worker，请使用 `Worker()` 构造函数并将您的客户端、Task Queue、Workflow 和活动添加为
+论据。以下代码示例创建一个 Worker，该 Worker 轮询来自 Task Queue 的任务并执行
+Workflow。创建 Worker 时，它接受 Workflows 参数中的 Workflow 列表，即
+活动参数，或两者。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/your_app/run_worker_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -62,24 +63,24 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### Register types {#register-types}
+### 寄存器类型 {#register-types}
 
-**How to register types using the Temporal Python SDK.**
+**如何使用 Temporal Python SDK 注册类型。**
 
-All Workers listening to the same Task Queue name must be registered to handle the exact same Workflows Types and
-Activity Types.
+必须注册所有监听相同 Task Queue 名称的 Worker 才能处理完全相同的 Workflow 类型和
+Activity 类型。
 
-If a Worker polls a Task for a Workflow Type or Activity Type it does not know about, it fails that Task. However, the
-failure of the Task does not cause the associated Workflow Execution to fail.
+如果 Worker 轮询任务以查找它不知道的 Workflow 类型或 Activity 类型，则该任务将失败。然而，
+任务失败不会导致关联的 Workflow Execution 失败。
 
-When a `Worker` is created, it accepts a list of Workflows in the `workflows` parameter, a list of Activities in the
-`activities` parameter, or both.
+创建 `Worker` 时，它接受 `Workflows` 参数中的 Workflow 列表，即 `Workflows` 中的活动列表
+`activities` 参数，或两者。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/your_app/run_worker_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python

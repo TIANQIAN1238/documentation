@@ -1,0 +1,264 @@
+---
+id: testing-suite
+title: 测试 - Ruby SDK
+sidebar_label: 测试
+description: Ruby 测试套件指南涵盖 Workflow 和 Temporal 的集成测试。它包括端到端、集成和单元测试，强调使用测试服务器来优化测试执行。
+toc_max_heading_level: 4
+keywords:
+  - guide context
+  - ruby
+  - sdk
+  - testing
+  - time-skipping
+tags:
+  - Ruby SDK
+  - Temporal SDKs
+  - Testing
+---
+
+此页面显示如何执行以下操作：
+
+- [了解测试类型](#types-of-tests)
+- [使用兼容的测试框架](#test-frameworks)
+- [测试 Workflows](#testing-Workflows)
+- [测试活动](#test-activities)
+- [重播测试](#replay-test)
+
+Ruby 测试套件功能指南描述了促进 Workflow 和集成测试的框架。
+
+## 测试类型 {#types-of-tests}
+
+在 Temporal 的上下文中，您可以创建以下类型的自动化测试：
+
+- **端到端：** 运行 Temporal Server 和 Worker 及其所有 Workflow 和活动；从客户端启动 Workflow 并与之交互。
+- **集成：** 端到端和单元测试之间的任何内容。
+  - 使用模拟上下文和其他 SDK 导入（通常是网络请求）运行活动。
+  - 通过模拟活动运行 Worker，并使用客户端启动 Workflow。
+  - 使用模拟 SDK 导入运行 Workflow。
+- **单元：** 运行一段 Workflow 或 Activity 代码并模拟它调用的任何代码。
+
+我们通常建议将大部分测试编写为集成测试。
+
+由于测试服务器支持跳过时间，因此请使用测试服务器与 Worker 进行端到端测试和集成测试。
+
+## 测试框架 {#test-frameworks}
+
+**兼容的测试框架**
+
+Ruby SDK 与任何测试框架兼容，没有特定的建议。
+大多数 Ruby SDK 示例使用 [minitest](https://github.com/minitest/minitest)。
+
+## 测试 Workflows {#testing-Workflows}
+
+Workflow 测试可以针对真实服务器以集成测试方式完成，但是很难模拟超时和其他基于长时间的代码。
+使用跳时 Workflow 测试环境可以提供帮助。
+
+### 使用标准服务器测试 Workflow
+
+非时间跳跃的“Temporalio::Testing::WorkflowEnvironment”可以通过支持所有标准 Temporal 功能的“start_local”启动。
+它实际上是打包在 Temporal CLI 中的真正的 Temporal 开发服务器，首次使用时会延迟下载，并在后台作为子进程运行。
+假设测试正确使用单独的 Task Queue，则可以而且应该在测试中重复使用同一服务器。
+
+这是 Workflow 的一个简单示例：
+
+```ruby
+class SimpleWorkflow < Temporalio::Workflow::Definition
+  def execute(name)
+    "Hello, #{name}!"
+  end
+end
+```
+
+以下是 Workflow 的测试在 minitest 中的显示方式：
+
+```ruby
+def test_simple_workflow
+  # Start local server that is stopped when block is done
+  Temporalio::Testing::WorkflowEnvironment.start_local do |env|
+    # Start worker that is stopped when block is done
+    worker = Temporalio::Worker.new(
+      env.client,
+      task_queue: "tq-#{SecureRandom.uuid}",
+      workflows: [SimpleWorkflow]
+    )
+    worker.run do
+      # Execute workflow and check result
+      result = env.client.execute_workflow(
+        SimpleWorkflow, 'some-name',
+        id: "wf-#{SecureRandom.uuid}", task_queue: worker.task_queue
+      )
+      assert_equal 'Hello, some-name!', result
+    end
+  end
+end
+```
+
+虽然这只是一个演示，但本地服务器通常用作许多测试的固定装置。
+例如，在 minitest 中，用户经常懒惰地启动环境（没有块），并在传递给“Minitest.after_run”的块内将其关闭。
+
+### 通过时间跳跃测试 Workflow
+
+有时需要测试长时间运行的Workflow或测试是否发生超时。
+可以通过“start_time_skipping”启动时间跳跃“Temporalio::Testing::WorkflowEnvironment”，这是具有特殊时间跳跃功能的 Temporal Server 的重新实现。
+与“start_local”一样，这也会在第一次调用时延迟下载要运行的进程。
+请注意，与“start_local”不同，此类不是线程安全的，也不能安全用于独立测试。
+从技术上讲，它可以重复使用，但一次只能用于一个测试，因为时间跳跃是在环境级别锁定/解锁的。
+鼓励开发人员根据需要的测试运行它。
+
+#### 自动时间跳跃
+
+这是等待一天的 Workflow 的简单示例：
+
+```ruby
+class WaitADayWorkflow < Temporalio::Workflow::Definition
+  def execute
+    Temporalio::Workflow.sleep(1 * 24 * 60 * 60)
+    'all done'
+  end
+end
+```
+
+在普通服务器上对此 Workflow 进行常规集成测试会太慢。
+然而，当我们等待结果时，跳时服务器会自动跳到下一个事件。
+这是 minitest 中对 Workflow 的测试：
+
+```ruby
+def test_wait_a_day_workflow
+  # Start time-skipping test server that is stopped when block is done
+  Temporalio::Testing::WorkflowEnvironment.start_time_skipping do |env|
+    # Start worker that is stopped when block is done
+    worker = Temporalio::Worker.new(
+      env.client,
+      task_queue: "tq-#{SecureRandom.uuid}",
+      workflows: [WaitADayWorkflow]
+    )
+    worker.run do
+      # Execute workflow and check result
+      result = env.client.execute_workflow(
+        WaitADayWorkflow,
+        id: "wf-#{SecureRandom.uuid}", task_queue: worker.task_queue
+      )
+      assert_equal 'all done', result
+    end
+  end
+end
+```
+
+该测试几乎会立即运行。
+这是因为通过在客户端上调用“execute_Workflow”，我们实际上是在调用“start_Workflow”+“result”，并且“result”会自动尽可能地跳过时间（基本上直到 Workflow 结束或直到 Activity 运行）。
+
+要在等待 Workflow 结果时禁用自动时间跳跃，请运行传递给“env.auto_time_skipping_disabled”的块中的代码。
+
+#### 手动时间跳跃
+
+在等待 Workflow 之前，时间跳跃环境中的所有时间跳跃都是通过“WorkflowEnvironment#sleep”手动完成的。
+
+这是等待 Signal 或超时的 Workflow：
+
+```ruby
+class SignalWorkflow < Temporalio::Workflow::Definition
+  def execute
+    # Wait for signal or timeout in 45 seconds
+    Temporalio::Workflow.timeout(45 * 60) do
+      Temporalio::Workflow.wait_condition { @signal_received }
+    end
+    'got signal'
+  rescue Timeout::Error
+    'got timeout'
+  end
+
+  workflow_signal
+  def some_signal
+    @signal_received = true
+  end
+end
+```
+
+要在 minitest 中测试正常的 Signal，您可以：
+
+```ruby
+def test_signal_workflow
+  Temporalio::Testing::WorkflowEnvironment.start_time_skipping do |env|
+    worker = Temporalio::Worker.new(
+      env.client,
+      task_queue: "tq-#{SecureRandom.uuid}",
+      workflows: [SignalWorkflow]
+    )
+    worker.run do
+      handle = env.client.start_workflow(
+        SignalWorkflow,
+        id: "wf-#{SecureRandom.uuid}", task_queue: worker.task_queue
+      )
+      handle.signal(SignalWorkflow.some_signal)
+      assert_equal 'got signal', handle.result
+    end
+  end
+end
+```
+
+但如何测试超时部分呢？就像这样：
+
+```ruby
+def test_signal_workflow_timeout
+  Temporalio::Testing::WorkflowEnvironment.start_time_skipping do |env|
+    worker = Temporalio::Worker.new(
+      env.client,
+      task_queue: "tq-#{SecureRandom.uuid}",
+      workflows: [SignalWorkflow]
+    )
+    worker.run do
+      handle = env.client.start_workflow(
+        SignalWorkflow,
+        id: "wf-#{SecureRandom.uuid}", task_queue: worker.task_queue
+      )
+      # Advance 50 seconds
+      env.sleep(50)
+      assert_equal 'got timeout', handle.result
+    end
+  end
+end
+```
+
+### 嘲笑活动
+
+测试 Workflow 时，您通常不想实际运行活动。
+活动只是扩展“Temporalio::Activity::Definition”的类。
+只需编写不同的/空的/假的/断言的，并将它们传递给 Worker，以便在测试期间调用不同的活动。
+
+## 测试活动 {#test-activities}
+
+Activity 或任何可以在 Activity 中运行的代码的单元测试是通过“Temporalio::Testing::ActivityEnvironment”类完成的。
+只需实例化该类，“run”块内的任何代码都将在 Activity 上下文中调用。
+在构建环境时，可以通过参数自定义有关 Activity 环境的一些内容，包括设置信息、提供回调每个心跳的过程、设置要使用的取消等。
+
+## 重播测试 {#replay-test}
+
+鉴于 Workflow 的历史记录，可以在本地重播它以检查诸如非确定性错误之类的情况。
+例如，假设下面的“history_json”参数给出了从 Workflow“MyWorkflow”的 CLI 或 Web UI 导出的历史记录的 JSON 字符串，以下方法将重播它：
+
+```ruby
+def replay_from_json(history_json)
+  # Create a replayer
+  replayer = Temporalio::Worker::WorkflowReplayer.new(workflows: [MyWorkflow])
+  # Replay the history
+  history = Temporalio::WorkflowHistory.from_history_json(history_json)
+  replayer.replay_workflow(history)
+end
+```
+
+如果存在非确定性，则会引发异常。
+
+Workflow 历史记录不仅仅可以从 JSON 加载。
+它可以从 Workflow 句柄中单独获取，甚至可以在列表中获取。
+例如，以下代码将检查特定 Workflow Type（即 Workflow 类）的所有 Workflow 历史记录对于当前 Workflow 代码是否安全。
+
+```ruby
+# Create a replayer
+replayer = Temporalio::Worker::WorkflowReplayer.new(workflows: [MyWorkflow])
+# Replay all workflows from a list
+replayer.replay_workflows(client.list_workflows("WorkflowType = 'MyWorkflow'")).each do |result|
+  # Raise if any failed (could have just set raise_on_replay_failure: true, but this
+  # demonstrates iterating over the results)
+  raise result.replay_failure if result.replay_failure
+end
+```

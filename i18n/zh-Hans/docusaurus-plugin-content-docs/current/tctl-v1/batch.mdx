@@ -1,0 +1,236 @@
+---
+id: batch
+title: tctl v1.17 批量命令参考
+sidebar_label: 批
+description: 探索新的 Temporal CLI，现已公开预览。使用它可以通过批处理命令、Signaling、取消和终止任务来高效管理多个 Workflow Execution。今天就试试吧！
+toc_max_heading_level: 4
+keywords:
+  - cli
+  - cli reference
+  - tctl
+  - temporal
+  - temporal cli
+  - temporal server
+---
+
+:::info tctl is deprecated
+
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议转换到 [Temporal CLI](/cli) 以继续使用和访问新功能。
+
+感谢您成为 Temporal 社区的重要组成部分。
+
+:::
+
+**如何运行 tctl 批处理命令。**
+
+“tctl 批处理”命令使您能够使用单个命令影响多个现有的 [Workflow Execution](/Workflow-execution)。
+批处理作业在后台运行，一次影响一个 Workflow Execution。
+
+使用 [tctl 批处理启动](#start) 启动批处理作业。
+
+:::note
+
+“tctl-v1”可以运行“batch”和“batch-v2”命令。
+
+:::
+
+启动批处理作业时，您必须提供[列表过滤器](/list-filter) 以及应发生的批处理作业的类型。
+批处理作业在后台运行，一次影响一个 Workflow Execution。
+
+列表过滤器识别受批处理作业影响的 Workflow Execution 组。
+“tctl 批量启动”命令显示有多少 Workflow Execution 将受到批处理作业的影响，并要求您在继续之前进行确认。
+
+批次类型决定了您必须提供的其他参数以及受影响的参数。
+批处理作业分为三种类型：
+
+### XPROT028XTask失败
+
+成功启动的批处理作业会返回作业 ID。
+您可以在“tctl 批处理描述”命令中使用此作业 ID，该命令描述特定批处理作业的进度。
+
+您还可以使用作业 ID 来终止批处理作业本身。
+终止批处理作业不会回滚批处理作业已执行的操作。
+
+### tctl 批处理命令
+
+- [tctl批量描述](#描述)
+- [tctl批次列表](#list)
+- [tctl批量启动](#start)
+- [tctl 批量终止](#terminate)
+
+＃＃ 开始
+
+“tctl 批处理启动”命令启动批处理作业。
+
+`tctl 批量启动 --Query <值> <修饰符>`
+
+以下修饰符控制命令的行为。
+
+### `--Query`
+
+_所需修饰符_
+
+指定该批处理作业应运行的 [Workflow Executions](/Workflow-execution)。
+
+[Search Attributes](/search-attribute) 的类似 SQL 的 Query 与“tctl Workflow list --Query”命令使用的相同。
+
+别名：`-q`
+
+**例子**
+
+```bash
+tctl batch start --query <value>
+```
+
+### `--原因`
+
+指定运行此批处理作业的原因。
+
+**例子**
+
+```bash
+tctl batch start --query <value> --reason <string>
+```
+
+### `--batch_type`
+
+指定该批处理作业执行的操作。支持的操作有“Signal”、“取消”和“终止”。
+
+**例子**
+
+```bash
+tctl batch start --query <value> --batch_type <operation>
+```
+
+### `--Signal_name`
+
+指定 [Signal](/sending-messages#sending-Signals) 的名称。当“--batch_type”为“Signal”时需要此修饰符。
+
+**例子**
+
+```bash
+tctl batch start --query <value> --batch_type signal --signal_name <name>
+```
+
+### `--输入`
+
+传递 [Signal](/sending-messages#sending-Signals) 的输入。输入必须为 JSON 格式。
+
+别名：`-i`
+
+**例子**
+
+```bash
+tctl batch start --query <value> --input <json>
+```
+
+### `--rps`
+
+指定处理的RPS。默认值为 50。
+
+**例子**
+
+```bash
+tctl batch start --query <value> --rps <value>
+```
+
+### `--是的`
+
+禁用确认提示。
+
+别名：`y`
+
+**例子**
+
+```bash
+tctl batch start --query <value> --yes
+```
+
+＃＃ 列表
+
+“tctl 批处理列表”命令列出所有批处理作业。
+
+`tctl 批次列表 <修饰符>`
+
+:::note
+
+“tctl-v1”可以运行“batch”和“batch-v2”命令。
+
+:::
+
+以下修饰符控制命令的行为。
+
+### --页面大小
+
+指定要在页面上列出的批处理作业的最大数量。默认值为 30。
+
+**例子**
+
+```bash
+tctl batch list --pagesize <value>
+```
+
+＃＃ 描述
+
+“tctl 批处理描述”命令描述批处理作业的进度。
+
+`tctl 批量描述 --job_id <id>`
+
+:::note
+
+“tctl”可以运行“batch”和“batch-v2”命令。
+
+:::
+
+以下修饰符控制命令的行为。
+
+### --job_id
+
+_所需修饰符_
+
+指定批处理作业的作业 ID。
+
+**例子**
+
+```bash
+tctl batch describe --job_id <id>
+```
+
+## 终止
+
+“tctl 批处理终止”命令终止批处理作业。
+
+该列表包含 XPROT025X 可以故障转移到的集群名称（以空格分隔）。
+确保包含到当前活动的集群中。
+这是只读设置，无法更改。
+
+:::note
+
+“tctl-v1”可以运行“batch”和“batch-v2”命令。
+
+:::
+
+以下修饰符控制命令的行为。
+
+### `--job_id`
+
+_所需修饰符_
+
+指定批处理作业的作业 ID。
+
+**例子**
+
+```bash
+tctl batch terminate --job_id <id>
+```
+
+### `--原因`
+
+指定终止该批处理作业的原因。
+
+**例子**
+
+```bash
+tctl batch terminate --job_id <id> --reason <string>
+```

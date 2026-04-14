@@ -1,8 +1,8 @@
 ---
 id: deadline-exceeded-error
-title: Troubleshoot the deadline-exceeded error
-sidebar_label: Deadline-exceeded error
-description: Troubleshoot Temporal Service's Context deadline exceeded errors caused by network issues, server overload, and timing skews. Sync system clocks, check Frontend logs, metrics, Workflow logic, and service health after configurations or restarts. For unresolved issues, contact support.
+title: "解决超出截止日期的错误"
+sidebar_label: "超过截止日期错误"
+description: "解决由于网络问题、服务器过载和时间偏差导致的 Temporal 服务的上下文期限超出错误。配置或重启后同步系统时钟，检查前端日志、指标、Workflow 逻辑和服务运行状况。对于未解决的问题，请联系支持人员。"
 toc_max_heading_level: 4
 keywords:
   - error
@@ -12,40 +12,42 @@ tags:
   - Errors
 ---
 
-All requests made to the [Temporal Service](/temporal-service) by the Client or Worker are [gRPC requests](https://grpc.io/docs/what-is-grpc/core-concepts/#deadlines).
-Sometimes, when these frontend requests can't be completed, you'll see this particular error message: `Context: deadline exceeded`.
-Network interruptions, timeouts, server overload, and Query errors are some of the causes of this error.
+客户或 Worker 向 [Temporal 服务](/temporal-service) 发出的所有请求均为 [gRPC 请求](https://grpc.io/docs/what-is-grpc/core-concepts/#deadlines)。
+有时，当这些前端请求无法完成时，您会看到以下特定错误消息：`Context: deadline exceeded`。
+网络中断、超时、服务器过载和 Query 错误是导致此错误的部分原因。
 
-The following sections discuss the nature of this error and how to troubleshoot it.
+以下各节讨论此错误的性质以及如何解决该错误。
 
-### Check system clocks
+<a id="check-system-clocks"></a>
+### 检查系统时钟 {#check-system-clocks}
 
-Timing skew can cause the system clock on a Worker to drift behind the system clock of the Temporal Service.
-If the difference between the two clocks exceeds an Activity's Start-To-Close Timeout, an `Activity complete after timeout` error occurs.
+时序偏差可能会导致 Worker 上的系统时钟漂移到 Temporal 服务的系统时钟之后。
+如果两个时钟之间的差异超过 Activity 的启动到关闭超时，则会发生 `Activity complete after timeout` 错误。
 
-If you receive an `Activity complete after timeout` error alongside `Context: deadline exceeded`, check the clocks on the Temporal Service's system and the system of the Worker sending that error.
-If the Worker's clock doesn't match the Temporal Service, synchronize all clocks to an NTP server.
+如果您收到 `Activity complete after timeout` 错误和 `Context: deadline exceeded`，请检查 Temporal 服务系统和发送该错误的 Worker 系统上的时钟。
+如果 Worker 的时钟与 Temporal 服务不匹配，请将所有时钟同步到 NTP 服务器。
 
-### Check Frontend Service logs
+<a id="check-frontend-service-logs"></a>
+### 检查前端服务日志 {#check-frontend-service-logs}
 
 :::note
 
-Cloud users cannot access some of the logs needed to diagnose the source of the error.
+云用户无法访问诊断错误来源所需的某些日志。
 
-If you're using Temporal Cloud, create a [support ticket](/cloud/support#support-ticket) with as much information as possible, including the Namespace Name and the Workflow Ids of some Workflow Executions in which the issue occurs.
+如果您使用的是 Temporal Cloud，请创建一个包含尽可能多信息的 [支持票](/cloud/support#support-ticket)，包括发生问题的一些 Workflow Execution 的 Namespace 名称和 Workflow Id。
 
 :::
 
-[Frontend Service](/temporal-service/temporal-server#frontend-service) logs can show which parts of the Temporal Service aren't working.
-For the error to appear, a service pod or container must be up and running.
+[前端服务](/temporal-service/temporal-server#frontend-service) 日志可以显示 Temporal 服务的哪些部分不工作。
+要出现该错误，服务容器或容器必须启动并运行。
 
-OSS users can verify that the Frontend Service is connected and running by using the Temporal CLI.
+OSS用户可以使用Temporal CLI验证前端服务是否已连接并正在运行。
 
 ```
 temporal operator cluster health --address 127.0.0.1:7233
 ```
 
-Use [`grpc-health-probe`](https://github.com/grpc-ecosystem/grpc-health-probe) to check the Frontend Service, [Matching Service](/temporal-service/temporal-server#matching-service), and [History Service](/temporal-service/temporal-server#history-service).
+使用 [`gRPC-health-probe`](https://github.com/grpc-ecosystem/grpc-health-probe) 检查前端服务、[配对服务](/temporal-service/temporal-server#matching-service) 和 [历史服务](/temporal-service/temporal-server#history-service)。
 
 ```
 ./grpc-health-probe -addr=frontendAddress:frontendPort -service=temporal.api.workflowservice.v1.WorkflowService
@@ -55,71 +57,77 @@ Use [`grpc-health-probe`](https://github.com/grpc-ecosystem/grpc-health-probe) t
 ./grpc-health-probe -addr=historyAddress:historyPort -service=temporal.api.workflowservice.v1.HistoryService
 ```
 
-Logs can also be used to find failed Client [Query](/sending-messages#sending-queries) requests.
+日志还可用于查找失败的客户端 [Query](/sending-messages#sending-queries) 请求。
 
-### Check your Temporal Service metrics
+<a id="check-your-temporal-service-metrics"></a>
+### 检查您的 Temporal 服务指标 {#check-your-temporal-service-metrics}
 
-Temporal Service metrics can be used to detect issues (such as `resource exhausted`) that impact Temporal Service health.
-A `resource exhausted` error can cause your client request to fail, which prompts the `deadline exceeded` error.
+Temporal 服务指标可用于检测影响 Temporal 服务运行状况的问题（例如 `resource exhausted`）。
+`resource exhausted` 错误可能会导致您的客户端请求失败，从而提示 `deadline exceeded` 错误。
 
-Use the following query to check for errors in `RpsLimit`, `ConcurrentLimit` and `SystemOverloaded` on your metrics dashboard.
+使用以下 Query 检查指标仪表板上的 `RpsLimit`、`ConcurrentLimit` 和 `SystemOverloaded` 中是否有错误。
 
 ```
 sum(rate(service_errors_resource_exhausted{}[1m])) by (resource_exhausted_cause)
 ```
 
-Look for high latencies, short timeouts, and other abnormal [Temporal Service metrics](/references/cluster-metrics).
-If the metrics come from a specific service (such as History Service), check the service's health and performance.
+查找高延迟、短超时和其他异常 [Temporal 服务指标](/references/cluster-metrics)。
+如果指标来自特定服务（例如历史记录服务），请检查该服务的运行状况和性能。
 
-### Check Workflow logic
+<a id="check-workflow-logic"></a>
+### 检查 Workflow 逻辑 {#check-workflow-logic}
 
-Check your [Client and Worker configuration](/references/configuration) files for missing or invalid target values, such as the following:
+检查您的 [客户端和 Worker 配置](/references/configuration) 文件是否缺少或无效的目标值，如下所示：
 
-- Server names
-- Network or host addresses
-- Certificates
+- 服务器名称
+- 网络或主机地址
+- 证书
 
-Invalid targets also cause `connection refused` errors alongside `deadline exceeded`.
-Check that the Client connects after updating your files.
+无效目标还会导致 `connection refused` 错误和 `deadline exceeded` 错误。
+更新文件后检查客户端是否连接。
 
-### Advanced troubleshooting
+<a id="advanced-troubleshooting"></a>
+### 高级故障排除 {#advanced-troubleshooting}
 
-In addition to the steps listed in the previous sections, check the areas mentioned in each of the following scenarios.
+除了前面部分中列出的步骤之外，还请检查以下每个场景中提到的区域。
 
-### After enabling mTLS
+<a id="after-enabling-mtls"></a>
+### 启用 mTLS 后 {#after-enabling-mtls}
 
-Check the health of the Temporal Service with `temporal operator cluster health`.
+使用 `Temporal operator cluster health` 检查 Temporal 服务的运行状况。
 
 ```
 temporal operator cluster health --address [SERVER_ADDRESS]
 ```
 
-Add any missing [environment variables](/references/web-ui-environment-variables) to the configuration files, and correct any incorrect values.
-Server names and certificates must match between Frontend and internode.
+将任何缺失的 [环境变量](/references/web-ui-environment-variables) 添加到配置文件中，并更正任何不正确的值。
+前端和节点间的服务器名称和证书必须匹配。
 
-### After restarting the Temporal Service
+<a id="after-restarting-the-temporal-service"></a>
+### 重新启动 Temporal 服务后 {#after-restarting-the-temporal-service}
 
-You might not be giving the Temporal Service enough time to respond and reconnect.
-Restart the Server, wait, and then check all services for connectivity and further errors.
+您可能没有给 Temporal 服务足够的时间来响应和重新连接。
+重新启动服务器，等待，然后检查所有服务的连接情况和进一步的错误。
 
-If the error persists, review your Workflow Execution History and server logs for more specific causes before continuing to troubleshoot.
+如果错误仍然存​​在，请在继续排除故障之前查看您的 Workflow Execution 历史记录和服务器日志以了解更具体的原因。
 
-### When executing or scheduling Workflows
+<a id="when-executing-or-scheduling-workflows"></a>
+### 执行或调度 Workflow 时 {#when-executing-or-scheduling-workflows}
 
-One or more services might be unable to connect to the [Frontend Service](/temporal-service/temporal-server#frontend-service).
-The Workflow might be unable to complete requests within the given connection time.
+一项或多项服务可能无法连接到 [前端服务](/temporal-service/temporal-server#frontend-service)。
+Workflow 可能无法在给定的连接时间内完成请求。
 
-Increase the value of `frontend.keepAliveMaxConnectionAge` so that requests can be finished before the connection terminates.
+增加 `frontend.keepAliveMaxConnectionAge` 的值，以便可以在连接终止之前完成请求。
 
 :::note
 
-If you increase `frontend.keepAliveMaxConnectionAge` values, consider monitoring your server performance for load.
+如果增加 `frontend.keepAliveMaxConnectionAge` 值，请考虑监视服务器性能的负载。
 
 :::
 
 ---
 
-Still unable to resolve your issue?
+仍然无法解决您的问题？
 
-- If you use Temporal Cloud, create a [support ticket](/cloud/support#support-ticket).
-- If you use our open source software or Temporal Cloud, check for similar questions and possible solutions in our [community forum](https://community.temporal.io) or [community Slack](https://temporal.io/slack).
+- 如果您使用 Temporal Cloud，请创建 [支持票](/cloud/support#support-ticket)。
+- 如果您使用我们的开源软件或 Temporal Cloud，请在我们的 [社区论坛](https://community.temporal.io) 或 [社区松弛](https://temporal.io/slack) 中检查类似问题和可能的解决方案。

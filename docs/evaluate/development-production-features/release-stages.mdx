@@ -1,8 +1,8 @@
 ---
 id: release-stages
-title: Temporal product release stages guide
-sidebar_label: Product release stages
-description: Discover Temporal's Product Release Stages Guide for detailed criteria on Pre-release, Public Preview, and General Availability. Make informed decisions on feature adoption!
+title: "Temporal 产品发布阶段指南"
+sidebar_label: "产品发布阶段"
+description: "了解 Temporal 的产品发布阶段指南，了解有关预发布、公共预览和正式发布的详细标准。对功能采用做出明智的决定！"
 toc_max_heading_level: 4
 keywords:
   - product release stages
@@ -12,72 +12,72 @@ tags:
 ---
 
 :::tip CHANGELOG
-To stay up-to-date with the latest feature changes, visit the [changelog](https://temporal.io/change-log).
+要了解最新的功能变化，请访问 [变更日志](https://temporal.io/change-log)。
 :::
 
-This Product Release Stages Guide provides an understanding of how Temporal features are released. It describes and lists the criteria for each release stage, so that you can make informed decisions about the adoption of each new feature.
+本产品发布阶段指南帮助您了解 Temporal 功能的发布方式。它描述并列出了每个发布阶段的标准，以便您可以就每个新功能的采用做出明智的决策。
 
-Product Release Guide Expectations:
+产品发布指南期望：
 
-|                                 | Pre-release                                                        | Public Preview                                                                              | General Availability                             |
+|                                 | 预发布                                                        | 公开预览                                                                              | 一般可用性                             |
 | ------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| **Features access**             | Self-hosted Temporal users: Everyone; Temporal Cloud: Invite only. | Everyone. Temporal Cloud may limit the number of users being onboarded to ensure stability. | Everyone.                                        |
-| **Feature completeness**        | Limited functionality.                                             | Core functionality is complete.                                                             | Mature and feature complete.                     |
-| **API stability**               | Experimental; API is subject to change.                            | API breaking changes are kept to a minimum.                                                 | API is stable.                                   |
-| **Feature region Availability** | Limited regions.                                                   | Most regions.                                                                               | All [regions](/cloud/regions).                   |
-| **Feature support**             | Community and engineering team.                                    | [Formal support](/cloud/support#support-ticket).                                            | [Formal support](/cloud/support#support-ticket). |
-| **Feature recommended usage**   | Experimental.                                                      | Production use cases.                                                                       | Production usage.                                |
-| **Feature Cloud pricing**       | No additional cost.                                                | Pricing changes are kept to a minimum.                                                      | Pricing is stable.                               |
-| **Feature Interoperability**    | Limited.                                                           | Features are compatible with each other, unless otherwise stated.                           | Features are compatible with each other.         |
+| **功能访问**             | 自托管Temporal用户：所有人； Temporal Cloud：仅限受邀者。 | 每个人。 Temporal Cloud 可能会限制加入的用户数量以确保稳定性。 | 每个人。                                        |
+| **功能完整性**        | 功能有限。                                             | 核心功能已经完成。                                                             | 成熟、功能齐全。                     |
+| **API稳定性**               | 实验性； API 可能会发生变化。                            | API 重大变更保持在最低限度。                                                 | API稳定。                                   |
+| **功能区域可用性** | 地区有限。                                                   | 大多数地区。                                                                               | 全部 [地区](/cloud/regions)。                   |
+| **功能支持**             | 社区和工程团队。                                    | [正式支持](/cloud/support#support-ticket)。                                            | [正式支持](/cloud/support#support-ticket)。 |
+| **功能推荐使用**   | 实验性的。                                                      | 生产用例。                                                                       | 生产用途。                                |
+| **功能云定价**       | 无需额外费用。                                                | 定价变化保持在最低限度。                                                      | 定价稳定。                               |
+| **功能互操作性**    | 有限的。                                                           | 除非另有说明，功能是相互兼容的。                           | 功能是相互兼容的。         |
 
-## Pre-release {#pre-release}
+## 预发布 {#pre-release}
 
-**Access:** Most Pre-release features are released in the open source Temporal software and are publicly available.
-However, some features which are explicit to hosting Temporal Services, such as [API Keys](/cloud/api-keys), may be specific to Temporal Cloud.
+**访问：** 大多数预发布功能均在开源 Temporal 软件中发布并公开可用。
+但是，一些明确用于托管 Temporal 服务的功能（例如 [API 密钥](/cloud/api-keys)）可能特定于 Temporal Cloud。
 
-In Temporal Cloud, Pre-release features are invite-only: Temporal will work directly with a group of existing Temporal Cloud customers to be part of testing of each Pre-release feature.
-These customers are invited to provide feedback to the Temporal team.
+在 Temporal Cloud 中，预发布功能仅限邀请：Temporal 将直接与一组现有的 Temporal Cloud 客户合作，参与每个预发布功能的测试。
+我们邀请这些客户向 Temporal 团队提供反馈。
 
-**Classification:** New features in Pre-release may not be fully mature and may have bugs.
-Users acknowledge and agree that Pre-release features are provided on an “as-is” basis, and that they are provided without any indemnification, support, warranties, or representation of any kind.
+**分类：** Pre-release 中的新功能可能尚未完全成熟，可能存在 bug。
+用户承认并同意预发布功能是按“原样”提供的，并且不提供任何赔偿、支持、保证或任何形式的陈述。
 
-**Feedback:** Feedback is highly encouraged and important for guiding Temporal feature development.
-We encourage you to share your experience so that you can influence the future direction of Temporal.
+**反馈：** 强烈鼓励提供反馈，这对于指导 Temporal 功能开发非常重要。
+我们鼓励您分享您的经验，以便您可以影响 Temporal 的未来方向。
 
-**Availability:** Temporal may modify features before they become Generally Available, or may even decide to remove them.
-This means there is no guarantee that a new feature will become Generally Available.
-A Pre-release feature can be deprecated at any time.
+**可用性：** Temporal 可能会在功能正式可用之前对其进行修改，甚至可能决定删除它们。
+这意味着不能保证新功能将普遍可用。
+预发布功能可以随时弃用。
 
-Pre-release features may be disabled by default, and can be enabled via configuration.
-Temporal Cloud customers can contact the Temporal account team or [Temporal Support Team](/cloud/support#support-ticket) to gain Pre-release access.
+预发布功能可能默认被禁用，并且可以通过配置启用。
+Temporal Cloud 客户可以联系 Temporal 客户团队或 [Temporal 支持团队](/cloud/support#support-ticket) 以获得预发布访问权限。
 
-## Public Preview {#public-preview}
+## 公开预览 {#public-preview}
 
-**Access:** New features in Public preview are available to everyone.
+**访问：** 公共预览版中的新功能可供所有人使用。
 
-**Classification:** Features in public preview may undergo further development and testing before they are made Generally Available.
-These features are being refined and are recommended for production usage.
+**分类：** 公共预览版中的功能在正式发布之前可能会经过进一步的开发和测试。
+这些功能正在完善中，建议用于生产使用。
 
-**Feedback:** Temporal users are invited to share feedback via the [Community Slack](http://t.mp/slack), by reaching out directly to the Temporal team at product@temporal.io, or by creating issues in the relevant [GitHub repository](https://github.com/temporalio).
-Temporal also encourages Temporal Cloud users to submit feedback via [support ticket](/cloud/support#support-ticket).
-This feedback will assist in guiding the improvements for General Availability.
+**反馈：** Temporal 用户受邀通过 [社区闲置](http://t.mp/slack) 分享反馈，通过product@Temporal.io 直接联系 Temporal 团队，或在相关 [GitHub 存储库](https://github.com/temporalio) 中创建问题。
+Temporal 还鼓励 Temporal Cloud 用户通过 [支持票](/cloud/support#support-ticket) 提交反馈。
+此反馈将有助于指导通用可用性的改进。
 
-**Availability:** New Features in Public Preview may evolve.
-The APIs may undergo changes; however, Temporal's goal is to maintain backward compatibility.
+**可用性：** 公共预览版中的新功能可能会不断发展。
+API 可能会发生变化；然而，Temporal 的目标是保持向后兼容性。
 
-## General Availability {#general-availability}
+## 一般可用性 {#general-availability}
 
-**Access:** Features in General Availability are available to everyone.
+**访问：** 公开发布的功能可供所有人使用。
 
-**Classification:** The feature is now fully developed, tested, and available for use without further anticipated changes.
+**分类：** 该功能现已完全开发、测试并可供使用，无需进一步预期更改。
 
-**Feedback:** Temporal users are invited to share feedback via the [Community Slack](http://t.mp/slack), by reaching out directly to the Temporal team at product@temporal.io, or by creating issues in the relevant [GitHub repository](https://github.com/temporalio).
+**反馈：** Temporal 用户受邀通过 [社区闲置](http://t.mp/slack) 分享反馈，通过product@Temporal.io 直接联系 Temporal 团队，或在相关 [GitHub 存储库](https://github.com/temporalio) 中创建问题。
 
-**Availability:** Features in General Availability are released with stable APIs and recommended for production use with a committed SLA.
+**可用性：** 通用功能通过稳定的 API 发布，并建议在承诺的 SLA 下用于生产使用。
 
 :::info Exceptions
 
-There may be exceptions for different features, but this is the typical expectation.
-Any variation will be documented.
+不同的功能可能会有例外，但这是典型的期望。
+任何变化都将被记录下来。
 
 :::

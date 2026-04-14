@@ -1,0 +1,122 @@
+---
+id: continue-as-new
+title: Continue-As-New - PHP SDK
+sidebar_label: Continue-As-New
+description: 在 PHP 中使用 Temporal 的 Continue-As-New 通过自动创建具有相同 Workflow Id 和新参数的新 Workflow Execution 来管理大型事件历史记录。
+toc_max_heading_level: 2
+keywords:
+  - continue-as-new workflow
+  - restart workflow
+  - fresh event history
+  - avoid large event histories
+  - temporal php continue-as-new
+tags:
+  - Workflows
+  - continue-as-new
+  - PHP SDK
+  - Temporal SDKs
+---
+
+本页为 PHP 开发人员回答了以下问题：
+
+- [Continue-As-New 是什么？](#什么)
+- [如何使用 Continue-As-New？](#how)
+- [什么时候适合Continue-As-New？](#when)
+- [如何测试Continue-As-New？](#how-to-test)
+
+## Continue-As-New 是什么？ {＃什么}
+
+[Continue-As-New](/Workflow-execution/Continue-As-New) 让 Workflow Execution 成功关闭并创建新的 Workflow Execution。
+当您的 Workflow 变得太长或接近某些缩放限制时，您可以将其视为检查点。
+
+新的Workflow Execution位于同一个[链](/Workflow-execution#Workflow-execution-chain)；它保留了相同的 Workflow Id，但获得了新的运行 ID 和新的 Event History。
+它还接收 Workflow 的常用参数。
+
+## 如何使用 PHP SDK 进行 Continue-As-New {#how}
+
+首先，设计您的 Workflow 参数，以便您可以在 Continue-As-New 进入下一次 Workflow 运行时传递“当前状态”。
+对于 Workflow 的原始调用者，此状态通常设置为“无”。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/samples-php/blob/master/app/src/SafeMessageHandlers/MessageHandlerWorkflowInterface.php">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+```php
+final class ClusterManagerInput {
+    public function __construct(
+        public ?ClusterManagerState $state = null,
+        public bool $testContinueAsNew = false,
+    ) {}
+}
+
+#[Workflow\WorkflowInterface]
+interface MessageHandlerWorkflowInterface
+{
+#[Workflow\WorkflowMethod]
+public function run(ClusterManagerInput $input);
+}
+
+````
+上面代码片段中的测试钩子已在[下面](#how-to-test)中介绍。
+
+在 Workflow 中，调用具有相同类型的 [`continueAsNew()`](https://php.Temporal.io/classes/Temporal-Workflow.html#method_continueAsNew) 函数。
+这会立即停止 Workflow 并启动新的 Workflow。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/samples-php/blob/master/app/src/SafeMessageHandlers/MessageHandlerWorkflow.php">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+```php
+Workflow::continueAsNew(
+    Workflow::getInfo()->type->name,
+    [new ClusterManagerInput($this->state, $input->testContinueAsNew)],
+);
+````
+
+### 带消息处理程序的 Workflow 的注意事项 {#with-message-handlers}
+
+如果您使用 Update 或 Signal，请勿从处理程序调用 Continue-As-New。
+相反，请等待主 Workflow 中的处理程序完成，然后再运行 `continueAsNew`。
+请参阅 [`allHandlersFinished`](message-passing#wait-for-message-handlers) 示例以获取指导。
+
+## Continue-As-New 什么时候适合使用 PHP SDK？ {＃什么时候}
+
+当您的 Workflow 可能达到 [Event History 限制](/Workflow-execution/event#event-history) 时，请使用 Continue-As-New。
+
+Temporal 跟踪 Workflow 针对这些限制的进度，让您知道何时应该使用 Continue-As-New。
+调用 `Workflow::getInfo()->shouldContinueAsNew` 检查是否到时间。
+
+## 如何使用 PHP SDK 测试 Continue-As-New {#how-to-test}
+
+测试 Workflow 自然是 Continue-As-New 可能非常耗时且占用资源。
+相反，添加一个测试挂钩以在自动化测试中更快地检查 Workflow 的 Continue-As-New 行为。
+
+例如，当“testContinueAsNew == true”时，此示例将创建一个名为“$this->maxHistoryLength”的仅测试变量，并将其设置为一个较小的值。
+Workflow 中的辅助方法在每次考虑使用 Continue-As-New 时都会对其进行检查：
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/samples-php/blob/master/app/src/SafeMessageHandlers/MessageHandlerWorkflow.php">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```php
+private function shouldContinueAsNew(): bool
+{
+    if (Workflow::getInfo()->shouldContinueAsNew) {
+        return true;
+    }
+
+    // This is just for ease-of-testing.  In production, we trust temporal to tell us when to continue as new.
+    if ($this->maxHistoryLength !== null && Workflow::getInfo()->historyLength > $this->maxHistoryLength) {
+        return true;
+    }
+
+    return false;
+}
+```

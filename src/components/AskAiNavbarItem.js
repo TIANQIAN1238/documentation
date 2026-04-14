@@ -20,8 +20,8 @@ export default function AskAiNavbarItem() {
     <button
       className="ask-ai-navbar-button"
       onClick={handleAskAI}
-      aria-label="Ask AI"
-      title="Ask AI"
+      aria-label="AI 助手"
+      title="AI 助手"
     >
       <svg
         width="16"
@@ -43,7 +43,7 @@ export default function AskAiNavbarItem() {
           fill="currentColor"
         />
       </svg>
-      <span className="ask-ai-text">Ask AI</span>
+      <span className="ask-ai-text">AI 助手</span>
     </button>
   );
 } 

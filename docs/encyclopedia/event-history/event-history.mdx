@@ -1,8 +1,8 @@
 ---
 id: event-history
-title: Event History
-description: Discover how Temporal uses the Event History to recreate a Workflow's state in the case of failure, such as a Worker crash, and how it uses replay to restore the Workflow's state to the point of failure.
-sidebar_label: Event History
+title: "ZXQ0Token"
+description: "了解 Temporal 如何使用 Event History 在出现故障（例如 Worker 崩溃）时重新创建 Workflow 的状态，以及如何使用重播将 Workflow 的状态恢复到故障点。"
+sidebar_label: "ZXQ0Token"
 tags:
   - Workflows
   - Activities
@@ -28,16 +28,16 @@ keywords:
   - worker process execution
 ---
 
-With Temporal, your Workflows can seamlessly recover from crashes. This is made possible by the [Event History](https://docs.temporal.io/workflow-execution/event), a complete and durable log of everything that has happened in the lifecycle of a Workflow Execution, as well as the ability of the Temporal Service to durably persist the Events during Replay.
+借助 Temporal，您的 Workflow 可以从崩溃中无缝恢复。这是通过 [Event History](https://docs.Temporal.io/workflow-execution/event) 实现的，[Event History](https://docs.Temporal.io/workflow-execution/event) 是 Workflow Execution 生命周期中发生的所有事件的完整且持久的日志，以及 Temporal 服务在重播期间持久保留事件的能力。
 
-Temporal uses the Event History to record every step taken along the way. Each time your Workflow Definition makes an API call to execute an Activity or start a Timer for instance, it doesn’t perform the action directly. Instead, it sends a Command to the Temporal Service.
+Temporal 使用 Event History 记录沿途采取的每一步。例如，每次 Workflow Definition 进行 API 调用以执行 Activity 或启动 Timer 时，它不会直接执行该操作。相反，它会向 Temporal 服务发送命令。
 
-A Command is a requested action issued by a Worker to the Temporal Service after a Workflow Task Execution completes. The Temporal Service will act on these Commands such as scheduling an Activity or scheduling a timer. These Commands are then mapped to Events which are persisted in case of failure. For example, if the Worker crashes, the Worker uses the Event History to replay the code and recreate the state of the Workflow Execution to what it was immediately before the crash. It then resumes progress from the point of failure as if the failure never occurred.
+命令是 Workflow 任务执行完成后由 Worker 向 Temporal 服务发出的请求操作。 Temporal 服务将根据这些命令执行操作，例如调度 Activity 或调度 Timer。然后，这些命令被映射到事件，这些事件在发生故障时会被保留。例如，如果 Worker 崩溃，Worker 使用 Event History 重播代码并将 Workflow Execution 的状态重新创建为崩溃前的状态。然后，它从故障点恢复进度，就好像故障从未发生过一样。
 
-For a deep dive on how the Event History works, refer to the walkthroughs in the dropdown.
+要深入了解 Event History 的工作原理，请参阅下拉列表中的演练。
 
-- [Go](/encyclopedia/event-history/event-history-go)
-- [Java](/encyclopedia/event-history/event-history-java)
+- [去](/encyclopedia/event-history/event-history-go)
+- [爪哇](/encyclopedia/event-history/event-history-java)
 - [Python](/encyclopedia/event-history/event-history-python)
-- [Typescript](/encyclopedia/event-history/event-history-typescript)
-- [.NET](/encyclopedia/event-history/event-history-dotnet)
+- [打字稿](/encyclopedia/event-history/event-history-typescript)
+- [。网](/encyclopedia/event-history/event-history-dotnet)

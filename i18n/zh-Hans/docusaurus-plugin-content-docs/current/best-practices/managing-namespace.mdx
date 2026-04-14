@@ -1,0 +1,163 @@
+---
+id: managing-namespace
+title: XPROT017X 命令参考
+sidebar_label: Namespace 最佳实践
+description: 组织和管理 Temporal Namespace 的最佳实践，包括命名约定、组织模式和生产保障措施。
+toc_max_heading_level: 4
+keywords:
+  - namespace management
+  - temporal namespace
+  - best practices
+  - namespace configuration
+tags:
+  - Best Practices
+  - Namespaces
+---
+
+:::info Applies to both open source and Temporal Cloud
+本页介绍了适用于**开源 Temporal 和 Temporal Cloud 的 Namespace 最佳实践。
+特定于平台的指南在全文中都有明确的标签。
+
+有关参考文档，请参阅：
+- [Namespace 概念](/Namespaces)
+- [管理 Namespaces（开源）](/self-hosted-guide/Namespaces)
+- [Namespaces (Temporal Cloud)](/cloud/Namespaces)
+:::
+
+[Namespace](/Namespaces) 是 Temporal Platform 内的一个隔离单元。
+它确保 Workflow Execution、Task Queue 和资源在逻辑上分离，防止冲突并实现安全的多租户使用。
+
+## 命名约定
+
+### 使用小写字母和连字符
+
+在 Namespace 名称中使用小写字母和连字符 (`-`) 作为分隔符。
+
+- **Temporal Cloud**：Namespace 名称不区分大小写，因此 `MyNamespace` 和 `myNamespace` 指的是相同的 Namespace。
+- **开源**：Namespace 名称区分大小写，因此“MyNamespace”和“myNamespace”是不同的 Namespace。
+
+为了避免跨环境混淆，请始终使用小写。
+
+**示例**：`付款-结帐-prd`
+
+### 遵循一致的命名模式
+
+使用类似“<use-case>-<domain>-<environment>”的模式来命名 Namespace：
+
+|组件|最大长度|示例 |
+|------------|------------|----------|
+|使用案例 | 10 个字符 | `付款`、`履行`、`订单` |
+|域名 | 10 个字符 | `结帐`、`通知`、`库存` |
+|环境 | 3 个字符 | `dev`、`stg`、`prd` |
+
+**示例**：` payment-checkout-dev`、`fulfill-notify-prd`、`orders-inventory-stg`
+
+**为什么是这种模式？**
+- 简单易懂
+- 清楚地区分环境
+- 在域下对相关服务进行分组
+- 允许平台团队向应用程序团队实施退款
+- Namespace级别限制在不同服务和环境之间隔离
+
+:::tip Temporal Cloud
+Cloud Namespace 名称限制为 [39 个字符](/cloud/Namespaces#Temporal-cloud-Namespace-name)。
+如果您需要包含区域，请使用短代码（例如“aps1”、“use1”）。
+:::
+
+## 组织模式
+
+### 模式 1：每个用例和环境的 Namespace
+
+适用于没有多个服务或团队边界的简单配置。
+
+**命名约定**：`<用例>_<环境>`
+
+**示例**：` payment_prod`、`orders_dev`
+
+### 模式 2：每个用例、服务和环境的 Namespace
+
+当属于同一用例的多个服务通过 API (HTTP/gRPC) 与 Temporal 进行外部通信时。
+
+**命名约定**：`<用例>_<服务>_<环境>`
+
+**示例**：` payment_gateway_prod`、` payment_processor_prod`
+
+### 模式 3：每个用例、域和环境的 Namespace
+
+当多个服务需要相互通信时，请使用 [Temporal Nexus](/Nexus) 跨 Namespace 边界连接 Workflow。
+与共享 Namespace 相比，这提供了更好的安全性、故障隔离和模块化性。
+
+**命名约定**：`<用例>_<域>_<环境>`
+
+**示例**：` payment_checkout_prod`、` payment_refunds_prod`
+
+对于没有 Nexus 的系统，服务可以通过同一 Namespace 内的 [Signals](/sending-messages#sending-Signals) 或 [Child Workflows](/child-Workflows) 进行通信。
+
+:::note Workflow ID uniqueness
+当多个团队共享 Namespace 时，请为每个 Workflow Id 添加服务特定字符串作为前缀，以确保唯一性。
+Task Queue 名称在 Namespace 中也必须是唯一的。
+:::
+
+## 生产保障
+
+### 使用授权者（仅限开源）{#authorizer}
+
+在前端服务上使用自定义 [Authorizer](/self-hosted-guide/security#authorizer-plugin) 对谁可以创建 Update 或弃用 Namespace 设置限制。
+
+如果未设置授权者，Temporal 将使用无条件允许所有 API 调用的“nopAuthority”授权者。
+
+在 Temporal Cloud 上，[基于角色的访问控制](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions) 提供 Namespace 级别的授权，无需自定义配置。
+
+### 启用删除保护（仅限 Temporal Cloud）{#deletion-protection}
+
+[为生产版 Namespace 启用删除保护](/cloud/Namespaces#delete-protection)，以防止意外删除。
+
+### 启用高可用性（仅限 Temporal Cloud）{#high-availability}
+
+对于具有严格正常运行时间要求的关键业务用例，请启用[高可用性功能](/cloud/high-availability)以获得[99.99% 合同 SLA](/cloud/high-availability#high-availability-features)。
+
+### 使用基础设施即代码（仅限 Temporal Cloud）{#terraform}
+
+使用 [Temporal Cloud Terraform 提供程序](/cloud/terraform-provider) 管理 Namespace。
+如果 Terraform 不适合，针对 [Cloud Ops API](/ops) 或 [tcld](/cloud/tcld) 编写脚本是一个不错的选择。
+
+这提供了：
+- 每个 Namespace 用途和所有者的文档
+- 防止基础设施漂移
+- 版本控制的配置更改
+
+在 Terraform 配置中使用“prevent_destroy = true”，以防止通过 Terraform 意外删除 Namespace。
+这与 [Temporal Cloud 删除保护](/cloud/Namespaces#delete-protection) 是分开的，后者防止通过任何界面进行删除。
+
+**参考**：[Terraform 配置示例](https://github.com/kawofong/Temporal-terraform)
+
+## 标记（仅限 Temporal Cloud）{#tagging}
+
+[标签](/cloud/Namespaces#tag-a-Namespace) 是键值元数据对，可帮助组织、跟踪和管理 Namespace。
+
+标签通过添加不适合 Namespace 名称的元数据来补充您的命名约定。
+虽然名称捕获了用例、领域和环境，但标签可以捕获其他维度，例如团队所有权、数据敏感性或业务关键性。
+
+### 推荐标签类别
+
+|标签键 |目的|示例 |
+|---------|---------|----------|
+| `环境` |部署阶段| `开发`、`登台`、`生产` |
+| `团队` |所属团队| “平台”、“支付”、“身份” |
+| `部门` |事业部| “工程”、“财务”、“运营” |
+| `关键性` |商业重要性| ‘高’、‘中’、‘低’ |
+| `数据敏感性` |数据分类 | `pii`、`pci`、`公共` |
+| `延迟敏感度` |性能层 | `实时`、`批量`、`异步` |
+
+有关标签结构、限制和管理说明，请参阅[如何标记 Namespace](/cloud/Namespaces#tag-a-Namespace)。
+
+## SDK客户端配置
+
+在 SDK 客户端中设置 Namespace 以隔离 Workflow Execution。
+如果您不设置 Namespace，则使用客户端启动的所有 Workflow Execution 将与“默认”Namespace 关联。
+
+在将 Namespace 设置到客户端之前，您必须先注册它。
+
+详细配置请参见：
+- [Namespace 概念](/Namespaces)
+- [Namespaces (Temporal Cloud)](/cloud/Namespaces#access-Namespaces)

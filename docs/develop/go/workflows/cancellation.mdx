@@ -1,8 +1,8 @@
 ---
 id: cancellation
-title: Cancel a Workflow - Go SDK
-sidebar_label: Cancellation
-description:
+title: "取消 Workflow - Go SDK"
+sidebar_label: "消除"
+description: Handle Cancellations in Temporal Workflows and Activities, set Activity Heartbeat Timeouts, and send Cancellation
   Handle Cancellations in Temporal Workflows and Activities, set Activity Heartbeat Timeouts, and send Cancellation
   requests from a Temporal Client in Go.
 toc_max_heading_level: 4
@@ -16,27 +16,28 @@ tags:
   - Temporal SDKs
 ---
 
-This page shows the following:
+该页面显示以下内容：
 
-- How to handle a Cancellation request within a Workflow.
-- How to set an Activity Heartbeat Timeout.
-- How to listen for and handle a Cancellation request within an Activity.
-- How to send a Cancellation request from a Temporal Client.
-- Heartbeating after a Cancellation.
+- 如何在 Workflow 内处理取消请求。
+- 如何设置 Activity 心跳超时。
+- 如何在 Activity 中侦听和处理取消请求。
+- 如何从 Temporal CLIent 发送取消请求。
+- 取消后的心跳。
 
-## Handle Cancellation in Workflow {#handle-cancellation-in-workflow}
+<a id="handle-cancellation-in-workflow"></a>
+## 在 Workflow 中处理取消 {#handle-cancellation-in-workflow}
 
-Workflow Definitions can be written to handle execution cancellation requests with Go's `defer` and the
-`workflow.NewDisconnectedContext` API. In the Workflow Definition, there is a special Activity that handles clean up
-should the execution be cancelled.
+可以编写 Workflow Definition 来处理 Go 的 `defer` 和
+`Workflow.NewDisconnectedContext` API。在 Workflow Definition 中，有一个特殊的 Activity 负责处理清理工作
+是否应取消执行。
 
-If the Workflow receives a Cancellation Request, but all Activities gracefully handle the Cancellation, and/or no
-Activities are skipped then the Workflow status will be Complete. It is completely up to the needs of the business
-process and your use case which determines whether you want to return the Cancellation error to show a Canceled status
-or Complete status regardless of whether a Cancellation has propagated to and/or skipped Activities.
+如果 Workflow 收到取消请求，但所有活动都正常处理取消，和/或没有
+活动将被跳过，然后 Workflow 状态将为“完成”。完全取决于业务的需求
+流程和您的用例决定您是否要返回取消错误以显示已取消状态
+或完成状态，无论取消是否已传播到和/或跳过活动。
 
-<!--SNIPSTART go-features-cancellation-workflow {"selectedLines": ["14-15", "18", "20-38", "41", "43-45", "47-50"]}-->
-[sample-apps/go/features/cancellation/workflow.go](https://github.com/temporalio/documentation/blob/main/sample-apps/go/features/cancellation/workflow.go)
+<!--SNIPSTART go-features-cancellation-Workflow {"selectedLines": ["14-15", "18", "20-38", "41", "43-45", "47-50"]}-->
+[示例应用程序/go/features/cancellation/Workflow.go](https://github.com/temporalio/documentation/blob/main/sample-apps/go/features/cancellation/workflow.go)
 ```go
 // ...
 // YourWorkflow is a Workflow Definition that shows how it can be canceled.
@@ -77,17 +78,18 @@ func YourWorkflow(ctx workflow.Context) error {
 ```
 <!--SNIPEND-->
 
-## Handle Cancellation in an Activity {#handle-cancellation-in-an-activity}
+<a id="handle-cancellation-in-an-activity"></a>
+## 在 Activity 中处理取消 {#handle-cancellation-in-an-activity}
 
-**How to handle a Cancellation in an Activity in Go.**
+**如何在 Go 中处理 Activity 中的取消。**
 
-Ensure that the Activity is Heartbeating to receive the Cancellation request and stop execution.
+确保 Activity 处于心跳状态以接收取消请求并停止执行。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/features/cancellation/activity.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -110,17 +112,17 @@ func (a *Activities) ActivityToBeCanceled(ctx context.Context) (string, error) {
 // ...
 ```
 
-## Request Cancellation {#request-cancellation}
+## 请求取消 {#request-cancellation}
 
-**How to request Cancellation of a Workflow and Activities in Go.**
+**如何请求取消 Workflow 和 Go 中的活动。**
 
-Use the `CancelWorkflow` API to cancel a Workflow Execution using its Id.
+使用 `CancelWorkflow` API 通过其 ID 取消 Workflow Execution。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/features/cancellation/cancel/main.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -137,45 +139,46 @@ func main() {
 }
 ```
 
-## Heartbeating after a Cancellation
+<a id="heartbeating-after-a-cancellation"></a>
+## 取消后的心跳 {#heartbeating-after-a-cancellation}
 
-Sometimes you may want to continue running your Activity, even after a Cancellation has been issued. You may want to
-completely ignore the cancellation and continue Activity execution, including Heartbeating, or you may want to send one
-final Heartbeat after Cancellation. Even though the context is cancelled when the Workflow is Cancelled, you are still
-able to send Activity Heartbeats.
+有时您可能希望继续运行 Activity，即使在发出取消后也是如此。你可能想要
+完全忽略取消并继续 Activity 执行，包括心跳，或者您可能想发送一个
+取消后的最终心跳。即使当 Workflow 被取消时上下文被取消，您仍然可以
+能够发送 Activity 心跳。
 
-When you call `activity.RecordHeartbeat` after Cancellation has occurred, a
-`WARN RecordActivityHeartbeat with error Error context canceled` message will be logged, and a `context canceled` error
+当您在取消后致电 `Activity.RecordHeartbeat` 时，
+将记录 `WARN RecordActivityHeartbeat with error Error context canceled` 消息，并出现 `context canceled` 错误
 will be returned from the call. However, the Heartbeat **has** still been sent.
 
-## Reset a Workflow Execution {#reset}
+## 重置 Workflow Execution {#reset}
 
-Resetting a Workflow Execution terminates the current Workflow Execution and starts a new Workflow Execution from a
-point you specify in its Event History. Use reset when a Workflow is blocked due to a non-deterministic error or other
-issues that prevent it from completing.
+重置 Workflow Execution 将终止当前的 Workflow Execution 并从
+您在其 Event History 中指定的点。当 Workflow 由于非确定性错误或其他原因而被阻止时，请使用重置
+阻止其完成的问题。
 
-When you reset a Workflow, the Event History up to the reset point is copied to the new Workflow Execution, and the
-Workflow resumes from that point with the current code. Reset only works if you've fixed the underlying issue, such as
-removing non-deterministic code. Any progress made after the reset point will be discarded. Provide a reason when
-resetting, as it will be recorded in the Event History.
+当您重置 Workflow 时，重置点之前的 Event History 将被复制到新的 Workflow Execution，并且
+Workflow 从该点使用当前代码恢复。仅当您解决了根本问题（例如
+删除不确定性代码。重置点之后取得的任何进度都将被丢弃。给出一个理由，当
+重置，因为它将记录在 Event History 中。
 
 <Tabs>
 
 <TabItem value="web-ui" label="Web UI">
 
-1. Navigate to the Workflow Execution details page,
-2. Click the **Reset** button in the top right dropdown menu,
-3. Select the Event ID to reset to,
-4. Provide a reason for the reset,
-5. Confirm the reset.
+1. 导航至Workflow Execution详细信息页面，
+2. 单击右上角下拉菜单中的 **重置** 按钮，
+3. 选择要重置的事件 ID，
+4. 提供重置原因，
+5. 确认重置。
 
-The Web UI shows available reset points and creates a link to the new Workflow Execution after the reset completes.
+Web UI 显示可用的重置点，并在重置完成后创建指向新 Workflow Execution 的链接。
 
 </TabItem>
 
 <TabItem value="cli" label="Temporal CLI">
 
-Use the `temporal workflow reset` command to reset a Workflow Execution:
+使用 `Temporal Workflow reset` 命令重置 Workflow Execution：
 
 ```bash
 temporal workflow reset \
@@ -184,7 +187,7 @@ temporal workflow reset \
     --reason "Reason for reset"
 ```
 
-For example:
+例如：
 
 ```bash
 temporal workflow reset \
@@ -193,8 +196,8 @@ temporal workflow reset \
     --reason "Fixed non-deterministic code"
 ```
 
-By default, the command resets the latest Workflow Execution in the `default` Namespace. Use `--run-id` to reset a
-specific run. Use `--namespace` to specify a different Namespace:
+默认情况下，该命令重置 `default` Namespace 中最新的 Workflow Execution。使用 `--run-id` 重置
+具体运行。使用 `--Namespace` 指定不同的 Namespace：
 
 ```bash
 temporal workflow reset \
@@ -206,7 +209,7 @@ temporal workflow reset \
     --tls-key-path /path/to/key.pem
 ```
 
-Monitor the new Workflow Execution after resetting to ensure it completes successfully.
+重置后监视新的 Workflow Execution 以确保其成功完成。
 
 </TabItem>
 

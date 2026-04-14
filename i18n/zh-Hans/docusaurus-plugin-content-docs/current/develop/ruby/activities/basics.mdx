@@ -1,0 +1,68 @@
+---
+id: basics
+title: Activity 基础知识 - Ruby SDK
+sidebar_label: Activity 基础知识
+description: 本节介绍 Activity 和 Ruby SDK 的基础知识
+toc_max_heading_level: 4
+keywords:
+  - Ruby SDK
+tags:
+  - Ruby SDK
+  - Temporal SDKs
+---
+
+## 开发 Activity {#develop-Activity}
+
+Workflow 所做的主要事情之一是协调活动的执行。
+Activity 是一种正常的方法执行，旨在执行单个、明确定义的操作（短期或长期运行），例如 Query 数据库、调用第三方 API 或对媒体文件进行转码。
+Activity 可以与 Temporal Platform 之外的世界交互，或使用 Temporal CLIent 与 Temporal 服务交互。
+为了使 Workflow 能够执行 Activity，我们必须定义 [Activity Definition](/Activity-definition)。
+
+您可以通过创建扩展“Temporalio::Activity::Definition”的类来开发 Activity Definition。
+要将类注册为具有自定义名称的 Activity，请在类定义中使用“Activity_name”类方法。
+否则，Activity 名称是非限定类名称。
+
+```ruby
+class MyActivity < Temporalio::Activity::Definition
+  def execute(input)
+    "#{input['greeting']}, #{input['name']}!"
+  end
+end
+```
+
+Activity 实现代码应该是_幂等的_。了解有关[幂等性](/Activity-definition#idempotency) 的更多信息。
+
+[Activity Definition](/Activity-definition) 可以支持的参数总数没有明确的限制。
+但是，最终编码到 gRPC 消息有效负载中的数据的总大小是有限制的。
+
+单个参数的最大大小限制为 2 MB。
+gRPC 消息的总大小（包括所有参数）限制为最大 4 MB。
+
+某些 SDK 要求您传递上下文对象，而其他 SDK 则不需要。
+当涉及到您的应用程序数据（即序列化并编码到有效负载中的数据）时，我们建议您使用单个哈希或对象作为包装传递给活动的应用程序数据的参数。
+这样您就可以更改传递到 Activity 的数据，而不会破坏方法签名。
+
+从技术上讲，Activity 中的“execute”方法可以接受 Temporal 可以转换的任何数据类型的多个参数。
+但是，Temporal 强烈鼓励使用单个参数对象来简化版本控制和可维护性。
+
+### Activity 并发和执行器 {#Activity-concurrency-and-executors}
+
+:::note
+
+本节介绍大多数用户在开始时不需要的高级并发和执行选项。
+
+:::
+
+默认情况下，活动在“线程池执行器”（即“Temporalio::Worker::ActivityExecutor::ThreadPool”）中运行。
+此默认值在所有 Worker 之间共享，并且是一个简单的线程池，可以在没有线程时根据需要不断创建线程。
+空闲/可用于处理传入的工作。
+如果一个线程空闲足够长的时间，它就会被杀死。
+
+Worker 一次运行的最大并发活动数通过其“tuner”选项进行配置。
+默认值为“Temporalio::Worker::Tuner.create_fixed”，默认情况下该 Worker 一次有 100 个活动。
+当达到此值时，Worker 将停止向服务器请求工作，直到再次有可用插槽。
+
+除了线程池执行器之外，默认执行器集中还有一个 Fiber 执行器。
+要使用 Fiber，请调用 Activity 类顶部的 `Activity_executor : Fiber` 类方法（该值的默认值为 `:default`，即线程池执行器）。
+仅当 Worker 已创建并在纤程中运行时，活动才能选择纤程执行器，但线程池执行器始终可用。
+目前，由于[问题](https://github.com/Temporalio/sdk-ruby/issues/162)，Workers 只能在 Ruby 3.3 及更高版本上的 Fiber 中运行。

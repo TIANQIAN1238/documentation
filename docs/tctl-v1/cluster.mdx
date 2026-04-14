@@ -1,8 +1,8 @@
 ---
 id: cluster
-title: tctl v1.17 cluster command reference
-sidebar_label: cluster
-description: Explore Temporal CLI for improved Temporal Cluster operations. Use commands like `tctl cluster health` and `tctl cluster get-search-attributes` for efficient Workflow management.
+title: "tctl v1.17 集群命令参考"
+sidebar_label: "簇"
+description: "探索 Temporal CLI 以改进 Temporal 集群操作。使用 `tctl cluster health` 和 `tctl cluster get-search-attributes` 等命令进行高效的 Workflow 管理。"
 toc_max_heading_level: 4
 keywords:
   - cli
@@ -15,31 +15,32 @@ keywords:
 
 :::info tctl is deprecated
 
-The tctl command line utility has been deprecated and is no longer actively supported.
-We recommend transitioning to [Temporal CLI](/cli) for continued use and access to new features.
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议过渡到 [Temporal CLI](/cli) 以继续使用和访问新功能。
 
-Thank you for being a valued part of the Temporal community.
+感谢您成为 Temporal 社区的重要组成部分。
 
 :::
 
-The `tctl cluster` command enables [Temporal Cluster](/temporal-service) operations.
+`tctl cluster` 命令启用 [Temporal集群](/temporal-service) 操作。
 
-- [tctl cluster health](#health)
-- [tctl cluster get-search-attributes](#get-search-attributes)
+- [tctl 集群运行状况](#health)
+- [tctl 集群获取搜索属性](#get-search-attributes)
 
-## get-search-attributes
+<a id="get-search-attributes"></a>
+## 获取搜索属性 {#get-search-attributes}
 
-The `tctl cluster get-search-attributes` command lists all [Search Attributes](/search-attribute) that can be used in the `--query` modifier of the [`tctl workflow list`](/tctl-v1/workflow#list) command and the `--search_attr_key` and `--search_attr_value` modifiers of the [`tctl workflow run`](/tctl-v1/workflow#run) and [`tctl workflow start`](/tctl-v1/workflow#start) commands.
+`tctl cluster get-search-attributes` 命令列出了可在 [`tctl Workflow list`](/search-attribute) 命令的 `--Query` 修饰符以及 [`tctl Workflow run`](/tctl-v1/workflow#list) 和 [`tctl Workflow start`](/tctl-v1/workflow#run) 命令的 `--search_attr_key` 和 `--search_attr_value` 修饰符中使用的所有 [Search Attributes](/tctl-v1/workflow#start)。
 
-**Example:**
+**例子：**
 
 ```bash
 tctl cluster get-search-attributes
 ```
 
-The command has no modifiers.
+该命令没有修饰符。
 
-Example output:
+输出示例：
 
 ```text
 +-----------------------+----------+
@@ -66,12 +67,12 @@ Example output:
 +-----------------------+----------+
 ```
 
-The admin version of this command displays default and custom Search Attributes separately, and also shows the underlying Elasticsearch index schema and system Workflow status.
+此命令的管理版本分别显示默认和自定义 Search Attribute，还显示底层 Elasticsearch 索引架构和系统 Workflow 状态。
 
-## health
+## 健康 {#health}
 
-The `tctl cluster health` command checks the health of the [Frontend Service](/temporal-service/temporal-server#frontend-service).
+`tctl cluster health` 命令检查 [前端服务](/temporal-service/temporal-server#frontend-service) 的运行状况。
 
 `tctl cluster health`
 
-The command has no modifiers.
+该命令没有修饰符。

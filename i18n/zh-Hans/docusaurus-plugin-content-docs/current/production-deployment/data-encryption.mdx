@@ -1,0 +1,363 @@
+---
+id: data-encryption
+title: Codec Server - Temporal Platform feature guide
+sidebar_label: Codecs and Encryption
+description: Encrypt data in Temporal Server to secure Workflow, Activity, and Worker information. Use custom Payload Codecs for encryption/decryption, set up Codec Servers for remote decoding, and ensure secure access.
+slug: /production-deployment/data-encryption
+toc_max_heading_level: 4
+keywords:
+  - guide-context
+  - how-to
+  - production-readiness
+  - security
+tags:
+  - Temporal Service
+  - Self-hosting
+  - Security
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+Temporal Server stores and persists the data handled in your Workflow Execution.
+Encrypting this data ensures that any sensitive application data is secure when handled by the Temporal Server.
+
+For example, if you have sensitive information passed in the following objects that are persisted in the Workflow Execution Event History, use encryption to secure it:
+
+- Inputs and outputs/results in your [Workflow](/Workflow-execution), [Activity](/Activity-execution), and [Child Workflow](/child-Workflows)
+- [Signal](/sending-messages#sending-Signals) inputs
+- [Memo](/Workflow-execution#memo)
+- Headers (verify if applicable to your SDK)
+- [Query](/sending-messages#sending-queries) inputs and results
+- Results of [Local Activities](/local-Activity) and [Side Effects](/Workflow-execution/event#side-effect)
+- [Application errors and failures](/references/failures).
+  Failure messages and call stacks are not encoded as codec-capable Payloads by default; you must explicitly enable encoding these common attributes on failures.
+  For more details, see [Failure Converter](/failure-converter).
+
+Using encryption ensures that your sensitive data exists unencrypted only on the Client and the Worker Process that is executing the Workflows and Activities, on hosts that you control.
+
+By default, your data is serialized to a [Payload](/dataconversion#payload) by a [Data Converter](/dataconversion).
+To encrypt your Payload, configure your custom encryption logic with a [Payload Codec](/payload-codec) and set it with a [custom Data Converter](/default-custom-data-converters#custom-data-converter).
+
+A Payload Codec does byte-to-byte conversion to transform your Payload (for example, by implementing compression and/or encryption and decryption) and is an optional step that happens between the Client and the [Payload Converter](/payload-converter):
+
+<CaptionedImage
+    src="/diagrams/remote-data-encoding.svg"
+    title="Remote data encoding architecture" />
+
+You can run your Payload Codec with a [Codec Server](/codec-server) and use the Codec Server endpoints in the Web UI and CLI to decode your encrypted Payload locally.
+For details on how to set up a Codec Server, see [Codec Server setup](#codec-server-setup).
+
+However, if you plan to set up [remote data encoding](/remote-data-encoding) for your data, ensure that you consider all security implications of running encryption remotely before implementing it.
+
+When implementing a custom codec, it is recommended to perform your compression or encryption on the entire input Payload and store the result in the data field of a new Payload with a different encoding metadata field.
+This ensures that the input Payload's metadata is preserved.
+When the encoded Payload is sent to be decoded, you can verify the metadata field before applying the decryption.
+If your Payload is not encoded, it is recommended to pass the unencoded data to the decode function instead of failing the conversion.
+
+Examples for implementing encryption:
+
+- [Go示例](https://github.com/Temporalio/samples-go/tree/main/encryption)
+- [Java 示例](https://github.com/Temporalio/samples-java/tree/main/core/src/main/java/io/Temporal/samples/encryptedpayloads)
+- [Python 示例](https://github.com/Temporalio/samples-python/tree/main/encryption)
+- [TypeScript 示例](https://github.com/Temporalio/samples-typescript/tree/main/encryption)
+- [.NET 示例](https://github.com/Temporalio/samples-dotnet/tree/main/src/Encryption)
+
+## Codec Server 设置 {#codec-server-setup}
+
+使用 Codec Server 以编程方式解码编码的 [payloads](/dataconversion#payload)。
+
+Codec Server 是一个 HTTP 服务器，它使用您的自定义编解码器逻辑来远程解码您的数据。
+Codec Server 独立于 Temporal 服务，并通过预定义端点解码您的加密有效负载。您可以在自己的环境中创建、操作和管理对 Codec Server 的访问。
+Temporal CLI 和 Web UI 反过来提供内置挂钩来调用 Codec Server 以按需解码加密的有效负载。
+
+Codec Server 独立于 Temporal Server，并通过端点解码您的加密有效负载。
+当您在 Temporal Web UI 或 CLI 中配置 Codec Server 端点时，Web UI 和 CLI 使用远程端点从 Codec Server 接收解码后的负载。
+请参阅 [API 合同要求](#api-contract-specifications)。
+
+然后，解码后的有效负载可以显示在 Web UI 上的 Workflow Execution Event History 中。请注意，当您使用 Codec Server 时，解码后的有效负载仅在客户端进行解码和返回； Temporal Server 上的有效负载（无论是 Temporal Cloud 还是自托管 Temporal 服务）保持加密状态。
+
+由于您在受控环境中创建、操作和管理对 Codec Server 的访问，因此请确保考虑以下事项：
+
+- 当您使用 Web UI 注册 Codec Server 端点时，预计 Codec Server 将接收每个 Workflow Execution 的多个请求。
+- 确保您安全地访问 Codec Server。有关详细信息，请参阅[授权](#authorization)。您可能需要某种形式的[密钥管理基础设施](/key-management) 在 Worker 和 Codec Server 之间共享加密密钥。
+- 您需要在 Codec Server 中的 HTTP/HTTPS 端点上启用 [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) 才能接收来自 Temporal Web UI 的请求。
+- 当向 Codec Server 发送和接收有效负载时，您可能会在 Web UI 中引入延迟。
+
+您的 Codec Server 应与应用程序中其他地方使用的自定义 [Payload Codec](/payload-codec) 共享逻辑。
+
+### API合约规范
+
+当您创建 Codec Server 来处理来自 Web UI 的请求时，必须满足以下要求。
+
+#### 端点
+
+Web UI 和 CLI 向“/decode”端点发送 POST。在 Codec Server 中，创建一个“/decode”路径并将传入的有效负载传递到有效负载编解码器中的解码方法。
+
+有关如何创建 Codec Server 的示例，请参阅以下 Codec Server 实施示例：
+
+- [转到](https://github.com/Temporalio/samples-go/tree/main/codec-server)
+- [Java](https://github.com/Temporalio/sdk-java/tree/master/Temporal-remote-data-encoder)
+- [Python](https://github.com/Temporalio/samples-python/blob/main/encryption/codec_server.py)
+- [TypeScript](https://github.com/Temporalio/samples-typescript/blob/main/encryption/src/codec-server.ts)
+- [.NET](https://github.com/Temporalio/samples-dotnet/blob/main/src/Encryption/CodecServer/Program.cs)
+
+您还可以添加[验证步骤](#authorization)来检查传入请求是否具有访问有效负载编解码器中的解码逻辑所需的授权。
+
+#### 标题
+
+从 Web UI 到 Codec Server 的每个请求都包含以下标头：
+
+- `Content-Type: application/json`：确保您的 Codec Server 可以容纳此 [MIME 类型](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types)。
+
+- `X-Namespace: {Namespace}`：这是自定义 HTTP 标头。确保 Codec Server 中的 [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) 配置包含此标头。
+
+- [可选]`授权：<credentials>`：在使用 Codec Server 启用授权时，将其包含在 CORS 配置中。
+
+有关设置授权的详细信息，请参阅[授权](#authorization)。
+
+#### 请求正文
+
+“POST”请求正文的一般规范包含有效负载。
+默认情况下，负载中的所有字段值均采用 Base64 编码，无论它们是否由自定义编解码器实现加密。
+
+以下示例显示了使用 base64 编码的示例“POST”请求正文。
+
+```json
+{
+  "payloads": [{
+    "metadata": {
+      "encoding": <base64EncodedEncodingHint>
+    },
+    "data": <encryptedPayloadData>
+  }, ...]
+}
+```
+
+#### CORS
+
+默认情况下，在跨源 Fetch/XHR 调用中，浏览器不会发送凭据。
+在 Codec Server 上启用 [跨源资源共享 (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) 请求，以接收来自 Temporal Web UI 的 HTTP/HTTPS 请求。
+
+至少，启用 Codec Server 的以下响应以允许来自 Temporal Web UI 的请求：
+
+- `访问控制允许来源`
+- `访问控制允许方法`
+- `访问控制允许标头`
+
+例如，对于托管在 https://cloud.Temporal.io 上的 Temporal Cloud Web UI，请在 Codec Server 中启用以下功能：
+
+-`访问控制允许来源：https://cloud.Temporal.io`
+- `访问控制允许方法：POST、GET、选项`
+- `访问控制允许标头：X-Namespace，内容类型`
+
+有关 Temporal Web UI 的示例请求/响应的详细信息，请参阅[示例请求/响应](#sample-requestresponse)。
+如果设置授权，请在“Access-Control-Allow-Headers”中包含“Authorization”。
+有关设置授权的详细信息，请参阅[授权](#authorization)。
+
+＃＃＃＃ 授权
+
+确定如何提供对 Codec Server 的访问非常重要。
+由于它旨在通过单个 API 调用解码潜在的敏感数据，因此应限制对生产 Codec Server 的访问。
+
+根据您的基础设施和风险级别，限制 HTTP 进入您的 Codec Server 可能就足够了（例如使用 [WireGuard](https://www.wireguard.com/) 等 VPN）。
+Temporal Web UI 可以与只能在“localhost”上访问的 Codec Server 进行通信，因此这是一种合法的安全模式。
+但是，如果您的 Codec Server 完全暴露在互联网上，您可能需要身份验证解决方案。
+
+如果您已经在使用组织范围的身份验证提供程序，则应将其与 Codec Server 集成。请记住，Codec Server 只是一个独立的 HTTP 服务器，因此您可以使用 OAuth、[Auth0](https://auth0.com/) 或任何其他协议的现有库。
+[此存储库](https://github.com/pvsone/codec-cors-credentials)包含使用 Auth0 处理对 Codec Server 的基于浏览器的身份验证的示例。
+
+要从 Web UI 启用授权（对于自托管 Temporal 服务和 Temporal Cloud），您的 Codec Server 必须是 HTTPS 服务器。
+
+**Temporal Cloud**
+
+Temporal Cloud UI 提供了将访问令牌 (JWT) 传递到 Codec Server 端点的选项。
+使用访问令牌验证访问，然后从 Codec Server 返回解码后的有效负载。
+
+您可以通过在添加端点的 Codec Server 端点界面中选择“**传递访问令牌**”来启用此功能。
+在 Temporal Cloud UI 中启用此选项会向发送到您设置的 Codec Server 端点的每个请求添加授权标头。
+
+在您的 Codec Server 实现中，根据 [我们的 JWKS 端点](https://login.tmprl.cloud/.well-known/jwks.json) 验证此访问令牌上的签名（在您的授权标头中）。
+
+{/* 现在对此发表评论。 _/}
+{/_ 如果您想要解压令牌中的声明，以添加额外的检查来检查用户是否有权有效访问 Namespace 及其尝试访问的负载，您可以使用 Auth0 SDK、中间件或 JWT.io 上的第三方库之一来实现它。 */}
+
+Temporal Cloud UI 提供的令牌包含请求访问有效负载的人员的电子邮件标识符。
+根据您在访问控制系统中向用户提供的权限，在 Codec Server 中设置条件是返回解码的有效负载还是仅返回原始编码的有效负载。
+
+**自托管Temporal服务**
+
+在自托管 Temporal 服务上，在 Temporal 服务设置中配置 [Web UI 配置中的授权](/references/web-ui-configuration#auth)。
+
+启用此功能后，您可以将访问令牌传递到 Codec Server 并验证从 Web UI 到您设置的 Codec Server 端点的请求。
+请注意，对于自托管 Temporal 服务，您必须显式配置 Web UI 和 CLI 的授权规范。
+
+#### 请求/响应示例
+
+创建和托管具有以下规格的 Codec Server 时，请考虑以下示例请求/响应：
+
+- 方案：`https`
+- 主机：`dev.mydomain.com/codec`
+- 路径：`/解码`
+
+```json
+HTTP/1.1 POST /decode
+Host: https://dev.mydomain.com/codec
+Content-Type: application/json
+X-Namespace: myapp-dev.acctid123
+Authorization: Bearer <token>
+
+{"payloads":[{"metadata":{"encoding":"anNvbi9wcm90b2J1Zg==","messageType":"dGVtcG9yYWxfc2hvcC5vcmNoZXN0cmF0aW9ucy52MS5TdGFydFNob3BwaW5nQ2FydFJlcXVlc3Q="},"data":"eyJjYXJ0SWQiOiJleGFtcGxlLWNhcnQiLCJzaG9wcGVySWQiOiJ5b3VyLXNob3BwZXItaWQtZXhhbXBsZSIsImVtYWlsIjoieW91ci1lbWFpbEBkb21haW4uY29tIn0"}]}
+
+200 OK
+Content-Type: application/json
+
+{
+  "payloads": [{
+    "metadata":{
+      "encoding": "json/protobuf",
+      "messageType": "temporal_shop.orchestrations.v1.StartShoppingCartRequest"
+    },
+    "data":{
+      "cartId":"example-cart",
+      "shopperId":"your-shopper-id-example",
+      "email":"your-email@domain.com"
+    }}]
+}
+```
+
+您还可以在“/encode”端点上执行远程编码，反过来看起来是一样的：
+
+- 方案：`https`
+- 主机：`dev.mydomain.com/codec`
+- 路径：`/编码`
+
+```json
+HTTP/1.1 POST /encode
+Host: https://dev.mydomain.com/codec
+Content-Type: application/json
+X-Namespace: myapp-dev.acctid123
+Authorization: Bearer <token>
+
+{"payloads":[{"metadata":{"encoding":"json/protobuf","messageType":"temporal_shop.orchestrations.v1.StartShoppingCartRequest"},"data":{"cartId":"example-cart","shopperId":"your-shopper-id-example","email":"your-email@domain.com"}}]}
+
+200 OK
+Content-Type: application/json
+
+{
+  "payloads": [
+    {
+      "metadata": {
+        "encoding": "anNvbi9wcm90b2J1Zg==",
+        "messageType": "dGVtcG9yYWxfc2hvcC5vcmNoZXN0cmF0aW9ucy52MS5TdGFydFNob3BwaW5nQ2FydFJlcXVlc3Q="
+      },
+      "data": "eyJjYXJ0SWQiOiJleGFtcGxlLWNhcnQiLCJzaG9wcGVySWQiOiJ5b3VyLXNob3BwZXItaWQtZXhhbXBsZSIsImVtYWlsIjoieW91ci1lbWFpbEBkb21haW4uY29tIn0"
+    }
+  ]
+}
+```
+
+### 使用 Web UI 和 CLI 设置 Codec Server 端点
+
+创建 Codec Server 并公开必要的端点后，在 Web UI 和 CLI 中设置端点。
+
+#### 网页用户界面
+
+在 Temporal Cloud 和自托管 Temporal 服务上，您可以在 Web UI 中配置 Codec Server 端点以用于 Namespace。
+
+<CaptionedImage
+src =“/img/info/set-codec-endpoint-form.png”
+    title="Codec Server 端点 Namespace 设置"
+/>
+
+:::caution
+
+如果您的 Codec Server 在专用网络上，您的浏览器可能会阻止 Temporal Web UI 访问它。在 Chrome 上，您的浏览器可能会提示您允许访问 Codec Server 端点。确保允许访问 Codec Server 端点。有关此权限提示的详细信息，请参阅 [Chrome 开发者博客：本地网络访问的新权限提示](https://developer.chrome.com/blog/local-network-access/)。
+
+如果您的浏览器阻止了 Temporal 访问 Codec Server，请参阅 [Chrome 文档](https://support.google.com/chrome/answer/114662)，了解有关如何更改站点设置的详细信息。在 **站点设置** 中，查找 **本地网络** 设置并将其更改为 **允许** 仅更改 Temporal 的此设置，而不影响其他站点。
+
+:::
+
+要在 Namespace 上设置 Codec Server 端点，请执行以下操作。
+
+1. 在 Web UI 中，转到 Namespaces，选择要配置 Codec Server 端点的 Namespace，然后单击 **编辑**。
+1. 在 Namespace 配置页面的 **Codec Server** 部分中，输入您的 Codec Server 端点和端口号。
+1. 可选：如果您的 Codec Server 配置为[验证来自 Temporal Web UI 的请求](#authorization)，请启用 **传递访问令牌** 以随 HTTPS 请求发送 JWT 访问令牌。
+1. 可选：如果您的 Codec Server 配置为[验证请求来源](#cors)，请启用**包含跨域凭据**。
+
+在 Temporal Cloud 上，您必须具有 [Namespace 管理员权限](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions) 才能在 Namespace 上添加 Codec Server 端点。在云 Namespace 上设置 Codec Server 端点可为 Namespace 上的所有用户启用该端点。
+
+在自托管 Temporal 服务上设置 Codec Server 端点可使其适用于整个 Temporal 服务。您可以使用单个 Codec Server 来处理每个 Namespace 的不同编码和解码路线。
+
+您还可以在浏览器级别覆盖全局 X​​PROT019X 设置。这在开发、测试编码功能或对其进行故障排除时非常有用。
+
+<CaptionedImage
+src =“/img/info/data-encoder-button.png”
+    title="Codec Server端点浏览器设置"
+/>
+
+要为 Namespace 级别端点设置浏览器覆盖，请执行以下操作。
+
+1. 导航至 Namespace 中的 **Workflows**。
+2. 在右上角，选择**配置 Codec Server**。
+3. 选择是否要使用 Namespace 级别（或自托管 Temporal 服务的 Temporal 服务级别）或浏览器级别编解码器端点设置作为浏览器的默认设置。
+   在 Temporal Cloud 中：
+   - **使用 Namespace 级别设置（如果可用）。否则，请使用我的浏览器设置。**
+     默认情况下使用 Namespace 级别的 Codec Server 端点。
+     如果 Namespace 上未设置端点，则应用您的浏览器设置。
+   - **使用我的浏览器设置并忽略 Namespace 级别设置。**
+     默认情况下应用浏览器级别设置，覆盖 Namespace 级别 Codec Server 端点。
+4. 输入您的 Codec Server 端点和端口号。
+5. 可选：如果您的 Codec Server 配置为[验证来自 Temporal Web UI 的请求](#authorization)，请启用 **传递访问令牌** 以随 HTTPS 请求发送 JWT 访问令牌。
+6. 可选：如果您的 Codec Server 配置为[验证请求来源](#cors)，请启用**包括跨源凭据**。
+
+在具有专用 UI​​ 服务器配置的自托管 Temporal 服务中，您还可以在 UI 服务器 [配置文件](/references/web-ui-configuration#codec) 中设置编解码器端点：
+
+```yaml
+codec:
+    endpoint: {{ default .Env.TEMPORAL_CODEC_ENDPOINT "{namespace}"}}
+```
+
+#### 命令行界面
+
+您可以使用“--codec-endpoint”标志将 Codec Server 端点与 Temporal CLI 一起配置。
+
+例如，如果您在“http://localhost:8888”上运行 Codec Server，则可以使用“env set”全局设置端点：
+
+```bash
+temporal env set --codec-endpoint "http://localhost:8888"
+```
+
+如果您的 Codec Server 端点未全局设置，请为每个命令提供“--codec-endpoint”选项。
+例如，要查看 Namespace“yourNamespace”中 Workflow Execution“yourWorkflow”的解码输出，请运行：
+
+```bash
+temporal --codec-endpoint "http://localhost:8888" --namespace "yourNamespace" workflow show --workflow-id "yourWorkflow"  --run-id "<yourRunId>" --output "table"
+```
+
+有关详细信息，请参阅[CLI 参考](/cli/)。
+
+如果您的 Codec Server 需要身份验证，Temporal CLI 还将接受 `--codec-auth` 参数来提供
+授权标头：
+
+```shell
+temporal workflow show \
+   --workflow-id converters_workflowID \
+   --codec-endpoint 'http://localhost:8081/{namespace}' \
+   --codec-auth 'auth-header'
+```
+
+### 处理大负载
+
+Codec Servers 不仅仅可用于敏感数据的加密和解密。
+Codec Server 的行为由实施者决定——他们还可以调用外部服务或执行其他任务，只要它们挂接到 Workflow 有效负载的编码和解码阶段即可。
+
+默认情况下，Temporal 将有效负载大小限制为 4MB。
+如果此限制对您的用例造成问题，您可以实现一个编解码器，将您的有效负载持久保存到 Workflow 历史记录之外的对象存储中。
+[DataDog](https://github.com/DataDog/Temporal-large-payload-codec) 提供了示例实现。
+
+### Temporal Nexus
+
+Data Converter 对于 Nexus Operation 的工作方式与对于 Worker 和 Temporal Cloud 之间发送的其他有效负载的工作方式相同。
+调用方和处理程序 Worker 都必须使用兼容的 Data Converter 在它们之间传递操作输入和结果。
+
+有关详细信息，请参阅 [Nexus 有效负载加密和 Data Converter](/Nexus/security#payload-encryption-data-converter)。

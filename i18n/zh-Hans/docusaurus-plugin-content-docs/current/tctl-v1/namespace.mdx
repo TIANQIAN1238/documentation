@@ -1,0 +1,368 @@
+---
+id: namespace
+title: tctl v1.17 Namespace 命令参考
+sidebar_label: Namespace
+description: 探索新推出的 Temporal CLI，它将在 v1.0 版本发布后取代 tctl。使用各种详细命令有效管理 Update Namespace。
+toc_max_heading_level: 4
+keywords:
+  - cli
+  - cli reference
+  - tctl
+  - temporal
+  - temporal cli
+  - temporal server
+---
+
+:::info tctl is deprecated
+
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议转换到 [Temporal CLI](/cli) 以继续使用和访问新功能。
+
+感谢您成为 Temporal 社区的重要组成部分。
+
+:::
+
+`tctl Namespace` 命令启用 [Namespace](/Namespaces) 操作。
+
+别名：`n`
+
+- [tctl Namespace 描述](#描述)
+- [tctl Namespace 列表](#list)
+- [tctl Namespace 寄存器](#寄存器)
+- [tctl Namespace Update](#Update)
+
+＃＃ 描述
+
+“tctl Namespace 描述”命令描述 [Namespace](/Namespaces)。
+
+`tctl Namespace 描述`
+
+以下修饰符控制命令的行为。
+
+### --Namespace_id
+
+指定Namespace的ID进行描述。
+
+除非指定了全局“--Namespace”修饰符（“tctl --Namespace <名称>描述”），否则此修饰符是必需的。
+
+**例子**
+
+```bash
+tctl namespace describe --namespace_id <id>
+```
+
+[Global Namespace](/global-Namespace) 的示例结果
+
+```bash
+$ tctl --ns canary-namespace n desc
+Name: canary-namespace
+Description: testing namespace
+OwnerEmail: dev@yourtech.io
+NamespaceData:
+Status: REGISTERED
+RetentionInDays: 7
+EmitMetrics: true
+ActiveClusterName: dc1
+Clusters: dc1, dc2
+```
+
+＃＃ 列表
+
+`tctl Namespace list` 命令列出所有 [Namespace](/Namespace)。
+
+`tctl Namespace 列表`
+
+该命令没有修饰符。
+
+＃＃ 登记
+
+“tctl Namespace 寄存器”命令注册 [Namespace](/Namespaces)。
+
+`tctl Namespace 寄存器`
+
+默认情况下，Temporal 使用“默认”Namespace。
+使用以下命令创建并注册新的 Namespace：
+
+```bash
+tctl --namespace your-namespace namespace register
+# OR using short alias
+tctl --ns your-namespace n re
+```
+
+以下修饰符控制命令的行为。
+
+### --active_cluster
+
+注册 [Namespace](/Namespaces) 时指定活动 [Temporal 集群](/Temporal-service) 的名称。
+当发生故障转移时，全局 Namespace 的该值会发生变化。
+
+**例子**
+
+```bash
+tctl namespace register --active_cluster <name>
+```
+
+### --集群
+
+注册 [Namespace](/Namespaces) 时指定 [Temporal 集群](/Temporal-service) 列表。
+
+该列表包含 Namespace 可以故障转移到的集群名称（以空格分隔）。
+确保包含到当前活动的集群中。
+这是只读设置，无法更改。
+
+仅当“--global_Namespace”修饰符设置为 true 时，此修饰符才有效。
+
+**例子**
+
+```bash
+tctl namespace register --clusters <names>
+```
+
+＃＃＃  - 描述
+
+注册 [Namespace](/Namespaces) 时指定说明。
+
+**例子**
+
+```bash
+tctl namespace register --description <value>
+```
+
+### --global_Namespace
+
+指定 [Namespace](/Namespaces) 是否为 [Global Namespace](/global-Namespace)。
+启用后，它控制 Update 上复制任务的创建，从而允许跨集群复制状态。
+这是只读设置，无法更改。
+
+**例子**
+
+```bash
+tctl namespace register --global_namespace <boolean>
+```
+
+### --history_archival_state
+
+设置[存档](/Temporal-service/archival) 的状态。
+有效值为“已禁用”和“已启用”。
+
+**例子**
+
+```bash
+tctl namespace register --history_archival_state <value>
+```
+
+### --history_uri
+
+指定 [Archival](/Temporal-service/archival) 的 URI。
+首次启用存档后，无法更改 URI。
+
+**例子**
+
+```bash
+tctl namespace register --history_uri <uri>
+```
+
+### --Namespace_data
+
+以键值对的形式指定 [Namespace](/Namespaces) 的数据（例如 `k1:v1,k2:v2,k3:v3`）。
+
+**例子**
+
+```bash
+tctl namespace register --namespace_data <data>
+```
+
+### --所有者电子邮件
+
+## XPROT027Xs
+
+**例子**
+
+```bash
+tctl namespace register --owner_email <value>
+```
+
+＃＃＃  - 保留
+
+设置[Namespace](/Namespaces)的[保留期](/Temporal-service/Temporal-server#retention-period)。
+
+保留期适用于已关闭的 [Workflow Executions](/Workflow-执行)。
+
+**例子**
+
+```bash
+tctl namespace register --retention <value>
+```
+
+### --Visibility_archival_state
+
+设置 [Archival](/Temporal-service/archival) 的 Visibility 状态。
+有效值为“已禁用”和“已启用”。
+
+**例子**
+
+```bash
+tctl namespace register --visibility_archival_state <value>
+```
+
+### --Visibility_uri
+
+指定 [Archival](/Temporal-service/archival) 的 Visibility URI。
+首次启用存档后，无法更改 URI。
+
+**例子**
+
+```bash
+tctl namespace register --visibility_uri <uri>
+```
+
+## Update
+
+“tctl Namespace Update”命令 Update 是 [Namespace](/Namespaces)。
+
+`tctl Namespace Update`
+
+以下修饰符控制命令的行为。
+
+### --active_cluster
+
+更新 [Namespace](/Namespaces) 时指定活动 [Temporal 集群](/Temporal-service) 的名称。
+
+### 高 `XPROT027X_task_replay_latency`
+
+```bash
+tctl namespace update --active_cluster <name>
+```
+
+### --add_bad_binary
+
+添加重置 [Workflow Execution](/Workflow-execution) 时使用的二进制校验和。
+Temporal 不会将任何 [命令](/Workflow-execution#command) 分派给给定的二进制文件。
+
+另请参阅 [`--remove_bad_binary`](#--remove_bad_binary)。
+
+**例子**
+
+```bash
+tctl namespace update --add_bad_binary <value>
+```
+
+### --集群
+
+更新 [Namespace](/Namespaces) 时指定 [Temporal 集群](/Temporal-service) 列表。
+
+该列表包含 Namespace 可以故障转移到的集群名称（以空格分隔）。
+
+仅当“--global_Namespace”修饰符设置为 true 时，此修饰符才有效。
+
+**例子**
+
+```bash
+tctl namespace update --clusters <names>
+```
+
+＃＃＃  - 描述
+
+更新 [Namespace](/Namespaces) 时指定说明。
+
+**例子**
+
+```bash
+tctl namespace update --description <value>
+```
+
+### --history_archival_state
+
+设置[存档](/Temporal-service/archival) 的状态。
+有效值为“已禁用”和“已启用”。
+
+**例子**
+
+```bash
+tctl namespace update --history_archival_state <value>
+```
+
+### --history_uri
+
+指定 [Archival](/Temporal-service/archival) 的 URI。
+首次启用存档后，无法更改 URI。
+
+**例子**
+
+```bash
+tctl namespace update --history_uri <uri>
+```
+
+### --Namespace_data
+
+以键值对的形式指定 [Namespace](/Namespaces) 的数据（例如 `k1:v1,k2:v2,k3:v3`）。
+
+**例子**
+
+```bash
+tctl namespace update --namespace_data <data>
+```
+
+### --所有者电子邮件
+
+指定 [Namespace](/Namespaces) 所有者的电子邮件地址。
+
+**例子**
+
+```bash
+tctl namespace update --owner_email <value>
+```
+
+＃＃＃  - 原因
+
+指定更新 [Namespace](/Namespaces) 的原因。
+
+**例子**
+
+```bash
+tctl namespace update --reason <value>
+```
+
+### --remove_bad_binary
+
+删除二进制校验和。
+
+另请参阅 [`--add_bad_binary`](#--add_bad_binary)。
+
+**例子**
+
+```bash
+tctl namespace update --remove_bad_binary <value>
+```
+
+＃＃＃  - 保留
+
+指定保留[Workflow Executions](/Workflow-execution)的天数。
+
+**例子**
+
+```bash
+tctl namespace update --retention <value>
+```
+
+### --Visibility_archival_state
+
+设置 [Archival](/Temporal-service/archival) 的 Visibility 状态。
+有效值为“已禁用”和“已启用”。
+
+**例子**
+
+```bash
+tctl namespace update --visibility_archival_state <value>
+```
+
+### --Visibility_uri
+
+指定 [Archival](/Temporal-service/archival) 的 Visibility URI。
+首次启用存档后，无法更改 URI。
+
+**例子**
+
+```bash
+tctl namespace update --visibility_uri <uri>
+```

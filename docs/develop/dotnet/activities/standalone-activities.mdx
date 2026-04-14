@@ -1,7 +1,7 @@
 ---
 id: standalone-activities
-title: Standalone Activities - .NET SDK
-sidebar_label: Standalone Activities
+title: "独立活动 - .NET SDK"
+sidebar_label: "独立活动"
 toc_max_heading_level: 4
 keywords:
   - standalone activity
@@ -16,88 +16,88 @@ tags:
   - Temporal Client
   - .NET SDK
   - Temporal SDKs
-description: Execute Activities independently without a Workflow using the Temporal .NET SDK.
+description: "使用 Temporal .NET SDK 独立执行活动，无需 Workflow。"
 ---
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal .NET SDK support for [Standalone Activities](/standalone-activity) is at
-[Pre-release](/evaluate/development-production-features/release-stages#pre-release).
+Temporal .NET SDK 对 [独立活动](/standalone-activity) 的支持位于
+[预发布](/evaluate/development-production-features/release-stages#pre-release)。
 
-All APIs are experimental and may be subject to backwards-incompatible changes.
+所有 API 都是实验性的，可能会发生向后不兼容的更改。
 
 :::
 
-Standalone Activities are Activities that run independently, without being orchestrated by a
-Workflow. Instead of starting an Activity from within a Workflow Definition, you start a Standalone
-Activity directly from a Temporal Client.
+独立活动是独立运行的活动，无需由
+Workflow。您无需从 Workflow Definition 中启动 Activity，而是启动一个独立的 Activity。
+Activity 直接来自 Temporal CLIent。
 
-The way you write the Activity and register it with a Worker is identical to [Workflow
-Activities](/develop/dotnet/activities/basics#develop-activity). The only difference is that you execute a
-Standalone Activity directly from your Temporal Client.
+编写 Activity 并将其注册到 Worker 的方式与 [Workflow
+活动](/develop/dotnet/activities/basics#develop-activity) 相同。唯一的区别是您执行
+直接来自 Temporal CLIent 的独立 Activity。
 
-This page covers the following:
+此页面涵盖以下内容：
 
-- [Get Started with Standalone Activities](#get-started)
-- [Define your Activity](#define-activity)
-- [Run a Worker with the Activity registered](#run-worker)
-- [Execute a Standalone Activity](#execute-activity)
-- [Start a Standalone Activity without waiting for the result](#start-activity)
-- [Get a handle to an existing Standalone Activity](#get-activity-handle)
-- [Wait for the result of a Standalone Activity](#get-activity-result)
-- [List Standalone Activities](#list-activities)
-- [Count Standalone Activities](#count-activities)
-- [Run Standalone Activities with Temporal Cloud](#run-standalone-activities-temporal-cloud)
+- [开始独立活动](#get-started)
+- [定义您的 Activity](#define-activity)
+- [运行注册了 Activity 的 Worker](#run-worker)
+- [执行独立的 Activity](#execute-activity)
+- [启动独立的 Activity，无需等待结果](#start-activity)
+- [获取现有独立 Activity 的句柄](#get-activity-handle)
+- [等待独立 Activity 的结果](#get-activity-result)
+- [列出独立活动](#list-activities)
+- [计算独立活动](#count-activities)
+- [使用 Temporal Cloud 运行独立活动](#run-standalone-activities-temporal-cloud)
 
 :::note
 
-This documentation uses source code from the [StandaloneActivity](https://github.com/temporalio/samples-dotnet/tree/main/src/StandaloneActivity) sample project.
+本文档使用 [独立式Activity](https://github.com/temporalio/samples-dotnet/tree/main/src/StandaloneActivity) 示例项目中的源代码。
 
 :::
 
-## Get Started with Standalone Activities {#get-started}
+## 开始独立活动 {#get-started}
 
-Prerequisites:
+先决条件：
 
-- Install the [Temporal CLI](https://github.com/temporalio/cli/releases/tag/v1.6.2-standalone-activity) (Standalone Activity Prerelease version)
+- 安装 [Temporal CLI](https://github.com/temporalio/cli/releases/tag/v1.6.2-standalone-activity)（独立 Activity 预发行版本）
 
-- Temporal .NET SDK (v1.12.0 or higher). See the [.NET Quickstart](https://docs.temporal.io/develop/dotnet/set-up-your-local-dotnet) for install instructions.
+- Temporal .NET SDK（v1.12.0 或更高版本）。有关安装说明，请参阅 [.NET 快速入门](https://docs.temporal.io/develop/dotnet/set-up-your-local-dotnet)。
 
-The first step in running a Standalone Activity involves starting a Temporal server:
+运行独立 Activity 的第一步涉及启动 Temporal Server：
 
 ```bash
 temporal server start-dev
 ```
 
-This command automatically starts the Temporal development server with the Web UI, and creates the `default` Namespace.
-It uses an in-memory database, so do not use it for real use cases.
+此命令自动使用 Web UI 启动 Temporal 开发服务器，并创建 `default` Namespace。
+它使用内存数据库，因此不要将其用于实际用例。
 
 :::info Temporal Cloud
 
-All code samples on this page use
-[`ClientEnvConfig.LoadClientConnectOptions()`](https://dotnet.temporal.io/api/Temporalio.Common.EnvConfig.ClientEnvConfig.html)
-to configure the Temporal Client connection. It responds to [environment
-variables](/references/client-environment-configuration) and [TOML configuration
-files](/references/client-environment-configuration), so the same code works against a local dev
-server and Temporal Cloud without changes. See [Run Standalone Activities with Temporal
-Cloud](#run-standalone-activities-temporal-cloud) below.
+此页面上的所有代码示例都使用
+[`ClientEnvConfig.LoadClientConnectOptions()`](https://dotnet.temporal.io/api/temporalio.Common.EnvConfig.ClientEnvConfig.html)
+配置 Temporal CLIent 连接。它响应 [环境
+变量](/references/client-environment-configuration) 和 [TOML配置
+文件](/references/client-environment-configuration)，因此相同的代码适用于本地开发
+服务器和 Temporal Cloud 没有变化。请参阅下面的 [使用 Temporal 运行独立活动
+云](#run-standalone-activities-temporal-cloud)。
 
 :::
 
-The Temporal Server will now be available for client connections on `localhost:7233`, and the
-Temporal Web UI will now be accessible at [http://localhost:8233](http://localhost:8233). Standalone
-Activities are available from the nav bar item located towards the top left of the page:
+Temporal Server 现在可用于 `localhost:7233` 上的客户端连接，并且
+Temporal Web UI 现在可通过 [http://localhost:8233](http://localhost:8233) 访问。独立式
+可以通过页面左上角的导航栏项目进行活动：
 
 <img src="/img/standalone-activities-ui-nav.png" alt="Standalone Activities Web UI nav bar item" height="336" />
 
-Clone the [samples-dotnet](https://github.com/temporalio/samples-dotnet) repository to follow along:
+克隆 [样本 dotnet](https://github.com/temporalio/samples-dotnet) 存储库以继续操作：
 
 ```
 git clone https://github.com/temporalio/samples-dotnet.git
 cd samples-dotnet
 ```
 
-The sample project is structured as follows:
+示例项目的结构如下：
 
 ```
 src/StandaloneActivity/
@@ -107,11 +107,12 @@ src/StandaloneActivity/
 └── TemporalioSamples.StandaloneActivity.csproj
 ```
 
-## Define your Activity {#define-activity}
+<a id="define-activity"></a>
+## 定义你的 Activity {#define-activity}
 
-An Activity in the Temporal .NET SDK is a method decorated with the `[Activity]` attribute. The way
-you write a Standalone Activity is identical to how you write an Activity orchestrated by a Workflow.
-In fact, the same Activity can be executed both as a Standalone Activity and as a Workflow Activity.
+Temporal .NET SDK 中的 Activity 是用 `[Activity]` 属性修饰的方法。方式
+您编写独立的 Activity 与编写由 Workflow 编排的 Activity 的方式相同。
+事实上，相同的 Activity 既可以作为独立 Activity 也可以作为 Workflow Activity 执行。
 
 [src/StandaloneActivity/MyActivities.cs](https://github.com/temporalio/samples-dotnet/blob/main/src/StandaloneActivity/MyActivities.cs)
 
@@ -130,13 +131,14 @@ public static class MyActivities
 public record ComposeGreetingInput(string Greeting, string Name);
 ```
 
-## Run a Worker with the Activity registered {#run-worker}
+<a id="run-worker"></a>
+## 使用注册的 Activity 运行 Worker {#run-worker}
 
-Running a Worker for Standalone Activities is the same as running a Worker for Workflow Activities —
-you create a Worker, register the Activity, and run the Worker. The Worker doesn't need to know
-whether the Activity will be invoked from a Workflow or as a Standalone Activity. See [How to develop
-a Worker](/develop/dotnet/workers/run-worker-process) for more details on Worker setup and
-configuration options.
+为独立活动运行 Worker 与为 Workflow 活动运行 Worker 相同 —
+您创建一个 Worker，注册 Activity，然后运行 Worker。 Worker 不需要知道
+Activity 是从 Workflow 调用还是作为独立 Activity 调用。有关 Worker 设置和的更多详细信息，请参阅 [如何发展
+一个 Worker](/develop/dotnet/workers/run-worker-process)
+配置选项。
 
 [src/StandaloneActivity/Program.cs](https://github.com/temporalio/samples-dotnet/blob/main/src/StandaloneActivity/Program.cs)
 
@@ -172,19 +174,20 @@ using var worker = new TemporalWorker(
 await worker.ExecuteAsync(tokenSource.Token);
 ```
 
-Run the Worker (in a separate terminal):
+运行 Worker（在单独的终端中）：
 
 ```
 dotnet run --project src/StandaloneActivity worker
 ```
 
-## Execute a Standalone Activity {#execute-activity}
+<a id="execute-activity"></a>
+## 执行独立的 Activity {#execute-activity}
 
-Use
-[`client.ExecuteActivityAsync()`](https://dotnet.temporal.io/api/Temporalio.Client.ITemporalClientExtensions.html)
-to execute a Standalone Activity and wait for the result. Call this from your application code, not
-from inside a Workflow Definition. This durably enqueues your Standalone Activity in the Temporal
-Server, waits for it to be executed on your Worker, and then returns the result.
+使用
+[`client.ExecuteActivityAsync()`](https://dotnet.temporal.io/api/temporalio.Client.ITemporalClientExtensions.html)
+执行独立的 Activity 并等待结果。从您的应用程序代码中调用它，而不是
+从 Workflow Definition 内部。这会将您的独立 Activity 持久地排入 Temporal 中
+服务器，等待它在你的Worker上执行，然后返回结果。
 
 [src/StandaloneActivity/Program.cs](https://github.com/temporalio/samples-dotnet/blob/main/src/StandaloneActivity/Program.cs)
 
@@ -206,7 +209,7 @@ var result = await client.ExecuteActivityAsync(
 Console.WriteLine($"Activity result: {result}");
 ```
 
-You can pass the Activity as either a lambda expression or a string Activity type name:
+您可以将 Activity 作为 lambda 表达式或字符串 Activity 类型名称传递：
 
 ```csharp
 // Using a lambda expression (type-safe)
@@ -227,18 +230,18 @@ var result = await client.ExecuteActivityAsync<string>(
     });
 ```
 
-`StartActivityOptions` requires `Id`, `TaskQueue`, and at least one of `ScheduleToCloseTimeout` or
-`StartToCloseTimeout`. See
-[`StartActivityOptions`](https://dotnet.temporal.io/api/Temporalio.Client.StartActivityOptions.html)
-in the API reference for the full set of options.
+`StartActivityOptions` 需要 `Id`、`TaskQueue` 以及 `ScheduleToCloseTimeout` 或 `ScheduleToCloseTimeout` 中的至少一项
+`StartToCloseTimeout`。参见
+[`StartActivityOptions`](https://dotnet.temporal.io/api/temporalio.Client.StartActivityOptions.html)
+在 API 参考中获取完整的选项集。
 
-Run it (with the Worker running in another terminal):
+运行它（在另一个终端中运行 Worker）：
 
 ```
 dotnet run --project src/StandaloneActivity execute-activity
 ```
 
-Or use the Temporal CLI:
+或者使用 Temporal CLI：
 
 ```bash
 temporal activity execute \
@@ -249,11 +252,12 @@ temporal activity execute \
   --input '{"Greeting": "Hello", "Name": "World"}'
 ```
 
-## Start a Standalone Activity without waiting for the result {#start-activity}
+<a id="start-activity"></a>
+## 启动独立的 Activity 而不等待结果 {#start-activity}
 
-Use
-[`client.StartActivityAsync()`](https://dotnet.temporal.io/api/Temporalio.Client.ITemporalClient.html)
-to start a Standalone Activity and get a handle without waiting for the result:
+使用
+[`client.StartActivityAsync()`](https://dotnet.temporal.io/api/temporalio.Client.ITemporalClient.html)
+启动独立的 Activity 并获取句柄而不等待结果：
 
 [src/StandaloneActivity/Program.cs](https://github.com/temporalio/samples-dotnet/blob/main/src/StandaloneActivity/Program.cs)
 
@@ -279,13 +283,13 @@ var result = await handle.GetResultAsync();
 Console.WriteLine($"Activity result: {result}");
 ```
 
-Run it (with the Worker running in another terminal):
+运行它（在另一个终端中运行 Worker）：
 
 ```
 dotnet run --project src/StandaloneActivity start-activity
 ```
 
-Or use the Temporal CLI:
+或者使用 Temporal CLI：
 
 ```bash
 temporal activity start \
@@ -296,9 +300,10 @@ temporal activity start \
   --input '{"Greeting": "Hello", "Name": "World"}'
 ```
 
-## Get a handle to an existing Standalone Activity {#get-activity-handle}
+<a id="get-activity-handle"></a>
+## 获取现有独立 Activity 的句柄 {#get-activity-handle}
 
-Use `client.GetActivityHandle()` to create a handle to a previously started Standalone Activity:
+使用 `client.GetActivityHandle()` 创建先前启动的独立 Activity 的句柄：
 
 ```csharp
 // Without a known result type
@@ -308,24 +313,25 @@ var handle = client.GetActivityHandle("my-activity-id", runId: "the-run-id");
 var typedHandle = client.GetActivityHandle<string>("my-activity-id", runId: "the-run-id");
 ```
 
-You can use the handle to wait for the result, describe, cancel, or terminate the Activity.
+您可以使用句柄等待结果、描述、取消或终止 Activity。
 
-## Wait for the result of a Standalone Activity {#get-activity-result}
+<a id="get-activity-result"></a>
+## 等待独立 Activity 的结果 {#get-activity-result}
 
-Under the hood, calling `client.ExecuteActivityAsync()` is the same as calling
-`client.StartActivityAsync()` to durably enqueue the Standalone Activity, and then calling
-`await handle.GetResultAsync()` to wait for the Activity to be executed and return the result:
+在幕后，调用 `client.ExecuteActivityAsync()` 与调用相同
+`client.StartActivityAsync()` 将独立 Activity 持久排队，然后调用
+`await handle.GetResultAsync()`等待Activity执行并返回结果：
 
 ```csharp
 var result = await handle.GetResultAsync();
 ```
 
-## List Standalone Activities {#list-activities}
+## 列出独立活动 {#list-activities}
 
-Use
-[`client.ListActivitiesAsync()`](https://dotnet.temporal.io/api/Temporalio.Client.ITemporalClient.html)
-to list Standalone Activity Executions that match a [List Filter](/list-filter) query. The result is
-an `IAsyncEnumerable` that yields `ActivityExecution` entries.
+使用
+[`client.ListActivitiesAsync()`](https://dotnet.temporal.io/api/temporalio.Client.ITemporalClient.html)
+列出与 [列表过滤器](/list-filter) Query 匹配的独立 Activity 执行。结果是
+生成 `ActivityExecution` 条目的 `IAsyncEnumerable`。
 
 [src/StandaloneActivity/Program.cs](https://github.com/temporalio/samples-dotnet/blob/main/src/StandaloneActivity/Program.cs)
 
@@ -345,28 +351,28 @@ await foreach (var info in client.ListActivitiesAsync(
 }
 ```
 
-Run it:
+运行它：
 
 ```
 dotnet run --project src/StandaloneActivity list-activities
 ```
 
-Or use the Temporal CLI:
+或者使用 Temporal CLI：
 
 ```bash
 temporal activity list
 ```
 
-The query parameter accepts the same [List Filter](/list-filter) syntax used for [Workflow
-Visibility](/visibility). For example, `"ActivityType = 'ComposeGreeting' AND Status = 'Running'"`.
+Query 参数接受与 [Workflow
+Visibility](/list-filter) 相同的 [列表过滤器](/visibility) 语法。例如，`"ActivityType = 'ComposeGreeting' AND Status = 'Running'"`。
 
-## Count Standalone Activities {#count-activities}
+## 计算独立活动 {#count-activities}
 
-Use
-[`client.CountActivitiesAsync()`](https://dotnet.temporal.io/api/Temporalio.Client.ITemporalClient.html)
-to count Standalone Activity Executions that match a [List Filter](/list-filter) query.
+使用
+[`client.CountActivitiesAsync()`](https://dotnet.temporal.io/api/temporalio.Client.ITemporalClient.html)
+计算与 [列表过滤器](/list-filter) Query 匹配的独立 Activity 执行。
 
-[src/StandaloneActivity/Program.cs](https://github.com/temporalio/samples-dotnet/blob/main/src/StandaloneActivity/Program.cs) 
+[src/StandaloneActivity/Program.cs](https://github.com/temporalio/samples-dotnet/blob/main/src/StandaloneActivity/Program.cs)
 
 ```csharp
 using Temporalio.Client;
@@ -381,29 +387,31 @@ var resp = await client.CountActivitiesAsync(
 Console.WriteLine($"Total activities: {resp.Count}");
 ```
 
-Run it:
+运行它：
 
 ```
 dotnet run --project src/StandaloneActivity count-activities
 ```
 
-Or use the Temporal CLI:
+或者使用 Temporal CLI：
 
 ```bash
 temporal activity count
 ```
 
-## Run Standalone Activities with Temporal Cloud {#run-standalone-activities-temporal-cloud}
+<a id="run-standalone-activities-temporal-cloud"></a>
+## 使用 Temporal Cloud 运行独立活动 {#run-standalone-activities-temporal-cloud}
 
-The code samples on this page use `ClientEnvConfig.LoadClientConnectOptions()`, so the same code
-works against Temporal Cloud — just configure the connection via environment variables or a TOML
-profile. No code changes are needed.
+本页的代码示例使用`ClientEnvConfig.LoadClientConnectOptions()`，因此相同的代码
+适用于 Temporal Cloud — 只需通过环境变量或 TOML 配置连接
+简介。无需更改代码。
 
-For full details on connecting to Temporal Cloud, including Namespace creation, certificate
-generation, and authentication options, see
-[Connect to Temporal Cloud](/develop/dotnet/client/temporal-client#connect-to-temporal-cloud).
+有关连接到 Temporal Cloud 的完整详细信息，包括 Namespace 创建、证书
+生成和身份验证选项，请参阅
+[连接到 Temporal Cloud](/develop/dotnet/client/temporal-client#connect-to-temporal-cloud)。
 
-### Connect with mTLS
+<a id="connect-with-mtls"></a>
+### 连接 mTLS {#connect-with-mtls}
 
 ```
 export TEMPORAL_ADDRESS=<your-namespace>.<your-account-id>.tmprl.cloud:7233
@@ -412,7 +420,8 @@ export TEMPORAL_TLS_CLIENT_CERT_PATH='path/to/your/client.pem'
 export TEMPORAL_TLS_CLIENT_KEY_PATH='path/to/your/client.key'
 ```
 
-### Connect with an API key
+<a id="connect-with-an-api-key"></a>
+### 使用 API 密钥连接 {#connect-with-an-api-key}
 
 ```
 export TEMPORAL_ADDRESS=<region>.<cloud_provider>.api.temporal.io:7233
@@ -420,4 +429,4 @@ export TEMPORAL_NAMESPACE=<your-namespace>.<your-account-id>
 export TEMPORAL_API_KEY=<your-api-key>
 ```
 
-Then run the Worker and starter code as shown in the earlier sections.
+然后运行 ​​Worker 和起始代码，如前面部分所示。

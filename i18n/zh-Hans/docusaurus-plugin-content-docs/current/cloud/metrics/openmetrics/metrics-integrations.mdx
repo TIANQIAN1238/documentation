@@ -1,0 +1,117 @@
+---
+id: metrics-integrations
+title: Metrics integrations
+sidebar_label: Metrics integrations
+description: Integrating with the Temporal Cloud OpenMetrics endpoint.
+keywords:
+  - temporal cloud metrics configuration
+  - configure metrics endpoint
+  - temporal cloud observability
+  - temporal cloud UI setup
+  - grafana temporal integration
+  - prometheus metrics endpoint
+  - openmetrics endpoint
+  - observability tools integration
+  - openmetrics api
+  - datadog temporal integration
+tags:
+  - Metrics
+  - OpenMetrics
+  - Observability
+  - Temporal Cloud
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+可以使用 OpenMetrics 端点从 Temporal Cloud 导出指标。本文档描述了配置具有第三方支持或基于开放标准的集成。
+本文档仅用于基本配置。有关标签管理和高基数场景等高级概念，请参阅 
+[通用 API 参考](/cloud/metrics/openmetrics/api-reference)。
+
+
+## 集成
+
+### 数据狗
+
+Datadog 提供与 OpenMetrics 端点的无服务器集成。此集成将抓取指标，将其存储在 Datadog 中，并提供带有一些内置监视器的默认仪表板。有关更多详细信息，请参阅[集成页面](https://docs.datadoghq.com/integrations/Temporal-cloud-openmetrics/)。
+
+### Grafana 云
+
+Grafana 为 Grafana Cloud 提供与 OpenMetrics 端点的无服务器集成。此集成将抓取指标，将其存储在 Grafana Cloud 中，并提供默认仪表板
+用于可视化 Grafana Cloud 中的指标。请参阅[集成页面](https://grafana.com/docs/grafana-cloud/monitor-infrastruct/integrations/integration-reference/integration-Temporal/)
+ 了解更多详情。
+
+### 点击堆栈
+
+ClickHouse 提供与 ClickStack 的 OpenMetrics 端点的集成。此集成使用 OpenTelemetry 收集器从 OpenMetrics 端点读取数据，将数据提取到 ClickHouse 中，并
+包括一个默认仪表板，可使用 HyperDX 可视化数据。有关更多详细信息，请参阅[集成页面](https://clickhouse.com/docs/use-cases/observability/clickstack/integrations/Temporal-metrics)。
+
+### 新遗物
+
+New Relic 通过基础设施代理与 Temporal Cloud 集成，使用灵活的集成从 OpenMetrics 端点提取数据。有关更多详细信息，请参阅[集成页面](https://docs.newrelic.com/docs/infrastruct/host-integrations/host-integrations-list/Temporal-cloud-integration/)。
+
+### 普罗米修斯 \+ Grafana
+
+自托管的 Prometheus 可用于抓取 OpenMetrics 端点。
+
+1. 使用您的 [API 密钥](/cloud/metrics/openmetrics/api-reference#creating-api-keys) 为 OpenMetrics 端点添加新的抓取作业。
+
+```yaml
+scrape_configs:
+  - job_name: 'temporal-cloud'
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    honor_timestamps: true
+    scheme: https
+    authorization:
+      type: Bearer
+      credentials: '<API_KEY>'
+    static_configs:
+      - targets: ['metrics.temporal.io']
+    metrics_path: '/v1/metrics'
+```
+
+2. 导入 [Grafana 仪表板](https://github.com/grafana/jsonnet-libs/blob/master/Temporal-mixin/dashboards/Temporal-overview.json) 并配置 Prometheus 数据源。
+
+### OpenTelemetry Collector 配置
+
+使用自托管 OpenTelemetry Collector 收集指标，以摄取到您选择的系统中。
+
+1. 使用您的 [API 密钥](/cloud/metrics/openmetrics/api-reference#creating-api-keys) 为 OpenMetrics 端点添加新的 prometheus 接收器。
+
+```yaml
+receivers:
+  prometheus:
+    config:
+      scrape_configs:
+      - job_name: 'temporal-cloud'
+        scrape_interval: 60s
+        scrape_timeout: 30s
+        honor_timestamps: true
+        scheme: https
+        authorization:
+          type: Bearer
+          credentials_file: <API_KEY_FILE>
+        static_configs:
+          - targets: ['metrics.temporal.io']
+        metrics_path: '/v1/metrics'
+
+processors:
+  batch:
+
+exporters:
+  otlphttp:
+    endpoint: <ENDPOINT>
+
+service:
+  pipelines:
+    metrics:
+      receivers: [prometheus]
+      processors: [batch]
+      exporters: [otlphttp]
+```
+
+:::info
+
+这些集成的示例以及更多示例请参见[此处](https://github.com/Temporal-community/cloud-metrics-scrape-examples)。
+
+:::

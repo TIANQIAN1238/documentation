@@ -1,8 +1,8 @@
 ---
 id: aws-export-s3
-title: Exporting Workflow Event History to AWS S3
-sidebar_label: AWS Export to S3
-description: Export Workflow History to AWS S3
+title: "将 Workflow Event History 导出到 AWS S3"
+sidebar_label: "AWS 导出到 S3"
+description: "将 Workflow 历史记录导出到 AWS S3"
 slug: /cloud/export/aws-export-s3
 toc_max_heading_level: 4
 keywords:
@@ -22,104 +22,110 @@ tags:
 
 import * as Components from '@site/src/components';
 
-## Prerequisites
+<a id="prerequisites"></a>
+## 先决条件 {#prerequisites}
 
-Before configuring the Export Sink, ensure you have the following:
+在配置导出接收器之前，请确保您具备以下条件：
 
-- An AWS S3 bucket.
-   - The S3 bucket must reside in the same region as your Namespace.
-- (Optional) An IAM role that has write permission to the above S3 bucket.
-   - You can follow the automation in the UI to create the IAM role. Please pre-create the role if setting up Export via terraform/tcld.
-- (Optional) A KMS ARN associated with the S3 bucket.
+- AWS S3 存储桶。
+   - S3 存储桶必须与您的 Namespace 位于同一区域。
+- （可选）对上述 S3 存储桶具有写入权限的 IAM 角色。
+   - 您可以按照 UI 中的自动化操作来创建 IAM 角色。如果通过 terraform/tcld 设置导出，请预先创建角色。
+- （可选）与 S3 存储桶关联的 KMS ARN。
 
-## Configure Workflow History export
+<a id="configure-workflow-history-export"></a>
+## 配置 Workflow 历史记录导出 {#configure-workflow-history-export}
 
-There are multiple ways to configure export: through the [Temporal Cloud UI](#using-temporal-cloud-ui), [`tcld`](#using-tcld), or [`terraform`](#using-terraform).
+配置导出的方法有多种：通过 [Temporal Cloud 用户界面](#using-temporal-cloud-ui)、[`tcld`](#using-tcld) 或 [`terraform`](#using-terraform)。
 
-### Using Temporal Cloud UI
+<a id="using-temporal-cloud-ui"></a>
+### 使用 Temporal Cloud 用户界面 {#using-temporal-cloud-ui}
 
-You can use the Temporal Cloud UI to configure the Workflow History Export.
+您可以使用 Temporal Cloud UI 配置 Workflow 历史记录导出。
 
-The Temporal Cloud UI provides two ways for configuring Workflow History Export:
+Temporal Cloud UI 提供两种配置 Workflow 历史记录导出的方法：
 
-- [Automated setup](#automated-setup) (recommended): The Cloud UI launches the AWS CloudFormation Console to create a stack with write permission to the S3 bucket.
-- [Manual setup](#manual-setup): The Cloud UI provides a CloudFormation template for users to manually configure a CloudFormation stack.
+- [自动设置](#automated-setup)（推荐）：云 UI 启动 AWS CloudFormation 控制台以创建具有 S3 存储桶写入权限的堆栈。
+- [手动设置](#manual-setup)：Cloud UI 提供 CloudFormation 模板，供用户手动配置 CloudFormation 堆栈。
 
 :::info Why does Temporal Cloud provision multiple internal IAM roles to trust for Export?
 
-Temporal Cloud creates multiple intermediary IAM roles for export operations for security purposes. 
-The system randomly selects from these roles when writing to your storage sink, which provides several benefits:
+出于安全目的，Temporal Cloud 为导出操作创建多个中间 IAM 角色。 
+当写入存储接收器时，系统会随机选择这些角色，这提供了几个好处：
 
-- **Security isolation**: If one IAM role is compromised or needs to be decommissioned, other IAM roles remain available
-- **Load distribution**: Avoids relying on a single IAM role, reducing security risk
-- **Warm standby**: Keeps multiple IAM roles active to avoid potential throttling when switching between IAM roles
-- **Reliability**: Provides resilience against cloud provider account-level issues that could affect a single IAM role
+- **安全隔离**：如果一个 IAM 角色受到威胁或需要停用，其他 IAM 角色仍然可用
+- **负载分配**：避免依赖单一 IAM 角色，降低安全风险
+- **热备用**：保持多个 IAM 角色处于活动状态，以避免在 IAM 角色之间切换时出现潜在的限制
+- **可靠性**：针对可能影响单个 IAM 角色的云提供商账户级问题提供弹性
 
-This approach prioritizes security and availability, ensuring robust export operations even if individual IAM roles encounter issues.
+此方法优先考虑安全性和可用性，即使单个 IAM 角色遇到问题也能确保稳健的导出操作。
 :::
 
 
-The following steps guide you through setting up Workflow History Export using the Temporal Cloud UI.
+以下步骤指导您使用 Temporal Cloud UI 设置 Workflow 历史记录导出。
 
 ![](/img/cloud/gcp/export-sink-ui.png)
 
 :::tip
 
-Don't forget to click **Create** at the end of your setup to confirm your export.
+不要忘记在设置结束时单击“**创建**”以确认导出。
 
 :::
 
-#### Automated setup
+<a id="automated-setup"></a>
+#### 自动设置 {#automated-setup}
 
-You can use the automated setup to create a CloudFormation stack with write permission to your S3 bucket.
-Make sure to verify the export setup before you save the configuration.
+您可以使用自动设置来创建具有 S3 存储桶写入权限的 CloudFormation 堆栈。
+确保在保存配置之前验证导出设置。
 
-1. Open the Temporal Cloud UI and navigate to the Namespace you want to configure.
-2. Select **Configure** from the **Export** card.
-3. Provide the following information to configure the export sink and then select **Create and launch stack**:
-   - Name: A name for the export sink.
-   - AWS S3 Bucket Name: The name of the configured AWS S3 bucket to send Closed Workflow Histories to.
-   - AWS Account ID: The AWS account ID.
-   - Role Name: The name of the AWS IAM role to use for the CloudFormation stack that has write permission to the S3 bucket.
-   - KMS ARN: (optional) The ARN of the AWS KMS key to use for encryption of the exported Workflow History.
-4. You will be taken to the CloudFormation Console to create the stack with pre-populated information.
-   - Review the information and then select **Create stack**.
+1. 打开 Temporal Cloud UI 并导航到您要配置的 Namespace。
+2. 从 **导出** 卡中选择 **配置**。
+3. 提供以下信息来配置导出接收器，然后选择 **创建并启动堆栈**：
+   - 名称：导出接收器的名称。
+   - AWS S3 存储桶名称：要向其发送已关闭 Workflow 历史记录的已配置 AWS S3 存储桶的名称。
+   - AWS 账户 ID：AWS 账户 ID。
+   - 角色名称：用于对 S3 存储桶具有写入权限的 CloudFormation 堆栈的 AWS IAM 角色的名称。
+   - KMS ARN：（可选）用于加密导出的 Workflow 历史记录的 AWS KMS 密钥的 ARN。
+4. 您将进入 CloudFormation 控制台，使用预先填充的信息创建堆栈。
+   - 查看信息，然后选择 **创建堆栈**。
 
-#### Manual setup
+<a id="manual-setup"></a>
+#### 手动设置 {#manual-setup}
 
-You can manually configure a CloudFormation stack using the provided template.
+您可以使用提供的模板手动配置 CloudFormation 堆栈。
 
-1. Open the Temporal Cloud UI and navigate to the Namespace you want to configure.
-2. Select **Configure** from the **Export** card.
-3. Select **Manual** from **Access method**.
-   - Enter the Template URL into your web browser to download your copy of the CloudFormation template.
-   - Configure the CloudFormation template for your export sink.
-   - Follow the steps in the [AWS documentation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-using-console-create-stack-template.html) by uploading the template to the CloudFormation console.
+1. 打开 Temporal Cloud UI 并导航到您要配置的 Namespace。
+2. 从 **导出** 卡中选择 **配置**。
+3. 从**访问方法**中选择**手动**。
+   - 在 Web 浏览器中输入模板 URL 以下载 CloudFormation 模板的副本。
+   - 为导出接收器配置 CloudFormation 模板。
+   - 按照 [AWS 文档](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-using-console-create-stack-template.html) 中的步骤将模板上传到 CloudFormation 控制台。
 
-### Using `tcld`
+<a id="using-tcld"></a>
+### 使用 `tcld` {#using-tcld}
 
-Run the `tcld namespace export s3 create` command and provide the following information:
+运行 `tcld Namespace export s3 create` 命令并提供以下信息：
 
-- `--namespace`: The Namespace to configure export for.
-- `--sink-name`: The name of the export sink.
-- `--role-arn`: The ARN of the AWS IAM role to use for the CloudFormation stack that has write permission to the S3 bucket.
-- `--s3-bucket-name`: The name of the AWS S3 bucket.
+- `--Namespace`：要为其配置导出的 Namespace。
+- `--sink-name`：导出接收器的名称。
+- `--role-arn`：用于对 S3 存储桶具有写入权限的 CloudFormation 堆栈的 AWS IAM 角色的 ARN。
+- `--s3-bucket-name`：AWS S3 存储桶的名称。
 
-For example:
+例如：
 
 ```command
 tcld namespace export s3 create --namespace "your-namespace.your-account" --sink-name "your-sink-name" --role-arn "arn:aws:iam::123456789012:role/test-sink" --s3-bucket-name "your-aws-s3-bucket-name"
 ```
 
-Retrieve the status of this command by running the `tcld namespace export s3 get` command.
+通过运行 `tcld Namespace export s3 get` 命令检索该命令的状态。
 
-For example:
+例如：
 
 ```command
 tcld namespace export s3 get --namespace "your-namespace.your-account" --sink-name "your-sink-name"
 ```
 
-The following is an example of the output:
+以下是输出示例：
 
 ```json
 {
@@ -145,13 +151,15 @@ The following is an example of the output:
 }
 ```
 
-### Using `terraform`
+<a id="using-terraform"></a>
+### 使用 `terraform` {#using-terraform}
 
-See the [terraform export support](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs/resources/namespace_export_sink) for setup instructions.
+请参阅 [地形导出支持](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs/resources/namespace_export_sink) 了解设置说明。
 
 
-### Next Steps
+<a id="next-steps"></a>
+### 后续步骤 {#next-steps}
 
-- [Verify export setup](/cloud/export#verify)
-- [Monitor export progress](/cloud/export#monitor)
-- [Work with exported files](/cloud/export#working-with-exported-files)
+- [验证导出设置](/cloud/export#verify)
+- [监控导出进度](/cloud/export#monitor)
+- [处理导出的文件](/cloud/export#working-with-exported-files)

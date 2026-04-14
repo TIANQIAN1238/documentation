@@ -1,8 +1,8 @@
 ---
 id: multithreading
-title: Temporal Go SDK multithreading
-sidebar_label: Multithreading
-description: The Temporal Go SDK ensures deterministic multithreading in Workflows using workflow.Go(), avoiding race conditions and eliminating the need for mutexes.
+title: "Temporal Go SDK 多线程"
+sidebar_label: "多线程"
+description: "Temporal Go SDK 使用 Workflow.Go() 确保 Workflow 中的确定性多线程，避免竞争条件并消除对互斥体的需要。"
 toc_max_heading_level: 4
 keywords:
   - temporal go sdk
@@ -25,27 +25,29 @@ tags:
   - Concepts
 ---
 
-The Temporal Go SDK allows you to create additional goroutines (threads) in your Workflows by calling `workflow.Go()`.
-Native Go threading is never allowed in Workflow code, as it would create determinism errors.
+Temporal Go SDK 允许您通过调用 `Workflow.Go()` 在 Workflow 中创建额外的 goroutine（线程）。
+Workflow 代码中永远不允许使用本机 Go 线程，因为它会产生确定性错误。
 
-You might sometimes need to execute multiple Activities or Child Workflows in parallel and then await the result of all of them.
-Normally, this would require a lock or [mutex](https://en.wikipedia.org/wiki/Lock_(computer_science)) around some shared data structure to avoid race conditions that could occur when multiple asynchronous operations try to modify the data structure.
+有时您可能需要并行执行多个活动或 Child Workflow，然后等待所有活动的结果。
+通常，这需要围绕某些共享数据结构进行锁定（或 [互斥量](https://en.wikipedia.org/wiki/Lock_(computer_science)），以避免多个异步操作尝试修改数据结构时可能出现的竞争条件。
 
-Although Temporal Workflows run Asynchronously in Go, there is a control in place that ensures only one thread can access at a time.
+尽管 Temporal Workflow 在 Go 中异步运行，但有一种控制措施可以确保一次只有一个线程可以访问。
 
-## How multithreading works
+<a id="how-multithreading-works"></a>
+## 多线程如何工作 {#how-multithreading-works}
 
-Temporal's Go SDK contains a deterministic runner to control the thread execution.
-This deterministic runner will decide which Workflow thread to run in the right order, and one at a time.
-Each task will execute in a loop until all threads are blocked.
+Temporal 的 Go SDK 包含一个确定性运行器来控制线程执行。
+这个确定性运行程序将决定以正确的顺序运行哪个 Workflow 线程，并且一次一个。
+每个任务都会循环执行，直到所有线程都被阻塞。
 
-`workflow.Go()` creates a new thread and adds it to this runner.
-This significantly minimizes the likelihood of race conditions, and eliminates the need to use a mutex.
+`Workflow.Go()` 创建一个新线程并将其添加到此运行器中。
+这极大地减少了竞争条件的可能性，并且消除了使用互斥体的需要。
 
-For a complex example, refer to the [Go Particle Swarm Operation Sample](https://github.com/temporalio/samples-go/tree/main/pso).
+有关复杂示例，请参阅 [Go 粒子群操作示例](https://github.com/temporalio/samples-go/tree/main/pso)。
 
-For an example using Signals, refer to the [Go Await Signal Sample](https://github.com/temporalio/samples-go/tree/main/await-signals)
+有关使用 Signal 的示例，请参阅 [等待 Signal 样品](https://github.com/temporalio/samples-go/tree/main/await-signals)
 
-## Static analysis with the workflowcheck tool
+<a id="static-analysis-with-the-workflowcheck-tool"></a>
+## 使用 Workflowcheck 工具进行静态分析 {#static-analysis-with-the-workflowcheck-tool}
 
-The Temporal Go SDK also provides a command line tool called [`workflowcheck`](https://github.com/temporalio/sdk-go/blob/master/contrib/tools/workflowcheck/README.md) to statically analyze Workflow Definitions. This can help eliminate potential instances of non-determinism.
+Temporal Go SDK 还提供了一个名为 [`Workflowcheck`](https://github.com/temporalio/sdk-go/blob/master/contrib/tools/workflowcheck/README.md) 的命令行工具来静态分析 Workflow Definition。这有助于消除潜在的非决定论实例。

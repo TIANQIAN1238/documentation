@@ -1,0 +1,148 @@
+---
+id: external-storage
+title: 外部存储
+sidebar_label: 外部存储
+description: External Storage offloads large payloads to an external store like S3, keeping only a small reference in the event
+  External Storage offloads large payloads to an external store like S3, keeping only a small reference in the event
+  history.
+slug: /external-storage
+toc_max_heading_level: 4
+keywords:
+  - external-storage
+  - storage-driver
+  - large-payloads
+  - claim-check
+  - data-converters
+  - payloads
+tags:
+  - Concepts
+  - Data Converters
+---
+
+import ThemedImage from '@theme/ThemedImage';
+
+:::info Release, stability, and dependency info
+
+外部存储处于[预发布](/evaluate/development-product-features/release-stages#pre-release)。 API 和
+在稳定版本发布之前配置可能会发生变化。加入
+[#large-payloads Slack 频道](https://Temporalio.slack.com/archives/C09VA2DE15Y) 提供反馈或寻求帮助。
+
+:::
+
+外部存储将负载卸载到外部存储（例如 Amazon S3）并通过传递一个小的引用令牌
+Event History 代替。这称为[声明检查模式](https://dataengineering.wiki/Concepts/Software+Engineering/Claim+Check+Pattern)。
+
+SDK具体使用指南请参见：
+
+- [Go SDK：大有效负载存储](/develop/go/data-handling/external-storage)
+- [Python SDK：大有效负载存储](/develop/python/data-handling/external-storage)
+
+## 为什么使用外部存储
+
+Temporal 服务强制规定每个有效负载的最大大小。默认和建议的限制为 2 MB。自托管用户可以
+[配置此限制](/self-hosted-guide/defaults)，但在 Temporal Cloud 上固定为 2 MB。超过此限制的有效负载将失败
+操作。如果没有外部存储，您必须重组代码以解决限制，例如通过拆分
+跨多个 Workflow 的数据。
+
+即使单个有效负载低于硬限制，有效负载数据也会累积在 Event History 中。每个 Activity 输入
+并且输出是持久的，因此通过许多活动传递数据的 Workflow 可以看到历史记录大小快速增长。大号
+历史记录会降低 Workflow Task 延迟。您可以使用 [Continue-As-New](/Workflow-execution/Continue-As-New) 来解决此问题，但这会带来其他权衡。
+
+外部存储解决了几种常见场景：
+
+- **数据处理管道。** 处理文档、图像或其他大型 blob 的 Workflow 可能会超出
+  每个有效负载限制。
+- **人工智能代理对话。** 长对话历史记录会随着每一回合的增长而增长，并且累积大小可能会降低
+  Workflow 性能。
+- **数据大小尖峰。** 某些 Workflow 处理的数据通常较小，但偶尔也很大。索赔检查模式
+  透明地处理这些峰值，仅卸载超过大小阈值的有效负载。
+- **迁移到 Temporal Cloud。** 自托管部署可能具有更高的配置负载限制。外部存储
+  让您可以迁移到云，而无需重组超过 2 MB 限制的 Workflow。
+- **数据治理。** 虽然 Temporal 支持端到端客户端加密，但一些组织更喜欢存储
+  他们控制的基础设施中的有效负载数据。将卸载大小阈值设置为零，以将所有有效负载外部化
+  的大小。
+
+SDK具体使用指南请参见：
+
+- [Go SDK：大有效负载存储](/develop/go/data-handling/external-storage)
+- [Python SDK：大有效负载存储](/develop/python/data-handling/external-storage)
+
+## 外部存储如何适应数据转换管道 {#data-pipeline}
+
+在[数据转换](/dataconversion)期间，外部存储位于管道的末端，在
+[有效负载转换器](/payload-converter) 和 [有效负载编解码器](/payload-codec)：
+
+<图>
+  <ThemedImage
+alt="通过 Data Converter 的数据流"
+    来源={{
+      光：'/diagrams/data-converter-flow-with-external-storage.svg'，
+      黑暗：'/diagrams/data-converter-flow-dark.svg'，
+    }}
+  />
+  <figcaption>通过 Data Converter 的数据流</figcaption>
+</figure>
+
+当 Temporal CLIent 发送的有效负载超过配置的大小阈值时，存储驱动程序会上传
+有效负载到您的外部存储并用轻量级引用替换它。低于阈值的有效负载保持内联
+Event History。
+
+当 Temporal 服务将任务分派给 Worker 时，该过程相反。 Worker 下载参考的
+并行地从外部存储中获取有效负载，然后通过有效负载编解码器和有效负载转换器将它们传回
+重建原始数据。
+
+The SDK parallelizes uploads and downloads to minimize latency. When a single Workflow Task involves multiple payloads
+that exceed the threshold, the SDK uploads or downloads all of them concurrently rather than one at a time. This allows
+external storage operations to scale well even when a Task carries many large payloads.
+
+Because External Storage runs after the Payload Codec, if you use an encryption codec, payloads are already encrypted
+before upload to your store.
+
+## Storage drivers
+
+A storage driver connects External Storage to a backing store. Each driver provides two operations:
+
+- **Store**. Upload payloads and return a claim, which is a set of key-value pairs the driver uses to locate the payload
+  later.
+- **Retrieve**. Download payloads using the claims that `store` produced.
+
+Temporal SDKs include built-in drivers for common storage systems like Amazon S3. You can configure multiple storage
+drivers and use a selector function to route payloads to different drivers based on size, type, or other criteria such
+as hot and cold storage tiers.
+
+### Custom storage drivers
+
+If the built-in drivers don't support your storage backend, you can implement a custom driver. For SDK-specific examples, see:
+
+- [Go SDK: Implement a custom storage driver](/develop/go/data-handling/external-storage#implement-a-custom-storage-driver)
+- [Python SDK: Implement a custom storage driver](/develop/python/data-handling/external-storage#implement-a-custom-storage-driver)
+
+## Key configuration settings
+
+Configure External Storage on the Data Converter. The key settings are:
+
+- **Size threshold**. The driver offloads payloads larger than this value, which defaults to 256 KiB.
+- **Drivers**. One or more storage driver implementations.
+- **Driver selector**. When using multiple drivers, you must provide a function that chooses which driver handles each
+  payload.
+
+## Lifecycle management for external storage {#lifecycle}
+
+Temporal does not automatically delete payloads from your external store. Payloads can also be orphaned if a request
+fails after the upload completes. We recommend you configure a lifecycle policy that both ensures these payloads are
+eventually cleaned up and provides a grace period for debugging and recovery.
+
+Your TTL must be long enough that payloads remain available for the entire lifetime of the Workflow plus its retention
+window:
+
+```
+TTL > Maximum Workflow Run Timeout + Namespace Retention Period
+```
+
+For example, if your longest-running Workflow has a Run Timeout of 14 days and your Namespace retention period is 30
+days, configure your lifecycle rule to expire objects after at least 44 days.
+
+If your Workflows run indefinitely (no Run Timeout), there is no finite TTL that guarantees safety. Set a generous TTL
+based on your operational needs. Use [Continue-As-New](/Workflow-execution/Continue-As-New) for Workflows that need to
+run longer. The new run uploads fresh payloads, and the old run's payloads only need to survive through its retention
+period.

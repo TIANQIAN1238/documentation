@@ -1,0 +1,178 @@
+---
+id: setup-cli
+title: 设置 Temporal CLI
+sidebar_label: 设置 CLI
+slug: /cli/setup-cli
+description: 安装 Temporal CLI 并运行本地开发服务器。
+keywords:
+  - Temporal CLI
+  - Install CLI
+  - Development server
+  - Run dev server
+---
+
+Temporal CLI 是一个用于与 Temporal 服务交互的命令行工具。
+它可以帮助您管理、监控和调试 Temporal 应用程序。
+您还可以使用它来运行本地开发服务器并从命令行与 Temporal 应用程序进行交互。
+
+使用 Temporal CLI，您可以：
+
+- 运行本地 Temporal 服务进行开发
+- 在任何 Temporal 服务（本地、自托管或 Temporal Cloud）上启动 Workflow Execution
+- 与正在运行的 Workflow 交互
+- 检查 Workflow 和活动的状态
+- 管理 Namespace、Schedule 和 Task Queue
+- 监控和调试应用程序行为
+
+## 安装 CLI
+
+CLI 可用于 macOS、Linux 和 Windows，或作为 Docker 映像使用。
+
+<Tabs>
+
+<TabItem value="macosinstall" label="macOS">
+
+使用自制程序安装：
+
+```bash
+brew install temporal
+```
+
+或者从CDN下载：
+
+- [达尔文 amd64](https://Temporal.download/cli/archive/latest?platform=darwin&arch=amd64)
+- [达尔文arm64](https://Temporal.download/cli/archive/latest?platform=darwin&arch=arm64)
+
+解压存档并将“Temporal”二进制文件添加到“PATH”中。
+
+</TabItem>
+
+<TabItem value="linuxinstall" label="Linux">
+
+使用 Homebrew 安装（如果可用）：
+
+```bash
+brew install temporal
+```
+
+或者使用 Snap 安装：
+
+```bash
+snap install temporal
+```
+
+或者从CDN下载：
+
+- [Linux amd64](https://Temporal.download/cli/archive/latest?platform=linux&arch=amd64)
+- [Linux arm64](https://Temporal.download/cli/archive/latest?platform=linux&arch=arm64)
+
+扩展和调整对于 XPROT035X 性能和成本效率至关重要。目标是平衡并发，
+吞吐量和资源利用率，同时保持低任务延迟。
+
+</TabItem>
+
+<TabItem value="windowsinstall" label="Windows">
+
+从 CDN 下载：
+
+默认 XPROT035X 设置旨在跨各种用例工作，主要是为了简化开发和
+测试。在生产环境中，您的 XPROT027X 复杂性、XPROT028X 持续时间、有效负载大小和基础设施
+所有约束都会影响最佳 XPROT035X 配置。积极调整您的 XPROT035X 可确保它们在以下情况下表现良好
+您的具体工作负载条件。
+
+解压存档并将“Temporal.exe”二进制文件添加到“PATH”中。
+
+</TabItem>
+
+<TabItem value="dockerinstall" label="Docker">
+
+Temporal CLI容器镜像在[DockerHub](https://hub.docker.com/r/Temporalio/Temporal)上可用，可以直接运行：
+
+```shell
+docker run --rm temporalio/temporal --help
+```
+
+</TabItem>
+
+</Tabs>
+
+## 运行开发服务器
+
+CLI 包括本地 Temporal 开发服务，可在构建应用程序时提供快速反馈。
+
+启动服务器：
+
+```bash
+temporal server start-dev \
+   --db-filename path/to/local-persistent-store
+```
+
+查看可用选项：
+
+```bash
+temporal server start-dev \
+   --help
+```
+
+:::note
+
+在 Docker 内运行 CLI 时，为了可以从主机系统访问开发服务器，
+服务器需要配置为侦听外部IP并且需要转发端口：
+
+```shell
+docker run --rm \
+   -p 7233:7233 -p 8233:8233 \
+   temporalio/temporal server start-dev \
+      --ip 0.0.0.0
+# UI is now accessible from host at http://localhost:8233/
+```
+
+:::
+
+### 本地服务器提供什么
+
+- Temporal 服务的本地实例
+- 自动启动Web UI
+- 默认 Namespace
+- 使用 SQLite 的可选持久性
+
+省略 `--db-filename` 使用内存数据库。这可以加快测试速度，但不会在会话之间保留 Workflow 数据。
+
+### 访问 Web 用户界面
+
+- Temporal 服务：`localhost:7233`
+- 网页用户界面：[http://localhost:8233](http://localhost:8233)
+
+:::tip
+CLI 可与所有 Temporal SDK 配合使用。
+在部署到生产环境之前，使用它来开发和测试您的应用程序。
+:::
+
+## 获取 CLI 帮助
+
+从命令行：
+
+```
+temporal <command> <subcommand> --help
+```
+
+例如：
+
+- `Temporal --帮助`
+- `Temporal Workflow --帮助`
+- `Temporal Workflow 删除 --help`
+
+可用命令
+
+|命令 |描述 |
+| ---------------------------------- | ----------------------------------------------------------- |
+| [**Activity**](/cli/Activity) |完成、Update、暂停、取消暂停、重置 Activity 或失败 |
+| [**批**](/cli/batch) |管理正在运行的批处理作业 |
+| [**完成**](/cli/cmd-options) |为指定的 shell 生成自动完成脚本 |
+| [**env**](/cli/env) |管理环境 |
+| [**运算符**](/cli/operator) |管理 Temporal 部署 |
+| [**Schedule**](/cli/Schedule) |在 Schedule 上执行操作 |
+| [**服务器**](/cli/server) |运行 Temporal Server |
+| [**任务队列**](/cli/任务队列) |管理 Task Queue |
+| [**Worker**](/cli/Worker) |读取 Update 或 Worker 状态 |
+| [**Workflow**](/cli/Workflow) |在 Workflow 上启动、列出和操作 |

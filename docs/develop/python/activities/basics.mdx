@@ -1,8 +1,8 @@
 ---
 id: basics
-title: Activity basics - Python SDK
-sidebar_label: Activity basics
-description: This section explains Activity Basics with the Python SDK
+title: "Activity 基础知识 - Python SDK"
+sidebar_label: "Activity 基础知识"
+description: "本节介绍 Activity 与 Python SDK 的基础知识"
 toc_max_heading_level: 4
 keywords:
   - Python SDK
@@ -11,46 +11,46 @@ tags:
   - Temporal SDKs
 ---
 
-## Develop a basic Activity {#develop-activities}
+## 开发一个基本的 Activity {#develop-activities}
 
-**How to develop a basic Activity using the Temporal Python SDK.**
+**如何使用 Temporal Python SDK 开发基本的 Activity。**
 
-One of the primary things that Workflows do is orchestrate the execution of Activities. An Activity is a normal function
-or method execution that's intended to execute a single, well-defined action (either short or long-running), such as
-querying a database, calling a third-party API, or transcoding a media file. An Activity can interact with the world outside
-the Temporal Platform or use a Temporal Client to interact with a Temporal Service. For the Workflow to be able to
-execute the Activity, we must define the [Activity Definition](/activity-definition).
+Workflow 所做的主要事情之一是协调活动的执行。 Activity 是一个普通函数
+或旨在执行单个、明确定义的操作（短期或长期运行）的方法执行，例如
+Query数据库、调用第三方API或转码媒体文件。 Activity可以与外界互动
+Temporal 平台或使用 Temporal CLIent 与 Temporal 服务交互。为了使 Workflow 能够
+执行Activity，我们必须定义[Activity Definition](/activity-definition)。
 
-You can develop an Activity Definition by using the `@activity.defn` decorator. Register the function as an Activity
-with a custom name through a decorator argument, for example `@activity.defn(name="your_activity")`.
+您可以使用 `@Activity.defn` 装饰器开发 Activity Definition。将函数注册为 Activity
+通过装饰器参数使用自定义名称，例如 `@Activity.defn(name="your_Activity")`。
 
 :::note
 
-The Temporal Python SDK supports multiple ways of implementing an Activity:
+Temporal Python SDK 支持多种实现 Activity 的方法：
 
-- Asynchronously using [`asyncio`](https://docs.python.org/3/library/asyncio.html)
-- Synchronously multithreaded using
+- 异步使用[`asyncio`](https://docs.python.org/3/library/asyncio.html)
+- 同步多线程使用
   [`concurrent.futures.ThreadPoolExecutor`](https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor)
-- Synchronously multiprocess using
+- 同步多进程使用
   [`concurrent.futures.ProcessPoolExecutor`](https://docs.python.org/3/library/concurrent.futures.html#processpoolexecutor)
-  and
+  和
   [`multiprocessing.managers.SyncManager`](https://docs.python.org/3/library/multiprocessing.html#multiprocessing.managers.SyncManager)
 
-Blocking the async event loop in Python would turn your asynchronous program into a synchronous program that executes
-serially, defeating the entire purpose of using `asyncio`. This can also lead to potential deadlock, and unpredictable
-behavior that causes tasks to be unable to execute. Debugging these issues can be difficult and time consuming, as
-locating the source of the blocking call might not always be immediately obvious.
+在 Python 中阻止异步事件循环会将异步程序变成执行的同步程序
+连续地，违背了使用 `asyncio` 的全部目的。这也可能导致潜在的僵局，并且不可预测
+导致任务无法执行的行为。调试这些问题可能很困难且耗时，因为
+定位阻塞调用的来源可能并不总是显而易见的。
 
-Due to this, consider not making blocking calls from within an asynchronous Activity, or use an async safe library to
-perform these actions. If you must use a blocking library, consider using a synchronous Activity instead.
+因此，请考虑不要从异步 Activity 中进行阻塞调用，或者使用异步安全库来
+执行这些操作。如果必须使用阻塞库，请考虑使用同步 Activity。
 
 :::
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/your_app/your_activities_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -62,37 +62,38 @@ async def your_activity(input: YourParams) -> str:
     return f"{input.greeting}, {input.name}!"
 ```
 
-### Develop Activity Parameters {#activity-parameters}
+<a id="activity-parameters"></a>
+### 开发 Activity 参数 {#activity-parameters}
 
-**How to develop Activity Parameters using the Temporal Python SDK.**
+**如何使用 Temporal Python SDK 开发 Activity 参数。**
 
-There is no explicit limit to the total number of parameters that an [Activity Definition](/activity-definition) may
-support. However, there is a limit to the total size of the data that ends up encoded into a gRPC message Payload.
+[Activity Definition](/activity-definition) 可以使用的参数总数没有明确的限制
+支持。但是，最终编码到 gRPC 消息有效负载中的数据的总大小是有限制的。
 
-A single argument is limited to a maximum size of 2 MB. And the total size of a gRPC message, which includes all the
-arguments, is limited to a maximum of 4 MB.
+单个参数的最大大小限制为 2 MB。 gRPC 消息的总大小，其中包括所有
+参数，最大限制为 4 MB。
 
-Also, keep in mind that all Payload data is recorded in the
-[Workflow Execution Event History](/workflow-execution/event#event-history) and large Event Histories can affect Worker
-performance. This is because the entire Event History could be transferred to a Worker Process with a
-[Workflow Task](/tasks#workflow-task).
+另外，请记住，所有有效负载数据都记录在
+[Workflow Execution Event History](/workflow-execution/event#event-history) 和大型事件历史记录可能会影响 Worker
+性能。这是因为整个 Event History 可以通过以下方式传输到 Worker 进程：
+[Workflow 任务](/tasks#workflow-task)。
 
 {/* TODO link to gRPC limit section when available */}
 
-Some SDKs require that you pass context objects, others do not. When it comes to your application data—that is, data
-that is serialized and encoded into a Payload—we recommend that you use a single object as an argument that wraps the
-application data passed to Activities. This is so that you can change what data is passed to the Activity without
-breaking a function or method signature.
+某些 SDK 要求您传递上下文对象，而其他 SDK 则不需要。当涉及到您的应用程序数据时，即数据
+被序列化并编码到有效负载中 - 我们建议您使用单个对象作为包装的参数
+传递给活动的应用程序数据。这样您就可以更改传递到 Activity 的数据，而无需
+破坏函数或方法签名。
 
-Activity parameters are the function parameters of the function decorated with `@activity.defn`. These can be any data
-type Temporal can convert, including dataclasses when properly type-annotated. Technically this can be multiple
-parameters, but Temporal strongly encourages a single dataclass parameter containing all input fields.
+Activity参数是用`@Activity.defn`修饰的函数的函数参数。这些可以是任何数据
+类型 Temporal 可以转换，包括正确类型注释时的数据类。从技术上讲，这可以是多个
+参数，但 Temporal 强烈鼓励使用包含所有输入字段的单个数据类参数。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/your_app/your_activities_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -106,26 +107,27 @@ async def your_activity(input: YourParams) -> str:
     return f"{input.greeting}, {input.name}!"
 ```
 
-### Define Activity return values {#activity-return-values}
+<a id="activity-return-values"></a>
+### 定义 Activity 返回值 {#activity-return-values}
 
-**How to define Activity return values using the Temporal Python SDK.**
+**如何使用 Temporal Python SDK 定义 Activity 返回值。**
 
-All data returned from an Activity must be serializable.
+从 Activity 返回的所有数据都必须是可序列化的。
 
-Activity return values are subject to payload size limits in Temporal. The default payload size limit is 2MB, and there
-is a hard limit of 4MB for any gRPC message size in the Event History transaction
-([see Cloud limits here](https://docs.temporal.io/cloud/limits#per-message-grpc-limit)). Keep in mind that all return
-values are recorded in a [Workflow Execution Event History](/workflow-execution/event#event-history).
+Activity 返回值受 Temporal 中的有效负载大小限制。默认负载大小限制为 2MB，并且
+对于 Event History 事务中的任何 gRPC 消息大小，硬限制为 4MB
+（[请参阅此处的云限制](https://docs.temporal.io/cloud/limits#per-message-grpc-limit)）。请记住，所有返回
+值记录在 [Workflow Execution Event History](/workflow-execution/event#event-history) 中。
 
-An Activity Execution can return inputs and other Activity values.
+Activity 执行可以返回输入和其他 Activity 值。
 
-The following example defines an Activity that takes an object as input and returns a string.
+以下示例定义了一个 Activity，它将一个对象作为输入并返回一个字符串。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/your_app/your_activities_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -135,22 +137,23 @@ async def your_activity(input: YourParams) -> str:
     return f"{input.greeting}, {input.name}!"
 ```
 
-### Customize your Activity Type {#activity-type}
+<a id="activity-type"></a>
+### 自定义您的 Activity 类型 {#activity-type}
 
-**How to customize your Activity Type**
+**如何定制您的 Activity 类型**
 
-Activities have a Type that are referred to as the Activity name. The following examples demonstrate how to set a custom
-name for your Activity Type.
+活动有一个称为 Activity 名称的类型。以下示例演示了如何设置自定义
+Activity 类型的名称。
 
-You can customize the Activity name with a custom name in the decorator argument. For example,
-`@activity.defn(name="your-activity")`. If the name parameter is not specified, the Activity name defaults to the
-function name.
+您可以使用装饰器参数中的自定义名称来自定义 Activity 名称。例如，
+`@Activity.defn(name="your-Activity")`。如果未指定 name 参数，则 Activity 名称默认为
+函数名称。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/your_app/your_activities_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python

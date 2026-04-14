@@ -1,8 +1,8 @@
 ---
 id: task-queue
-title: Temporal CLI task-queue command reference
-sidebar_label: task-queue
-description: Temporal Task Queue commands facilitate operations like describing poller info, displaying partitions, fetching compatible Build IDs, and determining Build ID reachability for effective Workflow and Activity management.
+title: "Temporal CLI 任务队列命令参考"
+sidebar_label: "任务队列"
+description: "Temporal Task Queue 命令有助于描述轮询器信息、显示分区、获取兼容的构建 ID 以及确定构建 ID 可访问性等操作，以实现有效的 Workflow 和 Activity 管理。"
 toc_max_heading_level: 4
 keywords:
   - cli reference
@@ -16,25 +16,26 @@ tags:
 ---
 
 {/* NOTE: This is an auto-generated file. Any edit to this file will be overwritten.
-This file is generated from https://github.com/temporalio/cli/blob/main/internal/commandsgen/commands.yml via internal/cmd/gen-docs */}
+该文件是通过内部/cmd/gen-docs 从 https://github.com/temporalio/cli/blob/main/internal/commandsgen/commands.yml 生成的 */}
 
-This page provides a reference for the `temporal` CLI `task-queue` command. The flags applicable to each subcommand are presented in a table within the heading for the subcommand. Refer to [Global Flags](#global-flags) for flags that you can use with every subcommand.
+本页提供 `Temporal` CLI `task-queue` 命令的参考。适用于每个子命令的标志显示在子命令标题内的表格中。请参阅 [全球旗帜](#global-flags) 了解可与每个子命令一起使用的标志。
 
-## config
+<a id="config"></a>
+## 配置 {#config}
 
-Manage Task Queue configuration:
+管理 Task Queue 配置：
 
 ```
 temporal task-queue config [command] [options]
 ```
 
-Available commands:
-- `get`: Retrieve the current configuration for a task queue
-- `set`: Update the configuration for a task queue
+可用命令：
+- `get`：检索 Task Queue 的当前配置
+- `set`：Update Task Queue 的配置
 
-### get
+### 得到 {#get}
 
-Retrieve the current configuration for a Task Queue:
+检索 Task Queue 的当前配置：
 
 ```
 temporal task-queue config get \
@@ -42,24 +43,24 @@ temporal task-queue config get \
     --task-queue-type activity
 ```
 
-This command returns the current configuration including:
-- Queue rate limit: The overall rate limit of the task queue.
-  This setting overrides the worker rate limit if set.
-  Unless modified, this is the system-defined rate limit.
-- Fairness key rate limit defaults: Default rate limits for fairness keys.
-  If set, each individual fairness key will be limited to this rate,
-  scaled by the weight of the fairness key.
+该命令返回当前配置，包括：
+- 队列速率限制：Task Queue 的总体速率限制。
+  此设置将覆盖 Worker 速率限制（如果已设置）。
+  除非修改，否则这是系统定义的速率限制。
+- 公平密钥速率限制默认值：公平密钥的默认速率限制。
+  如果设置，每个单独的公平密钥将仅限于该速率，
+  按公平密钥的权重进行缩放。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--task-queue`, `-t` | Yes | **string** Task Queue name. |
-| `--task-queue-type` | Yes | **string-enum** Task Queue type. Accepted values: workflow, activity, nexus. Accepted values: workflow, activity, nexus. |
+| `--task-queue`、`-t` | 是的 | **字符串** Task Queue 名称。 |
+| `--task-queue-type` | 是的 | **字符串枚举** Task Queue 类型。接受的值：Workflow、Activity、Nexus。接受的值：Workflow、Activity、Nexus。 |
 
-### set
+### 放 {#set}
 
-Update configuration settings for a Task Queue.
+Task Queue 的 Update 配置设置。
 
 ```
 temporal task-queue config set \
@@ -72,41 +73,41 @@ temporal task-queue config set \
     --fairness-key-rps-limit-reason <reason_string>
 ```
 
-This command supports updating:
-- Queue rate limits: Controls the overall rate limit of the task queue.
-  This setting overrides the worker rate limit if set.
-  Unless modified, this is the system-defined rate limit.
-- Fairness key rate limit defaults: Sets default rate limits for fairness keys.
-  If set, each individual fairness key will be limited to this rate,
-  scaled by the weight of the fairness key.
+该命令支持更新：
+- 队列速率限制：控制 Task Queue 的总体速率限制。
+  此设置将覆盖 Worker 速率限制（如果已设置）。
+  除非修改，否则这是系统定义的速率限制。
+- 公平密钥速率限制默认值：设置公平密钥的默认速率限制。
+  如果设置，每个单独的公平密钥将仅限于该速率，
+  按公平密钥的权重进行缩放。
 
-To unset a rate limit, pass in 'default', for example: --queue-rps-limit default
+要取消设置速率限制，请传入“default”，例如：--queue-rps-limit default
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--fairness-key-rps-limit-default` | No | **float\|default** Fairness key rate limit default in requests per second. Accepts a float; or 'default' to unset. |
-| `--fairness-key-rps-limit-reason` | No | **string** Reason for fairness key rate limit update. |
-| `--queue-rps-limit` | No | **float\|default** Queue rate limit in requests per second. Accepts a float; or 'default' to unset. |
-| `--queue-rps-limit-reason` | No | **string** Reason for queue rate limit update. |
-| `--task-queue`, `-t` | Yes | **string** Task Queue name. |
-| `--task-queue-type` | Yes | **string-enum** Task Queue type. Accepted values: workflow, activity, nexus. Accepted values: workflow, activity, nexus. |
+| `--fairness-key-rps-limit-default` | 不 | **漂浮\|默认** 公平密钥速率限制默认以每秒请求数为单位。接受浮动；或“默认”以取消设置。 |
+| `--fairness-key-rps-limit-reason` | 不 | **字符串** 公平密钥速率限制的原因 Update。 |
+| `--queue-rps-limit` | 不 | **漂浮\|默认** 每秒请求的队列速率限制。接受浮动；或“默认”以取消设置。 |
+| `--queue-rps-limit-reason` | 不 | **字符串** 队列速率限制的原因 Update。 |
+| `--task-queue`、`-t` | 是的 | **字符串** Task Queue 名称。 |
+| `--task-queue-type` | 是的 | **字符串枚举** Task Queue 类型。接受的值：Workflow、Activity、Nexus。接受的值：Workflow、Activity、Nexus。 |
 
-## describe
+## 描述 {#describe}
 
-Display a list of active Workers that have recently polled a Task Queue. The
-Temporal Server records each poll request time. A `LastAccessTime` over one
-minute may indicate the Worker is at capacity or has shut down. Temporal
-Workers are removed if 5 minutes have passed since the last poll request.
+显示最近轮询过 Task Queue 的活动 Worker 的列表。的
+Temporal Server记录每次轮询请求的时间。 `LastAccessTime` 超过一
+分钟可能表明 Worker 已满负荷或已关闭。 Temporal
+如果自上次轮询请求以来已过去 5 分钟，Worker 将被删除。
 
 ```
 temporal task-queue describe \
   --task-queue YourTaskQueue
 ```
 
-This command provides poller information for a given Task Queue.
-Workflow and Activity polling use separate Task Queues:
+此命令提供给定 Task Queue 的轮询器信息。
+Workflow 和 Activity 轮询使用单独的 Task Queue：
 
 ```
 temporal task-queue describe \
@@ -114,34 +115,34 @@ temporal task-queue describe \
     --task-queue-type "activity"
 ```
 
-This command provides the following task queue statistics:
-- `ApproximateBacklogCount`: The approximate number of tasks backlogged in this
-  task queue. May count expired tasks but eventually converges to the right
-  value.
-- `ApproximateBacklogAge`: Approximate age of the oldest task in the backlog,
-  based on its creation time, measured in seconds.
-- `TasksAddRate`: Approximate rate at which tasks are being added to the task
-  queue, measured in tasks per second, averaged over the last 30 seconds.
-  Includes tasks dispatched immediately without going to the backlog
-  (sync-matched tasks), as well as tasks added to the backlog. (See note below.)
-- `TasksDispatchRate`: Approximate rate at which tasks are being dispatched from
-  the task queue, measured in tasks per second, averaged over the last 30
-  seconds.  Includes tasks dispatched immediately without going to the backlog
-  (sync-matched tasks), as well as tasks added to the backlog. (See note below.)
-- `BacklogIncreaseRate`: Approximate rate at which the backlog size is
-  increasing (if positive) or decreasing (if negative), measured in tasks per
-  second, averaged over the last 30 seconds.  This is roughly equivalent to:
-  `TasksAddRate` - `TasksDispatchRate`.
+此命令提供以下 Task Queue 统计信息：
+- `ApproximateBacklogCount`：本次积压任务的大致数量
+  Task Queue。可能会计算过期的任务，但最终会收敛到右侧
+  值。
+- `ApproximateBacklogAge`：待办事项中最旧任务的大致年龄，
+  基于其创建时间（以秒为单位）。
+- `TasksAddRate`：将任务添加到任务的大致速率
+  队列，以每秒任务数为单位，在过去 30 秒内取平均值。
+  包括立即分派的任务，无需进入待办事项列表
+  （同步匹配的任务），以及添加到待办事项中的任务。 （参见下面的注释。）
+- `TasksDispatchRate`：任务调度的大致速率
+  Task Queue，以每秒任务数衡量，过去 30 次的平均值
+  秒。  包括立即分派的任务，无需进入待办事项列表
+  （同步匹配的任务），以及添加到待办事项中的任务。 （参见下面的注释。）
+- `BacklogIncreaseRate`：待办事项大小的大致比率
+  增加（如果为正）或减少（如果为负），以每个任务的任务来衡量
+  第二，过去 30 秒的平均值。  这大致相当于：
+  `TasksAddRate` - `TasksDispatchRate`。
 
-NOTE: The `TasksAddRate` and `TasksDispatchRate` metrics may differ from the
-actual rate of add/dispatch, because tasks may be dispatched eagerly to an
-available worker, or may apply only to specific workers (they are "sticky").
-Such tasks are not counted by these metrics. Despite the inaccuracy of
-these two metrics, the derived metric of `BacklogIncreaseRate` is accurate
-for backlogs older than a few seconds.
+注意：`TasksAddRate` 和 `TasksDispatchRate` 指标可能与
+添加/分派的实际速率，因为任务可能会急切地分派到
+可用的 Worker，或者可能仅适用于特定的 Worker（它们是“粘性的”）。
+这些指标不计算此类任务。尽管不准确
+这两个指标，`BacklogIncreaseRate` 的导出指标是准确的
+对于超过几秒的积压。
 
-Safely retire Workers assigned a Build ID by checking reachability across
-all task types. Use the flag `--report-reachability`:
+通过检查可访问性，安全地停用分配有构建 ID 的 Worker
+所有任务类型。使用标志 `--report-reachability`：
 
 ```
 temporal task-queue describe \
@@ -150,49 +151,50 @@ temporal task-queue describe \
     --report-reachability
 ```
 
-Task reachability information is returned for the requested versions and all
-task types, which can be used to safely retire Workers with old code versions,
-provided that they were assigned a Build ID.
+返回所请求版本和所有任务的可达性信息
+任务类型，可用于安全地淘汰旧代码版本的 Worker，
+前提是他们被分配了一个构建 ID。
 
-Note that task reachability status is deprecated in favor of Drainage Status
-(ie. of a Drained or Draining Worker Deployment Version) and will be removed 
-in a future release. Also, determining task reachability incurs a non-trivial 
-computing cost.
+请注意，任务可达性状态已被弃用，取而代之的是排水状态
+（即 Drained 或 Draining Worker 部署版本）并将被删除 
+在未来的版本中。此外，确定任务的可达性会导致一个不平凡的问题 
+计算成本。
 
-Task reachability states are reported per build ID. The state may be one of the
-following:
+任务可达性状态按构建 ID 报告。国家可能是其中之一
+以下：
 
-- `Reachable`: using the current versioning rules, the Build ID may be used
-  by new Workflow Executions or Activities OR there are currently open
-  Workflow or backlogged Activity tasks assigned to the queue.
-- `ClosedWorkflowsOnly`: the Build ID does not have open Workflow Executions
-  and can't be reached by new Workflow Executions. It MAY have closed
-  Workflow Executions within the Namespace retention period.
-- `Unreachable`: this Build ID is not used for new Workflow Executions and
-  isn't used by any existing Workflow Execution within the retention period.
+- `Reachable`：使用当前版本控制规则，可以使用构建 ID
+  通过新的 Workflow Execution 或活动或当前开放
+  分配给队列的 Workflow 或积压的 Activity 任务。
+- `ClosedWorkflowsOnly`：构建 ID 没有打开的 Workflow Execution
+  新的 Workflow Execution 无法到达。它可能已经关闭
+  Workflow Execution 在 Namespace 保留期内。
+- `Unreachable`：此构建 ID 不用于新的 Workflow Execution 和
+  在保留期内未被任何现有的 Workflow Execution 使用。
 
-Task reachability is eventually consistent. You may experience a delay until
-reachability converges to the most accurate value. This is designed to act
-in the most conservative way until convergence. For example, `Reachable` is
-more conservative than `ClosedWorkflowsOnly`.
+任务可达性最终是一致的。您可能会遇到延迟，直到
+可达性收敛到最准确的值。这是为了行动而设计的
+以最保守的方式直到收敛。例如，`Reachable` 是
+比`ClosedWorkflowsOnly`更保守。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--disable-stats` | No | **bool** Disable task queue statistics. |
-| `--legacy-mode` | No | **bool** Enable a legacy mode for servers that do not support rules-based worker versioning. This mode only provides pollers info. |
-| `--partitions-legacy` | No | **int** Query partitions 1 through `N`. Experimental/Temporary feature. Legacy mode only. |
-| `--report-config` | No | **bool** Include task queue configuration in the response. When enabled, the command will return the current rate limit configuration for the task queue. |
-| `--report-reachability` | No | **bool** Display task reachability information. |
-| `--select-all-active` | No | **bool** Include all active versions. A version is active if it had new tasks or polls recently. |
-| `--select-build-id` | No | **string[]** Filter the Task Queue based on Build ID. |
-| `--select-unversioned` | No | **bool** Include the unversioned queue. |
-| `--task-queue`, `-t` | Yes | **string** Task Queue name. |
-| `--task-queue-type` | No | **string-enum[]** Task Queue type. If not specified, all types are reported. Accepted values: workflow, activity, nexus. |
-| `--task-queue-type-legacy` | No | **string-enum** Task Queue type (legacy mode only). Accepted values: workflow, activity. |
+| `--disable-stats` | 不 | **布尔** 禁用 Task Queue 统计信息。 |
+| `--legacy-mode` | 不 | **bool** 为不支持基于规则的 Worker 版本控制的服务器启用旧模式。此模式仅提供轮询器信息。 |
+| `--partitions-legacy` | 不 | **int** Query 分区 1 到 `N`。实验/临时功能。仅限传统模式。 |
+| `--report-config` | 不 | **bool** 在响应中包含 Task Queue 配置。启用后，该命令将返回 Task Queue 的当前速率限制配置。 |
+| `--report-reachability` | 不 | **bool** 显示任务可达性信息。 |
+| `--select-all-active` | 不 | **布尔** 包括所有活动版本。如果某个版本最近有新任务或民意调查，则该版本处于活动状态。 |
+| `--select-build-id` | 不 | **string[]** 根据构建 ID 过滤 Task Queue。 |
+| `--select-unversioned` | 不 | **bool** 包括未版本控制的队列。 |
+| `--task-queue`、`-t` | 是的 | **字符串** Task Queue 名称。 |
+| `--task-queue-type` | 不 | **字符串枚举[]** Task Queue 类型。如果未指定，则报告所有类型。接受的值：Workflow、Activity、Nexus。 |
+| `--task-queue-type-legacy` | 不 | **字符串枚举** Task Queue 类型（仅限传统模式）。接受的值：Workflow、Activity。 |
 
-## get-build-id-reachability
+<a id="get"></a>
+## 获取构建 ID 可达性 {#get-build-id-reachability}
 
 ```
 +-----------------------------------------------------------------------------+
@@ -200,8 +202,8 @@ Use the following options to change the behavior of this command. You can also u
 +-----------------------------------------------------------------------------+
 ```
 
-Show if a given Build ID can be used for new, existing, or closed Workflows
-in Namespaces that support Worker versioning:
+显示给定的构建 ID 是否可用于新的、现有的或已关闭的 Workflow
+在支持 Worker 版本控制的 Namespace 中：
 
 ```
 temporal task-queue get-build-id-reachability \
@@ -209,19 +211,20 @@ temporal task-queue get-build-id-reachability \
     --build-id "YourBuildId"
 ```
 
-You can specify the `--build-id` and `--task-queue` flags multiple times. If
-`--task-queue` is omitted, the command checks Build ID reachability against
-all Task Queues.
+您可以多次指定 `--build-id` 和 `--task-queue` 标志。如果
+`--task-queue` 被省略，该命令检查构建 ID 的可达性
+所有 Task Queue。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--build-id` | No | **string[]** One or more Build ID strings. Can be passed multiple times. |
-| `--reachability-type` | No | **string-enum** Reachability filter. `open`: reachable by one or more open workflows. `closed`: reachable by one or more closed workflows. `existing`: reachable by either. New Workflow Executions reachable by a Build ID are always reported. Accepted values: open, closed, existing. |
-| `--task-queue`, `-t` | No | **string[]** Search only the specified task queue(s). Can be passed multiple times. |
+| `--build-id` | 不 | **字符串[]** 一个或多个构建 ID 字符串。可以多次通过。 |
+| `--reachability-type` | 不 | **字符串枚举**可达性过滤器。 `open`：可由一个或多个打开的 Workflow 访问。 `closed`：可由一个或多个封闭的 Workflow 到达。 `existing`：两者均可到达。始终报告可通过构建 ID 访问的新 Workflow Execution。接受的值：开放、封闭、现有。 |
+| `--task-queue`、`-t` | 不 | **字符串[]** 仅搜索指定的 Task Queue。可以多次通过。 |
 
-## get-build-ids
+<a id="set"></a>
+## 获取构建 ID {#get-build-ids}
 
 ```
 +-----------------------------------------------------------------------------+
@@ -229,39 +232,41 @@ Use the following options to change the behavior of this command. You can also u
 +-----------------------------------------------------------------------------+
 ```
 
-Fetch sets of compatible Build IDs for specified Task Queues and display their
-information:
+获取指定 Task Queue 的兼容构建 ID 集并显示它们
+信息：
 
 ```
 temporal task-queue get-build-ids \
     --task-queue YourTaskQueue
 ```
 
-This command is limited to Namespaces that support Worker versioning.
+此命令仅限于支持 Worker 版本控制的 Namespace。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--max-sets` | No | **int** Max return count. Use 1 for default major version. Use 0 for all sets. |
-| `--task-queue`, `-t` | Yes | **string** Task Queue name. |
+| `--max-sets` | 不 | **int** 最大返回计数。使用 1 作为默认主要版本。所有集合均使用 0。 |
+| `--task-queue`、`-t` | 是的 | **字符串** Task Queue 名称。 |
 
-## list-partition
+<a id="describe"></a>
+## 列表分区 {#list-partition}
 
-Display a Task Queue's partition list with assigned matching nodes:
+显示 Task Queue 的分区列表以及分配的匹配节点：
 
 ```
 temporal task-queue list-partition \
     --task-queue YourTaskQueue
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--task-queue`, `-t` | Yes | **string** Task Queue name. |
+| `--task-queue`、`-t` | 是的 | **字符串** Task Queue 名称。 |
 
-## update-build-ids
+<a id="get-build-id-reachability"></a>
+## Update-build-ids {#update-build-ids}
 
 ```
 +-----------------------------------------------------------------------------+
@@ -269,18 +274,19 @@ Use the following options to change the behavior of this command. You can also u
 +-----------------------------------------------------------------------------+
 ```
 
-Add or change a Task Queue's compatible Build IDs for Namespaces using Worker
-versioning:
+使用 Worker 添加或更改 Task Queue 与 Namespace 的兼容构建 ID
+版本控制：
 
 ```
 temporal task-queue update-build-ids [subcommands] [options] \
     --task-queue YourTaskQueue
 ```
 
-### add-new-compatible
+<a id="get-build-ids"></a>
+### 新增兼容 {#add-new-compatible}
 
-Add a compatible Build ID to a Task Queue's existing version set. Provide an
-existing Build ID and a new Build ID:
+将兼容的构建 ID 添加到 Task Queue 的现有版本集。提供一个
+现有的构建 ID 和新的构建 ID：
 
 ```
 temporal task-queue update-build-ids add-new-compatible \
@@ -289,21 +295,22 @@ temporal task-queue update-build-ids add-new-compatible \
     --build-id "YourNewBuildId"
 ```
 
-The new ID is stored in the set containing the existing ID and becomes the new
-default for that set.
+新的ID存储在包含现有ID的集合中并成为新的ID
+该组的默认值。
 
-This command is limited to Namespaces that support Worker versioning.
+此命令仅限于支持 Worker 版本控制的 Namespace。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--build-id` | Yes | **string** Build ID to be added. |
-| `--existing-compatible-build-id` | Yes | **string** Pre-existing Build ID in this Task Queue. |
-| `--set-as-default` | No | **bool** Set the expanded Build ID set as the Task Queue default. |
-| `--task-queue`, `-t` | Yes | **string** Task Queue name. |
+| `--build-id` | 是的 | **字符串** 要添加的构建 ID。 |
+| `--existing-compatible-build-id` | 是的 | **字符串** 此 Task Queue 中预先存在的构建 ID。 |
+| `--set-as-default` | 不 | **bool** 将扩展的构建 ID 集设置为 Task Queue 默认值。 |
+| `--task-queue`、`-t` | 是的 | **字符串** Task Queue 名称。 |
 
-### add-new-default
+<a id="list-partition"></a>
+### 添加新默认值 {#add-new-default}
 
 ```
 +-----------------------------------------------------------------------------+
@@ -311,9 +318,9 @@ Use the following options to change the behavior of this command. You can also u
 +-----------------------------------------------------------------------------+
 ```
 
-Create a new Task Queue Build ID set, add a Build ID to it, and make it the
-overall Task Queue default. The new set will be incompatible with previous
-sets and versions.
+创建一个新的 Task Queue Build ID 集，向其中添加 Build ID，并将其设为
+总体默认Task Queue。新套装将与之前的套装不兼容
+集和版本。
 
 ```
 temporal task-queue update-build-ids add-new-default \
@@ -329,14 +336,15 @@ temporal task-queue update-build-ids add-new-default \
 +------------------------------------------------------------------------+
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--build-id` | Yes | **string** Build ID to be added. |
-| `--task-queue`, `-t` | Yes | **string** Task Queue name. |
+| `--build-id` | 是的 | **字符串** 要添加的构建 ID。 |
+| `--task-queue`、`-t` | 是的 | **字符串** Task Queue 名称。 |
 
-### promote-id-in-set
+<a id="update-build-ids"></a>
+### 在集合中提升 id {#promote-id-in-set}
 
 ```
 +-----------------------------------------------------------------------------+
@@ -344,8 +352,8 @@ Use the following options to change the behavior of this command. You can also u
 +-----------------------------------------------------------------------------+
 ```
 
-Establish an existing Build ID as the default in its Task Queue set. New tasks
-compatible with this set will now be dispatched to this ID:
+在其 Task Queue 集中建立一个现有的构建 ID 作为默认值。新任务
+与此集兼容的现在将被分派到此 ID：
 
 ```
 temporal task-queue update-build-ids promote-id-in-set \
@@ -361,14 +369,15 @@ temporal task-queue update-build-ids promote-id-in-set \
 +------------------------------------------------------------------------+
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--build-id` | Yes | **string** Build ID to set as default. |
-| `--task-queue`, `-t` | Yes | **string** Task Queue name. |
+| `--build-id` | 是的 | **字符串** 设置为默认值的构建 ID。 |
+| `--task-queue`、`-t` | 是的 | **字符串** Task Queue 名称。 |
 
-### promote-set
+<a id="add-new-compatible"></a>
+### 促销集 {#promote-set}
 
 ```
 +-----------------------------------------------------------------------------+
@@ -376,9 +385,9 @@ Use the following options to change the behavior of this command. You can also u
 +-----------------------------------------------------------------------------+
 ```
 
-Promote a Build ID set to be the default on a Task Queue. Identify the set by
-providing a Build ID within it. If the set is already the default, this
-command has no effect:
+将构建 ID 集提升为 Task Queue 上的默认值。识别集合为
+在其中提供构建 ID。如果该设置已经是默认设置，则此
+命令没有效果：
 
 ```
 temporal task-queue update-build-ids promote-set \
@@ -394,14 +403,15 @@ temporal task-queue update-build-ids promote-set \
 +------------------------------------------------------------------------+
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--build-id` | Yes | **string** Build ID within the promoted set. |
-| `--task-queue`, `-t` | Yes | **string** Task Queue name. |
+| `--build-id` | 是的 | **字符串** 升级集中的构建 ID。 |
+| `--task-queue`、`-t` | 是的 | **字符串** Task Queue 名称。 |
 
-## versioning
+<a id="add-new-default"></a>
+## 版本控制 {#versioning}
 
 ```
 +---------------------------------------------------------------------+
@@ -409,29 +419,30 @@ Use the following options to change the behavior of this command. You can also u
 +---------------------------------------------------------------------+
 ```
 
-Provides commands to add, list, remove, or replace Worker Build ID assignment
-and redirect rules associated with Task Queues:
+提供用于添加、列出、删除或替换 Worker 构建 ID 分配的命令
+以及与 Task Queue 关联的重定向规则：
 
 ```
 temporal task-queue versioning [subcommands] [options] \
     --task-queue YourTaskQueue
 ```
 
-Task Queues support the following versioning rules and policies:
+Task Queue 支持以下版本控制规则和策略：
 
-- Assignment Rules: manage how new executions are assigned to run on specific
-  Worker Build IDs. Each Task Queue stores a list of ordered Assignment Rules,
-  which are evaluated from first to last. Assignment Rules also allow for
-  gradual rollout of new Build IDs by setting ramp percentage.
-- Redirect Rules: automatically assign work for a source Build ID to a target
-  Build ID. You may add at most one redirect rule for each source Build ID.
-  Redirect rules require that a target Build ID is fully compatible with
-  the source Build ID.
+- 分配规则：管理如何分配新的执行以在特定的上运行
+  Worker 构建 ID。每个Task Queue存储一个有序的分配规则列表，
+  从头到尾进行评估。分配规则还允许
+  通过设置斜坡百分比逐步推出新的构建 ID。
+- 重定向规则：自动将源构建 ID 的工作分配给目标
+  构建 ID。您最多可以为每个源构建 ID 添加一条重定向规则。
+  重定向规则要求目标构建 ID 完全兼容
+  源构建 ID。
 
-### add-redirect-rule
+<a id="promote-id-in-set"></a>
+### 添加重定向规则 {#add-redirect-rule}
 
-Add a new redirect rule for a given Task Queue. You may add at most one
-redirect rule for each distinct source build ID:
+为给定的 Task Queue 添加新的重定向规则。您最多可以添加一个
+每个不同源构建 ID 的重定向规则：
 
 ```
 temporal task-queue versioning add-redirect-rule \
@@ -446,18 +457,19 @@ temporal task-queue versioning add-redirect-rule \
 +---------------------------------------------------------------------+
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--source-build-id` | Yes | **string** Source build ID. |
-| `--target-build-id` | Yes | **string** Target build ID. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm. |
+| `--source-build-id` | 是的 | **字符串** 源构建 ID。 |
+| `--target-build-id` | 是的 | **字符串** 目标构建 ID。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认。 |
 
-### commit-build-id
+<a id="promote-set"></a>
+### 提交构建 ID {#commit-build-id}
 
-Complete a Build ID's rollout and clean up unnecessary rules that might have
-been created during a gradual rollout:
+完成构建 ID 的部署并清理可能存在的不必要规则
+是在逐步推出期间创建的：
 
 ```
 temporal task-queue versioning commit-build-id \
@@ -465,17 +477,17 @@ temporal task-queue versioning commit-build-id \
     --build-id "YourBuildId"
 ```
 
-This command automatically applies the following atomic changes:
+此命令自动应用以下原子更改：
 
-- Adds an unconditional assignment rule for the target Build ID at the
-  end of the list.
-- Removes all previously added assignment rules to the given target
-  Build ID.
-- Removes any unconditional assignment rules for other Build IDs.
+- 在目标Build ID处添加无条件分配规则
+  列表末尾。
+- 删除所有先前添加到给定目标的分配规则
+  构建 ID。
+- 删除其他构建 ID 的任何无条件分配规则。
 
-Rejects requests when there have been no recent pollers for this Build ID.
-This prevents committing invalid Build IDs. Use the `--force` option to
-override this validation.
+当最近没有针对此构建 ID 的轮询器时，拒绝请求。
+这可以防止提交无效的构建 ID。使用 `--force` 选项
+覆盖此验证。
 
 ```
 +---------------------------------------------------------------------+
@@ -483,18 +495,19 @@ override this validation.
 +---------------------------------------------------------------------+
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--build-id` | Yes | **string** Target build ID. |
-| `--force` | No | **bool** Bypass recent-poller validation. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm. |
+| `--build-id` | 是的 | **字符串** 目标构建 ID。 |
+| `--force` | 不 | **bool** 绕过最近轮询器验证。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认。 |
 
-### delete-assignment-rule
+<a id="versioning"></a>
+### 删除分配规则 {#delete-assignment-rule}
 
-Deletes a rule identified by its index in the Task Queue's list of assignment
-rules.
+删除由 Task Queue 分配列表中的索引标识的规则
+规则。
 
 ```
 temporal task-queue versioning delete-assignment-rule \
@@ -502,9 +515,9 @@ temporal task-queue versioning delete-assignment-rule \
     --rule-index YourIntegerRuleIndex
 ```
 
-By default, the Task Queue must retain one unconditional rule, such as "no
-hint filter" or "percentage". Otherwise, the delete operation is rejected.
-Use the `--force` option to override this validation.
+默认情况下，Task Queue 必须保留一条无条件规则，例如“no
+提示过滤器”或“百分比”。否则，删除操作将被拒绝。
+使用 `--force` 选项覆盖此验证。
 
 ```
 +---------------------------------------------------------------------+
@@ -512,17 +525,18 @@ Use the `--force` option to override this validation.
 +---------------------------------------------------------------------+
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--force` | No | **bool** Bypass one-unconditional-rule validation. |
-| `--rule-index`, `-i` | Yes | **int** Position of the assignment rule to be replaced. Requests for invalid indices will fail. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm. |
+| `--force` | 不 | **bool** 绕过单无条件规则验证。 |
+| `--rule-index`、`-i` | 是的 | **int** 要替换的分配规则的位置。对无效索引的请求将失败。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认。 |
 
-### delete-redirect-rule
+<a id="add-redirect-rule"></a>
+### 删除重定向规则 {#delete-redirect-rule}
 
-Deletes the routing rule for the given source Build ID.
+删除给定源构建 ID 的路由规则。
 
 ```
 temporal task-queue versioning delete-redirect-rule \
@@ -536,46 +550,48 @@ temporal task-queue versioning delete-redirect-rule \
 +---------------------------------------------------------------------+
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--source-build-id` | Yes | **string** Source Build ID. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm. |
+| `--source-build-id` | 是的 | **字符串** 源构建 ID。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认。 |
 
-### get-rules
+<a id="commit-build-id"></a>
+### 获取规则 {#get-rules}
 
-Retrieve all the Worker Build ID assignments and redirect rules associated
-with a Task Queue:
+检索所有 Worker 构建 ID 分配和关联的重定向规则
+使用 Task Queue：
 
 ```
 temporal task-queue versioning get-rules \
     --task-queue YourTaskQueue
 ```
 
-Task Queues support the following versioning rules:
+Task Queue 支持以下版本控制规则：
 
-- Assignment Rules: manage how new executions are assigned to run on specific
-  Worker Build IDs. Each Task Queue stores a list of ordered Assignment Rules,
-  which are evaluated from first to last. Assignment Rules also allow for
-  gradual rollout of new Build IDs by setting ramp percentage.
-- Redirect Rules: automatically assign work for a source Build ID to a target
-  Build ID. You may add at most one redirect rule for each source Build ID.
-  Redirect rules require that a target Build ID is fully compatible with
-  the source Build ID.
+- 分配规则：管理如何分配新的执行以在特定的上运行
+  Worker 构建 ID。每个Task Queue存储一个有序的分配规则列表，
+  从头到尾进行评估。分配规则还允许
+  通过设置斜坡百分比逐步推出新的构建 ID。
+- 重定向规则：自动将源构建 ID 的工作分配给目标
+  构建 ID。您最多可以为每个源构建 ID 添加一条重定向规则。
+  重定向规则要求目标构建 ID 完全兼容
+  源构建 ID。
 ```
 +---------------------------------------------------------------------+
 | CAUTION: This API has been deprecated by Worker Deployment.         |
 +---------------------------------------------------------------------+
 ```
 
-Use [global flags](#global-flags) to customize the connection to the Temporal Service for this command.
+使用 [全局标志](#global-flags) 自定义此命令与 Temporal 服务的连接。
 
-### insert-assignment-rule
+<a id="delete-assignment-rule"></a>
+### 插入赋值规则 {#insert-assignment-rule}
 
-Inserts a new assignment rule for this Task Queue. Rules are evaluated in
-order, starting from index 0. The first applicable rule is applied, and the
-rest ignored:
+为此 Task Queue 插入新的分配规则。规则的评估在
+顺序，从索引 0 开始。应用第一个适用的规则，并且
+其余忽略：
 
 ```
 temporal task-queue versioning insert-assignment-rule \
@@ -583,7 +599,7 @@ temporal task-queue versioning insert-assignment-rule \
     --build-id "YourBuildId"
 ```
 
-If you do not specify a `--rule-index`, this command inserts at index 0.
+如果未指定 `--rule-index`，则此命令将在索引 0 处插入。
 
 ```
 +---------------------------------------------------------------------+
@@ -591,20 +607,21 @@ If you do not specify a `--rule-index`, this command inserts at index 0.
 +---------------------------------------------------------------------+
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--build-id` | Yes | **string** Target Build ID. |
-| `--percentage` | No | **int** Traffic percent to send to target Build ID. |
-| `--rule-index`, `-i` | No | **int** Insertion position. Ranges from 0 (insert at start) to count (append). Any number greater than the count is treated as "append". |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm. |
+| `--build-id` | 是的 | **字符串** 目标构建 ID。 |
+| `--percentage` | 不 | **int** 发送到目标构建 ID 的流量百分比。 |
+| `--rule-index`、`-i` | 不 | **int** 插入位置。范围从 0（在开始时插入）到计数（追加）。任何大于计数的数字都被视为“追加”。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认。 |
 
-### replace-assignment-rule
+<a id="delete-redirect-rule"></a>
+### 替换分配规则 {#replace-assignment-rule}
 
-Change an assignment rule for this Task Queue. By default, this enforces one
-unconditional rule (no hint filter or percentage). Otherwise, the operation
-will be rejected. Set `force` to true to bypass this validation.
+更改此 Task Queue 的分配规则。默认情况下，这会强制执行一个
+无条件规则（无提示过滤器或百分比）。否则，操作
+会被拒绝。将 `force` 设置为 true 以绕过此验证。
 
 ```
 temporal task-queue versioning replace-assignment-rule \
@@ -613,10 +630,10 @@ temporal task-queue versioning replace-assignment-rule \
     --build-id "YourBuildId"
 ```
 
-To assign multiple assignment rules to a single Build ID, use
-'insert-assignment-rule'.
+要将多个分配规则分配给单个构建 ID，请使用
+'插入赋值规则'。
 
-To update the percent:
+至 Update 百分比：
 
 ```
 temporal task-queue versioning replace-assignment-rule \
@@ -626,7 +643,7 @@ temporal task-queue versioning replace-assignment-rule \
     --percentage AnIntegerPercent
 ```
 
-Percent may vary between 0 and 100 (default).
+百分比可能在 0 到 100（默认）之间变化。
 
 ```
 +---------------------------------------------------------------------+
@@ -634,20 +651,21 @@ Percent may vary between 0 and 100 (default).
 +---------------------------------------------------------------------+
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--build-id` | Yes | **string** Target Build ID. |
-| `--force` | No | **bool** Bypass the validation that one unconditional rule remains. |
-| `--percentage` | No | **int** Divert percent of traffic to target Build ID. |
-| `--rule-index`, `-i` | Yes | **int** Position of the assignment rule to be replaced. Requests for invalid indices will fail. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm. |
+| `--build-id` | 是的 | **字符串** 目标构建 ID。 |
+| `--force` | 不 | **bool** 绕过保留一条无条件规则的验证。 |
+| `--percentage` | 不 | **int** 将流量百分比转移到目标构建 ID。 |
+| `--rule-index`、`-i` | 是的 | **int** 要替换的分配规则的位置。对无效索引的请求将失败。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认。 |
 
-### replace-redirect-rule
+<a id="get-rules"></a>
+### 替换重定向规则 {#replace-redirect-rule}
 
-Updates a Build ID's redirect rule on a Task Queue by replacing its target
-Build ID:
+Update 通过替换其目标来在 Task Queue 上设置构建 ID 的重定向规则
+构建 ID：
 
 ```
 temporal task-queue versioning replace-redirect-rule \
@@ -662,50 +680,51 @@ temporal task-queue versioning replace-redirect-rule \
 +---------------------------------------------------------------------+
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--source-build-id` | Yes | **string** Source Build ID. |
-| `--target-build-id` | Yes | **string** Target Build ID. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm. |
+| `--source-build-id` | 是的 | **字符串** 源构建 ID。 |
+| `--target-build-id` | 是的 | **字符串** 目标构建 ID。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认。 |
 
-## Global Flags
+<a id="insert-assignment-rule"></a>
+## 全局标志 {#global-flags}
 
-The following options can be used with any command.
+以下选项可与任何命令一起使用。
 
-| Flag | Required | Description | Default |
+| 旗帜 | 必需的 | 描述 | 默认 |
 |------|----------|-------------|--------|
-| `--address` | No | **string** Temporal Service gRPC endpoint. | `localhost:7233` |
-| `--api-key` | No | **string** API key for request. |  |
-| `--client-authority` | No | **string** Temporal gRPC client :authority pseudoheader. |  |
-| `--client-connect-timeout` | No | **duration** The client connection timeout. 0s means no timeout. |  |
-| `--codec-auth` | No | **string** Authorization header for Codec Server requests. |  |
-| `--codec-endpoint` | No | **string** Remote Codec Server endpoint. |  |
-| `--codec-header` | No | **string[]** HTTP headers for requests to codec server. Format as a `KEY=VALUE` pair. May be passed multiple times to set multiple headers. |  |
-| `--color` | No | **string-enum** Output coloring. Accepted values: always, never, auto. | `auto` |
-| `--command-timeout` | No | **duration** The command execution timeout. 0s means no timeout. |  |
-| `--config-file` | No | **string** File path to read TOML config from, defaults to `$CONFIG_PATH/temporalio/temporal.toml` where `$CONFIG_PATH` is defined as `$HOME/.config` on Unix, `$HOME/Library/Application Support` on macOS, and `%AppData%` on Windows. _(Experimental)_ |  |
-| `--disable-config-env` | No | **bool** If set, disables loading environment config from environment variables. _(Experimental)_ |  |
-| `--disable-config-file` | No | **bool** If set, disables loading environment config from config file. _(Experimental)_ |  |
-| `--env` | No | **string** Active environment name (`ENV`). | `default` |
-| `--env-file` | No | **string** Path to environment settings file. Defaults to `$HOME/.config/temporalio/temporal.yaml`. |  |
-| `--grpc-meta` | No | **string[]** HTTP headers for requests. Format as a `KEY=VALUE` pair. May be passed multiple times to set multiple headers. Can also be made available via environment variable as `TEMPORAL_GRPC_META_[name]`. |  |
-| `--identity` | No | **string** The identity of the user or client submitting this request. Defaults to "temporal-cli:$USER@$HOST". |  |
-| `--log-format` | No | **string-enum** Log format. Accepted values: text, json. | `text` |
-| `--log-level` | No | **string-enum** Log level. Default is "info" for most commands and "warn" for "server start-dev". Accepted values: debug, info, warn, error, never. | `info` |
-| `--namespace`, `-n` | No | **string** Temporal Service Namespace. | `default` |
-| `--no-json-shorthand-payloads` | No | **bool** Raw payload output, even if the JSON option was used. |  |
-| `--output`, `-o` | No | **string-enum** Non-logging data output format. Accepted values: text, json, jsonl, none. | `text` |
-| `--profile` | No | **string** Profile to use for config file. _(Experimental)_ |  |
-| `--time-format` | No | **string-enum** Time format. Accepted values: relative, iso, raw. | `relative` |
-| `--tls` | No | **bool** Enable base TLS encryption. Does not have additional options like mTLS or client certs. This is defaulted to true if api-key or any other TLS options are present. Use --tls=false to explicitly disable. |  |
-| `--tls-ca-data` | No | **string** Data for server CA certificate. Can't be used with --tls-ca-path. |  |
-| `--tls-ca-path` | No | **string** Path to server CA certificate. Can't be used with --tls-ca-data. |  |
-| `--tls-cert-data` | No | **string** Data for x509 certificate. Can't be used with --tls-cert-path. |  |
-| `--tls-cert-path` | No | **string** Path to x509 certificate. Can't be used with --tls-cert-data. |  |
-| `--tls-disable-host-verification` | No | **bool** Disable TLS host-name verification. |  |
-| `--tls-key-data` | No | **string** Private certificate key data. Can't be used with --tls-key-path. |  |
-| `--tls-key-path` | No | **string** Path to x509 private key. Can't be used with --tls-key-data. |  |
-| `--tls-server-name` | No | **string** Override target TLS server name. |  |
+| `--address` | 不 | **字符串** Temporal 服务 gRPC 端点。 | `localhost:7233` |
+| `--api-key` | 不 | **字符串** 请求的 API 密钥。 |  |
+| `--client-authority` | 不 | **字符串** Temporal gRPC 客户端：权限伪标头。 |  |
+| `--client-connect-timeout` | 不 | **持续时间** 客户端连接超时。 0s表示没有超时。 |  |
+| `--codec-auth` | 不 | **字符串** Codec Server 请求的授权标头。 |  |
+| `--codec-endpoint` | 不 | **字符串** 远程 Codec Server 端点。 |  |
+| `--codec-header` | 不 | **string[]** 向 Codec Server 发出请求的 HTTP 标头。格式为 `KEY=VALUE` 对。可以多次传递以设置多个标头。 |  |
+| `--color` | 不 | **字符串枚举** 输出着色。接受的值：始终、从不、自动。 | `auto` |
+| `--command-timeout` | 不 | **持续时间** 命令执行超时。 0s表示没有超时。 |  |
+| `--config-file` | 不 | **字符串** 从中读取 TOML 配置的文件路径，默认为 `$CONFIG_PATH/temporalio/temporal.toml`，其中 `$CONFIG_PATH` 在 Unix 上定义为 `$HOME/.config`，在 macOS 上定义为 `$HOME/Library/Application Support`，在 Windows 上定义为 `%AppData%`。 _（实验性）_ |  |
+| `--disable-config-env` | 不 | **bool** 如果设置，则禁用从环境变量加载环境配置。 _（实验性）_ |  |
+| `--disable-config-file` | 不 | **bool** 如果设置，则禁用从配置文件加载环境配置。 _（实验性）_ |  |
+| `--env` | 不 | **字符串** 活动环境名称 (`ENV`)。 | `default` |
+| `--env-file` | 不 | **字符串** 环境设置文件的路径。默认为 `$HOME/.config/temporalio/temporal.yaml`。 |  |
+| `--gRPC-meta` | 不 | **string[]** 请求的 HTTP 标头。格式为 `KEY=VALUE` 对。可以多次传递以设置多个标头。也可以通过环境变量 `Temporal_gRPC_META_[name]` 提供。 |  |
+| `--identity` | 不 | **字符串** 提交此请求的用户或客户端的身份。默认为“Temporal-cli:$USER@$HOST”。 |  |
+| `--log-format` | 不 | **字符串枚举** 日志格式。接受的值：文本、json。 | `text` |
+| `--log-level` | 不 | **字符串枚举** 日志级别。大多数命令的默认值为“info”，“server start-dev”的默认值为“warn”。接受的值：调试、信息、警告、错误、从不。 | `info` |
+| `--Namespace`、`-n` | 不 | **字符串** Temporal 服务 Namespace。 | `default` |
+| `--no-json-shorthand-payloads` | 不 | **bool** 原始负载输出，即使使用了 JSON 选项。 |  |
+| `--output`、`-o` | 不 | **字符串枚举** 非日志数据输出格式。接受的值：text、json、jsonl、none。 | `text` |
+| `--profile` | 不 | **字符串** 用于配置文件的配置文件。 _（实验性）_ |  |
+| `--time-format` | 不 | **字符串枚举** 时间格式。接受的值：relative、iso、raw。 | `relative` |
+| `--tls` | 不 | **布尔** 启用基本 TLS 加密。没有 mTLS 或客户端证书等附加选项。如果存在 api-key 或任何其他 TLS 选项，则默认为 true。使用 --tls=false 显式禁用。 |  |
+| `--tls-ca-data` | 不 | **字符串** 服务器 CA 证书的数据。不能与 --tls-ca-path 一起使用。 |  |
+| `--tls-ca-path` | 不 | **字符串** 服务器 CA 证书的路径。不能与 --tls-ca-data 一起使用。 |  |
+| `--tls-cert-data` | 不 | **字符串** x509 证书的数据。不能与 --tls-cert-path 一起使用。 |  |
+| `--tls-cert-path` | 不 | **字符串** x509 证书的路径。不能与 --tls-cert-data 一起使用。 |  |
+| `--tls-disable-host-verification` | 不 | **bool** 禁用 TLS 主机名验证。 |  |
+| `--tls-key-data` | 不 | **字符串** 私有证书密钥数据。不能与 --tls-key-path 一起使用。 |  |
+| `--tls-key-path` | 不 | **字符串** x509 私钥的路径。不能与 --tls-key-data 一起使用。 |  |
+| `--tls-server-name` | 不 | **字符串** 覆盖目标 TLS 服务器名称。 |  |
 

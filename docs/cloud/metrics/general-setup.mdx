@@ -1,8 +1,8 @@
 ---
 id: general-setup
-title: General observability setup with metrics
-sidebar_label: General setup
-description: Learn how to configure a metrics endpoint in Temporal Cloud using the UI or tcld CLI, assign certificates, and integrate with observability tools like Grafana.
+title: "带有指标的一般可观察性设置"
+sidebar_label: "一般设置"
+description: "了解如何使用 UI 或 tcld CLI 在 Temporal Cloud 中配置指标端点、分配证书以及与 Grafana 等可观察性工具集成。"
 keywords:
   - temporal cloud metrics configuration
   - configure metrics endpoint
@@ -25,53 +25,53 @@ import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
 
 :::danger PromQL endpoint deprecated
 
-The PromQL endpoint and its `temporal_cloud_v0_*` metrics were deprecated on April 2, 2026 and are no longer accepting new users.
-The PromQL endpoint will be disabled for all users on **October 5, 2026**.
+PromQL 端点及其 `Temporal_cloud_v0_*` 指标已于 2026 年 4 月 2 日弃用，并且不再接受新用户。
+将于 **2026 年 10 月 5 日**对所有用户禁用 PromQL 端点。
 
-New users should set up the [OpenMetrics endpoint](/cloud/metrics/openmetrics) instead.
-Existing users should follow the [migration guide](/cloud/metrics/openmetrics/migration-guide) to transition to the OpenMetrics endpoint.
+新用户应设置 [OpenMetrics 端点](/cloud/metrics/openmetrics)。
+现有用户应按照 [迁移指南](/cloud/metrics/openmetrics/migration-guide) 转换到 OpenMetrics 端点。
 
 :::
 
-You will learn how to do the following:
+您将学习如何执行以下操作：
 
-- [Configure an endpoint using the UI](#configure-via-ui)
-- [Configure an endpoint using tcld](#configure-via-cli-tcld)
-- [Query for metrics with a PromQL endpoint](#query-promql)
+- [使用 UI 配置端点](#configure-via-ui)
+- [使用 tcld 配置端点](#configure-via-cli-tcld)
+- [Query 用于具有 PromQL 端点的指标](#query-promql)
 
-## Configure using the UI {#configure-via-ui}
-
-**How to configure a metrics endpoint using Temporal Cloud UI**
+<a id="configure-via-ui"></a>
+## 使用 UI {#configure-via-ui} 配置
+**如何使用 Temporal Cloud UI 配置指标端点**
 
 :::note
 
-To view and manage third-party integration settings, your user account must have the Account Owner or Global Admin [role](/cloud/manage-access/roles-and-permissions#account-level-roles).
+要查看和管理第三方集成设置，您的用户帐户必须具有帐户所有者或全局管理员 [角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。
 
 :::
 
-To assign a certificate and generate your metrics endpoint, follow these steps:
+要分配证书并生成指标端点，请按照以下步骤操作：
 
-1. Log in to Temporal Cloud UI with an Account Owner or Global Admin [role](/cloud/manage-access/roles-and-permissions#account-level-roles).
-2. Go to **Settings** and select **Observability**.
-4. Add your root CA certificate (.pem) and save it.
-   Note that if an observability endpoint is already set up, you can append your root CA certificate here to use the generated observability endpoint in your observability tool.
-5. To test your endpoint, run the following command on your host:
+1. 使用帐户所有者或全局管理员 [角色](/cloud/manage-access/roles-and-permissions#account-level-roles) 登录到 Temporal Cloud UI。
+2. 转至 **设置** 并选择 **可观察性**。
+4. 添加您的根 CA 证书 (.pem) 并保存。
+   请注意，如果已设置可观察性端点，您可以在此处附加根 CA 证书，以在可观察性工具中使用生成的可观察性端点。
+5. 要测试您的端点，请在主机上运行以下命令：
    ```
    curl -v --cert <path to your client-cert.pem> --key <path to your client-cert.key> "<your generated Temporal Cloud prometheus_endpoint>/api/v1/query?query=temporal_cloud_v0_state_transition_count"
    ```
-   If you have Workflows running on a Namespace in your Temporal Cloud instance, you should see some data as a result of running this command.
+如果您在 Temporal Cloud 实例中的 Namespace 上运行 Workflow，则运行此命令后您应该会看到一些数据。
 
-After the page refreshes, the new metrics endpoint appears below **Endpoint**, in the form `https://<account-id>.tmprl.cloud/prometheus`.
-Use the endpoint to configure your observability tool.
-For example, if you use Grafana, see [Grafana data source configuration](/cloud/metrics/prometheus-grafana#grafana-data-source-configuration).
+页面刷新后，新的指标端点将显示在 **Endpoint** 下方，格式为 `https://<account-id>.tmprl.cloud/prometheus`。
+使用端点来配置您的可观察性工具。
+例如，如果您使用 Grafana，请参阅 [Grafana数据源配置](/cloud/metrics/prometheus-grafana#grafana-data-source-configuration)。
 
-You can also query via the [Prometheus HTTP API](https://prometheus.io/docs/prometheus/latest/querying/api/) at URLs like:
+您还可以通过 [普罗米修斯 HTTP API](https://prometheus.io/docs/prometheus/latest/querying/api/) 访问 Query，网址如下：
 
 ```
 https://<account-id>.tmprl.cloud/prometheus/api/v1/query?query=temporal_cloud_v0_state_transition_count
 ```
 
-For example:
+例如：
 
 ```
 $ curl --cert client.pem --key client-key.pem "https://<account-id>.tmprl.cloud/prometheus/api/v1/query?query=temporal_cloud_v0_state_transition_count" | jq .
@@ -98,32 +98,32 @@ $ curl --cert client.pem --key client-key.pem "https://<account-id>.tmprl.cloud/
 }
 ```
 
-## Configure endpoint using tcld {#configure-via-cli-tcld}
+<a id="configure-via-cli-tcld"></a>
+## 使用 tcld 配置端点 {#configure-via-cli-tcld}
+**如何使用 tcld CLI 配置指标端点。**
 
-**How to configure a metrics endpoint using the tcld CLI.**
+要将证书添加到指标端点，请使用 [`tcld account metrics accepted-client-ca add`](/cloud/tcld/account#add)。
 
-To add a certificate to a metrics endpoint, use [`tcld account metrics accepted-client-ca add`](/cloud/tcld/account#add).
+要启用指标端点，请使用 [`tcld account metrics enable`](/cloud/tcld/account#enable)。
 
-To enable a metrics endpoint, use [`tcld account metrics enable`](/cloud/tcld/account#enable).
+要禁用指标端点，请使用 [`tcld account metrics disable`](/cloud/tcld/account#disable)。
 
-To disable a metrics endpoint, use [`tcld account metrics disable`](/cloud/tcld/account#disable).
+有关详细信息，请参阅 [tcld 帐户指标命令](/cloud/tcld/account#metrics)。
 
-For more information, see [tcld account metrics command](/cloud/tcld/account#metrics).
+<a id="query-promql"></a>
+## Query 用于具有 PromQL 端点的指标 {#query-promql}
+Temporal Cloud 以 Prometheus 支持的格式发出指标。
+Prometheus 是一个用于警报和监控的开源工具包。
+Temporal 服务通过 [普罗米修斯 HTTP API 端点](https://prometheus.io/docs/prometheus/latest/querying/api/) 公开云指标。
+Temporal Cloud 指标为可视化、监控和可观察性平台提供兼容的数据源。
 
-## Query for metrics with a PromQL endpoint {#query-promql}
-
-Temporal Cloud emits metrics in a Prometheus-supported format.
-Prometheus is an open-source toolkit for alerting and monitoring.
-The Temporal Service exposes Cloud metrics with a [Prometheus HTTP API endpoint](https://prometheus.io/docs/prometheus/latest/querying/api/).
-Temporal Cloud metrics provide a compatible data source for visualizing, monitoring, and observability platforms.
-
-You can use functions like [rate](https://prometheus.io/docs/prometheus/latest/querying/functions/#rate) or [increase](https://prometheus.io/docs/prometheus/latest/querying/functions/#increase) to calculate the rate of increase for a Temporal Cloud metric:
+您可以使用 [速度](https://prometheus.io/docs/prometheus/latest/querying/functions/#rate) 或 [增加](https://prometheus.io/docs/prometheus/latest/querying/functions/#increase) 等函数来计算 Temporal Cloud 指标的增长率：
 
 ```
 rate(temporal_cloud_v0_frontend_service_request_count[$__rate_interval])
 ```
 
-Or you might use Prometheus to calculate average latencies or histogram quartiles:
+或者您可以使用 Prometheus 计算平均延迟或直方图四分位数：
 
 ```
 # Average latency
@@ -134,10 +134,10 @@ rate(temporal_cloud_v0_service_latency_sum[$__rate_interval])
 histogram_quantile(0.99, sum(rate(temporal_cloud_v0_service_latency_bucket[$__rate_interval])) by (le, operation))
 ```
 
-Metrics are scraped every 30 seconds and exposed to the metrics endpoint with a 1-minute lag.\
-The endpoint returns data with a 15-second resolution, which results in displaying the same value twice.
+每 30 秒抓取一次指标，并以 1 分钟的滞后时间暴露给指标端点。\
+端点以 15 秒的分辨率返回数据，这会导致相同的值显示两次。
 
-Set up Grafana with Temporal Cloud observability to view metrics by creating or getting your Prometheus endpoint for Temporal Cloud metrics and enabling SDK metrics.
+设置具有 Temporal Cloud 可观测性的 Grafana，通过创建或获取 Temporal Cloud 指标的 Prometheus 端点并启用 SDK 指标来查看指标。
 
 <RelatedReadContainer>
   <RelatedReadItem path="/cloud/metrics/prometheus-grafana" text="How to set up Grafana with Temporal Cloud observability" archetype="feature-guide" />

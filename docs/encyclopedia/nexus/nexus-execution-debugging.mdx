@@ -1,9 +1,9 @@
 ---
 id: nexus-execution-debugging
 slug: /nexus/execution-debugging
-title: Execution Debugging - Temporal Nexus
-description: Learn about execution debugging in Temporal Nexus.
-sidebar_label: Nexus Execution Debugging
+title: 执行调试 - Temporal Nexus
+description: 了解 Temporal Nexus 中的执行调试。
+sidebar_label: Nexus 执行调试
 keywords:
   - nexus
   - temporal nexus
@@ -17,17 +17,16 @@ import { CaptionedImage } from '@site/src/components';
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal Nexus is now [Generally Available](/evaluate/development-production-features/release-stages#general-availability) for [Temporal Cloud](/cloud/nexus) and [self-hosted deployments](/production-deployment/self-hosted-guide/nexus).
+Temporal Nexus 现已在 [Temporal Cloud](/cloud/nexus) 和[自托管部署](/production-deployment/self-hosted-guide/nexus)上[正式发布](/evaluate/development-production-features/release-stages#general-availability)。
 
 :::
 
 
-Nexus supports end-to-end execution debugging across caller Workflows, Nexus Operations, and handler Workflows - even across [multi-level calls](/nexus#multi-level-calls) spanning multiple Namespaces.
+Nexus 支持跨 caller Workflow、Nexus Operation 和 handler Workflow 的端到端执行调试——甚至跨越跨越多个 Namespace 的[多级调用](/nexus#multi-level-calls)。
 
-## Bi-directional linking
+## 双向链接
 
-Bidirectional links connect Nexus Operation events in the caller's Workflow History to corresponding events in the handler's Workflow History.
-They are automatically wired by SDK builder functions like New-Workflow-Run-Operation, enabling click-through navigation across Namespaces, regions, and clouds in the Temporal UI.
+双向链接将 caller Workflow 历史中的 Nexus Operation 事件与 handler Workflow 历史中的对应事件相连接。它们由 SDK 构建函数（如 New-Workflow-Run-Operation）自动建立，支持在 Temporal UI 中跨 Namespace、区域和云进行点击导航。
 
 <CaptionedImage
     src="/img/cloud/nexus/nexus-bi-directional-linking.png"
@@ -35,14 +34,14 @@ They are automatically wired by SDK builder functions like New-Workflow-Run-Oper
     zoom="true"
 />
 
-- **Forward**: From a caller's Nexus Operation event to the handler's Workflow.
-- **Backward**: From the handler's Workflow back to the caller's Nexus Operation event.
+- **正向**：从 caller 的 Nexus Operation 事件导航到 handler 的 Workflow。
+- **反向**：从 handler 的 Workflow 返回到 caller 的 Nexus Operation 事件。
 
-## Pending Operations
+## 待处理的 Operation
 
-Pending Nexus Operations are displayed in the UI on the Workflow details page and can be listed from the CLI using the `temporal workflow describe` command.
+待处理的 Nexus Operation 显示在 UI 的 Workflow 详情页面上，也可以通过 CLI 使用 `temporal workflow describe` 命令列出。
 
-From the UI:
+从 UI 查看：
 
 <CaptionedImage
     src="/img/cloud/nexus/pending-nexus-operations.png"
@@ -50,7 +49,7 @@ From the UI:
     zoom="true"
 />
 
-From the CLI:
+从 CLI 查看：
 
 ```
 temporal workflow describe
@@ -69,15 +68,13 @@ Pending Nexus Operations: 1
   LastAttemptFailure       {"message":"handler error (INTERNAL): internal error","applicationFailureInfo":{}}
 ```
 
-[Retryable errors](/nexus/error-handling#errors-in-nexus-handlers) surface in the Pending Operation.
-Non-retryable errors resolve the Operation with a [Failed](/references/events#nexusoperationfailed), [TimedOut](/references/events#nexusoperationtimedout), or [Canceled](/references/events#nexusoperationcanceled) event.
+[可重试错误](/nexus/error-handling#errors-in-nexus-handlers)会在待处理 Operation 中显示。不可重试错误会通过 [Failed](/references/events#nexusoperationfailed)、[TimedOut](/references/events#nexusoperationtimedout) 或 [Canceled](/references/events#nexusoperationcanceled) 事件解决该 Operation。
 
-## Pending Callbacks
+## 待处理的回调
 
-Nexus completion callbacks are sent from the handler's Namespace to the caller's Namespace for asynchronous Operations.
-These can be viewed in the UI or from the CLI using the `temporal workflow describe` command.
+Nexus 完成回调从 handler 的 Namespace 发送到 caller 的 Namespace，用于异步 Operation。可以在 UI 中或通过 CLI 使用 `temporal workflow describe` 命令查看这些回调。
 
-From the UI:
+从 UI 查看：
 
 <CaptionedImage
     src="/img/cloud/nexus/nexus-callback.png"
@@ -85,7 +82,7 @@ From the UI:
     zoom="true"
 />
 
-From the CLI:
+从 CLI 查看：
 
 ```
 temporal workflow describe
@@ -99,14 +96,12 @@ Callbacks: 1
   RegistrationTime  32 minutes ago
 ```
 
-## Tracing
+## 链路追踪
 
-Temporal integrates with [OpenTelemetry](https://opentelemetry.io/) and [OpenTracing](https://opentracing.io/) to visualize call graphs across Activities, Nexus Operations, and Child Workflows.
-Enable tracing by installing an interceptor on the Client or Worker:
+Temporal 与 [OpenTelemetry](https://opentelemetry.io/) 和 [OpenTracing](https://opentracing.io/) 集成，可跨 Activity、Nexus Operation 和 Child Workflow 可视化调用图。通过在 Client 或 Worker 上安装拦截器来启用链路追踪：
 
 - [Go SDK](https://github.com/temporalio/samples-go/tree/main/opentelemetry)
 - [Java SDK](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/tracing)
 - [Python SDK](https://github.com/temporalio/samples-python/tree/main/open_telemetry)
 - [TypeScript](https://github.com/temporalio/samples-typescript/tree/main/interceptors-opentelemetry)
 - [.NET SDK](https://github.com/temporalio/samples-dotnet/tree/main/src/OpenTelemetry)
-

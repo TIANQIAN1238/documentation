@@ -1,0 +1,263 @@
+---
+id: cancellation
+title: 取消 - .NET SDK
+sidebar_label: 消除
+description: Interrupt Workflow Execution in .NET using the Temporal SDK. Cancel for graceful stops; terminate for forceful stops.
+  Interrupt Workflow Execution in .NET using the Temporal SDK. Cancel for graceful stops; terminate for forceful stops.
+  Handle Cancellation in Workflow and Activities efficiently.
+toc_max_heading_level: 4
+keywords:
+  - interrupt workflow execution
+  - cancel workflow
+  - terminate workflow
+  - temporal cancellation
+  - temporal termination
+  - workflow execution
+  - temporal client
+  - activity heartbeat timeout
+  - cancellation request
+  - workflow cancellation token
+  - cancellation in .net
+  - terminate async
+  - cancel async
+  - workflow handle
+  - temporal .net
+  - temporal dotnet
+  - workflow management
+  - handle cancellation in workflow
+  - handle cancellation in activity
+  - request cancellation
+  - workflow code examples
+tags:
+  - Workflows
+  - .Net SDK
+  - Temporal SDKs
+---
+
+本页显示如何中断 Workflow Execution。
+
+您可以通过以下方式之一中断 Workflow Execution：
+
+- [取消](#cancellation)：取消 Workflow 提供了一种停止 Workflow Execution 的优雅方法。
+- [终止](#termination)：终止 Workflow 会强制停止 Workflow Execution。
+
+终止 Workflow 会强制停止 Workflow Execution。此操作类似于终止进程。
+
+- 系统在 Workflow 历史记录中记录“WorkflowExecutionTermulated”事件。
+- 强制终止并立即停止 Workflow Execution。
+- Workflow 代码没有机会处理终止。
+- Workflow Task 不会获得 Scheduled。
+
+在大多数情况下，取消是更好的选择，因为它可以让 Workflow 优雅地完成。仅在以下情况下终止
+Workflow卡住，无法正常取消。
+
+## 取消 {#cancellation}
+
+要使 Workflow 及其活动能够被取消，请执行以下操作：
+
+- 在 Workflow 内处理取消请求。
+- 设置 Activity 心跳超时。
+- 监听并处理 Activity 内的取消请求。
+- 从 Temporal CLIent 发送取消请求。
+
+### 在 Workflow 中处理取消 {#handle-cancellation-in-Workflow}
+
+可以编写 Workflow Definition 来响应取消请求。 Activity 通常运行在
+取消执行清理。
+
+Workflow 上的取消请求会取消“Workflow.CancellationToken”。这是隐式使用的令牌
+对于 Workflow 内的所有调用（例如 Timer、活动等），因此取消会传播到
+它们被处理并冒泡。
+
+```csharp
+[WorkflowRun]
+public async Task RunAsync()
+{
+    try
+    {
+        // Whether this workflow waits on the activity to handle the cancellation or not is
+        // dependent upon the CancellationType option. We leave the default here which sends the
+        // cancellation but does not wait on it to be handled.
+        await Workflow.ExecuteActivityAsync(
+            (MyActivities a) => a.MyNormalActivity(),
+            new() { ScheduleToCloseTimeout = TimeSpan.FromMinutes(5) });
+    }
+    catch (Exception e) when (TemporalException.IsCanceledException(e))
+    {
+        // The "when" clause above is because we only want to apply the logic to cancellation, but
+        // this kind of cleanup could be done on any/all exceptions too.
+        Workflow.Logger.LogError(e, "Cancellation occurred, performing cleanup");
+
+        // Call cleanup activity. If this throws, it will swallow the original exception which we
+        // are ok with here. This could be changed to just log a failure and let the original
+        // cancellation continue. We use a different cancellation token since the default one on
+        // Workflow.CancellationToken is now marked cancelled.
+        using var detachedCancelSource = new CancellationTokenSource();
+        await Workflow.ExecuteActivityAsync(
+            (MyActivities a) => a.MyCancellationCleanupActivity(),
+            new()
+            {
+                ScheduleToCloseTimeout = TimeSpan.FromMinutes(5),
+                CancellationToken = detachedCancelSource.Token;
+            });
+
+        // Rethrow the cancellation
+        throw;
+    }
+}
+```
+
+### 在 Activity 中处理取消 {#handle-cancellation-in-an-Activity}
+
+确保 Activity 处于 [Heartbeating](/develop/dotnet/activities/timeouts#Activity-heartbeats) 状态以接收
+取消请求并停止执行。还要确保
+[心跳超时](/develop/dotnet/activities/timeouts#heartbeat-timeout) 在调用时在 Activity 选项上设置
+来自 Workflow。 Activity 取消请求取消“ActivityExecutionContext”上的“CancellationToken”。
+
+```csharp
+[Activity]
+public async Task MyActivityAsync()
+{
+    // This is a naive loop simulating work, but similar heartbeat/cancellation logic applies to
+    // other scenarios as well
+    while (true)
+    {
+        // Send heartbeat
+        ActivityExecutionContext.Current.Heartbeat();
+
+        // Do some work, passing the cancellation token
+        await Task.Delay(1000, ActivityExecutionContext.Current.CancellationToken);
+    }
+}
+```
+
+### 请求取消 {#request-cancellation}
+
+在“WorkflowHandle”上使用“CancelAsync”来取消 Workflow Execution。
+
+```csharp
+// Get a workflow handle by its workflow ID. This could be made specific to a run by passing run ID.
+// This could also just be a handle that is returned from StartWorkflowAsync instead.
+var handle = myClient.GetWorkflowHandle("my-workflow-id");
+
+// Send cancellation. This returns when cancellation is received by the server. Wait on the handle's
+// result to wait for cancellation to be applied.
+await handle.CancelAsync();
+```
+
+#### 如何请求取消 Activity
+
+默认情况下，由于 Workflow 取消令牌，当 Workflow 取消时，活动会自动取消
+is used by activities by default.要显式发出取消，可以创建新的取消令牌。
+
+```csharp
+[WorkflowRun]
+public async Task RunAsync()
+{
+    // Create a source linked to workflow cancellation. A new source could be created instead if we
+    // didn't want it associated with workflow cancellation.
+    using var cancelActivitySource = CancellationTokenSource.CreateLinkedTokenSource(
+        Workflow.CancellationToken);
+
+    // Start the activity. Whether this workflow waits on the activity to handle the cancellation
+    // or not is dependent upon the CancellationType option. We leave the default here which sends
+    // the cancellation but does not wait on it to be handled.
+    var activityTask = Workflow.ExecuteActivityAsync(
+        (MyActivities a) => a.MyNormalActivity(),
+        new()
+        {
+            ScheduleToCloseTimeout = TimeSpan.FromMinutes(5),
+            CancellationToken = cancelActivitySource.Token;
+        });
+    activityTask.Start();
+
+    // Wait 5 minutes, then cancel it
+    await Workflow.DelayAsync(TimeSpan.FromMinutes(5));
+    cancelActivitySource.Cancel();
+
+    // Wait on the activity which will throw cancellation which will fail the workflow
+    await activityTask;
+}
+```
+
+## 终止 {#termination}
+
+要在 .NET 中终止 Workflow Execution，请使用
+[TerminateAsync()](https://dotnet.Temporal.io/api/Temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_TerminateAsync_System_String_Temporalio_Client_WorkflowTerminateOptions_)
+Workflow 手柄上的方法。
+
+```csharp
+// Get a workflow handle by its workflow ID. This could be made specific to a run by passing run ID.
+// This could also just be a handle that is returned from StartWorkflowAsync instead.
+var handle = myClient.GetWorkflowHandle("my-workflow-id");
+
+// Terminate
+await handle.TerminateAsync();
+```
+
+Workflow Execution 也可以直接从 WebUI 终止。在这种情况下，可以从以下位置记录自定义注释：
+发生这种情况时的用户界面。
+
+## 重置 Workflow Execution {#reset}
+
+重置 Workflow Execution 将终止当前的 Workflow Execution 并从
+您在 Event History 中指定的点。当 Workflow 由于非确定性错误或其他原因而被阻止时，请使用重置
+阻止其完成的问题。
+
+当您重置 Workflow 时，重置点之前的 Event History 将被复制到新的 Workflow Execution，并且
+Workflow 从该点开始使用当前代码恢复。仅当您解决了根本问题（例如
+删除不确定性代码。重置点之后取得的任何进度都将被丢弃。给出一个理由，当
+重置，因为它将记录在 Event History 中。
+
+<Tabs>
+
+<TabItem value="web-ui" label="Web UI">
+
+1. 导航至Workflow Execution详细信息页面，
+2. 单击右上角下拉菜单中的 **重置** 按钮，
+3. 选择要重置的事件 ID，
+4. 提供重置原因，
+5. 确认重置。
+
+Web UI 显示可用的重置点，并在重置完成后创建指向新 Workflow Execution 的链接。
+
+</TabItem>
+
+<TabItem value="cli" label="Temporal CLI">
+
+使用“Temporal Workflow重置”命令重置Workflow Execution：
+
+```bash
+temporal workflow reset \
+    --workflow-id <workflow-id> \
+    --event-id <event-id> \
+    --reason "Reason for reset"
+```
+
+例如：
+
+```bash
+temporal workflow reset \
+    --workflow-id my-background-check \
+    --event-id 4 \
+    --reason "Fixed non-deterministic code"
+```
+
+默认情况下，该命令会将最新的 Workflow Execution 重置为“默认”Namespace。使用 `--run-id` 重置
+具体运行。使用 `--Namespace` 指定不同的 Namespace：
+
+```bash
+temporal workflow reset \
+    --workflow-id my-background-check \
+    --event-id 4 \
+    --reason "Fixed non-deterministic code" \
+    --namespace my-namespace \
+    --tls-cert-path /path/to/cert.pem \
+    --tls-key-path /path/to/key.pem
+```
+
+重置后监视新的 Workflow Execution 以确保其成功完成。
+
+</TabItem>
+
+</Tabs>

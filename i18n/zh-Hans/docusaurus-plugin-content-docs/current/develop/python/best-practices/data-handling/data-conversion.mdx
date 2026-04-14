@@ -1,0 +1,160 @@
+---
+id: data-conversion
+title: 有效负载转换 - Python SDK
+sidebar_label: 有效负载转换
+slug: /develop/python/data-handling/data-conversion
+toc_max_heading_level: 2
+tags:
+  - Data Converters
+  - Python SDK
+  - Temporal SDKs
+description: 自定义 Temporal 如何使用 Python SDK 中的有效负载转换器序列化应用程序对象，包括 Pydantic 和自定义类型示例。
+---
+
+有效负载转换器将您的应用程序对象序列化为“有效负载”并将它们反序列化回来。
+“有效负载”是一种带有元数据的二进制形式，Temporal 使用它来传输数据。
+
+默认情况下，Temporal 使用“DefaultPayloadConverter”来处理“None”、“bytes”、Protobuf 消息和任何可 JSON 序列化的内容。
+仅当您的应用程序使用本机不支持的类型时，您才需要自定义有效负载转换器。
+
+## 默认支持的类型
+
+默认Data Converter支持多种类型转换，包括：
+
+- `无`
+- `字节`
+- `google.Protobuf.message.Message` — 编码时为 JSON，但可以解码其他语言的二进制原型
+- 任何可以转换为 JSON 的内容，包括：
+  - [`json.dump`](https://docs.python.org/3/library/json.html#json.dump) 本机支持的任何内容
+  - [数据类](https://docs.python.org/3/library/dataclasses.html)
+  - 默认情况下，包括 JSON 转储在内的可迭代对象可能不支持，例如`设置`
+  - 基于 [IntEnum, StrEnum](https://docs.python.org/3/library/enum.html) 的枚举
+  - [UUID](https://docs.python.org/3/library/uuid.html)
+
+尽管 Workflow、Update、Signal 和查询都可以使用多个输入参数进行定义，但用户强烈要求
+鼓励使用单个“dataclass”或 Pydantic 模型参数，以便可以轻松添加具有默认值的字段
+而不破坏兼容性。
+类似的建议适用于返回值。
+
+具有泛型的类可能无法正确解析泛型。
+当前的实现没有泛型类型解析。
+用户应该使用具体类型。
+
+## 使用 Pydantic 模型
+
+要使用 Pydantic 模型实例，请安装 Pydantic 并在创建 Client 实例时设置 Pydantic Data Converter：
+
+```python
+from temporalio.contrib.pydantic import pydantic_data_converter
+
+client = Client(data_converter=pydantic_data_converter, ...)
+```
+
+此 Data Converter 支持所有 [Pydantic 支持的类型](https://docs.pydantic.dev/latest/api/standard_library_types/) 与 JSON 之间的转换。
+除了 Pydantic 模型之外，支持的类型包括：
+
+- [`json.dumps()`](https://docs.python.org/3/library/json.html#py-to-json-table) 默认支持的所有内容。
+- `json.dumps()` 不支持的几种标准库类型，包括数据类、日期时间模块中的类型、集合、UUID 等。
+- 由其中任何一个组成的自定义类型，具有任意程度的嵌套。
+  例如，带有“datetime”字段的 Pydantic 模型列表。
+
+有关完整详细信息，请参阅 [Pydantic 文档](https://docs.pydantic.dev/latest/api/standard_library_types/)。
+
+:::note
+
+此 Data Converter 不支持 Pydantic v1。
+如果您还无法从 Pydantic v1 升级，请参阅 https://github.com/Temporalio/samples-python/tree/main/pydantic_converter/v1 以获取有限的 v1 支持。
+
+:::
+
+`datetime.date`、`datetime.time` 和 `datetime.datetime` 只能与 Pydantic Data Converter 一起使用。
+
+## 默认转换器如何工作
+
+默认转换器是一个“CompositePayloadConverter”，它会按顺序尝试每个编码转换器，直到有人处理该值。
+序列化后，每个“EncodingPayloadConverter”都会按顺序使用，直到一个成功为止。
+
+有效负载转换器可以独立于有效负载编解码器进行定制。
+
+## 自定义有效负载转换器
+
+要处理自定义数据类型，请创建一个新的“EncodingPayloadConverter”。
+例如，要支持 `IPv4Address` 类型：
+
+```python
+class IPv4AddressEncodingPayloadConverter(EncodingPayloadConverter):
+    @property
+    def encoding(self) -> str:
+        return "text/ipv4-address"
+
+    def to_payload(self, value: Any) -> Optional[Payload]:
+        if isinstance(value, ipaddress.IPv4Address):
+            return Payload(
+                metadata={"encoding": self.encoding.encode()},
+                data=str(value).encode(),
+            )
+        else:
+            return None
+
+    def from_payload(self, payload: Payload, type_hint: Optional[Type] = None) -> Any:
+        assert not type_hint or type_hint is ipaddress.IPv4Address
+        return ipaddress.IPv4Address(payload.data.decode())
+
+class IPv4AddressPayloadConverter(CompositePayloadConverter):
+    def __init__(self) -> None:
+        # Just add ours as first before the defaults
+        super().__init__(
+            IPv4AddressEncodingPayloadConverter(),
+            *DefaultPayloadConverter.default_encoding_payload_converters,
+        )
+
+my_data_converter = dataclasses.replace(
+    DataConverter.default,
+    payload_converter_className=IPv4AddressPayloadConverter,
+)
+```
+
+### 为自定义类型自定义 JSON 转换器
+
+如果您需要自定义类型在列表、联合和其他集合中工作，请自定义现有的 JSON 转换器，而不是添加新的编码转换器。
+JSON 转换器是列表中的最后一个，因此它可以处理任何其他未知类型。
+
+使用自定义“json.JSONEncoder”自定义序列化，并使用自定义“JSONTypeConverter”自定义反序列化：
+
+```python
+class IPv4AddressJSONEncoder(AdvancedJSONEncoder):
+    def default(self, o: Any) -> Any:
+        if isinstance(o, ipaddress.IPv4Address):
+            return str(o)
+        return super().default(o)
+
+class IPv4AddressJSONTypeConverter(JSONTypeConverter):
+    def to_typed_value(
+        self, hint: Type, value: Any
+    ) -> Union[Optional[Any], _JSONTypeConverterUnhandled]:
+        if issubclass(hint, ipaddress.IPv4Address):
+            return ipaddress.IPv4Address(value)
+        return JSONTypeConverter.Unhandled
+
+class IPv4AddressPayloadConverter(CompositePayloadConverter):
+    def __init__(self) -> None:
+        # Replace default JSON plain with our own that has our encoder and type
+        # converter
+        json_converter = JSONPlainPayloadConverter(
+            encoder=IPv4AddressJSONEncoder,
+            custom_type_converters=[IPv4AddressJSONTypeConverter()],
+        )
+        super().__init__(
+            *[
+                c if not isinstance(c, JSONPlainPayloadConverter) else json_converter
+                for c in DefaultPayloadConverter.default_encoding_payload_converters
+            ]
+        )
+
+my_data_converter = dataclasses.replace(
+    DataConverter.default,
+    payload_converter_className=IPv4AddressPayloadConverter,
+)
+```
+
+现在 `IPv4Address` 可以用在类型提示中，包括集合、可选值等。

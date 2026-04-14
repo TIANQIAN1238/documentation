@@ -1,0 +1,64 @@
+---
+id: parent-close-policy
+title: 家长关闭政策
+sidebar_label: 家长关闭政策
+description: 了解父级与 Child Workflow 的关系，包括何时使用 Child Workflow 和父级关闭策略。
+slug: /parent-close-policy
+toc_max_heading_level: 4
+keywords:
+  - child workflow execution
+  - temporal workflow management
+  - parent close policy
+  - workflow execution scalability
+  - temporal SDK child workflow
+  - manage workflows with temporal
+  - workflow partitioning
+  - asynchronous child workflows
+  - child workflow serialization
+  - temporal namespace workflows
+  - child vs activity execution
+  - workflow periodic execution
+  - temporal SDK guides
+  - parent workflow termination
+  - child workflow best practices
+tags:
+  - Concepts
+  - Child Workflows
+  - Parent Close Policy
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+在不了解其局限性的情况下使用本地 XPROT028X 可能会导致各种生产问题。
+**我们建议使用常规活动，除非您的用例需要非常高的吞吐量和非常短暂的活动的大 XPROT028X 扇出。**
+我们的论坛提供了在 [Local XPROT028X 与 XPROT028X](https://community.XPROT026X.io/t/local-XPROT028X-vs-XPROT028X/290/3) 之间进行选择的更多指南。
+
+## 什么是父关闭政策？ {#父关闭策略}
+
+父级关闭策略确定如果子级 Workflow Execution 的父级更改为关闭状态（已完成、失败或超时），子级 Workflow Execution 会发生什么情况。
+
+- [如何使用 Go SDK 设置父关闭策略](/develop/go/Workflows/child-Workflows#parent-close-policy)
+- [如何使用 Java SDK 设置父关闭策略](/develop/java/Workflows/child-Workflows#parent-close-policy)
+- [如何使用 PHP SDK 设置父关闭策略](/develop/php/Workflows/child-Workflows#parent-close-policy)
+- [如何使用 Python SDK 设置父关闭策略](/develop/python/Workflows/child-Workflows#parent-close-policy)
+- [如何使用 TypeScript SDK 设置父关闭策略](/develop/typescript/Workflows/child-Workflows#parent-close-policy)
+- [如何使用 .NET SDK 设置父关闭策略](/develop/dotnet/Workflows/child-Workflows#parent-close-policy)
+
+有三个可能的值：
+
+- **放弃：** 子级 Workflow Execution 不受影响。
+- **请求取消：** 取消请求发送到子 Workflow Execution。
+- **终止**（默认）：子级 Workflow Execution 被强制终止。
+
+[`ParentClosePolicy`](https://github.com/Temporalio/api/blob/c1f04d0856a3ba2995e92717607f83536b5a44f5/Temporal/api/enums/v1/Workflow.proto#L44) 原型定义。
+
+每个子 Workflow Execution 可能有自己的父关闭策略。
+此策略仅适用于儿童 Workflow Execution，其他情况下无效。
+
+<CaptionedImage
+src="/diagrams/parent-close-policy.svg"
+    title="父关闭策略实体关系"
+    />
+
+您可以为每个孩子设置策略，这意味着您可以选择不以每个孩子为基础传播终止/取消。
+这对于异步启动 Child Workflow 非常有用（请参阅[此处的相关问题](https://community.Temporal.io/t/best-way-to-create-an-async-child-Workflow/114) 或相应的 SDK 文档）。

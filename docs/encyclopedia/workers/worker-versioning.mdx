@@ -1,8 +1,8 @@
 ---
 id: worker-versioning
-title: Worker Versioning
-sidebar_label: Worker Versioning
-description: Learn the concepts behind Worker Versioning and the details behind how it works.
+title: "Worker 版本控制"
+sidebar_label: "Worker 版本控制"
+description: "了解 Worker 版本控制背后的概念及其工作原理的详细信息。"
 slug: /worker-versioning
 toc_max_heading_level: 4
 keywords:
@@ -17,141 +17,149 @@ tags:
   - Workers
 ---
 
-This page defines some of the underlying concepts used in [Worker Versioning](/production-deployment/worker-deployments/worker-versioning):
+本页定义了 [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning) 中使用的一些基本概念：
 
-- [Worker Deployments](#deployments)
-- [Worker Deployment Versions](#deployment-versions)
-- [Versioning Behaviors](#versioning-behaviors)
-- [Versioning Definitions](#versioning-definitions)
-- [Versioning Statuses](#versioning-statuses)
-- [Continue-as-new, Child Workflow, and Retry Semantics](#inheritance-semantics)
+- [Worker 部署](#deployments)
+- [Worker 部署版本](#deployment-versions)
+- [版本控制行为](#versioning-behaviors)
+- [版本控制定义](#versioning-definitions)
+- [版本控制状态](#versioning-statuses)
+- [Continue-As-New、Child Workflow 和重试语义](#inheritance-semantics)
 
-## Worker Deployments {#deployments}
+## Worker 部署 {#deployments}
 
-A Worker Deployment is a logical service that groups similar Workers together for unified management.
-Each Deployment has a name (such as your service name) and supports versioning through a series of Worker Deployment Versions.
+Worker 部署是将相似的 Worker 分组在一起进行统一管理的逻辑服务。
+每个部署都有一个名称（例如您的服务名称），并支持通过一系列 Worker 部署版本进行版本控制。
 
-## Worker Deployment Versions {#deployment-versions}
+## Worker 部署版本 {#deployment-versions}
 
-A Worker Deployment Version represents an iteration of a Worker Deployment.
-Each Deployment Version consists of Workers that share the same code build and environment.
-When a Worker starts polling for Workflow and Activity Tasks, it reports its Deployment Version to the Temporal Server.
+Worker 部署版本表示 Worker 部署的迭代。
+每个部署版本都由共享相同代码构建和环境的 Worker 组成。
+当 Worker 开始轮询 Workflow 和 Activity 任务时，它会将其部署版本报告给 Temporal Server。
 
-## Versioning Behaviors {#versioning-behaviors}
+## 版本控制行为 {#versioning-behaviors}
 
-You can declare each Workflow type to have a **Versioning Behavior**, either Pinned or Auto-Upgrade, in your Workflow configuration using an SDK or the CLI.
+您可以使用 SDK 或 CLI 在 Workflow 配置中声明每个 Workflow 类型具有**版本控制行为**（固定或自动升级）。
 
-To learn more about implementing Worker Versioning, see our [Worker Versioning in production](production-deployment/worker-deployments/worker-versioning) page.
+要了解有关实施 Worker 版本控制的更多信息，请参阅我们的 [Worker 生产中的版本控制](production-deployment/worker-deployments/worker-versioning) 页面。
 
-### Pinned Workflows {#pinned}
+### 固定 Workflows {#pinned}
 
-A **Pinned** Workflow is guaranteed to complete on a single Worker Deployment Version. You can mark a Workflow Type as pinned when you register it by adding an additional Pinned parameter. If you need to move a pinned Workflow to a new version, use [`temporal workflow update-options`](/cli/workflow#update-options).
+**固定** Workflow 保证在单个 Worker 部署版本上完成。您可以在注册 Workflow 类型时通过添加附加固定参数将其标记为固定。如果您需要将固定的 Workflow 移至新版本，请使用 [`Temporal Workflow Update-options`](/cli/workflow#update-options)。
 
-### Auto-Upgrade Workflows {#auto-upgrade}
+### 自动升级 Workflows {#auto-upgrade}
 
-An **Auto-Upgrade** Workflow will move to the latest Worker Deployment Version automatically whenever you change the current version. Auto-upgrade Workflows are not restricted to a single Deployment Version and need to be kept replay-safe manually, i.e. with [patching](/workflow-definition#workflow-versioning).
+每当您更改当前版本时，**自动升级** Workflow 将自动移动到最新的 Worker 部署版本。自动升级 Workflow 不限于单个部署版本，需要手动保持重放安全，即使用 [修补](/workflow-definition#workflow-versioning)。
 
-### Activity behavior across versions
+<a id="activity-behavior-across-versions"></a>
+### Activity 跨版本行为 {#activity-behavior-across-versions}
 
-There are a few scenarios to consider for your Activities when you're handling your Worker Deployment versions.
+当您处理 Worker 部署版本时，需要考虑一些活动方案。
 
-- Activities generally start on the Worker Deployment Version of their Workflow which means:
-  - For Pinned Workflows, an Activity starts on the pinned version.
-  - For Auto-Upgrade Workflows, an Activity starts on the Target Worker Deployment Version of the Workflow. In this case, Workflow Execution moves to its Target Version immediately before starting the Activity if the Target Version is different from the last used Version. The Target Worker Deployment Version of a Workflow is the Current or Ramping Version of the Workflow's Task Queue, depending on the Ramp Percentage and Workflow ID.
+- 活动通常从其 Workflow 的 Worker 部署版本开始，这意味着：
+  - 对于固定的 Workflow，Activity 从固定版本开始。
+  - 对于自动升级 Workflow，Activity 在 Workflow 的目标 Worker 部署版本上启动。在这种情况下，如果目标版本与上次使用的版本不同，则 Workflow Execution 在启动 Activity 之前立即移动到其目标版本。 Workflow 的目标 Worker 部署版本是 Workflow 的 Task Queue 的当前版本或渐变版本，具体取决于渐变百分比和 Workflow ID。
 
-There is an exception where you will have **Independent Activities**. Independent Activities are specific to Worker Versioning. They start on the Current or Ramping Version of their own Task Queue independently from their Workflow.
+有一个例外，您将有**独立活动**。独立活动特定于 Worker 版本控制。他们从自己的 Task Queue 的当前版本或斜坡版本开始，独立于 Workflow。
 
-- For a Pinned Workflow, Independent Activities are Activities that start on a Task Queue that's not a member of the calling Workflow's Pinned Worker Deployment Version.
-- For an Auto-Upgrade Workflow, Independent Activities are Activities that start on a Task Queue that's not a member of the calling Workflow's Target Worker Deployment Version.
+- 对于固定的 Workflow，独立活动是在 Task Queue 上启动的活动，该 Task Queue 不是调用 Workflow 的固定 Worker 部署版本的成员。
+- 对于自动升级 Workflow，独立活动是在 Task Queue 上启动的活动，该 Task Queue 不是调用 Workflow 的目标 Worker 部署版本的成员。
 
-Since Independent Activities aren't part of a Workflow's version, they can run in a few different ways:
+由于独立活动不是 Workflow 版本的一部分，因此它们可以通过几种不同的方式运行：
 
-- The Activity Task Queue is running in a separate Worker Deployment that only has the Independent Activity.
-- The Independent Activity is in an unversioned Task Queue.
-- The Independent Activity is in a separate Worker Deployment that has its own Workflows, but other Workflows reuse the Activity from other Worker Deployments.
+- Activity Task Queue 在仅具有独立 Activity 的单独 Worker 部署中运行。
+- 独立 Activity 位于未版本化的 Task Queue 中。
+- 独立 Activity 位于单独的 Worker 部署中，该部署拥有自己的 Workflow，但其他 Workflow 重复使用其他 Worker 部署中的 Activity。
 
-## Versioning Definitions
+<a id="versioning-definitions"></a>
+## 版本控制定义 {#versioning-definitions}
 
-- **Current Worker Deployment Version**: The version where Workflows are routed to unless they were previously pinned on a different version. Other versions can continue polling to allow pinned Workflows to finish executing or in case you need to roll back. If no current version is specified, the default is unversioned.
-- **Ramping Worker Deployment Version**: The version where a configurable percentage of Workflows are routed to unless they were previously pinned on a different version. The ramp percentage can be in the range [0, 100]. Workflows that don't go to the Ramping Version will go to the Current Version. If no Ramping Version is specified, 100% of new Workflows and Auto-Upgrade Workflows will go to the Current Version.
-- **Target Worker Deployment Version**: The version your Workflow will upgrade to next. This could be the Deployment's Current Version or the Ramping Version. For example, if an Auto-Upgrade Workflow was running on Version A, the Current Version is B, and there is a 5% ramp to C, there is a 95% chance that its Target Version is B and 5% that it's C. Workflow ID determines whether the workflow falls into the 95% group or the 5% group.
+- **当前 Worker 部署版本**：Workflow 路由到的版本，除非它们之前固定在不同版本上。其他版本可以继续轮询以允许固定的 Workflow 完成执行或以防万一您需要回滚。如果未指定当前版本，则默认为无版本。
+- **渐变 Worker 部署版本**：将可配置百分比的 Workflow 路由到的版本，除非它们之前固定在不同版本上。斜坡百分比可以在 [0, 100] 范围内。不进入斜坡版本的 Workflow 将进入当前版本。如果未指定渐变版本，则 100% 的新 Workflow 和自动升级 Workflow 将转到当前版本。
+- **目标 Worker 部署版本**：您的 Workflow 将升级到下一个版本。这可能是部署的当前版本或渐变版本。例如，如果自动升级 Workflow 在版本 A 上运行，当前版本为 B，并且有 5% 的升级到 C，则其目标版本为 B 的可能性为 95%，为 C 的可能性为 5%。Workflow ID 确定 Workflow 属于 95% 组还是 5% 组。
 
-## Versioning Statuses {#versioning-statuses}
+## 版本控制状态 {#versioning-statuses}
 
-A Worker Deployment Version moves through the following states:
+Worker 部署版本会经历以下状态：
 
-1. **Inactive**: The version exists because a Worker with that version has polled the server. If this version never becomes Active, it will never be Draining or Drained.
-2. **Active**: The version is either Current or Ramping, so it is accepting new Workflows and existing auto-upgrade Workflows.
-3. **Draining**: The version has open pinned Workflows running on it, but stopped being Current or Ramping, usually because a newer version has been deployed. It is possible to be Draining and have no open pinned Workflows for a short time, since the drainage status is updated only periodically.
-4. **Drained**: The version was draining and now all the pinned Workflows that were running on it are closed. Closed Workflows may still re-run some code paths if they are [Queried](https://docs.temporal.io/sending-messages#sending-queries) within their [Retention Period](https://docs.temporal.io/temporal-service/temporal-server#retention-period) and Workers with that version are still polling.
+1. **非活动**：该版本存在，因为具有该版本的 Worker 已轮询服务器。如果此版本从未变为“Active”，则它永远不会处于“Draining”或“Drained”状态。
+2. **活动**：版本为当前版本或正在升级版本，因此它接受新的 Workflow 和现有的自动升级 Workflow。
+3. **耗尽**：该版本已打开固定的 Workflow 在其上运行，但不再是当前或斜坡，通常是因为已部署了较新的版本。由于排水状态仅定期为 Updated，因此可能会在短时间内处于排水状态并且没有开路固定的 Workflow。
+4. **耗尽**：该版本正在耗尽，现在在其上运行的所有固定的 Workflow 都已关闭。如果关闭的 Workflow 的 [保留期限](https://docs.temporal.io/sending-messages#sending-queries) 中的 [查询](https://docs.temporal.io/temporal-service/temporal-server#retention-period) 和 Worker 仍在轮询，则它们仍可能重新运行某些代码路径。
 
-## Continue-as-new, Child Workflow, and Retry Semantics {#inheritance-semantics}
+## Continue-As-New、Child Workflow 和重试语义 {#inheritance-semantics}
 
-When Workflows start new runs (e.g. by continuing-as-new or retrying) the new run may inherit their versioning behavior. This section explains how inheritance works across different Workflow execution patterns.
+当 Workflow 开始新的运行（例如，通过继续新运行或重试）时，新运行可能会继承其版本控制行为。本节介绍继承如何在不同的 Workflow Execution 模式中发挥作用。
 
-### Ways Workflows Start New Runs
+<a id="ways-workflows-start-new-runs"></a>
+### Workflow 开始新运行的方式 {#ways-workflows-start-new-runs}
 
-A Workflow can start a new run through:
+Workflow 可以通过以下方式开始新的运行：
 
-- Starting a [Child Workflow](https://docs.temporal.io/child-workflows)
-- Invoking [Continue-As-New](https://docs.temporal.io/workflow-execution/continue-as-new)
-- Retrying per its [Retry Policy](https://docs.temporal.io/encyclopedia/retry-policies)
-- Starting another iteration of a [Cron Job](https://docs.temporal.io/cron-job) (superseded by [Schedules](https://docs.temporal.io/schedule))
+- 启动 [Child Workflow](https://docs.temporal.io/child-workflows)
+- 调用 [Continue-As-New](https://docs.temporal.io/workflow-execution/continue-as-new)
+- 按照 [Retry Policy](https://docs.temporal.io/encyclopedia/retry-policies) 重试
+- 开始 [计划任务](https://docs.temporal.io/cron-job) 的另一次迭代（由 [Schedules](https://docs.temporal.io/schedule) 取代）
 
-### Inheritance Rules Overview
+<a id="inheritance-rules-overview"></a>
+### 继承规则概述 {#inheritance-rules-overview}
 
-Auto-upgrade Workflows never inherit versions.
-By default, Pinned workflows will pass their version to any Pinned children.
+自动升级 Workflow 永远不会继承版本。
+默认情况下，固定的 Workflow 会将其版本传递给任何固定的子项。
 
-This section provides more detail on specific inheritance scenarios.
+本节提供有关特定继承方案的更多详细信息。
 
-### Inheritance by Scenario
+<a id="inheritance-by-scenario"></a>
+### 按场景继承 {#inheritance-by-scenario}
 
 #### Child Workflows
 
-**When Parent is Pinned:**
+**当家长被固定时：**
 
-- Child inherits the parent's version if the child's Task Queue belongs to that version
-- Child's first Workflow task executes in the same version as its parent
-- If child is also Pinned: child remains Pinned to the inherited version for its lifetime
-- If child is Auto-Upgrade: child's behavior changes to Auto-Upgrade after the first task completes
-- If child's Task Queue is not in the same Worker Deployment as parent: no inheritance occurs, child starts on Current Version of its task queue
+- 如果子项的 Task Queue 属于该版本，则子项继承父项的版本
+- 子级的第一个 Workflow 任务与其父级执行相同的版本
+- 如果子项也被固定：子项在其生命周期中保持固定到继承的版本
+- 如果孩子是自动升级：第一个任务完成后，孩子的行为将更改为自动升级
+- 如果子项的 Task Queue 与父项不在同一个 Worker 部署中：不会发生继承，子项从其 Task Queue 的当前版本开始
 
-**When Parent is Auto-upgrade:**
+**当父级自动升级时：**
 
-- Child inherits no initial Versioning Behavior
-- Child starts on the Current Version of its Worker Deployment like all new Workflow executions
+- 子项不继承初始版本控制行为
+- 子项像所有新的 Workflow Execution 一样从当前版本的 Worker 部署开始
 
 #### Continue-As-New
 
-**When Original Workflow is Pinned:**
+**当原始 Workflow 被固定时：**
 
-- The Pinned version is inherited across the Continue-As-New chain
-- If the new run's Task Queue is not in the same Worker Deployment as the original Workflow: no inheritance occurs, new run starts on Current Version of its task queue
+- 固定版本在 Continue-As-New 链中继承
+- 如果新运行的 Task Queue 与原始 Workflow 不在同一 Worker 部署中：不会发生继承，新运行将在其 Task Queue 的当前版本上启动
 
-**When Original Workflow is Auto-upgrade:**
+**原版Workflow自动升级时：**
 
-- No version inheritance occurs
+- 不发生版本继承
 
-#### Retries
+<a id="retries"></a>
+#### 重试 {#retries}
 
-**Inheritance Conditions (all must be met):**
+**继承条件（必须全部满足）：**
 
-- The retried run is effectively pinned at the time of retry
-- The retried run inherited a pinned version when it started (i.e., it is a child of a pinned parent, or a Continue-As-New of a pinned run)
-- The retried run is running on a Task Queue in the inherited version
+- 重试运行在重试时被有效固定
+- 重试的运行在启动时继承了固定版本（即，它是固定父级的子级，或固定运行的 Continue-As-New）
+- 重试运行在继承版本的 Task Queue 上运行
 
-**When Conditions Not Met:**
+**当条件不满足时：**
 
-- No version inheritance occurs
+- 不发生版本继承
 
-#### Cron Jobs
+<a id="cron-jobs"></a>
+#### 计划任务 {#cron-jobs}
 
-- **Never inherit** versioning behavior or version
+- **永远不要继承**版本控制行为或版本
 
-### Versioning Override Inheritance
+<a id="versioning-override-inheritance"></a>
+### 版本控制覆盖继承 {#versioning-override-inheritance}
 
-- Children, crons, retries, and continue-as-new inherit the source run's override **if**:
-  - The override is pinned, **AND**
-  - The new Workflow's Task Queue belongs to the override version
-- Override inheritance is evaluated separately and takes precedence over inherited base version
+- 子进程、crons、重试和 Continue-As-New 继承源运行的覆盖 **if**：
+  - 覆盖已固定，**并且**
+  - 新Workflow的Task Queue属于覆盖版本
+- 覆盖继承是单独评估的，并且优先于继承的基本版本

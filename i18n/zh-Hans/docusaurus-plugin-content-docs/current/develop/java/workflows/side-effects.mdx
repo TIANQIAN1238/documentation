@@ -1,0 +1,84 @@
+---
+id: side-effects
+title: Side Effects - Java SDK
+sidebar_label: Side Effects
+slug: /develop/java/workflows/side-effects
+toc_max_heading_level: 2
+keywords:
+  - side-effects
+tags:
+  - Side-effects
+  - Java SDK
+  - Temporal SDKs
+description: Workflow 中的 Side Effect 执行非确定性代码，例如生成 UUID。结果保存在 Workflow Event History 中，以便一致重放而无需重新执行。
+---
+
+## Side Effects {#副作用}
+
+Side Effect 用于执行非确定性代码，例如生成 UUID 或随机数，而不影响 Workflow 的确定性。
+这是通过将 Side Effect 的非确定性结果存储到 Workflow [Event History](/Workflow-execution/event#event-history) 中来完成的。
+
+Side Effect 在重放期间不会重新执行。相反，它返回 Workflow Execution Event History 的记录结果。
+
+Side Effect 不应出现故障。 Side Effect 引发的异常会导致当前 Workflow Task 失败并重试。
+
+也可以使用 Activity 或本地 Activity 代替 Side Effect，因为其结果也保留在 Workflow Execution 历史记录中。
+
+:::note
+
+您不应修改 Side Effect 函数内的 Workflow 状态，因为它在重播期间不会重新执行。 Side Effect 函数应该用于返回一个值。
+
+:::
+
+要在 Java 中使用 Side Effect，请设置[`sideEffect()`](https://www.javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/Workflow/Workflow.html#sideEffect(java.lang.Class,io.Temporal.Workflow.Functions.Func)) 函数Workflow Execution 并返回非确定性代码。
+
+```java
+int random = Workflow.sideEffect(Integer.class, () -> random.nextInt(100));
+if random < 50 {
+       ....
+} else {
+       ....
+}
+```
+
+这是使用 sideEffect() 的另一个示例。
+
+```java
+// implementation of the @WorkflowMethod
+public void execute() {
+    int randomInt = Workflow.sideEffect( int.class, () -> {
+        Random random = new SecureRandom();
+        return random.nextInt();
+    });
+
+    String userHome = Workflow.sideEffect(String.class, () -> System.getenv("USER_HOME"));
+
+    if(randomInt % 2 == 0) {
+        // ...
+    } else {
+        // ...
+    }
+}
+```
+
+Java 还提供了一种确定性方法来生成随机数或随机 UUID。
+
+要以确定性方法生成随机数，请使用 [`newRandom()`](https://javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/Workflow/Workflow.html#newRandom)。
+
+```java
+// implementation of the @WorkflowMethod
+public void execute() {
+    int randomInt = Workflow.newRandom().nextInt();
+    // ...
+}
+```
+
+要以确定性方法生成随机 UUID，请使用 [`randomUUID()`](https://www.javadoc.io/static/io.Temporal/Temporal-sdk/latest/io/Temporal/Workflow/Workflow.html#newRandom())。
+
+```java
+// implementation of the @WorkflowMethod
+public void execute() {
+    String randomUUID = Workflow.randomUUID().toString();
+    // ...
+}
+```

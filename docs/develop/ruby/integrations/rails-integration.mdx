@@ -1,8 +1,8 @@
 ---
 id: rails-integration
-title: Rails integration - Ruby SDK
-sidebar_label: Rails integration
-description: Use the Temporal Ruby SDK with Ruby on Rails, including conventions for ActiveRecord, ActiveModel, and handling lazy/eager loading.
+title: "导轨集成 - Ruby SDK"
+sidebar_label: "导轨集成"
+description: "将 Temporal Ruby SDK 与 Ruby on Rails 结合使用，包括 ActiveRecord、ActiveModel 和处理延迟/急切加载的约定。"
 keywords:
   - rails
   - ruby on rails
@@ -17,34 +17,36 @@ tags:
   - Temporal SDKs
 ---
 
-Temporal Ruby SDK is a generic Ruby library that can work in any Ruby environment.
-However, there are some common conventions for Rails users to be aware of.
+Temporal Ruby SDK 是一个通用的 Ruby 库，可以在任何 Ruby 环境中工作。
+然而，Rails 用户需要注意一些常见的约定。
 
-See the [rails_app sample](https://github.com/temporalio/samples-ruby/tree/main/rails_app) for an example of using Temporal from Rails.
+有关使用 Rails 中的 Temporal 的示例，请参阅 [Rails_app 示例](https://github.com/temporalio/samples-ruby/tree/main/rails_app)。
 
-## ActiveRecord
+<a id="activerecord"></a>
+## 活动记录 {#activerecord}
 
-For ActiveRecord, or other general/ORM models that are used for a different purpose, it is not recommended to try to reuse them as Temporal models.
-Eventually model purposes diverge and models for a Temporal workflows/activities should be specific to their use for clarity and compatibility reasons.
-Also many Ruby ORMs do many lazy things and therefore provide unclear serialization semantics.
-Instead, consider having models specific for Workflows/Activities and translate to/from existing models as needed.
-See the [ActiveModel section](/develop/ruby/best-practices/converters-and-encryption#active-model) on how to do this with ActiveModel objects.
+对于 ActiveRecord 或用于不同目的的其他通用/ORM 模型，不建议尝试将它们重用为 Temporal 模型。
+最终模型的目的会有所不同，出于清晰度和兼容性原因，Temporal Workflow/活动的模型应特定于其用途。
+此外，许多 Ruby ORM 做了很多偷懒的事情，因此提供了不明确的序列化语义。
+相反，请考虑使用特定于 Workflow/活动的模型，并根据需要与现有模型进行转换。
+请参阅 [活动模型部分](/develop/ruby/best-practices/converters-and-encryption#active-model) 了解如何使用 ActiveModel 对象执行此操作。
 
-## Lazy/Eager Loading
+<a id="lazyeager-loading"></a>
+## 延迟/急切加载 {#lazyeager-loading}
 
-By default, Rails eagerly loads all application code on application start in production, but lazily loads it in non-production environments.
-Temporal Workflows by default disallow use of IO during the Workflow run.
-With lazy loading enabled in dev/test environments, when an Activity class is referenced in a Workflow before it has been explicitly required, it can give an error like:
+默认情况下，Rails 在生产环境中的应用程序启动时立即加载所有应用程序代码，但在非生产环境中延迟加载它。
+Temporal 默认情况下，Workflow 不允许在 Workflow 运行期间使用 IO。
+在开发/测试环境中启用延迟加载时，当在明确要求之前在 Workflow 中引用 Activity 类时，它可能会给出如下错误：
 
 ```
 Cannot access File path from inside a workflow. If this is known to be safe, the code can be run in a Temporalio::Workflow::Unsafe.illegal_call_tracing_disabled block.
 ```
 
-This comes from bootsnap via zeitwerk because it is lazily loading a class/module at Workflow runtime.
-It is not good to lazily load code during a Workflow run because it can be side effecting.
-Workflows and the classes they reference should be eagerly loaded.
+这来自通过 zeitwerk 的 bootsnap，因为它在 Workflow 运行时延迟加载类/模块。
+在 Workflow 运行期间延迟加载代码并不好，因为它可能是 Side Effecting。
+应立即加载 Workflow 及其引用的类。
 
-To resolve this, either always eagerly load (e.g. `config.eager_load = true`) or explicitly require what is used by a workflow at the top of the file.
+要解决此问题，要么始终急切加载（例如 `config.eager_load = true`），要么明确要求文件顶部的 Workflow 使用的内容。
 
-Note, this only affects non-production environments.
+请注意，这仅影响非生产环境。
 

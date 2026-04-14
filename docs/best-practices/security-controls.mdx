@@ -1,8 +1,8 @@
 ---
 id: security-controls
-title: Security controls for Temporal Cloud
-sidebar_label: Security controls for Cloud
-description: Best practices for implementing and managing security controls in Temporal Cloud environments.
+title: "Temporal Cloud 的安全控制"
+sidebar_label: "云安全控制"
+description: "在 Temporal Cloud 环境中实施和管理安全控制的最佳实践。"
 toc_max_heading_level: 4
 keywords:
   - temporal cloud security
@@ -16,129 +16,153 @@ tags:
   - Temporal Cloud
 ---
 
-Temporal Cloud provides the capabilities of Self-Hosted Temporal as a managed service; it does not manage your applications or workers. Applications and services written using Temporal SDKs still run in your compute environment, and you have full control over how you secure your applications and services.
+Temporal Cloud 提供自托管 Temporal 的功能作为托管服务；它不管理您的应用程序或 Worker。使用 Temporal SDK 编写的应用程序和服务仍然在您的计算环境中运行，并且您可以完全控制如何保护应用程序和服务。
 
-These best practices ensure your Temporal Cloud environment adheres to the security guidelines recommended by our team. You can also learn more about our security practices, compliance posture, and subscribe for vulnerability (CVE) updates at https://trust.temporal.io/. 
+这些最佳实践可确保您的 Temporal Cloud 环境遵守我们团队推荐的安全准则。您还可以了解有关我们的安全实践、合规状况的更多信息，并订阅漏洞 (CVE) Update：https://trust.Temporal.io/.
 
-If you have any concerns or questions, please reach out to your Account Executive or to our security team at security@temporal.io.
+如果您有任何疑虑或疑问，请通过 security@Temporal.io 联系您的客户经理或我们的安全团队。
 
 :::tip 
 
-**Stay Updated on Temporal Security Advisories:** 
-Subscribe to Temporal’s security updates on the [Temporal Trust Portal](https://trust.temporal.io/) so you are aware of any patches or CVEs. While Temporal Cloud server-side updates are handled by the vendor, your Temporal SDKs (in application code) should be kept up-to-date.
+**留在 Updated 上 Temporal 安全公告：** 
+订阅 [Temporal 信任门户](https://trust.temporal.io/) 上的 Temporal 安全 Update，以便您了解任何补丁或 CVE。虽然 Temporal Cloud 服务器端 Update 由供应商处理，但您的 Temporal SDK（在应用程序代码中）应保持最新。
 
 :::
 
-## Identity and Access Management
+<a id="identity-and-access-management"></a>
+## 身份和访问管理 {#identity-and-access-management}
 
-Strong identity management in Temporal Cloud is crucial for ensuring secure access for your Temporal account. It’s critical that only authorized users and services can access your Temporal Cloud account and that each has the minimum necessary permissions needed for their role. 
+Temporal Cloud 中强大的身份管理对于确保 Temporal 帐户的安全访问至关重要。至关重要的是，只有授权用户和服务才能访问您的 Temporal Cloud 帐户，并且每个用户和服务都拥有其角色所需的最低必要权限。
 
-### Best Practices:
+<a id="best-practices"></a>
+### 最佳实践： {#best-practices}
 
-#### 1. Enable [SAML Single Sign-on](https://docs.temporal.io/cloud/saml) (SSO) for User Access
+<a id="1-enable-saml-single-sign-on-sso-for-user-access"></a>
+#### 1. 启用 [SAML 单点登录](https://docs.temporal.io/cloud/saml) (SSO) 用户访问 {#1-enable-saml-single-sign-on-sso-for-user-access}
 
-Integrate Temporal Cloud with your organization's identity provider via SAML 2.0 for centralized authentication. SSO allows you to enforce your corporate login policies (MFA, password complexity, etc.). When you configure SAML with Temporal Cloud, you can disable social logins (i.e. Microsoft, Google) by opening a support ticket. 
+通过 SAML 2.0 将 Temporal Cloud 与您组织的身份提供商集成以进行集中身份验证。 SSO 允许您强制执行公司登录策略（MFA、密码复杂性等）。当您使用 Temporal Cloud 配置 SAML 时，您可以通过打开支持票证来禁用社交登录（即 Microsoft、Google）。
 
-#### 2. Use Least-Privilege Roles for Temporal Cloud Users
+<a id="2-use-least-privilege-roles-for-temporal-cloud-users"></a>
+#### 2. 对 Temporal Cloud 用户使用最低权限角色 {#2-use-least-privilege-roles-for-temporal-cloud-users}
 
-Temporal Cloud provides [preconfigured account-level roles](https://docs.temporal.io/cloud/users) (Account Owner, Finance Admin, Global Admin, Developer, Read-Only) and Namespace-level permissions. Assign users the lowest level of access they need. For example, give developers access only to the Namespaces they work on, and use read-only roles for auditors or reviewers. Regularly review user roles and remove or downgrade accounts that are no longer needed
+Temporal Cloud 提供 [预配置的帐户级角色](https://docs.temporal.io/cloud/users)（账户所有者、财务管理员、全局管理员、开发人员、只读）和 Namespace 级别的权限。为用户分配他们需要的最低访问级别。例如，仅允许开发人员访问他们所处理的 Namespace，并为审核员或审阅者使用只读角色。定期检查用户角色并删除或降级不再需要的帐户
 
-#### 3. Leverage SCIM or Automated User Provisioning
+<a id="3-leverage-scim-or-automated-user-provisioning"></a>
+#### 3. 利用 SCIM 或自动用户配置 {#3-leverage-scim-or-automated-user-provisioning}
 
-When applicable, use [SCIM](https://docs.temporal.io/cloud/scim) or the Temporal Cloud user management API to automate adding and removing user accounts. This ensures timely removal of access when people change roles or leave the organization.
+如果适用，请使用 [SCIM](https://docs.temporal.io/cloud/scim) 或 Temporal Cloud 用户管理 API 自动添加和删除用户帐户。这可以确保当人们改变角色或离开组织时及时删除访问权限。
 
-#### Use Service Accounts for Automation
+<a id="use-service-accounts-for-automation"></a>
+#### 使用服务帐户实现自动化 {#use-service-accounts-for-automation}
 
-For non-human access (CI/CD pipelines, backend services), use [Temporal Cloud Service Accounts](https://docs.temporal.io/cloud/service-accounts) instead of shared user logins. Service Accounts are machine identities that can be granted specific permissions without ties to an individual. Create separate Service Accounts with unique API keys for different applications or microservices, and apply least privilege to each (e.g. a service account that only has access to one Namespace).
+对于非人类访问（CI/CD 管道、后端服务），请使用 [Temporal Cloud 服务帐户](https://docs.temporal.io/cloud/service-accounts) 而不是共享用户登录。服务帐户是可以被授予特定权限的机器身份，而与个人无关。为不同的应用程序或微服务创建具有唯一 API 密钥的单独服务帐户，并对每个应用程序或微服务应用最小权限（例如，只能访问一个 Namespace 的服务帐户）。
 
-## Secure Application Authentication and API Access
+<a id="secure-application-authentication-and-api-access"></a>
+## 安全应用程序身份验证和 API 访问 {#secure-application-authentication-and-api-access}
 
-Clients interact with the Temporal Service to initiate and manage Workflows, while Workers execute the business logic defined in Workflows and Activities in your own environment. 
+客户端与 Temporal 服务交互以启动和管理 Workflow，而 Worker 在您自己的环境中执行 Workflow 和活动中定义的业务逻辑。
 
-A crucial aspect of strengthening your usage involves securing these interactions. Temporal Cloud offers two authentication methods for your applications: mutual TLS certificates and API keys.
+加强使用的一个重要方面是确保这些交互的安全。 Temporal Cloud 为您的应用程序提供两种身份验证方法：相互 TLS 证书和 API 密钥。
 
-### Best Practices:
+<a id="best-practices"></a>
+### 最佳实践： {#best-practices}
 
-#### 1. Using Mutual TLS (mTLS) provides comprehensive security
+<a id="1-using-mutual-tls-mtls-provides-comprehensive-security"></a>
+#### 1. 使用相互 TLS (mTLS) 提供全面的安全性 {#1-using-mutual-tls-mtls-provides-comprehensive-security}
 
-Temporal Cloud secures its gRPC endpoint per Namespace via mutual TLS. This means you provide a Certificate Authority (CA) certificate for your Namespace, and all your Temporal clients/workers must present client certificates signed by that CA. 
+Temporal Cloud 通过相互 TLS 根据 Namespace 保护其 gRPC 端点。这意味着您为 Namespace 提供证书颁发机构 (CA) 证书，并且所有 Temporal CLIents/Worker 必须提供由该 CA 签名的客户端证书。
 
-We recommend you enable mTLS for strong identity assurance of clients; it ensures only systems holding a valid certificate (issued by your trusted CA) can connect. Generate a private key and CA certificate (or use your enterprise CA) and upload the CA to Temporal Cloud. Do not share these certificates and associated keys beyond the authorized services.
+我们建议您启用mTLS，为客户提供强有力的身份保证；它确保只有持有有效证书（由您信任的 CA 颁发）的系统才能连接。生成私钥和 CA 证书（或使用您的企业 CA）并将 CA 上传到 Temporal Cloud。不要在授权服务之外共享这些证书和关联密钥。
 
-#### 2. Proactively manage and rotate certificates
+<a id="2-proactively-manage-and-rotate-certificates"></a>
+#### 2. 主动管理和轮换证书 {#2-proactively-manage-and-rotate-certificates}
 
-Track the expiration dates of your client and [Certificate Authority certificates](https://docs.temporal.io/cloud/certificates). Temporal Cloud trusts the uploaded CA; if it expires, all client authorizations will fail. Establish and automate a certificate rotation schedule (e.g. rotate client certificates quarterly and CA certificates annually, well before expiry). Temporal supports uploading a new CA certificate alongside the old one to allow seamless rollover. Always test new certificates in a staging environment if possible.
+跟踪您的客户端和 [证书颁发机构证书](https://docs.temporal.io/cloud/certificates) 的到期日期。 Temporal Cloud信任上传的CA；如果过期，所有客户端授权都将失败。建立并自动化证书轮换 Schedule（例如，每季度轮换一次客户端证书，每年轮换一次 CA 证书，早在到期之前）。 Temporal 支持将新的 CA 证书与旧的 CA 证书一起上传，以实现无缝翻转。如果可能，请始终在临时环境中测试新证书。
 
-#### 3. If you’re using API Keys, handle them with strict care
+<a id="3-if-youre-using-api-keys-handle-them-with-strict-care"></a>
+#### 3. 如果您使用 API 密钥，请严格小心处理它们 {#3-if-youre-using-api-keys-handle-them-with-strict-care}
 
-Temporal Cloud API keys are an alternative to mTLS for authentication of SDKs, CLI, and automation. If you opt for API keys, handle them with strict care by enacting the following practices: 
-- Keep them secret: store in a secrets manager, never in code or Git.
-- Rotate at least every 90 days: Temporal lets you create a new key, swap it in, then delete the old one.
-- One key per service/person: no sharing or reuse.
-- Monitor usage & revoke on anomalies: feed Temporal audit logs to SIEM.
-- Optional: Admins can disable all user API keys if your policy is “mTLS only.”
+Temporal Cloud API 密钥是 mTLS 的替代方案，用于 SDK、CLI 和自动化的身份验证。如果您选择 API 密钥，请通过制定以下做法来严格谨慎地处理它们： 
+- 保密：存储在秘密管理器中，而不是存储在代码或 Git 中。
+- 至少每 90 天轮换一次：Temporal 可让您创建一把新钥匙，将其换入，然后删除旧钥匙。
+- 每个服务/人一把钥匙：不可共享或重复使用。
+- 监控使用情况并撤销异常：将 Temporal 审核日志提供给 SIEM。
+- 可选：如果您的策略是“仅限 mTLS”，管理员可以禁用所有用户 API 密钥。
 
-## Network Configuration and Isolation
+<a id="network-configuration-and-isolation"></a>
+## 网络配置和隔离 {#network-configuration-and-isolation}
 
-Although Temporal Cloud is a SaaS offering, you retain control over its networking configurations, allowing for tailored security measures. By minimizing public internet exposure and segmenting Temporal workflows into suitable network zones, you can significantly bolster security and reduce potential vulnerabilities. This approach ensures that your workflows are isolated and protected within your defined network boundaries, even while leveraging the benefits of a cloud-based service. 
+尽管 Temporal Cloud 是 SaaS 产品，但您仍保留对其网络配置的控制，从而可以采取定制的安全措施。通过最大限度地减少公共互联网暴露并将 Temporal Workflow 划分为合适的网络区域，您可以显着增强安全性并减少潜在的漏洞。这种方法可确保您的 Workflow 在您定义的网络边界内得到隔离和保护，即使同时利用基于云的服务的优势也是如此。
 
-### Best Practices:
+<a id="best-practices"></a>
+### 最佳实践： {#best-practices}
 
-#### 1. Use Private Connectivity
+<a id="1-use-private-connectivity"></a>
+#### 1. 使用专用连接 {#1-use-private-connectivity}
 
-Temporal Cloud supports private connectivity options such as [AWS PrivateLink](https://docs.temporal.io/cloud/connectivity/aws-connectivity) and [Google Cloud Private Service Connect](https://docs.temporal.io/cloud/connectivity/gcp-connectivity). If your infrastructure is in AWS or GCP, configure a PrivateLink/PSC endpoint for Temporal Cloud. This allows your workers and applications to reach Temporal Cloud over a private network path, avoiding traversal of the public internet. Private connectivity reduces the surface for man-in-the-middle attacks and can meet stringent network security policies.
+Temporal Cloud 支持专用连接选项，例如 [AWS 私有链接](https://docs.temporal.io/cloud/connectivity/aws-connectivity) 和 [Google 云私有服务连接](https://docs.temporal.io/cloud/connectivity/gcp-connectivity)。如果您的基础设施位于 AWS 或 GCP 中，请为 Temporal Cloud 配置 PrivateLink/PSC 终端节点。这允许您的 Worker 和应用程序通过专用网络路径到达 Temporal Cloud，从而避免遍历公共互联网。专用连接减少了中间人攻击的范围，并且可以满足严格的网络安全策略。
 
-#### 2. Separate environments by Namespace
+<a id="2-separate-environments-by-namespace"></a>
+#### 2.通过Namespace分隔环境 {#2-separate-environments-by-namespace}
 
-Use [Temporal Namespaces](https://learn.temporal.io/best_practice_guides/managing_a_namespace/#2-use-domain-service-and-environment-to-name-namespaces) to isolate workflows for different environments or teams (e.g. development, staging, production). Each Namespace is logically segregated and cannot interact with others by default, providing a security boundary. 
+使用 [Temporal Namespaces](https://learn.temporal.io/best_practice_guides/managing_a_namespace/#2-use-domain-service-and-environment-to-name-namespaces) 为不同环境或团队（例如开发、登台、生产）隔离 Workflow。每个Namespace在逻辑上都是隔离的，默认情况下不能与其他人交互，从而提供了安全边界。
 
-Ensure that your production Namespace uses stricter network controls (e.g. only accessible from the prod network) and that credentials for it are separate from non-prod Namespaces. This limits the impact of any compromise in a lower environment, and as workflow data is only visible to users with access to that Namespace, separating environments by Namespace also enforces data-visibility boundaries.
+确保您的生产 Namespace 使用更严格的网络控制（例如只能从产品网络访问），并且其凭据与非产品 Namespace 分开。这限制了较低环境中任何妥协的影响，并且由于 Workflow 数据仅对有权访问该 Namespace 的用户可见，因此通过 Namespace 分隔环境还强制执行数据-Visibility 边界。
 
-## Data Protection and Encryption
+<a id="data-protection-and-encryption"></a>
+## 数据保护和加密 {#data-protection-and-encryption}
 
-Temporal's data encryption capabilities ensure the security and confidentiality of your Workflows and provide protection without compromising performance. Protecting the data that you send to and store in Temporal Cloud is a joint responsibility. Temporal Cloud already encrypts all data at rest on the server side, but you can add additional layers of encryption and control. 
+Temporal 的数据加密功能可确保您的 Workflow 的安全性和机密性，并在不影响性能的情况下提供保护。保护您发送到 Temporal Cloud 并存储在 Temporal Cloud 中的数据是我们的共同责任。 Temporal Cloud 已对服务器端的所有静态数据进行加密，但您可以添加额外的加密和控制层。
 
-### Best Practices:
+<a id="best-practices"></a>
+### 最佳实践： {#best-practices}
 
-#### 1. Enable Client-Side Encryption for Workflow Data
+<a id="1-enable-client-side-encryption-for-workflow-data"></a>
+#### 1. 为 Workflow 数据启用客户端加密 {#1-enable-client-side-encryption-for-workflow-data}
 
-Temporal provides an optional [data conversion framework](https://docs.temporal.io/dataconversion) (Data Converter) and payload codec interface; customers must implement, deploy, and operate their own custom codec and manage encryption keys. 
+Temporal提供可选的[数据转换框架](https://docs.temporal.io/dataconversion)（Data Converter）和负载编解码器接口；客户必须实施、部署和操作自己的自定义编解码器并管理加密密钥。
 
-In practice, this means you can encrypt any sensitive data before it is sent to Temporal Cloud and only decrypt it on the Client/Worker side. Because encryption keys stay under your control, you are responsible for key generation, secure storage, rotation, and versioning. Implementing this involves developing a custom codec plugin in your Temporal SDK and optionally (if you need to inspect decrypted payloads in the Web UI or CLI) deploying a dedicated codec server.
+实际上，这意味着您可以在将任何敏感数据发送到 Temporal Cloud 之前对其进行加密，并且仅在客户端/Worker 端对其进行解密。由于加密密钥由您控制，因此您负责密钥生成、安全存储、轮换和版本控制。实现这一点涉及在 Temporal SDK 中开发自定义编解码器插件，并可选择（如果您需要在 Web UI 或 CLI 中检查解密的有效负载）部署专用的 Codec Server。
 
-#### 2. Encode Workflow Failure Details with a [Failure Converter](https://docs.temporal.io/failure-converter)
+<a id="2-encode-workflow-failure-details-with-a-failure-converter"></a>
+#### 2. 使用 [故障转换器](https://docs.temporal.io/failure-converter) 编码 Workflow 故障详细信息 {#2-encode-workflow-failure-details-with-a-failure-converter}
 
-Temporal’s default behavior copies error messages and call stacks as plain text, and this text is directly accessible in the Message field of Workflow Executions.
+Temporal 的默认行为将错误消息和调用堆栈复制为纯文本，并且可以在 Workflow Execution 的消息字段中直接访问此文本。
 
-If your failure messages and stack traces contain sensitive information, it is recommended that you configure the [Failure Converter](https://docs.temporal.io/failure-converter) to encrypt the error information. This would encrypt the `message` and `stack_trace` fields in the payloads.
+如果您的失败消息和堆栈跟踪包含敏感信息，建议您配置 [故障转换器](https://docs.temporal.io/failure-converter) 对错误信息进行加密。这将加密有效负载中的 `message` 和 `stack_trace` 字段。
 
-#### 3. Leverage Namespace Data Retention Policies
+<a id="3-leverage-namespace-data-retention-policies"></a>
+#### 3. 利用 Namespace 数据保留策略 {#3-leverage-namespace-data-retention-policies}
 
-Temporal Cloud Namespace has a [Retention Period](https://docs.temporal.io/temporal-service/temporal-server#retention-period) setting for workflow histories (1 to 90 days). Set an appropriate retention period to balance operational needs with security. Shorter retention means completed workflow data (history, payloads) is purged sooner, reducing the amount of sensitive data stored in the cloud at any time. Document your retention choices to align with your company’s data retention policies and regulatory requirements. For retention periods over 90 days, these can be exported to your own GCS or S3 buckets.
+Temporal Cloud Namespace 具有 Workflow 历史记录（1 至 90 天）的 [保留期限](https://docs.temporal.io/temporal-service/temporal-server#retention-period) 设置。设置适当的保留期限以平衡操作需求和安全性。较短的保留意味着更快地清除已完成的 Workflow 数据（历史记录、有效负载），从而减少随时存储在云中的敏感数据量。记录您的保留选择，以符合公司的数据保留政策和监管要求。对于超过 90 天的保留期，可以将它们导出到您自己的 GCS 或 S3 存储桶。
 
-### Availability and Disaster Recovery
+<a id="availability-and-disaster-recovery"></a>
+### 可用性和灾难恢复 {#availability-and-disaster-recovery}
 
-Temporal Cloud’s platform is engineered for fault-tolerance out of the box, but you determine which Namespaces merit the very highest availability guarantees. Use the table below to decide when to turn on different High Availability models and how to operationalise them.
+Temporal Cloud 的平台专为开箱即用的容错而设计，但您可以确定哪些 Namespace 值得最高的可用性保证。使用下表来决定何时开启不同的高可用性模型以及如何实施它们。
 
-| Namespace scope | Use Case | Uptime SLA | Recovery Time Objective (RTO) | Recovery Point Objective (RPO) |
+| Namespace范围 | 使用案例 | 正常运行时间服务等级协议 | 恢复时间目标 (RTO) | 恢复点目标 (RPO) |
 |-----------------|----------|------------|--------------------------------|--------------------------------|
-| **Single-Region** | **If your application is built for one region and does not have stringent high-availability or disaster recovery requirements.** | 99.9% | ≤ 8 hours | ≤ 8 hours |
-| **Same-Region Replication** | **If you want higher availability but your application is designed for a single region or if cross region latency doesn’t meet SLAs for application** | 99.99% | ≤ 20 minutes | Near-zero (≈ seconds) |
-| **Multi-Region Replication** | **If a disruption of your workflow will cause loss of revenue, poor end-user experience, or issues with regulatory compliance.** | 99.99% | ≤ 20 minutes | Near-zero (≈ seconds) |
-| **Multi-Cloud Replication** | **If you need the highest level of disaster tolerance, protecting against outages of an entire cloud provider (e.g., AWS or GCP)** | 99.99% | ≤ 20 minutes | Near-zero (≈ seconds) |
+| **单区域** | **如果您的应用程序是针对一个区域构建的，并且没有严格的高可用性或灾难恢复要求。** | 99.9% | ≤8小时 | ≤8小时 |
+| **同区域复制** | **如果您想要更高的可用性，但您的应用程序是针对单个区域设计的，或者跨区域延迟不符合应用程序的 SLA** | 99.99% | ≤20分钟 | 接近于零（≈秒） |
+| **多区域复制** | **如果 Workflow 的中断会导致收入损失、最终用户体验不佳或法规合规性问题。** | 99.99% | ≤20分钟 | 接近于零（≈秒） |
+| **多云复制** | **如果您需要最高级别的容灾能力，防止整个云提供商（例如 AWS 或 GCP）发生中断** | 99.99% | ≤20分钟 | 接近于零（≈秒） |
 
-### Best Practices:
+<a id="best-practices"></a>
+### 最佳实践： {#best-practices}
 
-#### 1. Identify Availability-sensitive Namespaces
+<a id="1-identify-availability-sensitive-namespaces"></a>
+#### 1. 识别可用性敏感的 Namespace {#1-identify-availability-sensitive-namespaces}
 
-Run a business-impact analysis to flag workflows where a regional outage would cause significant customer, revenue, or safety impact. Identify Namespaces that are availability-sensitive where a regional outage may have outsized business impacts such as revenue loss, poor customer experience, or inability to meet legal obligations.
+运行业务影响分析来标记 Workflow，其中区域中断将导致重大客户、收入或安全影响。识别对可用性敏感的 Namespace，其中区域中断可能会产生巨大的业务影响，例如收入损失、客户体验不佳或无法履行法律义务。
 
-#### 2. Enable High Availability for business critical use cases
+<a id="2-enable-high-availability-for-business-critical-use-cases"></a>
+#### 2. 为业务关键用例启用高可用性 {#2-enable-high-availability-for-business-critical-use-cases}
 
-For many organizations, ensuring High Availability (HA) is required because of strict uptime requirements, compliance, and regulatory needs. 
+对于许多组织来说，由于严格的正常运行时间要求、合规性和监管需求，需要确保高可用性 (HA)。
 
-For these critical use cases, enable High Availability features for specific namespaces for a [99.99% contractual SLA](https://docs.temporal.io/cloud/high-availability#high-availability-features). When choosing between [same-region, multi-region, and multi-cloud replication](https://docs.temporal.io/cloud/high-availability), it is recommended to use multi-region/multi-cloud replication to distribute your dependencies across regions. Using physically separated regions improves the fault tolerance of your application.
+对于这些关键用例，请为 [99.99% 合同 SLA](https://docs.temporal.io/cloud/high-availability#high-availability-features) 的特定 Namespace 启用高可用性功能。在 [同地域、多地域、多云复制](https://docs.temporal.io/cloud/high-availability) 之间进行选择时，建议使用多区域/多云复制来跨区域分发依赖项。使用物理上分离的区域可以提高应用程序的容错能力。
 
-By default, Temporal Cloud provides a [99.9% contractual SLA guarantee](https://docs.temporal.io/cloud/high-availability) against service errors for all namespaces. 
+默认情况下，Temporal Cloud 为所有 Namespace 提供针对服务错误的 [99.9% 合同 SLA 保证](https://docs.temporal.io/cloud/high-availability)。
 
-Note: [enabling HA features for namespaces will 2x the consumption cost.](https://docs.temporal.io/cloud/pricing#high-availability-features)
+注：[为 Namespace 启用 HA 功能将使消耗成本增加 2 倍。](https://docs.temporal.io/cloud/pricing#high-availability-features)

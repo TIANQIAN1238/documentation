@@ -1,0 +1,77 @@
+---
+id: migrate-within-cloud
+title: 区域间迁移
+sidebar_label: 区域间迁移
+slug: /cloud/migrate/migrate-within-cloud
+description: 使用 Temporal Cloud 的高可用性功能在区域之间进行迁移。
+tags:
+  - Temporal Cloud
+  - Production
+  - High Availability
+  - Migration
+keywords:
+  - availability
+  - explanation
+  - failover
+  - high-availability
+  - migration
+  - multi-cloud replication
+  - multi-region replication
+  - namespaces
+  - same-region replication
+  - temporal-cloud
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+Temporal Cloud 的[高可用性功能](/cloud/high-availability) 允许您将 Temporal Cloud Namespace 从一个区域或云提供商迁移到另一个区域或云提供商，并且零停机时间。
+
+## 准备迁移
+
+使用导出的 Namespace 将需要停止导出并将区域配置迁移到新区域，以便导出作业在迁移后继续。 
+有关详细信息，请参阅[故障转移场景](/cloud/export#failover-scenarios)。
+
+[使用高可用性功能会影响定价](/cloud/pricing#high-availability-features)。
+
+## 迁移步骤
+
+1. 在要迁移到的区域添加Namespace副本。请参阅 [regions](/cloud/regions) 了解可用区域和支持的多区域和多云配置的列表。
+
+<CaptionedImage
+src="/img/cloud/high-availability/migrate/1-add-replica.png"
+    title="添加 Namespace 副本"
+    缩放=“真”
+/>
+
+<CaptionedImage
+src="/img/cloud/high-availability/migrate/2-choose-region.png"
+    title="选择副本所在区域"
+    缩放=“真”
+/>
+
+2. 等待副本变为活动状态。云 UI 将显示时间估计，当副本处于活动状态时，Namespace 管理员将收到一封电子邮件。
+3. 如果您的 Worker 使用 API 密钥身份验证：确保您的 Worker（以及所有其他客户端代码）是 Updated，以[使用新副本的区域端点](/cloud/Namespaces#access-Namespaces)。
+4. 触发故障转移到新区域。
+
+<CaptionedImage
+* `complete`：响应包含请求的所有指标  
+*“有限”：由于大小限制（最多 30k 指标数据点），响应被截断。使用 XPROT025X 或度量过滤来减小响应大小。
+*“未知”：无法确定完整性（可能是由于区域问题或超时）。鼓励客户重试。
+
+5. 删除您要迁移的区域中的 Namespace 副本。
+
+:::note
+如果使用 [API 密钥](/cloud/api-keys) 进行 Worker 身份验证，您必须打开 [支持票证](/cloud/support#support-ticket) 才能删除副本。
+
+:::
+
+<CaptionedImage
+src =“/img/cloud/high-availability/migrate/4-remove-replica.png”
+    title="删除原始区域的副本"
+    缩放=“真”
+/>
+
+:::note
+在进行进一步的副本更改之前，所有副本更改均需经过一段[冷却期](/cloud/high-availability/enable#changing)。
+
+:::

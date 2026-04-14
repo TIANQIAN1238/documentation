@@ -1,8 +1,8 @@
 ---
 id: plugins-guide
-title: Plugins guide
-sidebar_label: Plugins guide
-description: Best practices for creating plugins for AI Agents
+title: "插件指南"
+sidebar_label: "插件指南"
+description: "为 AI 代理创建插件的最佳实践"
 toc_max_heading_level: 4
 hide_table_of_contents: false
 keywords:
@@ -15,67 +15,73 @@ tags:
 
 import SdkTabs from '@site/src/components';
 
-# Plugins
+<a id="plugins"></a>
+# 插件 {#plugins}
 
-A **Plugin** is an abstraction that allows you to customize any aspect of your Temporal Worker setup, including
-registering Workflow and Activity definitions, modifying worker and client options, and more. Using plugins, you can
-build reusable open-source libraries or build add-ons for engineers at your company.
+**插件**是一个抽象，允许您自定义 Temporal Worker 设置的任何方面，包括
+注册 Workflow 和 Activity Definition、修改 Worker 和客户端选项等等。使用插件，您可以
+为您公司的工程师构建可重用的开源库或构建附加组件。
 
-This guide will teach you how to create plugins and give platform engineers general guidance on using and managing
-Temporal's primitives.
+本指南将教您如何创建插件，并为平台工程师提供使用和管理的一般指导
+Temporal 的原语。
 
-Here are some common use cases for plugins:
+以下是插件的一些常见用例：
 
-- AI Agent SDKs
-- Observability, tracing, or logging middleware
-- Adding reliable built-in functionality such as LLM calls, messaging systems, and payments infrastructure
-- Encryption or compliance middleware
+- AI代理SDK
+- 可观察性、跟踪或日志记录中间件
+- 添加可靠的内置功能，例如 LLM 呼叫、消息传递系统和支付基础设施
+- 加密或合规中间件
 
-## How to build a Plugin
+<a id="how-to-build-a-plugin"></a>
+## 如何构建插件 {#how-to-build-a-plugin}
 
-The recommended way to start building plugins is with a `SimplePlugin`. This abstraction will tackle the vast majority
-of plugins people want to write.
+开始构建插件的推荐方法是使用 `SimplePlugin`。这种抽象将解决绝大多数问题
+人们想要编写的插件数量。
 
-### Example Plugins
+<a id="example-plugins"></a>
+### 示例插件 {#example-plugins}
 
-If you prefer to learn by getting hands-on with code, check out some existing plugins.
+如果您更喜欢通过实践代码来学习，请查看一些现有的插件。
 
-- Temporal's Python SDK ships with an
-  [OpenAI Agents SDK](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents) plugin
-- [Temporal client and Worker plugin for Pydantic AI](https://github.com/pydantic/pydantic-ai/blob/757d40932ebb8ef00f25cc469ff44e9b267b1aa3/pydantic_ai_slim/pydantic_ai/durable_exec/temporal/__init__.py#L83)
-- Temporal's TypeScript SDK ships with an
-  [OpenTelemetry Plugin](https://github.com/temporalio/sdk-typescript/blob/main/packages/interceptors-opentelemetry/src/plugin.ts)
+- Temporal 的 Python SDK 附带一个
+  [OpenAI 代理 SDK](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents) 插件
+- [Pydantic AI 的 Temporal CLIent 和 Worker 插件](https://github.com/pydantic/pydantic-ai/blob/757d40932ebb8ef00f25cc469ff44e9b267b1aa3/pydantic_ai_slim/pydantic_ai/durable_exec/temporal/__init__.py#L83)
+- Temporal 的 TypeScript SDK 附带一个
+  [打开遥测插件](https://github.com/temporalio/sdk-typescript/blob/main/packages/interceptors-opentelemetry/src/plugin.ts)
 
-## What you can provide to users in a plugin
+<a id="what-you-can-provide-to-users-in-a-plugin"></a>
+## 你可以在插件中为用户提供什么 {#what-you-can-provide-to-users-in-a-plugin}
 
-There are a number of features you can give your users with a plugin. Here's a short list of some of the things you can
-do.
+您可以通过插件为用户提供许多功能。这是您可以做的一些事情的简短列表
+做。
 
-- [Built-in Activities](#built-in-activity)
-- [Workflow-friendly libraries](#workflow-friendly-libraries)
-- [Built-in Workflows](#built-in-workflows)
-- [Built-in Nexus Operations](#built-in-nexus-operations)
-- [Custom Data Converters](#custom-data-converters)
-- [Interceptors](#interceptors)
-- [Context Propagators](#context-propagators)
+- [内置活动](#built-in-activity)
+- [Workflow 友好的库](#workflow-friendly-libraries)
+- [内置 Workflow](#built-in-workflows)
+- [内置Nexus操作](#built-in-nexus-operations)
+- [定制 Data Converter](#custom-data-converters)
+- [拦截器](#interceptors)
+- [上下文传播器](#context-propagators)
 
-### Built-in Activity
+<a id="built-in-activity"></a>
+### 内置 Activity {#built-in-activity}
 
-You can provide built-in Activities in a Plugin for users to call from their Workflows. Check out the
-[Activities](/activities) page for more details on how they work.
+您可以在插件中提供内置活动，供用户从其 Workflow 调用。查看
+[活动](/activities) 页了解有关其工作原理的更多详细信息。
 
-Refer to the [best practices for creating Activities](/activity-definition#best-practices-for-defining-activities) when
-you are making Activity plugins.
+请参阅 [创建活动的最佳实践](/activity-definition#best-practices-for-defining-activities) 时
+您正在制作 Activity 插件。
 
-#### Timeouts and retry policies
+<a id="timeouts-and-retry-policies"></a>
+#### 超时和重试策略 {#timeouts-and-retry-policies}
 
-Temporal's Activity retry mechanism gives applications the benefits of Durable Execution. See the
-[Activity retry policy explanation](/activity-definition#activity-retry-policy) for more details.
+Temporal 的 Activity 重试机制为应用程序提供了持久执行的优势。请参阅
+[Activity Retry Policy 说明](/activity-definition#activity-retry-policy) 了解更多详情。
 
 <SdkTabs hideUnsupportedLanguages>
   <SdkTabs.Python>
     {/* SNIPSTART python-plugin-activity */}
-[features/snippets/plugins/plugins.py](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.py)
+[功能/片段/插件/plugins.py](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.py)
 ```py
 @activity.defn
 async def some_activity() -> None:
@@ -88,7 +94,7 @@ plugin = SimplePlugin("organization.PluginName", activities=[some_activity])
   </SdkTabs.Python>
   <SdkTabs.Go>
     {/* SNIPSTART go-plugin-activity */}
-[features/snippets/plugins/plugins.go](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.go)
+[功能/片段/插件/plugins.go](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.go)
 ```go
 func SomeActivity(ctx context.Context) error {
 	// Activity implementation
@@ -114,7 +120,7 @@ func createActivityPlugin() (*temporal.SimplePlugin, error) {
   </SdkTabs.Go>
   <SdkTabs.Java>
     {/* SNIPSTART java-plugin-activity */}
-[features/snippets/plugins/plugins.java](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.java)
+[功能/片段/插件/plugins.java](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.java)
 ```java
 @ActivityInterface
 public interface SomeActivity {
@@ -138,7 +144,7 @@ SimplePlugin activityPlugin =
   </SdkTabs.Java>
   <SdkTabs.TypeScript>
     {/* SNIPSTART typescript-plugins-activity */}
-[features/snippets/plugins/plugins.ts](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.ts)
+[功能/片段/插件/plugins.ts](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.ts)
 ```ts
 const activity = async () => 'activity';
 const plugin = new SimplePlugin({
@@ -153,7 +159,7 @@ const plugin = new SimplePlugin({
   </SdkTabs.TypeScript>
   <SdkTabs.DotNet>
     {/* SNIPSTART dotnet-plugins-activity */}
-[features/snippets/plugins/plugins.cs](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.cs)
+[功能/片段/插件/plugins.cs](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.cs)
 ```cs
 [Activity]
 static void SomeActivity() => throw new NotImplementedException();
@@ -166,7 +172,7 @@ SimplePlugin activityPlugin = new SimplePlugin(
   </SdkTabs.DotNet>
   <SdkTabs.Ruby>
     {/* SNIPSTART ruby-plugin-activity */}
-[features/snippets/plugins/plugins.rb](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.rb)
+[功能/片段/插件/plugins.rb](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.rb)
 ```rb
 def some_activity
   # Activity implementation
@@ -182,75 +188,79 @@ plugin = Temporalio::SimplePlugin.new(
   </SdkTabs.Ruby>
 </SdkTabs>
 
-### Workflow-friendly libraries
+<a id="workflow-friendly-libraries"></a>
+### Workflow 友好的库 {#workflow-friendly-libraries}
 
-You can provide a library for use within a Workflow if you'd like to abstract away some Temporal-specific details for
-your users. Your library will call elements you include in your Plugin such as Activities, Child Workflows, Signals,
-Updates, Queries, Nexus Operations, Interceptors, Data Converters, and any other code as long as it follows these
-requirements:
+如果您想抽象出一些 Temporal 特定的详细信息，您可以提供一个在 Workflow 中使用的库。
+您的用户。您的库将调用您包含在插件中的元素，例如活动、Child Workflows、Signals、
+Update、查询、Nexus 操作、拦截器、Data Converter 以及任何其他代码，只要遵循这些代码即可
+要求：
 
-- Any code that runs in the Workflow context must be [deterministic](/workflow-definition#deterministic-constraints),
-  meaning it produces the same commands and results when replayed. For example, don't call system time APIs, generate
-  random values, or perform direct network and file I/O from Workflow-context code; move that work to Activities or
-  Nexus Operations.
-- See [observability](/evaluate/development-production-features/observability) to avoid duplicating observation side
-  effects when Workflows replay.
-- Put other side effects inside of Activities or [Local Activities](/local-activity). This helps your Workflow handle
-  being restarted, resumed, or executed in a different process from where it originally began without losing correctness
-  or state consistency.
-- See [testing your Plugin](#testing-your-plugin) to write tests that check for issues with side effects.
-- It should run quickly since it may be replayed many times during a long Workflow execution. More expensive code should
-  go in Activities or Nexus Operations.
+- 在 Workflow 上下文中运行的任何代码都必须是 [确定性的](/workflow-definition#deterministic-constraints)，
+  这意味着重播时它会产生相同的命令和结果。例如，不调用系统时间API，生成
+  随机值，或从 Workflow 上下文代码执行直接网络和文件 I/O；将该工作移至“活动”或
+  Nexus 操作。
+- 请参阅 [可观测性](/evaluate/development-production-features/observability) 以避免重复观察面
+  Workflow重播时的效果。
+- 将其他 Side Effect 放入活动或 [当地活动](/local-activity) 中。这有助于您的 Workflow 处理
+  在与最初开始的地方不同的进程中重新启动、恢复或执行，而不会丢失正确性
+  或状态一致性。
+- 请参阅 [测试你的插件](#testing-your-plugin) 编写检查 Side Effect 问题的测试。
+- 它应该运行得很快，因为它可能会在很长的 Workflow Execution 期间重播很多次。更昂贵的代码应该
+  进入“活动”或“Nexus 操作”。
 
-A Plugin should allow a user to decompose their Workflows into Activities, as well as Child Workflows and Nexus Calls
-when needed. This gives users granular control through retries and timeouts, debuggability through the Temporal UI,
-operability with resets, pauses, and cancels, memoization for efficiency and resumability, and scalability using task
-queues and Workers.
+插件应允许用户将其 Workflow 分解为活动，以及 Child Workflow 和 Nexus 调用
+当需要时。这使用户可以通过重试和超时进行精细控制，通过 Temporal UI 进行调试，
+重置、暂停和取消的可操作性、效率和可恢复性的记忆以及使用任务的可扩展性
+队列和 Worker。
 
-Users use Workflows for:
+用户将 Workflow 用于：
 
-- Orchestration and decision-making
-- Interactivity via [message-passing](/evaluate/development-production-features/workflow-message-passing)
-- Tracing and observability
+- 协调和决策
+- InterActivity 通过 [消息传递](/evaluate/development-production-features/workflow-message-passing)
+- 追踪和可观察性
 
-#### Making changes to your library
+<a id="making-changes-to-your-library"></a>
+#### 对您的库进行更改 {#making-changes-to-your-library}
 
-Your users may want to keep their Workflows running across deployments of their Worker code. If their deployment
-includes a new version of your Plugin, changes to your Plugin could break Workflow code that started before the new
-version was deployed. This can be due to
-[non-deterministic behavior from code changes](/workflow-definition#non-deterministic-change) in your Plugin.
+您的用户可能希望在 Worker 代码的部署中保持 Workflow 运行。如果他们的部署
+包含新版本的插件，对插件的更改可能会破坏在新版本之前启动的 Workflow 代码
+版本已部署。这可能是由于
+[代码更改带来的非确定性行为](/workflow-definition#non-deterministic-change) 在您的插件中。
 
-See [testing](#testing-your-plugin) to see how to test for this. And, if you make substantive changes, you need to use
-[patching](/patching).
+请参阅 [测试](#testing-your-plugin) 以了解如何对此进行测试。而且，如果您进行实质性更改，则需要使用
+[修补](/patching)。
 
-#### Example of a Workflow library that uses a Plugin in Python
+<a id="example-of-a-workflow-library-that-uses-a-plugin-in-python"></a>
+#### 在 Python 中使用插件的 Workflow 库示例 {#example-of-a-workflow-library-that-uses-a-plugin-in-python}
 
-- [Implementation of the `OpenAIAgentsPlugin`](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)
-- [Example of replay testing](https://github.com/temporalio/sdk-python/blob/main/tests/contrib/openai_agents/test_openai_replay.py)
+- [`OpenAIAgentsPlugin` 的实施](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)
+- [重放测试示例](https://github.com/temporalio/sdk-python/blob/main/tests/contrib/openai_agents/test_openai_replay.py)
 
-### Built-in Workflows
+<a id="built-in-workflows"></a>
+### 内置 Workflow {#built-in-workflows}
 
-You can provide a built-in Workflow in a `SimplePlugin`. It’s callable as a Child Workflow or standalone. When you want
-to provide a piece of functionality that's more complex than an Activity, you can:
+您可以在 `SimplePlugin` 中提供内置 Workflow。它可以作为 Child Workflow 或独立调用。当你想要的时候
+要提供比 Activity 更复杂的功能，您可以：
 
-- Use a [Workflow Library](#workflow-friendly-libraries) that runs directly in the end user’s Workflow
-- Add a Child Workflow
+- 使用直接在最终用户的 Workflow 中运行的 [Workflow 库](#workflow-friendly-libraries)
+- 添加 Child Workflow
 
-Consider adding a Child Workflow when one or more of these conditions applies:
+当满足以下一个或多个条件时，请考虑添加 Child Workflow：
 
-- That child should outlive the parent.
-- The Workflow Event History would otherwise [not scale](/workflow-execution/event#event-history-limits) in parent
-  Workflows.
-- When you want a separate Workflow ID for the child so that it can be operated independently of the parent's state
-  (canceled, terminated, paused).
+- 那个孩子应该比父母活得更久。
+- Workflow Event History 否则将在父级中 [没有规模](/workflow-execution/event#event-history-limits)
+  Workflow。
+- 当您想要为子级提供单独的 Workflow ID 以便其可以独立于父级状态进行操作时
+  （取消、终止、暂停）。
 
-Any Workflow can be run as a standalone Workflow or as a Child Workflow, so registering a Child Workflow in a
-`SimplePlugin` is the same as registering any Workflow.
+任何 Workflow 都可以作为独立的 Workflow 或 Child Workflow 运行，因此在
+`SimplePlugin` 与注册任何 Workflow 相同。
 
 <SdkTabs hideUnsupportedLanguages>
   <SdkTabs.Python>
     {/* SNIPSTART python-plugin-workflow */}
-[features/snippets/plugins/plugins.py](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.py)
+[功能/片段/插件/plugins.py](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.py)
 ```py
 @workflow.defn
 class HelloWorkflow:
@@ -265,7 +275,7 @@ plugin = SimplePlugin("organization.PluginName", workflows=[HelloWorkflow])
   </SdkTabs.Python>
   <SdkTabs.Go>
     {/* SNIPSTART go-plugin-workflow */}
-[features/snippets/plugins/plugins.go](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.go)
+[功能/片段/插件/plugins.go](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.go)
 ```go
 func HelloWorkflow(ctx workflow.Context, name string) (string, error) {
 	return "Hello, " + name + "!", nil
@@ -290,7 +300,7 @@ func createWorkflowPlugin() (*temporal.SimplePlugin, error) {
   </SdkTabs.Go>
   <SdkTabs.Java>
     {/* SNIPSTART java-plugin-workflow */}
-[features/snippets/plugins/plugins.java](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.java)
+[功能/片段/插件/plugins.java](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.java)
 ```java
 @WorkflowInterface
 public interface HelloWorkflow {
@@ -314,7 +324,7 @@ SimplePlugin workflowPlugin =
   </SdkTabs.Java>
   <SdkTabs.DotNet>
     {/* SNIPSTART dotnet-plugins-workflow */}
-[features/snippets/plugins/plugins.cs](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.cs)
+[功能/片段/插件/plugins.cs](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.cs)
 ```cs
 [Workflow]
 class SimpleWorkflow
@@ -332,7 +342,7 @@ SimplePlugin workflowPlugin = new SimplePlugin(
   </SdkTabs.DotNet>
   <SdkTabs.Ruby>
     {/* SNIPSTART ruby-plugin-workflow */}
-[features/snippets/plugins/plugins.rb](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.rb)
+[功能/片段/插件/plugins.rb](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.rb)
 ```rb
 class HelloWorkflow < Temporalio::Workflow::Definition
   def execute(name)
@@ -349,14 +359,15 @@ plugin = Temporalio::SimplePlugin.new(
   </SdkTabs.Ruby>
 </SdkTabs>
 
-### Built-in Nexus Operations
+<a id="built-in-nexus-operations"></a>
+### 内置 Nexus 操作 {#built-in-nexus-operations}
 
-Nexus calls are used from Workflows similar to Activities and you can learn more about [Temporal Nexus](/nexus). Like Activities, Nexus operation inputs and return values must be serializable.
+Nexus 调用是从 Workflow 中使用的，与活动类似，您可以了解有关 [Temporal Nexus](/nexus) 的更多信息。与活动一样，Nexus 操作输入和返回值必须是可序列化的。
 
 <SdkTabs hideUnsupportedLanguages>
   <SdkTabs.Python>
     {/* SNIPSTART python-plugin-nexus */}
-[features/snippets/plugins/plugins.py](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.py)
+[功能/片段/插件/plugins.py](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.py)
 ```py
 @nexusrpc.service
 class WeatherService:
@@ -385,7 +396,7 @@ plugin = SimplePlugin(
   </SdkTabs.Python>
   <SdkTabs.Go>
     {/* SNIPSTART go-plugin-nexus */}
-[features/snippets/plugins/plugins.go](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.go)
+[功能/片段/插件/plugins.go](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.go)
 ```go
 type WeatherInput struct {
 	City string `json:"city"`
@@ -425,7 +436,7 @@ func createNexusPlugin() (*temporal.SimplePlugin, error) {
   </SdkTabs.Go>
   <SdkTabs.Java>
     {/* SNIPSTART java-plugin-nexus */}
-[features/snippets/plugins/plugins.java](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.java)
+[功能/片段/插件/plugins.java](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.java)
 ```java
 // Example Nexus service implementation
 public class WeatherService {
@@ -470,7 +481,7 @@ SimplePlugin nexusPlugin =
   </SdkTabs.Java>
   <SdkTabs.TypeScript>
     {/* SNIPSTART typescript-plugins-nexus */}
-[features/snippets/plugins/plugins.ts](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.ts)
+[功能/片段/插件/plugins.ts](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.ts)
 ```ts
 const testServiceHandler = nexus.serviceHandler(
   nexus.service('testService', {
@@ -491,7 +502,7 @@ const plugin = new SimplePlugin({
   </SdkTabs.TypeScript>
   <SdkTabs.DotNet>
     {/* SNIPSTART dotnet-plugins-nexus */}
-[features/snippets/plugins/plugins.cs](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.cs)
+[功能/片段/插件/plugins.cs](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.cs)
 ```cs
 [NexusService]
 public interface IStringService
@@ -522,16 +533,17 @@ SimplePlugin nexusPlugin = new SimplePlugin(
   </SdkTabs.DotNet>
 </SdkTabs>
 
-### Custom Data Converters
+<a id="custom-data-converters"></a>
+### 自定义 Data Converter {#custom-data-converters}
 
-A [custom Data Converter](/default-custom-data-converters#custom-data-converter) can alter data formats or provide compression or encryption.
+[定制Data Converter](/default-custom-data-converters#custom-data-converter) 可以改变数据格式或提供压缩或加密。
 
-Note that you can use an existing Data Converter such as, in Python, `PydanticPayloadConverter` in your Plugin.
+请注意，您可以在插件中使用现有的 Data Converter，例如 Python 中的 `PydanticPayloadConverter`。
 
 <SdkTabs hideUnsupportedLanguages>
   <SdkTabs.Python>
     {/* SNIPSTART python-plugin-converter */}
-[features/snippets/plugins/plugins.py](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.py)
+[功能/片段/插件/plugins.py](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.py)
 ```py
 def set_converter(converter: DataConverter | None) -> DataConverter:
     if converter is None or converter == DataConverter.default:
@@ -549,7 +561,7 @@ plugin = SimplePlugin("organization.PluginName", data_converter=set_converter)
   </SdkTabs.Python>
   <SdkTabs.Go>
     {/* SNIPSTART go-plugin-converter */}
-[features/snippets/plugins/plugins.go](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.go)
+[功能/片段/插件/plugins.go](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.go)
 ```go
 func createConverterPlugin() (*temporal.SimplePlugin, error) {
 	customConverter := converter.GetDefaultDataConverter() // Or your custom converter
@@ -565,7 +577,7 @@ func createConverterPlugin() (*temporal.SimplePlugin, error) {
   </SdkTabs.Go>
   <SdkTabs.Java>
     {/* SNIPSTART java-plugin-converter */}
-[features/snippets/plugins/plugins.java](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.java)
+[功能/片段/插件/plugins.java](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.java)
 ```java
 SimplePlugin converterPlugin =
     SimplePlugin.newBuilder("organization.PluginName")
@@ -583,7 +595,7 @@ SimplePlugin converterPlugin =
   </SdkTabs.Java>
   <SdkTabs.TypeScript>
     {/* SNIPSTART typescript-plugins-converter */}
-[features/snippets/plugins/plugins.ts](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.ts)
+[功能/片段/插件/plugins.ts](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.ts)
 ```ts
 const codec: PayloadCodec = {
   encode(_payloads: Payload[]): Promise<Payload[]> {
@@ -605,7 +617,7 @@ const plugin = new SimplePlugin({
   </SdkTabs.TypeScript>
   <SdkTabs.DotNet>
     {/* SNIPSTART dotnet-plugins-converter */}
-[features/snippets/plugins/plugins.cs](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.cs)
+[功能/片段/插件/plugins.cs](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.cs)
 ```cs
 private class Codec : IPayloadCodec
 {
@@ -626,7 +638,7 @@ SimplePlugin converterPlugin = new SimplePlugin(
   </SdkTabs.DotNet>
   <SdkTabs.Ruby>
     {/* SNIPSTART ruby-plugin-converter */}
-[features/snippets/plugins/plugins.rb](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.rb)
+[功能/片段/插件/plugins.rb](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.rb)
 ```rb
 custom_converter = Temporalio::Converters::DataConverter.new(
   payload_converter: Temporalio::Converters::PayloadConverter.default
@@ -642,17 +654,18 @@ plugin = Temporalio::SimplePlugin.new(
   </SdkTabs.Ruby>
 </SdkTabs>
 
-### Interceptors
+<a id="interceptors"></a>
+### 拦截器 {#interceptors}
 
-Interceptors are middleware that can run before and after various calls such as Activities, Workflows, and Signals. You can [learn more about interceptors](/develop/python/workers/interceptors) for the details of implementing them. They're used to:
+拦截器是可以在各种调用之前和之后运行的中间件，例如“活动”、“Workflow”和“Signal”。您可以 [了解有关拦截器的更多信息](/develop/python/workers/interceptors) 了解实现它们的详细信息。他们习惯于：
 
-- Create side effects such as logging and tracing.
-- Modify arguments, such as adding headers for authorization or tracing propagation.
+- 创建 Side Effect，例如日志记录和跟踪。
+- 修改参数，例如添加用于授权或跟踪传播的标头。
 
 <SdkTabs hideUnsupportedLanguages>
   <SdkTabs.Python>
     {/* SNIPSTART python-plugin-interceptors */}
-[features/snippets/plugins/plugins.py](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.py)
+[功能/片段/插件/plugins.py](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.py)
 ```py
 class SomeWorkerInterceptor(temporalio.worker.Interceptor):
     pass  # Your implementation
@@ -671,7 +684,7 @@ plugin = SimplePlugin(
   </SdkTabs.Python>
   <SdkTabs.Go>
     {/* SNIPSTART go-plugin-interceptors */}
-[features/snippets/plugins/plugins.go](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.go)
+[功能/片段/插件/plugins.go](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.go)
 ```go
 type SomeWorkerInterceptor struct {
 	interceptor.WorkerInterceptorBase
@@ -695,7 +708,7 @@ func createInterceptorPlugin() (*temporal.SimplePlugin, error) {
   </SdkTabs.Go>
   <SdkTabs.Java>
     {/* SNIPSTART java-plugin-interceptors */}
-[features/snippets/plugins/plugins.java](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.java)
+[功能/片段/插件/plugins.java](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.java)
 ```java
 public class SomeWorkerInterceptor extends WorkerInterceptorBase {
   // Your worker interceptor implementation
@@ -715,7 +728,7 @@ SimplePlugin interceptorPlugin =
   </SdkTabs.Java>
   <SdkTabs.TypeScript>
     {/* SNIPSTART typescript-plugins-interceptors */}
-[features/snippets/plugins/plugins.ts](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.ts)
+[功能/片段/插件/plugins.ts](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.ts)
 ```ts
 class MyWorkflowClientInterceptor implements WorkflowClientInterceptor {}
 
@@ -749,7 +762,7 @@ const plugin = new SimplePlugin({
   </SdkTabs.TypeScript>
   <SdkTabs.DotNet>
     {/* SNIPSTART dotnet-plugins-interceptors */}
-[features/snippets/plugins/plugins.cs](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.cs)
+[功能/片段/插件/plugins.cs](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.cs)
 ```cs
 private class SomeClientInterceptor : IClientInterceptor
 {
@@ -781,7 +794,7 @@ SimplePlugin interceptorPlugin = new SimplePlugin(
   </SdkTabs.DotNet>
   <SdkTabs.Ruby>
     {/* SNIPSTART ruby-plugin-interceptors */}
-[features/snippets/plugins/plugins.rb](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.rb)
+[功能/片段/插件/plugins.rb](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.rb)
 ```rb
 class SomeWorkerInterceptor
   include Temporalio::Worker::Interceptor::Workflow
@@ -812,11 +825,11 @@ plugin = Temporalio::SimplePlugin.new(
   </SdkTabs.Ruby>
 </SdkTabs>
 
-### Context Propagators {#context-propagators}
+### 上下文传播器 {#context-propagators}
 
-Context propagators pass custom key-value data (such as tracing IDs, tenant IDs, or auth tokens) across Workflow, Activity, and Child Workflow boundaries via Temporal headers. See [Context Propagation](/encyclopedia/context-propagation) for details on how they work.
+上下文传播器通过 Temporal 标头跨 Workflow、Activity 和 Child Workflow 边界传递自定义键值数据（例如跟踪 ID、租户 ID 或身份验证令牌）。有关其工作原理的详细信息，请参阅 [上下文传播](/encyclopedia/context-propagation)。
 
-Propagators registered via a Plugin are appended to any propagators already set by the user or by previous plugins.
+通过插件注册的传播器将附加到用户或以前的插件已设置的任何传播器。
 
 <SdkTabs hideUnsupportedLanguages>
   <SdkTabs.Go>
@@ -833,18 +846,19 @@ func createContextPropagatorPlugin() (*temporal.SimplePlugin, error) {
   </SdkTabs.Go>
 </SdkTabs>
 
-### Special considerations for different languages
+<a id="special-considerations-for-different-languages"></a>
+### 不同语言的特殊注意事项 {#special-considerations-for-different-languages}
 
-Each of the SDKs has nuances you should be aware of so you can account for it in your code.
+每个 SDK 都有您应该注意的细微差别，以便您可以在代码中考虑到它。
 
-#### Python
+＃＃＃＃ Python
 
-You can choose to [run your Workflows in a sandbox in Python](/develop/python/best-practices/python-sdk-sandbox). This lets you run
-Workflow code in a sandbox environment to help prevent non-determinism errors in your application. To work for users who
-use sandboxing, your Plugin should specify the Workflow runner that it uses.
+您可以选择[在 Python 的沙箱中运行 Workflow](/develop/python/best-practices/python-sdk-sandbox)。这可以让你运行
+Workflow 沙箱环境中的代码有助于防止应用程序中的非确定性错误。为以下用户工作
+使用沙箱，您的插件应指定它使用的 Workflow 运行程序。
 
 {/* SNIPSTART python-plugin-sandbox */}
-[features/snippets/plugins/plugins.py](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.py)
+[功能/片段/插件/plugins.py](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.py)
 ```py
 def workflow_runner(runner: WorkflowRunner | None) -> WorkflowRunner:
     if not runner:
@@ -863,17 +877,18 @@ plugin = SimplePlugin("organization.PluginName", workflow_runner=workflow_runner
 ```
 {/* SNIPEND */}
 
-#### TypeScript
+<a id="python"></a>
+#### 打字稿 {#python}
 
-TypeScript bundles cannot provide built-in Workflows because the TypeScript SDK bundles all Workflow code from a single
-module. Plugin users must import and re-export any Plugin-provided Workflows from their own Workflow module so the
-bundle includes them.
+TypeScript 捆绑包无法提供内置 Workflow，因为 TypeScript SDK 捆绑了来自单个 Workflow 的所有 Workflow 代码
+模块。插件用户必须从自己的 Workflow 模块导入并重新导出任何插件提供的 Workflow，以便
+捆绑包包括它们。
 
-Users of a plugin which provides Workflow interceptors should always provide the plugin to the bundler if bundling. If
-you aren't aware of the exact function of the plugin, you can always provide it, as it won't have any adverse effects.
+提供 Workflow 拦截器的插件的用户在捆绑时应始终向捆绑器提供该插件。如果
+您不知道该插件的具体功能，您可以随时提供它，因为它不会产生任何不利影响。
 
 {/* SNIPSTART typescript-plugins-bundler */}
-[features/snippets/plugins/plugins.ts](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.ts)
+[功能/片段/插件/plugins.ts](https://github.com/temporalio/features/blob/main/features/snippets/plugins/plugins.ts)
 ```ts
 const bundle = await bundleWorkflowCode({
   workflowsPath: require.resolve('./workflows'),
@@ -889,29 +904,32 @@ const worker = await Worker.create({
 ```
 {/* SNIPEND */}
 
-## Testing your Plugin {#testing-your-plugin}
+<a id="typescript"></a>
+## 测试你的插件 {#typescript}
 
-To test your Plugin, you'll write a normal Temporal Workflow tests, having included the plugin in your Client.
+要测试您的插件，您将编写一个正常的 Temporal Workflow 测试，并将该插件包含在您的客户端中。
 
-Two special concerns are versioning tests, for when you're making changes to your plugin, and testing unwanted side
-effects.
+两个特别关注的问题是版本控制测试，当您对插件进行更改时，以及测试不需要的方面
+影响。
 
-### Versioning tests
+<a id="testing-your-plugin"></a>
+### 版本控制测试 {#testing-your-plugin}
 
-When you make changes to your plugin after it has already shipped to users, we recommend that you set up [replay testing](/develop/python/best-practices/testing-suite#replay) on each important change to make sure that you’re not causing non-determinism errors for your users.
+当您在插件交付给用户后对其进行更改时，我们建议您在每个重要更改上设置 [重播测试](/develop/python/best-practices/testing-suite#replay)，以确保不会给用户造成非确定性错误。
 
-### Side effects tests
+<a id="versioning-tests"></a>
+### Side Effects 测试 {#versioning-tests}
 
-Your Plugin should cater to Workflows resuming in different processes than the ones they started on and then replaying
-from the beginning, which can happen, for example, after an intermittent failure.
+您的插件应该满足 Workflow 在与开始时不同的进程中恢复然后重播的需求
+从一开始，这可能会发生，例如，在间歇性故障之后。
 
-You can ensure you're not depending on local side effects by turning Workflow caching off, which will mean that the
-Workflow replays from the top each time it progresses:
+您可以通过关闭 Workflow 缓存来确保您不依赖于本地 Side Effect，这意味着
+Workflow 每次进行时都会从顶部重播：
 
 <SdkTabs hideUnsupportedLanguages>
   <SdkTabs.Python>
     {/* SNIPSTART python-worker-max-cached-workflows */}
-[features/snippets/worker/worker.py](https://github.com/temporalio/features/blob/main/features/snippets/worker/worker.py)
+[功能/片段/Worker/Worker.py](https://github.com/temporalio/features/blob/main/features/snippets/worker/worker.py)
 ```py
 worker = Worker(client, task_queue="task-queue", max_cached_workflows=0)
 ```
@@ -919,7 +937,7 @@ worker = Worker(client, task_queue="task-queue", max_cached_workflows=0)
   </SdkTabs.Python>
   <SdkTabs.Go>
     {/* SNIPSTART go-worker-max-cached-workflows */}
-[features/snippets/worker/worker.go](https://github.com/temporalio/features/blob/main/features/snippets/worker/worker.go)
+[功能/片段/Worker/Worker.go](https://github.com/temporalio/features/blob/main/features/snippets/worker/worker.go)
 ```go
 worker.SetStickyWorkflowCacheSize(0)
 w := worker.New(c, "task-queue", worker.Options{})
@@ -928,7 +946,7 @@ w := worker.New(c, "task-queue", worker.Options{})
   </SdkTabs.Go>
   <SdkTabs.Java>
     {/* SNIPSTART java-worker-max-cached-workflows */}
-[features/snippets/worker/worker.java](https://github.com/temporalio/features/blob/main/features/snippets/worker/worker.java)
+[功能/片段/Worker/Worker.java](https://github.com/temporalio/features/blob/main/features/snippets/worker/worker.java)
 ```java
 WorkerFactory factory =
     WorkerFactory.newInstance(
@@ -939,7 +957,7 @@ Worker worker = factory.newWorker("task-queue");
   </SdkTabs.Java>
   <SdkTabs.TypeScript>
     {/* SNIPSTART typescript-worker-max-cached-workflows */}
-[features/snippets/worker/worker.ts](https://github.com/temporalio/features/blob/main/features/snippets/worker/worker.ts)
+[功能/片段/Worker/Worker.ts](https://github.com/temporalio/features/blob/main/features/snippets/worker/worker.ts)
 ```ts
 const worker = await Worker.create({
   connection,
@@ -951,7 +969,7 @@ const worker = await Worker.create({
   </SdkTabs.TypeScript>
   <SdkTabs.DotNet>
     {/* SNIPSTART dotnet-worker-max-cached-workflows */}
-[features/snippets/worker/worker.cs](https://github.com/temporalio/features/blob/main/features/snippets/worker/worker.cs)
+[功能/片段/Worker/Worker.cs](https://github.com/temporalio/features/blob/main/features/snippets/worker/worker.cs)
 ```cs
 using var worker = new TemporalWorker(
     client,
@@ -964,7 +982,7 @@ using var worker = new TemporalWorker(
   </SdkTabs.DotNet>
   <SdkTabs.Ruby>
     {/* SNIPSTART ruby-worker-max-cached-workflows */}
-[features/snippets/worker/worker.rb](https://github.com/temporalio/features/blob/main/features/snippets/worker/worker.rb)
+[功能/片段/Worker/Worker.rb](https://github.com/temporalio/features/blob/main/features/snippets/worker/worker.rb)
 ```rb
 worker = Temporalio::Worker.new(
   client: client,
@@ -976,6 +994,6 @@ worker = Temporalio::Worker.new(
   </SdkTabs.Ruby>
 </SdkTabs>
 
-Check for duplicate side effects or other types of failures.
+检查是否有重复的 Side Effect 或其他类型的故障。
 
-It's harder to test against side effects to global variables, so this practice is best avoided entirely.
+针对全局变量的 Side Effect 进行测试比较困难，因此最好完全避免这种做法。

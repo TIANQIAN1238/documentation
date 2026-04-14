@@ -1,0 +1,115 @@
+---
+id: child-workflows
+title: Child Workflows - PHP SDK
+sidebar_label: Child Workflows
+slug: /develop/php/workflows/child-workflows
+toc_max_heading_level: 2
+keywords:
+  - child-workflows
+tags:
+  - Workflows
+  - Child Workflows
+  - PHP SDK
+  - Temporal SDKs
+description: 在 PHP 中使用 Temporal 在父 Workflow 中启动子 Workflow Execution。配置 ChildWorkflowOptions，处理父关闭策略，并使用 Promise 实现异步调用。
+---
+
+## 如何启动子 Workflow Execution {#child-Workflows}
+
+[Child Workflow Execution](/child-Workflows) 是使用 Child Workflow API 从另一个 Workflow 内部生成 Scheduled 的 Workflow Execution。
+
+使用 Child Workflow API 时，Child Workflow 相关事件 ([StartChildWorkflowExecutionInitiated](/references/events#startchildWorkflowexecutionstarted)、[ChildWorkflowExecutionStarted](/references/events#childWorkflowexecutionstarted)、 [ChildWorkflowExecutionCompleted](/references/events#childWorkflowexecutioncompleted) 等...）记录在 Workflow Execution Event History 中。
+
+始终阻止进度，直到 [ChildWorkflowExecutionStarted](/references/events#childWorkflowexecutionstarted) 事件记录到 Event History，以确保子 Workflow Execution 已启动。
+此后，可以使用 Child Workflow 选项中设置的_Abandon_ [Parent Close Policy](/parent-close-policy) 放弃子 Workflow Execution。
+
+要确保 Child Workflow Execution 已启动，请首先在 Child Workflow future 实例上调用 Child Workflow Execution 方法，该方法将返回不同的 future。
+
+然后获取一个对象的值，该对象充当最初未知的结果的代理，这就是等待子 Workflow Execution 生成的结果。
+
+除了活动之外，Workflow 还可以启动其他 Workflow。
+
+`Workflow::executeChildWorkflow` 和 `Workflow::newChildWorkflowStub` 允许在 Workflow 的实现中调度其他 Workflow。
+父 Workflow 能够监控和影响 Child Workflow 的生命周期，类似于它调用的 Activity 的方式。
+
+```php
+// Use one stub per child workflow run
+$child = Workflow::newChildWorkflowStub(
+    ChildWorkflowInterface::class,
+    ChildWorkflowOptions::new()
+        // Do not specify WorkflowId if you want Temporal to generate a unique Id
+        // for the child execution.
+        ->withWorkflowId('BID-SIMPLE-CHILD-WORKFLOW')
+        ->withExecutionStartToCloseTimeout(DateInterval::createFromDateString('30 minutes'))
+);
+
+// This is a non blocking call that returns immediately.
+// Use yield $child->workflowMethod(name) to call synchronously.
+$promise = $child->workflowMethod('value');
+
+// Do something else here.
+try{
+    $value = yield $promise;
+} catch(TemporalException $e) {
+    $logger->error('child workflow failed');
+    throw $e;
+}
+```
+
+让我们看一下这个调用的每个组成部分。
+
+在调用 `$child->WorkflowMethod()` 之前，您必须为调用配置 `ChildWorkflowOptions`。
+这些选项自定义各种执行超时，并传递到由“Workflow::newChildWorkflowStub”定义的 Workflow 存根中。
+创建存根后，您可以根据属性“WorkflowMethod”调用其 Workflow 方法。
+
+方法调用立即返回并返回一个“Promise”。
+这使您可以执行更多代码，而无需等待 Scheduled Workflow 完成。
+
+当您准备好处理 Workflow 的结果时，请在返回的 Promise 对象上调用“yield $promise”方法。
+
+当用户取消父 Workflow 时，可以根据可配置的子策略取消或放弃 Child Workflow。
+
+您还可以跳过 Child Workflow 启动的存根部分并直接使用“Workflow::executeChildWorkflow”：
+
+```php
+// Use one stub per child workflow run
+$childResult = yield Workflow::executeChildWorkflow(
+    'ChildWorkflowName',
+    ['args'],
+    ChildWorkflowOptions::new()->withWorkflowId('BID-SIMPLE-CHILD-WORKFLOW'),
+    Type::TYPE_STRING // optional: defines the return type
+);
+```
+
+#### 如何设置父关闭策略 {#parent-close-policy}
+
+[父关闭策略](/parent-close-policy) 确定如果子 Workflow Execution 的父更改为关闭状态（已完成、失败或超时），子 Workflow Execution 会发生什么情况。
+
+默认“父关闭策略”选项设置为终止子 Workflow Execution。
+
+在 PHP 中，[父关闭策略](/parent-close-policy) 通过“ChildWorkflowOptions”对象和“withParentClosePolicy()”方法设置。
+可能的值可以从 [`ParentClosePolicy`](https://github.com/Temporalio/sdk-php/blob/master/src/Workflow/ParentClosePolicy.php) 类获取。
+
+- `政策终止`
+- `政策_放弃`
+- `POLICY_REQUEST_CANCEL`
+
+然后 `ChildWorkflowOptions` 对象用于创建一个新的 Child Workflow 对象：
+
+```php
+$child = Workflow::newUntypedChildWorkflowStub(
+    'child-workflow',
+    ChildWorkflowOptions::new()
+        ->withParentClosePolicy(ParentClosePolicy::POLICY_ABANDON)
+);
+
+yield $child->start();
+```
+
+在上面的代码片段中，我们：
+
+1. 使用“Workflow::newUntypedChildWorkflowStub”创建一个新的无类型 Child Workflow 存根。
+2. 提供“ChildWorkflowOptions”对象，并将“父关闭策略”设置为“ParentClosePolicy::POLICY_ABANDON”。
+3. 使用 `yield` 和方法 `start()` 异步启动 Child Workflow Execution。
+
+我们在这里需要“yield”以确保子 Workflow Execution 在父级关闭之前启动。

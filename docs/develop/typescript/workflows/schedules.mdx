@@ -1,7 +1,7 @@
 ---
 id: schedules
-title: Schedules - TypeScript SDK
-sidebar_label: Schedules
+title: "Schedules - TypeScript SDK"
+sidebar_label: "Schedules"
 slug: /develop/typescript/workflows/schedules
 toc_max_heading_level: 3
 keywords:
@@ -11,42 +11,44 @@ tags:
   - Schedules
   - TypeScript SDK
   - Temporal SDKs
-description: Schedule automated tasks effortlessly with Temporal. Create, backfill, delete, describe, list, pause, trigger, and update Schedules. Control your Workflow execution with Temporal Cron Jobs and ensure timely, automated business processes. Automate repetitive tasks and reduce manual intervention now!
+description: "Schedule 使用 Temporal 轻松自动化任务。创建、回填、删除、描述、列出、暂停、触发和 Update Schedule。使用 Temporal Cron 作业控制您的 Workflow Execution，并确保及时、自动化的业务流程。现在就自动执行重复性任务并减少人工干预！"
 ---
 
-This page shows how to do the following:
+此页面显示如何执行以下操作：
 
-- [Schedule a Workflow](#schedule-a-workflow)
-  - [Create a Schedule](#create-schedule)
-  - [Backfill a Schedule](#backfill-schedule)
-  - [Delete a Schedule](#delete-schedule)
-  - [Describe a Schedule](#describe-schedule)
-  - [List a Schedule](#list-schedule)
-  - [Pause a Schedule](#pause-schedule)
-  - [Trigger a Schedule](#trigger-schedule)
-  - [Update a Schedule](#update-schedule)
-- [Temporal Cron Jobs](#temporal-cron-jobs)
-- [Start Delay](#start-delay)
+- [Schedule 和 Workflow](#schedule-a-workflow)
+  - [创建一个 Schedule](#create-schedule)
+  - [回填 Schedule](#backfill-schedule)
+  - [删除 Schedule](#delete-schedule)
+  - [描述 Schedule](#describe-schedule)
+  - [列出 Schedule](#list-schedule)
+  - [暂停 Schedule](#pause-schedule)
+  - [触发 Schedule](#trigger-schedule)
+  - [Update 和 Schedule](#update-schedule)
+- [Temporal 计划任务](#temporal-cron-jobs)
+- [启动延迟](#start-delay)
 
-## How to Schedule a Workflow {#schedule-a-workflow}
+<a id="schedule-a-workflow"></a>
+## 如何 Schedule 到 Workflow {#schedule-a-workflow}
 
-Scheduling Workflows is a crucial aspect of any automation process, especially when dealing with time-sensitive tasks. By scheduling a Workflow, you can automate repetitive tasks, reduce the need for manual intervention, and ensure timely execution of your business processes.
+调度 Workflow 是任何自动化流程的一个重要方面，尤其是在处理时间敏感的任务时。通过调度 Workflow，您可以自动执行重复性任务，减少手动干预的需要，并确保及时执行业务流程。
 
-Use any of the following actions to help Schedule a Workflow Execution and take control over your automation process.
+使用以下任一操作来帮助 Schedule 和 Workflow Execution 并控制您的自动化流程。
 
-### Create a Schedule {#create-schedule}
+<a id="create-schedule"></a>
+### 创建一个 Schedule {#create-schedule}
 
-The create action enables you to create a new Schedule. When you create a new Schedule, a unique Schedule ID is generated, which you can use to reference the Schedule in other Schedule commands.
+创建操作使您能够创建新的 Schedule。创建新的 Schedule 时，会生成唯一的 Schedule ID，您可以使用该 ID 在其他 Schedule 命令中引用 Schedule。
 
 :::tip Schedule Auto-Deletion
 
-Once a Schedule has completed creating all its Workflow Executions, the Temporal Service deletes it since it won’t fire again.
-The Temporal Service doesn't guarantee when this removal will happen.
+一旦 Schedule 完成创建其所有 Workflow Execution，Temporal 服务就会将其删除，因为它不会再次触发。
+Temporal 服务不保证何时会发生此删除。
 
 :::
 
-<!--SNIPSTART typescript-create-a-scheduled-workflow-->
-[schedules/src/start-schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/start-schedule.ts)
+<!--SNIPSTART typescript-create-a-Scheduled-Workflow-->
+[Schedules/src/start-Schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/start-schedule.ts)
 ```ts
 async function run() {
   const config = loadClientConnectConfig();
@@ -92,12 +94,13 @@ async function run() {
 ```
 <!--SNIPEND-->
 
-### Backfill a Schedule {#backfill-schedule}
+<a id="backfill-schedule"></a>
+### 回填 Schedule {#backfill-schedule}
 
-The backfill action executes Actions ahead of their specified time range. This command is useful when you need to execute a missed or delayed Action, or when you want to test the Workflow before its scheduled time.
+回填操作会在指定时间范围之前执行操作。当您需要执行错过或延迟的操作时，或者当您想要在 Scheduled 时间之前测试 Workflow 时，此命令非常有用。
 
-<!--SNIPSTART typescript-backfill-a-scheduled-workflow-->
-[schedules/src/backfill-schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/backfill-schedule.ts)
+<!--SNIPSTART typescript-backfill-a-Scheduled-Workflow-->
+[Schedules/src/backfill-Schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/backfill-schedule.ts)
 ```ts
 function subtractMinutes(minutes: number): Date {
   const now = new Date();
@@ -123,12 +126,13 @@ async function run() {
 ```
 <!--SNIPEND-->
 
-### Delete a Schedule {#delete-schedule}
+<a id="delete-schedule"></a>
+### 删除 Schedule {#delete-schedule}
 
-The delete action enables you to delete a Schedule. When you delete a Schedule, it does not affect any Workflows that were started by the Schedule.
+删除操作使您能够删除 Schedule。删除 Schedule 时，不会影响由 Schedule 启动的任何 Workflow。
 
-<!--SNIPSTART typescript-delete-a-scheduled-workflow-->
-[schedules/src/delete-schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/delete-schedule.ts)
+<!--SNIPSTART typescript-delete-a-Scheduled-Workflow-->
+[Schedules/src/delete-Schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/delete-schedule.ts)
 ```ts
 async function run() {
   const client = new Client({
@@ -143,12 +147,13 @@ async function run() {
 ```
 <!--SNIPEND-->
 
-### Describe a Schedule {#describe-schedule}
+<a id="describe-schedule"></a>
+### 描述 Schedule {#describe-schedule}
 
-The describe action shows the current Schedule configuration, including information about past, current, and future Workflow Runs. This command is helpful when you want to get a detailed view of the Schedule and its associated Workflow Runs.
+描述操作显示当前的 Schedule 配置，包括有关过去、当前和未来 Workflow 运行的信息。当您想要获取 Schedule 及其关联的 Workflow 运行的详细视图时，此命令非常有用。
 
-<!--SNIPSTART typescript-describe-a-scheduled-workflow-->
-[schedules/src/describe-schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/describe-schedule.ts)
+<!--SNIPSTART typescript-describe-a-Scheduled-Workflow-->
+[Schedules/src/describe-Schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/describe-schedule.ts)
 ```ts
 async function run() {
   const client = new Client({
@@ -164,12 +169,13 @@ async function run() {
 ```
 <!--SNIPEND-->
 
-### List a Schedule {#list-schedule}
+<a id="list-schedule"></a>
+### 列出 Schedule {#list-schedule}
 
-The list action lists all the available Schedules. This command is useful when you want to view a list of all the Schedules and their respective Schedule IDs.
+列表操作列出了所有可用的 Schedule。当您想要查看所有 Schedule 及其各自的 Schedule ID 的列表时，此命令非常有用。
 
-<!--SNIPSTART typescript-list-a-scheduled-workflow-->
-[schedules/src/list-schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/list-schedule.ts)
+<!--SNIPSTART typescript-list-a-Scheduled-Workflow-->
+[Schedules/src/list-Schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/list-schedule.ts)
 ```ts
 async function run() {
   const client = new Client({
@@ -189,12 +195,13 @@ async function run() {
 ```
 <!--SNIPEND-->
 
-### Pause a Schedule {#pause-schedule}
+<a id="pause-schedule"></a>
+### 暂停 Schedule {#pause-schedule}
 
-The pause action enables you to pause and unpause a Schedule. When you pause a Schedule, all the future Workflow Runs associated with the Schedule are temporarily stopped. This command is useful when you want to temporarily halt a Workflow due to maintenance or any other reason.
+暂停操作使您能够暂停和取消暂停 Schedule。当您暂停 Schedule 时，与 Schedule 关联的所有未来 Workflow 运行都会暂时停止。当您由于维护或任何其他原因想要暂时停止 Workflow 时，此命令非常有用。
 
-<!--SNIPSTART typescript-pause-a-scheduled-workflow-->
-[schedules/src/pause-schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/pause-schedule.ts)
+<!--SNIPSTART typescript-pause-a-Scheduled-Workflow-->
+[Schedules/src/pause-Schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/pause-schedule.ts)
 ```ts
 async function run() {
   const client = new Client({
@@ -209,12 +216,13 @@ async function run() {
 ```
 <!--SNIPEND-->
 
-### Trigger a Schedule {#trigger-schedule}
+<a id="trigger-schedule"></a>
+### 触发 Schedule {#trigger-schedule}
 
-The trigger action triggers an immediate action with a given Schedule. By default, this action is subject to the Overlap Policy of the Schedule. This command is helpful when you want to execute a Workflow outside of its scheduled time.
+触发操作会使用给定的 Schedule 触发立即操作。默认情况下，此操作受 Schedule 的重叠策略的约束。当您想要在 Scheduled 时间之外执行 Workflow 时，此命令很有用。
 
-<!--SNIPSTART typescript-trigger-a-scheduled-workflow-->
-[schedules/src/trigger-schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/trigger-schedule.ts)
+<!--SNIPSTART typescript-trigger-a-Scheduled-Workflow-->
+[Schedules/src/trigger-Schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/trigger-schedule.ts)
 ```ts
 async function run() {
   const client = new Client({
@@ -230,12 +238,13 @@ async function run() {
 ```
 <!--SNIPEND-->
 
-### Update a Schedule {#update-schedule}
+<a id="update-schedule"></a>
+### Update 和 Schedule {#update-schedule}
 
-The update action enables you to update an existing Schedule. This command is useful when you need to modify the Schedule's configuration, such as changing the start time, end time, or interval.
+Update 操作使您能够 Update 现有的 Schedule。当您需要修改 Schedule 的配置（例如更改开始时间、结束时间或间隔）时，此命令非常有用。
 
-<!--SNIPSTART typescript-update-a-scheduled-workflow-->
-[schedules/src/update-schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/update-schedule.ts)
+<!--SNIPSTART typescript-Update-a-Scheduled-Workflow-->
+[Schedules/src/Update-Schedule.ts](https://github.com/temporalio/samples-typescript/blob/main/schedules/src/update-schedule.ts)
 ```ts
 const updateSchedule = (
   input: ScheduleDescription,
@@ -261,20 +270,21 @@ async function run() {
 ```
 <!--SNIPEND-->
 
-## Temporal Cron Jobs {#temporal-cron-jobs}
+<a id="temporal-cron-jobs"></a>
+## Temporal Cron 作业 {#temporal-cron-jobs}
 
 :::caution Cron support is not recommended
 
-We recommend using [Schedules](https://docs.temporal.io/schedule) instead of Cron Jobs.
-Schedules were built to provide a better developer experience, including more configuration options and the ability to update or pause running Schedules.
+我们建议使用 [Schedules](https://docs.temporal.io/schedule) 而不是 Cron 作业。
+Schedule 旨在提供更好的开发人员体验，包括更多配置选项以及 Update 或暂停运行 Schedule 的能力。
 
 :::
 
-A [Temporal Cron Job](/cron-job) is the series of Workflow Executions that occur when a Cron Schedule is provided in the call to spawn a Workflow Execution.
+[Temporal 计划任务](/cron-job) 是在调用中提供 Cron Schedule 来生成 Workflow Execution 时发生的一系列 Workflow Execution。
 
-A Cron Schedule is provided as an option when the call to spawn a Workflow Execution is made.
+当调用生成 Workflow Execution 时，会提供 Cron Schedule 作为选项。
 
-You can set each Workflow to repeat on a schedule with the `cronSchedule` option:
+您可以使用 `cronSchedule` 选项将每个 Workflow 设置为在 Schedule 上重复：
 
 ```typescript
 const handle = await client.workflow.start(scheduledWorkflow, {
@@ -283,7 +293,7 @@ const handle = await client.workflow.start(scheduledWorkflow, {
 });
 ```
 
-Temporal Workflow Schedule Cron strings follow this format:
+Temporal Workflow Schedule Cron 字符串遵循以下格式：
 
 ```
 ┌───────────── minute (0 - 59)
@@ -295,14 +305,14 @@ Temporal Workflow Schedule Cron strings follow this format:
 * * * * *
 ```
 
-## Start Delay {#start-delay}
+## 启动延迟 {#start-delay}
 
-**How to use Start Delay**
+**如何使用启动延迟**
 
-Use the `startDelay` to schedule a Workflow Execution at a specific one-time future point rather than on a recurring schedule.
+在特定的一次性未来点而不是重复出现的 Schedule 上使用 `startDelay` 至 Schedule 和 Workflow Execution。
 
-You may specify the `startDelay` option on either the [`client.workflow.start()`](https://typescript.temporal.io/api/classes/client.WorkflowClient#start) or [`client.workflow.execute()`](https://typescript.temporal.io/api/classes/client.WorkflowClient#execute) methods of a Workflow Client.
-For example:
+您可以在 Workflow 客户端的 [`client.Workflow.start()`](https://typescript.temporal.io/api/classes/client.WorkflowClient#start) 或 [`client.Workflow.execute()`](https://typescript.temporal.io/api/classes/client.WorkflowClient#execute) 方法上指定 `startDelay` 选项。
+例如：
 
 ```typescript
 const handle = await client.workflow.start(someWorkflow, {

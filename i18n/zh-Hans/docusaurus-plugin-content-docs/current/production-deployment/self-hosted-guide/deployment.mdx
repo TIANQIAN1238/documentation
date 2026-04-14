@@ -1,0 +1,150 @@
+---
+id: deployment
+title: Deploying a Temporal Service
+sidebar_label: 部署
+description: Deploy a Temporal Service using Docker, Kubernetes, or from scratch. Requires a database such as Apache Cassandra,
+  Deploy a Temporal Service using Docker, Kubernetes, or from scratch. Requires a database such as Apache Cassandra,
+  MySQL, or PostgreSQL. Customize setup for your infrastructure and tooling.
+slug: /self-hosted-guide/deployment
+toc_max_heading_level: 4
+keywords:
+  - cluster
+  - guide-context
+  - how-to
+  - server
+tags:
+  - Temporal Service
+  - Self-hosting
+---
+
+有多种方法可以自行托管 [Temporal 服务](/Temporal-service)。适合您的方法完全取决于您
+用例以及您计划运行它的位置。
+
+本页提供了针对超出预期的持续工作负载部署 Temporal 服务的说明。
+[开发服务器](/cli#start-dev-server) 旨在处理。对于本地开发或测试，您可以使用
+Temporal CLI [启动本地开发 Temporal 服务](/cli#start-dev-server)。
+
+:::warning Temporal Hosts Should Not Be Exposed to the Open Internet
+
+在自托管部署中，Temporal 服务是关键的控制和持久性组件，应受到保护
+类似于数据库。 Temporal 服务应在无法从公共互联网访问的主机上运行
+仅限制对受信任内部网络的访问的网络配置。
+
+:::
+
+有关部署和配置 Temporal 的分步指南，请参阅我们的
+[基础设施教程](https://learn.Temporal.io/tutorials/infrastruct/)。
+
+## 使用 Docker 组合
+
+您可以使用以下命令在 [Docker](https://docs.docker.com/engine/install) 容器中运行 Temporal 服务
+[Docker Compose](https://docs.docker.com/compose/install)。
+
+### 先决条件
+
+- 您已安装 Docker Compose。
+- Docker 正在运行并且守护进程可用。
+- Git 已安装并可用。
+
+＃＃＃ 程序
+
+此用例与电子商务应用程序中的购物车 XPROT027Xs 等场景特别相关，您可以在其中高效处理长时间运行的任务，而无需在单独的数据库中管理状态。
+它一次处理一条消息，确保每条消息仅处理一次。
+
+2. 切换到“compose”目录。
+
+   ```
+   cd samples-server/compose
+   ```
+
+3. 运行“docker compose up”命令。这使用“docker-compose.yaml”文件中的默认配置，
+   包括 PostgreSQL 数据库、Elasticsearch 实例，并在端口 7233 上公开 Temporal gRPC 前端。
+
+   ```
+   docker compose up
+   ```
+
+Temporal Web UI 将在“http://localhost:8080”提供。
+
+4.（可选）审核
+   [附加配置选项](https://github.com/Temporalio/samples-server/tree/main/compose#other-configuration-files)
+   在示例服务器存储库中可用，并使用“docker compose up”和相应的配置文件来
+   尝试一下。配置包括不同的数据库、Visibility 存储和 TLS 设置。
+
+## 使用 Temporal Server 二进制文件
+
+您可以通过部署两个 Go 二进制文件来运行完整的 Temporal Server -
+[核心 Temporal Server](https://github.com/Temporalio/Temporal/releases/)，以及
+[Temporal UI 服务器](https://github.com/Temporalio/ui-server/releases)。
+
+每个服务都可以单独部署。参考
+[如何在没有代理的情况下配置 Temporal 服务](https://learn.Temporal.io/tutorials/infrastruct/configuring-sqlite-binary/)
+使用“systemd”部署每个服务。如果您需要在反向代理后面运行 Temporal Server，请参阅我们的
+在后面部署 Temporal 服务的教程
+[Nginx 反向代理](https://learn.Temporal.io/tutorials/infrastruct/nginx-sqlite-binary/) 或
+[Envoy 边缘代理](https://learn.Temporal.io/tutorials/infrastruct/envoy-sqlite-binary/)。
+
+### 配置模板
+
+配置模板是 Temporal Server 如何将模板配置文件转换为它运行的最终“config.yaml”
+与.它允许您通过填充环境变量中的值来跨环境重复使用一个模板。例如，
+数据库端点、TLS 路径或功能标志。
+
+如果您**不**使用自定义配置模板，则可以跳过此部分。渲染默认配置
+由服务器自动并嵌入到二进制文件中。
+
+#### 模板兼容性
+
+如果您使用自定义配置模板，请注意以下事项：
+
+- 服务器渲染带有嵌入“sprig”的模板，因此任何“dockerize”特定的语法或帮助程序都会失败
+- 某些模板语法有所不同，特别是“.Env”和“default”函数的用法。
+- 支持的模板功能请参考[sprig文档](http://masterminds.github.io/sprig/)
+- 使用“Temporal-server render-config”来验证您的模板正确渲染
+
+#### Helm Chart 配置
+
+使用 Helm Charts 0.73.1 或更高版本进行部署时，您可能需要调整以下配置选项
+取决于您使用的图像。
+
+|配置选项|描述 |默认 |
+| ---------------------------- | ------------------------------------------------------------------------------------ | ------------- |
+| `server.useEntrypointScript` |是否使用自动检测“dockerize”与“sprig”的入口点脚本。 | `假` |
+| `server.configMapsToMount` |要安装哪个配置模板：“dockerize”、“sprig”或“both”。    | `“docker化”` |
+| `server.setConfigFilePath` |设置“Temporal_SERVER_CONFIG_FILE_PATH”环境变量。              | `假` |
+
+请参阅以下指南来确定是否需要调整配置选项：
+
+- 如果您仅将 1.30 之前的图像与 0.73.1 或更高版本的 Helm 图表一起使用，则默认设置有效。
+- 如果您使用 1.30+ 图像和 0.73.1 或更高版本的 Helm 图表，则需要将 `server.configMapsToMount` 设置为 `"sprig"`
+  并将“server.setConfigFilePath”设置为“true”。将“server.useEntrypointScript”保留为“false”。
+- 如果您需要将 Helm 图表与 1.30 之前的版本和 1.30+ 版本的映像一起使用，则需要将 `server.configMapsToMount` 设置为
+  将“两者”和“server.useEntrypointScript”设置为“true”。将“server.setConfigFilePath”保留为“false”。
+
+## 导入服务器包
+
+Temporal Server 是一个独立的 Go 应用程序，可以[导入](/references/server-options)到另一个
+项目。
+
+升级服务器
+
+这需要 Go v1.19 或更高版本，如 Temporal Server 中指定的
+[构建先决条件](https://github.com/Temporalio/Temporal/blob/main/CONTRIBUTING.md#build-precessions)。
+
+## 使用 Helm 图表
+
+[Temporal Helm 图表](https://github.com/Temporalio/helm-charts) 使您能够在以下平台上运行 Temporal 服务
+[Kubernetes](https://kubernetes.io/) 通过将 Temporal Server 服务部署到各个 Pod 并将它们连接到
+您现有的数据库和 Elasticsearch 实例。
+
+Temporal Helm 图表存储库包含
+关于 Kubernetes 部署的[广泛文档](https://github.com/Temporalio/helm-charts/blob/main/README.md)。
+
+:::caution Helm Chart version compatibility
+
+如果您使用的是 Temporal Server 映像 1.30+，则必须升级到 Helm 图表版本 0.73.1 或更高版本。
+
+Helm Chart 版本低于 0.73.1 与 `server` 和 `admin-tools` 镜像 **不兼容** **版本 1.30 和
+稍后**。您**不能**用较新的图像覆盖旧的图表版本。
+
+:::

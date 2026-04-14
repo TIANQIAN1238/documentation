@@ -1,8 +1,8 @@
 ---
 id: activity-execution
-title: Activity Execution
-sidebar_label: Activity Execution
-description: Understand how Activity Executions work in Temporal, including retries, timeouts, and failure handling.
+title: "Activity 执行"
+sidebar_label: "Activity 执行"
+description: "了解 Activity 执行在 Temporal 中的工作原理，包括重试、超时和故障处理。"
 slug: /activity-execution
 toc_max_heading_level: 4
 keywords:
@@ -17,186 +17,191 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-This page discusses the following:
+本页讨论以下内容：
 
-- [Activity Execution](#activity-execution)
-- [Cancellation](#cancellation)
-- [Activity Id](#activity-id)
-- [Asynchronous Activity Completion](#asynchronous-activity-completion)
-- [Task Token](#task-token)
+- [Activity 执行](#activity-execution)
+- [消除](#cancellation)
+- [Activity ID](#activity-id)
+- [异步 Activity 完成](#asynchronous-activity-completion)
+- [任务令牌](#task-token)
 
-## What is an Activity Execution? {#activity-execution}
+<a id="activity-execution"></a>
+## 什么是 Activity 执行？ {#activity-execution}
 
-An Activity Execution is the full chain of [Activity Task Executions](/tasks#activity-task-execution).
+Activity 执行是 [Activity 任务执行](/tasks#activity-task-execution) 的完整链。
 
 :::info
 
-- [How to start an Activity Execution using the Go SDK](/develop/go/activities/execution)
-- [How to start an Activity Execution using the Java SDK](/develop/java/activities/execution)
-- [How to start an Activity Execution using the PHP SDK](/develop/php/activities/execution)
-- [How to start an Activity Execution using the Python SDK](/develop/python/activities/execution)
-- [How to start an Activity Execution using the TypeScript SDK](/develop/typescript/activities/execution)
-- [How to start an Activity Execution using the .NET SDK](/develop/dotnet/activities/execution)
+- [如何使用 Go SDK 启动 Activity 执行](/develop/go/activities/execution)
+- [如何使用 Java SDK 启动 Activity 执行](/develop/java/activities/execution)
+- [如何使用 PHP SDK 启动 Activity 执行](/develop/php/activities/execution)
+- [如何使用 Python SDK 启动 Activity 执行](/develop/python/activities/execution)
+- [如何使用 TypeScript SDK 启动 Activity 执行](/develop/typescript/activities/execution)
+- [如何使用 .NET SDK 启动 Activity 执行](/develop/dotnet/activities/execution)
 
 :::
 
 <CaptionedImage src="/diagrams/activity-execution.svg" title="Activity Execution" />
 
-You can customize [Activity Execution timeouts](/encyclopedia/detecting-activity-failures#start-to-close-timeout) and
-[retry policies](/encyclopedia/retry-policies).
+您可以定制 [Activity 执行超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout) 和
+[重试政策](/encyclopedia/retry-policies)。
 
-If an Activity Execution fails (because it exhausted all retries, threw a
-[non-retryable error](/encyclopedia/retry-policies#non-retryable-errors), or was canceled), the error is returned to your
-[Workflow](/workflows) code when it attempts to fetch the Activity result. For [Standalone Activities](/standalone-activity) the error is
-returned to the Client when you attempt to fetch the Activity result.
+如果 Activity 执行失败（因为它用尽了所有重试，抛出了
+[不可重试的错误](/encyclopedia/retry-policies#non-retryable-errors)，或被取消），错误将返回给您
+当尝试获取 Activity 结果时，出现 [Workflow](/workflows) 代码。对于 [独立活动](/standalone-activity) 错误是
+当您尝试获取 Activity 结果时返回给客户端。
 
 :::note
 
-Temporal guarantees that an Activity Task either runs or timeouts. There are multiple failure scenarios when an Activity
-Task is lost. It can be lost during delivery to a Worker or after the Activity Function is called and the Worker
-crashed.
+Temporal 确保 Activity 任务运行或超时。 Activity 出现多种故障情况
+任务丢失。它可能会在传递给 Worker 期间或调用 Activity 函数且 Worker 后丢失
+坠毁了。
 
-Temporal doesn't detect task loss directly. It relies on
-[Start-To-Close timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout). If the Activity Task times
-out, the Activity Execution will be retried according to the Activity Execution Retry Policy.
+Temporal 不直接检测任务丢失。它依赖于
+[开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。如果 Activity 任务时间
+out，将根据 Activity 执行 Retry Policy 重试 Activity 执行。
 
-In scenarios where the Activity Execution Retry Policy is set to `1` and a Timeout occurs, the Activity Execution will
-not be tried.
+在 Activity 执行 Retry Policy 设置为 `1` 且发生超时的情况下，Activity 执行将
+不被尝试。
 
 :::
 
-## Cancellation {#cancellation}
+## 取消 {#cancellation}
 
-Activity Cancellation:
+Activity 取消：
 
-- lets the Activity know it doesn't need to keep doing work, and
-- gives the Activity time to clean up any resources it has created.
+- 让 Activity 知道它不需要继续工作，并且
+- 给 Activity 时间来清理它创建的任何资源。
 
-Activities must heartbeat to receive cancellations from a Temporal Service.
+活动必须发出心跳才能接收来自 Temporal 服务的取消。
 
-An Activity may receive Cancellation if:
+在以下情况下，Activity 可能会收到取消通知：
 
-- The Activity was requested to be Cancelled. This can often cascade from Workflow Cancellation, but not always—SDKs
-  have ways to stop Cancellation from cascading. {/* TODO link to workflow cancellation */}
-- The Activity was considered failed by the Server because any of the Activity timeouts have triggered (for example, the
-  Server didn't receive a heartbeat within the Activity's Heartbeat timeout). The
-  [Cancelled Failure](/references/failures#cancelled-failure) that the Activity receives will have
-  `message: 'TIMED_OUT'`.
-- The Workflow Run reached a [Closed state](/workflow-execution#workflow-execution-status), in which case the Cancelled
-  Failure will have `message: 'NOT_FOUND'`.
-- In some SDKs:
-  - The Worker is shutting down.
-  - An Activity sends a Heartbeat but the Heartbeat details can't be converted by the Worker's configured
-    [Data Converter](/dataconversion). This fails the Activity Task Execution with an Application Failure.
-  - The Activity timed out on the Worker side and is not Heartbeating or the Temporal Service hasn't relayed a
-    Cancellation.
+- Activity 被请求取消。这通常可以从 Workflow 取消级联，但并非总是如此 - SDK
+  有办法阻止取消级联。 {/* TODO 链接至 Workflow 取消 */}
+- 服务器认为 Activity 失败，因为任何 Activity 超时已触发（例如，
+  服务器在 Activity 的心跳超时内未收到心跳。的
+  Activity收到的[取消失败](/references/failures#cancelled-failure)会有
+  `message: 'TIMED_OUT'`。
+- Workflow 运行达到 [关闭状态](/workflow-execution#workflow-execution-status)，在这种情况下，取消
+  失败将有`message: 'NOT_FOUND'`。
+- 在某些 SDK 中：
+  - Worker 正在关闭。
+  - Activity 发送心跳，但心跳详细信息无法通过 Worker 的配置进行转换
+    [Data Converter](/dataconversion)。这会导致 Activity 任务执行失败并出现应用程序故障。
+  - Activity 在 Worker 端超时并且没有检测信号或 Temporal 服务尚未中继
+    取消。
 
-There are different ways to receive Cancellation depending on the SDK. {/* TODO link to dev guide */} An Activity may
-accept or ignore Cancellation:
+根据 SDK 的不同，接收取消的方式也不同。 {/* TODO 开发指南链接 */} Activity 可能
+接受或忽略取消：
 
-- To allow Cancellation to happen, let the Cancellation Failure propagate.
-- To ignore Cancellation, catch it and continue executing.
+- 要允许取消发生，请传播取消失败。
+- 要忽略取消，捕获它并继续执行。
 
-Some SDKs have ways to shield tasks from being stopped while still letting the Cancellation propagate.
+一些 SDK 有方法防止任务停止，同时仍允许取消传播。
 
-The Workflow can also decide if it wants to wait for the Activity Cancellation to be accepted or to proceed without
-waiting.
+Workflow 还可以决定是否要等待 Activity 取消被接受或不继续进行
+等待。
 
-Cancellation can only be requested a single time. If you try to cancel your Activity Execution more than once, it will
-not receive more than one Cancellation request.
+只能请求一次取消。如果您多次尝试取消 Activity 执行，它将
+未收到超过一个取消请求。
 
-## What is an Activity Id? {#activity-id}
+<a id="activity-id"></a>
+## 什么是 Activity ID？ {#activity-id}
 
-The identifier for an [Activity Execution](#activity-execution). The identifier can be generated by the system, or it
-can be provided by the Workflow code that spawns the Activity Execution. The identifier is unique among the open
-Activity Executions of a [Workflow Run](/workflow-execution/workflowid-runid#run-id). (A single Workflow Run may reuse
-an Activity Id if an earlier Activity Execution with the same Id has closed.)
+[Activity 执行](#activity-execution) 的标识符。该标识符可以由系统生成，也可以由系统生成
+可以由生成 Activity 执行的 Workflow 代码提供。标识符在开放环境中是唯一的
+Activity [Workflow 运行](/workflow-execution/workflowid-runid#run-id) 的执行。 （单个 Workflow 运行可以重复使用
+如果具有相同 ID 的早期 Activity 执行已关闭，则为 Activity Id。）
 
-An Activity Id can be used to [complete the Activity asynchronously](#asynchronous-activity-completion).
+Activity Id 可用于 [异步完成 Activity](#asynchronous-activity-completion)。
 
-[Standalone Activities](/standalone-activity) have a separate ID space from Workflows and other Temporal primitives.
-This means use of conflict policy (`USE_EXISTING`, …) and reuse policy (`REJECT_DUPLICATES`, …) will only observe the Standalone Activity ID space.
+[独立活动](/standalone-activity) 具有与 Workflow 和其他 Temporal 原语不同的 ID 空间。
+这意味着使用冲突策略（`USE_EXISTING`，...）和重用策略（`REJECT_DUPLICATES`，...）将仅观察独立 Activity ID 空间。
 
-## What is Asynchronous Activity Completion? {#asynchronous-activity-completion}
+<a id="asynchronous-activity-completion"></a>
+## 什么是异步 Activity 完成？ {#asynchronous-activity-completion}
 
-Asynchronous Activity Completion is a feature that enables an Activity Function to return without causing the Activity
-Execution to complete. The Temporal Client can then be used from anywhere to both Heartbeat Activity Execution progress
-and eventually complete the Activity Execution and provide a result.
+异步 Activity 完成是一项功能，使 Activity 函数能够返回，而不会导致 Activity
+执行完成。然后可以从任何地方使用 Temporal CLIent 来查看心跳 Activity 执行进度
+最终完成Activity执行并提供结果。
 
-How to complete an Activity Asynchronously in:
+如何异步完成 Activity：
 
-- [Go](/develop/go/activities/asynchronous-activity)
-- [Java](/develop/java/activities/asynchronous-activity)
+- [去](/develop/go/activities/asynchronous-activity)
+- [爪哇](/develop/java/activities/asynchronous-activity)
 - [PHP](/develop/php/activities/asynchronous-activity)
 - [Python](/develop/python/activities/asynchronous-activity)
-- [TypeScript](/develop/typescript/activities/asynchronous-activity)
-- [.NET](/develop/dotnet/activities/asynchronous-activity)
+- [打字稿](/develop/typescript/activities/asynchronous-activity)
+- [。网](/develop/dotnet/activities/asynchronous-activity)
 
-### When to use Async Completion
+<a id="when-to-use-async-completion"></a>
+### 何时使用异步完成 {#when-to-use-async-completion}
 
-When an external system has the final result of a computation that is started by an Activity, there are three main ways
-of getting the result to the Workflow:
+当外部系统获得由 Activity 启动的计算的最终结果时，主要有以下三种方式
+将结果发送到 Workflow：
 
-1. The external system uses Async Completion to complete the Activity with the result.
-2. The Activity completes normally, without the result. Later, the external system sends a Signal to the Workflow with
-   the result.
-3. A subsequent Activity
-   [polls the external system](https://community.temporal.io/t/what-is-the-best-practice-for-a-polling-activity/328/2)
-   for the result.
+1. 外部系统使用异步完成来完成 Activity 的结果。
+2. Activity正常完成，没有结果。随后，外部系统将 Signal 发送到 Workflow，其中包含
+   结果。
+3.后续Activity
+   [轮询外部系统](https://community.temporal.io/t/what-is-the-best-practice-for-a-polling-activity/328/2)
+   为了结果。
 
-If you don't have control over the external system — that is, you can't add Async Completion or a Signal to its code —
-then:
+如果您无法控制外部系统 - 也就是说，您无法将异步完成或 Signal 添加到其代码中 -
+那么：
 
-- you can poll (#3), or
-- if the external system can reliably call a webhook (and retry calling in the case of failure), you can write a webhook
-  handler that sends a Signal to the Workflow (#2).
+- 你可以投票（#3），或者
+- 如果外部系统可以可靠地调用Webhook（并在失败的情况下重试调用），则可以编写Webhook
+  将 Signal 发送到 Workflow 的处理程序 (#2)。
 
-The decision between using #1 vs #2 involves a few factors. Use Async Completion if:
+使用#1 与#2 之间的决定涉及几个因素。如果出现以下情况，请使用异步完成：
 
-- the external system is unreliable and might fail to Signal, or
-- you want the external process to Heartbeat or receive Cancellation.
+- 外部系统不可靠，可能会出现 Signal 故障，或者
+- 您希望外部进程心跳或接收取消。
 
-Otherwise, if the external system can reliably be trusted to do the task and Signal back with the result, and it doesn't
-need to Heartbeat or receive Cancellation, then you may want to use Signals.
+否则，如果可以可靠地信任外部系统来执行任务并返回 Signal 结果，那么它不会
+需要心跳或接收取消，那么您可能需要使用 Signals。
 
-The benefit to using Signals has to do with the timing of failure retries. For example, consider an external process
-that is waiting for a human to review something and respond, and they could take up to a week to do so. If you use Async
-Completion (#1), you would:
+使用 Signal 的好处与失败重试的时间有关。例如，考虑一个外部流程
+它正在等待人们审查某些内容并作出回应，他们可能需要长达一周的时间才能完成。如果您使用异步
+完成（＃1），你会：
 
-- set a [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout) of one week on the
+- 将 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout) 设置为一周
   Activity,
-- in the Activity, notify the external process you need the human review, and
-- have the external process Asynchronously Complete the Activity when the human responds.
+- 在 Activity 中，通知外部流程您需要人工审核，并且
+- 当人类响应时，让外部进程异步完成 Activity。
 
-If the Activity fails on the second step to notify the external system and doesn't throw an error (for example, if the
-Worker dies), then the Activity won't be retried for a week, when the Start-To-Close Timeout is hit.
+如果 Activity 在第二步通知外部系统失败并且没有抛出错误（例如，如果
+Worker 死亡），那么当达到开始到关闭超时时，Activity 将在一周内不会重试。
 
-If you use Signals, you would:
+如果您使用 Signal，您将：
 
-- set a [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout) of one minute on the
+- 将 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout) 设置为一分钟
   Activity,
-- in the Activity, notify the external process you need the human review,
-- complete the Activity without the result, and
-- have the external process Signal the Workflow when the human responds.
+- 在 Activity 中，通知外部流程您需要人工审核，
+- 完成 Activity，但没有结果，并且
+- 当人类响应时，有外部过程Signal Workflow。
 
-If the Activity fails on the second step to notify the external system and doesn't throw an error, then the Activity
-will be retried in a minute.
+如果 Activity 在第二步通知外部系统失败并且没有抛出错误，则 Activity
+将在一分钟后重试。
 
-In the second scenario, the failure is retried sooner. This is particularly helpful in scenarios like this in which the
-external process might take a long time.
+在第二种情况下，会更快地重试失败。这在这样的场景中特别有用：
+外部过程可能需要很长时间。
 
-### What is a Task Token? {#task-token}
+<a id="task-token"></a>
+### 什么是任务令牌？ {#task-token}
 
-A Task Token is a unique identifier for an [Activity Task Execution](/tasks#activity-task-execution).
+任务令牌是 [Activity 任务执行](/tasks#activity-task-execution) 的唯一标识符。
 
-[Asynchronous Activity Completion](#asynchronous-activity-completion) calls take either of the following as arguments:
+[异步 Activity 完成](#asynchronous-activity-completion) 调用采用以下任一参数作为参数：
 
-- a Task Token, or
-- an [Activity Id](#activity-id), a [Workflow Id](/workflow-execution/workflowid-runid#workflow-id), and optionally a
-  [Run Id](/workflow-execution/workflowid-runid#run-id).
+- 任务令牌，或
+- [Activity ID](#activity-id)、[Workflow ID](/workflow-execution/workflowid-runid#workflow-id) 和可选的
+  [运行 ID](/workflow-execution/workflowid-runid#run-id)。
 
-Since a Task Token is unique for an Activity execution, retries can cause a remote service using the Task Token to end
-up with an invalid one. For example, an Activity might fail after passing its current Task Token to a remote service,
-but before returning the complete async error, leaving that service with a Task Token that's no longer valid.
+由于任务令牌对于 Activity 执行是唯一的，因此重试可能会导致使用任务令牌的远程服务结束
+加上一个无效的。例如，Activity 在将其当前任务令牌传递给远程服务后可能会失败，
+但在返回完整的异步错误之前，请为该服务留下不再有效的任务令牌。
 
-To avoid this risk, you can provide the Activity Id and Workflow Id to the remote service instead of the Task Token.
+为了避免此风险，您可以向远程服务提供 Activity Id 和 Workflow Id，而不是任务令牌。

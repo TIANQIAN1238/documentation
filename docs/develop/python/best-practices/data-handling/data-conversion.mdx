@@ -1,48 +1,50 @@
 ---
 id: data-conversion
-title: Payload conversion - Python SDK
-sidebar_label: Payload conversion
+title: "有效负载转换 - Python SDK"
+sidebar_label: "有效负载转换"
 slug: /develop/python/data-handling/data-conversion
 toc_max_heading_level: 2
 tags:
   - Data Converters
   - Python SDK
   - Temporal SDKs
-description: Customize how Temporal serializes application objects using Payload Converters in the Python SDK, including Pydantic and custom type examples.
+description: "自定义 Temporal 如何使用 Python SDK 中的有效负载转换器序列化应用程序对象，包括 Pydantic 和自定义类型示例。"
 ---
 
-Payload Converters serialize your application objects into a `Payload` and deserialize them back.
-A `Payload` is a binary form with metadata that Temporal uses to transport data.
+有效负载转换器将您的应用程序对象序列化为 `Payload` 并将它们反序列化回来。
+`Payload` 是带有 Temporal 用于传输数据的元数据的二进制形式。
 
-By default, Temporal uses a `DefaultPayloadConverter` that handles `None`, `bytes`, protobuf messages, and anything JSON-serializable.
-You only need a custom Payload Converter when your application uses types that aren't natively supported.
+默认情况下，Temporal 使用 `DefaultPayloadConverter` 来处理 `None`、`bytes`、Protobuf 消息和任何可 JSON 序列化的消息。
+仅当您的应用程序使用本机不支持的类型时，您才需要自定义有效负载转换器。
 
-## Default supported types
+<a id="default-supported-types"></a>
+## 默认支持的类型 {#default-supported-types}
 
-The default Data Converter supports converting multiple types including:
+默认的Data Converter支持转换多种类型，包括：
 
 - `None`
 - `bytes`
-- `google.protobuf.message.Message` — As JSON when encoding, but can decode binary proto from other languages
-- Anything that can be converted to JSON including:
-  - Anything that [`json.dump`](https://docs.python.org/3/library/json.html#json.dump) supports natively
-  - [dataclasses](https://docs.python.org/3/library/dataclasses.html)
-  - Iterables including ones JSON dump may not support by default, e.g. `set`
-  - [IntEnum, StrEnum](https://docs.python.org/3/library/enum.html) based enumerates
-  - [UUID](https://docs.python.org/3/library/uuid.html)
+- `google.Protobuf.message.Message` — 编码时为 JSON，但可以解码其他语言的二进制原型
+- 任何可以转换为 JSON 的内容，包括：
+  - [`json.dump`](https://docs.python.org/3/library/json.html#json.dump) 本身支持的任何内容
+  - [数据类](https://docs.python.org/3/library/dataclasses.html)
+  - 默认情况下，包括 JSON 转储在内的可迭代对象可能不支持，例如`set`
+  - 基于[整数枚举、字符串枚举](https://docs.python.org/3/library/enum.html)的枚举
+  - [通用唯一标识符](https://docs.python.org/3/library/uuid.html)
 
-Although Workflows, Updates, Signals, and Queries can all be defined with multiple input parameters, users are strongly
-encouraged to use a single `dataclass` or Pydantic model parameter so that fields with defaults can be easily added
-without breaking compatibility.
-Similar advice applies to return values.
+虽然 Workflow、Update、Signal 和查询都可以使用多个输入参数进行定义，但用户强烈要求
+鼓励使用单个 `dataclass` 或 Pydantic 模型参数，以便可以轻松添加具有默认值的字段
+而不破坏兼容性。
+类似的建议适用于返回值。
 
-Classes with generics may not have the generics properly resolved.
-The current implementation does not have generic type resolution.
-Users should use concrete types.
+具有泛型的类可能无法正确解析泛型。
+当前的实现没有泛型类型解析。
+用户应该使用具体类型。
 
-## Use Pydantic models
+<a id="use-pydantic-models"></a>
+## 使用 Pydantic 模型 {#use-pydantic-models}
 
-To use Pydantic model instances, install Pydantic and set the Pydantic Data Converter when creating Client instances:
+要使用 Pydantic 模型实例，请安装 Pydantic 并在创建 Client 实例时设置 Pydantic Data Converter：
 
 ```python
 from temporalio.contrib.pydantic import pydantic_data_converter
@@ -50,36 +52,38 @@ from temporalio.contrib.pydantic import pydantic_data_converter
 client = Client(data_converter=pydantic_data_converter, ...)
 ```
 
-This Data Converter supports conversion of all [types supported by Pydantic](https://docs.pydantic.dev/latest/api/standard_library_types/) to and from JSON.
-In addition to Pydantic models, supported types include:
+此 Data Converter 支持所有 [Pydantic 支持的类型](https://docs.pydantic.dev/latest/api/standard_library_types/) 与 JSON 之间的转换。
+除了 Pydantic 模型之外，支持的类型包括：
 
-- Everything that [`json.dumps()`](https://docs.python.org/3/library/json.html#py-to-json-table) supports by default.
-- Several standard library types that `json.dumps()` does not support, including dataclasses, types from the datetime module, sets, UUID, etc.
-- Custom types composed of any of these, with any degree of nesting.
-  For example, a list of Pydantic models with `datetime` fields.
+- [`json.dumps()`](https://docs.python.org/3/library/json.html#py-to-json-table) 默认支持的所有内容。
+- `json.dumps()` 不支持的几种标准库类型，包括数据类、日期时间模块中的类型、集合、UUID 等。
+- 由其中任何一个组成的自定义类型，具有任意程度的嵌套。
+  例如，具有 `datetime` 字段的 Pydantic 模型列表。
 
-See the [Pydantic documentation](https://docs.pydantic.dev/latest/api/standard_library_types/) for full details.
+有关完整详细信息，请参阅 [Pydantic 文档](https://docs.pydantic.dev/latest/api/standard_library_types/)。
 
 :::note
 
-Pydantic v1 isn't supported by this Data Converter.
-If you aren't yet able to upgrade from Pydantic v1, see https://github.com/temporalio/samples-python/tree/main/pydantic_converter/v1 for limited v1 support.
+此 Data Converter 不支持 Pydantic v1。
+如果您还无法从 Pydantic v1 升级，请参阅 https://github.com/temporalio/samples-python/tree/main/pydantic_converter/v1 以获取有限的 v1 支持。
 
 :::
 
-`datetime.date`, `datetime.time`, and `datetime.datetime` can only be used with the Pydantic Data Converter.
+`datetime.date`、`datetime.time` 和 `datetime.datetime` 只能与 Pydantic Data Converter 一起使用。
 
-## How the default converter works
+<a id="how-the-default-converter-works"></a>
+## 默认转换器如何工作 {#how-the-default-converter-works}
 
-The default converter is a `CompositePayloadConverter` that tries each encoding converter in order until one handles the value.
-Upon serialization, each `EncodingPayloadConverter` is used in order until one succeeds.
+默认转换器是 `CompositePayloadConverter`，它按顺序尝试每个编码转换器，直到有人处理该值。
+序列化后，每个 `EncodingPayloadConverter` 都会按顺序使用，直到一个成功为止。
 
-Payload Converters can be customized independently of a Payload Codec.
+有效负载转换器可以独立于有效负载编解码器进行定制。
 
-## Custom Payload Converters
+<a id="custom-payload-converters"></a>
+## 自定义有效负载转换器 {#custom-payload-converters}
 
-To handle custom data types, create a new `EncodingPayloadConverter`.
-For example, to support `IPv4Address` types:
+要处理自定义数据类型，请创建新的 `EncodingPayloadConverter`。
+例如，要支持 `IPv4Address` 类型：
 
 ```python
 class IPv4AddressEncodingPayloadConverter(EncodingPayloadConverter):
@@ -114,12 +118,13 @@ my_data_converter = dataclasses.replace(
 )
 ```
 
-### Customize the JSON converter for custom types
+<a id="customize-the-json-converter-for-custom-types"></a>
+### 为自定义类型自定义 JSON 转换器 {#customize-the-json-converter-for-custom-types}
 
-If you need your custom type to work in lists, unions, and other collections, customize the existing JSON converter instead of adding a new encoding converter.
-The JSON converter is the last in the list, so it handles any otherwise unknown type.
+如果您需要自定义类型在列表、联合和其他集合中工作，请自定义现有的 JSON 转换器，而不是添加新的编码转换器。
+JSON 转换器是列表中的最后一个，因此它可以处理任何其他未知类型。
 
-Customize serialization with a custom `json.JSONEncoder` and deserialization with a custom `JSONTypeConverter`:
+使用自定义 `json.JSONEncoder` 自定义序列化，并使用自定义 `JSONTypeConverter` 自定义反序列化：
 
 ```python
 class IPv4AddressJSONEncoder(AdvancedJSONEncoder):
@@ -157,4 +162,4 @@ my_data_converter = dataclasses.replace(
 )
 ```
 
-Now `IPv4Address` can be used in type hints including collections, optionals, etc.
+现在 `IPv4Address` 可用于类型提示，包括集合、可选值等。

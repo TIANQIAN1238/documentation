@@ -1,0 +1,41 @@
+---
+id: timers
+title: Timers - Python SDK
+sidebar_label: Timers
+description: 使用 sleep() 或 Timer() 将耐用的 Timer 与 Temporal Workflow 设置在一起，确保代码执行在停机后恢复。在 Python 中使用轻资源操作休眠数月。
+slug: /develop/python/workflows/timers
+toc_max_heading_level: 2
+keywords:
+  - temporal workflow timers
+  - delay workflow execution
+  - durable scheduling
+  - long-term task scheduling
+  - sleep in workflow
+tags:
+  - Workflows
+  - Durable Timers
+  - Python SDK
+  - Temporal SDKs
+---
+
+Workflow 可以将 Timer 设置为固定时间段的耐用性。
+在某些 SDK 中，该函数称为“sleep()”，而在其他 SDK 中，该函数称为“Timer()”。
+
+Workflow 可以休眠数月。
+Timer 是持久的，因此即使您的 Worker 或 Temporal 服务在时间段结束时关闭，只要您的 Worker 和 Temporal 服务备份，“sleep()”调用就会解析，您的代码将继续执行。
+
+睡眠是一种轻资源操作：它不会占用进程，并且您可以在单个 Worker 上运行数百万个 Timer。
+
+要在 Python 中设置 Timer，请调用 [`asyncio.sleep()`](https://docs.python.org/3/library/asyncio-task.html#sleeping) 函数并传递继续之前要等待的持续时间（以秒为单位）。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/continue_as_new/your_Workflows_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+# ...
+        await asyncio.sleep(10)
+```

@@ -1,8 +1,8 @@
 ---
 id: nexus-endpoints
-title: Nexus Endpoints
-sidebar_label: Nexus Endpoints
-description: Nexus Endpoints are reverse proxies that connect Nexus callers and handlers forwarding Nexus requests to an upstream target Namespace and Task Queue that a Worker is polling.
+title: "Nexus 端点"
+sidebar_label: "Nexus 端点"
+description: "Nexus 端点是连接 Nexus 调用方和处理程序的反向代理，将 Nexus 请求转发到 Worker 正在轮询的上游目标 Namespace 和 Task Queue。"
 toc_max_heading_level: 4
 slug: /nexus/endpoints
 keywords:
@@ -18,27 +18,29 @@ import { CaptionedImage } from '@site/src/components';
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal Nexus is now [Generally Available](/evaluate/development-production-features/release-stages#general-availability) for [Temporal Cloud](/cloud/nexus) and [self-hosted deployments](/production-deployment/self-hosted-guide/nexus).
+[Temporal Cloud](/evaluate/development-production-features/release-stages#general-availability) 和 [自托管部署](/cloud/nexus) 的 Temporal Nexus 现在为 [一般可用](/production-deployment/self-hosted-guide/nexus)。
 
 :::
 
-A [Nexus Endpoint](/glossary#nexus-endpoint) is a fully managed reverse proxy for [Nexus Services](/nexus/services).
-It routes requests from a caller Workflow to a target Namespace and Task Queue.
-Callers only need to know the Endpoint name - the target Namespace, Task Queue, and internal implementation are encapsulated.
+[Nexus 端点](/glossary#nexus-endpoint) 是 [Nexus 服务](/nexus/services) 的完全托管反向代理。
+它将来自调用者 Workflow 的请求路由到目标 Namespace 和 Task Queue。
+调用者只需要知道Endpoint名称——目标Namespace、Task Queue，以及内部实现被封装。
 
-Workers handle Nexus requests by registering one or more Services and polling the Endpoint's target Task Queue.
-Multiple Endpoints can target different Task Queues in the same Namespace.
+Worker 通过注册一项或多项服务并轮询端点的目标 Task Queue 来处理 Nexus 请求。
+多个端点可以针对同一 Namespace 中的不同 Task Queue。
 
-The Endpoint description field supports markdown for documenting available Operations, contact information, or schema links.
+端点描述字段支持降价以记录可用的操作、联系信息或架构链接。
 
-## Reverse proxy for Nexus Services, not a general purpose proxy
-A Nexus Endpoint acts as a reverse proxy for a single Nexus Service, routing requests to one target Namespace and Task Queue.
+<a id="reverse-proxy-for-nexus-services-not-a-general-purpose-proxy"></a>
+## Nexus 服务的反向代理，不是通用代理 {#reverse-proxy-for-nexus-services-not-a-general-purpose-proxy}
+Nexus 端点充当单个 Nexus 服务的反向代理，将请求路由到一个目标 Namespace 和 Task Queue。
 
-Unlike general-purpose proxies, it does not route to multiple backends. Instead, it provides a secure, managed connection to a specific upstream target, which can be in any region or cloud.
-The [EndpointSpec](https://github.com/temporalio/api/blob/2a5b3951e71565e28628edea1b3d88d69ed26607/temporal/api/nexus/v1/message.proto#L170) support the following [target type](https://github.com/temporalio/api/blob/2a5b3951e71565e28628edea1b3d88d69ed26607/temporal/api/nexus/v1/message.proto#L185):
+与通用代理不同，它不会路由到多个后端。相反，它提供了到特定上游目标的安全、托管连接，该目标可以位于任何区域或云中。
+[端点规范](https://github.com/temporalio/api/blob/2a5b3951e71565e28628edea1b3d88d69ed26607/temporal/api/nexus/v1/message.proto#L170) 支持以下 [目标类型](https://github.com/temporalio/api/blob/2a5b3951e71565e28628edea1b3d88d69ed26607/temporal/api/nexus/v1/message.proto#L185)：
 
-- **Worker**: Route to a target Namespace and Task Queue.
+- **Worker**：路由到目标 Namespace 和 Task Queue。
 
-## Deploying a Nexus Endpoint
+<a id="deploying-a-nexus-endpoint"></a>
+## 部署 Nexus 端点 {#deploying-a-nexus-endpoint}
 
-Adding an Endpoint to the [Nexus Registry](/nexus/registry) deploys it immediately. The Endpoint is available at runtime as soon as it's registered.
+将端点添加到 [Nexus 注册表](/nexus/registry) 会立即部署它。端点一经注册即可在运行时可用。

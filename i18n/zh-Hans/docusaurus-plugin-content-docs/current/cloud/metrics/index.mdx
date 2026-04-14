@@ -1,0 +1,62 @@
+---
+id: index
+title: Temporal Cloud 指标
+sidebar_label: 指标
+description: 使用云指标和 SDK 指标监控 Temporal Cloud 工作负载。
+slug: /cloud/metrics/
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - how-to
+  - introduction
+  - metrics
+  - observability
+  - prometheus
+  - reference
+  - tcld cli
+  - temporal cloud
+tags:
+  - Metrics
+  - Observability
+  - Temporal Cloud
+---
+
+Temporal 提供两种不同的指标来源：[Cloud Metrics](/cloud/metrics/openmetrics/metrics-reference) 和 [SDK Metrics](/references/sdk-metrics)。
+每个源都提供不同级别的粒度、过滤选项、监控工具集成和配置。
+
+- **SD​​K 指标** 从应用程序的角度监控各个 Worker 和代码的行为。
+- **云指标**从 Temporal 服务的角度监控 Temporal Cloud 的行为。
+
+当一起使用时，云和 SDK 指标可衡量整个 Temporal 基础设施的运行状况和性能，包括 Temporal Cloud 服务和用户提供的 Temporal Worker。
+
+## 云指标
+
+您帐户中所有 Namespace 的云指标均可从 [OpenMetrics 端点](/cloud/metrics/openmetrics) 获取，这是一个位于 `metrics.Temporal.io` 的与 Prometheus 兼容的可抓取端点。
+
+- [OpenMetrics 概述](/cloud/metrics/openmetrics) - 入门和关键概念
+- [指标集成](/cloud/metrics/openmetrics/metrics-integrations) - Datadog、Grafana Cloud、New Relic、ClickStack 等
+- [API参考](/cloud/metrics/openmetrics/api-reference) - 端点规范和高级配置
+- [指标参考](/cloud/metrics/openmetrics/metrics-reference) - 所有“Temporal_cloud_v1_*”指标的完整目录
+
+## SDK 指标
+
+SDK 指标由您的 Worker 和客户端发出。
+有关设置说明，请参阅[SDK 指标设置](/cloud/metrics/sdk-metrics-setup)。
+
+## PromQL 端点（已弃用）{#promql-deprecated}
+
+:::danger PromQL endpoint deprecated
+
+PromQL 端点及其“Temporal_cloud_v0_*”指标已于 2026 年 4 月 2 日弃用，并且不再接受新用户。
+将于 **2026 年 10 月 5 日**对所有用户禁用 PromQL 端点。
+
+迁移到 [OpenMetrics 端点](/cloud/metrics/openmetrics)。
+有关完整的 v0 到 v1 指标映射，请参阅[迁移指南](/cloud/metrics/openmetrics/migration-guide)。
+
+:::
+
+旧版 PromQL 端点使用 mTLS 证书身份验证，并通过 Prometheus Query API 公开“Temporal_cloud_v0_*”指标。
+
+- [PromQL 端点](/cloud/metrics/promql)
+- [PromQL 指标参考](/cloud/metrics/reference)
+- [使用 Grafana 进行 PromQL 设置](/cloud/metrics/prometheus-grafana)

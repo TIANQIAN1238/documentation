@@ -1,0 +1,116 @@
+---
+id: export
+title: Workflow 历史导出
+sidebar_label: Workflow 历史导出
+description: Temporal Cloud 中的 Workflow 历史记录导出允许用户将关闭的 Workflow 历史记录导出到对象存储以进行合规性和分析。通过云 UI 或 tcld 配置。
+slug: /cloud/export
+toc_max_heading_level: 4
+keywords:
+  - archival
+  - export
+  - operations
+  - temporal cloud
+  - verify
+  - workflow history export
+tags:
+  - Temporal Cloud
+  - Export Workflow History
+---
+
+Workflow 历史记录导出允许用户将封闭的 Workflow 历史记录从 Temporal Cloud 导出到云对象存储（AWS S3 或 GCP GCS），从而实现：
+
+- [proto 格式] 的完整 Workflow 历史数据的合规性和审计跟踪(https://github.com/Temporalio/api/blob/master/Temporal/api/export/v1/message.proto)
+- 当摄取到您选择的数据平台时，对 Workflow 历史记录进行分析
+
+Temporal Cloud 中的 Workflow 历史记录导出提供与自托管 Temporal Server 中的 [存档](/self-hosted-guide/archival) 类似的功能。 
+Temporal Cloud 不支持存档。
+
+导出每小时运行一次，在整点后 10 分钟开始。 
+关闭的 Workflow 最多需要 24 小时才能出现在导出的文件中。
+保证至少一次交货。
+
+
+## 先决条件{#先决条件}
+
+要使用 Workflow 历史记录导出，您必须具有：
+
+1. 托管 Namespace 的云提供商的云帐户。
+2. 一个可用于接收导出的历史记录的对象存储桶。
+
+## 配置 Workflow 历史记录导出 {#configure}
+
+### AWS
+
+[AWS S3 导出配置](/cloud/export/aws-export-s3)
+
+### GCP
+
+[GCP GCS 导出配置](/cloud/export/gcp-export-gcs)
+
+## 验证导出设置 {#verify}
+
+从导出配置页面中，选择**验证**。
+这验证了 Temporal 可以成功地将测试文件写入对象存储。
+
+如果一切配置正确，您将看到“成功”状态，表明 Temporal 已写入对象存储。
+
+## 监控导出进度 {#monitor}
+
+配置导出后，您可以通过多种方式检查它是否仍在工作：
+
+1. **对象存储**：
+
+- 文件传输：在设置的最初一个小时后，检查您的对象存储。
+     您应该会看到导出的 Workflow 历史文件。
+   - 目录结构：导出的文件将遵循以下命名约定和路径：
+
+   ```bash
+   //[bucket-name]/temporal-workflow-history/export/[Namespace]/[Year]/[Month]/[Day]/[Hour]/[Minute]/
+   ```
+导出的文件名将包含随机生成的 ID。目录结构中记录的时间
+是导出上传到对象存储的时间，而不是 Workflow 完成时间。
+
+2. **Temporal Cloud 网页用户界面**：
+
+- 导出用户界面：
+
+- 上次成功导出：显示最近一次成功导出的时间戳。
+      - 上次状态检查：这反映了最新内部 Workflow 运行状况检查的时间戳。
+
+- 使用仪表板：
+      - 导出作业中的操作包含在 [使用情况仪表板](/cloud/billing-and-cost) 中。
+
+3. **指标**：
+   - 导出相关的指标可从 [云指标端点](/cloud/metrics/) 获取，特别是带有标签“is_background="true"”的指标“Temporal_cloud_v1_total_action_count”。
+
+4. **电子邮件**：
+   - 当 Workflow 历史记录导出作业由于用户相关错误（例如对象存储权限问题）而失败时，电子邮件将发送到“Namespace 管理员”、“帐户所有者”和“全局管理员”角色。
+
+## 使用导出的文件
+
+使用[此处](https://github.com/Temporalio/api/blob/master/Temporal/api/export/v1/message.proto)定义的原型模式来反序列化导出的文件。
+
+### 在分析中使用导出的文件
+
+将原型转换为另一种格式以对数据进行分析非常有用。要将 protos 转换为 parquet，请按照 
+[示例 Python Workflow](https://github.com/Temporalio/samples-python/tree/main/cloud_export_to_parquet)。请注意，此示例 Workflow：
+* 将嵌套的原型结构转换为平面表格格式。
+* 表中的每一行代表 Workflow 的单个历史事件。为了在转换后保留它们的关系，每行中都包含“WorkflowID”和“runID”。
+* 如果您启用了 Codec Server，则负载字段将被加密。该字段可能包含加载到数据库时无法识别的字符，因此本示例中不包括有效负载字段。
+
+## 导出和高可用性 Namespaces {#export-ha}
+
+### 出口区域持久性
+
+当为 [高可用性](/cloud/high-availability) Namespace 配置导出时，导出将绑定到最初设置的特定区域。导出配置不会自动对 Namespace 进行故障转移。
+
+- 如果在区域 A 中配置了导出，即使在 Namespace 故障转移到区域 B 后，它将继续从区域 A 的存储导出
+- 导出始终从最初配置的同一区域读取和写入
+- 导出过程独立于 Namespace 故障转移事件
+- 导出不会自动故障转移，因为我们优先考虑数据完整性和一致性，而不是导出的实时可用性。 HA 数据复制具有固有的延迟，这可能会导致故障转移期间导出不完整或不一致。
+
+### 故障转移场景
+
+**Namespace 故障转移与健康的主要区域**：当 Namespace 故障转移到次要区域但主要区域保持健康（包括其 Blob 存储）时，导出作业将继续从主要区域运行。它不会自动切换到从次要区域导出数据。
+
+**主要区域中断**：如果主要区域（配置了导出的位置）经历完全中断（包括 S3/GCS 存储）：在主要区域恢复之前，导出将不可用。一旦主要区域恢复，导出将恢复并包含中断期间发生的任何 Workflow 历史记录。导出处理可能会出现延迟，但完整的数据集最终将可用。它不会自动切换到从次要区域导出数据。

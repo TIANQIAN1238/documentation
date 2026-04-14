@@ -1,8 +1,8 @@
 ---
 id: embedded-server
-title: Embedding Temporal server as a Go library
-sidebar_label: Embedded server
-description: Run Temporal server as an embedded Go library for testing and development. Learn how to use temporal.NewServer() to run Temporal server in-process.
+title: "将 Temporal Server 嵌入为 Go 库"
+sidebar_label: "嵌入式服务器"
+description: "将 Temporal Server 作为嵌入式 Go 库运行以进行测试和开发。了解如何使用 Temporal.NewServer() 在进程内运行 Temporal Server。"
 slug: /self-hosted-guide/embedded-server
 toc_max_heading_level: 4
 keywords:
@@ -17,31 +17,33 @@ tags:
   - Go SDK
 ---
 
-You can run Temporal server as an embedded Go library instead of deploying it as a separate service.
-This approach is useful for testing and development scenarios where you want to run Temporal in-process without managing external infrastructure.
+您可以将 Temporal Server 作为嵌入式 Go 库运行，而不是将其部署为单独的服务。
+此方法对于您想要在进程内运行 Temporal 而不管理外部基础设施的测试和开发场景非常有用。
 
 :::caution Not for production use
 
-Embedded deployments with SQLite are suitable for **testing and development only**.
-For production workloads, deploy Temporal as a service using [MySQL, PostgreSQL, or Cassandra](/temporal-service/persistence) as the persistence layer.
+使用 SQLite 的嵌入式部署仅适合**测试和开发**。
+对于生产工作负载，使用 [MySQL、PostgreSQL 或 Cassandra](/temporal-service/persistence) 作为持久层将 Temporal 部署为服务。
 
 :::
 
-## Reference implementation
+<a id="reference-implementation"></a>
+## 参考实现 {#reference-implementation}
 
-The recommended way to run an embedded Temporal server is to use the Temporal CLI's dev server implementation as a reference.
-The CLI's [devserver package](https://github.com/temporalio/cli/tree/main/internal/devserver) provides a complete implementation that handles:
+运行嵌入式 Temporal Server 的推荐方法是使用 Temporal CLI 的开发服务器实现作为参考。
+CLI 的 [开发服务器包](https://github.com/temporalio/cli/tree/main/internal/devserver) 提供了一个完整的实现，可以处理：
 
-- SQLite configuration and schema setup
-- Namespace creation
-- Service configuration
-- Port allocation
+- SQLite 配置和模式设置
+- Namespace 创作
+- 服务配置
+- 端口分配
 
-You can study and adapt this implementation for your own embedded use case.
+您可以针对您自己的嵌入式用例研究和调整此实现。
 
-## Basic server API
+<a id="basic-server-api"></a>
+## 基本服务器API {#basic-server-api}
 
-The core API for embedding Temporal is `temporal.NewServer()`:
+嵌入Temporal的核心API是`Temporal.NewServer()`：
 
 ```go
 import (
@@ -63,15 +65,16 @@ if err := server.Start(); err != nil {
 }
 ```
 
-The challenge is building the `config.Config` struct correctly, especially for SQLite which requires:
+挑战在于正确构建 `config.Config` 结构，特别是对于 SQLite 来说，它需要：
 
-1. **Schema setup** - SQLite databases need schema initialization via `sqliteschema.SetupSchema()`
-2. **Namespace creation** - Namespaces can be pre-created via `sqliteschema.CreateNamespaces()`
-3. **Service configuration** - All four services (frontend, history, matching, worker) need proper port configuration
+1. **架构设置** - SQLite 数据库需要通过 `sqliteschema.SetupSchema()` 进行架构初始化
+2. **Namespace 创建** - Namespace 可以通过 `sqliteschema.CreateNamespaces()` 预先创建
+3. **服务配置** - 所有四个服务（前端、历史、匹配、Worker）都需要正确的端口配置
 
-## Configuration from file
+<a id="configuration-from-file"></a>
+## 文件中的配置 {#configuration-from-file}
 
-For non-SQLite databases, you can load configuration from a YAML file:
+对于非 SQLite 数据库，您可以从 YAML 文件加载配置：
 
 ```go
 cfg, err := config.Load(
@@ -87,7 +90,7 @@ server, err := temporal.NewServer(
 )
 ```
 
-Or load from a directory with environment-specific files:
+或者从包含特定于环境的文件的目录加载：
 
 ```go
 cfg, err := config.Load(
@@ -96,48 +99,51 @@ cfg, err := config.Load(
 )
 ```
 
-## Server options reference
+<a id="server-options-reference"></a>
+## 服务器选项参考 {#server-options-reference}
 
-The `temporal.NewServer()` function accepts options to customize the server.
-See [Server Options Reference](/references/server-options) for the complete list.
+`Temporal.NewServer()` 函数接受自定义服务器的选项。
+完整列表请参见 [服务器选项参考](/references/server-options)。
 
-Key options include:
+关键选项包括：
 
-| Option | Description |
+| 选项 | 描述 |
 |--------|-------------|
-| `ForServices([]string)` | Services to run (default: frontend, history, matching, worker) |
-| `WithConfig(*config.Config)` | Server configuration |
-| `WithLogger(log.Logger)` | Custom logger |
-| `WithAuthorizer(authorization.Authorizer)` | Custom authorization |
-| `WithClaimMapper(func)` | Role/claim mapping for auth |
-| `WithCustomMetricsHandler(metrics.Handler)` | Custom metrics handler |
-| `WithDynamicConfigClient(dynamicconfig.Client)` | Runtime configuration |
-| `InterruptOn(chan)` | Channel for graceful shutdown |
+| `ForServices([]string)` | 要运行的服务（默认：前端、历史记录、匹配、Worker） |
+| `WithConfig(*config.Config)` | 服务器配置 |
+| `WithLogger(log.Logger)` | 自定义记录器 |
+| `WithAuthorizer(authorization.Authorizer)` | 定制授权 |
+| `WithClaimMapper(func)` | 身份验证的角色/声明映射 |
+| `WithCustomMetricsHandler(metrics.Handler)` | 自定义指标处理程序 |
+| `WithDynamicConfigClient(dynamicconfig.Client)` | 运行时配置 |
+| `InterruptOn(chan)` | 优雅关闭的通道 |
 
-## SQLite limitations
+<a id="sqlite-limitations"></a>
+## SQLite 限制 {#sqlite-limitations}
 
-SQLite is intended for testing and development only:
+SQLite 仅用于测试和开发：
 
-- **Single writer**: SQLite supports only one writer at a time, limiting write throughput
-- **No durability in memory mode**: In-memory mode loses data on restart
-- **Not scalable**: Cannot handle production workloads
-- **Single shard**: Use `NumHistoryShards: 1` for SQLite
+- **单写入器**：SQLite 一次仅支持一名写入器，限制了写入吞吐量
+- **内存模式没有持久性**：内存模式在重新启动时会丢失数据
+- **不可扩展**：无法处理生产工作负载
+- **单分片**：对 SQLite 使用 `NumHistoryShards: 1`
 
-For production, use MySQL, PostgreSQL, or Cassandra with a properly scaled multi-node deployment.
+对于生产，请使用 MySQL、PostgreSQL 或 Cassandra 以及适当扩展的多节点部署。
 
-## Examples
+<a id="examples"></a>
+## 示例 {#examples}
 
-For complete working examples, see:
+有关完整的工作示例，请参阅：
 
-- [Temporal CLI dev server](https://github.com/temporalio/cli/tree/main/internal/devserver) - Reference implementation for SQLite embedding
-- [samples-server repository](https://github.com/temporalio/samples-server) - Server extensibility examples:
-  - [Authorizer](https://github.com/temporalio/samples-server/tree/main/extensibility/authorizer) - Custom authorization and claim mapping
-  - [Metrics handler](https://github.com/temporalio/samples-server/tree/main/extensibility/metrics-handler) - Custom metrics handling
-  - [TLS](https://github.com/temporalio/samples-server/tree/main/tls) - TLS configuration for secure communication
-  - [Docker Compose](https://github.com/temporalio/samples-server/tree/main/compose) - Database configurations (PostgreSQL, MySQL, Cassandra)
+- [Temporal CLI 开发服务器](https://github.com/temporalio/cli/tree/main/internal/devserver) - SQLite 嵌入的参考实现
+- [样本服务器存储库](https://github.com/temporalio/samples-server) - 服务器扩展性示例：
+  - [授权人](https://github.com/temporalio/samples-server/tree/main/extensibility/authorizer) - 自定义授权和声明映射
+  - [指标处理程序](https://github.com/temporalio/samples-server/tree/main/extensibility/metrics-handler) - 自定义指标处理
+  - [传输层安全协议](https://github.com/temporalio/samples-server/tree/main/tls) - 用于安全通信的 TLS 配置
+  - [Docker 组合](https://github.com/temporalio/samples-server/tree/main/compose) - 数据库配置（PostgreSQL、MySQL、Cassandra）
 
-## Related
+＃＃ 有关的
 
-- [Server Options Reference](/references/server-options)
-- [Deployment](/self-hosted-guide/deployment)
-- [Visibility Storage](/self-hosted-guide/visibility)
+- [服务器选项参考](/references/server-options)
+- [部署](/self-hosted-guide/deployment)
+- [Visibility 存储](/self-hosted-guide/visibility)

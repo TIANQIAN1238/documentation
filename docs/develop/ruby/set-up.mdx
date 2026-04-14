@@ -1,8 +1,8 @@
 ---
 id: set-up-local-ruby
-title: Set up your local with the Ruby SDK
-sidebar_label: Quickstart
-description: Configure your local development environment to get started developing with Temporal
+title: "使用 Ruby SDK 设置本地"
+sidebar_label: "快速入门"
+description: "配置本地开发环境以开始使用 Temporal 进行开发"
 keywords:
   - set up
   - getting started
@@ -18,11 +18,12 @@ hide_table_of_contents: true
 import { SetupSteps, SetupStep, CodeSnippet } from '@site/src/components/elements/SetupSteps';
 import { CallToAction } from '@site/src/components/elements/CallToAction';
 
-# Quickstart
+<a id="quickstart"></a>
+# 快速入门 {#quickstart}
 
-This guide walks you through setting up the Temporal Ruby SDK and running your first Workflow. In just a few steps,
-you'll install the SDK and start a local development server. To validate that your local environment is correctly
-installed, we will execute a Workflow that will output "Hello, Temporal".
+本指南将引导您设置 Temporal Ruby SDK 并运行您的第一个 Workflow。只需几步，
+您将安装 SDK 并启动本地开发服务器。验证您的本地环境是否正确
+安装后，我们将执行 Workflow ，它将输出“Hello，Temporal”。
 
 <SetupSteps>
 <SetupStep code={
@@ -65,22 +66,22 @@ installed, we will execute a Workflow that will output "Hello, Temporal".
 </>
 }>
 
-## Installation
+＃＃ 安装
 
-This step sets up a new Ruby project using Bundler and installs the Temporal Ruby SDK.
+此步骤使用 Bundler 设置一个新的 Ruby 项目并安装 Temporal Ruby SDK。
 
-We recommend using [Bundler](https://bundler.io/) to manage your Ruby project dependencies, including the Temporal SDK.
-These tutorials assume Ruby 3.4.3 or higher.
+我们建议使用 [捆绑器](https://bundler.io/) 来管理 Ruby 项目依赖项，包括 Temporal SDK。
+这些教程假定 Ruby 3.4.3 或更高版本。
 
-Follow the steps to create a directory, initialize the project with a `Gemfile`, and add the Temporal SDK.
+按照以下步骤创建目录，使用 `Gemfile` 初始化项目，然后添加 Temporal SDK。
 
-**Note:**
+**笔记：**
 
-- Only macOS ARM/x64 and Linux ARM/x64 are supported.
-- Source gem is published but **cannot be built directly**.
-- Windows (MinGW) is not supported.
-- `fibers`/`async` are only supported on Ruby **3.3+**.
-- See [Platform Support](#) for full details.
+- 仅支持 macOS ARM/x64 和 Linux ARM/x64。
+- 源gem已发布，但**无法直接构建**。
+- 不支持 Windows (MinGW)。
+- `fibers`/`async` 仅在 Ruby **3.3+** 上受支持。
+- 请参阅 [平台支持](#) 了解完整详细信息。
 
 </SetupStep>
 
@@ -120,12 +121,13 @@ Follow the steps to create a directory, initialize the project with a `Gemfile`,
 </>
 }>
 
-## Install Temporal CLI
+<a id="installation"></a>
+## 安装 Temporal CLI {#installation}
 
-The fastest way to get a development version of the Temporal Service running on your local machine is to use
-[Temporal CLI](https://docs.temporal.io/cli).
+在本地计算机上运行 Temporal 服务的开发版本的最快方法是使用
+[Temporal CLI](https://docs.temporal.io/cli)。
 
-Choose your operating system to install Temporal CLI.
+选择您的操作系统来安装 Temporal CLI。
 
 </SetupStep>
 
@@ -147,39 +149,42 @@ temporal server start-dev --ui-port 8080
 </>
 }>
 
-## Start the development server
+<a id="install-temporal-cli"></a>
+## 启动开发服务器 {#install-temporal-cli}
 
-Once you've installed Temporal CLI and added it to your PATH, open a new Terminal window and run the following command.
+安装 Temporal CLI 并将其添加到 PATH 后，打开一个新的终端窗口并运行以下命令。
 
-This command starts a local Temporal Service. It starts the Web UI, creates the default Namespace, and uses an in-memory
-database.
+此命令启动本地 Temporal 服务。它启动 Web UI，创建默认的 Namespace，并使用内存中的
+数据库。
 
-The Temporal Service will be available on localhost:7233. The Temporal Web UI will be available at
+Temporal 服务将在 localhost:7233 上可用。 Temporal Web UI 将在以下网址提供：
 http://localhost:8233.
 
-Leave the local Temporal Service running as you work through tutorials and other projects. You can stop the Temporal
-Service at any time by pressing CTRL+C.
+当您完成教程和其他项目时，让本地 Temporal 服务保持运行。您可以停止 Temporal
+按 CTRL+C 可随时提供服务。
 
-Once you have everything installed, you're ready to build apps with Temporal on your local machine.
+安装完所有内容后，您就可以在本地计算机上使用 Temporal 构建应用程序了。
 
 </SetupStep>
 </SetupSteps>
 
-## Run Hello World: Test Your Installation
+<a id="start-the-development-server"></a>
+## 运行 Hello World：测试您的安装 {#start-the-development-server}
 
-Now let's verify your setup is working by creating and running a complete Temporal application with both a Workflow and
-Activity.
+现在，让我们通过创建并运行一个完整的 Temporal 应用程序来验证您的设置是否正常工作，其中包含 Workflow 和
+Activity。
 
-This test will confirm that:
+该测试将确认：
 
-- The Temporal Ruby SDK is properly installed
-- Your local Temporal Service is running
-- You can successfully create and execute Workflows and Activities
-- The communication between components is functioning correctly
+- Temporal Ruby SDK 已正确安装
+- 您本地的 Temporal 服务正在运行
+- 您可以成功创建并执行 Workflow 和活动
+- 组件之间的通信功能正常
 
-### 1. Create the Activity
+<a id="run-hello-world-test-your-installation"></a>
+### 1.创建Activity {#run-hello-world-test-your-installation}
 
-Create an Activity file (say_hello_activity.rb):
+创建 Activity 文件 (say_hello_Activity.rb)：
 
 ```ruby
 require 'temporalio/activity'
@@ -192,9 +197,10 @@ class SayHelloActivity < Temporalio::Activity::Definition
 end
 ```
 
-### 2. Create the Workflow
+<a id="1-create-the-activity"></a>
+### 2.创建Workflow {#1-create-the-activity}
 
-Create a Workflow file (say_hello_workflow.rb):
+创建 Workflow 文件 (say_hello_Workflow.rb)：
 
 ```ruby
 require 'temporalio/workflow'
@@ -211,14 +217,15 @@ class SayHelloWorkflow < Temporalio::Workflow::Definition
 end
 ```
 
-### 3. Create and Run the Worker
+<a id="2-create-the-workflow"></a>
+### 3. 创建并运行 Worker {#2-create-the-workflow}
 
-With your Activity and Workflow defined, you need a Worker to execute them. Workers are a crucial part of your Temporal
-application as they're what actually execute the tasks defined in your Workflows and Activities. For more information on
-Workers, see [Understanding Temporal](/evaluate/understanding-temporal#workers) and a
-[deep dive into Workers](/workers).
+定义了 Activity 和 Workflow 后，您需要 Worker 来执行它们。 Worker 是 Temporal 的重要组成部分
+应用程序，因为它们实际执行 Workflow 和活动中定义的任务。欲了解更多信息
+Workers，参见 [了解 Temporal](/evaluate/understanding-temporal#workers) 和
+[深入研究 Worker](/workers)。
 
-Create a Worker file (worker.rb):
+创建 Worker 文件 (Worker.rb)：
 
 ```ruby
 require 'temporalio/client'
@@ -242,17 +249,18 @@ worker = Temporalio::Worker.new(
 worker.run(shutdown_signals: ['SIGINT'])
 ```
 
-Run the Worker:
+运行 Worker：
 
 ```bash
 ruby worker.rb
 ```
 
-### 4. Execute the Workflow
+<a id="3-create-and-run-the-worker"></a>
+### 4.执行Workflow {#3-create-and-run-the-worker}
 
-Now that your Worker is running, it's time to start a Workflow Execution.
+现在您的 Worker 正在运行，是时候启动 Workflow Execution 了。
 
-Create a separate file called starter.rb:
+创建一个名为 starter.rb 的单独文件：
 
 ```ruby
 require 'temporalio/client'
@@ -271,19 +279,20 @@ result = client.execute_workflow(
 puts "Result: #{result}"
 ```
 
-Then run:
+然后运行：
 
 ```bash
 ruby starter.rb
 ```
 
-### Verify Success
+<a id="4-execute-the-workflow"></a>
+### 验证成功 {#4-execute-the-workflow}
 
-If everything is working correctly, you should see:
+如果一切正常，您应该看到：
 
-- Worker processing the workflow and activity
-- Output: `Workflow result: Hello, Temporal!`
-- Workflow Execution details in the [Temporal Web UI](http://localhost:8233)
+- Worker 处理 Workflow 和 Activity
+- 输出：`Workflow result: Hello, Temporal!`
+- [Temporal 网页用户界面](http://localhost:8233) 中的 Workflow Execution 详细信息
 
 <CallToAction href="https://learn.temporal.io/getting_started/ruby/first_program_in_ruby/">
   <h3>Next: Run your first Temporal Application</h3>

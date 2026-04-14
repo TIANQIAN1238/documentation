@@ -1,0 +1,67 @@
+---
+id: monitoring
+title: 监控高可用性
+sidebar_label: 监控
+slug: /cloud/high-availability/monitoring
+description: 如何跟踪高可用性 Namespace 的运行状况和性能。
+tags:
+  - Temporal Cloud
+  - Production
+  - High Availability
+keywords:
+  - availability
+  - explanation
+  - failover
+  - high-availability
+  - logs
+  - metrics
+  - monitoring
+  - namespaces
+  - replication
+  - temporal-cloud
+---
+
+import { ToolTipTerm } from '@site/src/components';
+
+Temporal Cloud 为您提供多种方式来跟踪您的健康状况和性能
+[高可用性](/cloud/high-availability) Namespaces。
+
+## 复制状态
+
+您可以使用 Temporal Cloud UI 监控副本状态。如果副本运行状况不佳，Temporal Cloud 会禁用
+“触发故障转移”选项可防止故障转移到不健康的副本。不健康的副本可能是由于：
+
+- **数据同步问题：** 由于网络或性能原因，副本无法与主服务器保持同步
+  问题。
+- **复制滞后：** 副本落后于主副本，导致其不同步。
+- **网络问题：** 副本和主副本之间的通信丢失会导致问题。
+- **运行状况检查失败：** 如果副本运行状况检查失败，则会被标记为运行状况不佳。
+
+这些问题会阻止在故障转移期间使用副本，从而确保系统的稳定性和一致性。
+
+## 监控复制
+
+Temporal Cloud 的高可用性功能在主数据库和副本数据库之间使用异步复制。 Workflow
+主节点中的 Update 以及关联的历史事件将传输到副本节点。复制滞后是指
+Workflow Update 和历史事件从主服务器到副本服务器的传输延迟。
+
+:::tip
+
+Temporal Cloud 努力将 <ToolTipTerm term="P95" /> 复制延迟保持在 1 分钟以内。在此背景下，
+P95 意味着 95% 的 Update 的处理速度超过此限制。
+
+:::
+
+当存在明显的复制延迟时，强制故障转移会增加回滚 Workflow 的可能性
+进步。在启动故障转移之前，请务必检查复制滞后指标。
+
+Temporal Cloud 发出复制延迟 [指标](/cloud/metrics/openmetrics/metrics-reference#replication-metrics)
+作为预先计算的百分位数（p50、p95、p99），标记为“Temporal_Namespace”。
+
+### 多云复制
+
+## 故障转移审核日志
+
+当 Temporal 触发故障转移时，[审核日志](/cloud/audit-logs) 将为 Update 提供详细信息。
+
+在日志中查找“操作”：“FailoverNamespace”。

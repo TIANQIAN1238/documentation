@@ -1,0 +1,322 @@
+---
+id: errors
+title: 错误
+sidebar_label: 错误
+description: 本参考概述了 Workflow Task 中可能出现的错误、原因以及 Temporal 中的解决步骤。它涵盖了各种错误场景，例如属性故障、大小限制和系统资源问题。
+toc_max_heading_level: 4
+keywords:
+  - error
+  - errors
+  - strongly-typed
+tags:
+  - Reference
+---
+
+此参考列出了可能的 [Workflow Task](/tasks#Workflow-task) 错误以及解决方法。
+
+> 对于其他类型的错误，请参阅 [Temporal 故障](https://docs.Temporal.io/kb/failures)。
+
+以下每个错误都对应于一个 [WorkflowTaskFailedCause](https://api-docs.Temporal.io/#Temporal.api.enums.v1.WorkflowTaskFailedCause)，它出现在 [Events](/Workflow-execution/event#event) 下`Workflow_task_failed_event_attributes`。
+
+## 错误取消 Timer 属性 {#bad-cancel-Timer-attributes}
+
+此错误表明 [Workflow Task](/tasks#Workflow-task) 在尝试取消 Timer 时失败。
+
+{/* TODO 添加 Timer 术语定义并链接到它 */}
+
+检查您的 Timer 属性是否缺少 Timer Id 值。
+添加有效的 Timer Id 并重新部署代码。
+
+## 错误取消 Workflow Execution 属性 {#bad-cancel-Workflow-execution-attributes}
+
+由于未设置 [CancelWorkflowExecution](/references/commands#cancelWorkflowexecution) 属性，[Workflow Task](/tasks#Workflow-task) 失败。
+
+重置所有缺失的属性并重新部署 Workflow Task。
+
+## 错误的完整 Workflow Execution 属性 {#bad-complete-Workflow-execution-attributes}
+
+此错误表示 [Workflow Task](/tasks#Workflow-task) 由于未设置 [CompleteWorkflowExecution](/references/commands#completeWorkflowexecution) 上的属性而失败。
+
+重置任何缺失的属性。
+如果负载超过大小限制，请调整负载的大小。
+
+## 错误继续作为新属性 {#bad-Continue-As-New-attributes}
+
+此错误表明 [Workflow Task](/tasks#Workflow-task) 无法验证 [ContinueAsNew](/references/commands#continueasnewWorkflowexecution) 属性。
+该属性可能未设置或无效。
+
+重置任何缺失的属性。
+如果有效负载或备忘录超出大小限制，请调整输入大小。
+
+检查 [Workflow](/Workflows) 是否在取消别名密钥后验证 Search Attribute。
+
+## 错误失败 Workflow Execution 属性 {#bad-fail-Workflow-execution-attributes}
+
+此错误表示 [Workflow Task](/tasks#Workflow-task) 由于未设置 [FailWorkflowExecution](/references/commands#failWorkflowexecution) 属性而失败。
+
+如果遇到此错误，请确保设置了“StartToCloseTimeout”或“ScheduleToCloseTimeout”。
+重新启动 [Workflow](/Workflows) 和 [Activity](/activities) 注册到的 [Worker](/Workers)。
+
+## 错误修改 Workflow 属性 {#bad-modify-Workflow-properties-attributes}
+
+此错误表示 [Workflow Task](/tasks#Workflow-task) 无法验证更新插入备忘录或负载中的属性属性。
+这些属性要么未设置，要么超出大小限制。
+
+重置所有未设置和空的属性。
+调整 [Memo](/Workflow-execution#memo) 或有效负载的大小以适应系统的限制。
+
+## 坏记录标记属性 {#bad-record-marker-attributes}
+
+此错误表示 [Workflow Task](/tasks#Workflow-task) 由于 [Marker](/references/events#markerrecorded) 名称未设置或不正确而失败。
+
+输入有效的标记名称并重新部署任务。
+
+## 错误请求取消 Activity 属性 {#bad-request-cancel-Activity-attributes}
+
+此错误表示可能未设置 [RequestCancelActivity](/references/commands#requestcancelActivitytask) 的属性，或者表示历史记录生成器状态无效。
+
+Update [Temporal SDK](/encyclopedia/Temporal-sdks) 到最新版本。
+在重试 [Workflow Task](/tasks#Workflow-task) 之前重置所有未设置的属性。
+
+如果您仍然看到此错误，请检查您的代码是否存在[非确定性原因](/Workflow-definition#non-definition-change)。
+
+## 错误请求取消外部 Workflow Execution 属性 {#bad-request-cancel-external-Workflow-execution}
+
+此错误表明 [Workflow Task](/tasks#Workflow-task) 在尝试取消外部 Workflow 时失败。
+未设置或无效的属性可能会导致发生这种情况。
+
+重置任何缺失的属性，例如 Workflow Id 或运行 ID。
+调整任何超出长度限制的字段。
+
+如果 [Child Workflow](/child-Workflows) 设置为“Start”和“RequestCancel”，请删除这些属性之一。
+Child Workflow 无法在同一个 Workflow Task 中执行这两个操作。
+
+## 错误的 Schedule Activity 属性 {#bad-Schedule-Activity-attributes}
+
+此错误表示 [`ScheduleActivityTask`](/references/commands#ScheduleActivitytask) 或 [`CompleteWorkflowExecution`](/references/commands#completeWorkflowexecution) 的属性未设置或无效。
+
+重置任何未设置或空的属性。
+调整接收到的有效负载的大小以保持在给定的大小限制内。
+
+## Schedule Nexus Operation 属性错误
+
+此错误表示 ScheduleNexusOperation 的属性未设置或无效，例如，如果调用方 Workflow 中使用的 Nexus 端点名称不存在。
+
+检查错误中给出的原因，以便尽可能缓解。
+
+## 错误的 Search Attributes {#bad-search-attributes}
+
+此错误表示 [Workflow Task](/tasks#Workflow-task) 未设置或无效 [Search Attributes](/search-attribute)。
+这可能会导致 Workflow Task 继续重试但没有成功。
+
+确保在重试任务之前定义所有属性。
+调整有效负载的大小以适应系统的大小限制。
+
+## 错误的 Signal 输入大小 {#bad-Signal-input-size}
+
+显示由于 XPROT027X 逻辑而引入的延迟。
+例如，如果您有一个 XPROT027X 同时调度多个活动或 XPROT011X，则可能会导致每个 XPROT027X 发生锁争用。
+每个 XPROT027X 锁定的等待时间计为“用户延迟”。
+
+调整有效负载的大小，并重新部署 [Workflow Task](/tasks#Workflow-task)。
+
+## 错误的 Signal Workflow Execution 属性 {#bad-Signal-Workflow-execution-attributes}
+
+此错误表示 [Workflow Task](/tasks#Workflow-task) 无法验证 [SignalExternalWorkflowExecution](/references/commands#SignalexternalWorkflowexecution) 的属性。
+
+重置任何未设置、缺失、零或无效的属性。
+调整输入以适应系统的大小限制。
+
+## 错误启动子执行属性 {#bad-start-child-execution-attributes}
+
+此错误表示 [Workflow Task](/tasks#Workflow-task) 无法验证 [`StartChildWorkflowExecution`](/references/commands#startchildWorkflowexecution) 的属性
+
+调整属性的输入大小以使其符合系统的大小限制。
+
+确保在取消别名键后执行 [Search Attribute](/search-attribute) 验证。
+
+## 错误启动 Timer 属性 {#bad-start-Timer-attributes}
+
+此错误表明 Scheduled [Event](/Workflow-execution/event#event) 缺少 Timer Id。
+
+{/* TODO 添加 Timer Id 作为术语锚点并链接到它 */}
+
+设置有效的 Timer Id 并重试 [Workflow Task](/tasks#Workflow-task)。
+
+## 导致错误的二进制文件 {#cause-bad-binary}
+
+此错误表明 [Worker](/Workers) 部署返回了错误的二进制校验和。
+
+{/* TODO：获取有关二进制的更多信息 */}
+
+## 导致 Update 损坏 {#cause-bad-Update}
+
+{/* TODO：编写时添加 Workflow Update 页面的链接 */}
+
+此错误表示 [Workflow Execution](/Workflow-execution) 在接收 Update 之前尝试完成。
+
+当 [Worker](/Workers#Worker) 生成缺少字段或无效 Update 响应格式的 [Workflow Task Completed](/references/events#Workflowtaskcompleted) 消息时，可能会发生“BadUpdate”。
+
+此错误可能表明使用了不受支持的 SDK。
+确保您使用的是[支持的 SDK](/encyclopedia/Temporal-sdks)。
+
+## 原因重置 Workflow {#cause-reset-Workflow}
+
+此错误表示 [Workflow Task](/tasks#Workflow-task) 由于请求重置 [Workflow](/Workflows) 而失败。
+
+如果系统尚未启动新的Workflow，请手动重置Workflow。
+
+## 原因未处理的 Update {#cause-unhandled-Update}
+
+当 Workflow Update 被 Temporal Server 接收，而 Workflow Task 正在 Worker 上处理时，会产生“UnhandledUpdate”，该命令会导致 Workflow 转换为关闭状态。
+
+Temporal 拒绝 Workflow Task 完成，以保证 Update 最终由 Workflow 代码处理，并倒回 Workflow，以便它可以处理待处理的 Update。
+
+当 Workflow 频繁接收 Update 时，可能会发生此错误。
+
+## 原因未指定 {#cause-unspecified}
+
+此错误表示 [Workflow Task](/tasks#Workflow-task) 由于未知原因而失败。
+
+如果您看到此错误，请检查您的 Workflow Definition。
+
+## 故障转移关闭命令 {#failover-close-command}
+
+此错误表示 [Namespace](/Namespaces) 故障转移强制 [Workflow Task](/tasks#Workflow-task) 关闭。
+发生此错误时，系统会自动重试。
+
+## `XPROT026X_AUTH_CLIENT_ID`
+
+## 强制关闭命令 {#force-close-command}
+
+此错误表示 [Workflow Task](/tasks#Workflow-task) 被强制关闭。
+如果错误可恢复，重试将为 Scheduled。
+
+{/* TODO：更多信息 */}
+
+## gRPC 消息太大 {#gRPC-消息太大}
+
+当 Workflow Task 响应超过 gRPC 消息大小限制 4 MB 时，会出现此错误。
+Workflow Execution 会自动终止，因为这是不可恢复的错误。
+
+当 Workflow、Schedule 在单个 Workflow Task 中执行太多活动、Child Workflow 或命令时，或者当 Workflow 返回较大结果时，通常会发生这种情况。
+
+要解决此错误，请修复 Workflow 代码并启动新的 Workflow Execution。
+将工作分成较小的批次，减少 Workflow 返回的大小，将 Continue-As-New 用于长时间运行的 Workflow，或使用自定义负载编解码器压缩大型负载。
+
+有关详细的解决策略，请参阅 [BlobSizeLimitError 故障排除指南](/troubleshooting/blob-size-limit-error)。
+
+## 不确定性错误 {#non-definitive-error}
+
+[Workflow Task](/tasks#Workflow-task) 由于[非确定性错误](/Workflow-definition#non-definition-change) 失败。
+
+{/* TODO：信息 */}
+
+## 超出待处理活动限制 {#pending-activities-limit-exceeded}
+
+[Workflow](/Workflows) 已达到待处理的[活动](/活动) 的容量。
+因此，[Workflow Task](/tasks#Workflow-task) 无法阻止创建另一个 Activity。
+
+在重新部署代码之前，让 Workflow 完成所有当前活动。
+
+## 待处理的 Child Workflows 超出限制 {#pending-child-Workflows-limit-exceeded}
+
+此错误表示 [Workflow](/Workflows) 已达到待处理 [Child Workflows](/child-Workflows) 的容量。
+因此，[Workflow Task](/tasks#Workflow-task) 无法阻止添加其他 Child Workflow。
+
+重新部署此任务之前，请等待系统完成所有当前正在运行的 Child Workflow。
+
+## 待处理的 Nexus Operation 超出限制 {#pending-Nexus-operations-limit-exceeded}
+
+Workflow 已达到待处理的 Nexus Operation 的容量。因此，Workflow Task 未能阻止创建另一个 Nexus Operation。
+
+在重试该任务之前，让 Workflow 完成任何当前的 Nexus Operation。
+
+有关详细信息，请参阅[每个 Workflow Nexus Operation 限制](/cloud/limits#per-Workflow-Nexus-operation-limits)。
+
+## 超出待处理请求取消限制 {#pending-request-cancel-limit-exceeded}
+
+此错误表明 [Workflow Task](/tasks#Workflow-task) 在尝试添加更多取消请求后失败。
+[Workflow](/Workflows) 已达到取消其他 Workflow 的待处理请求的容量，并且无法接受更多请求。
+
+如果您看到此错误，请在重试该任务之前给系统一些时间来处理待处理的请求。
+
+## 待处理的 Signals 超出限制 {#pending-Signals-limit-exceeded}
+
+Workflow 已达到待处理的 Signal 的容量。
+因此，尝试将更多 [Signal](/sending-messages#sending-Signals) 添加到外部 Workflow 后，[Workflow Task](/tasks#Workflow-task) 失败。
+
+等待 Signal 由 Workflow 处理，然后再重试该任务。
+
+## 重置粘性 Task Queue {#reset-sticky-task-queue}
+
+此错误表明粘性 [Task Queue](/task-queue) 需要重置。
+
+如果您看到此错误，请重置粘性 Task Queue。
+系统会自动重试。
+
+## 资源耗尽原因并发限制 {#resource-exhausted-cause-concurrent-limit}
+
+此错误表明并发 [poller 计数](/develop/Worker-performance#poller-count) 已耗尽。
+
+{/* TODO：需要更多信息 */}
+
+根据 [Worker](/Workers) 调整轮询器计数。
+
+## 资源耗尽原因持久性限制 {#resource-exhausted-cause-persistence-limit}
+
+此错误表明已达到持久速率限制。
+
+{/* TODO：需要更多信息 */}
+
+## 资源耗尽原因 RPS 限制 {#resource-exhausted-cause-rps-limit}
+
+此错误表明 [Workflow](/Workflows) 已耗尽其 RPS 限制。
+
+{/* TODO：需要更多信息 */}
+
+## 资源耗尽导致系统过载 {#resource-exhausted-cause-system-overload}
+
+此错误表明系统过载，无法为 [Workflow Tasks](/tasks#Workflow-task) 分配更多资源。
+
+{/* TODO：需要更多信息 */}
+
+## 资源耗尽原因未指定 {#resource-exhausted-cause-unspecified}
+
+此错误表明未知原因正在阻止资源分配给进一步的 [Workflow Tasks](/tasks#Workflow-task)。
+
+{/* TODO：需要更多信息 */}
+
+## Schedule Activity 重复 ID {#Schedule-Activity-duplicate-id}
+
+[Workflow Task](/tasks#Workflow-task) 失败，因为 [Activity](/activities) Id 已在使用中。
+
+检查您的代码，看看您是否已在 [Workflow](/Workflows) 中指定相同的 Activity Id。
+输入另一个 Activity Id，然后尝试再次运行 Workflow Task。
+
+## 启动 Timer 重复 ID {#start-Timer-duplicate-id}
+
+此错误表明具有给定 Timer Id 的 Timer 已启动。
+
+{/* TODO 链接到 Timer 术语（如果存在）*/}
+
+尝试输入不同的 Timer Id，然后重试 [Workflow Task](/tasks#Workflow-task)。
+
+## 未处理的命令 {#unhandled-command}
+
+此错误表示自上次 [Workflow Task](/tasks#Workflow-task) 启动以来有新的可用 [Events](/references/events)。
+Workflow Task 失败，因为 [Workflow](/Workflows) 尝试在不处理新事件的情况下自行关闭。
+
+当 Workflow 接收大量 [Signal](/sending-messages#sending-Signal) 时，可能会发生“UnhandledCommand”。
+如果 Workflow 没有足够的时间来处理这些 Signal，则 Scheduled 会使用 RetryWorkflow Task 来处理这些新事件。
+
+为了防止此错误，请使用 ReceiveAsync 函数排空 Signal 通道。
+
+如果您继续看到此错误，请检查日志中是否有失败的 Workflow Task。
+Workflow 可能已被不同的 [Worker](/Workers#Worker) 拾取。
+
+## Workflow Worker 未处理的故障 {#Workflow-Worker-未处理的故障}
+
+此错误表示 [Workflow Task](/tasks#Workflow-task) 遇到来自 [Workflow Definition](/Workflow-definition) 的未处理故障。
+
+{/* TODO：需要更多信息 */}

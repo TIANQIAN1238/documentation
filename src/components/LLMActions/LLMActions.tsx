@@ -97,7 +97,7 @@ export default function LLMActions() {
         ) : (
           <FaRegCopy className={styles.icon} />
         )}
-        {loading ? 'Loading...' : copied ? 'Copied!' : 'Copy for LLM'}
+        {loading ? '加载中...' : copied ? '已复制！' : '复制给 LLM'}
       </button>
       <button
         className={styles.actionButton}
@@ -107,7 +107,7 @@ export default function LLMActions() {
         data-analytics-action="click"
       >
         <FaMarkdown className={styles.icon} />
-        View as Markdown
+        查看 Markdown
       </button>
     </div>
   );

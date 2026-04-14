@@ -1,8 +1,8 @@
 ---
 id: use-cases-design-patterns
-title: Temporal use cases and design patterns
-description: Discover various use cases and architectural design patterns for implementing Workflows with Temporal.
-sidebar_label: Use cases
+title: "Temporal 用例和设计模式"
+description: "了解使用 Temporal 实施 Workflow 的各种用例和架构设计模式。"
+sidebar_label: "使用案例"
 tags:
   - use-cases
   - design-patterns
@@ -12,118 +12,131 @@ keywords:
   - workflows
 ---
 
-This page provides an overview of how leading organizations leverage Temporal to solve real-world problems, general use cases, and architectural design patterns.
+本页面概述了领先组织如何利用 Temporal 来解决现实问题、一般用例和架构设计模式。
 
-## Use Cases of Temporal in Production
+<a id="use-cases-of-temporal-in-production"></a>
+## Temporal 在生产中的用例 {#use-cases-of-temporal-in-production}
 
-Here are some examples where Temporal is most impactful and running in production at large organizations today. For more examples, see our [Temporal Use Cases](https://temporal.io/in-use) page.
+以下是 Temporal 最具影响力并在当今大型组织的生产中运行的一些示例。有关更多示例，请参阅我们的 [Temporal 使用案例](https://temporal.io/in-use) 页面。
 
-### Transactions
+<a id="transactions"></a>
+### 交易 {#transactions}
 
-Actions or activities involving two or more parties or things that reciprocally affect or influence each other. For example:
+涉及两方或多方的行动或活动或相互影响或影响的事物。例如：
 
-- [Payment processing at Stripe](https://temporal.io/resources/on-demand/stripe)
-- [Money movement at Coinbase](https://temporal.io/in-use/coinbase)
-- [Content management at Box](https://temporal.io/resources/case-studies/box)
+- [Stripe 的付款处理](https://temporal.io/resources/on-demand/stripe)
+- [Coinbase 的资金流动](https://temporal.io/in-use/coinbase)
+- [Box 的内容管理](https://temporal.io/resources/case-studies/box)
 
-### Business processes
+<a id="business-processes"></a>
+### 业务流程 {#business-processes}
 
-A sequence of tasks that find their end in the delivery of a service or product to a client. For example:
+一系列任务，最终向客户提供服务或产品。例如：
 
-- [Bookings at Turo](https://temporal.io/replay/videos/temporal-adoption-and-integration-at-turo)
-- [Orders/logistics at Maersk](https://temporal.io/replay/videos/building-a-time-machine-for-the-logistics-industry)
-- [Marketing Campaigns at AirBnb](https://medium.com/airbnb-engineering/journey-platform-a-low-code-tool-for-creating-interactive-user-workflows-9954f51fa3f8)
-- [Human-in-the-loop at Checkr](https://temporal.io/in-use/checkr)
+- [在图罗预订](https://temporal.io/replay/videos/temporal-adoption-and-integration-at-turo)
+- [马士基的订单/物流](https://temporal.io/replay/videos/building-a-time-machine-for-the-logistics-industry)
+- [爱彼迎 (AirBnb) 的营销活动](https://medium.com/airbnb-engineering/journey-platform-a-low-code-tool-for-creating-interactive-user-workflows-9954f51fa3f8)
+- [Checkr 的人机交互](https://temporal.io/in-use/checkr)
 
-### Entity lifecycle
+<a id="entity-lifecycle"></a>
+### 实体生命周期 {#entity-lifecycle}
 
-Complex long-running processes that accumulate state over time. For example:
+随着时间的推移积累状态的复杂的长时间运行的进程。例如：
 
-- [Mortgage underwriting applications at ANZ](https://temporal.io/in-use/anz-story)
-- [Menu versioning at Yum! Brands](https://temporal.io/replay-2023/videos/synchronizing-concurrent-workflows)
+- [ANZ 的抵押贷款承销申请](https://temporal.io/in-use/anz-story)
+- [Yum! 的菜单版本控制品牌](https://temporal.io/replay-2023/videos/synchronizing-concurrent-workflows)
 
-### Operations
+＃＃＃ 运营
 
-An automated method for getting a repeatable, mundane task accomplished. For example:
+一种用于完成可重复的平凡任务的自动化方法。例如：
 
-- [Infrastructure services at DataDog](https://www.youtube.com/watch?v=Hz7ZZzafBoE)
-- [Custom CI/CD at Netflix](https://temporal.io/replay-2023/videos/actor-workflows-reliably-orchestrating-thousands-of-flink-clusters-at)
+- [DataDog 的基础设施服务](https://www.youtube.com/watch?v=Hz7ZZzafBoE)
+- [Netflix 的定制 CI/CD](https://temporal.io/replay-2023/videos/actor-workflows-reliably-orchestrating-thousands-of-flink-clusters-at)
 
-### AI / ML and Data Engineering
+<a id="operations"></a>
+### 人工智能/机器学习和数据工程 {#operations}
 
-AI and ML developers face challenges in system orchestration, such as managing complex data pipelines and job coordination across GPU resources.
-Temporal's code-first approach helps build reliable services faster, making it popular among AI companies. For example:
+AI 和 ML 开发人员面临系统编排方面的挑战，例如管理复杂的数据管道和跨 GPU 资源的作业协调。
+Temporal 的代码优先方法有助于更快地构建可靠的服务，使其在人工智能公司中广受欢迎。例如：
 
-- [Orchestrating video processing at Descript](https://temporal.io/blog/ai-ml-and-data-engineering-workflows-with-temporal#descript)
-- [Automating data pipelines at Neosync](https://temporal.io/blog/ai-ml-and-data-engineering-workflows-with-temporal#neosync)
+- [在 Descript 中编排视频处理](https://temporal.io/blog/ai-ml-and-data-engineering-workflows-with-temporal#descript)
+- [Neosync 的自动化数据管道](https://temporal.io/blog/ai-ml-and-data-engineering-workflows-with-temporal#neosync)
 
-### AI Agents
+<a id="ai-ml-and-data-engineering"></a>
+### 人工智能代理 {#ai-ml-and-data-engineering}
 
-AI Agents present new uses for Temporal, such as maintaining state over long periods and enabling seamless human intervention when needed.
-Temporal ensures Durable Execution of tools, LLMs, and conversations, letting you focus on business logic instead of handling failures. For example:
+AI 代理为 Temporal 带来了新用途，例如长期维护状态以及在需要时实现无缝人工干预。
+Temporal 确保工具、LLM 和对话的持久执行，让您专注于业务逻辑而不是处理故障。例如：
 
-- [Creating reliable, observable Agents at Lindy](https://temporal.io/resources/case-studies/lindy-reliability-observability-ai-agents-temporal-cloud)
-- [Long-running, durable Agents at Dust](https://temporal.io/blog/how-dust-builds-agentic-ai-temporal)
-- [Creating account summaries with Agents at ZoomInfo](https://temporal.io/resources/on-demand/account-summaries-gen-ai)
+- [在 Lindy 创建可靠、可观察的代理](https://temporal.io/resources/case-studies/lindy-reliability-observability-ai-agents-temporal-cloud)
+- [长期运行、持久耐用的防尘剂](https://temporal.io/blog/how-dust-builds-agentic-ai-temporal)
+- [使用 ZoomInfo 的代理创建帐户摘要](https://temporal.io/resources/on-demand/account-summaries-gen-ai)
 
-## General Use Cases
+<a id="ai-agents"></a>
+## 一般用例 {#ai-agents}
 
-### Human in the Loop
+<a id="general-use-cases"></a>
+### 人在循环中 {#general-use-cases}
 
-"Human in the Loop" systems require human interaction for certain steps, such as customer onboarding, forms, or invoice approval.
-These are event-driven systems with humans generating events, and may be challenging to implement due to timing or unreliable connections between the human to the rest of the system.
-They can use schedules and timers to prompt for user input.
+“人在循环”系统在某些步骤中需要人工交互，例如客户加入、表格或发票审批。
+这些是由人类生成事件的事件驱动系统，并且由于人类与系统其他部分之间的时间或不可靠连接而可能难以实现。
+他们可以使用 Schedule 和 Timer 提示用户输入。
 
-**Example**: [Background checks example using the Go SDK](https://learn.temporal.io/examples/go/background-checks/).
+**示例**：[使用 Go SDK 的背景检查示例](https://learn.temporal.io/examples/go/background-checks/)。
 
-**Code Sample**: [Candidate acceptance example prompting for a response](https://learn.temporal.io/examples/go/background-checks/candidate-acceptance)
+**代码示例**：[提示回应的候选人接受示例](https://learn.temporal.io/examples/go/background-checks/candidate-acceptance)
 
-### Polyglot Systems
+<a id="human-in-the-loop"></a>
+### 多语言系统 {#human-in-the-loop}
 
-Modern development teams often work with different programming languages based on their expertise and project requirements. Temporal supports this through built-in multi-language capabilities, allowing teams to continue using their preferred languages while working together.
+现代开发团队经常根据他们的专业知识和项目要求使用不同的编程语言。 Temporal 通过内置的多语言功能支持这一点，允许团队在协同工作时继续使用他们喜欢的语言。
 
-The example below showcases how Workflow Executions, written in different languages, can send messages to each other. Go, Java, PHP, and TypeScript SDKs are represented in this sample. It also shows how to properly propagate errors, including how to do so across Workflows written in different languages.
+下面的示例展示了用不同语言编写的 Workflow Execution 如何相互发送消息。此示例中包含 Go、Java、PHP 和 TypeScript SDK。它还展示了如何正确传播错误，包括如何在用不同语言编写的 Workflow 之间执行此操作。
 
-**Example**: [Polyglot example](https://github.com/temporalio/temporal-polyglot).
+**示例**：[多语言示例](https://github.com/temporalio/temporal-polyglot)。
 
-### Long Running Tasks
+<a id="polyglot-systems"></a>
+### 长时间运行的任务 {#polyglot-systems}
 
-This use case is particularly relevant for scenarios like shopping cart Workflows in an eCommerce app, where you can handle long-running tasks efficiently without managing state in a separate database.
-It processes one message at a time, ensuring each message is processed only once.
+此用例与电子商务应用程序中的购物车 Workflow 等场景特别相关，您可以在其中高效处理长时间运行的任务，而无需在单独的数据库中管理状态。
+它一次处理一条消息，确保每条消息仅处理一次。
 
-This approach addresses issues that can arise with long message processing times, which in other systems might cause consumer failover (typically with a default 5-minute message poll timeout) and potentially result in duplicate message processing by multiple consumers.
-Temporal's ability to handle extended task durations makes it well-suited for such scenarios.
-The [heartbeat](/encyclopedia/detecting-activity-failures#activity-heartbeat) feature allows you to know that an activity is still working, providing insight into the progress of long-running processes.
+此方法解决了消息处理时间过长可能出现的问题，这在其他系统中可能会导致使用者故障转移（通常具有默认的 5 分钟消息轮询超时），并可能导致多个使用者重复消息处理。
+Temporal 处理延长任务持续时间的能力使其非常适合此类场景。
+[心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 功能可让您知道 Activity 仍在工作，从而深入了解长时间运行的流程的进度。
 
-**Example**: [eCommerce example](https://learn.temporal.io/tutorials/go/build-an-ecommerce-app/).
+**示例**：[电子商务示例](https://learn.temporal.io/tutorials/go/build-an-ecommerce-app/)。
 
-**Code Sample**: [Temporal eCommerce](https://github.com/temporalio/temporal-ecommerce)
+**代码示例**：[Temporal 电子商务](https://github.com/temporalio/temporal-ecommerce)
 
-## Design Patterns
+<a id="long-running-tasks"></a>
+## 设计模式 {#long-running-tasks}
 
-### Saga
+<a id="design-patterns"></a>
+### 传奇 {#design-patterns}
 
-The Saga pattern is a design pattern used to manage and handle failures in complex Workflows by breaking down a transaction into a series of smaller, manageable sub-transactions.
-If a step in the Workflow fails, the Saga pattern compensates for this failure by executing specific actions to undo the previous steps.
-This ensures that even in the event of a failure, the system can revert to a consistent state.
+Saga 模式是一种设计模式，用于通过将事务分解为一系列较小的、可管理的子事务来管理和处理复杂 Workflow 中的故障。
+如果 Workflow 中的某个步骤失败，Saga 模式会通过执行特定操作来撤消前面的步骤来补偿此失败。
+这确保了即使发生故障，系统也可以恢复到一致的状态。
 
-**Examples:**
+**示例：**
 
-- [Build a trip booking application in Python](https://learn.temporal.io/tutorials/python/trip-booking-app/).
-- [Saga Pattern with Temporal Whitepaper](https://pages.temporal.io/download-saga-pattern-made-easy)
-- [To choreograph or orchestrate your saga, that is the question](https://temporal.io/blog/to-choreograph-or-orchestrate-your-saga-that-is-the-question)
-- [Saga Webinar](https://pages.temporal.io/on-demand-webinar-what-is-a-saga.html)
+- [使用 Python 构建旅行预订应用程序](https://learn.temporal.io/tutorials/python/trip-booking-app/)。
+- [Saga 模式与 Temporal 白皮书](https://pages.temporal.io/download-saga-pattern-made-easy)
+- [编排或编排你的传奇，这就是问题所在](https://temporal.io/blog/to-choreograph-or-orchestrate-your-saga-that-is-the-question)
+- [佐贺网络研讨会](https://pages.temporal.io/on-demand-webinar-what-is-a-saga.html)
 
-### State Machine
+<a id="saga"></a>
+### 状态机 {#saga}
 
-A state machine is a software design pattern used to modify a system’s behavior in response to changes in its state.
-While state machines are widely used in software development, applying them to complex business processes can be a difficult undertaking.
-Temporal simplifies the complexity of state machines by providing a structured approach to workflow development, avoiding the intricate state management code required for state machines.
+状态机是一种软件设计模式，用于修改系统的行为以响应其状态的变化。
+虽然状态机广泛应用于软件开发中，但将它们应用于复杂的业务流程可能是一项艰巨的任务。
+Temporal 通过为 Workflow 开发提供结构化方法来简化状态机的复杂性，避免状态机所需的复杂状态管理代码。
 
-**Example**: [State Machine Simplified Whitepaper](https://pages.temporal.io/download-state-machines-simplified.html)
+**示例**：[状态机简化白皮书](https://pages.temporal.io/download-state-machines-simplified.html)
 
 :::tip
 
-If you're interested in code to help get you started, check out our [Temporal Example Applications](https://learn.temporal.io/examples/), [Getting Started Tutorials](https://learn.temporal.io/getting_started/), or [Project-based Tutorials](https://learn.temporal.io/tutorials/).
+如果您对可帮助您入门的代码感兴趣，请查看我们的 [Temporal 示例应用](https://learn.temporal.io/examples/)、[入门教程](https://learn.temporal.io/getting_started/) 或 [基于项目的教程](https://learn.temporal.io/tutorials/)。
 
 :::

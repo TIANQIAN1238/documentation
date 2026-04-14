@@ -1,0 +1,235 @@
+---
+id: basics
+title: Activity 基础知识 - TypeScript SDK
+description: 展示如何使用 TypeScript SDK 创建 Activity
+sidebar_label: Activity 基础知识
+slug: /develop/typescript/activities/basics
+toc_max_heading_level: 3
+tags:
+  - TypeScript SDK
+  - Temporal SDKs
+  - Activity
+---
+
+## 如何开发 Activity {#develop-activities}
+
+Workflow 所做的主要事情之一是协调活动的执行。 Activity 是正常功能
+或旨在执行单个、明确定义的操作（短期或长期运行）的方法执行，例如
+XPROT040修复数据库、调用第三方API或转码媒体文件。 Activity可以与外界互动
+Temporal Platform 或使用 Temporal CLIent 与 Temporal 服务交互。为了使 Workflow 能够
+执行Activity，我们必须定义[Activity Definition](/Activity-definition)。
+
+- 活动在标准 Node.js 环境中执行。
+- 活动不能与 Workflows 位于同一文件中，并且必须单独注册。
+- 活动可能会重复重试，因此您可能需要对关键 Side Effect 使用幂等密钥。
+
+活动_只是功能_。下面是一个Activity，它接受一个字符串参数并返回一个字符串。
+
+<!--SNIPSTART typescript-Activity-fn -->
+[snippets/src/activities.ts](https://github.com/Temporalio/samples-typescript/blob/main/snippets/src/activities.ts)
+```ts
+export async function greet(name: string): Promise<string> {
+  return `👋 Hello, ${name}!`;
+}
+```
+<!--SNIPEND-->
+
+## 如何开发Activity参数 {#Activity-parameters}
+
+[Activity Definition](/Activity-定义) 可以使用的参数总数没有明确的限制
+支持。但是，最终编码到 gRPC 消息有效负载中的数据的总大小是有限制的。
+
+单个参数的最大大小限制为 2 MB。 gRPC 消息的总大小，其中包括所有
+参数，最大限制为 4 MB。
+
+另外，请记住，所有有效负载数据都记录在
+[Workflow Execution Event History](/Workflow-execution/event#event-history) 和大型事件历史记录可能会影响 Worker
+性能。这是因为整个 Event History 可以通过以下方式传输到 Worker 进程：
+[Workflow Task](/tasks#Workflow-任务)。
+
+{/* TODO 链接到 gRPC 限制部分（如果可用）*/}
+
+某些 SDK 要求您传递上下文对象，而其他 SDK 则不需要。当涉及到您的应用程序数据时，即数据
+被序列化并编码到有效负载中 - 我们建议您使用单个对象作为包装的参数
+传递给活动的应用程序数据。这样您就可以更改传递到 Activity 的数据，而无需
+破坏函数或方法签名。
+
+该 Activity 采用“string”类型的单个“name”参数。
+
+<!--SNIPSTART typescript-Activity-fn -->
+[snippets/src/activities.ts](https://github.com/Temporalio/samples-typescript/blob/main/snippets/src/activities.ts)
+```ts
+export async function greet(name: string): Promise<string> {
+  return `👋 Hello, ${name}!`;
+}
+```
+<!--SNIPEND-->
+
+## 如何定义 Activity 返回值 {#Activity-return-values}
+
+从 Activity 返回的所有数据都必须是可序列化的。
+
+Activity 返回值受 Temporal 中的有效负载大小限制。默认负载大小限制为 2MB，并且
+Event History 事务中任何 gRPC 消息大小的硬限制为 4MB
+（[请参阅此处的云限制](https://docs.Temporal.io/cloud/limits#per-message-gRPC-limit)）。请记住，所有返回
+值记录在 [Workflow Execution Event History](/Workflow-execution/event#event-history) 中。
+
+在 TypeScript 中，返回值始终是 Promise。
+
+在以下示例中，“Promise<string>”是返回值。
+
+```typescript
+export async function greet(name: string): Promise<string> {
+  return `👋 Hello, ${name}!`;
+}
+```
+
+## 如何自定义您的 Activity 类型 {#Activity-type}
+
+活动有一个称为 Activity 名称的类型。以下示例演示了如何设置自定义
+Activity 类型的名称。
+
+当您向 Worker 注册 Activity 时，您可以自定义 Activity 的名称。在以下示例中，Activity
+名称是“ActivityFoo”。
+
+<!--SNIPSTART typescript-custom-Activity-type -->
+[snippets/src/Worker-Activity-type-custom.ts](https://github.com/Temporalio/samples-typescript/blob/main/snippets/src/Worker-Activity-type-custom.ts)
+```ts
+import { Worker } from '@temporalio/worker';
+import { greet } from './activities';
+
+async function run() {
+  const worker = await Worker.create({
+    workflowsPath: require.resolve('./workflows'),
+    taskQueue: 'snippets',
+    activities: {
+      activityFoo: greet,
+    },
+  });
+
+  await worker.run();
+}
+```
+<!--SNIPEND-->
+
+## 活动的重要设计模式 {#Activity-design-patterns}
+
+以下是使用我们的活动 API 的一些重要（且经常请求的）模式。这些图案
+解决常见需求和用例。
+
+### 在 Activity 函数中共享依赖项（依赖项注入）
+
+由于活动“只是函数”，因此您还可以创建创建活动的函数。这是一个有用的模式
+使用闭包执行以下操作：
+
+- 存储昂贵的共享依赖项，例如数据库连接。
+- 将密钥（例如环境变量）从 Worker 注入到 Activity。
+
+<!--SNIPSTART typescript-Activity-with-deps-->
+[activities-dependency-injection/src/activities.ts](https://github.com/Temporalio/samples-typescript/blob/main/activities-dependency-injection/src/activities.ts)
+```ts
+export interface DB {
+  get(key: string): Promise<string>;
+}
+
+export const createActivities = (db: DB) => ({
+  async greet(msg: string): Promise<string> {
+    const name = await db.get('name'); // simulate read from db
+    return `${msg}: ${name}`;
+  },
+  async greet_es(mensaje: string): Promise<string> {
+    const name = await db.get('name'); // simulate read from db
+    return `${mensaje}: ${name}`;
+  },
+});
+```
+<!--SNIPEND-->
+
+<详情>
+  <summary>查看完整示例</summary>
+
+当您在 Worker 中注册这些时，请相应地传递您的共享依赖项：
+
+<!--SNIPSTART typescript-Activity-deps-Worker {"enable_source_link": false}-->
+```ts
+import { createActivities } from './activities';
+
+async function run() {
+  // Mock DB connection initialization in Worker
+  const db = {
+    async get(_key: string) {
+      return 'Temporal';
+    },
+  };
+
+  const worker = await Worker.create({
+    taskQueue: 'dependency-injection',
+    workflowsPath: require.resolve('./workflows'),
+    activities: createActivities(db),
+  });
+
+  await worker.run();
+}
+
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+```
+<!--SNIPEND-->
+
+由于活动始终按名称引用，因此在 Workflow 内，它们可以正常代理，尽管类型
+需要一些调整：
+
+<!--SNIPSTART typescript-Activity-deps-Workflow-->
+[activities-dependency-injection/src/Workflows.ts](https://github.com/Temporalio/samples-typescript/blob/main/activities-dependency-injection/src/Workflows.ts)
+```ts
+import type { createActivities } from './activities';
+
+// Note usage of ReturnType<> generic since createActivities is a factory function
+const { greet, greet_es } = proxyActivities<ReturnType<typeof createActivities>>({
+  startToCloseTimeout: '30 seconds',
+});
+```
+<!--SNIPEND-->
+
+</details>
+
+### 同时导入多个 Activity
+
+如果您希望多个活动共享相同的超时，您可以通过同一个“proxyActivities”调用代理多个活动，
+重试和选项：
+
+```ts
+export async function Workflow(name: string): Promise<string> {
+  // destructuring multiple activities with the same options
+  const { act1, act2, act3 } = proxyActivities<typeof activities>();
+  /* activityOptions */
+  await act1();
+  await Promise.all([act2, act3]);
+}
+```
+
+### 动态引用活动
+
+由于活动仅通过其字符串名称引用，因此您可以根据需要动态引用它们：
+
+```js
+export async function DynamicWorkflow(activityName, ...args) {
+  const acts = proxyActivities(/* activityOptions */);
+
+  // these are equivalent
+  await acts.activity1();
+  await acts['activity1']();
+
+  // dynamic reference to activities using activityName
+  let result = await acts[activityName](...args);
+}
+```
+
+这里仍然支持类型安全，但我们鼓励您验证并处理 Activity 名称中的不匹配情况。安
+无效的 Activity 名称会导致“NotFoundError”，并显示如下消息：
+
+```
+ApplicationFailure: Activity function actC is not registered on this Worker, available activities: ["actA", "actB"]
+```

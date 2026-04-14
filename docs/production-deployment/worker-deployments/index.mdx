@@ -1,8 +1,8 @@
 ---
 id: index
-title: Temporal Worker deployments
-sidebar_label: Worker deployments
-description: Programmatically scale and deploy your Temporal Workers into common production environments using our provided tooling and best practices.
+title: "Temporal Worker 部署"
+sidebar_label: "Worker 部署"
+description: "使用我们提供的工具和最佳实践，以编程方式扩展您的 Temporal Worker 并将其部署到常见生产环境中。"
 slug: /production-deployment/worker-deployments
 toc_max_heading_level: 4
 keywords:
@@ -16,26 +16,26 @@ tags:
   - Durable Execution
 ---
 
-A core feature of Temporal is that you are able to deploy your Workers to any infrastructure where your Workflow and Activity code will actually run.
-This way, you have total control over your runtime environment, and can be responsive to any security or scaling needs that may arise over time, whether you are using Temporal Cloud or self-hosting a Temporal Service.
+Temporal 的核心功能是，您可以将 Worker 部署到 Workflow 和 Activity 代码实际运行的任何基础设施。
+这样，您就可以完全控制运行时环境，并且可以响应随着时间的推移可能出现的任何安全或扩展需求，无论您是使用 Temporal Cloud 还是自托管 Temporal 服务。
 
-If you are just getting started, you want more guidance, or a refresher on Temporal concepts, our [Tutorials and Courses](https://learn.temporal.io/) help by using only one or two Temporal Workers to demonstrate core functionality.
-Once you have an understanding of the core concepts, the content in this section will provide clarity on real-world deployments that grow far beyond those examples.
+如果您刚刚入门，需要更多指导或回顾 Temporal 概念，我们的 [教程和课程](https://learn.temporal.io/) 可以通过仅使用一两个 Temporal Worker 来演示核心功能。
+一旦您了解了核心概念，本节中的内容将清晰地介绍远远超出这些示例的实际部署。
 
-Our Worker Deployments guide provides documentation of Temporal product features that make it easier to scale and revise your Workflows.
+我们的 Worker 部署指南提供了 Temporal 产品功能的文档，使您可以更轻松地扩展和修改 Workflow。
 
-[Worker Versioning](/production-deployment/worker-deployments/worker-versioning) is the recommended default for safely
-deploying new Workflow code. It allows you to pin Workflows to individual versions of your workers, which are called
-Worker Deployment Versions.
+[Worker 版本控制](/production-deployment/worker-deployments/worker-versioning) 是安全建议的默认值
+部署新的 Workflow 代码。它允许您将 Workflow 固定到 Worker 的各个版本，这些版本称为
+Worker 部署版本。
 
-If your environment cannot yet support versioned worker deployments, you can fall back to patching Workflow code.
-However, new production deployments should prefer Worker Versioning whenever possible.
+如果您的环境尚不能支持版本化的 Worker 部署，您可以回退到修补 Workflow 代码。
+但是，新的生产部署应尽可能首选 Worker 版本控制。
 
-You can optionally use the Temporal [Worker Controller](/production-deployment/worker-deployments/kubernetes-controller) to programmatically manage and scale your Worker deployments in Kubernetes pods.
+您可以选择使用 Temporal [Worker 控制器](/production-deployment/worker-deployments/kubernetes-controller) 以编程方式管理和扩展 Kubernetes Pod 中的 Worker 部署。
 
-This section also covers specific Worker Deployment examples:
+本节还介绍了特定的 Worker 部署示例：
 
-- [**Deploy Workers to Amazon EKS**](/production-deployment/worker-deployments/deploy-workers-to-aws-eks)
-  Containerize your Worker, publish it to Amazon Elastic Container Registry (ECR), and deploy it to Amazon Elastic Kubernetes Service (EKS) using the Temporal Python SDK.
-  This guide covers the full deployment lifecycle and shows how to configure your Worker to connect to Temporal Cloud using Kubernetes-native tools like ConfigMaps and Secrets.
-  Running Workers on EKS gives you fine-grained control over scaling, resource allocation, and availability—ideal for production systems that need reliability and flexibility in the cloud.
+- [**将 Worker 部署到 Amazon EKS**](/production-deployment/worker-deployments/deploy-workers-to-aws-eks)
+  将您的 Worker 容器化，将其发布到 Amazon Elastic Container Registry (ECR)，并使用 Temporal Python SDK 将其部署到 Amazon Elastic Kubernetes Service (EKS)。
+  本指南涵盖了完整的部署生命周期，并展示了如何使用 ConfigMaps 和 Secrets 等 Kubernetes 原生工具配置 Worker 以连接到 Temporal Cloud。
+  在 EKS 上运行 Worker 可以让您对扩展、资源分配和可用性进行细粒度控制，非常适合需要云中可靠性和灵活性的生产系统。

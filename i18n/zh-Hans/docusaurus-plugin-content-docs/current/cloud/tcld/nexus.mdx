@@ -1,0 +1,295 @@
+---
+id: nexus
+title: tcld Nexus 命令参考
+sidebar_label: Nexus
+description: 管理 Temporal Cloud 中的 Nexus 资源
+slug: /cloud/tcld/nexus
+toc_max_heading_level: 5
+keywords:
+  - cli reference
+  - tcld
+tags:
+  - tcld
+---
+
+`tcld Nexus` 命令管理 Temporal Cloud 中的 Nexus 资源。
+
+别名：`nxs`
+
+- [tcld Nexus 端点](#端点)
+
+## 端点
+
+“tcld Nexus 端点”命令管理 Temporal Cloud 中的 Nexus 端点。
+
+别名：`ep`
+
+- [tcld Nexus 端点允许-Namespace](#allowed-Namespace)
+- [tcld Nexus 端点创建](#create)
+- [tcld Nexus 端点删除](#delete)
+- [tcld Nexus 端点获取](#get)
+- [tcld Nexus 端点列表](#list)
+- [tcld Nexus 端点 Update](#Update)
+
+### 允许-Namespace
+
+`tcld Nexus 端点 allowed-Namespace` 命令管理 Nexus 端点允许的 Namespace。
+
+别名：`安`
+
+- [tcld Nexus 端点允许-Namespace 添加](#add)
+- [tcld Nexus 允许端点-Namespace 列表](#list)
+- [允许 tcld Nexus 端点 - Namespace 删除](#remove)
+- [tcld Nexus 端点允许-Namespace 设置](#set)
+
+＃＃＃＃ 添加
+
+`tcld Nexus 端点 allowed-Namespace add` 命令将允许的 Namespace 添加到 Nexus 端点。
+
+别名：`a`
+
+＃＃＃＃＃  - 姓名
+
+端点名称。
+
+别名：`n`
+
+##### --Namespace
+
+Namespace 表示允许调用此端点。
+
+别名：`ns`
+
+##### --请求 ID
+
+用于异步操作的 request-id，如果未设置，服务器将分配一个（可选）。
+
+别名：`r`
+
+##### --资源版本
+
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
+
+别名：`v`
+
+＃＃＃＃ 列表
+
+“tcld Nexus 端点允许的 Namespace 列表”命令列出 Nexus 端点允许的 Namespace。
+
+别名：`l`
+
+＃＃＃＃＃  - 姓名
+
+端点名称。
+
+别名：`n`
+
+＃＃＃＃ 消除
+
+“tcld Nexus 端点允许-Namespace 删除”命令从 Nexus 端点删除允许的 Namespace。
+
+别名：`r`
+
+＃＃＃＃＃  - 姓名
+
+端点名称。
+
+别名：`n`
+
+##### --Namespace
+
+Namespace 表示允许调用此端点。
+
+别名：`ns`
+
+##### --请求 ID
+
+用于异步操作的 request-id，如果未设置，服务器将分配一个（可选）。
+
+别名：`r`
+
+##### --资源版本
+
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
+
+别名：`v`
+
+＃＃＃＃ 放
+
+“tcld Nexus 端点允许的 Namespace 设置”命令设置 Nexus 端点允许的 Namespace。
+
+别名：`s`
+
+#### --页面标记 (-p)
+
+端点名称。
+
+别名：`n`
+
+##### --Namespace
+
+Namespace 表示允许调用此端点。
+
+别名：`ns`
+
+##### --请求 ID
+
+用于异步操作的 request-id，如果未设置，服务器将分配一个（可选）。
+
+别名：`r`
+
+##### --资源版本
+
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
+
+别名：`v`
+
+＃＃＃ 创造
+
+“tcld Nexus 端点创建”命令在云帐户上创建一个新的 Nexus 端点。
+Workflow 代码中使用端点名称来调用 Nexus Operation。
+端点目标是 Worker，必须同时提供“--target-Namespace”和“--target-task-queue”。
+如果已注册同名端点，则此操作将会失败。
+
+别名：`c`
+
+#### --允许-Namespace
+
+Namespace 表示允许调用此端点（可选）。
+
+别名：`ans`
+
+＃＃＃＃  - 描述
+
+Markdown 格式的端点描述（可选）。
+
+别名：`d`
+
+#### --描述文件
+
+Markdown 格式的端点描述文件（可选）。
+
+别名：`df`
+
+＃＃＃＃  - 姓名
+
+端点名称。
+
+别名：`n`
+
+#### --请求 ID
+
+用于异步操作的 request-id，如果未设置，服务器将分配一个（可选）。
+
+别名：`r`
+
+#### --目标-Namespace
+
+Namespace，其中处理程序 Worker 将轮询 Nexus 任务。
+
+别名：`tns`
+
+#### --目标任务队列
+
+Task Queue，其中处理程序 Worker 将轮询 Nexus 任务。
+
+别名：`ttq`
+
+＃＃＃ 删除
+
+“tcld Nexus 端点删除”命令可删除云帐户上的 Nexus 端点。
+。
+
+别名：`d`
+
+＃＃＃＃  - 姓名
+
+端点名称。
+
+别名：`n`
+
+#### --请求 ID
+
+用于异步操作的 request-id，如果未设置，服务器将分配一个（可选）。
+
+别名：`r`
+
+#### --资源版本
+
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
+
+别名：`v`
+
+＃＃＃ 得到
+
+“tcld Nexus 端点获取”命令按名称从云帐户获取 Nexus 端点配置。
+
+别名：`g`
+
+＃＃＃＃  - 姓名
+
+端点名称。
+
+别名：`n`
+
+＃＃＃ 列表
+
+“tcld Nexus 端点列表”命令列出云帐户上的所有 Nexus 端点配置。
+
+别名：`l`
+
+### Update
+
+“tcld Nexus 端点 Update”命令 Update 是云帐户上的现有 Nexus 端点。
+Workflow 代码中使用端点名称来调用 Nexus Operation。
+端点目标是 Worker，必须同时提供“--target-Namespace”和“--target-task-queue”。
+
+端点被修补，留下未按原样提供标志的任何现有字段。
+
+别名：`u`
+
+＃＃＃＃  - 描述
+
+Markdown 格式的端点描述（可选）。
+
+别名：`d`
+
+#### --描述文件
+
+Markdown 格式的端点描述文件（可选）。
+
+别名：`df`
+
+＃＃＃＃  - 姓名
+
+端点名称。
+
+别名：`n`
+
+#### --请求 ID
+
+用于异步操作的 request-id，如果未设置，服务器将分配一个（可选）。
+
+别名：`r`
+
+#### --资源版本
+
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
+
+别名：`v`
+
+#### --目标-Namespace
+
+Namespace，其中处理程序 Worker 将轮询 Nexus 任务（可选）。
+
+别名：`tns`
+
+#### --目标任务队列
+
+Task Queue，其中处理程序 Worker 将轮询 Nexus 任务（可选）。
+
+别名：`ttq`
+
+#### --未设置描述
+
+取消设置端点描述。

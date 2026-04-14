@@ -1,0 +1,240 @@
+---
+id: cancellation
+title: 取消 - Ruby SDK
+sidebar_label: 消除
+description: Interrupt Workflow Execution in Ruby using the Temporal SDK. Cancel for graceful stops; terminate for forceful stops.
+  Interrupt Workflow Execution in Ruby using the Temporal SDK. Cancel for graceful stops; terminate for forceful stops.
+  Handle Cancellation in Workflow and Activities efficiently.
+toc_max_heading_level: 4
+keywords:
+  - interrupt workflow execution
+  - cancel workflow
+  - terminate workflow
+  - temporal cancellation
+  - temporal termination
+  - workflow execution
+  - cancellation token
+  - workflow handle
+  - ruby examples
+tags:
+  - Workflows
+  - Ruby SDK
+  - Temporal SDKs
+---
+
+本页显示如何中断 Workflow Execution。
+
+您可以通过以下方式之一中断 Workflow Execution：
+
+- [取消](#cancellation)：取消 Workflow 提供了一种停止 Workflow Execution 的优雅方法。
+- [终止](#termination)：终止 Workflow 会强制停止 Workflow Execution。
+
+终止 Workflow 会强制停止 Workflow Execution。此操作类似于终止进程。
+
+- 系统在 Workflow 历史记录中记录“WorkflowExecutionTermulated”事件。
+- 强制终止并立即停止 Workflow Execution。
+- Workflow 代码没有机会处理终止。
+- Workflow Task 不会获得 Scheduled。
+
+在大多数情况下，取消是更好的选择，因为它可以让 Workflow 优雅地完成。仅在以下情况下终止
+Workflow卡住，无法正常取消。
+
+## 取消 {#cancellation}
+
+要使 Workflow 及其活动能够被取消，请执行以下操作：
+
+- 在 Workflow 内处理取消请求。
+- 设置 Activity 心跳超时。
+- 监听并处理 Activity 内的取消请求。
+- 从 Temporal CLIent 发送取消请求。
+
+## Workflow 中的取消处理 {#handle-cancellation-in-Workflow}
+
+可以编写 Workflow Definition 来响应取消请求。 Activity 通常运行在
+取消执行清理。
+
+Workflow 上的取消请求会取消“Temporalio::Workflow.cancellation”，即“Temporalio::Cancellation”
+这实际上充当取消令牌。这是隐式用于所有调用的取消
+Workflow 也是如此（例如 Timer、活动等），因此取消会传播到它们进行处理，
+气泡出来。
+
+```ruby
+class MyWorkflow < Temporalio::Workflow::Definition
+  def execute
+    # Whether this workflow waits on the activity to handle the cancellation or not is
+    # dependent upon the cancellation_type parameter. We leave the default here which
+    # sends the cancellation but does not wait on it to be handled.
+    Temporalio::Workflow.execute_activity(MyActivity, start_to_close_timeout: 100)
+  rescue Temporalio::Error => e
+    # For this sample, we only want to execute cleanup when it's a cancellation
+    raise unless Temporalio::Error.canceled?(e)
+
+    # Call a cleanup activity. We have to do this with a new/detached cancellation
+    # because the default workflow-level one is already canceled at this point.
+    Temporalio::Workflow.execute_activity(
+      MyCleanupActivity,
+      start_to_close_timeout: 100,
+      cancellation: Temporalio::Cancellation.new
+    )
+
+    # Re-raise the original exception
+    raise
+  end
+end
+```
+
+## 在 Activity 中处理取消 {#handle-cancellation-in-an-Activity}
+
+确保 Activity 处于 [Heartbeating](/develop/ruby/activities/timeouts#Activity-heartbeats) 状态以接收
+取消请求并停止执行。还要确保
+[Heartbeat Timeout](/develop/ruby/activities/timeouts#heartbeat-timeout) 在调用时在 Activity 选项上设置
+Workflow。 Activity 取消请求会在 Activity 中引发“Temporalio::Error::CanceledError”。
+
+```ruby
+class MyActivity < Temporalio::Activity::Definition
+  def execute
+    # This is a naive loop simulating work, but similar heartbeat/cancellation logic
+    # applies to other scenarios as well
+    loop do
+      # Send heartbeat
+      Temporalio::Activity::Context.current.heartbeat
+      # Sleep before heartbeating again
+      sleep(3)
+    end
+  rescue Temporalio::Error::CanceledError
+    raise 'Canceled!'
+  end
+end
+```
+
+## 请求取消 {#request-cancellation}
+
+使用“WorkflowHandle”上的“cancel”取消 Workflow Execution。
+
+```ruby
+# Get a workflow handle by its workflow ID. This could be made specific to a run by
+# passing run ID. This could also just be a handle that is returned from
+# start_workflow instead.
+handle = my_client.workflow_handle('my-workflow-id')
+
+# Send cancellation. This returns when cancellation is received by the server. Wait on
+# the handle's result to wait for cancellation to be applied.
+handle.cancel
+```
+
+默认情况下，取消 Workflow 时活动会自动取消，因为 Workflow 取消是
+默认情况下由活动使用。要显式发出取消，可以创建新的取消令牌。
+
+```ruby
+class MyWorkflow < Temporalio::Workflow::Definition
+  def execute
+    # Create a new cancellation linked to the workflow one, so that it inherits
+    # cancellation that comes from the workflow. Users can choose to make it
+    # completely detached by not providing a parent.
+    cancellation, cancel_proc = Temporalio::Cancellation.new(
+      Temporalio::Workflow.cancellation
+    )
+
+    # Start the activity in the background. Whether this workflow waits on the activity
+    # to handle the cancellation or not is dependent upon the cancellation_type
+    # parameter. We leave the default here which sends the cancellation but does not wait
+    # on it to be handled.
+    future = Temporalio::Future.new do
+      Temporalio::Workflow.execute_activity(
+        MyActivity,
+        start_to_close_timeout: 100,
+        cancellation:
+      )
+    end
+
+    # Wait 5 minutes, then cancel it
+    Temporalio::Workflow.sleep(5 * 60)
+    cancel_proc.call
+
+    # Wait on the activity which will raise an activity error with a cause of
+    # cancellation which will fail the workflow
+    future.wait
+  end
+end
+```
+
+## 终止 {#termination}
+
+要在 Ruby 中终止 Workflow Execution，请在 Workflow 句柄上使用“terminate”方法。
+
+```ruby
+# Get a workflow handle by its workflow ID. This could be made specific to a run by
+# passing run ID. This could also just be a handle that is returned from
+# start_workflow instead.
+handle = my_client.workflow_handle('my-workflow-id')
+
+# Terminate
+handle.terminate
+```
+
+Workflow Execution 也可以直接从 WebUI 终止。在这种情况下，可以从以下位置记录自定义注释：
+发生这种情况时的用户界面。
+
+## 重置 Workflow Execution {#reset}
+
+重置 Workflow Execution 将终止当前的 Workflow Execution 并从
+您在 Event History 中指定的点。当 Workflow 由于非确定性错误或其他原因而被阻止时，请使用重置
+阻止其完成的问题。
+
+当您重置 Workflow 时，重置点之前的 Event History 将被复制到新的 Workflow Execution，并且
+Workflow 从该点开始使用当前代码恢复。仅当您解决了根本问题（例如
+删除不确定性代码。重置点之后取得的任何进度都将被丢弃。给出一个理由，当
+重置，因为它将记录在 Event History 中。
+
+<Tabs>
+
+<TabItem value="web-ui" label="Web UI">
+
+1. 导航至Workflow Execution详细信息页面，
+2. 单击右上角下拉菜单中的 **重置** 按钮，
+3. 选择要重置的事件 ID，
+4. 提供重置原因，
+5. 确认重置。
+
+Web UI 显示可用的重置点，并在重置完成后创建指向新 Workflow Execution 的链接。
+
+</TabItem>
+
+<TabItem value="cli" label="Temporal CLI">
+
+使用“Temporal Workflow重置”命令重置Workflow Execution：
+
+```bash
+temporal workflow reset \
+    --workflow-id <workflow-id> \
+    --event-id <event-id> \
+    --reason "Reason for reset"
+```
+
+例如：
+
+```bash
+temporal workflow reset \
+    --workflow-id my-background-check \
+    --event-id 4 \
+    --reason "Fixed non-deterministic code"
+```
+
+默认情况下，该命令会将最新的 Workflow Execution 重置为“默认”Namespace。使用 `--run-id` 重置
+具体运行。使用 `--Namespace` 指定不同的 Namespace：
+
+```bash
+temporal workflow reset \
+    --workflow-id my-background-check \
+    --event-id 4 \
+    --reason "Fixed non-deterministic code" \
+    --namespace my-namespace \
+    --tls-cert-path /path/to/cert.pem \
+    --tls-key-path /path/to/key.pem
+```
+
+重置后监视新的 Workflow Execution 以确保其成功完成。
+
+</TabItem>
+
+</Tabs>

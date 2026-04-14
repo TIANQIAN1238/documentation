@@ -1,8 +1,8 @@
 ---
 id: metrics-reference
-title: OpenMetrics metrics reference
-sidebar_label: Metrics reference
-description: Detailed API documentation for the Temporal Cloud OpenMetrics endpoint.
+title: "OpenMetrics 指标参考"
+sidebar_label: "指标参考"
+description: "Temporal Cloud OpenMetrics 端点的详细 API 文档。"
 keywords:
   - temporal cloud metrics configuration
   - configure metrics endpoint
@@ -21,709 +21,725 @@ tags:
   - Temporal Cloud
 ---
 
-This document describes all metrics available from the Temporal Cloud OpenMetrics endpoint.
+本文档描述了 Temporal Cloud OpenMetrics 端点可用的所有指标。
 
 
-## Metric Conventions
+<a id="metric-conventions"></a>
+## 公制约定 {#metric-conventions}
 
-### Metric Types
+<a id="metric-types"></a>
+### 指标类型 {#metric-types}
 
-All metrics are exposed as OpenMetrics gauges, but represent different measurement types:
+所有指标都作为 OpenMetrics 仪表公开，但代表不同的测量类型：
 
-* *Rate Metrics*: per-second rate of the aggregated values  
-* *Value Metrics*: The most recent aggregate value within a look-back window (e.g. backlogs, limits)  
-* *Percentile Metrics*: Pre-calculated aggregated latency percentiles in seconds
+* *速率指标*：每秒聚合值的速率  
+* *价值指标*：回溯窗口内的最新聚合值（例如积压、限制）  
+* *百分位指标*：预先计算的聚合延迟百分位（以秒为单位）
 
 :::note
 
-All metrics are stored as 1 minute aggregates.
+所有指标均存储为 1 分钟聚合。
 
 :::
 
-### Common Labels
+<a id="common-labels"></a>
+### 常用标签 {#common-labels}
 
-All metrics include these base labels:
+所有指标都包含这些基本标签：
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_namespace` | The Temporal namespace |
-| `temporal_account` | The Temporal account identifier |
-| `region` | Cloud region where the metric originated |
+| `Temporal_Namespace` | Temporal Namespace |
+| `Temporal_account` | Temporal 帐户标识符 |
+| `region` | 指标源自的云区域 |
 
-### Opt-in Labels
+<a id="opt-in-labels"></a>
+### 选择加入标签 {#opt-in-labels}
 
-Some labels are **opt-in** due to their high cardinality.
-These labels are not included by default when you scrape the OpenMetrics endpoint.
-To enable an opt-in label, add it to the `labels` query parameter on your scrape URL.
-When an opt-in label is enabled, it is populated on **all metrics** that support it.
+某些标签由于其高基数而被**选择加入**。
+当您抓取 OpenMetrics 端点时，默认情况下不包含这些标签。
+要启用选择加入标签，请将其添加到抓取 URL 上的 `labels` Query 参数中。
+启用选择加入标签后，它会填充在支持它的**所有指标**上。
 
-| Label | Available on | Description |
+| 标签 | 可用于 | 描述 |
 | ----- | ----- | ----- |
-| `temporal_activity_type` | Activity metrics | The activity type name |
-| `worker_version` | `temporal_cloud_v1_approximate_backlog_count` | The Worker version |
+| `Temporal_Activity_type` | Activity 指标 | Activity 类型名称 |
+| `Worker_version` | `Temporal_cloud_v1_approximate_backlog_count` | Worker版本 |
 
-For example, to include `temporal_activity_type` in your scrape results:
+例如，要在抓取结果中包含 `Temporal_Activity_type`：
 
 ```
 /v1/metrics?labels=temporal_activity_type
 ```
 
-## Metrics Catalog
+<a id="metrics-catalog"></a>
+## 指标目录 {#metrics-catalog}
 
-### Frontend Service Metrics
+<a id="frontend-service-metrics"></a>
+### 前端服务指标 {#frontend-service-metrics}
 
-#### temporal\_cloud\_v1\_service\_request\_count
+#### Temporal\_cloud\_v1\_service\_request\_count
 
-gRPC requests received per second.
+gRPC 每秒收到的请求。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The name of the RPC operation |
+| `operation` | RPC 操作的名称 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_service\_request\_throttled\_count
+#### Temporal\_cloud\_v1\_service\_request\_throttled\_count
 
-gRPC requests throttled per second.
+gRPC 每秒限制的请求。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The name of the RPC operation |
+| `operation` | RPC 操作的名称 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_service\_error\_count
+#### Temporal\_cloud\_v1\_service\_error\_count
 
-gRPC errors per second.
+gRPC 每秒错误数。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The name of the RPC operation |
+| `operation` | RPC 操作的名称 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_service\_pending\_requests
+#### Temporal\_cloud\_v1\_service\_pending\_requests
 
-The number of pollers that are waiting for a task. Use this to track against ``temporal_cloud_v1_poller_limit``
+等待任务的轮询器数量。用它来跟踪“`Temporal_cloud_v1_poller_limit`”
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The name of the operation |
+| `operation` | 操作名称 |
 
-**Type**: Value
+**类型**：值
 
-#### temporal\_cloud\_v1\_resource\_exhausted\_error\_count
+#### Temporal\_cloud\_v1\_resource\_exhausted\_error\_count
 
-Resource exhaustion errors per second. This metric does not include throttling due to Namespace limits.
+每秒资源耗尽错误。此指标不包括由于 Namespace 限制而导致的限制。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The name of the operation |
+| `operation` | 操作名称 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_service\_latency\_p50
+#### Temporal\_cloud\_v1\_service\_latency\_p50
 
 :::caution
 
-Avoid aggregating this metric across dimensions because the percentile won't be accurate.
+避免跨维度聚合此指标，因为百分位数不准确。
 
 :::
 
-The 50th percentile latency of service requests in seconds
+服务请求的第 50 个百分位延迟（以秒为单位）
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The name of the operation |
+| `operation` | 操作名称 |
 
-**Type**: Latency  
+**类型**：延迟
 
-#### temporal\_cloud\_v1\_service\_latency\_p95
+#### Temporal\_cloud\_v1\_service\_latency\_p95
 
 :::caution
 
-Avoid aggregating this metric across dimensions because the percentile won't be accurate.
+避免跨维度聚合此指标，因为百分位数不准确。
 
 :::
 
-The 95th percentile latency of service requests in seconds
+服务请求的第 95 个百分点的延迟（以秒为单位）
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The name of the operation |
+| `operation` | 操作名称 |
 
-**Type**: Latency  
+**类型**：延迟
 
-#### temporal\_cloud\_v1\_service\_latency\_p99
+#### Temporal\_cloud\_v1\_service\_latency\_p99
 
 :::caution
 
-Avoid aggregating this metric across dimensions as the percentile won't be accurate.
+避免跨维度聚合此指标，因为百分位数不准确。
 
 :::
 
-The 99th percentile latency of service requests in seconds
+服务请求的第 99 个百分位延迟（以秒为单位）
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The name of the operation |
+| `operation` | 操作名称 |
 
-**Type**: Latency  
+**类型**：延迟
 
-### Workflow Completion Metrics
+<a id="workflow-completion-metrics"></a>
+### Workflow 完成指标 {#workflow-completion-metrics}
 
 :::caution High Cardinality
 
-These metrics could have high cardinality depending on number of workflow types and task queues.
+这些指标可能具有高基数，具体取决于 Workflow 类型和 Task Queue 的数量。
 
 :::
 
-#### temporal\_cloud\_v1\_workflow\_success\_count
+#### Temporal\_cloud\_v1\_Workflow\_success\_count
 
-Successful workflow completions per second.
+每秒成功的 Workflow 完成次数。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
 
-**Type**: Rate  
+**类型**：费率
 
-#### temporal\_cloud\_v1\_workflow\_failed\_count
+<a id="temporalcloudv1workflowfailedcount"></a>
+#### Temporal\_cloud\_v1\_Workflow\_失败\_count {#temporalcloudv1workflowfailedcount}
 
-Workflow failures per second.
+Workflow 每秒失败次数。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_workflow\_timeout\_count
+#### Temporal\_cloud\_v1\_Workflow\_timeout\_count
 
-Workflow timeouts per second.
+Workflow 每秒超时。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_workflow\_cancel\_count
+#### Temporal\_cloud\_v1\_Workflow\_cancel\_count
 
-Workflow cancellations per second.
+Workflow 每秒取消次数。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_workflow\_terminate\_count
+#### Temporal\_cloud\_v1\_Workflow\_terminate\_count
 
-Workflow terminations per second.
+Workflow 每秒终止次数。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_workflow\_continued\_as\_new\_count
+#### Temporal\_cloud\_v1\_Workflow\_continued\_as\_new\_count
 
-Workflows continued as new per second.
+Workflow 继续每秒更新。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_workflow\_schedule\_to\_close\_latency\_p50
+#### Temporal\_cloud\_v1\_Workflow\_Schedule\_to\_close\_latency\_p50
 
 :::caution
 
-Avoid aggregating this metric across dimensions because the percentile won't be accurate.
+避免跨维度聚合此指标，因为百分位数不准确。
 
 :::
 
-The 50th percentile workflow schedule-to-close latency in seconds.
+Workflow Schedule 关闭延迟的第 50 个百分位（以秒为单位）。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_workflow_type` | The workflow type |
+| `Temporal_Workflow_type` | Workflow型 |
 
-**Type**: Latency
+**类型**：延迟
 
-#### temporal\_cloud\_v1\_workflow\_schedule\_to\_close\_latency\_p95
+#### Temporal\_cloud\_v1\_Workflow\_Schedule\_to\_close\_latency\_p95
 
 :::caution
 
-Avoid aggregating this metric across dimensions because the percentile won't be accurate.
+避免跨维度聚合此指标，因为百分位数不准确。
 
 :::
 
-The 95th percentile workflow schedule-to-close latency in seconds.
+Workflow Schedule 关闭延迟（以秒为单位）的第 95 个百分位。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_workflow_type` | The workflow type |
+| `Temporal_Workflow_type` | Workflow型 |
 
-**Type**: Latency
+**类型**：延迟
 
-#### temporal\_cloud\_v1\_workflow\_schedule\_to\_close\_latency\_p99
+#### Temporal\_cloud\_v1\_Workflow\_Schedule\_to\_close\_latency\_p99
 
 :::caution
 
-Avoid aggregating this metric across dimensions because the percentile won't be accurate.
+避免跨维度聚合此指标，因为百分位数不准确。
 
 :::
 
-The 99th percentile workflow schedule-to-close latency in seconds.
+Workflow Schedule 关闭延迟的第 99 个百分位数（以秒为单位）。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_workflow_type` | The workflow type |
+| `Temporal_Workflow_type` | Workflow型 |
 
-**Type**: Latency
+**类型**：延迟
 
-### Activity Metrics
+<a id="activity-metrics"></a>
+### Activity 指标 {#activity-metrics}
 
 :::caution High Cardinality
 
-These metrics could have high cardinality depending on number of activity types, workflow types, and task queues. The `temporal_activity_type` label is [opt-in](#opt-in-labels) to help manage cardinality.
+这些指标可能具有高基数，具体取决于 Activity 类型、Workflow 类型和 Task Queue 的数量。 `Temporal_Activity_type` 标签是 [选择加入](#opt-in-labels)，用于帮助管理基数。
 
 :::
 
 :::note Standalone Activities
 
-Standalone Activities are Activity Executions that are started independently, without an associated Workflow. For Activity metrics that include the `temporal_workflow_type` label, Standalone Activities use the placeholder value `"__standalone_activity"`.
+独立活动是独立启动的 Activity 执行，没有关联的 Workflow。对于包含 `Temporal_Workflow_type` 标签的 Activity 指标，独立活动使用占位符值 `"__standalone_Activity"`。
 
 :::
 
 
-#### temporal\_cloud\_v1\_activity\_success\_count
+#### Temporal\_cloud\_v1\_Activity\_success\_count
 
-Successful activity completions per second.
+每秒成功的 Activity 完成次数。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
-| `temporal_activity_type` | The activity type (opt-in) |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_activity\_fail\_count
+#### Temporal\_cloud\_v1\_Activity\_fail\_count
 
-Activity failures per second.
+Activity 每秒失败次数。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
-| `temporal_activity_type` | The activity type (opt-in) |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_activity\_timeout\_count
+#### Temporal\_cloud\_v1\_Activity\_timeout\_count
 
-Activity timeouts per second.
+Activity 每秒超时。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
-| `temporal_activity_type` | The activity type (opt-in) |
-| `timeout_type` | The timeout type |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
+| `timeout_type` | 超时类型 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_activity\_task\_fail\_count
+#### Temporal\_cloud\_v1\_Activity\_task\_fail\_count
 
-Activity task failures per second.
+Activity 每秒任务失败次数。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
-| `temporal_activity_type` | The activity type (opt-in) |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_activity\_task\_timeout\_count
+#### Temporal\_cloud\_v1\_Activity\_task\_timeout\_count
 
-Activity task timeouts per second.
+Activity 每秒任务超时数。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
-| `temporal_activity_type` | The activity type (opt-in) |
-| `timeout_type` | The timeout type |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
+| `timeout_type` | 超时类型 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_activity\_cancel\_count
+#### Temporal\_cloud\_v1\_Activity\_cancel\_count
 
-Activity cancellations per second.
+Activity 每秒取消次数。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
-| `temporal_activity_type` | The activity type (opt-in) |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_activity\_terminate\_count
+#### Temporal\_cloud\_v1\_Activity\_terminate\_count
 
-Activity terminations per second.  This metric only applies to Standalone Activities. Regular Activities that run within a Workflow cannot be terminated independently.
+Activity 每秒终止次数。  该指标仅适用于独立活动。在 Workflow 内运行的常规活动无法独立终止。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `temporal_workflow_type` | The workflow type |
-| `temporal_activity_type` | The activity type (opt-in) |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `Temporal_Workflow_type` | Workflow型 |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
 
-**Type**: Rate
+**类型**：费率
 
 :::info Activity latency labels
 
-Activity latency metrics include only the `temporal_activity_type` label.
-Labels such as `temporal_task_queue` and `temporal_workflow_type` are intentionally excluded because pre-calculated percentile values cannot be accurately aggregated across additional dimensions.
+Activity 延迟指标仅包括 `Temporal_Activity_type` 标签。
+故意排除 `Temporal_task_queue` 和 `Temporal_Workflow_type` 等标签，因为预先计算的百分位值无法在其他维度上准确聚合。
 
 :::
 
-#### temporal\_cloud\_v1\_activity\_start\_to\_close\_latency\_p50
+#### Temporal\_cloud\_v1\_Activity\_start\_to\_close\_latency\_p50
 
 :::caution
 
-Avoid aggregating this metric across dimensions because the percentile won't be accurate.
+避免跨维度聚合此指标，因为百分位数不准确。
 
 :::
 
-The 50th percentile activity start-to-close latency in seconds.
+第 50 个百分位数 Activity 启动到关闭延迟（以秒为单位）。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_activity_type` | The activity type (opt-in) |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
 
-**Type**: Latency
+**类型**：延迟
 
-#### temporal\_cloud\_v1\_activity\_start\_to\_close\_latency\_p95
+#### Temporal\_cloud\_v1\_Activity\_start\_to\_close\_latency\_p95
 
 :::caution
 
-Avoid aggregating this metric across dimensions because the percentile won't be accurate.
+避免跨维度聚合此指标，因为百分位数不准确。
 
 :::
 
-The 95th percentile activity start-to-close latency in seconds.
+第 95 个百分位数 Activity 启动到关闭延迟（以秒为单位）。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_activity_type` | The activity type (opt-in) |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
 
-**Type**: Latency
+**类型**：延迟
 
-#### temporal\_cloud\_v1\_activity\_start\_to\_close\_latency\_p99
+#### Temporal\_cloud\_v1\_Activity\_start\_to\_close\_latency\_p99
 
 :::caution
 
-Avoid aggregating this metric across dimensions because the percentile won't be accurate.
+避免跨维度聚合此指标，因为百分位数不准确。
 
 :::
 
-The 99th percentile activity start-to-close latency in seconds.
+第 99 个百分位数 Activity 启动到关闭延迟（以秒为单位）。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_activity_type` | The activity type (opt-in) |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
 
-**Type**: Latency
+**类型**：延迟
 
-#### temporal\_cloud\_v1\_activity\_schedule\_to\_close\_latency\_p50
+#### Temporal\_cloud\_v1\_Activity\_Schedule\_to\_close\_latency\_p50
 
 :::caution
 
-Avoid aggregating this metric across dimensions because the percentile won't be accurate.
+避免跨维度聚合此指标，因为百分位数不准确。
 
 :::
 
-The 50th percentile activity schedule-to-close latency in seconds.
+Activity Schedule 关闭延迟的第 50 个百分位（以秒为单位）。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_activity_type` | The activity type (opt-in) |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
 
-**Type**: Latency
+**类型**：延迟
 
-#### temporal\_cloud\_v1\_activity\_schedule\_to\_close\_latency\_p95
+#### Temporal\_cloud\_v1\_Activity\_Schedule\_to\_close\_latency\_p95
 
 :::caution
 
-Avoid aggregating this metric across dimensions because the percentile won't be accurate.
+避免跨维度聚合此指标，因为百分位数不准确。
 
 :::
 
-The 95th percentile activity schedule-to-close latency in seconds.
+Activity Schedule 关闭延迟的第 95 个百分位数（以秒为单位）。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_activity_type` | The activity type (opt-in) |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
 
-**Type**: Latency
+**类型**：延迟
 
-#### temporal\_cloud\_v1\_activity\_schedule\_to\_close\_latency\_p99
+#### Temporal\_cloud\_v1\_Activity\_Schedule\_to\_close\_latency\_p99
 
 :::caution
 
-Avoid aggregating this metric across dimensions because the percentile won't be accurate.
+避免跨维度聚合此指标，因为百分位数不准确。
 
 :::
 
-The 99th percentile activity schedule-to-close latency in seconds.
+Activity Schedule 关闭延迟的第 99 个百分位数（以秒为单位）。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_activity_type` | The activity type (opt-in) |
+| `Temporal_Activity_type` | Activity 类型（选择加入） |
 
-**Type**: Latency
+**类型**：延迟
 
-### Task Queue Metrics
+<a id="task-queue-metrics"></a>
+### Task Queue 指标 {#task-queue-metrics}
 
 :::caution High Cardinality
 
-These metrics could have high cardinality depending on number of task queues present.
+这些指标可能具有高基数，具体取决于存在的 Task Queue 数量。
 
 :::
 
-#### temporal\_cloud\_v1\_approximate\_backlog\_count
+#### Temporal\_cloud\_v1\_approximate\_backlog\_count
 
-The approximate number of tasks pending in a task queue. Started Activities are not included in the count as they have been dequeued from the task queue.
+Task Queue 中待处理任务的大致数量。已启动的活动不包含在计数中，因为它们已从 Task Queue 中出列。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `task_type` | Type of task: `workflow` or `activity` |
-| `task_priority` | The task priority |
-| `worker_version` | The Worker version (opt-in) |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `task_type` | 任务类型：`Workflow` 或 `Activity` |
+| `task_priority` | 任务优先级 |
+| `Worker_version` | Worker 版本（选择加入） |
 
-**Type**: Value
+**类型**：值
 
-#### temporal\_cloud\_v1\_poll\_success\_count
+#### Temporal\_cloud\_v1\_poll\_success\_count
 
-Successfully matched tasks per second.
+每秒成功匹配的任务数。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The poll operation name |
-| `task_type` | Type of task: `workflow` or `activity` |
-| `temporal_task_queue` | The task queue name |
+| `operation` | 轮询操作名称 |
+| `task_type` | 任务类型：`Workflow` 或 `Activity` |
+| `Temporal_task_queue` | Task Queue 名称 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_poll\_success\_sync\_count
+#### Temporal\_cloud\_v1\_poll\_success\_sync\_count
 
-Tasks matched synchronously per second (no polling wait).
+每秒同步匹配的任务（无轮询等待）。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The poll operation name |
-| `task_type` | Type of task: `workflow` or `activity` |
-| `temporal_task_queue` | The task queue name |
+| `operation` | 轮询操作名称 |
+| `task_type` | 任务类型：`Workflow` 或 `Activity` |
+| `Temporal_task_queue` | Task Queue 名称 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_poll\_timeout\_count
+#### Temporal\_cloud\_v1\_poll\_timeout\_count
 
-The rate of poll requests that timed out without receiving a task.
+未收到任务而超时的轮询请求的比率。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The poll operation name |
-| `task_type` | Type of task: `workflow` or `activity` |
-| `temporal_task_queue` | The task queue name |
+| `operation` | 轮询操作名称 |
+| `task_type` | 任务类型：`Workflow` 或 `Activity` |
+| `Temporal_task_queue` | Task Queue 名称 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_no\_poller\_tasks\_count
+#### Temporal\_cloud\_v1\_no\_poller\_tasks\_count
 
-The rate of tasks added to queues with no active pollers.
+添加到没有活动轮询器的队列中的任务的速率。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `temporal_task_queue` | The task queue name |
-| `task_type` | Type of task: `workflow` or `activity` |
+| `Temporal_task_queue` | Task Queue 名称 |
+| `task_type` | 任务类型：`Workflow` 或 `Activity` |
 
-**Type**: Rate
+**类型**：费率
 
-### Namespace Metrics
+<a id="namespace-metrics"></a>
+### Namespace 指标 {#namespace-metrics}
 
-#### temporal\_cloud\_v1\_namespace\_open\_workflows
+#### Temporal\_cloud\_v1\_Namespace\_open\_Workflows
 
-The current number of open workflows in a namespace.
+Namespace 中当前打开的 Workflow 数量。
 
-**Type**: Value
+**类型**：值
 
-#### temporal\_cloud\_v1\_total\_action\_count
+#### Temporal\_cloud\_v1\_total\_action\_count
 
-The total number of actions performed per second. Actions with `is_background=false` are counted toward the ``temporal_cloud_v1_action_limit``.
+每秒执行的操作总数。 `is_background=false` 的操作计入“`Temporal_cloud_v1_action_limit`”。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `is_background` | Whether the action was background: `true` or `false`. Background actions (e.g. History export) do not count toward the action rate limit |
-| `namespace_mode` | Indicates if actions are produced by an `active` or a `standby` Namespace |
+| `is_background` | 操作是否为背景：`true` 或 `false`。后台操作（例如历史记录导出）不计入操作速率限制 |
+| `Namespace_mode` | 指示操作是由 `active` 还是 `standby` Namespace 产生 |
 
 :::note
 
-Does not include the `region` label. Actions are scoped to the Namespace level.
+不包括 `region` 标签。操作的范围为 Namespace 级别。
 
 :::
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_total\_action\_throttled\_count
+#### Temporal\_cloud\_v1\_total\_action\_throttled\_count
 
-The total number of actions throttled per second.
+每秒限制的操作总数。
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_operations\_count
+<a id="temporalcloudv1operationscount"></a>
+#### Temporal\_cloud\_v1\_操作\_count {#temporalcloudv1operationscount}
 
-Operations performed per second.
+每秒执行的操作数。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The name of the operation |
-| `is_background` | Whether the operation was background: `true` or `false`. Background operations do not count toward the operation rate limit |
-| `namespace_mode` | Indicates if operations are produced by an `active` or a `standby` Namespace |
+| `operation` | 操作名称 |
+| `is_background` | 操作是否为后台：`true` 或 `false`。后台操作不计入操作速率限制 |
+| `Namespace_mode` | 指示操作是由 `active` 还是 `standby` Namespace 生成 |
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_operations\_throttled\_count
+#### Temporal\_cloud\_v1\_operations\_throttled\_count
 
-Operations throttled due to rate limits per second.
+由于每秒速率限制，操作受到限制。
 
-| Label | Description |
+| 标签 | 描述 |
 | ----- | ----- |
-| `operation` | The name of the operation |
-| `is_background` | Whether the operation was background: `true` or `false`. Background operations do not count toward the operation rate limit |
-| `namespace_mode` | Indicates if actions are throttled in an `active` or a `standby` Namespace |
+| `operation` | 操作名称 |
+| `is_background` | 操作是否为后台：`true` 或 `false`。后台操作不计入操作速率限制 |
+| `Namespace_mode` | 指示 `active` 或 `standby` Namespace 中的操作是否受到限制 |
 
-**Type**: Rate
+**类型**：费率
 
-### Schedule Metrics
+<a id="schedule-metrics"></a>
+### Schedule 指标 {#schedule-metrics}
 
-#### temporal\_cloud\_v1\_schedule\_action\_success\_count
+#### Temporal\_cloud\_v1\_Schedule\_action\_success\_count
 
-Successfully executed scheduled workflows per second.
+每秒成功执行 Scheduled Workflow 次。
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_schedule\_buffer\_overruns\_count
+#### Temporal\_cloud\_v1\_Schedule\_buffer\_overruns\_count
 
-The rate of schedule buffer overruns when using `BUFFER_ALL` overlap policy.
+使用 `BUFFER_ALL` 重叠策略时 Schedule 缓冲区溢出的比率。
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_schedule\_missed\_catchup\_window\_count
+#### Temporal\_cloud\_v1\_Schedule\_missed\_catchup\_window\_count
 
-The rate of missed schedule executions outside the catchup window.
+在追赶窗口之外错过 Schedule 执行的比率。
 
-**Type**: Rate
+**类型**：费率
 
-#### temporal\_cloud\_v1\_schedule\_rate\_limited\_count
+#### Temporal\_cloud\_v1\_Schedule\_rate\_limited\_count
 
-The rate of scheduled workflows delayed due to rate limiting.
+由于速率限制，Scheduled Workflows 的速率延迟。
 
-**Type**: Rate
+**类型**：费率
 
-### Replication Metrics
+<a id="replication-metrics"></a>
+### 复制指标 {#replication-metrics}
 
-#### temporal\_cloud\_v1\_replication\_lag\_p50
+#### Temporal\_cloud\_v1\_replication\_lag\_p50
 
-The 50th percentile cross-region replication lag in seconds.
+第 50 个百分位的跨区域复制延迟（以秒为单位）。
 
-**Type**: Latency
+**类型**：延迟
 
-#### temporal\_cloud\_v1\_replication\_lag\_p95
+#### Temporal\_cloud\_v1\_replication\_lag\_p95
 
-The 95th percentile cross-region replication lag in seconds.
+第 95 个百分位数的跨区域复制延迟以秒为单位。
 
-**Type**: Latency
+**类型**：延迟
 
-#### temporal\_cloud\_v1\_replication\_lag\_p99
+#### Temporal\_cloud\_v1\_replication\_lag\_p99
 
-The 99th percentile cross-region replication lag in seconds.
+第 99 个百分位数的跨区域复制延迟以秒为单位。
 
-**Type**: Latency
+**类型**：延迟
 
-### Limit Metrics
+<a id="limit-metrics"></a>
+### 限制指标 {#limit-metrics}
 
-#### temporal\_cloud\_v1\_operations\_limit
+<a id="temporalcloudv1operationslimit"></a>
+#### Temporal\_cloud\_v1\_操作\_limit {#temporalcloudv1operationslimit}
 
-The current configured operations per second limit for a namespace.
+Namespace 当前配置的每秒操作数限制。
 
-**Type**: Value
+**类型**：值
 
-#### temporal\_cloud\_v1\_action\_limit
+#### Temporal\_cloud\_v1\_action\_limit
 
-The current configured actions per second limit for a namespace. Track utilization against this limit with ``temporal_cloud_v1_total_action_count`` and `is_background=false`.
+当前为 Namespace 配置的每秒操作限制。使用“`Temporal_cloud_v1_total_action_count`` and `is_background=false”跟踪此限制的利用率。
 
-**Type**: Value
+**类型**：值
 
-#### temporal\_cloud\_v1\_service\_request\_limit
+#### Temporal\_cloud\_v1\_service\_request\_limit
 
-The current configured frontend service RPS limit for a namespace. Track utilization against this limit with ``temporal_cloud_v1_service_request_count``
+Namespace 当前配置的前端服务 RPS 限制。使用“`Temporal_cloud_v1_service_request_count`”跟踪此限制的利用率
 
-**Type**: Value
+**类型**：值
 
-#### temporal\_cloud\_v1\_poller\_limit
+#### Temporal\_cloud\_v1\_poller\_limit
 
-The current configured poller limit for a namespace. Track utilization against this limit with ``temporal_cloud_v1_service_pending_requests``.
+Namespace 当前配置的轮询器限制。使用“`Temporal_cloud_v1_service_pending_requests`”跟踪此限制的利用率。
 
-**Type**: Value
+**类型**：值
 
-#### temporal\_cloud\_v1\_action\_on\_demand\_envelope\_limit
+#### Temporal\_cloud\_v1\_action\_on\_demand\_envelope\_limit
 
-The on-demand envelope limit for actions per second. For Namespaces in provisioned capacity mode, this shows what the action limit would be if operating in on-demand mode. For Namespaces already in on-demand mode, this tracks the same value as `temporal_cloud_v1_action_limit`.
-
-:::note
-
-Does not include the `region` label. Limits are scoped to the Namespace level.
-
-:::
-
-**Type**: Value
-
-#### temporal\_cloud\_v1\_operations\_on\_demand\_envelope\_limit
-
-The on-demand envelope limit for operations per second. For Namespaces in provisioned capacity mode, this shows what the operations limit would be if operating in on-demand mode. For Namespaces already in on-demand mode, this tracks the same value as `temporal_cloud_v1_operations_limit`.
+每秒操作的按需信封限制。对于处于预配置容量模式的 Namespace，这显示了在按需模式下运行时的操作限制。对于已处于按需模式的 Namespace，该值跟踪与 `Temporal_cloud_v1_action_limit` 相同的值。
 
 :::note
 
-Does not include the `region` label. Limits are scoped to the Namespace level.
+不包括 `region` 标签。限制范围为 Namespace 级别。
 
 :::
 
-**Type**: Value
+**类型**：值
 
-#### temporal\_cloud\_v1\_service\_request\_on\_demand\_envelope\_limit
+#### Temporal\_cloud\_v1\_operations\_on\_demand\_envelope\_limit
 
-The on-demand envelope limit for service requests per second. For Namespaces in provisioned capacity mode, this shows what the service request limit would be if operating in on-demand mode. For Namespaces already in on-demand mode, this tracks the same value as `temporal_cloud_v1_service_request_limit`.
+每秒操作数的按需包络限制。对于处于预配置容量模式的 Namespace，这显示了在按需模式下运行时的操作限制。对于已处于按需模式的 Namespace，该值跟踪与 `Temporal_cloud_v1_operations_limit` 相同的值。
 
 :::note
 
-Does not include the `region` label. Limits are scoped to the Namespace level.
+不包括 `region` 标签。限制范围为 Namespace 级别。
 
 :::
 
-**Type**: Value
+**类型**：值
+
+#### Temporal\_cloud\_v1\_service\_request\_on\_demand\_envelope\_limit
+
+每秒服务请求的按需信封限制。对于处于预配置容量模式的 Namespace，这显示了在按需模式下运行时的服务请求限制。对于已处于按需模式的 Namespace，该值跟踪与 `Temporal_cloud_v1_service_request_limit` 相同的值。
+
+:::note
+
+不包括 `region` 标签。限制范围为 Namespace 级别。
+
+:::
+
+**类型**：值
 

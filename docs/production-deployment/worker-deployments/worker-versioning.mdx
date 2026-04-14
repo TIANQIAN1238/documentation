@@ -2,9 +2,8 @@
 id: worker-versioning
 title: Worker Versioning
 sidebar_label: Worker Versioning
-description:
-  Use Worker Versioning to pin Workflow revisions to individual Worker Deployment Versions, avoiding the need for
-  patching to support multiple code paths.
+description: Use Worker Versioning to pin Workflow revisions to individual Worker Deployment Versions, avoiding the need for
+  使用 Worker Versioning 将 Workflow 修订版固定到各个 Worker Deployment Version，避免需要通过 Patching 来支持多个代码路径。
 slug: /production-deployment/worker-deployments/worker-versioning
 toc_max_heading_level: 4
 keywords:
@@ -20,29 +19,24 @@ tags:
 import { LANGUAGE_TAB_GROUP, getLanguageLabel } from '@site/src/constants/languageTabs';
 import SdkTabs from '@site/src/components';
 
-Worker Versioning is a Temporal feature that allows you to confidently deploy new changes to the Workflows running on
-your Workers without breaking them. Temporal enables this by helping you manage different builds or versions, formally
-called [Worker Deployment Versions](/worker-versioning#deployment-versions).
+Worker Versioning 是一项 Temporal 功能，允许您在不破坏 Workflow 的情况下，自信地将新更改部署到在 Worker 上运行的 Workflow。Temporal 通过帮助您管理不同的构建版本（正式称为 [Worker Deployment Versions](/worker-versioning#deployment-versions)）来实现这一点。
 
-For most teams, Worker Versioning should be the default recommendation for deploying Workflow code changes in
-production. If you can run versioned worker deployments, prefer Worker Versioning over patching.
+对于大多数团队，Worker Versioning 应该是在生产中部署 Workflow 代码更改的默认推荐方案。如果您可以运行版本化的 Worker 部署，请优先选择 Worker Versioning 而非 Patching。
 
-Worker Versioning unlocks important benefits for users of [blue-green or rainbow deployments](#deployment-systems).
+Worker Versioning 为[蓝绿或彩虹部署](#deployment-systems)的用户解锁了重要优势：
 
-- Ramping traffic gradually to a new Worker Deployment Version.
-- Verifying a new Deployment Version with tests before sending production traffic to it.
-- Instant rollback when you detect that a new Deployment Version is broken.
-- Improved error rates when adopting it.
+- 逐步将流量引导至新的 Worker Deployment Version。
+- 在将生产流量发送到新 Deployment Version 之前，先用测试进行验证。
+- 检测到新 Deployment Version 出现问题时立即回滚。
+- 采用时改善错误率。
 
-In addition, Worker Versioning introduces **Workflow Pinning**. For pinned Workflow Types, each execution runs entirely
-on the Worker Deployment Version where it started. You need not worry about making breaking code changes to running,
-pinned Workflows.
+此外，Worker Versioning 还引入了 **Workflow 固定（Workflow Pinning）**。对于已固定的 Workflow 类型，每次执行完全在其启动时所在的 Worker Deployment Version 上运行。您无需担心对正在运行的已固定 Workflow 进行破坏性代码更改。
 
-To use Workflow Pinning, we recommend using [rainbow deployments](#deployment-systems).
+要使用 Workflow 固定，我们建议使用[彩虹部署](#deployment-systems)。
 
 :::tip
 
-Watch this Temporal Replay 2025 talk to learn more about Worker Versioning and see a demo.
+观看此 Temporal Replay 2025 演讲以了解更多关于 Worker Versioning 的信息并观看演示。
 
 <div style={{ display: 'flex', justifyContent: 'center' }}>
   <iframe
@@ -61,96 +55,72 @@ Watch this Temporal Replay 2025 talk to learn more about Worker Versioning and s
 
 :::note
 
-Worker Versioning is currently available in Public Preview.
+Worker Versioning 目前处于公开预览（Public Preview）阶段。
 
-Minimum versions:
+最低版本要求：
 
-- Go SDK version [v1.35.0](https://github.com/temporalio/sdk-go/releases/tag/v1.35.0)
+- Go SDK 版本 [v1.35.0](https://github.com/temporalio/sdk-go/releases/tag/v1.35.0)
 - Python [v1.11](https://github.com/temporalio/sdk-python/releases/tag/1.11.0)
 - Java [v1.29](https://github.com/temporalio/sdk-java/releases/tag/v1.29.0)
 - Typescript [v1.12](https://github.com/temporalio/sdk-typescript/releases/tag/v1.12.0)
 - .NET [v1.7.0](https://github.com/temporalio/sdk-dotnet/releases/tag/1.7.0)
 - Ruby [v0.5.0](https://github.com/temporalio/sdk-ruby/releases/tag/v0.5.0)
-- Other SDKs: coming soon!
+- 其他 SDK：即将支持！
 
-Self-hosted users:
+自托管用户：
 
-- Minimum Temporal CLI version [v1.4.1](https://github.com/temporalio/cli/releases/tag/v1.4.1)
-- Minimum Temporal Server version: [v1.29.1](https://github.com/temporalio/temporal/releases/tag/v1.29.1)
-- Minimum Temporal UI Version [v2.38.0](https://github.com/temporalio/ui/releases/tag/v2.38.0)
+- 最低 Temporal CLI 版本 [v1.4.1](https://github.com/temporalio/cli/releases/tag/v1.4.1)
+- 最低 Temporal Server 版本：[v1.29.1](https://github.com/temporalio/temporal/releases/tag/v1.29.1)
+- 最低 Temporal UI 版本 [v2.38.0](https://github.com/temporalio/ui/releases/tag/v2.38.0)
 
 :::
 
-## Getting Started with Worker Versioning {#definition}
+## Worker Versioning 入门 {#definition}
 
-To get started with Worker Versioning, you should understand some concepts around versioning and deployments.
+要开始使用 Worker Versioning，您应该了解一些关于版本控制和部署的概念。
 
-- A **Worker Deployment** is a deployment or service across multiple versions. In a rainbow deployment, more than two
-  active Deployment Versions can run at once.
-- A **Worker Deployment Version** is a version of a deployment or service. It can have multiple Workers polling on
-  multiple Task Queues, but they all run the same build.
-- A **Build ID**, in combination with a Worker Deployment name, identifies a single Worker Deployment Version.
-- When a versioned worker polls on a task queue, that task queue becomes part of that Worker's version. That version's
-  Worker Deployment controls how the task queue matches Workflow Tasks with Workers.
-- Using **Workflow Pinning**, you can declare each Workflow type to have a **Versioning Behavior**, either Pinned or
-  Auto-Upgrade.
-  - A **Pinned** Workflow is guaranteed to complete on a single Worker Deployment Version.
-  - An **Auto-Upgrade** Workflow will automatically move to a new code version as you roll it out, specifically its
-    Target Worker Deployment Version (defined below). Therefore, Auto-Upgrade Workflows are not restricted to a single
-    Deployment Version and need to be kept replay-safe manually, i.e. with
-    [patching](/workflow-definition#workflow-versioning).
-  - Both Pinned and Auto-Upgrade Workflows are guaranteed to start only on the Current or Ramping Version of their
-    Worker Deployment.
-  - Pinned Workflows are designed for use with rainbow deployments. See [Deployment Systems](#deployment-systems).
-  - Pinned Workflows don't need to be patched, as they run on the same worker and build until they complete.
-  - If you expect your Workflow to run longer than you want your Worker Deployment Versions to exist, you should mark
-    your Workflow Type as Auto-Upgrade.
-- Each Worker Deployment has a single [**Current Version**](/worker-versioning#versioning-definitions) which is where
-  Workflows are routed to unless they were previously pinned on a different version.
-- Each Worker Deployment can have a [**Ramping Version**](/worker-versioning#versioning-definitions) which is where a
-  configurable percentage of Workflows are routed to unless they were previously pinned on a different version.
-- For a given Workflow, its [**Target Worker Deployment Version**](/worker-versioning#versioning-definitions) is the
-  version it will move to next.
+- **Worker Deployment** 是跨多个版本的部署或服务。在彩虹部署中，可以同时运行两个以上的活跃 Deployment Version。
+- **Worker Deployment Version** 是部署或服务的一个版本。它可以有多个 Worker 在多个 Task Queue 上轮询，但它们都运行相同的构建。
+- **Build ID** 与 Worker Deployment 名称结合使用，标识单个 Worker Deployment Version。
+- 当版本化的 Worker 在 Task Queue 上轮询时，该 Task Queue 成为该 Worker 版本的一部分。该版本的 Worker Deployment 控制 Task Queue 如何将 Workflow Task 与 Worker 匹配。
+- 使用 **Workflow 固定（Workflow Pinning）**，您可以将每种 Workflow 类型声明为具有**版本控制行为（Versioning Behavior）**，可以是 Pinned 或 Auto-Upgrade。
+  - **Pinned** Workflow 保证在单个 Worker Deployment Version 上完成。
+  - **Auto-Upgrade** Workflow 将随着您推出新代码版本而自动迁移到新代码版本，具体地说是其目标 Worker Deployment Version（下面定义）。因此，Auto-Upgrade Workflow 不限于单个 Deployment Version，需要通过[Patching](/workflow-definition#workflow-versioning) 手动保持重放安全性。
+  - Pinned 和 Auto-Upgrade Workflow 都保证只在其 Worker Deployment 的 Current 或 Ramping Version 上启动。
+  - Pinned Workflow 设计用于彩虹部署。参见[部署系统](#deployment-systems)。
+  - Pinned Workflow 不需要 Patching，因为它们在完成之前都运行在相同的 Worker 和构建上。
+  - 如果您期望您的 Workflow 运行时间比您希望 Worker Deployment Version 存在的时间更长，您应该将 Workflow 类型标记为 Auto-Upgrade。
+- 每个 Worker Deployment 都有一个单一的[**Current Version**](/worker-versioning#versioning-definitions)，除非 Workflow 之前在不同版本上被固定，否则 Workflow 都被路由到此版本。
+- 每个 Worker Deployment 可以有一个[**Ramping Version**](/worker-versioning#versioning-definitions)，可配置百分比的 Workflow 被路由到此版本，除非它们之前被固定在不同版本上。
+- 对于给定的 Workflow，其[**目标 Worker Deployment Version**](/worker-versioning#versioning-definitions)是它将迁移到的下一个版本。
 
-## Setting up your deployment system {#deployment-systems}
+## 设置您的部署系统 {#deployment-systems}
 
-If you haven't already, you'll want to pick a container deployment solution for your Workers.
+如果您还没有，您需要为 Worker 选择一个容器部署解决方案。
 
-You also need to pick among three common deployment strategies:
+您还需要在三种常见的部署策略中选择一种：
 
-- A **rolling deployment** strategy upgrades Workers in place with little control over how quickly they cut over and
-  only a slow ability to roll Workers back. Rolling deploys have minimal footprint but tend to provide lower
-  availability than the other strategies and are incompatible with Worker Versioning.
-- A **blue-green deployment** strategy maintains two "colors," or Worker Deployment Versions simultaneously and can
-  control how traffic is routed between them. This allows you to maximize your uptime with features like instant
-  rollback and ramping. Worker Versioning enables the routing control that blue-green deployments need.
-- A **rainbow deployment** strategy is like blue-green but with more colors, allowing Workflow Pinning. You can deploy
-  new revisions of your Workflows freely while older versions drain. Using Worker Versioning, Temporal lets you know
-  when all the Workflows of a given version are drained so that you can sunset it.
+- **滚动部署（rolling deployment）**策略就地升级 Worker，对切换速度控制有限，Worker 回滚也很慢。滚动部署的资源占用最小，但往往提供比其他策略更低的可用性，且与 Worker Versioning 不兼容。
+- **蓝绿部署（blue-green deployment）**策略同时维护两个"颜色"或 Worker Deployment Version，可以控制流量在它们之间的路由方式。这允许您通过即时回滚和流量灰度等功能最大化正常运行时间。Worker Versioning 启用了蓝绿部署所需的路由控制。
+- **彩虹部署（rainbow deployment）**策略类似于蓝绿部署，但有更多颜色，允许 Workflow 固定。您可以自由部署 Workflow 的新修订版，同时旧版本在排空中。使用 Worker Versioning，Temporal 会在给定版本的所有 Workflow 都排空时通知您，以便您可以将其下线。
 
 :::note
 
-You also have the option to use the
-[Temporal Worker Controller](/production-deployment/worker-deployments/kubernetes-controller) to automatically enable
-rainbow deployments of your Workers if you're using Kubernetes.
+如果您使用 Kubernetes，您也可以选择使用 [Temporal Worker Controller](/production-deployment/worker-deployments/kubernetes-controller) 自动实现 Worker 的彩虹部署。
 
 :::
 
-If you cannot yet support blue-green or rainbow style deployments, use [patching](/patching) as a fallback while you
-work toward a versioned deployment model.
+如果您还不能支持蓝绿或彩虹风格的部署，请使用 [Patching](/patching) 作为临时方案，同时逐步迁移到版本化的部署模型。
 
-## Configuring a Worker for Versioning
+## 为 Versioning 配置 Worker
 
-You'll need to add a few additional configuration parameters to your Workers to toggle on Worker Versioning. There are
-three new parameters, with different names depending on the language:
+您需要向 Worker 添加一些额外的配置参数以启用 Worker Versioning。有三个新参数，根据语言不同名称有所不同：
 
-- `UseVersioning`: This enables the Versioning functionality for this Worker.
-- A `Version` to identify the revision that this Worker will be allowed to execute. This is a combination of a
-  deployment name and a build ID number.
-- (Optional) The [Default Versioning Behavior](#definition). If unset, you'll be required to specify the behavior on
-  each Workflow. Or you can default to Pinned or Auto-Upgrade.
+- `UseVersioning`：为此 Worker 启用 Versioning 功能。
+- 一个 `Version`，用于标识此 Worker 将被允许执行的修订版。这是部署名称和 Build ID 编号的组合。
+- （可选）[默认版本控制行为](#definition)。如果未设置，您将需要在每个 Workflow 上指定行为。或者您可以默认为 Pinned 或 Auto-Upgrade。
 
-Follow the example for your SDK below:
+按照以下 SDK 示例进行操作：
 
 <SdkTabs>
 <SdkTabs.Go>
@@ -255,81 +225,68 @@ worker = Temporalio::Worker.new(
 </SdkTabs.Ruby>
 </SdkTabs>
 
-## Choosing a Versioning Behavior {#choosing-behavior}
+## 选择版本控制行为 {#choosing-behavior}
 
-The right versioning behavior depends on how long your Workflows run relative to your deployment frequency.
+正确的版本控制行为取决于您的 Workflow 运行时间相对于部署频率的关系。
 
-### Decision guide {#decision-guide}
+### 决策指南 {#decision-guide}
 
-| Workflow Duration                        | Uses Continue-as-New? | Recommended Behavior                                     | Patching Required? |
-| ---------------------------------------- | --------------------- | -------------------------------------------------------- | ------------------ |
-| **Short** (completes before next deploy) | N/A                   | `PINNED`                                                 | Never              |
-| **Medium** (spans multiple deploys)      | No                    | `AUTO_UPGRADE`                                           | Yes                |
-| **Long** (weeks to years)                | Yes                   | `PINNED` + [upgrade on CaN](#upgrade-on-continue-as-new) | Never              |
-| **Long** (weeks to years)                | No                    | `AUTO_UPGRADE` + patching                                | Yes                |
+| Workflow 持续时间                   | 使用 Continue-as-New？ | 推荐行为                                                  | 是否需要 Patching？ |
+| ----------------------------------- | ---------------------- | --------------------------------------------------------- | ------------------- |
+| **短暂**（在下次部署前完成）        | 不适用                 | `PINNED`                                                  | 从不                |
+| **中等**（跨越多次部署）            | 否                     | `AUTO_UPGRADE`                                            | 是                  |
+| **长期**（数周至数年）              | 是                     | `PINNED` + [在 Continue-as-New 时升级](#upgrade-on-continue-as-new) | 从不      |
+| **长期**（数周至数年）              | 否                     | `AUTO_UPGRADE` + Patching                                 | 是                  |
 
-### Examples by Workflow type {#behavior-examples}
+### 按 Workflow 类型分类的示例 {#behavior-examples}
 
-| Workflow Type        | Duration     | Recommended Behavior       | Notes                               |
-| -------------------- | ------------ | -------------------------- | ----------------------------------- |
-| Order processing     | Minutes      | `PINNED`                   | Completes before next deploy        |
-| Payment retry        | Hours        | `PINNED` or `AUTO_UPGRADE` | Depends on deploy frequency         |
-| Subscription billing | Days         | `AUTO_UPGRADE`             | May span multiple deploys           |
-| Customer entity      | Months-Years | `PINNED` + upgrade on CaN  | Uses Continue-as-New pattern        |
-| AI agent / Chatbot   | Weeks        | `PINNED` + upgrade on CaN  | Long sleeps, uses CaN               |
-| Compliance audit     | Months       | `AUTO_UPGRADE` + patching  | Cannot use CaN (needs full history) |
+| Workflow 类型       | 持续时间    | 推荐行为                  | 备注                           |
+| ------------------- | ----------- | ------------------------- | ------------------------------ |
+| 订单处理            | 分钟        | `PINNED`                  | 在下次部署前完成               |
+| 支付重试            | 小时        | `PINNED` 或 `AUTO_UPGRADE` | 取决于部署频率                |
+| 订阅计费            | 天          | `AUTO_UPGRADE`            | 可能跨越多次部署               |
+| 客户实体            | 月至年      | `PINNED` + 在 CaN 时升级  | 使用 Continue-as-New 模式      |
+| AI 代理 / 聊天机器人 | 周          | `PINNED` + 在 CaN 时升级  | 长时间休眠，使用 CaN           |
+| 合规性审计          | 月          | `AUTO_UPGRADE` + Patching | 不能使用 CaN（需要完整历史）   |
 
-:::info Long-running Workflows with Continue-as-New
+:::info 使用 Continue-as-New 的长期运行 Workflow
 
-If your Workflow uses Continue-as-New to manage history size, you can upgrade to new Worker Deployment Versions at the
-CaN boundary without patching. See [Upgrading on Continue-as-New](#upgrade-on-continue-as-new) below.
+如果您的 Workflow 使用 Continue-as-New 来管理历史大小，您可以在 CaN 边界处升级到新的 Worker Deployment Version，而无需 Patching。参见下面的[在 Continue-as-New 时升级](#upgrade-on-continue-as-new)。
 
 :::
 
-### Default Versioning Behavior Considerations
+### 默认版本控制行为注意事项
 
-If you are using blue-green deployments, you should default to Auto-Upgrade and should not use Workflow Pinning.
-Otherwise, if your Worker and Workflows are new, we suggest not providing a `DefaultVersioningBehavior`.
+如果您使用蓝绿部署，您应该默认使用 Auto-Upgrade 且不应使用 Workflow 固定。
+否则，如果您的 Worker 和 Workflow 是新的，我们建议不要提供 `DefaultVersioningBehavior`。
 
-In general, each Workflow Type should be annotated as Auto-Upgrade or Pinned. If all of your Workflows will be
-short-running for the foreseeable future, you can default to Pinned.
+一般来说，每种 Workflow 类型都应注明为 Auto-Upgrade 或 Pinned。如果您所有的 Workflow 在可预见的未来都是短期运行的，您可以默认为 Pinned。
 
-Many users who are migrating to Worker Versioning will start by defaulting to Auto-Upgrade until they have had time to
-annotate their Workflows. This default is the most similar to the legacy behavior. Once each Workflow Type is annotated,
-you can remove the `DefaultVersioningBehavior`.
+许多正在迁移到 Worker Versioning 的用户会先默认为 Auto-Upgrade，直到他们有时间注释其 Workflow。这个默认值与旧版行为最相似。一旦每种 Workflow 类型都被注释，您就可以删除 `DefaultVersioningBehavior`。
 
-There is a possibility of a queue blocking limitation for new or Auto-Upgrade Workflows if there is a ramp, but one of
-the Current or Ramping versions is down or doesn't have enough capacity. This leads to other versions not getting Tasks
-or slowing down.
+如果有灰度发布（ramp），但 Current 或 Ramping 版本之一宕机或容量不足，新的或 Auto-Upgrade Workflow 可能出现队列阻塞限制。这会导致其他版本无法获取 Task 或速度变慢。
 
-For example, you have a Current Version and a Ramping Version at 50%. If all of your Current Version Workers go down,
-you would expect at least 50% of new Workflows to go to the Ramping Version. This won't happen because the Tasks for the
-Current Version are blocking the queue.
+例如，您有一个 Current Version 和一个 50% 的 Ramping Version。如果您所有的 Current Version Worker 都宕机，您会期望至少 50% 的新 Workflow 进入 Ramping Version。但这不会发生，因为 Current Version 的 Task 正在阻塞队列。
 
 :::note
 
-Keep in mind that Child Workflows of a parent or previous Auto-Upgrade Workflow default to Auto-Upgrade behavior and not
-Unspecified.
+请记住，父 Workflow 或之前的 Auto-Upgrade Workflow 的 Child Workflow 默认为 Auto-Upgrade 行为，而不是 Unspecified。
 
 :::
 
-You also want to make sure you understand how your Activities are going to work across different Worker Deployment
-Versions. Refer to the [Worker Versioning Activity behavior docs](#choosing-behavior)
-for more details.
+您还需要确保了解 Activity 在不同 Worker Deployment Version 之间的工作方式。有关更多详情，请参阅 [Worker Versioning Activity 行为文档](#choosing-behavior)。
 
-## Rolling out changes with the CLI
+## 使用 CLI 推出更改
 
-Next, deploy your Worker with the additional configuration parameters. Before making any Workflow revisions, you can use
-the `temporal` CLI to check which of your Worker versions are currently polling:
+接下来，使用额外的配置参数部署您的 Worker。在做出任何 Workflow 修订之前，您可以使用 `temporal` CLI 检查当前正在轮询的 Worker 版本：
 
-You can view the Versions that are part of a Deployment with `temporal worker deployment describe`:
+您可以使用 `temporal worker deployment describe` 查看属于 Deployment 的版本：
 
 ```bash
 temporal worker deployment describe --name="$MY_DEPLOYMENT"
 ```
 
-To activate a Deployment Version, use `temporal worker deployment set-current-version`, specifying the deployment name
-and a Build ID:
+要激活 Deployment Version，使用 `temporal worker deployment set-current-version`，指定部署名称和 Build ID：
 
 ```bash
 temporal worker deployment set-current-version \
@@ -337,8 +294,7 @@ temporal worker deployment set-current-version \
     --build-id "YourBuildID"
 ```
 
-To ramp a Deployment Version up to some percentage of your overall Worker fleet, use `set-ramping version`, with the
-same parameters and a ramping percentage:
+要将 Deployment Version 逐步扩展到您整体 Worker 集群的某个百分比，使用 `set-ramping version`，加上相同的参数和灰度百分比：
 
 ```bash
 temporal worker deployment set-ramping-version \
@@ -347,13 +303,13 @@ temporal worker deployment set-ramping-version \
     --percentage=5
 ```
 
-You can verify that Workflows are cutting over to that version with `describe -w YourWorkflowID`:
+您可以通过 `describe -w YourWorkflowID` 验证 Workflow 是否已切换到该版本：
 
 ```bash
 temporal workflow describe -w YourWorkflowID
 ```
 
-That returns the new Version that the workflow is running on:
+这将返回 Workflow 正在运行的新版本：
 
 ```
 Versioning Info:
@@ -363,10 +319,9 @@ Versioning Info:
   OverrideBehavior       Unspecified
 ```
 
-## Marking a Workflow Type as Pinned
+## 将 Workflow 类型标记为 Pinned
 
-You can mark a Workflow Type as pinned when you register it by adding an additional Pinned parameter. This will cause it
-to remain on its original deployed version:
+您可以在注册 Workflow 类型时通过添加额外的 Pinned 参数将其标记为 Pinned。这将使其保留在其原始部署版本上：
 
 <SdkTabs>
 <SdkTabs.Go>
@@ -447,12 +402,11 @@ end
 </SdkTabs.Ruby>
 </SdkTabs>
 
-## Moving a pinned Workflow
+## 移动已固定的 Workflow
 
-Sometimes you'll need to manually move a set of pinned Workflows off of a version that has a bug to a version with the
-fix.
+有时您需要手动将一组已固定的 Workflow 从有 Bug 的版本迁移到修复版本。
 
-If you need to move a pinned Workflow to a new version, use `temporal workflow update-options`:
+如果您需要将已固定的 Workflow 迁移到新版本，请使用 `temporal workflow update-options`：
 
 ```bash
 temporal workflow update-options \
@@ -462,7 +416,7 @@ temporal workflow update-options \
     --versioning-override-build-id "$TARGET_BUILD_ID"
 ```
 
-You can move several Workflows at once matching a `--query` parameter:
+您可以一次移动多个匹配 `--query` 参数的 Workflow：
 
 ```bash
 temporal workflow update-options \
@@ -472,14 +426,9 @@ temporal workflow update-options \
   --versioning-override-build-id "$FIXED_BUILD_ID"
 ```
 
-In this scenario, you may also need to use the other [Versioning APIs](/workflow-definition#workflow-versioning) to
-patch your Workflow in the "fixed" build, so that your target Worker can handle the moved Workflows correctly. If you
-made a [version-incompatible change](/workflow-definition#deterministic-constraints) to your Workflow, and you want to
-roll back to an earlier version, it's not possible to patch it. Considering using
-[Workflow Reset](/workflow-execution/event#reset) along with your move.
+在这种情况下，您可能还需要使用其他 [Versioning API](/workflow-definition#workflow-versioning) 在"修复"构建中对您的 Workflow 进行 Patching，以便目标 Worker 可以正确处理移动的 Workflow。如果您对 Workflow 进行了[版本不兼容的更改](/workflow-definition#deterministic-constraints)，并且想要回滚到较早的版本，则无法对其进行 Patching。可以考虑将 [Workflow Reset](/workflow-execution/event#reset) 与您的迁移结合使用。
 
-"Reset-with-Move" allows you to atomically Reset your Workflow and set a Versioning Override on the newly reset
-Workflow, so when it resumes execution, all new Workflow Tasks will be executed on your new Worker.
+"Reset-with-Move"允许您以原子方式重置 Workflow 并在新重置的 Workflow 上设置版本控制覆盖，因此当它恢复执行时，所有新的 Workflow Task 将在您的新 Worker 上执行。
 
 ```bash
 temporal workflow reset with-workflow-update-options \
@@ -491,16 +440,13 @@ temporal workflow reset with-workflow-update-options \
     --versioning-override-build-id "$TARGET_BUILD_ID"
 ```
 
-## Migrating a Workflow from Pinned to Auto-Upgrade
+## 将 Workflow 从 Pinned 迁移到 Auto-Upgrade
 
-There may be times when you need to migrate your Workflow from Pinned to Auto-Upgrade because you configured your
-Workflow Type with the wrong behavior or you've pinned a really long-running Workflow by mistake.
+有时您需要将 Workflow 从 Pinned 迁移到 Auto-Upgrade，因为您错误地配置了 Workflow 类型的行为，或者您意外地固定了一个长期运行的 Workflow。
 
-Pinned Workflows can block version drainage, especially when they run for a long time. You could move the Workflow to a
-new build, but that would just push the problem to the next build.
+已固定的 Workflow 可能会阻塞版本排空，特别是当它们运行很长时间时。您可以将 Workflow 移动到新的构建，但这只会将问题推到下一个构建。
 
-In order to make this change, you need to change the versioning behavior for your Workflow from Pinned to Auto-Upgrade.
-You can use `temporal workflow update-options` for this:
+为了进行此更改，您需要将 Workflow 的版本控制行为从 Pinned 更改为 Auto-Upgrade。您可以使用 `temporal workflow update-options`：
 
 ```bash
 temporal workflow update-options \
@@ -508,7 +454,7 @@ temporal workflow update-options \
     --versioning-override-behavior auto_upgrade
 ```
 
-If you want to move all your Workflows of a certain type to this new configuration, you can do it with this command:
+如果您想将某种类型的所有 Workflow 移动到这个新配置，可以使用此命令：
 
 ```bash
 temporal workflow update-options \
@@ -516,7 +462,7 @@ temporal workflow update-options \
     --versioning-override-behavior auto_upgrade
 ```
 
-You can also filter on a certain build ID to limit the number of Workflows you apply it to:
+您也可以按特定的 Build ID 进行过滤以限制应用的 Workflow 数量：
 
 ```bash
 temporal workflow update-options \
@@ -526,40 +472,37 @@ temporal workflow update-options \
 
 :::note
 
-When you change the behavior to Auto-Upgrade, the Workflow will resume work on the Workflow's Target Version. So if the Workflow's Target Version is different from the earlier Pinned Version, you should make sure you [patch](/patching#patching) the Workflow code.
+当您将行为更改为 Auto-Upgrade 时，Workflow 将在其目标版本上恢复工作。因此，如果 Workflow 的目标版本与之前的 Pinned 版本不同，您应该确保[对 Workflow 代码进行 Patching](/patching#patching)。
 
 :::
 
-## Upgrading on Continue-as-New {#upgrade-on-continue-as-new}
+## 在 Continue-as-New 时升级 {#upgrade-on-continue-as-new}
 
-Long-running Workflows that use [Continue-as-New](/workflow-execution/continue-as-new) can upgrade to newer Worker
-Deployment Versions at Continue-as-New boundaries without requiring patching.
+使用 [Continue-as-New](/workflow-execution/continue-as-new) 的长期运行 Workflow 可以在 Continue-as-New 边界处升级到更新的 Worker Deployment Version，而无需 Patching。
 
-This pattern is ideal for:
+此模式非常适合：
 
-- **Entity Workflows** that run for months or years
-- **Batch processing** Workflows that checkpoint with Continue-as-New
-- **AI agent Workflows** with long sleeps waiting for user input
+- 运行数月或数年的**实体 Workflow（Entity Workflows）**
+- 使用 Continue-as-New 进行检查点的**批处理** Workflow
+- 等待用户输入的长时间休眠的 **AI 代理 Workflow**
 
-:::note Public Preview
+:::note 公开预览
 
-This feature is in Public Preview as an experimental SDK-level option.
+此功能作为实验性 SDK 级别选项处于公开预览阶段。
 
 :::
 
-### How it works {#upgrade-on-can-how-it-works}
+### 工作原理 {#upgrade-on-can-how-it-works}
 
-By default, Pinned Workflows stay on their original Worker Deployment Version even when they Continue-as-New. With the
-upgrade option enabled:
+默认情况下，已固定的 Workflow 在执行 Continue-as-New 时仍保留在其原始 Worker Deployment Version 上。启用升级选项后：
 
-1. Each Workflow run remains pinned to its version (no patching needed during a run)
-2. The Temporal Server tells the workflow when a new [Target Version](/worker-versioning#versioning-definitions) becomes available
-3. When the Workflow performs Continue-as-New with the upgrade option, the new run starts on the [Target Version](/worker-versioning#versioning-definitions)
+1. 每次 Workflow 运行都保持固定在其版本上（在一次运行中无需 Patching）
+2. Temporal Server 在新的[目标版本](/worker-versioning#versioning-definitions)可用时通知 Workflow
+3. 当 Workflow 使用升级选项执行 Continue-as-New 时，新的运行将在[目标版本](/worker-versioning#versioning-definitions)上启动
 
-### Checking for new versions {#checking-for-new-versions}
+### 检查新版本 {#checking-for-new-versions}
 
-When a new Worker Deployment Version becomes Current or Ramping, active Workflows can detect this through
-`target_worker_deployment_version_changed`:
+当新的 Worker Deployment Version 成为 Current 或 Ramping 时，活跃的 Workflow 可以通过 `target_worker_deployment_version_changed` 检测到这一点：
 
 ```go
 func (w *Workflows) ContinueAsNewWithVersionUpgradeV1(
@@ -607,43 +550,30 @@ func (w *Workflows) ContinueAsNewWithVersionUpgradeV2(
 }
 ```
 
-### Limitations {#upgrade-on-can-limitations}
+### 限制 {#upgrade-on-can-limitations}
 
-:::caution Current Limitations
+:::caution 当前限制
 
-- **Lazy moving only:** Workflows must be invoked by executing a step to receive the Target-Version-Changed information.
-  Sleeping Workflows won't be proactively get the Target-Version-Changed information. If you have idle workflows that you
-  want to wake up so that they can check `GetTargetWorkerDeploymentVersionChanged`, you can send them a Signal.
-- **Interface compatibility:** When continuing as new to a different version, ensure your Workflow input provided by the
-  previous version's workflow definition is compatible with the new version's workflow definition. If incompatible, the
-  new run may fail on its first Workflow Task.
+- **仅惰性移动：** Workflow 必须通过执行步骤来接收目标版本已更改的信息。
+  休眠中的 Workflow 不会主动获取目标版本已更改的信息。如果您有想要唤醒的空闲 Workflow 以便它们可以检查 `GetTargetWorkerDeploymentVersionChanged`，可以向它们发送 Signal。
+- **接口兼容性：** 在以 Continue-as-New 方式切换到不同版本时，确保前一个版本的 Workflow 定义提供的 Workflow 输入与新版本的 Workflow 定义兼容。如果不兼容，新的运行可能在其第一个 Workflow Task 上失败。
 
 :::
 
-## Sunsetting an old Deployment Version
+## 下线旧的 Deployment Version
 
-A Worker Deployment Version moves through the following states:
+Worker Deployment Version 经历以下状态：
 
-1. **Inactive**: The version exists because a Worker with that version has polled the server. If this version never
-   becomes Active, it will never be Draining or Drained.
-2. **Active**: The version is either Current or Ramping, so it is accepting new Workflows and existing Auto-Upgrade
-   Workflows.
-3. **Draining**: The version stopped being Current or Ramping, and it has open pinned Workflows running on it. It is
-   possible to be Draining and have no open pinned Workflows for a short time, since the drainage status is updated
-   periodically.
-4. **Drained**: The version was draining and now all the pinned Workflows that were running on it are closed.
+1. **非活跃（Inactive）**：该版本之所以存在，是因为具有该版本的 Worker 曾轮询过服务器。如果此版本从未变为 Active，它将永远不会是 Draining 或 Drained 状态。
+2. **活跃（Active）**：该版本是 Current 或 Ramping，因此它正在接受新 Workflow 和现有的 Auto-Upgrade Workflow。
+3. **排空中（Draining）**：该版本停止成为 Current 或 Ramping，并且它上面有开放的已固定 Workflow 在运行。由于排空状态是周期性更新的，可能存在短暂时期处于 Draining 状态但没有开放的已固定 Workflow。
+4. **已排空（Drained）**：该版本正在排空，现在所有在其上运行的已固定 Workflow 都已关闭。
 
-You can see these statuses when you describe a Worker Deployment in the `WorkerDeploymentVersionStatus` of each
-`VersionSummary`, or by describing the version directly. When a version is Draining or Drained, that is displayed in a
-value called `DrainageStatus`. Periodically, the Temporal Service will refresh this status by counting any open pinned
-Workflows using that version.
+您可以在描述 Worker Deployment 时的每个 `VersionSummary` 的 `WorkerDeploymentVersionStatus` 中看到这些状态，或者直接描述该版本。当某个版本处于 Draining 或 Drained 状态时，在名为 `DrainageStatus` 的值中显示。Temporal Service 会定期刷新此状态，通过统计使用该版本的任何开放已固定 Workflow 来更新。
 
-On each refresh, `DrainageInfo.last_checked_time` is updated. Eventually, `DrainageInfo` will report that the version is
-fully drained. At this point, no Workflows are still running on that version and no more will be automatically routed to
-it, so you can consider shutting down the running Workers.
+每次刷新时，`DrainageInfo.last_checked_time` 会更新。最终，`DrainageInfo` 会报告该版本已完全排空。此时，没有 Workflow 仍在该版本上运行，也没有更多会自动路由到它，因此您可以考虑关闭正在运行的 Worker。
 
-You can monitor this by checking `WorkerDeploymentInfo.VersionSummaries` or with
-`temporal worker deployment describe-version`:
+您可以通过检查 `WorkerDeploymentInfo.VersionSummaries` 或使用 `temporal worker deployment describe-version` 来监控这一点：
 
 ```bash
 temporal worker deployment describe-version \
@@ -667,14 +597,13 @@ Task Queues:
   hello-world  workflow
 ```
 
-If you have implemented [Queries](/sending-messages#sending-queries) on closed pinned Workflows, you may need to keep
-some Workers running to handle them.
+如果您在已关闭的已固定 Workflow 上实现了 [Query](/sending-messages#sending-queries)，您可能需要保持一些 Worker 运行以处理它们。
 
-### Adding a pre-deployment test
+### 添加预部署测试
 
-Before deploying a new Workflow revision, you can test it with synthetic traffic.
+在部署新的 Workflow 修订版之前，您可以用合成流量对其进行测试。
 
-To do this, use pinning in your tests, following the examples below
+为此，请在测试中使用固定，遵循以下示例：
 
 <SdkTabs>
 <SdkTabs.Go>
@@ -759,26 +688,16 @@ handle = env.client.start_workflow(
 </SdkTabs.Ruby>
 </SdkTabs>
 
-## Garbage collection
+## 垃圾回收
 
-Worker Deployments are never garbage collected, but _Worker Deployment Versions_ (often referred to as Versions, Worker
-Versions, Deployment Versions) are.
+Worker Deployment 永远不会被垃圾回收，但 _Worker Deployment Version_（通常称为 Version、Worker Version、Deployment Version）会被回收。
 
-Versions are deleted to keep the total number of versions in one Worker Deployment less than or equal to
-[`matching.maxVersionsInDeployment`](https://github.com/temporalio/temporal/blob/a3a53266c002ae33b630a41977274f8b5b587031/common/dynamicconfig/constants.go#L1317-L1321),
-which is currently set to 100 in Temporal Cloud, but that's a conservative number and it could be increased if needed.
+Version 被删除是为了将一个 Worker Deployment 中的版本总数保持在 [`matching.maxVersionsInDeployment`](https://github.com/temporalio/temporal/blob/a3a53266c002ae33b630a41977274f8b5b587031/common/dynamicconfig/constants.go#L1317-L1321) 以内，该值在 Temporal Cloud 中目前设置为 100，但这是一个保守的数字，如果需要可以增加。
 
-For example, when you deploy your 101st Worker Version in a Worker Deployment, the server looks at the oldest drained
-version in the Worker deployment. If it has had no pollers in the last 5 minutes, the server deletes it. If that version
-still has pollers, the server will try the next oldest version. If none of the 100 versions are eligible for deletion
-(ie. none of them are drained with no pollers), then no version will be deleted and the poll from the 101st version
-would fail.
+例如，当您在 Worker Deployment 中部署第 101 个 Worker Version 时，服务器会查看 Worker Deployment 中最旧的已排空版本。如果该版本在过去 5 分钟内没有轮询器，服务器将删除它。如果该版本仍有轮询器，服务器将尝试下一个最旧的版本。如果 100 个版本中没有一个符合删除条件（即，没有一个是没有轮询器的已排空版本），则不会删除任何版本，第 101 个版本的轮询将失败。
 
-At that point, to successfully deploy your 101st version, you would need to increase `matching.maxVersionsInDeployment`
-or stop polling from one of the old drained versions to make it eligible for clean up.
+此时，要成功部署第 101 个版本，您需要增加 `matching.maxVersionsInDeployment` 或停止从一个旧的已排空版本轮询，使其符合清理条件。
 
-If you want to re-deploy a previously deleted version, start polling with a Worker that has the same build ID and
-Deployment Name as the deleted version and the server will recreate it.
+如果您想重新部署之前删除的版本，请使用与已删除版本具有相同 Build ID 和 Deployment Name 的 Worker 开始轮询，服务器将重新创建它。
 
-This covers the complete lifecycle of working with Worker Versioning. We are continuing to improve this feature, and we
-welcome any feedback or feature requests using the sidebar link!
+这涵盖了使用 Worker Versioning 工作的完整生命周期。我们将继续改进此功能，欢迎通过侧边栏链接提供任何反馈或功能请求！

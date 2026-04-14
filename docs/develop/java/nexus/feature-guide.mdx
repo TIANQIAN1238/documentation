@@ -1,9 +1,9 @@
 ---
 id: feature-guide
 slug: /develop/java/nexus/feature-guide
-title: Temporal Nexus - Java SDK feature guide
-sidebar_label: Feature Guide
-description: Use Temporal Nexus within the Java SDK to connect Durable Executions within and across Namespaces using a Nexus Endpoint, a Nexus Service contract, and Nexus Operations.
+title: "Temporal Nexus - Java SDK 功能指南"
+sidebar_label: "功能指南"
+description: "在 Java SDK 中使用 Temporal Nexus，使用 Nexus 端点、Nexus 服务合约和 Nexus 操作来连接 Namespace 内部和之间的持久执行。"
 toc_max_heading_level: 4
 keywords:
   - temporal
@@ -19,68 +19,71 @@ import { CaptionedImage } from '@site/src/components';
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal Java SDK support for Nexus is
-[Generally Available](/evaluate/development-production-features/release-stages#general-availability).
+Temporal Java SDK 对 Nexus 的支持是
+[一般可用](/evaluate/development-production-features/release-stages#general-availability)。
 
 :::
 
-Use [Temporal Nexus](/evaluate/nexus) to connect Temporal Applications within and across Namespaces using a Nexus
-Endpoint, a Nexus Service contract, and Nexus Operations.
+使用 [Temporal Nexus](/evaluate/nexus) 使用 Nexus 连接 Namespace 内部和之间的 Temporal 应用程序
+端点、Nexus 服务合同和 Nexus 操作。
 
-This page shows how to do the following:
+此页面显示如何执行以下操作：
 
-- [Run a development Temporal Service with Nexus enabled](#run-the-temporal-nexus-development-server)
-- [Create caller and handler Namespaces](#create-caller-handler-namespaces)
-- [Create a Nexus Endpoint to route requests from caller to handler](#create-nexus-endpoint)
-- [Define the Nexus Service contract](#define-nexus-service-contract)
-- [Develop a Nexus Service and Operation handlers](#develop-nexus-service-operation-handlers)
-- [Develop a caller Workflow that uses a Nexus Service](#develop-caller-workflow-nexus-service)
-- [Make Nexus calls across Namespaces with a development Server](#nexus-calls-across-namespaces-dev-server)
-- [Make Nexus calls across Namespaces in Temporal Cloud](#nexus-calls-across-namespaces-temporal-cloud)
+- [运行启用 Nexus 的开发 Temporal 服务](#run-the-temporal-nexus-development-server)
+- [创建调用者和处理程序 Namespaces](#create-caller-handler-namespaces)
+- [创建 Nexus 端点以将请求从调用者路由到处理程序](#create-nexus-endpoint)
+- [定义 Nexus 服务合同](#define-nexus-service-contract)
+- [开发 Nexus 服务和操作处理程序](#develop-nexus-service-operation-handlers)
+- [开发使用 Nexus 服务的调用者 Workflow](#develop-caller-workflow-nexus-service)
+- [使用开发服务器跨 Namespace 进行 Nexus 调用](#nexus-calls-across-namespaces-dev-server)
+- [在 Temporal Cloud 中的 Namespace 之间进行 Nexus 调用](#nexus-calls-across-namespaces-temporal-cloud)
 
 :::note
 
-This documentation uses source code derived from the
-[Java Nexus sample](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/nexus).
+本文档使用的源代码源自
+[Java Nexus 示例](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/nexus)。
 
 :::
 
-## Run the Temporal Development Server with Nexus enabled {#run-the-temporal-nexus-development-server}
+<a id="run-the-temporal-nexus-development-server"></a>
+## 在启用 Nexus 的情况下运行 Temporal 开发服务器 {#run-the-temporal-nexus-development-server}
 
-Prerequisites:
+先决条件：
 
-- [Install the latest Temporal CLI](https://learn.temporal.io/getting_started/java/dev_environment/#set-up-a-local-temporal-service-for-development-with-temporal-cli)
-  (v1.3.0 or higher recommended)
-- [Install the latest Temporal Java SDK](https://learn.temporal.io/getting_started/java/dev_environment/#add-temporal-java-sdk-dependencies)
-  (v1.28.0 or higher recommended)
+- [安装最新的Temporal CLI](https://learn.temporal.io/getting_started/java/dev_environment/#set-up-a-local-temporal-service-for-development-with-temporal-cli)
+  （推荐v1.3.0或更高版本）
+- [安装最新的 Temporal Java SDK](https://learn.temporal.io/getting_started/java/dev_environment/#add-temporal-java-sdk-dependencies)
+  （推荐v1.28.0或更高版本）
 
-The first step in working with Temporal Nexus involves starting a Temporal server with Nexus enabled.
+使用 Temporal Nexus 的第一步涉及启动 Temporal Server 并启用 Nexus。
 
 ```
 temporal server start-dev
 ```
 
-This command automatically starts the Temporal development server with the Web UI, and creates the `default` Namespace.
-It uses an in-memory database, so do not use it for real use cases.
+此命令自动使用 Web UI 启动 Temporal 开发服务器，并创建 `default` Namespace。
+它使用内存数据库，因此不要将其用于实际用例。
 
-The Temporal Web UI should now be accessible at [http://localhost:8233](http://localhost:8233), and the Temporal Server
-should now be available for client connections on `localhost:7233`.
+现在应该可以通过 [http://localhost:8233](http://localhost:8233) 访问 Temporal Web UI，并且 Temporal Server
+现在应该可用于 `localhost:7233` 上的客户端连接。
 
-## Create caller and handler Namespaces {#create-caller-handler-namespaces}
+<a id="create-caller-handler-namespaces"></a>
+## 创建调用者和处理程序 Namespaces {#create-caller-handler-namespaces}
 
-Before setting up Nexus endpoints, create separate Namespaces for the caller and handler.
+在设置 Nexus 端点之前，请为调用者和处理程序创建单独的 Namespace。
 
 ```
 temporal operator namespace create --namespace my-target-namespace
 temporal operator namespace create --namespace my-caller-namespace
 ```
 
-`my-target-namespace` will contain the Nexus Operation handler, and we will use a Workflow in `my-caller-namespace` to
-call that Operation handler. We use different namespaces to demonstrate cross-Namespace Nexus calls.
+`my-target-Namespace` 将包含 Nexus 操作处理程序，我们将在 `my-caller-Namespace` 中使用 Workflow 来
+调用该操作处理程序。我们使用不同的 Namespace 来演示跨 Namespace Nexus 调用。
 
-## Create a Nexus Endpoint to route requests from caller to handler {#create-nexus-endpoint}
+<a id="create-nexus-endpoint"></a>
+## 创建一个 Nexus 端点以将请求从调用者路由到处理程序 {#create-nexus-endpoint}
 
-After establishing caller and handler Namespaces, the next step is to create a Nexus Endpoint to route requests.
+建立调用者和处理程序 Namespace 后，下一步是创建 Nexus 端点来路由请求。
 
 ```
 temporal operator nexus endpoint create \
@@ -89,23 +92,24 @@ temporal operator nexus endpoint create \
   --target-task-queue my-handler-task-queue
 ```
 
-You can also use the Web UI to create the Namespaces and Nexus endpoint.
+您还可以使用 Web UI 创建 Namespace 和 Nexus 端点。
 
-## Define the Nexus Service contract {#define-nexus-service-contract}
+<a id="define-nexus-service-contract"></a>
+## 定义 Nexus 服务合约 {#define-nexus-service-contract}
 
-Defining a clear contract for the Nexus Service is crucial for smooth communication.
+为 Nexus 服务定义明确的合同对于顺利沟通至关重要。
 
-In this example, there is a service package that describes the Service and Operation names along with input/output types
-for caller Workflows to use the Nexus Endpoint.
+在此示例中，有一个服务包描述了服务和操作名称以及输入/输出类型
+供调用者 Workflow 使用 Nexus 端点。
 
-Each [Temporal SDK includes and uses a default Data Converter](https://docs.temporal.io/dataconversion). The default
-data converter encodes payloads in the following order: Null, Byte array, Protobuf JSON, and JSON. In a polyglot
-environment, that is where more than one language and SDK is being used to develop a Temporal solution, Protobuf and
-JSON are common choices. This example uses Java classes serialized into JSON.
+每个 [Temporal SDK 包含并使用默认的 Data Converter](https://docs.temporal.io/dataconversion)。默认
+Data Converter 按以下顺序对有效负载进行编码：Null、字节数组、Protobuf JSON 和 JSON。在多语言环境中
+环境，即使用多种语言和 SDK 来开发 Temporal 解决方案、Protobuf 和
+JSON 是常见的选择。此示例使用序列化为 JSON 的 Java 类。
 
-<!--SNIPSTART samples-java-nexus-service-->
+<!--SNIPSTART samples-java-Nexus-service-->
 
-[core/src/main/java/io/temporal/samples/nexus/service/NexusService.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/service/NexusService.java)
+[核心/src/main/java/io/temporal/samples/nexus/service/nexusService.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/service/nexusService.java)
 
 ```java
 @Service
@@ -192,33 +196,35 @@ public interface SampleNexusService {
 
 <!--SNIPEND-->
 
-## Develop a Nexus Service and Operation handlers {#develop-nexus-service-operation-handlers}
+<a id="develop-nexus-service-operation-handlers"></a>
+## 开发 Nexus 服务和操作处理程序 {#develop-nexus-service-operation-handlers}
 
-Nexus Operation handlers are typically defined in the same Worker as the underlying Temporal primitives they abstract.
-Operation handlers can decide if a given Nexus Operation will be synchronous or asynchronous. They can invoke underlying
-Temporal primitives such as a Query, Signal, or Update using the Temporal SDK Client, or run other reliable code.
-Handlers should be reliable since the [circuit breaker](/nexus/operations#circuit-breaking) trips after 5 consecutive
-retryable errors, blocking all Operations from the caller to that Endpoint.
+Nexus 操作处理程序通常在与它们抽象的底层 Temporal 原语相同的 Worker 中定义。
+操作处理程序可以决定给定的 Nexus 操作是同步还是异步。他们可以调用底层
+使用 Temporal SDK 客户端的 Temporal 基元（例如 Query、Signal 或 Update），或运行其他可靠的代码。
+处理程序应该可靠，因为 [断路器](/nexus/operations#circuit-breaking) 在连续 5 次后跳闸
+可重试的错误，阻止从调用者到该端点的所有操作。
 
-The `io.temporal.nexus.*` packages have utilities to help create Nexus Operations:
+`io.Temporal.Nexus.*` 软件包具有帮助创建 Nexus 操作的实用程序：
 
-- `Nexus.getOperationContext().getWorkflowClient()` \- Get the Temporal Client that the Worker was initialized with for
-  synchronous handlers backed by Temporal primitives such as Signals and Queries
-- `WorkflowRunOperation.fromWorkflowMethod` \- Run a Workflow as an asynchronous Nexus Operation
+- `Nexus.getOperationContext().getWorkflowClient()` \- 获取 Worker 初始化时使用的 Temporal CLIent
+  由 Temporal 原语（例如 Signal 和查询）支持的同步处理程序
+- `WorkflowRunOperation.fromWorkflowMethod` \- 将 Workflow 作为异步 Nexus 操作运行
 
-This example starts with a sync Operation handler example using the `OperationHandler.sync` method, and then shows how
-to create an async Operation handler that uses `WorkflowRunOperation.fromWorkflowMethod` to start a handler Workflow
-from a Nexus Operation.
+此示例从使用 `OperationHandler.sync` 方法的同步操作处理程序示例开始，然后展示如何
+创建使用 `WorkflowRunOperation.fromWorkflowMethod` 启动处理程序 Workflow 的异步操作处理程序
+来自 Nexus 操作。
 
-### Develop a Synchronous Nexus Operation handler
+<a id="develop-a-synchronous-nexus-operation-handler"></a>
+### 开发同步 Nexus 操作处理程序 {#develop-a-synchronous-nexus-operation-handler}
 
-The `OperationHandler.sync` method is for exposing simple RPC handlers. Use
-`Nexus.getOperationContext().getWorkflowClient(ctx)` to get the Temporal Client for signaling, querying, and listing
-Workflows. Implementations can also make other calls, but handlers should be reliable to avoid tripping the
-[circuit breaker](/nexus/operations#circuit-breaking).
+`OperationHandler.sync` 方法用于公开简单的 RPC 处理程序。使用
+`Nexus.getOperationContext().getWorkflowClient(ctx)` 获取 Temporal CLIent 用于 Signaling、Querying 和列表
+Workflow。实现还可以进行其他调用，但处理程序应该可靠，以避免触发
+[断路器](/nexus/operations#circuit-breaking)。
 
 {/* SNIPSTART samples-java-nexus-handler {"selectedLines": ["1-16", "43"]} */}
-[core/src/main/java/io/temporal/samples/nexus/handler/NexusServiceImpl.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/handler/NexusServiceImpl.java)
+[核心/src/main/java/io/temporal/samples/nexus/handler/nexusServiceImpl.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/handler/nexusServiceImpl.java)
 
 ```java
 // To create a service implementation, annotate the class with @ServiceImpl and provide the
@@ -243,20 +249,22 @@ public class SampleNexusServiceImpl {
 
 {/* SNIPEND */}
 
-### Use the Temporal Client for Signals, Queries, and Updates
+<a id="use-the-temporal-client-for-signals-queries-and-updates"></a>
+### 将 Temporal CLIent 用于 Signal、查询和 Update {#use-the-temporal-client-for-signals-queries-and-updates}
 
-A common pattern is to use the Temporal Client from within a sync handler to Signal, Query, or Update a Workflow. You
-can also use Signal-With-Start or Update-With-Start to ensure the Workflow is started and send it a Signal or Update.
-All calls must complete within the [Nexus request timeout](/cloud/limits#nexus-operation-request-timeout). Updates
-should be short-lived to stay within this deadline.
+常见模式是在同步处理程序中使用 Temporal CLIent 到 Signal、Query 或 Update 和 Workflow。你
+还可以使用 Signal-With-Start 或 Update-With-Start 确保 Workflow 已启动并向其发送 Signal 或 Update。
+所有调用必须在 [Nexus 请求超时](/cloud/limits#nexus-operation-request-timeout) 内完成。 Updates
+为了保持在这个最后期限内，应该是短暂的。
 
-### Develop an Asynchronous Nexus Operation handler to start a Workflow
+<a id="develop-an-asynchronous-nexus-operation-handler-to-start-a-workflow"></a>
+### 开发异步 Nexus 操作处理程序来启动 Workflow {#develop-an-asynchronous-nexus-operation-handler-to-start-a-workflow}
 
-Use the `WorkflowRunOperation.fromWorkflowMethod` method, which is the easiest way to expose a Workflow as an operation.
+使用 `WorkflowRunOperation.fromWorkflowMethod` 方法，这是将 Workflow 公开为操作的最简单方法。
 
-<!--SNIPSTART samples-java-nexus-handler {"selectedLines": ["1-5", "18-40"]}-->
+<!--SNIPSTART samples-java-Nexus-handler {"selectedLines": ["1-5", "18-40"]}-->
 
-[core/src/main/java/io/temporal/samples/nexus/handler/NexusServiceImpl.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/handler/NexusServiceImpl.java)
+[核心/src/main/java/io/temporal/samples/nexus/handler/nexusServiceImpl.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/handler/nexusServiceImpl.java)
 
 ```java
 // To create a service implementation, annotate the class with @ServiceImpl and provide the
@@ -292,24 +300,25 @@ public class SampleNexusServiceImpl {
 
 <!--SNIPEND-->
 
-Workflow IDs should typically be business-meaningful IDs and are used to dedupe Workflow starts. In general, the ID
-should be passed in the Operation input as part of the Nexus Service contract.
+Workflow ID 通常应该是具有业务意义的 ID，并用于对 Workflow 启动进行重复数据删除。一般来说，身份证
+应作为 Nexus 服务合同的一部分在操作输入中传递。
 
 :::tip RESOURCES
 
-[Attach multiple Nexus callers to a handler Workflow](/nexus/operations#attaching-multiple-nexus-callers) with a
-Conflict-Policy of Use-Existing.
+[将多个 Nexus 调用者附加到处理程序 Workflow](/nexus/operations#attaching-multiple-nexus-callers) 带有
+现有使用冲突政策。
 
 :::
 
-#### Map a Nexus Operation input to multiple Workflow arguments
+<a id="map-a-nexus-operation-input-to-multiple-workflow-arguments"></a>
+#### 将 Nexus 操作输入映射到多个 Workflow 参数 {#map-a-nexus-operation-input-to-multiple-workflow-arguments}
 
-A Nexus Operation can only take one input parameter. If you want a Nexus Operation to start a Workflow that takes
-multiple arguments use the `WorkflowRunOperation.fromWorkflowHandle` method.
+一项 Nexus 操作只能采用一个输入参数。如果您希望 Nexus 操作启动 Workflow，则需要
+多个参数使用 `WorkflowRunOperation.fromWorkflowHandle` 方法。
 
-<!--SNIPSTART samples-java-nexus-handler-multiargs-->
+<!--SNIPSTART samples-java-Nexus-handler-multiargs-->
 
-[core/src/main/java/io/temporal/samples/nexusmultipleargs/handler/NexusServiceImpl.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexusmultipleargs/handler/NexusServiceImpl.java)
+[核心/src/main/java/io/temporal/samples/nexusmultipleargs/handler/nexusServiceImpl.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexusmultipleargs/handler/nexusServiceImpl.java)
 
 ```java
 // To create a service implementation, annotate the class with @ServiceImpl and provide the
@@ -365,14 +374,15 @@ public class SampleNexusServiceImpl {
 
 <!--SNIPEND-->
 
-### Register a Nexus Service in a Worker
+<a id="register-a-nexus-service-in-a-worker"></a>
+### 在 Worker 中注册 Nexus 服务 {#register-a-nexus-service-in-a-worker}
 
-After developing an asynchronous Nexus Operation handler to start a Workflow, the next step is to register a Nexus
-Service in a Worker.
+开发异步 Nexus 操作处理程序来启动 Workflow 后，下一步是注册 Nexus
+Worker 中的服务。
 
-<!--SNIPSTART samples-java-nexus-handler-worker-->
+<!--SNIPSTART samples-java-Nexus-handler-Worker-->
 
-[core/src/main/java/io/temporal/samples/nexus/handler/HandlerWorker.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/handler/HandlerWorker.java)
+[核心/src/main/java/io/temporal/samples/nexus/handler/HandlerWorker.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/handler/HandlerWorker.java)
 
 ```java
 package io.temporal.samples.nexus.handler;
@@ -401,14 +411,15 @@ public class HandlerWorker {
 
 <!--SNIPEND-->
 
-## Develop a caller Workflow that uses the Nexus Service {#develop-caller-workflow-nexus-service}
+<a id="develop-caller-workflow-nexus-service"></a>
+## 开发一个使用 Nexus 服务的调用者 Workflow {#develop-caller-workflow-nexus-service}
 
-Import the Service API package that has the necessary service and operation names and input/output types to execute a
-Nexus Operation from the caller Workflow:
+导入具有必要的服务和操作名称以及输入/输出类型的服务 API 包来执行
+Nexus 调用方 Workflow 的操作：
 
-<!--SNIPSTART samples-java-nexus-caller-echo-workflow-->
+<!--SNIPSTART samples-java-Nexus-caller-echo-Workflow-->
 
-[core/src/main/java/io/temporal/samples/nexus/caller/EchoCallerWorkflowImpl.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/caller/EchoCallerWorkflowImpl.java)
+[核心/src/main/java/io/temporal/samples/nexus/caller/EchoCallerWorkflowImpl.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/caller/EchoCallerWorkflowImpl.java)
 
 ```java
 package io.temporal.samples.nexus.caller;
@@ -439,9 +450,9 @@ public class EchoCallerWorkflowImpl implements EchoCallerWorkflow {
 
 <!--SNIPEND-->
 
-<!--SNIPSTART samples-java-nexus-caller-hello-workflow-->
+<!--SNIPSTART samples-java-Nexus-caller-hello-Workflow-->
 
-[core/src/main/java/io/temporal/samples/nexus/caller/HelloCallerWorkflowImpl.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/caller/HelloCallerWorkflowImpl.java)
+[核心/src/main/java/io/temporal/samples/nexus/caller/HelloCallerWorkflowImpl.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/caller/HelloCallerWorkflowImpl.java)
 
 ```java
 package io.temporal.samples.nexus.caller;
@@ -479,13 +490,14 @@ public class HelloCallerWorkflowImpl implements HelloCallerWorkflow {
 
 <!--SNIPEND-->
 
-### Register the caller Workflow in a Worker
+<a id="register-the-caller-workflow-in-a-worker"></a>
+### 在 Worker 中注册调用者 Workflow {#register-the-caller-workflow-in-a-worker}
 
-After developing the caller Workflow, the next step is to register it with a Worker.
+开发调用者 Workflow 后，下一步是将其注册到 Worker。
 
-<!--SNIPSTART samples-java-nexus-caller-worker-->
+<!--SNIPSTART samples-java-Nexus-caller-Worker-->
 
-[core/src/main/java/io/temporal/samples/nexus/caller/CallerWorker.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/caller/CallerWorker.java)
+[核心/src/main/java/io/temporal/samples/nexus/caller/CallerWorker.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/caller/CallerWorker.java)
 
 ```java
 package io.temporal.samples.nexus.caller;
@@ -524,13 +536,14 @@ public class CallerWorker {
 
 <!--SNIPEND-->
 
-### Develop a starter to start the caller Workflow
+<a id="develop-a-starter-to-start-the-caller-workflow"></a>
+### 开发一个starter来启动调用者Workflow {#develop-a-starter-to-start-the-caller-workflow}
 
-To initiate the caller Workflow, a starter program is used.
+为了启动调用者 Workflow，需要使用启动程序。
 
-<!--SNIPSTART samples-java-nexus-caller-starter-->
+<!--SNIPSTART samples-java-Nexus-caller-starter-->
 
-[core/src/main/java/io/temporal/samples/nexus/caller/CallerStarter.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/caller/CallerStarter.java)
+[核心/src/main/java/io/temporal/samples/nexus/caller/CallerStarter.java](https://github.com/temporalio/samples-java/blob/nexus-snip-sync/core/src/main/java/io/temporal/samples/nexus/caller/CallerStarter.java)
 
 ```java
 package io.temporal.samples.nexus.caller;
@@ -573,38 +586,41 @@ public class CallerStarter {
 
 <!--SNIPEND-->
 
-## Make Nexus calls across Namespaces with a development Server {#nexus-calls-across-namespaces-dev-server}
+<a id="nexus-calls-across-namespaces-dev-server"></a>
+## 使用开发服务器在 Namespace 之间进行 Nexus 调用 {#nexus-calls-across-namespaces-dev-server}
 
-Follow the steps below to run the Nexus handler Worker, the Nexus caller Worker, and the starter app.
+按照以下步骤运行 Nexus 处理程序 Worker、Nexus 调用程序 Worker 和入门应用程序。
 
-### Run Workers connected to a local development server
+<a id="run-workers-connected-to-a-local-development-server"></a>
+### 运行连接到本地开发服务器的 Workers {#run-workers-connected-to-a-local-development-server}
 
-Run the Nexus handler Worker:
+运行 Nexus 处理程序 Worker：
 
 ```bash
 ./gradlew -q execute -PmainClass=io.temporal.samples.nexus.handler.HandlerWorker \
     --args="-target-host localhost:7233 -namespace my-target-namespace"
 ```
 
-In another terminal window, run the Nexus caller Worker:
+在另一个终端窗口中，运行 Nexus 调用程序 Worker：
 
 ```bash
 ./gradlew -q execute -PmainClass=io.temporal.samples.nexus.caller.CallerWorker \
     --args="-target-host localhost:7233 -namespace my-caller-namespace"
 ```
 
-### Start a caller Workflow
+<a id="start-a-caller-workflow"></a>
+### 启动呼叫者 Workflow {#start-a-caller-workflow}
 
-With the Workers running, the final step in the local development process is to start a caller Workflow.
+随着 Worker 的运行，本地开发过程的最后一步是启动调用者 Workflow。
 
-Run the starter:
+运行启动器：
 
 ```bash
 ./gradlew -q execute -PmainClass=io.temporal.samples.nexus.caller.CallerStarter \
     --args="-target-host localhost:7233 -namespace my-caller-namespace"
 ```
 
-This will result in:
+这将导致：
 
 ```
 [main] INFO  i.t.s.nexus.caller.CallerStarter - Started workflow workflowId: 9b3de8ba-28ae-42fb-8087-bdedf4cecd39 runId: 404a2529-764d-4d1d-9de5-8a9475e40fba
@@ -613,71 +629,75 @@ This will result in:
 [main] INFO  i.t.s.nexus.caller.CallerStarter - Workflow result: ¡Hola! Nexus 👋
 ```
 
-### Canceling a Nexus Operation {#canceling-a-nexus-operation}
+<a id="canceling-a-nexus-operation"></a>
+### 取消 Nexus 操作 {#canceling-a-nexus-operation}
 
-To cancel a Nexus Operation from within a Workflow, create a `CancellationScope` using the
-`Workflow.newCancellationScope` API. `Workflow.newCancellationScope` takes a `Runnable`. Any SDK methods started in this
-runnable, such as Nexus operations, will be associated with this scope. `Workflow.newCancellationScope` returns a new
-scope that, when the `cancel()` method is called, cancels the context and any SDK method that was started in the scope.
-The promise returned by `Workflow.startNexusOperation` is resolved when the operation finishes, whether it succeeds,
-fails, times out, or is canceled.
+要从 Workflow 中取消 Nexus 操作，请使用以下命令创建 `CancellationScope`
+`Workflow.newCancellationScope` API。 `Workflow.newCancellationScope` 采用 `Runnable`。在此启动的任何 SDK 方法
+可运行的操作（例如 Nexus 操作）将与此范围关联。 `Workflow.newCancellationScope` 返回一个新的
+当调用 `cancel()` 方法时，取消上下文以及在该范围内启动的任何 SDK 方法。
+`Workflow.startNexusOperation`返回的promise在操作完成时解析，无论是否成功，
+失败、超时或被取消。
 
-Only asynchronous operations can be canceled in Nexus, as cancelation is sent using an operation token. The Workflow or
-other resources backing the operation may choose to ignore the cancelation request. If ignored, the operation may enter
-a terminal state.
+在 Nexus 中只能取消异步操作，因为取消是使用操作令牌发送的。 Workflow 或
+支持该操作的其他资源可以选择忽略取消请求。如果忽略，操作可能会进入
+终端状态。
 
-When a Nexus operation is started the caller can specify different cancellation types that will control how the caller
-reacts to cancellation:
+当 Nexus 操作启动时，调用者可以指定不同的取消类型，以控制调用者如何
+对取消的反应：
 
-- `ABANDON` - Do not request cancellation of the operation.
-- `TRY_CANCEL` - Initiate a cancellation request and immediately report cancellation to the caller. Note that this type
-  doesn't guarantee that cancellation is delivered to the operation handler if the caller exits before the delivery is
-  done.
-- `WAIT_REQUESTED` - Request cancellation of the operation and wait for confirmation that the request was received.
-  Doesn't wait for actual cancellation.
-- `WAIT_COMPLETED` - Wait for operation completion. Operation may or may not complete as cancelled.
+- `ABANDON` - 不请求取消操作。
+- `TRY_CANCEL` - 发起取消请求并立即向呼叫者报告取消。注意这个类型
+  如果调用者在传递之前退出，则不保证取消会传递给操作处理程序
+  完成了。
+- `WAIT_REQUESTED` - 请求取消操作并等待收到请求的确认。
+  不等待实际取消。
+- `WAIT_COMPLETED` - 等待操作完成。操作可能会或可能不会按取消的方式完成。
 
-The default is `WAIT_COMPLETED`. Users can set a different option on the `NexusServiceOptions` by calling
-`.setCancellationType()` on `NexusServiceOptions.Builder`.
+默认值为 `WAIT_COMPLETED`。用户可以通过调用在 `NexusServiceOptions` 上设置不同的选项
+`.setCancellationType()` 上 `NexusServiceOptions.Builder`。
 
-Once the caller Workflow completes, the caller's Nexus Machinery stops attempting to cancel operations that have not yet
-been canceled, letting them run to completion.
+一旦调用者 Workflow 完成，调用者的 Nexus 机器将停止尝试取消尚未执行的操作
+被取消，让它们运行完成。
 
-It's okay to leave operations running in some use cases. To ensure cancelations are delivered, wait for all pending
-operations to deliver their cancellation requests before exiting the Workflow.
+在某些用例中让操作保持运行是可以的。为确保取消订单已交付，请等待所有待处理的订单
+在退出 Workflow 之前发送取消请求的操作。
 
-See the
-[Nexus cancelation sample](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/nexuscancellation)
-for reference.
+请参阅
+[Nexus 取消样品](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/nexuscancellation)
+供参考。
 
-## Make Nexus calls across Namespaces in Temporal Cloud {#nexus-calls-across-namespaces-temporal-cloud}
+<a id="nexus-calls-across-namespaces-temporal-cloud"></a>
+## 在 Temporal Cloud 中的 Namespace 之间进行 Nexus 调用 {#nexus-calls-across-namespaces-temporal-cloud}
 
-This section assumes you are already familiar with
-[how connect a Worker to Temporal Cloud](/develop/java/client/temporal-client#start-workflow-execution). The same
-[source code](https://github.com/temporalio/samples-go/tree/main/nexus) is used in this section, but the `tcld` CLI will
-be used to create Namespaces and the Nexus Endpoint, and mTLS client certificates will be used to securely connect the
-caller and handler Workers to their respective Temporal Cloud Namespaces.
+本节假设您已经熟悉
+[如何将 Worker 连接到 Temporal Cloud](/develop/java/client/temporal-client#start-workflow-execution)。一样的
+本节中使用 [源代码](https://github.com/temporalio/samples-go/tree/main/nexus)，但 `tcld` CLI 将
+用于创建 Namespace 和 Nexus 端点，mTLS 客户端证书将用于安全连接
+调用者和处理程序 Worker 到其各自的 Temporal Cloud Namespace。
 
-### Install the latest `tcld` CLI and generate certificates
+<a id="install-the-latest-tcld-cli-and-generate-certificates"></a>
+### 安装最新的`tcld` CLI并生成证书 {#install-the-latest-tcld-cli-and-generate-certificates}
 
-To install the latest version of the `tcld` CLI, run the following command (on MacOS):
+要安装最新版本的 `tcld` CLI，请运行以下命令（在 MacOS 上）：
 
 ```
 brew install temporalio/brew/tcld
 ```
 
-If you don't already have certificates, you can generate them for mTLS Worker authentication using the command below:
+如果您还没有证书，可以使用以下命令生成证书以进行 mTLS Worker 身份验证：
 
 ```
 tcld gen ca --org $YOUR_ORG_NAME --validity-period 1y --ca-cert ca.pem --ca-key ca.key
 ```
 
-These certificates will be valid for one year.
+这些证书的有效期为一年。
 
-### Create caller and handler Namespaces
+<a id="create-caller-and-handler-namespaces"></a>
+### 创建调用者和处理程序 Namespaces {#create-caller-and-handler-namespaces}
 
-Before deploying to Temporal Cloud, ensure that the appropriate Namespaces are created for both the caller and handler.
-If you already have these Namespaces, you don't need to do this.
+在部署到 Temporal Cloud 之前，请确保为调用方和处理程序创建适当的 Namespace。
+如果您已经拥有这些 Namespace，则无需执行此操作。
 
 ```
 tcld login
@@ -697,13 +717,14 @@ tcld namespace create \
 	--retention-days 1
 ```
 
-Alternatively, you can create Namespaces through the UI:
-[https://cloud.temporal.io/Namespaces](https://cloud.temporal.io/Namespaces).
+或者，您可以通过 UI 创建 Namespace：
+[https://cloud.Temporal.io/namespaces](https://cloud.temporal.io/namespaces)。
 
-### Create a Nexus Endpoint to route requests from caller to handler
+<a id="create-a-nexus-endpoint-to-route-requests-from-caller-to-handler"></a>
+### 创建一个 Nexus 端点以将请求从调用者路由到处理程序 {#create-a-nexus-endpoint-to-route-requests-from-caller-to-handler}
 
-To create a Nexus Endpoint you must have a Developer account role or higher, and have NamespaceAdmin permission on the
-`--target-namespace`.
+要创建 Nexus 端点，您必须具有开发人员帐户角色或更高级别，并且具有 NamespaceAdmin 权限
+`--target-Namespace`。
 
 ```
 tcld nexus endpoint create \
@@ -714,15 +735,16 @@ tcld nexus endpoint create \
   --description-file ./core/src/main/java/io/temporal/samples/nexus/service/description.md
 ```
 
-The `--allow-namespace` is used to build an Endpoint allowlist of caller Namespaces that can use the Nexus Endpoint, as
-described in Runtime Access Control.
+`--allow-Namespace` 用于构建可以使用 Nexus 端点的调用者 Namespace 的端点白名单，如下所示
+运行时访问控制中描述。
 
-Alternatively, you can create a Nexus Endpoint through the UI:
-[https://cloud.temporal.io/nexus](https://cloud.temporal.io/nexus).
+或者，您可以通过 UI 创建 Nexus 端点：
+[https://cloud.Temporal.io/nexus](https://cloud.temporal.io/nexus)。
 
-### Run Workers Connected to Temporal Cloud
+<a id="run-workers-connected-to-temporal-cloud"></a>
+### 运行连接到 Temporal Cloud 的 Worker {#run-workers-connected-to-temporal-cloud}
 
-Run the handler Worker:
+运行处理程序 Worker：
 
 ```
 ./gradlew -q execute -PmainClass=io.temporal.samples.nexus.handler.HandlerWorker \
@@ -732,7 +754,7 @@ Run the handler Worker:
   -client-key 'path/to/your/ca.key'"
 ```
 
-Run the caller Worker:
+运行调用者 Worker：
 
 ```
 ./gradlew -q execute -PmainClass=io.temporal.samples.nexus.caller.CallerWorker \
@@ -742,7 +764,8 @@ Run the caller Worker:
   -client-key 'path/to/your/ca.key'"
 ```
 
-### Start a caller Workflow
+<a id="start-a-caller-workflow"></a>
+### 启动呼叫者 Workflow {#start-a-caller-workflow}
 
 ```
 ./gradlew -q execute -PmainClass=io.temporal.samples.nexus.caller.CallerStarter \
@@ -752,7 +775,7 @@ Run the caller Worker:
   -client-key 'path/to/your/ca.key'"
 ```
 
-This will result in:
+这将导致：
 
 ```
 [main] INFO  i.t.s.nexus.caller.CallerStarter - Started workflow workflowId: 9b3de8ba-28ae-42fb-8087-bdedf4cecd39 runId: 404a2529-764d-4d1d-9de5-8a9475e40fba
@@ -761,56 +784,58 @@ This will result in:
 [main] INFO  i.t.s.nexus.caller.CallerStarter - Workflow result: ¡Hola! Nexus 👋
 ```
 
-## Observability
+<a id="observability"></a>
+## 可观察性 {#observability}
 
-### Web UI
+<a id="web-ui"></a>
+### 网页用户界面 {#web-ui}
 
-A synchronous Nexus Operation will surface in the caller Workflow as follows, with just `NexusOperationScheduled` and
-`NexusOperationCompleted` events in the caller's Workflow history:
+同步 Nexus 操作将在调用者 Workflow 中出现，如下所示，仅包含 `NexusOperationScheduled` 和
+调用者的 Workflow 历史记录中的 `NexusOperationCompleted` 事件：
 
 <CaptionedImage src="/img/cloud/nexus/go-sdk-observability-sync.png" title="Observability Sync" />
 
-An asynchronous Nexus Operation will surface in the caller Workflow as follows, with `NexusOperationScheduled`,
-`NexusOperationStarted`, and `NexusOperationCompleted`, in the caller's Workflow history:
+异步 Nexus 操作将在调用者 Workflow 中出现，如下所示，其中 `NexusOperationScheduled`，
+`NexusOperationStarted` 和 `NexusOperationCompleted`，在调用者的 Workflow 历史记录中：
 
 <CaptionedImage src="/img/cloud/nexus/go-sdk-observability-async.png" title="Observability Async" />
 
 ### Temporal CLI
 
-Use the `workflow describe` command to show pending Nexus Operations in the caller Workflow and any attached callbacks
-on the handler Workflow:
+使用 `Workflow describe` 命令显示调用者 Workflow 中待处理的 Nexus 操作以及任何附加的回调
+在处理程序 Workflow 上：
 
 ```
 temporal workflow describe -w <ID>
 ```
 
-Nexus events are included in the caller's Workflow history:
+Nexus 事件包含在调用者的 Workflow 历史记录中：
 
 ```
 temporal workflow show -w <ID>
 ```
 
-For **asynchronous Nexus Operations** the following are reported in the caller's history:
+对于**异步 Nexus 操作**，调用者历史记录中会报告以下内容：
 
 - `NexusOperationScheduled`
 - `NexusOperationStarted`
 - `NexusOperationCompleted`
 
-For **synchronous Nexus Operations** the following are reported in the caller's history:
+对于**同步 Nexus 操作**，调用者历史记录中会报告以下内容：
 
 - `NexusOperationScheduled`
 - `NexusOperationCompleted`
 
 :::note
 
-`NexusOperationStarted` isn't reported in the caller's history for synchronous operations.
+`NexusOperationStarted` 不会在同步操作的调用者历史记录中报告。
 
 :::
 
-## Learn more
+＃＃ 了解更多
 
-- Read the high-level description of the [Temporal Nexus feature](/evaluate/nexus) and watch the
-  [Nexus keynote and demo](https://youtu.be/qqc2vsv1mrU?feature=shared&t=2082).
-- Learn how Nexus works in the [Nexus deep dive talk](https://www.youtube.com/watch?v=izR9dQ_eIe4) and
-  [Encyclopedia](/nexus).
-- Deploy Nexus Endpoints in production with [Temporal Cloud](/cloud/nexus).
+- 阅读 [Temporal Nexus 功能](/evaluate/nexus) 的高级描述并观看
+  [Nexus 主题演讲和演示](https://youtu.be/qqc2vsv1mrU?feature=shared&t=2082)。
+- 了解 Nexus 如何在 [Nexus 深入探讨](https://www.youtube.com/watch?v=izR9dQ_eIe4) 中工作以及
+  [百科全书](/nexus)。
+- 使用 [Temporal Cloud](/cloud/nexus) 在生产中部署 Nexus 端点。

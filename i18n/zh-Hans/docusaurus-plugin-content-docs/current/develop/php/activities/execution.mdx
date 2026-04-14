@@ -1,0 +1,138 @@
+---
+id: execution
+title: Activity 执行 - PHP SDK
+description: 展示如何使用 PHP SDK 执行 Activity
+sidebar_label: Activity 执行
+slug: /develop/php/activities/execution
+toc_max_heading_level: 3
+tags:
+  - PHP SDK
+  - Temporal SDKs
+  - Activity
+---
+
+## 如何启动 Activity 执行 {#Activity-execution}
+
+对生成 [Activity 执行](/Activity-执行) 的调用写入在 [Workflow Definition](/Workflow-定义) 中。
+调用生成 Activity 执行会生成 [ScheduleActivityTask](/references/commands#ScheduleActivitytask) 命令。
+这会产生三个 [Activity 任务](/tasks#Activity-task) 相关事件 ([ActivityTaskScheduled](/references/events#ActivitytaskScheduled)、[ActivityTaskStarted](/references/events#Activitytaskstarted) 和Workflow Execution Event History 中的 ActivityTask[已关闭]）。
+
+活动实现的单个实例在多个同时的 Activity 调用之间共享。
+Activity 实现代码应该是_幂等的_。
+
+通过调用参数传递给活动的值或通过结果值返回的值都记录在执行历史记录中。
+当 Workflow 状态需要恢复时，整个执行历史记录将从 Temporal 服务传输到 Workflow Worker。
+因此，大量执行历史记录可能会对 Workflow 的性能产生不利影响。
+
+因此，请注意通过 Activity 调用参数或返回值传输的数据量。
+除此之外，Activity 实现不存在其他限制。
+
+Activity 实现是 Activity 接口的实现。
+以下代码示例使用一个构造函数，该构造函数采用 Amazon S3 客户端和本地目录，并将文件上传到 S3 存储桶。
+然后，代码使用函数从 S3 存储桶下载文件，并传递存储桶名称、远程名称和本地名称作为参数。
+最后，它使用一个函数，该函数将本地文件名作为参数并返回一个字符串。
+
+```php
+// An implementation of an Activity interface.
+class FileProcessingActivitiesImpl implements FileProcessingActivities {
+
+    private S3Client $s3Client;
+
+    private string $localDirectory;
+
+    public function __construct(S3Client $s3Client, string $localDirectory) {
+        $this->s3Client = $s3Client;
+        $this->localDirectory = $localDirectory;
+    }
+
+    // Uploading a file to S3.
+    public function upload(string $bucketName, string $localName, string $targetName): void
+    {
+        $this->s3Client->putObject(
+            $bucketName,
+            $targetName,
+            fopen($this->localDirectory . $localName, 'rb+')
+        );
+    }
+
+// Downloading a file from S3.
+    public function download(
+        string $bucketName,
+        string $remoteName,
+        string $localName
+    ): void
+    {
+        $this->s3Client->downloadObject(
+            $bucketName,
+            $remoteName,
+            fopen($this->localDirectory .$localName, 'wb+')
+        );
+    }
+
+// A function that takes a local file name as an argument and returns a string.
+    public function processFile(string $localName): string
+    {
+        // Implementation omitted for brevity.
+        return compressFile($this->localDirectory . $localName);
+    }
+
+    public function deleteLocalFile(string $fileName): void
+    {
+        unlink($this->localDirectory . $fileName);
+    }
+}
+```
+
+### 如何设置所需的 Activity 超时 {#required-timeout}
+
+Activity 执行语义依赖于多个参数。
+唯一需要设置的值是 [Schedule-To-Close Timeout](/encyclopedia/Detecting-Activity-failures#Schedule-to-close-timeout) 或 [Start-To-Close Timeout](/encyclopedia/Detecting-Activity-failures#start-to-close-timeout)。
+这些值在 Activity 选项中设置。
+
+### 如何获取 Activity 执行的结果 {#get-Activity-results}
+
+调用生成 [Activity Execution](/Activity-execution) 会生成 [ScheduleActivityTask](/references/commands#ScheduleActivitytask) 命令并为 Workflow 提供 Awaitable。
+Workflow Execution 可以阻止进度，直到结果通过 Awaitable 可用为止，或者继续进度，在结果可用时使用结果。
+
+`Workflow::newActivityStub` 返回一个客户端存根并实现 Activity 接口。客户端存根可以在 Workflow 代码中使用。它以 Activity 的类型和“ActivityOptions”作为参数。
+
+调用（通过“yield”）此接口上的方法会调用实现此方法的 Activity。
+Activity 调用会同步阻塞，直到 Activity 完成、失败或超时。
+即使 Activity 执行需要几个月的时间，Workflow 代码仍然将其视为单个同步调用。
+托管 Workflow 的进程发生什么并不重要。
+业务逻辑代码只看到单个方法调用。
+
+```php
+class GreetingWorkflow implements GreetingWorkflowInterface
+{
+    private $greetingActivity;
+
+    public function __construct()
+    {
+        $this->greetingActivity = Workflow::newActivityStub(
+            GreetingActivityInterface::class,
+            ActivityOptions::new()->withStartToCloseTimeout(\DateInterval::createFromDateString('30 seconds'))
+        );
+    }
+
+    public function greet(string $name): \Generator
+    {
+        // This is a blocking call that returns only after the activity has completed.
+        return yield $this->greetingActivity->composeGreeting('Hello', $name);
+    }
+}
+```
+
+如果不同的活动需要不同的选项，例如超时或 Task Queue，则可以使用不同的选项创建多个客户端存根。
+
+```php
+$greetingActivity = Workflow::newActivityStub(
+    GreetingActivityInterface::class,
+    ActivityOptions::new()->withStartToCloseTimeout(\DateInterval::createFromDateString('30 seconds'))
+);
+
+$greetingActivity = Workflow::newActivityStub(
+    GreetingActivityInterface::class,
+    ActivityOptions::new()->withStartToCloseTimeout(\DateInterval::createFromDateString('30 minutes'))
+);
+```

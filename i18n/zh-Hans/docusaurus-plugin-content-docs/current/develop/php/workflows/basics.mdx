@@ -1,0 +1,135 @@
+---
+id: basics
+title: Workflow 基础知识 - PHP SDK
+sidebar_label: Workflow 基础知识
+description: 本节介绍 Workflow 与 PHP SDK 的基础知识
+toc_max_heading_level: 4
+keywords:
+  - PHP SDK
+tags:
+  - PHP SDK
+  - Temporal SDKs
+---
+
+## 如何开发基本的 Workflow {#develop-Workflows}
+
+Workflow 是 Temporal 应用程序的基本单元，这一切都始于 [Workflow Definition](/Workflow-定义) 的开发。
+
+在 Temporal PHP SDK 编程模型中，Workflow 是一个类方法。类必须实现用“#[WorkflowInterface]”注释的接口。 Workflow 的方法必须用“#[WorkflowMethod]”进行注释。
+
+```php
+use Temporal\Workflow\YourWorkflowInterface;
+use Temporal\Workflow\WorkflowMethod;
+
+#[WorkflowInterface]
+interface FileProcessingWorkflow
+{
+    #[WorkflowMethod]
+    public function processFile(Argument $args);
+
+}
+```
+
+### 如何定义 Workflow 参数 {#Workflow-parameters}
+
+Temporal Workflows 可以具有任意数量的自定义参数。
+但是，我们强烈建议使用对象作为参数，以便可以在不破坏 Workflow 签名的情况下更改对象的各个字段。
+所有 Workflow Definition 参数都必须可序列化。
+
+用“#[WorkflowMethod]”注释的方法可以有任意数量的参数。
+
+我们建议传递包含所有输入字段的单个参数，以允许以向后兼容的方式添加字段。
+
+请注意，所有输入都应使用提供的 [DataConverter](https://github.com/Temporalio/sdk-php/blob/master/src/DataConverter/DataConverterInterface.php) 接口序列化为字节数组。
+默认实现使用 JSON 序列化器，但可以轻松配置替代实现。
+您可以创建自定义对象并将其传递给 Workflow 方法，如以下示例所示：
+
+```php
+#[WorkflowInterface]
+interface FileProcessingWorkflow {
+    #[WorkflowMethod]
+    public function processFile(Argument $args);
+}
+```
+
+### 如何定义 Workflow 返回参数 {#Workflow-return-values}
+
+Workflow 返回值也必须是可序列化的。
+返回结果、返回错误或引发异常在每种受支持的语言中都是相当惯用的。
+但是，必须用于获取 Workflow Execution 结果的 Temporal API 将仅收到结果或错误之一。
+
+Workflow 方法返回一个生成器。
+要在客户端代码中正确转换 Workflow 返回值的类型，请使用“#[ReturnType()]”属性。
+
+```php
+#[WorkflowInterface]
+interface FileProcessingWorkflow {
+
+    #[WorkflowMethod]
+    #[ReturnType("string")]
+    public function processFile(Argument $args);
+}
+```
+
+### 如何定制您的 Workflow Type {#Workflow-type}
+
+Workflow 具有称为 Workflow 名称的类型。
+
+以下示例演示如何为 Workflow Type 设置自定义名称。
+
+要自定义 Workflow Type，请使用“WorkflowMethod”属性指定 Workflow 的名称。
+
+```php
+#[WorkflowMethod(name)]
+```
+
+如果未指定 Workflow Type，则 Workflow Type 默认为接口名称，在本例中为“YourWorkflowDefinitionInterface”。
+
+```php
+#[WorkflowInterface]
+interface YourWorkflowDefinitionInterface
+{
+    #[WorkflowMethod]
+    public function processFile(Argument $args);
+}
+```
+
+### 如何开发 Workflow 逻辑 {#Workflow-logic-requirements}
+
+Workflow 逻辑受到[确定性执行要求](/Workflow-definition#definition-constraints) 的约束。
+因此，每种语言都仅限于使用某些惯用技术。
+但是，每个 Temporal SDK 都提供了一组 API，可在 Workflow 内部使用这些 API 来与外部（对于 Workflow）应用程序代码进行交互。
+
+\*\*Temporal 使用 [Microsoft Azure 事件源模式](https://docs.microsoft.com/en-us/azure/architecture/patterns/event-commerce) 来恢复 Workflow 对象的状态（包括其本地变量值）。
+
+本质上，每次需要恢复 Workflow 状态时，其代码都会从头开始重新执行。
+重播时，Side Effect（例如 Activity 调用）将被忽略，因为它们已记录在 Workflow Event History 中。
+编写 Workflow 逻辑时，重播是不可见的，因此应该编写代码，因为它只执行一次。
+该设计对 Workflow 实现提出了以下限制：
+
+- 不要使用任何可变全局变量，因为 Workflow 的多个实例是并行执行的。
+- 不要直接从 Workflow 代码调用任何非确定性函数，例如非种子随机函数或“UUID”。
+
+始终在 Workflow 实现代码中执行以下操作：
+
+- 不要执行任何 IO 或服务调用，因为它们通常不是确定性的。为此使用活动。
+- 仅使用“Workflow::now()”来获取 Workflow 内的当前时间。
+- 调用“yield Workflow::Timer()”而不是“sleep()”。
+- 不要在 **Workflow 代码**中使用 PHP 提供的任何阻塞 SPL（即 `fopen`、`PDO` 等）。
+- 对 Workflow 代码进行任何更改时，请使用“yield Workflow::getVersion()”。如果没有这个，任何 Updated Workflow 代码的部署
+  可能会破坏已经打开的 Workflow。
+- 不要直接从 Workflow 访问配置 API，因为配置更改可能会影响 Workflow Execution 路径。
+  将其作为参数传递给 Workflow 函数或使用 Activity 加载它。
+
+Workflow 方法参数和返回值可使用提供的 DataConverter 接口序列化为字节数组。
+默认实现使用 JSON 序列化程序，但您可以使用任何替代序列化机制。
+
+确保使用“ReturnType”注释“WorkflowMethod”以指定具体的返回类型。
+
+> 您不能使用默认返回类型声明，因为 Workflow 方法是生成器。
+
+通过调用参数传递给 Workflow 的值或通过结果值返回的值都记录在执行历史记录中。
+对于 Workflow 逻辑需要处理的每个事件，整个执行历史记录都会从 Temporal 服务传输到 Workflow Worker。
+因此，大量执行历史记录可能会对 Workflow 的性能产生不利影响。
+因此，请注意通过 Activity 调用参数或返回值传输的数据量。
+否则，Activity 实现不存在其他限制。\*\*

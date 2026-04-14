@@ -1,0 +1,268 @@
+---
+id: managing-aps-limits
+title: XPROT017X 命令选项参考
+sidebar_label: 管理 APS 限制
+description: 通过容量模式控制如何将限制分配给 Namespace
+slug: /best-practices/managing-aps-limits
+toc_max_heading_level: 4
+keywords:
+  - best practices
+  - operations
+  - temporal cloud
+  - namespaces
+  - capacity modes
+  - on-demand capacity 
+  - provisioned capacity
+  - actions per second
+  - throttling
+tags:
+  - Best Practices
+  - Capacity Modes
+  - On-Demand Capacity
+  - Provisioned Capacity
+  - TRUs
+---
+
+如果您在 Temporal Cloud 上运行 Workflow，您可能已经注意到每个 Namespace 都有每秒操作数 (APS) 限制。 
+但这到底意味着什么？为什么它很重要？
+
+在 Temporal 中，“操作”是修改 Workflow 状态或与 Temporal 服务交互的任何操作。 
+Namespace 的 APS 限制控制该 Namespace 内的所有 Workflow 每秒可以发生的此类操作的数量。
+当达到 APS 限制时，Temporal 开始限制请求。 
+根据 Workflow 的业务优先级，这可能没问题，也可能会产生重大影响。
+
+困难在于 APS 消耗并不总是直观的。 
+单个 Workflow Execution 从启动的那一刻起就会生成多个操作，并且在小规模下非常适合 APS 限制的用例可以随着它们的增长而耗尽这些限制。 
+许多客户惊讶地发现，他们远远超出了仅根据 Workflow 计数所预期的 APS 限制。
+
+本指南将帮助您了解客户为何达到 APS 限制、如何设计有效使用操作的 Workflow，以及当您接近容量时应采取哪些措施。
+当设计更改还不够时，Temporal Cloud 提供[预配置容量模式](#provisioned-capacity-and-trus)，让您可以使用 Temporal 资源单元 (TRU) 为尖峰或不可预测的工作负载预留额外容量。
+
+无论您是刚刚开始使用 Temporal Cloud 还是优化现有部署，有效管理 APS 都是构建可扩展、可靠的应用程序的关键。
+
+## 了解 Temporal 中的操作
+
+在我们深入探讨客户为何达到 APS 限制之前，我们先讨论一下哪些操作。
+
+### 什么才是行动？
+
+在 Temporal 中，操作是推动 Workflow 前进的基本操作。 
+以下是重要内容的概述，以及[我们文档中的完整列表](/cloud/actions)。
+
+- Workflows：开始、完成、重置。还启动 Child Workflows、Schedules 和 Timers
+- 活动：开始、重试、心跳
+- Signal、Update 和查询
+
+除少数例外情况外，计入 APS 限制的操作与计费操作相同。 
+这里的关键见解是，Temporal 中发生的几乎所有事情（状态变化、决策点、交互）都被视为一个操作。
+
+### 行动乘数效应
+
+这意味着，当您启动单个 Workflow 时，您不仅仅执行与 APS 相关的一个操作，因为 Workflow 不是单个原子操作，而是 Temporal 编排的一系列事件。 
+Workflow 开头的每个 Activity 都是一个操作，因此 Workflow 开头可能会出现一系列活动。 
+此外，通常出于业务原因需要同时启动多个 Workflow。
+
+这些都可以起到事半功倍的效果。
+
+### 速率限制的影响
+
+在 Temporal Cloud 中，速率限制的影响是增加延迟，而不是丢失工作。 
+Workers [可能需要更长的时间](/cloud/service-availability#throughput) 才能完成 Workflows。
+
+## 客户达到 APS 限制的常见原因
+
+现在您已经了解了操作的定义方式以及它们如何计入 APS 限制，让我们看一下最常使客户陷入 APS 限制的模式。
+
+### 突发流量
+
+大多数企业并不是以恒定的速度运营——它们有节奏、周期和峰值。 
+这些模式可能会带来 APS 挑战，因为 Temporal Cloud 在每秒级别强制实施限制。
+
+常见的突发模式包括：
+
+- 日历驱动的峰值：月末财务结算流程、季度报告 Workflow、在 1 日和 15 日运行的工资单、在午夜开始的 Scheduled 批处理作业。这些会产生可预测但强烈的负载集中。
+- 事件驱动的激增：产品发布、营销活动、限时抢购、突发新闻或黑色星期五等季节性活动。 
+- 恢复场景：当下游依赖项失败然后恢复时，您通常会遇到惊群效应 - 数百或数千个正在等待的 Workflow 突然同时恢复执行，从而造成 APS 消耗的人为峰值。
+- 地理/营业时间集中度：全球应用程序经常出现负载跟随太阳变化的情况，Activity 在每个地区的营业时间内达到峰值。如果您的业务集中在特定市场，您将看到每日峰值，而不是 24/7 分布。
+- 重试风暴：当大量 Workflow 卡在 Activity 上且 Activity 发生故障时，如果重试延迟非常短，可能会导致操作激增。
+- Timer 风暴：大量 Workflow 都在同一时间设置了 Timer - 当这些 Timer 触发时触发尖峰，然后活动运行，从而同时导致大量操作。
+
+这些类型的流程可能会导致您的 Namespace 在一天内平均达到 200 APS，但在高峰时段/一天/活动/等期间飙升至 800 APS 或更高。
+
+#### 如何缓解
+
+您无法更改客户与系统交互的模式，但您可以对 Workflow 进行一些调整，以使流量模式更加一致，特别是对于不需要立即响应的用例。
+
+这些调整包括：
+- 实施应用程序级排队或速率限制以消除可预测的峰值。
+- 对于 Scheduled 批量操作，错开启动时间而不是立即触发所有内容 - 在大容量 [Schedules](/Schedule#spec) 中实现抖动。
+- 启动 Workflows 时实现抖动，例如使用 [Start Delay](/Workflow-execution/Timers-delays#delay-Workflow-execution)。
+- 接受速率限制
+- [预配置容量](/cloud/capacity-modes#provisioned-capacity)
+
+### 级联 Workflow 和扇出模式
+
+将复杂的流程分解为父进程和 Child Workflow（或 Nexus）是一种常见且通常合适的模式，但 APS 成本随着深度和扇出而急剧增加。
+
+考虑一个订单履行 Workflow，它会生成用于支付处理、库存管理、运输和客户通知的 Child Workflow。 
+每个 Child Workflow 都会经历其完整的操作生命周期（开始、任务、活动、完成），所有这些操作都计入 Namespace 的 APS 限制。
+
+这种模式经常出现在：
+- 批处理：父 Workflow 处理包含 1,000 条记录的文件，为每条记录生成一个 Child Workflow。每当批处理开始时，批处理也常常是突发的。
+- 映射缩减模式：数据处理 Workflow 扇出以并行处理分区，然后聚合结果。
+
+当您有多层嵌套时，这个挑战就会变得更加复杂——父级 Workflow 创建子级，父级 Workflow 创建自己的子级。
+
+#### 如何缓解
+
+- 评估 Child Workflow 是否必要 - 其他选项包括活动或另一个 Namespace 中的 Workflow（通过 Nexus）
+- 当您使用 Child Workflow 时，限制扇出大小 - 设计一个 Child Workflow 来批量处理其工作，而不是每个工作项一个子项。 [此示例应用程序](https://github.com/Temporalio/samples-java/tree/main/core/src/main/java/io/Temporal/samples/batch/slidingwindow)显示了更多详细信息。
+- 考虑将深层嵌套的层次结构展平为较浅的结构。
+
+### 大规模人机交互流程
+
+Workflow 结合了人类决策（批准、审查、手动数据输入、质量检查），往往需要长时间运行和交互密集型，从而产生持续的 APS 负载。
+
+这些 Workflow 可以涉及来自 UI 的查询以显示当前状态和待处理任务。
+
+在小规模上，这是可以管理的。但是，当您同时运行数以千计的应用程序时（例如等待审核的内容审核队列、处理申请的贷款审批系统或管理数千个未决案例的支持票证系统），所有这些长期运行的 Workflow 的累积 APS 负载就会增加。
+
+#### 如何缓解
+
+- 避免 UI 不断处于 Query Workflow 状态的轮询模式。相反，将状态更改推送到 UI 可以读取的数据库。
+
+### 实时 SLA 和期限管理
+
+具有严格服务水平协议的企业通常会在其 Workflow 中实施主动监控和升级。 
+这通常是通过每 [x] 分钟设置 Timer 来确定 SLA 截止日期是否临近，从而允许 Workflow 触发升级或警报来完成的。
+
+这些 Timer/监控操作中的每一个都会影响 APS。 
+当您有数千个运行中的 Workflow 都在主动监控自己的 SLA 时，后台负载就会变得很大。
+即使 Workflow 不执行其主要工作，您也会消耗大量 APS 容量。
+
+#### 如何缓解
+
+- 尽可能使用更长的监测间隔。例如，每 30 分钟而不是每 1 分钟检查一次 SLA。
+- 如果可能，合并 Timer。不是使用 10 个 Timer 检查 10 个任务，而是使用 1 个 Timer 然后检查这 10 个任务。
+- 如果可能，请为 Workflow 使用外部系统 Signal，而不是使用短暂的 Timer 进行轮询。
+- 对于重试，请使用具有合理初始间隔的指数退避。
+
+## 附加设计模式
+有一些设计模式可以带来高 APS，并且在许多不同类型的业务用例中保持一致。
+
+### 许多小活动
+
+考虑两种处理 1,000 条记录的方法：
+
+- 方法 A：创建一个 Workflow，生成 1,000 个单独的活动，每个记录一个。
+- 方法 B：创建一个生成 10 个活动的 Workflow，每个活动批量处理 100 条记录。
+
+方法 B 显然会导致 APS 减少。 
+这是一个简单的示例，但这种模式随处可见：处理单个事务与批量、发送单个通知与批量操作，或者进行单独的 API 调用与批量端点。 
+每个单独的 Activity 都会增加操作开销。
+
+#### 如何缓解
+
+- 考虑是否可以在单个 Activity 中组合多个外部调用。
+- 如果处理大量数据，请分块处理。
+- 有关更多信息，请参阅[我的 Temporal Workflow 中应该使用多少个活动？](https://Temporal.io/blog/how-many-activities-should-i-use-in-my-Temporal-Workflow)。
+
+### 一台 Namespace 具备多种用例
+通常，当开始使用 Temporal 时，第一个用例是在单个 Namespace 中实现的，通常每个逻辑环境一个。 
+当实现第二个 Temporal 用例时，它在同一个 Namespace 中运行，第三个、第四个用例也是如此。
+
+每个 Namespace 设置了 APS 限制，因此同一 Namespace 中具有多种流量模式的多个用例可能会很快耗尽此限制。
+
+#### 如何缓解
+
+每个用例规划一组 Namespace（每个环境一个）。有关更多详细信息，请参阅[管理 Namespace](/best-practices/managing-Namespace)。
+
+## 预配置容量和 TRU
+
+上述策略可帮助您设计高效使用操作的 Workflow。
+但有时您需要比按需模型提供的容量更多的容量，特别是对于尖峰或不可预测的工作负载。
+
+Temporal Cloud提供两种[容量模式](/cloud/capacity-modes)：
+
+- **按需模式**（默认）：您的 Namespace 根据您过去 7 天的使用情况自动扩展。这对于稳定、可预测的工作负载非常有效。
+- **配置模式**：您可以通过添加 Temporal 资源单元 (TRU) 来预留容量，为您提供应对流量峰值的保证空间。
+
+有关 TRU、可用增量以及如何通过 UI、CLI 或 API 管理容量的完整详细信息，请参阅[容量模式](/cloud/capacity-modes)。
+
+### 选择正确的方法
+
+当按需模型无法足够快地响应时，使用预配置容量：
+
+|场景|图案|推荐|
+|----------|---------|----------------|
+| **计划峰值** |促销、假日流量、产品发布 |活动开始前预先配置 TRU |
+| **计划外峰值** |流量突然激增、病毒式事件|当您看到限制时，立即通过 UI/CLI/API 做出反应 |
+| **负载测试** |大规模验证新服务|为测试配置 TRU，之后取消配置 |
+| **批量作业** | Scheduled 高通量作业 |通过 API 围绕作业 Schedules 自动进行 TRU 扩展 |
+| **迁移** |加入新工作负载的速度比按需调整的速度更快在按需信封赶上的同时，与 TRU 进行大约 7 天的桥接 |
+
+:::note
+当切换回按需模式时，您的 APS 限制将重置为过去 7 天的运行平均值。
+如果您的工作负载对过渡很敏感，请为此做好计划。
+:::
+
+### 成本优化技巧
+
+有关计费详细信息，请参阅[容量模式定价](/cloud/pricing#capacity-modes-pricing)。为了最大限度地降低成本：
+
+- 仅在需要额外容量时提供
+- 峰值结束后立即取消配置
+- 对于可预测的模式，自动扩展以最大限度地减少处于配置模式的时间
+
+### 自动化最佳实践
+
+由于您比任何自动扩展系统都更了解您的工作负载模式，因此请考虑构建您自己的 TRU 自动化：
+
+- **使用 [Cloud Ops API](/ops)、[Terraform Provider](/cloud/terraform-provider) 或 [tcld CLI](/cloud/tcld)** 根据应用程序的 Signal 以编程方式扩展容量
+- **设置利用率阈值**：例如，在达到限制的 70-80% 时扩大规模，在持续低使用率后缩小规模
+- **Schedule 容量更改**：使用 [Temporal Schedules](/Schedule) 或 Workflows 在已知事件发生之前增加 TRU
+- **对领先指标做出反应**：如果您的应用程序具有上游 Signal（传入订单队列深度、营销活动开始），请使用它们主动触发容量变化
+
+## 了解您是否达到 APS 限制
+
+除了了解可能影响 Temporal Namespace 的 APS 限制的模式外，了解您是否接近（或超过）这些限制也很重要。
+Temporal Cloud 提供了几个指标，如果进行跟踪，将告诉您是否由于 APS 而受到速率限制。
+请参阅有关[检测资源耗尽](/cloud/service-health#rps-aps-rate-limits) 的文档，了解这些指标的说明以及显示如何查看这些指标的示例 Grafana 仪表板。
+
+### 监控 TRU 决策
+
+如果您正在考虑预配置容量，请设置监控以了解您的使用模式：
+
+- **使用 [OpenMetrics](/cloud/metrics/openmetrics)**：要将 Visibility 实时纳入 APS 消耗，请将 Temporal Cloud 指标与您的可观测性堆栈集成
+- **跟踪 APS 使用情况与限制**：监控“Temporal_cloud_v0_resource_exhausted_errors”以检测限制事件
+- **设置利用率为 70-80% 的警报**：这让您有时间在达到限制之前配置 TRU
+- **分析历史模式**：了解您的流量模式有助于您在被动 TRU 配置和主动自动化之间做出决定
+
+## 要点
+
+让我们回顾一下客户达到 APS 限制的主要原因以及如何解决这些问题：
+
+|达到 APS 限制的原因 |如何解决这个问题？
+|------------------------------------------|--------------------|
+|突发流量|实施应用程序级排队或速率限制，以平滑尖峰，错开 Scheduled 批处理操作的启动时间。 |
+|级联Workflows <br />和扇出模式|评估是否需要 Child Workflow（考虑活动或另一个 Namespace），通过在 Child Workflow 内批量处理工作来限制扇出大小，考虑展平深度嵌套的层次结构。 |
+|人在环<br />大规模流程|设计长时间运行的 Workflow，以最大程度地减少交互带来的持续 APS 负载（通过避免轮询 UI 持续 Query 状态并仅使用 Signal 进行关键的人工输入）。 |
+|很多小活动|考虑是否可以在单个 Activity 中组合多个外部调用。如果处理大量数据，请分块处理。 |
+|一个 Namespace 中的多个用例 |每个用例规划一组 Namespace（每个环境一个）。 |
+|计划中的流量高峰 |在事件发生前预先配置 TRU，然后在事件发生后取消配置。 |
+|不可预测的峰值<br />需要即时响应 |通过 UI、CLI 或 API 切换到预配置模式以进行自助容量扩展。 |
+|大规模负载测试 |在测试期间配置 TRU，完成后取消配置。 |
+|新工作负载上线 |在按需包络调整期间与 TRU 进行桥接（大约 7 天）。 |
+
+
+## 一般指导
+
+在设计 Temporal Workflow 时着眼于 APS 限制，请问自己以下问题： 
+- Workflow 的单次执行将消耗多少个操作？
+- 通常会同时运行多少个 Workflow？
+- 当操作数量 * 活动 Workflow 数量扩展至当前卷的 100 倍时，APS 消耗会发生什么情况？
+- 是否存在组合操作的自然机会：组合活动或一起处理数据块？
+- 我是否正在轮询何时可以使用 Signals？
+- 这个Workflow是否需要连续运行，或者可以是事件驱动的吗？
+
+花几个小时优化 Workflow 设计可以帮助您避免容量紧缩、紧急限制增加以及未来潜在的显着成本增加。

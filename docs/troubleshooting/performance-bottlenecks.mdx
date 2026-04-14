@@ -1,8 +1,8 @@
 ---
 id: performance-bottlenecks
-title: Performance bottlenecks troubleshooting guide
-sidebar_label: Performance bottlenecks
-description: Diagnose and resolve performance bottlenecks using Temporal SDK metrics
+title: "性能瓶颈故障排除指南"
+sidebar_label: "性能瓶颈"
+description: "使用 Temporal SDK 指标诊断并解决性能瓶颈"
 toc_max_heading_level: 4
 keywords:
   - temporal cloud 
@@ -16,290 +16,305 @@ tags:
   - Temporal Cloud
 ---
 
-This guide outlines common performance bottlenecks in Temporal Workers and Clients.
-It covers key latency metrics and root causes of high values, and provides diagnostic steps and troubleshooting strategies.
-These metrics can help you optimize Temporal deployments and Workflow execution.
+本指南概述了 Temporal Worker 和客户端中的常见性能瓶颈。
+它涵盖了关键延迟指标和高值的根本原因，并提供了诊断步骤和故障排除策略。
+这些指标可以帮助您优化 Temporal 部署和 Workflow Execution。
 
-To get the most out of this guide, you should be familiar with [Temporal architecture](/temporal), [Workflows](/workflows), [Activities](/activities), and [Task Queues](/task-queue).
-You should also know how to use key metrics like latency, counter, rate, CPU utilization, and memory usage.
+为了充分利用本指南，您应该熟悉 [Temporal架构](/temporal)、[Workflows](/workflows)、[活动](/activities) 和 [Task Queues](/task-queue)。
+您还应该知道如何使用延迟、计数器、速率、CPU 利用率和内存使用率等关键指标。
 
-## Task processing metrics
+<a id="task-processing-metrics"></a>
+## 任务处理指标 {#task-processing-metrics}
 
-These metrics provide insights into various stages of the [Task](/tasks) lifecycle, from scheduling to completion.
-The following sections detail common metrics, their potential causes for high latency or resource depletion, and strategies for diagnosing and resolving performance issues.
+这些指标可以深入了解 [任务](/tasks) 生命周期的各个阶段（从计划到完成）。
+以下部分详细介绍了常见指标、高延迟或资源耗尽的潜在原因，以及诊断和解决性能问题的策略。
 
-### `temporal_workflow_task_schedule_to_start_latency` spike
+<a id="temporalworkflowtaskscheduletostartlatency-spike"></a>
+### `Temporal_Workflow_task_Schedule_to_start_latency` 秒杀 {#temporalworkflowtaskscheduletostartlatency-spike}
 
-High [`temporal_workflow_task_schedule_to_start_latency`](/references/sdk-metrics#workflow_task_schedule_to_start_latency) (P95 higher than one second) can be caused by several factors.
-This metric represents the time between when a [Workflow Task](/tasks#workflow-task) is scheduled (enqueued) and when it is picked up by a Worker for processing. Here are some potential causes:
+高 [`Temporal_Workflow_task_Schedule_to_start_latency`](/references/sdk-metrics#Workflow_task_Schedule_to_start_latency)（P95 高于一秒）可能由多种因素引起。
+该指标表示 [Workflow 任务](/tasks#Workflow-task) 处于 Scheduled（排队）状态和 Worker 拾取它进行处理之间的时间。以下是一些潜在的原因：
 
-- Insufficient Worker capacity: If there aren't enough Workers or if the Workers are overloaded, they may not be able to pick up Tasks quickly enough. This can lead to Tasks waiting longer in the queue ([Detect Task Backlog](https://docs.temporal.io/cloud/worker-health#detect-task-backlog)).
-- Worker configuration issues: Improperly configured Workers, such as having too few pollers or Task slots, can lead to increased latency ([Detect Task Backlog](https://docs.temporal.io/cloud/worker-health#detect-task-backlog)).
-- High Workflow lock latency: If many updates are made to a single execution, this can cause Workflow lock latency, which in turn affects the Schedule-to-start latency. Reduce the rate of Signals.
-- Network latency: Workers in a different region from the Temporal cluster, or large payload size, can introduce additional latency.
+- Worker 容量不足：如果没有足够的 Worker 或 Worker 过载，它们可能无法足够快地拾取任务。这可能会导致任务在队列中等待更长时间 ([检测任务积压](https://docs.Temporal.io/cloud/Worker-health#detect-task-backlog))。
+- Worker 配置问题：Worker 配置不当（例如轮询器或任务槽太少）可能会导致延迟增加 ([检测任务积压](https://docs.Temporal.io/cloud/Worker-health#detect-task-backlog))。
+- 高 Workflow 锁定延迟：如果多次执行 Update，可能会导致 Workflow 锁定延迟，进而影响 Schedule 启动延迟。降低 Signal 的速率。
+- 网络延迟：Worker 与 Temporal 集群位于不同区域，或者负载大小较大，可能会导致额外的延迟。
 
-To diagnose and address high `temporal_workflow_task_schedule_to_start_latency`, you should:
+要诊断和解决高 `Temporal_Workflow_task_Schedule_to_start_latency` 问题，您应该：
+
+1.检查Worker CPU和内存使用情况。
+1. 检查 Worker 配置（轮询器数量、任务槽数等）。
+1. 查找 Workflow 或 Activity 启动中是否存在可能使系统不堪重负的峰值。
+1. 如果可能，请确保 Worker 与 Temporal 集群位于同一区域。
 
-1. Check Worker CPU and memory usage.
-1. Review Worker configuration (number of pollers, Task slots, etc.).
-1. Look for any spikes in Workflow or Activity starts that might be overwhelming the system.
-1. Ensure Workers are in the same region as the Temporal cluster if possible.
+<a id="temporalactivityscheduletostartlatency-spike"></a>
+### `Temporal_Activity_Schedule_to_start_latency` 秒杀 {#temporalactivityscheduletostartlatency-spike}
 
-### `temporal_activity_schedule_to_start_latency` spike
+高 [`Temporal_Activity_Schedule_to_start_latency`](/references/sdk-metrics#Activity_Schedule_to_start_latency)（P95 高于一秒）可能由多种因素引起。
+此指标表示 [Activity 任务](/tasks#Activity-task) 处于 Scheduled（排队）状态和 Worker 拾取它进行处理之间的时间。
+以下是一些潜在的原因：
 
-High [`temporal_activity_schedule_to_start_latency`](/references/sdk-metrics#activity_schedule_to_start_latency) (P95 higher than one second) can be caused by several factors.
-This metric represents the time between when an [Activity Task](/tasks#activity-task) is scheduled (enqueued) and when it is picked up by a Worker for processing.
-Here are some potential causes:
+- Worker 容量不足：如果没有足够的 Worker 或 Worker 过载，它们可能无法足够快地拾取任务。这可能会导致任务在队列中等待更长时间 ([检测任务积压](https://docs.Temporal.io/cloud/Worker-health#detect-task-backlog))。
+- Worker 配置问题：Worker 配置不当（例如轮询器或任务槽太少）可能会导致延迟增加 ([检测任务积压](https://docs.Temporal.io/cloud/Worker-health#detect-task-backlog))。
+- Task Queue 配置：将 `TaskQueueActivitiesPerSecond` 设置得太低会限制活动启动的速率，从而导致 Schedule 启动延迟增加。
+- 网络延迟：Worker 与 Temporal 集群位于不同区域，或者较大的有效负载大小可能会导致额外的延迟。
 
-- Insufficient Worker capacity: If there aren't enough Workers or if the Workers are overloaded, they may not be able to pick up Tasks quickly enough. This can lead to Tasks waiting longer in the queue ([Detect Task Backlog](https://docs.temporal.io/cloud/worker-health#detect-task-backlog)).
-- Worker configuration issues: Improperly configured Workers, such as having too few pollers or Task slots, can lead to increased latency ([Detect Task Backlog](https://docs.temporal.io/cloud/worker-health#detect-task-backlog)).
-- Task Queue configuration: Setting `TaskQueueActivitiesPerSecond` too low can limit the rate at which Activities are started, leading to increased Schedule-to-start latency.
-- Network latency: Workers in a different region from the Temporal cluster, or large payload size can introduce additional latency.
+诊断和解决高 `Temporal_Activity_Schedule_to_start_latency` 问题：
 
-To diagnose and address high `temporal_activity_schedule_to_start_latency`:
+1.检查Worker CPU和内存使用情况。
+1. 检查 Worker 配置（轮询器数量、任务槽数等）。
+1. 查找 Workflow 或 Activity 启动中是否存在可能使系统不堪重负的峰值。
+1. 如果可能，请确保 Worker 与 Temporal 集群位于同一区域。
 
-1. Check Worker CPU and memory usage.
-1. Review Worker configuration (number of pollers, Task slots, etc.).
-1. Look for any spikes in Workflow or Activity starts that might be overwhelming the system.
-1. Ensure Workers are in the same region as the Temporal cluster if possible.
+<a id="temporalworkflowendtoendlatency-spike"></a>
+### `Temporal_Workflow_endtoend_latency` 秒杀 {#temporalworkflowendtoendlatency-spike}
 
-### `temporal_workflow_endtoend_latency` spike
+[`Temporal_Workflow_endtoend_latency`](/references/sdk-metrics#Workflow_endtoend_latency) 指标表示单次 Workflow 运行从 Schedule 到结束的总 Workflow Execution 时间。
+该指标的正常范围取决于用例，但以下是导致意外峰值的一些潜在原因：
 
-The [`temporal_workflow_endtoend_latency`](/references/sdk-metrics#workflow_endtoend_latency) metric represents the total Workflow Execution time from Schedule to the closure for a single Workflow Run.
-Normal ranges for this metric depend on the use case, but here are some potential causes for the unexpected spikes:
+- 复杂的 Workflow：如果 Workflow 有许多活动或者活动需要很长时间才能执行。
+- Workflow 和 Activity 重试：如果 Workflow 或活动配置为在失败时重试并且它们经常失败，则这可能会增加端到端延迟，因为系统将在重新尝试失败的操作之前等待重试延迟。
+- Worker 容量和配置：如果没有足够的 Worker 或 Worker 过载，它们可能无法足够快地拾取和处理任务。这可能会导致任务在队列中等待更长时间，从而增加端到端延迟 ([检测任务积压](https://docs.Temporal.io/cloud/Worker-health#detect-task-backlog))。
+- 外部依赖性：如果您的 Workflow 或活动依赖于外部系统或服务（例如数据库或 API），并且这些系统速度缓慢或不可靠，则可能会增加端到端延迟。
+- 网络延迟：与 Temporal 集群位于不同区域的 Worker 可能会带来额外的延迟。
 
-- Complex Workflows: If the Workflows have many Activities or if the Activities take a long time to execute.
-- Workflow and Activity retries: If Workflows or Activities are configured to retry upon failure and they fail often, this can increase the end-to-end latency as the system will wait for the retry delay before reattempting the failed operation.
-- Worker capacity and configuration: If there aren't enough Workers or if the Workers are overloaded, they may not be able to pick up and process Tasks quickly enough. This can lead to Tasks waiting longer in the queue, thereby increasing the end-to-end latency ([Detect Task Backlog](https://docs.temporal.io/cloud/worker-health#detect-task-backlog)).
-- External dependencies: If your Workflows or Activities depend on external systems or services (such as databases or APIs) and these systems are slow or unreliable, they can increase the end-to-end latency.
-- Network latency: Workers in a different region from the Temporal cluster can introduce additional latency.
+诊断和解决高 `Temporal_Workflow_endtoend_latency` 问题：
 
-To diagnose and address high `temporal_workflow_endtoend_latency`:
+1. 检查您的 Workflow 和 Activity 设计，确保它们尽可能高效。
+2. 监控您的 Worker，确保它们有足够的容量（CPU 和内存）并且没有过载。
+3. 监控外部依赖项以确保它们运行良好。
+4. 如果可能，请确保 Worker 与 Temporal 集群位于同一区域。
 
-1. Review your Workflow and Activity designs to ensure they are as efficient as possible.
-2. Monitor your Workers to ensure they have sufficient capacity (CPU and memory) and are not overloaded.
-3. Monitor your external dependencies to ensure they are performing well.
-4. Ensure Workers are in the same region as the Temporal cluster if possible.
+<a id="high-temporalworkflowtaskexecutionlatency"></a>
+### 高 `Temporal_Workflow_task_execution_latency` {#high-temporalworkflowtaskexecutionlatency}
 
-### High `temporal_workflow_task_execution_latency`
+[`Temporal_Workflow_task_execution_latency`](/references/sdk-metrics#Workflow_task_execution_latency) 指标表示 Worker 执行 Workflow 任务所花费的时间。
+当 Workflow 任务需要超过一两秒才能完成时，Temporal SDK 会引发“Workflow 运行期间检测到死锁”错误或 [TMPRL1101](https://github.com/temporalio/rules/blob/main/rules/TMPRL1101.md)。
+以下是一些潜在的原因：
 
-The [`temporal_workflow_task_execution_latency`](/references/sdk-metrics#workflow_task_execution_latency) metric represents the time taken by a Worker to execute a Workflow Task.
-The Temporal SDK raises a “Deadlock detected during Workflow run” error or [TMPRL1101](https://github.com/temporalio/rules/blob/main/rules/TMPRL1101.md) when a Workflow Task takes more than one or two seconds to complete.
-Here are some potential causes:
+- CPU 密集型工作：在 Workflow 任务中执行 CPU 密集型操作可能会导致执行速度缓慢。
+- 本地活动缓慢：Workflow 任务执行时间包括本地 Activity 执行时间。
+- 慢Workflow 重播：Workflow 任务执行时间包括Workflow 重播时间。有关详细信息，请参阅 `Workflow_task_replay_latency`。
+- Worker 资源限制：Worker pod 上的高 CPU 使用率可能会导致 Workflow 任务执行速度变慢。 CPU 资源不足的 Worker 可能会导致延迟。
+- 无限循环或阻塞调用：具有无限循环或阻塞外部 API 调用的 Workflow 代码可能会导致 Workflow 任务执行缓慢或超时。
+- 数据转换速度慢：您的自定义 Data Converter 编码/解码有效负载的时间过长，例如，在与远程加密服务通信时。
 
-- CPU-intensive work: Performing CPU-intensive operations in your Workflow Task can lead to slow execution.
-- Slow local Activities: Workflow Task execution time includes the Local Activity execution time.
-- Slow Workflow replay: Workflow Task execution time includes the Workflow Replay time. Refer to `workflow_task_replay_latency` for more details.
-- Worker resource constraints: High CPU usage on Worker pods can lead to slower Workflow Task execution. Workers with insufficient CPU resources can cause delays.
-- Infinite loops or blocking calls: Workflow code with infinite loops or blocking external API calls can cause the Workflow Task to execute slowly or time out.
-- Slow data conversion: Your custom Data Converter is taking too long to encode/decode payloads, for example, when talking to a remote encryption service.
+要诊断和解决 Workflow 任务执行缓慢的问题，您可以：
 
-To diagnose and address slow Workflow Task execution, you can:
+1. 监控Worker CPU和内存利用率。
+2. 确保您的 Worker 拥有足够的资源，并根据您的工作负载进行适当扩展。
+3. 考虑使用重放器在分析器中运行 Workflow 代码，以查看 CPU 周期的消耗情况。
+4. 检查您的 Workflow 代码以了解潜在的优化或删除阻塞操作。
+5. 禁用 Data Converter 的死锁检测：它不会减少任务执行延迟，但会消除“Workflow 运行期间检测到死锁”或 TMPRL1101 错误。在 Go 中，用 `Workflow.DataConverterWithoutDeadlockDetection` 包裹它。在 Java 中，用 `WorkflowUnsafe.deadlockDetectorOff` 包围 Data Converter 代码。
 
-1. Monitor Worker CPU and memory utilization.
-2. Ensure that your Workers have adequate resources and are properly scaled for your workload.
-3. Consider running your Workflow code in a profiler using a replayer to see where CPU cycles are spent.
-4. Review your Workflow code for potential optimizations or to remove blocking operations.
-5. Disable deadlock detection for Data Converter: It does not reduce Task execution latency but does remove the “Deadlock detected during Workflow run” or TMPRL1101 error. In Go, wrap it with `workflow.DataConverterWithoutDeadlockDetection`. In Java, surround your Data Converter code with `WorkflowUnsafe.deadlockDetectorOff`.
+<a id="high-workflowtaskreplaylatency"></a>
+### 高 `Workflow_task_replay_latency` {#high-workflowtaskreplaylatency}
 
-### High `workflow_task_replay_latency`
+Workflow 任务重放是通过使用记录的 Event History 从头开始​​重新执行 Workflow 代码来重建 Workflow 状态的过程。
+此过程确保 Workflow 可以从中断处继续，即使在中断或故障之后也是如此。
+如果 [`Workflow_task_replay_latency`](/references/sdk-metrics#Workflow_task_replay_latency) 超过几毫秒，则 [`Workflow_task_replay_latency`](/references/sdk-metrics#Workflow_task_replay_latency) 为高电平。
+以下是主要原因：
 
-Workflow Task replay is the process of reconstructing the Workflow's state by re-executing the Workflow code from the beginning, using the recorded Event History.
-This process ensures that the Workflow can continue from where it left off, even after interruptions or failures.
-[`workflow_task_replay_latency`](/references/sdk-metrics#workflow_task_replay_latency) is high if it exceeds a few milliseconds.
-Here are the main causes:
+- 大型事件历史记录：具有较长历史记录的 Workflow 需要更多时间来重放，因为 Worker 需要处理所有事件以重建 Workflow 状态。
+- Data Converter 性能：缓慢的 Data Converter，尤其是那些执行加密或与外部服务交互的 Data Converter，可能会影响重播。
+- 大有效负载：具有大有效负载的活动或 Signal 可能会减慢重播过程，特别是当 Data Converter 需要处理这些有效负载时。
+- 复杂的 Workflow 逻辑：具有复杂逻辑或计算密集型操作的 Workflow 代码（例如调度许多并发 Child Workflow 或活动）可能会增加重播延迟。
+- 频繁的缓存逐出：如果 Worker 经常从缓存中逐出 Workflow Execution（由于内存限制或频繁重新启动），则会导致更多重播和更高的延迟。
+- Worker 资源限制：Worker 节点上的高 CPU 利用率或内存压力可能会减慢重放速度。
 
-- Large Event Histories: Workflows with long histories take more time to replay, as the Worker needs to process all events to reconstruct the Workflow state.
-- Data Converter performance: Slow Data Converters, especially those that perform encryption or interact with external services, can impact replay.
-- Large payloads: Activities or Signals with large payloads can slow down the replay process, especially if the Data Converter needs to process these payloads.
-- Complex Workflow logic: Workflow code with complex logic or computationally intensive operations, such as scheduling many concurrent child Workflows or Activities, can increase replay latency.
-- Frequent cache evictions: If workers often evict Workflow Executions from their cache (due to memory constraints or frequent restarts), it leads to more replays and higher latency.
-- Worker resource constraints: High CPU utilization or memory pressure on Worker nodes can slow down the replay.
+要诊断并解决 Workflow 任务重放缓慢的问题，您可以：
 
-To diagnose and address slow Workflow Task replay, you can:
+1. 监控 SDK 指标：密切关注 `Temporal_Workflow_task_replay_latency` 指标。此直方图指标测量重播 Workflow 任务所需的时间。
+1. 分析 Workflow 历史记录大小：检查 Workflow 历史记录中的事件数量，并考虑对长期运行的 Workflow 使用“Continue-As-New”功能。
+1. 优化 Data Converter：如果您使用自定义 Data Converter，尤其是用于加密或复杂序列化，请寻找优化其性能的机会。
+1. 检查有效负载大小：较大的 Activity 或 Signal 有效负载会减慢重放速度。考虑优化 Workflow 中传递的数据大小。
+1. 分析 Workflow 代码：使用分析器来识别 Workflow 代码中可能会减慢重放速度的 CPU 密集型部分。
+1. 管理 Worker 缓存：频繁的缓存驱逐可能会导致更多的重播。调整 Worker 的缓存大小和逐出策略。
 
-1. Monitor SDK Metrics: Keep a close eye on the `temporal_workflow_task_replay_latency` metric. This histogram metric measures the time it takes to replay a Workflow Task.
-1. Analyze Workflow History Size: Check the number of events in your Workflow histories and consider using the "Continue-As-New" feature for long-running Workflows.
-1. Optimize Data Converters: If you're using custom Data Converters, especially for encryption or complex serialization, look for opportunities to optimize their performance.
-1. Review Payload Sizes: Large Activity or Signal payloads can slow down replay. Consider optimizing the size of data being passed in your Workflows.
-1. Profile Workflow Code: Use a profiler to identify CPU-intensive parts of your Workflow code that might be slowing down replay.
-1. Manage Worker Cache: Frequent cache evictions can lead to more replays. Tune your Worker's cache size and eviction policies.
+<a id="temporalactivityexecutionlatency-spike"></a>
+### `Temporal_Activity_execution_latency` 秒杀 {#temporalactivityexecutionlatency-spike}
 
-### `temporal_activity_execution_latency` spike
+[`Temporal_Activity_execution_latency`](/references/sdk-metrics#Activity_execution_latency) 指标测量从 Worker 开始处理 Activity 任务到向服务报告任务完成或失败的时间。
+`Temporal_Activity_execution_latency` 高有几个潜在原因：
 
-The [`temporal_activity_execution_latency`](/references/sdk-metrics#activity_execution_latency) metric measures the time from when a Worker starts processing an Activity Task until it reports to the service that the Task is complete or failed.
-There are several potential causes for high `temporal_activity_execution_latency`:
+- Activity 实现：Activity 高执行延迟的最常见原因是 Activity 本身的实际实现。如果Activity正在执行耗时的操作或进行缓慢的外部API调用，则执行时间将更长。
+- 外部依赖性：如果您的 Activity 受到所有活动访问的外部资源或服务的约束，则可能会导致延迟增加。
+- Worker 资源限制：资源不足的 Worker 节点或 CPU 利用率较高可能会导致 Activity 执行速度变慢。
+- 网络延迟：Worker 与外部服务或 Temporal 服务本身之间的高延迟可能会导致 Activity 执行时间增加。
 
-- Activity implementation: The most common cause of high Activity Execution latency is the actual implementation of the Activity itself. If the Activity is performing time-consuming operations or making slow external API calls, it will take longer to execute.
-- External dependencies: If your Activity is constrained by an external resource or service that all Activities access, it could cause increased latency.
-- Worker resource constraints: Under-resourced Worker nodes or experiencing high CPU utilization can lead to slower Activity Execution.
-- Network latency: High latency between your Workers and external services or the Temporal service itself can contribute to increased Activity Execution time.
+要诊断和解决高 Activity 执行延迟：
 
-To diagnose and address high Activity Execution latency:
+1. 监控 `Activity_execution_latency` 指标，您可以按 Activity 类型和 Activity Task Queue 进行筛选。
+2. 优化您的 Activity 实施以减少延迟，尤其是外部服务或数据库交互时。
+3. 检查您的 Worker CPU 和内存利用率，确保它们有足够的资源。
+4. 检查您的 Worker 配置，特别是 `(Max)ConcurrentActivityExecutionSize` 和 `(Max)WorkerActivitiesPerSecond`，以确保它们不会限制您的 Activity 执行。
 
-1. Monitor the `activity_execution_latency` metric, which you can filter by Activity type and Activity Task queue.
-2. Optimize your Activity implementation to reduce latency, especially with external services or database interactions.
-3. Check your Worker CPU and memory utilization to make sure they have adequate resources.
-4. Examine your Worker configuration, particularly `(Max)ConcurrentActivityExecutionSize` and `(Max)WorkerActivitiesPerSecond`, to ensure they are not limiting your activity execution.
+<a id="depletion-of-temporalworkertaskslotsavailable-for-workflowworker"></a>
+### `WorkflowWorker` 的 `Temporal_Worker_task_slots_available` 耗尽 {#depletion-of-temporalworkertaskslotsavailable-for-workflowworker}
 
-### Depletion of `temporal_worker_task_slots_available` for `WorkflowWorker`
+[`Temporal_Worker_task_slots_available{Worker_type=”WorkflowWorker”}`](/references/sdk-metrics#Worker_task_slots_available) 指标指示用于在 Worker 上执行 Workflow 任务的可用槽数。
+由于以下几个原因，该指标可能会变为零：
 
-The [`temporal_worker_task_slots_available{worker_type=”WorkflowWorker”}`](/references/sdk-metrics#worker_task_slots_available) metric indicates the number of available slots for executing Workflow Tasks on a Worker.
-This metric may go to zero for several reasons:
+- 高 Workflow 任务负载：如果任务数量超过 Worker 可以同时处理的数量，则可用插槽将耗尽。如果传入任务的速率高于任务完成的速率，则可能会发生这种情况。
+- Worker 配置：可用插槽的数量由 Worker 配置确定，特别是 `MaxConcurrentWorkflowTaskExecutionSize` 设置。如果这些设置太低，Worker 可能没有足够的插槽来处理任务负载。
+- 高 `Temporal_Workflow_task_execution_latency` 和 `Workflow_task_replay_latency`。
 
-- High Workflow Task Load: If there are more Tasks than the Worker can handle concurrently, the available slots will be depleted. This can happen if the rate of incoming Tasks is higher than the rate at which tasks are being completed.
-- Worker Configuration: The number of available slots is determined by the Worker configuration, specifically the `MaxConcurrentWorkflowTaskExecutionSize` setting. If these are set too low, the Worker may not have enough slots to handle the Task load.
-- High `temporal_workflow_task_execution_latency` and `workflow_task_replay_latency`.
+为了防止 Workflow 任务槽耗尽：
 
-To prevent depletion of Workflow Task slots:
+1. 监控 Worker CPU 和内存使用情况，同时增加 `(Max)ConcurrentWorkflowTaskExecutionSize` 以添加更多执行槽。
+2. 垂直扩展 Worker（增加 CPU 和内存）和水平扩展（增加 Worker 实例）。
 
-1. Monitor Worker CPU and Memory usage while increasing `(Max)ConcurrentWorkflowTaskExecutionSize` to add more execution slots.
-2. Scale up Workers both vertically (increasing CPU and Memory) and horizontally (increasing Worker instances).
+<a id="depletion-of-temporalworkertaskslotsavailable-for-activityworker"></a>
+### `ActivityWorker` 的 `Temporal_Worker_task_slots_available` 耗尽 {#depletion-of-temporalworkertaskslotsavailable-for-activityworker}
 
-### Depletion of `temporal_worker_task_slots_available` for `ActivityWorker`
+[`Temporal_Worker_task_slots_available{Worker_type=”ActivityWorker”}`](/references/sdk-metrics#Worker_task_slots_available) 指标指示用于在 Worker 上执行 Activity 任务的可用槽数。
+由于以下几个原因，该指标可能会变为零：
 
-The [`temporal_worker_task_slots_available{worker_type=”ActivityWorker”}`](/references/sdk-metrics#worker_task_slots_available) metric indicates the number of available slots for executing Activity Tasks on a Worker.
-This metric may go to zero for several reasons:
+- 被阻止的活动和僵尸活动：最常见的原因是活动被阻止或未按时返回。僵尸活动是该类别的一个子集。当 Activity 超时（达到其 `StartToClose` 或 `HeartbeatTimeout` 超时）并且已停止检测信号但继续运行、随着更多重试发生而占用部分或全部插槽时，就会发生这种情况。如果出现以下情况，就会发生这种情况：
+  - Activity 代码在下游服务调用或无限循环上阻塞。
+  - Activity 的 `StartToClose` 超时与外部调用的任何客户端超时之间不匹配。
+- 资源利用率：Worker 上的高 CPU 或内存使用率可能会导致活动阻塞且无法释放插槽。
 
-- Blocked Activities and Zombie Activities: The most common cause is activities that are blocked or not returning on time. Zombie Activities are a subset of this category. They occur when an Activity times out (hits its `StartToClose` or `HeartbeatTimeout` timeout) and has stopped Heartbeating but continues to run, occupying some or all the slots as more retries occur. This can happen if:
-  - The Activity code is blocking on a downstream service call or an infinite loop.
-  - There's a mismatch between the Activity's `StartToClose` timeout and any client-side timeouts for external calls.
-- Resource Utilization: High CPU or memory usage on Workers can cause activities to block and not release slots.
+为了防止 Activity 任务槽耗尽：
 
-To prevent depletion of Activity Task slots:
+1. 监控 Worker CPU 和内存使用情况，同时增加 `(Max)ConcurrentActivityExecutionSize` 以添加更多执行槽。
+2. 向下游 API 客户端添加客户端超时。
+3. 检查您的任务代码，确保任务在 `Temporal_Activity_execution_latency` 测量的合理时间内完成。
 
-1. Monitor Worker CPU and Memory usage while increasing `(Max)ConcurrentActivityExecutionSize` to add more execution slots.
-2. Add client-side timeout to your downstream API client.
-3. Review your Task code to ensure Tasks complete within a reasonable time measured by `temporal_activity_execution_latency`.
+<a id="network-requests"></a>
+## 网络请求 {#network-requests}
 
-## Network requests
+网络问题可能会影响 Temporal CLIents 和 Worker，从而导致延迟、故障和整体系统不稳定。
+本部分重点介绍揭示 Temporal 部署的常见网络相关问题的指标，特别是与网络连接、延迟和请求失败相关的问题。
+这些指标可以指示 Temporal CLIent（包括 Temporal Worker）和 Temporal Server 之间的通信通道中存在瓶颈的位置。
 
-Network issues can impact Temporal clients and workers, leading to delays, failures, and overall system instability.
-This section focuses on metrics that reveal common network-related problems with your Temporal deployment, specifically related to network connectivity, latency, and request failures.
-These metrics can indicate where bottlenecks exist within the communication channels between Temporal clients (including Temporal Workers) and the Temporal server.
+<a id="high-temporallongrequestfailure"></a>
+### 高 `Temporal_long_request_failure` {#high-temporallongrequestfailure}
 
-### High `temporal_long_request_failure`
+[`Temporal_long_request_failure`](/references/sdk-metrics#long_request_failure) 指标计算 `PollWorkflowTaskQueue`、`PollActivityTaskQueue` 和 `GetWorkflowExecutionHistory` 失败的 RPC 长轮询请求数（轮询新事件时）。该指标的高值可能由以下几个因素引起：
 
-The [`temporal_long_request_failure`](/references/sdk-metrics#long_request_failure) metric counts the number of failed RPC long poll requests for `PollWorkflowTaskQueue`, `PollActivityTaskQueue`, and `GetWorkflowExecutionHistory` (when polling new events). High values of this metric can be caused by several factors:
+- 网络问题：Temporal CLIent 和 Temporal Server 之间的网络连接问题（包括防火墙和代理）可能会导致长轮询请求失败。
+- 速率限制：如果请求速率超过 Temporal Server 或 Temporal Cloud 上配置的限制，则可能会拒绝其他请求，从而增加 `Temporal_long_request_failure` 计数。这通常由 `ResourceExhausted` 状态代码指示。
+- 服务器错误：如果 Temporal Server 遇到问题，它可能无法正确响应长轮询请求，从而导致 `Temporal_long_request_failure` 增加。
 
-- Network Issues: Problems with the network connection between the Temporal Client and the Temporal Server, including firewalls and proxies, can cause long poll requests to fail.
-- Rate Limiting: If the rate of requests exceeds the configured limits on the Temporal Server or Temporal Cloud, additional requests may be rejected, increasing the `temporal_long_request_failure` count. This is often indicated by a `ResourceExhausted` status code.
-- Server Errors: If the Temporal Server is experiencing issues, it may fail to respond to long poll requests correctly, leading to an increase in `temporal_long_request_failure`.
+要诊断 `Temporal_long_request_failure` 高的原因，您可以：
 
-To diagnose the cause of high `temporal_long_request_failure`, you can:
+1. 检查 `Temporal_long_request_failure` 指标的操作和状态或代码标签，以查看正在发生的错误类型。
+2. 如果您收到 `ResourceExhausted` 状态代码，请检查 Temporal Server 上配置的速率限制或向 Temporal Temporal Cloud 支持寻求帮助。
+3. 检查Temporal CLIent 和Temporal Server 之间的网络连接。
 
-1. Check the operation and the status or code tag of the `temporal_long_request_failure` metric to see the type of errors that are occurring.
-2. If you receive a `ResourceExhausted` status code, review the rate limits configured on the Temporal Server or ask for help from Temporal Support for Temporal Cloud.
-3. Check the network connection between the Temporal Client and the Temporal Server.
+<a id="high-temporalrequestfailuretotal"></a>
+### 高 `Temporal_request_failure_total` {#high-temporalrequestfailuretotal}
 
-### High `temporal_request_failure_total`
+[`Temporal_request_failure_total`](/references/sdk-metrics#request_failure) 指标计算 Temporal CLIent 发出的失败的 RPC 请求的数量。
+该指标的高值可能由以下几个因素引起：
 
-The [`temporal_request_failure_total`](/references/sdk-metrics#request_failure) metric counts the number of RPC requests made by the Temporal Client that have failed.
-High values of this metric can be caused by several factors:
+- 网络问题：Temporal CLIent 和 Temporal Server 之间的网络连接问题可能会导致请求失败。
+- 客户端错误：如果 Temporal CLIent 存在问题，例如配置错误或资源耗尽，它可能无法正确发出请求。
+- 操作错误：如果 `SignalWorkflowExecution` 或 `TerminateWorkflowExecution` 等特定操作尝试对不再存在的已关闭 Workflow Execution 执行操作（因为它已完成，并在达到 Namespace 保留时间时已从持久性中删除），则它们可能会失败。
+- 速率限制：如果请求速率超过 Temporal Server 上配置的限制，则可能会拒绝其他请求，从而增加计数器。这通常由 `ResourceExhausted` 状态代码指示。
+- 请求大小限制：如果 Worker 尝试返回大于 Blob 大小限制 (2MB) 的 Activity 响应，服务将拒绝它，从而导致请求失败。
+- 服务器错误：如果 Temporal Server 遇到问题，它可能无法正确响应请求，从而导致 `Temporal_request_failure_total` 增加。
 
-- Network Issues: Problems with the network connection between the Temporal Client and the Temporal Server can cause requests to fail.
-- Client Errors: If there's an issue with the Temporal Client, such as misconfiguration or resource exhaustion, it may fail to make requests correctly.
-- Operation Errors: Specific operations like `SignalWorkflowExecution` or `TerminateWorkflowExecution` can fail if they are trying to act on a closed Workflow Execution that no longer exists (because it completed and was removed from persistence when it hit Namespace retention time).
-- Rate Limiting: If the rate of requests exceeds the configured limits on the Temporal Server, additional requests may be rejected, increasing the counter. This is often indicated by a `ResourceExhausted` status code.
-- Request Size Limit: If the Worker tries to return an Activity response that is larger than the blob size limit (2MB), the service will reject it, causing a request failure.
-- Server Errors: If the Temporal Server is experiencing issues, it may fail to respond to requests correctly, leading to an increase in `temporal_request_failure_total`.
+要诊断 `Temporal_request_failure_total` 高的原因，您可以：
 
-To diagnose the cause of high `temporal_request_failure_total`, you can:
+1. 检查 `Temporal_request_failure_total` 指标的状态或代码标签以查看正在发生的错误类型。
+2. 查看 `Temporal_request_failure_total` 指标的操作标签，了解哪些操作失败。
+3. 监视 Temporal Server 日志和 Temporal CLIent 日志中是否有任何错误消息或警告。
+4. 检查Temporal CLIent 和Temporal Server 之间的网络连接。
 
-1. Check the status or code tag of the `temporal_request_failure_total` metric to see the type of errors that are occurring.
-2. Look at the operation tag of the `temporal_request_failure_total` metric to see which operations are failing.
-3. Monitor the Temporal Server logs and the Temporal Client logs for any error messages or warnings.
-4. Check the network connection between the Temporal Client and the Temporal Server.
+<a id="high-temporalrequestlatency"></a>
+### 高 `Temporal_request_latency` {#high-temporalrequestlatency}
 
-### High `temporal_request_latency`
+[`Temporal_request_latency`](/references/sdk-metrics#request_latency) 指标测量 Temporal CLIent 发出的 gRPC 请求的延迟。
+该指标的高值可能由以下几个因素引起：
 
-The [`temporal_request_latency`](/references/sdk-metrics#request_latency) metric measures the latency of gRPC requests made by the Temporal Client.
-High values for this metric can be caused by several factors:
+- 网络延迟：Temporal CLIent 和 Temporal Server 之间的物理距离和网络状况可能会影响请求的延迟。
+- 网络传输时间：较大的有效负载需要更长的时间通过网络传输，这会影响请求延迟。例如，`RespondWorkflowTaskCompleted` 中的大负载可能会影响请求的延迟。当 Workflow 调度具有大量输入的多个活动时尤其如此。
+- 资源耗尽：客户端或服务器上的资源（例如 CPU 或内存）耗尽可能会导致处理请求的延迟。
+- 客户端配置：不正确的客户端配置，例如将线程池大小设置得过于激进或内存限制对于分配的线程数量来说太低，可能会导致任务压垮客户端的情况，从而导致延迟增加。
+- 服务器负载：如果Temporal Server负载较重，则可能需要更长的时间来响应请求，从而导致延迟增加。
 
-- Network Latency: The physical distance and network conditions between the Temporal Client and the Temporal Server can affect the latency of requests.
-- Network Transfer Time: Larger payloads take longer to transfer over the network, which affects request latency. For example, large payloads in `RespondWorkflowTaskCompleted` can affect the latency of the request. This is especially true when Workflows are scheduling multiple activities with large inputs.
-- Resource Exhaustion: Running out of resources (such as CPU or memory) on the client or server can cause delays in processing the request.
-- Client Configuration: Improper client configuration, such as setting thread pool sizes too aggressively or having memory constraints that are too low for the number of allocated threads, can lead to situations where Tasks overwhelm the client, causing increased latency.
-- Server Load: If the Temporal Server is under heavy load, it may take longer to respond to requests, leading to increased latency.
+诊断和解决高 `Temporal_request_latency` 问题：
 
-To diagnose and address high `temporal_request_latency`:
+1. 监控 `Temporal_request_latency` 指标以确定延迟峰值发生的时间和地点。
+2. 检查Temporal CLIent 和Temporal Server 之间的网络连接。
+3. 监控Temporal CLIent 和Temporal Server 上的资源使用情况。
+4. 检查您的 Temporal CLIent 配置，确保其针对您的工作负载进行了优化。
+5. 如果您使用的是 Temporal Cloud，请检查云的 [服务延迟](https://docs.Temporal.io/cloud/metrics/reference#service-latency) 指标是否激增，并向 Temporal 支持寻求帮助。
 
-1. Monitor the `temporal_request_latency` metric to identify when and where latency spikes are occurring.
-2. Check the network connection between the Temporal Client and the Temporal Server.
-3. Monitor the resource usage on both the Temporal Client and the Temporal Server.
-4. Review your Temporal Client configuration to ensure it is optimized for your workload.
-5. If you're using Temporal Cloud, check if the Cloud’s [service-latency](https://docs.temporal.io/cloud/metrics/reference#service-latency) metric spikes up and reach out to Temporal Support for help.
+### `rate(Temporal_long_request_total{operation="PollActivityTaskQueue"})`
 
-### `rate(temporal_long_request_total{operation="PollActivityTaskQueue"})`
+[`rate(Temporal_long_request_total{operation="PollActivityTaskQueue"})`](/references/sdk-metrics#long_request) 表达式测量特定时间段内 `PollActivityTaskQueue` 长轮询请求的每秒平均速率。
 
-The [`rate(temporal_long_request_total{operation="PollActivityTaskQueue"})`](/references/sdk-metrics#long_request) expression measures the per-second average rate of `PollActivityTaskQueue` long poll requests over a certain period of time.
+`PollActivityTaskQueue` 是 Worker 轮询来自 Task Queue 的 Activity 任务的操作。
+`Temporal_long_request_total` 指标计算这些长轮询请求的数量。
 
-`PollActivityTaskQueue` is an operation where Workers poll for Activity Tasks from the Task Queue.
-The `temporal_long_request_total` metric counts the number of these long poll requests.
+通过应用Prometheus中的`rate()`函数，您可以计算在Query中指定的时间范围内这些请求的每秒平均速率。
+这可以帮助您了解 Temporal 服务的负载以及 Worker 轮询 Activity 任务的频率。
 
-By applying the `rate()` function in Prometheus, you can calculate the per-second average rate of these requests over the time range specified in the Query.
-This can help you understand the load on your Temporal service and how often your Workers are polling for Activity Tasks.
+### `rate(Temporal_long_request_total{operation="PollWorkflowTaskQueue"})`
 
-### `rate(temporal_long_request_total{operation="PollWorkflowTaskQueue"})`
+[`rate(Temporal_long_request_total{operation="PollWorkflowTaskQueue"})`](/references/sdk-metrics#long_request) 表达式测量特定时间段内 `PollWorkflowTaskQueue` 长轮询请求的每秒平均速率。
 
-The [`rate(temporal_long_request_total{operation="PollWorkflowTaskQueue"})`](/references/sdk-metrics#long_request) expression measures the per-second average rate of `PollWorkflowTaskQueue` long poll requests over a certain period of time.
+`PollWorkflowTaskQueue` 是 Worker 轮询来自 Task Queue 的 Workflow 任务的操作。
+`Temporal_long_request_total` 指标计算这些长轮询请求的数量。
 
-`PollWorkflowTaskQueue` is an operation where Workers poll for Workflow Tasks from the Task Queue.
-The `temporal_long_request_total` metric counts the number of these long poll requests.
+通过应用Prometheus中的`rate()`函数，您可以计算在Query中指定的时间范围内这些请求的每秒平均速率。
+这可以帮助您了解 Temporal 服务的负载以及 Worker 轮询 Workflow 任务的频率。
 
-By applying the `rate()` function in Prometheus, you can calculate the per-second average rate of these requests over the time range specified in the query.
-This can help you understand the load on your Temporal service and how often your Workers are polling for Workflow Tasks.
+<a id="caching"></a>
+## 缓存 {#caching}
 
-## Caching
+Temporal Worker 依靠缓存来优化性能，减少从历史记录和重播中获取 Workflow 状态的开销。
+然而，无限缓存是不可能的；在缓存数据的好处和消耗的内存之间需要权衡。
+这些指标使您能够在性能提升与负责任的内存使用之间取得平衡。
 
-Temporal Workers rely on caching to optimize performance by reducing the overhead of fetching Workflow state from the history and Replaying.
-However, unlimited caching is impossible; there's a trade-off between the benefits of cached data and the memory consumed.
-These metrics allow you to balance performance gains with responsible memory usage.
+### `Temporal_sticky_cache_size`
 
-### `temporal_sticky_cache_size`
+[`Temporal_sticky_cache_size`](/references/sdk-metrics#sticky_cache_size) 指标表示当前在 Worker 内存中缓存的 Workflow Execution 数量。
 
-The [`temporal_sticky_cache_size`](/references/sdk-metrics#sticky_cache_size) metric represents the number of Workflow executions currently cached in a Worker's memory.
+粘性缓存用于通过将 Workflow 状态保留在内存中来提高性能，从而减少每个任务从 Event History 重建 Workflow 的需要。
+它对于延迟敏感的 Workflow 特别有用。
 
-The sticky cache is used to improve performance by keeping the Workflow state in memory, reducing the need to reconstruct the Workflow from its Event History for every Task.
-It’s particularly useful for latency-sensitive Workflows.
+粘性缓存大小和 Worker 内存消耗之间有直接关系。
+随着缓存大小的增加，Worker 的内存使用量也会增加。
 
-There is a direct relationship between the sticky cache size and Worker memory consumption.
-As the cache size increases, so does the memory usage of the Worker.
+可以配置粘性缓存的最大大小。例如，Go SDK 中的默认值是 10,000 个 Workflow。
 
-The maximum size of the sticky cache can be configured. For example, the default in the Go SDK is 10,000 Workflows.
+较大的粘性缓存可以通过减少重播 Workflow 历史记录的需要来提高性能。
+但是，它也会增加内存使用量，如果管理不当，可能会导致问题。
 
-A larger sticky cache can improve performance by reducing the need to replay Workflow histories.
-However, it also increases memory usage, which can lead to issues if not properly managed.
+与 Worker 内存使用情况一起监控此指标。
+`sticky_cache_size` 的突然增加可能与内存消耗增加和潜在的性能问题相关。
 
-Monitor this metric alongside Worker memory usage.
-A sudden increase in `sticky_cache_size` can correlate with increased memory consumption and potential performance issues.
+如果内存消耗过高，您可以减小最大粘性缓存大小。
+相反，如果您有可用内存并且想要提高性能，则可以增加它。
 
-If memory consumption is too high, you can reduce the maximum sticky cache size.
-Conversely, if you have available memory and want to improve performance, you might increase it.
+<a id="temporalstickycachehittotal-and-temporalstickycachemisstotal"></a>
+### `Temporal_sticky_cache_hit_total` 和 `Temporal_sticky_cache_miss_total` {#temporalstickycachehittotal-and-temporalstickycachemisstotal}
 
-### `temporal_sticky_cache_hit_total` and `temporal_sticky_cache_miss_total`
+[`Temporal_sticky_cache_hit_total`](https://docs.Temporal.io/references/sdk-metrics#sticky_cache_hit) 指标是一个计数器，用于测量 Workflow 任务找到要运行的缓存 Workflow Execution 的总次数，以及
+相反的是 [`Temporal_sticky_cache_miss_total`](https://docs.Temporal.io/references/sdk-metrics#sticky_cache_miss)，它是一个计数器，用于测量 Workflow 任务找不到要运行的缓存 Workflow Execution 的总次数。
 
-The [`temporal_sticky_cache_hit_total`](https://docs.temporal.io/references/sdk-metrics#sticky_cache_hit) metric is a counter that measures the total number of times a Workflow Task found a cached Workflow Execution to run against, and
-the opposite is [`temporal_sticky_cache_miss_total`](https://docs.temporal.io/references/sdk-metrics#sticky_cache_miss), which is a counter that measures the total number of times a Workflow Task did not find a cached Workflow Execution to run against.
+粘性执行是一项功能，其中 Worker 缓存 Workflow Execution 并创建专用的 Task Queue 进行侦听。
+这提高了性能，因为 Temporal 服务仅将新事件发送到 Worker 而不是整个事件历史记录，并且 Workflow 不必重播。
 
-Sticky Execution is a feature where a Worker caches a Workflow Execution and creates a dedicated Task Queue to listen on.
-This improves performance because the Temporal Service only sends new events to the Worker instead of entire Event Histories, and the Workflow doesn't have to Replay.
+“命中”意味着 Worker 在处理 Workflow 任务时在其缓存中找到 Workflow，从而允许立即处理，而无需从服务器获取完整的 Event History 并重播。
+“未命中”意味着 Worker 在其缓存中未找到 Workflow，并且它必须获取 Event History 并重播。
 
-A “hit” means the Worker finds the Workflow in its cache when processing a Workflow Task, allowing immediate processing without fetching the full Event History from the server and Replaying.
-A "miss" means the Worker didn't find the Workflow in its cache, and it must fetch the Event History and Replay.
+监控这两个指标并进行比较可以帮助您了解粘性缓存的使用情况。
+高缓存命中率和低缓存未命中率表明您的 Workflow 正在高效地进行 Scheduled，而对获取事件历史记录和重播的需求极小。
 
-Monitoring these two metrics and comparing them can help you understand how your sticky cache is being used.
-A high rate of cache hits with a low rate of cache misses indicates that your Workflows are being scheduled efficiently, with minimal need for fetching Event Histories and Replaying.
+### `Temporal_sticky_cache_total_forced_eviction_total`
 
-### `temporal_sticky_cache_total_forced_eviction_total`
+[`Temporal_sticky_cache_total_forced_eviction_total`](https://docs.Temporal.io/references/sdk-metrics#sticky_cache_hit) 指标是一个计数器，用于测量已从粘性缓存中强制逐出的 Workflow Execution 总数。
 
-The [`temporal_sticky_cache_total_forced_eviction_total`](https://docs.temporal.io/references/sdk-metrics#sticky_cache_hit) metric is a counter that measures the total number of Workflow Executions that have been forcibly evicted from the sticky cache.
+粘性执行是一项功能，其中 Worker 缓存 Workflow Execution 并创建专用的 Task Queue 进行侦听。
+这提高了性能，因为 Temporal 服务仅将新事件发送到 Worker 而不是整个事件历史记录，并且 Workflow 不必重播。
 
-Sticky Execution is a feature where a Worker caches a Workflow Execution and creates a dedicated Task Queue to listen on.
-This improves performance because the Temporal Service only sends new events to the Worker instead of entire Event Histories, and the Workflow doesn't have to Replay.
+在这种情况下，“强制逐出”意味着 Workflow Execution 在完成之前从缓存中删除，通常是因为缓存已满，需要为其他 Workflow Execution 腾出空间。
+这意味着，如果 Worker 需要为已驱逐的 Workflow Execution 处理更多任务，则必须从 Temporal 服务和重播中获取整个 Event History。
 
-A "forced eviction" in this context means that a Workflow Execution was removed from the cache before it completed, typically because the cache was full and needed to make room for other Workflow Executions.
-This means that if the Worker needs to process more Tasks for the evicted Workflow Execution, it will have to fetch the entire Event History from the Temporal Service and Replay.
-
-Monitoring the `temporal_sticky_cache_total_forced_eviction_total` metric can help you understand how often your Workflows are being evicted from the cache.
-A high rate of forced evictions could indicate that your cache size is too small for your workload, and you may need to increase the `WorkflowCacheSize` setting if your Worker resources can accommodate it.
+监控 `Temporal_sticky_cache_total_forced_eviction_total` 指标可以帮助您了解 Workflow 从缓存中逐出的频率。
+强制逐出率较高可能表明您的缓存大小对于您的工作负载来说太小，并且如果您的 Worker 资源可以容纳它，您可能需要增加 `WorkflowCacheSize` 设置。

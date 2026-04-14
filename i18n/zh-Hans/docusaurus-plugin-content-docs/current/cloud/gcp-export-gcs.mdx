@@ -1,0 +1,166 @@
+---
+id: gcp-export-gcs
+title: 将 Workflow Event History 导出到 GCS
+sidebar_label: GCP 导出到 GCS
+description: 将 Workflow 历史记录导出到 GCS
+slug: /cloud/export/gcp-export-gcs
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - how-to
+  - operations
+  - temporal cloud
+  - term
+  - verify
+  - workflow history export
+  - gcp
+tags:
+  - Export Workflow History
+  - GCP
+  - Temporal Cloud
+---
+
+import * as Components from '@site/src/components';
+
+## 先决条件{#先决条件}
+
+在配置导出接收器之前，请在 Google Cloud 中完成以下步骤。
+
+1. 创建GCS存储桶并记下其存储桶名称，例如“test-export”
+
+- 如果您的 GCS 存储桶需要额外的安全性，请启用客户管理的加密密钥 (CMEK)。
+- 目前仅支持单区域存储桶（在GCS中创建存储桶时选择“区域”选项，而不是“多区域”或“同区域”）
+- 存储桶的区域必须与您的 Temporal Cloud Namespace 的区域相同。
+
+2. 记录拥有该存储桶的 GCP 项目 ID。
+3. 在同一项目中创建一个服务帐户，授予 Temporal 写入 GCS 存储桶的权限。
+4. 按照 Temporal Cloud UI 中的说明进行操作。有两种方法可以设置此服务帐户：
+   - 手动设置：
+     - 输入服务帐户 ID、GCP 项目 ID 和 GCS 存储桶名称。
+     - 按照说明手动设置新的服务帐户。
+   - 自动设置：
+     - 使用 [Terraform 模板](https://github.com/Temporalio/terraform-modules/tree/main/modules/export-sa) 创建服务帐户。
+
+## 配置Workflow历史记录导出
+
+配置导出的方法有多种：通过 [Temporal Cloud UI](#using-Temporal-cloud-ui)、[`tcld`](#using-tcld) 或 [`terraform`](#using-terraform)。
+
+
+:::note Why does Temporal Cloud provision multiple service accounts for Export?
+
+Temporal Cloud 为导出操作创建多个中间服务帐户，主要是出于安全目的。系统在写入存储接收器时从这些帐户中随机选择，这提供了几个好处：
+
+- **安全隔离**：如果一个服务帐户受到威胁或需要停用，其他帐户仍然可用
+- **负载分配**：防止独占使用单个帐户，降低安全风险
+- **热待机**：保持多个帐户处于活动状态，以避免在帐户之间切换时潜在的限制
+- **可靠性**：针对可能影响单个服务帐户的云提供商帐户级问题提供弹性
+
+这种方法优先考虑安全性和可用性，即使个别服务帐户遇到问题也能确保稳健的导出操作。
+:::
+
+- `connection-id`：PL 连接的 VPC 终端节点 ID（例如：`vpce-00939a7ed9EXAMPLE`）
+- `region`：PL 连接的区域，以 aws 为前缀（例如：`aws-us-east-1`）。必须与 XPROT025X 位于同一区域。请参阅 [Temporal Cloud 区域列表](/cloud/regions) 了解支持的区域。
+
+以下步骤指导您使用 Temporal Cloud UI 设置 Workflow 历史记录导出。
+
+![](/img/cloud/gcp/export-sink-ui-gcp.png)
+
+1. 在云 UI 中，导航至 Namespaces 部分。确认导出功能可见并正确显示。
+2. 为 Namespace 配置导出接收器：
+   1. 选择 GCS 作为接收器类型。
+   2. 提供以下信息：
+      1. 姓名
+      2.服务帐号ID
+      3.GCP项目ID
+      4.GCS存储桶名称
+3. 输入必要的值后，单击“**验证**”。
+   您应该能够成功写入接收器。
+   如果没有，请修复任何错误或联系支持人员寻求帮助。
+   - 如果您刚刚创建了 GCS 存储桶并为您的服务帐户授予了权限，则权限传播可能需要一些时间。您可能需要等待最多 5 分钟，然后才能单击 **验证** 按钮来验证连接。
+4. 单击**创建**将完成导出接收器设置。
+5. 页面将自动刷新，您应该在导出屏幕上看到状态“已启用”。
+   您现在已准备好导出 Workflow 历史记录。
+6. 如果您想停止导出并在将来恢复，您可以切换启用按钮。
+   **注意**：当您重新启用该功能时，它将从当前时间点开始，而不是从您禁用导出的时间开始。
+7. 您还可以通过单击“**删除**”来删除导出。
+
+:::tip
+
+不要忘记在设置结束时单击“创建”以确认导出。
+
+:::
+
+### 使用 tcld
+
+要访问 tcld 中的导出相关命令，请按照以下步骤操作：
+
+1. [下载最新版本的tcld](https://docs.Temporal.io/cloud/tcld/#install-tcld)。
+2. 确保您的tcld版本为v0.35.0或更高版本。
+3. 运行命令：`tcld n export gcs`：
+   ```bash
+   NAME:
+      tcld namespace export gcs - Manage GCS export sink
+
+   USAGE:
+      tcld namespace export gcs command [command options] [arguments...]
+
+   COMMANDS:
+      create, c    Create export sink
+      update, u    Update export sink
+      validate, v  Validate export sink
+      get, g       Get export sink
+      delete, d    Delete export sink
+      list, l      List export sinks
+      help, h      Shows a list of commands or help for one command
+
+   OPTIONS:
+      --help, -h  show help
+   ```
+
+4. 运行“tcld n export gcs create”命令并提供以下信息：
+   - `--Namespace`：要配置导出的 Namespace。
+   - `--sink-name`：导出接收器的名称。
+   - `--service-account-email`：有权访问接收器的服务帐户。
+   - `--gcs-bucket`：GCP GCS 存储桶的名称。
+
+例如：
+
+   ```bash
+   tcld n export gcs create -n test.ns --sink-name test-sink --service-account-email test-sink@test-export-sink.iam.gserviceaccount.com --gcs-bucket test-export-validation
+   ```
+5. 通过在 Temporal Cloud UI 中查看 Namespace 导出状态或使用以下命令并查找“活动”状态来检查此命令的状态：
+
+```bash
+tcld n export gcs g -n test.ns --sink-name test-sink
+{
+	"name": "test.ns",
+	"resourceVersion": "b954de0c-c6ae-4dcc-90bd-3918b52c3f28",
+	"state": "Active",
+	"spec": {
+		"name": "test-sink",
+		"enabled": true,
+		"destinationType": "Gcs",
+		"s3Sink": null,
+		"gcsSink": {
+			"saId": "test-sink",
+			"bucketName": "test-export-validation",
+			"gcpProjectId": "test-export-sink",
+		}
+	},
+	"health": "Ok",
+	"errorMessage": "",
+	"latestDataExportTime": "0001-01-01T00:00:00Z",
+	"lastHealthCheckTime": "2024-01-23T06:40:02Z"
+}
+```
+
+### 使用 `terraform`
+
+有关设置说明，请参阅 [Terraform 导出支持](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs/resources/Namespace_export_sink)。
+
+
+### 后续步骤
+
+- [验证导出设置](/cloud/export#verify)
+- [监控导出进度](/cloud/export#monitor)
+- [使用导出的文件](/cloud/export#working-with-exported-files)

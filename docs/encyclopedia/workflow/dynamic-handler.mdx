@@ -1,8 +1,8 @@
 ---
 id: dynamic-handler
-title: Dynamic handler
-sidebar_label: Dynamic handler
-description: Dynamic Handlers can serve as fallback mechanisms for handling Workflows, Activities, Signals, Queries, or Updates that aren't registered by name.
+title: "动态处理程序"
+sidebar_label: "动态处理程序"
+description: "动态处理程序可以用作后备机制，用于处理未按名称注册的 Workflow、活动、Signal、查询或 Update。"
 slug: /dynamic-handler
 toc_max_heading_level: 4
 keywords:
@@ -13,37 +13,38 @@ tags:
 
 ---
 
-This page discusses [Dynamic Handler](#dynamic-handler).
+本页讨论 [动态处理程序](#dynamic-handler)。
 
-## What is a Dynamic Handler? {#dynamic-handler}
+<a id="dynamic-handler"></a>
+## 什么是动态处理程序？ {#dynamic-handler}
 
-Temporal supports Dynamic Workflows, Activities, Signals, and Queries.
+Temporal 支持动态 Workflow、活动、Signal 和查询。
 
 :::note
 
-Currently, the Temporal SDKs that support Dynamic Handlers are:
+目前，支持动态处理程序的 Temporal SDK 有：
 
-- [Java](/develop/java/workflows/message-passing#dynamic-handler)
+- [爪哇](/develop/java/workflows/message-passing#dynamic-handler)
 - [Python](/develop/python/workflows/message-passing#dynamic-handler)
-- [.NET](/develop/dotnet/workflows/message-passing#dynamic-handler)
-- [Go](/develop/go/workflows/dynamic-workflow)
-- [Ruby](/develop/ruby/workflows/message-passing#dynamic-handler)
+- [。网](/develop/dotnet/workflows/message-passing#dynamic-handler)
+- [去](/develop/go/workflows/dynamic-workflow)
+- [红宝石](/develop/ruby/workflows/message-passing#dynamic-handler)
 
 :::
 
-These are unnamed handlers that are invoked if no other statically defined handler with the given name exists.
+这些是未命名的处理程序，如果不存在具有给定名称的其他静态定义的处理程序，则会调用这些处理程序。
 
-Dynamic Handlers provide flexibility to handle cases where the names of Workflows, Activities, Signals, or Queries aren't known at run time.
+动态处理程序可以灵活地处理运行时未知 Workflow、活动、Signal 或查询的名称的情况。
 
 :::caution
 
-Dynamic Handlers should be used judiciously as a fallback mechanism rather than the primary approach.
-Overusing them can lead to maintainability and debugging issues down the line.
+应明智地使用动态处理程序作为后备机制而不是主要方法。
+过度使用它们可能会导致可维护性和调试问题。
 
-Instead, Workflows, Activities, Signals, and Queries should be defined statically whenever possible, with clear names that indicate their purpose.
-Use static definitions as the primary way of structuring your Workflows.
+相反，Workflow、活动、Signal 和查询应尽可能静态定义，并使用表明其用途的清晰名称。
+使用静态定义作为构建 Workflow 的主要方式。
 
-Reserve Dynamic Handlers for cases where the handler names are not known at compile time and need to be looked up dynamically at runtime.
-They are meant to handle edge cases and act as a catch-all, not as the main way of invoking logic.
+保留动态处理程序，用于处理程序名称在编译时未知且需要在运行时动态查找的情况。
+它们旨在处理边缘情况并充当包罗万象的角色，而不是作为调用逻辑的主要方式。
 
 :::

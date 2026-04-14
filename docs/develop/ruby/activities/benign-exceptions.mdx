@@ -1,8 +1,8 @@
 ---
 id: benign-exceptions
-title: Benign exceptions - Ruby SDK
-sidebar_label: Benign exceptions
-description: Mark expected or non-severe Activity errors as benign to reduce noise in logs, metrics, and OpenTelemetry traces.
+title: "良性异常 - Ruby SDK"
+sidebar_label: "良性异常"
+description: "将预期或非严重的 Activity 错误标记为良性，以减少日志、指标和 OpenTelemetry 跟踪中的噪音。"
 toc_max_heading_level: 2
 keywords:
   - benign exceptions
@@ -18,17 +18,17 @@ tags:
   - Temporal SDKs
 ---
 
-**How to mark an Activity error as benign using the Temporal Ruby SDK**
+**如何使用 Temporal Ruby SDK 将 Activity 错误标记为良性错误**
 
-When Activities throw errors that are expected or not severe, they can create noise in your logs, metrics, and OpenTelemetry traces, making it harder to identify real issues.
-By marking these errors as benign, you can exclude them from your observability data while still handling them in your Workflow logic.
+当活动抛出预期或不严重的错误时，它们可能会在日志、指标和 OpenTelemetry 跟踪中产生噪音，从而使识别真正问题变得更加困难。
+通过将这些错误标记为良性，您可以将它们从可观测性数据中排除，同时仍然在 Workflow 逻辑中处理它们。
 
-To mark an error as benign, set the `category` parameter to `Temporalio::Error::ApplicationError::Category::BENIGN` when raising an `ApplicationError`.
+要将错误标记为良性，请在引发 `ApplicationError` 时将 `category` 参数设置为 `Temporalio::Error::ApplicationError::Category::BENIGN`。
 
-Benign errors:
-- Have Activity failure logs downgraded to DEBUG level
-- Do not emit Activity failure metrics
-- Do not set the OpenTelemetry failure status to ERROR
+良性错误：
+- 将 Activity 故障日志降级至 DEBUG 级别
+- 不发出 Activity 失败指标
+- 不要将 OpenTelemetry 失败状态设置为 ERROR
 
 ```ruby
 require 'temporalio/activity'
@@ -48,4 +48,4 @@ class MyActivity < Temporalio::Activity::Definition
 end
 ```
 
-Use benign exceptions for Activity errors that occur regularly as part of normal operations, such as polling an external service that isn't ready yet, or handling expected transient failures that will be retried.
+对正常操作中定期发生的 Activity 错误使用良性异常，例如轮询尚未准备就绪的外部服务，或处理将重试的预期瞬态故障。

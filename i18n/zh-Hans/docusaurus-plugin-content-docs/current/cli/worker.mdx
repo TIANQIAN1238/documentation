@@ -1,0 +1,474 @@
+---
+id: worker
+title: Temporal CLI Worker 命令参考
+sidebar_label: Worker
+description: 了解如何读取或修改与 Worker 关联的状态，例如 Worker 部署。
+toc_max_heading_level: 4
+keywords:
+  - worker
+  - worker deployment
+  - worker list
+  - worker describe
+tags:
+  - Temporal CLI
+---
+
+{/* 注意：这是一个自动生成的文件。对此文件的任何编辑都将被覆盖。
+该文件是通过内部/cmd/gen-docs 从 https://github.com/Temporalio/cli/blob/main/internal/commandsgen/commands.yml 生成的 */}
+
+本页提供“Temporal”CLI“Worker”命令的参考。适用于每个子命令的标志显示在子命令标题内的表格中。请参阅 [全局标志](#global-flags) 了解可与每个子命令一起使用的标志。
+
+## 部署
+
+部署命令对 Worker 部署执行操作：
+
+```
+temporal worker deployment [command] [options]
+```
+
+例如：
+
+```
+temporal worker deployment list
+```
+
+列出客户端 Namespace 中的部署。
+
+参数可以是与关联的 Worker 部署版本
+a 部署，使用部署名称和构建 ID 指定。
+
+例如：
+
+```
+temporal worker deployment set-current-version \
+         --deployment-name YourDeploymentName --build-id YourBuildID
+```
+
+设置给定部署的当前部署版本。
+
+＃＃＃ 删除
+
+根据部署名称删除 Worker 部署。
+仅当部署中没有版本时才能删除。
+
+```
+temporal worker deployment delete [options]
+```
+
+例如，设置删除部署的用户身份：
+
+```
+temporal worker deployment delete \
+    --name YourDeploymentName \
+    --identity YourIdentity
+
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--name`, `-d` |是的 | **字符串** Worker 部署的名称。 |
+
+### 删除版本
+
+删除 Worker 部署版本（给定其完全限定标识符）。
+正常操作期间很少需要此操作
+因为未使用的版本最终会被垃圾收集。
+只有满足以下所有条件时，客户端才能删除版本
+满足：
+  - 它不是此部署的当前版本或渐变版本。
+  - 它没有活动轮询器，即没有 Task Queue
+  版本有轮询器。
+  - 它没有排水。可以使用选项忽略此要求
+`--跳过排水`。
+```
+temporal worker deployment delete-version [options]
+```
+
+例如，跳过排水限制：
+
+```
+temporal worker deployment delete-version \
+    --deployment-name YourDeploymentName --build-id YourBuildID \
+    --skip-drainage
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--build-id` |是的 | **字符串** Worker 部署版本的构建 ID。 |
+| `--部署名称` |是的 | **字符串** Worker 部署的名称。 |
+| `--跳过排水` |没有 | **bool** 忽略不排空的删除要求。 |
+
+＃＃＃ 描述
+
+描述 Worker 部署的属性，例如版本
+与之关联的新任务或现有任务的路由信息
+此部署执行的或其创建时间。
+
+```
+temporal worker deployment describe [options]
+```
+
+例如，要在默认情况下描述部署“YourDeploymentName”
+Namespace：
+
+```
+temporal worker deployment describe \
+    --name YourDeploymentName
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--name`, `-d` |是的 | **字符串** Worker 部署的名称。 |
+
+### 描述版本
+
+描述 Worker 部署版本的属性，例如任务
+在此部署版本中由 Worker 轮询的队列，或引流
+安全停用 Worker 所需的信息，或用户提供的信息
+元数据或其创建/修改时间。
+
+```
+temporal worker deployment describe-version [options]
+```
+
+例如，描述部署中的部署版本
+`YourDeploymentName`，带有构建 ID `YourBuildID`，并且采用默认值
+Namespace：
+
+```
+temporal worker deployment describe-version \
+    --deployment-name YourDeploymentName --build-id YourBuildID
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--build-id` |是的 | **字符串** Worker 部署版本的构建 ID。 |
+| `--部署名称` |是的 | **字符串** Worker 部署的名称。 |
+| `--report-task-queue-stats` |没有 | **bool** 报告此版本中存在的 Task Queue 的统计信息。 |
+
+＃＃＃ 列表
+
+列出客户端 Namespace 中的现有 Worker 部署。
+
+```
+temporal worker deployment list [options]
+```
+
+例如，在 YourDeploymentNamespace 中列出部署：
+
+```
+temporal worker deployment list \
+    --namespace YourDeploymentNamespace
+```
+
+使用 [global flags](#global-flags) 自定义此命令与 Temporal 服务的连接。
+
+### 经理身份
+
+Manager Identity 命令更改 Worker 部署的“ManagerIdentity”：
+
+```
+temporal worker deployment manager-identity [command] [options]
+```
+
+如果存在，“ManagerIdentity”是拥有以下权限的用户的身份： 
+对此 Worker 部署进行更改的专有权利。默认为空。
+设置后，身份与“ManagerIdentity”不匹配的用户将不会
+能够更改 Worker 部署。
+
+这在多个用户（例如 CLI
+用户和自动控制器）可以与同一个 Worker 部署进行交互。
+“ManagerIdentity”允许不同用户相互交流
+预计谁对 Worker 部署进行更改。
+
+当前的经理身份通过“describe”返回：
+```
+ temporal worker deployment describe \
+    --deployment-name YourDeploymentName
+```
+
+＃＃＃＃ 放
+
+根据给定的部署名称设置 Worker 部署的“ManagerIdentity”。
+
+如果存在，“ManagerIdentity”是拥有以下权限的用户的身份： 
+对此 Worker 部署进行更改的专有权利。默认为空。
+设置后，身份与“ManagerIdentity”不匹配的用户将不会
+能够更改 Worker 部署。
+
+这在多个用户（例如 CLI
+用户和自动控制器）可以与同一个 Worker 部署进行交互。
+“ManagerIdentity”允许不同用户相互交流
+预计谁对 Worker 部署进行更改。
+
+```
+temporal worker deployment manager-identity set [options]
+```
+
+例如：
+
+```
+temporal worker deployment manager-identity set \
+   --deployment-name DeploymentName \
+   --self \
+   --identity YourUserIdentity # optional, populated by CLI if not provided
+```
+
+将 Deployment 的 Manager Identity 设置为用户的身份 
+这个请求。如果您没有专门传递身份字段，CLI 将 
+为您生成您的身份。
+
+例如：
+```
+temporal worker deployment manager-identity set \
+   --deployment-name DeploymentName \
+   --manager-identity NewManagerIdentity
+```
+
+将部署的管理器标识设置为任意字符串。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--部署名称` |没有 | **字符串** Worker 部署的名称。必需的。 |
+| `--经理身份` |没有 | **字符串** 新经理身份。除非指定 --self ，否则为必需。 |
+| `--自我` |没有 | **bool** 将 Manager Identity 设置为提交此请求的用户的身份。除非指定 --manager-identity，否则是必需的。 |
+| `--是`、`-y` |没有 | **bool** 不提示确认设置的经理身份。 |
+
+## XPROT025X 的专用网络连接
+
+根据部署名称取消设置 Worker 部署的“ManagerIdentity”。
+
+如果存在，“ManagerIdentity”是拥有以下权限的用户的身份： 
+对此 Worker 部署进行更改的专有权利。默认为空。
+设置后，身份与“ManagerIdentity”不匹配的用户将不会
+能够更改 Worker 部署。
+
+这在多个用户（例如 CLI
+用户和自动控制器）可以与同一个 Worker 部署进行交互。
+“ManagerIdentity”允许不同用户相互交流
+预计谁对 Worker 部署进行更改。
+
+```
+temporal worker deployment manager-identity unset [options]
+```
+
+例如：
+
+```
+temporal worker deployment manager-identity unset \
+   --deployment-name YourDeploymentName
+```
+
+清除给定部署的管理器身份字段。
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--部署名称` |没有 | **字符串** Worker 部署的名称。必需的。 |
+| `--是`、`-y` |没有 | **bool** 不提示确认取消设置经理身份。 |
+
+### 设置当前版本
+
+设置部署的当前版本。
+当某个版本为最新版本时，该部署版本的 Worker 将收到
+来自新 Workflow 和现有自动升级 Workflow 的任务
+正在此部署上运行。
+
+如果不是所有预期的 Task Queue 都被 Worker 轮询
+新版本请求将失败。要覆盖此保护，请使用
+`--忽略丢失的任务队列`。请注意，这将忽略 Task Queues
+在尚未发现的部署中，导致任务不一致
+队列配置。
+
+```
+temporal worker deployment set-current-version [options]
+```
+
+例如，设置部署的当前版本
+`YourDeploymentName`，版本 ID 为 `YourBuildID`，以及
+在默认的 Namespace 中：
+
+```
+temporal worker deployment set-current-version \
+    --deployment-name YourDeploymentName --build-id YourBuildID
+```
+
+set-current-version 的目标也可以是未版本化的 Workers：
+
+```
+temporal worker deployment set-current-version \
+    --deployment-name YourDeploymentName --unversioned
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--不允许轮询器` |没有 | **bool** 覆盖保护并将版本设置为当前版本，即使它没有轮询器。 |
+| `--build-id` |没有 | **字符串** Worker 部署版本的构建 ID。除非指定 --unversioned，否则是必需的。 |
+| `--部署名称` |是的 | **字符串** Worker 部署的名称。 |
+| `--忽略缺少任务队列` |没有 | **布尔** 覆盖保护以意外删除 Task Queue。 |
+| `--未版本化` |没有 | **bool** 将未版本化的 Workers 设置为目标版本。不能与 --build-id 一起使用。 |
+| `--是`、`-y` |没有 | **bool** 不提示确认设置当前版本。 |
+
+### 设置斜坡版本
+
+设置部署的渐变版本和百分比。
+
+可以使用部署名称和构建 ID 设置渐变版本，
+或使用 --unversioned 标志设置为未版本化的 Workers。
+
+渐变百分比是一个浮点数，其值在 [0, 100] 范围内。
+值 100 不会使渐变版本成为当前版本，请使用
+改为“设置当前版本”。
+
+要删除渐变版本，请使用标志“--delete”。
+
+如果不是所有预期的 Task Queue 都被 Worker 轮询
+新的 Ramping 版本请求将失败。要覆盖此保护，请使用
+`--忽略丢失的任务队列`。请注意，这将忽略 Task Queues
+在尚未发现的部署中，导致任务不一致
+队列配置。
+
+```
+temporal worker deployment set-ramping-version [options]
+```
+
+例如，设置部署的 Ramping 版本
+`YourDeploymentName`，具有构建 ID `YourBuildID` 的版本，以及
+10% 的任务重定向到此版本，并且
+使用默认的 Namespace：
+
+```
+temporal worker deployment set-ramping-version \
+    --deployment-name YourDeploymentName --build-id YourBuildID \
+    --percentage 10.0
+```
+
+并消除该斜坡：
+```
+temporal worker deployment set-ramping-version \
+    --deployment-name YourDeploymentName --build-id YourBuildID \
+    --delete
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--不允许轮询器` |没有 | **bool** 覆盖保护并将版本设置为斜坡，即使它没有轮询器。 |
+| `--build-id` |没有 | **字符串** Worker 部署版本的构建 ID。除非指定 --unversioned，否则是必需的。 |
+| `--删除` |没有 | **布尔** 删除斜坡版本。 |
+| `--部署名称` |是的 | **字符串** Worker 部署的名称。 |
+| `--忽略缺少任务队列` |没有 | **布尔** 覆盖保护以意外删除 Task Queue。 |
+| `--百分比` |没有 | **浮动** 重定向到斜坡版本的任务百分比。有效范围 [0,100]。 |
+| `--未版本化` |没有 | **bool** 将未版本化的 Workers 设置为目标版本。不能与 --build-id 一起使用。 |
+| `--是`、`-y` |没有 | **bool** 不提示确认设置斜坡版本。 |
+
+### Update-版本-元数据
+
+与 Worker 部署版本关联的 Update 元数据。
+
+例如：
+
+```
+ temporal worker deployment update-version-metadata \
+    --deployment-name YourDeploymentName --build-id YourBuildID \
+    --metadata bar=1 \
+    --metadata foo=true
+```
+
+当前的元数据也通过“describe-version”返回：
+```
+ temporal worker deployment describe-version \
+    --deployment-name YourDeploymentName --build-id YourBuildID \
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--build-id` |是的 | **字符串** Worker 部署版本的构建 ID。 |
+| `--部署名称` |是的 | **字符串** Worker 部署的名称。 |
+| `--元数据` |没有 | **string[]** 使用“KEY=”VALUE”对设置部署元数据。键必须是标识符，值必须是 JSON 值。例如： `YourKey={"your": "value"}` 可以多次传递。 |
+| `--删除条目` |没有 | **string[]** 要从元数据中删除的条目的键。可以多次通过。 |
+
+＃＃ 描述
+
+查找特定Worker的信息。
+
+```
+temporal worker describe --namespace YourNamespace --worker-instance-key YourKey
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--Worker-实例密钥` |是的 | **字符串** Worker 实例密钥来描述。 |
+
+＃＃ 列表
+
+获取指定 Namespace 的 Worker 列表。
+
+```
+temporal worker list --namespace YourNamespace --query 'TaskQueue="YourTaskQueue"'
+```
+
+使用以下选项更改此命令的行为。您还可以使用任何适用于所有子命令的[全局标志](#global-flags)。
+
+|旗帜|必填 |描述 |
+|------|----------|-------------|
+| `--限制` |没有 | **int** 要显示的 Worker 的最大数量。 |
+| `--Query`、`-q` |没有 | **字符串** 类似 SQL“Query”列表过滤器的内容。 |
+
+## 全局标志
+
+以下选项可与任何命令一起使用。
+
+|旗帜|必填 |描述 |默认 |
+|------|----------|-------------|--------|
+| `--地址` |没有 | **字符串** Temporal 服务 gRPC 端点。 | `本地主机：7233` |
+| `--api-key` |没有 | **字符串** 请求的 API 密钥。 |  |
+| `--客户端权限` |没有 | **字符串** Temporal gRPC 客户端：权限伪标头。 |  |
+| `--客户端连接超时` |没有 | **持续时间** 客户端连接超时。 0s表示没有超时。 |  |
+| `--codec-auth` |没有 | **字符串** Codec Server 请求的授权标头。 |  |
+| `--编解码器端点` |没有 | **字符串** 远程 Codec Server 端点。 |  |
+| `--编解码器头` |没有 | **string[]** 向 Codec Server 发出请求的 HTTP 标头。格式为“KEY=VALUE”对。可以多次传递以设置多个标头。 |  |
+| `--颜色` |没有 | **字符串枚举** 输出着色。接受的值：始终、从不、自动。 | `自动` |
+| `--命令超时` |没有 | **持续时间** 命令执行超时。 0s表示没有超时。 |  |
+| `--config 文件` |没有 | **字符串** 从中读取 TOML 配置的文件路径，默认为 `$CONFIG_PATH/Temporalio/Temporal.toml`，其中 `$CONFIG_PATH` 在 Unix 上定义为 `$HOME/.config`，在 macOS 上定义为 `$HOME/Library/Application Support`，在 Windows 上定义为 `%AppData%`。 _（实验）_ |  |
+| `--disable-config-env` |没有 | **bool** 如果设置，则禁用从环境变量加载环境配置。 _（实验）_ |  |
+| `--禁用配置文件` |没有 | **bool** 如果设置，则禁用从配置文件加载环境配置。 _（实验）_ |  |
+| `--env` |没有 | **字符串** 活动环境名称（`ENV`）。 | `默认` |
+| `--env-file` |没有 | **字符串** 环境设置文件的路径。默认为“$HOME/.config/Temporalio/Temporal.yaml”。 |  |
+| `--gRPC-元` |没有 | **string[]** 请求的 HTTP 标头。格式为“KEY=VALUE”对。可以多次传递以设置多个标头。也可以通过环境变量“Temporal_gRPC_META_[name]”提供。 |  |
+| `--身份` |没有 | **字符串** 提交此请求的用户或客户端的身份。默认为“Temporal-cli:$USER@$HOST”。 |  |
+| `--日志格式` |没有 | **字符串枚举** 日志格式。接受的值：文本、json。 | `文本` |
+| `--日志级别` |没有 | **字符串枚举** 日志级别。大多数命令的默认值为“info”，“server start-dev”的默认值为“warn”。接受的值：调试、信息、警告、错误、从不。 | `信息` |
+| `--Namespace`、`-n` |没有 | **字符串** Temporal 服务 Namespace。 | `默认` |
+| `--no-json-shorthand-payloads` |没有 | **bool** 原始负载输出，即使使用了 JSON 选项。 |  |
+| `--output`、`-o` |没有 | **字符串枚举** 非日志数据输出格式。接受的值：text、json、jsonl、none。 | `文本` |
+| `--个人资料` |没有 | **字符串** 用于配置文件的配置文件。 _（实验）_ |  |
+| `--时间格式` |没有 | **字符串枚举** 时间格式。接受的值：relative、iso、raw。 | `亲戚` |
+| `--tls` |没有 | **布尔** 启用基本 TLS 加密。没有 mTLS 或客户端证书等其他选项。如果存在 api-key 或任何其他 TLS 选项，则默认为 true。使用 --tls=false 显式禁用。 |  |
+| `--tls-ca-data` |没有 | **字符串** 服务器 CA 证书的数据。不能与 --tls-ca-path 一起使用。 |  |
+| `--tls-ca-path` |没有 | **字符串** 服务器 CA 证书的路径。不能与 --tls-ca-data 一起使用。 |  |
+| `--tls-cert-data` |没有 | **字符串** x509 证书的数据。不能与 --tls-cert-path 一起使用。 |  |
+| `--tls-cert-path` |没有 | **字符串** x509 证书的路径。不能与 --tls-cert-data 一起使用。 |  |
+| `--tls-disable-host-verification` |没有 | **bool** 禁用 TLS 主机名验证。 |  |
+| `--tls-key-data` |没有 | **字符串** 私有证书密钥数据。不能与 --tls-key-path 一起使用。 |  |
+| `--tls-key-path` |没有 | **字符串** x509 私钥的路径。不能与 --tls-key-data 一起使用。 |  |
+| `--tls-服务器名称` |没有 | **字符串** 覆盖目标 TLS 服务器名称。 |  |
+

@@ -1,8 +1,8 @@
 ---
 id: versioning
-title: Versioning - Go SDK
-description: Temporal's Go SDK ensures Workflow determinism through Patching APIs and Worker Versioning. Update Workflow code without causing non-deterministic issues, understand versioning best practices, and use dynamic configuration parameters for seamless updating of long-running Workflows.
-sidebar_label: Versioning
+title: "版本控制 - Go SDK"
+description: "Temporal 的 Go SDK 通过修补 API 和 Worker 版本控制确保 Workflow 的确定性。 Update Workflow 代码不会导致不确定性问题，了解版本控制最佳实践，并使用动态配置参数来无缝更新长期运行的 Workflow。"
+sidebar_label: "版本控制"
 toc_max_heading_level: 4
 keywords:
   - determinism
@@ -18,33 +18,35 @@ tags:
   - Temporal SDKs
 ---
 
-Since Workflow Executions in Temporal can run for long periods — sometimes months or even years — it's common to need to make changes to a Workflow Definition, even while a particular Workflow Execution is in progress.
+由于 Temporal 中的 Workflow Execution 可以运行很长时间（有时是几个月甚至几年），因此通常需要对 Workflow Definition 进行更改，即使特定的 Workflow Execution 正在进行中也是如此。
 
-The Temporal Platform requires that Workflow code is [deterministic](/workflow-definition#deterministic-constraints).
-If you make a change to your Workflow code that would cause non-deterministic behavior on Replay, you'll need to use one of our Versioning methods to gracefully update your running Workflows.
-With Versioning, you can modify your Workflow Definition so that new executions use the updated code, while existing ones continue running the original version.
-There are two primary Versioning methods that you can use:
+Temporal 平台要求 Workflow 代码为 [确定性的](/workflow-definition#deterministic-constraints)。
+如果您对 Workflow 代码进行的更改会导致重播时出现不确定行为，则您需要使用我们的版本控制方法之一来优雅地 Update 您正在运行的 Workflow。
+通过版本控制，您可以修改 Workflow Definition，以便新执行使用 Updated 代码，而现有执行继续运行原始版本。
+您可以使用两种主要的版本控制方法：
 
-- [Worker Versioning](/production-deployment/worker-deployments/worker-versioning). The Worker Versioning feature allows you to tag your Workers and programmatically roll them out in versioned deployments, so that old Workers can run old code paths and new Workers can run new code paths.
-- [Versioning with Patching](#patching). This method works by adding branches to your code tied to specific revisions. It applies a code change to new Workflow Executions while avoiding disruptive changes to in-progress Workflow Executions.
+- [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning)。 Worker 版本控制功能允许您标记 Worker 并以编程方式在版本化部署中推出它们，以便旧的 Worker 可以运行旧的代码路径，而新的 Worker 可以运行新的代码路径。
+- [通过补丁进行版本控制](#patching)。此方法的工作原理是向与特定修订版相关的代码添加分支。它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
 
 :::danger
-Support for the experimental Worker Versioning method before 2025 will be removed from Temporal Server in March 2026. Refer to the [latest Worker Versioning docs](/worker-versioning) for guidance. You can still refer to the [Worker Versioning Legacy](/develop/go/worker-versioning-legacy) docs if needed. 
+2025 年之前对实验性 Worker 版本控制方法的支持将于 2026 年 3 月从 Temporal Server 中删除。请参阅 [最新的 Worker 版本控制文档](/worker-versioning) 获取指导。如果需要，您仍然可以参考 [Worker 版本控制旧版](/develop/go/worker-versioning-legacy) 文档。
 :::
 
-## Worker Versioning
+<a id="worker-versioning"></a>
+## Worker 版本控制 {#worker-versioning}
 
-Temporal's [Worker Versioning](/production-deployment/worker-deployments/worker-versioning) feature allows you to tag your Workers and programmatically roll them out in Deployment Versions, so that old Workers can run old code paths and new Workers can run new code paths. This way, you can pin your Workflows to specific revisions, avoiding the need for patching.
+Temporal 的 [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning) 功能允许您标记 Worker 并以编程方式在部署版本中推出它们，以便旧的 Worker 可以运行旧的代码路径，而新的 Worker 可以运行新的代码路径。这样，您就可以将 Workflow 固定到特定版本，从而无需修补。
 
-## Versioning with Patching {#patching}
+## 使用补丁进行版本控制 {#patching}
 
-### Patching with GetVersion
+<a id="patching-with-getversion"></a>
+### 使用 GetVersion 进行修补 {#patching-with-getversion}
 
-A Patch defines a logical branch in a Workflow for a specific change, similar to a feature flag.
-It applies a code change to new Workflow Executions while avoiding disruptive changes to in-progress Workflow Executions.
-When you want to make substantive code changes that may affect existing Workflow Executions, create a patch. Note that there's no need to patch [Pinned Workflows](/worker-versioning).
+补丁在 Workflow 中为特定更改定义逻辑分支，类似于功能标志。
+它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
+当您想要进行可能影响现有 Workflow Execution 的实质性代码更改时，请创建补丁。请注意，无需修补 [固定 Workflow](/worker-versioning)。
 
-Consider the following Workflow Definition:
+考虑以下 Workflow Definition：
 
 ```go
 func YourWorkflow(ctx workflow.Context, data string) (string, error) {
@@ -64,12 +66,12 @@ func YourWorkflow(ctx workflow.Context, data string) (string, error) {
 }
 ```
 
-Suppose you replaced `ActivityA` with `ActivityC` and deployed the updated code.
+假设您将 `ActivityA` 替换为 `ActivityC` 并部署了 Updated 代码。
 
-If an existing Workflow Execution was started by the original version of the Workflow code, where `ActivityA` was run, and then resumed running on a new Worker where it was replaced with `ActivityC`, the server side Event History would be out of sync.
-This would cause the Workflow to fail with a nondeterminism error.
+如果现有的 Workflow Execution 由运行 `ActivityA` 的 Workflow 代码的原始版本启动，然后在被 `ActivityC` 替换的新 Worker 上恢复运行，则服务器端 Event History 将不同步。
+这将导致 Workflow 失败并出现不确定性错误。
 
-To resolve this, you can use `workflow.GetVersion()` to patch to your Workflow:
+要解决此问题，您可以使用 `Workflow.GetVersion()` 修补 Workflow：
 
 ```go
 var err error
@@ -88,10 +90,10 @@ err = workflow.ExecuteActivity(ctx, ActivityB, result1).Get(ctx, &result2)
 return result2, err
 ```
 
-When `workflow.GetVersion()` is run for the new Workflow Execution, it records a marker in the Event History so that all future calls to `GetVersion` for this change Id — `Step 1` in the example — on this Workflow Execution will always return the given version number, which is `1` in the example.
+当为新的 Workflow Execution 运行 `Workflow.GetVersion()` 时，它会在 Event History 中记录一个标记，以便将来针对此 Workflow Execution 上的此更改 Id（本例中为 `Step 1`）对 `GetVersion` 的所有调用将始终返回给定的版本号，在本例中为 `1`。
 
-If you make an additional change, such as replacing ActivityC with ActivityD, you need to
-add some additional code:
+如果您进行其他更改，例如将 ActivityC 替换为 ActivityD，则需要
+添加一些额外的代码：
 
 ```go
 v := workflow.GetVersion(ctx, "Step1", workflow.DefaultVersion, 2)
@@ -104,12 +106,12 @@ if v == workflow.DefaultVersion {
 }
 ```
 
-Note that we changed `maxSupported` from 1 to 2.
-A Workflow that has already passed this `GetVersion()` call before it was introduced returns `DefaultVersion`.
-A Workflow that was run with `maxSupported` set to 1 returns 1.
-New Workflows return 2.
+请注意，我们将 `maxSupported` 从 1 更改为 2。
+在引入之前已经通过此 `GetVersion()` 调用的 Workflow 返回 `DefaultVersion`。
+在 `maxSupported` 设置为 1 的情况下运行的 Workflow 返回 1。
+新Workflow回归2。
 
-After all the Workflow Executions prior to version 1 have left retention, you can remove the code for that version:
+在版本 1 之前的所有 Workflow Execution 都保留后，您可以删除该版本的代码：
 
 ```go
 v := workflow.GetVersion(ctx, "Step1", 1, 2)
@@ -120,31 +122,31 @@ if v == 1 {
 }
 ```
 
-You'll note that `minSupported` has changed from `DefaultVersion` to `1`.
-If an older version of the Workflow Execution history is replayed on this code, it fails because the minimum expected version is 1.
-After all the Workflow Executions for version 1 have left retention, you can remove version 1 so that your code looks like the following:
+您会注意到 `minSupported` 已从 `DefaultVersion` 更改为 `1`。
+如果在此代码上重播旧版本的 Workflow Execution 历史记录，则会失败，因为最低预期版本为 1。
+在版本 1 的所有 Workflow Execution 都保留后，您可以删除版本 1，以便您的代码如下所示：
 
 ```go
 _ := workflow.GetVersion(ctx, "Step1", 2, 2)
 err = workflow.ExecuteActivity(ctx, ActivityD, data).Get(ctx, &result1)
 ```
 
-Note that we have preserved the call to `GetVersion()`. There are two reasons to preserve this call:
+请注意，我们保留了对 `GetVersion()` 的调用。保留此调用有两个原因：
 
-1. This ensures that if there is a Workflow Execution still running for an older version, it will
-   fail here and not proceed.
-2. If you need to make additional changes for `Step1`, such as changing ActivityD to ActivityE, you
-   only need to update `maxVersion` from 2 to 3 and branch from there.
+1. 这确保了如果有 Workflow Execution 仍在运行旧版本，它将
+   此处失败，不再继续。
+2. 如果您需要对 `Step1` 进行其他更改，例如将 ActivityD 更改为 ActivityE，您
+   只需要从 2 到 3 Update `maxVersion` 并从那里分支。
 
-You need to preserve only the first call to `GetVersion()` for each `changeID`.
-All subsequent calls to `GetVersion()` with the same change Id are safe to remove.
-If necessary, you can remove the first `GetVersion()` call, but you need to ensure the following:
+您只需为每个 `changeID` 保留对 `GetVersion()` 的第一次调用。
+所有具有相同更改 ID 的后续调用 `GetVersion()` 都可以安全删除。
+如有必要，您可以删除第一个 `GetVersion()` 调用，但需要确保以下几点：
 
-- All executions with an older version have left retention.
-- You can no longer use `Step1` for the changeId. If you need to make changes to that same part in
-  the future, such as change from ActivityD to ActivityE, you would need to use a different changeId
-  like `Step1-fix2`, and start minVersion from DefaultVersion again. The code would look like the
-  following:
+- 所有旧版本的执行均已保留。
+- 您不能再使用 `Step1` 作为changeId。如果您需要对同一部分进行更改
+  将来，例如从 ActivityD 更改为 ActivityE，则需要使用不同的changeId
+  像`Step1-fix2`，并再次从DefaultVersion开始minVersion。代码看起来像
+  以下：
 
 ```go
 v := workflow.GetVersion(ctx, "Step1-fix2", workflow.DefaultVersion, 1)
@@ -155,13 +157,14 @@ if v == workflow.DefaultVersion {
 }
 ```
 
-You can add multiple calls to `GetVersion` in a single Workflow.
-This can become challenging to manage if you have many long-running Workflows, as you will wind up with many code branches over time.
-To clean these up, you can gradually deprecate older Workflow versions.
+您可以在单个 Workflow 中添加对 `GetVersion` 的多个调用。
+如果您有许多长时间运行的 Workflow，这可能会变得难以管理，因为随着时间的推移，您将得到许多代码分支。
+要清理这些内容，您可以逐渐弃用旧的 Workflow 版本。
 
-### Deprecating old Workflow versions
+<a id="deprecating-old-workflow-versions"></a>
+### 弃用旧的 Workflow 版本 {#deprecating-old-workflow-versions}
 
-You can safely remove support for older Workflow versions once you are certain that there are no longer any open Workflow Executions based on that version. You can use the following [List Filter](/list-filter) syntax for this (the 1 near the end of the last line represents the version number):
+一旦您确定不再有任何基于旧版 Workflow Execution 的开放 Workflow Execution，您就可以安全地删除对旧版 Workflow 的支持。为此，您可以使用以下 [列表过滤器](/list-filter) 语法（最后一行末尾附近的 1 表示版本号）：
 
 ```
 WorkflowType = "PizzaWorkflow" 
@@ -169,7 +172,7 @@ WorkflowType = "PizzaWorkflow"
     AND TemporalChangeVersion="ChangedNotificationActivityType-1"
 ```
 
-Since Workflow Executions that were started before `GetVersion` was added to the code won't have the associated Marker in their Event History, you'll need to use a different query to determine if any of those are still running:
+由于在 `GetVersion` 添加到代码之前启动的 Workflow Execution 在其 Event History 中不会有关联的标记，因此您需要使用不同的 Query 来确定其中是否有任何一个仍在运行：
 
 ```
 WorkflowType = "PizzaWorkflow" 
@@ -177,7 +180,7 @@ WorkflowType = "PizzaWorkflow"
     AND TemporalChangeVersion IS NULL
 ```
 
-If you have found that there are no longer any open executions for the first two versions of the Workflow, for example, then you could remove support for them by changing the code as shown below:
+例如，如果您发现 Workflow 的前两个版本不再有任何开放执行，那么您可以通过更改代码来删除对它们的支持，如下所示：
 
 ```go
 version := GetVersion(ctx, "ChangedNotificationActivityType", 2, 3)
@@ -188,18 +191,19 @@ if version  == 2 {
 }
 ```
 
-Patching allows you to make changes to currently running Workflows.
-It is a powerful method for introducing compatible changes without introducing non-determinism errors.
+修补允许您对当前运行的 Workflow 进行更改。
+它是一种引入兼容更改而不引入非确定性错误的强大方法。
 
-### Workflow cutovers
+<a id="workflow-cutovers"></a>
+### Workflow 切换 {#workflow-cutovers}
 
 
-To understand why Patching is useful, it's helpful to demonstrate cutting over an entire Workflow.
+要了解修补为何有用，演示剪切整个 Workflow 会很有帮助。
 
-Since incompatible changes only affect open Workflow Executions of the same type, you can avoid determinism errors by creating a whole new Workflow when making changes.
-To do this, you can copy the Workflow Definition function, giving it a different name, and register both names with your Workers.
+由于不兼容的更改仅影响相同类型的打开的 Workflow Execution，因此您可以在进行更改时通过创建全新的 Workflow 来避免确定性错误。
+为此，您可以复制 Workflow Definition 函数，为其指定一个不同的名称，然后将这两个名称注册到您的 Worker 中。
 
-For example, you would duplicate `PizzaWorkflow` as `PizzaWorkflowV2`:
+例如，您可以将 `PizzaWorkflow` 复制为 `PizzaWorkflowV2`：
 
 ```go
 func PizzaWorkflow(ctx workflow.Context, order PizzaOrder) (OrderConfirmation, error) {
@@ -211,34 +215,34 @@ func PizzaWorkflowV2(ctx workflow.Context, order PizzaOrder) (OrderConfirmation,
 }
 ```
 
-You can use any name you like for the new function, so long as the first character remains uppercase (this is a requirement for any Workflow Definition, since it must use an exported function).
-Using some type of version identifier, such as V2 in this example, will make it easier to identify the change.
+您可以为新函数使用任何您喜欢的名称，只要第一个字符保持大写即可（这是任何 Workflow Definition 的要求，因为它必须使用导出函数）。
+使用某种类型的版本标识符（例如本示例中的 V2）将更容易识别更改。
 
-You would then need to update the Worker configuration, and any other identifier strings, to register both Workflow Types:
+然后，您需要 Update、Worker 配置以及任何其他标识符字符串来注册这两种 Workflow 类型：
 
 ```go
 w.RegisterWorkflow(pizza.PizzaWorkflow)
 w.RegisterWorkflow(pizza.PizzaWorkflowV2)
 ```
 
-The downside of this method is that it requires you to duplicate code and to update any commands used to start the Workflow.
-This can become impractical over time.
-This method also does not provide a way to version any still-running Workflows -- it is essentially just a cutover, unlike Patching.
+此方法的缺点是它需要您复制代码以及用于启动 Workflow 的任何命令到 Update。
+随着时间的推移，这可能变得不切实际。
+此方法也不提供对任何仍在运行的 Workflow 进行版本控制的方法——它本质上只是一个转换，与修补不同。
 
-## Runtime checking {#runtime-checking}
+## 运行时检查 {#runtime-checking}
 
-The Temporal Go SDK performs a runtime check to help prevent obvious incompatible changes.
-Adding, removing, or reordering any of these methods without Versioning triggers the runtime check and results in a nondeterminism error:
+Temporal Go SDK 执行运行时检查以帮助防止明显的不兼容更改。
+在没有版本控制的情况下添加、删除或重新排序任何这些方法都会触发运行时检查并导致不确定性错误：
 
-- `workflow.ExecuteActivity()`
-- `workflow.ExecuteChildWorkflow()`
-- `workflow.NewTimer()`
-- `workflow.RequestCancelWorkflow()`
-- `workflow.SideEffect()`
-- `workflow.SignalExternalWorkflow()`
-- `workflow.Sleep()`
+- `Workflow.ExecuteActivity()`
+- `Workflow.ExecuteChildWorkflow()`
+- `Workflow.NewTimer()`
+- `Workflow.RequestCancelWorkflow()`
+- `Workflow.SideEffect()`
+- `Workflow.SignalExternalWorkflow()`
+- `Workflow.Sleep()`
 
-The runtime check does not perform a thorough check.
-For example, it does not check on the Activity's input arguments or the Timer duration.
-Each Temporal SDK implements these sanity checks differently, and they are not a complete check for non-deterministic changes.
-Instead, you should incorporate [Replay Testing](/develop/go/best-practices/testing-suite#replay) when making revisions.
+运行时检查不会执行彻底的检查。
+例如，它不会检查 Activity 的输入参数或 Timer 持续时间。
+每个 Temporal SDK 都以不同的方式实现这些健全性检查，并且它们并不是对非确定性更改的完整检查。
+相反，您应该在进行修订时合并 [重播测试](/develop/go/best-practices/testing-suite#replay)。

@@ -1,0 +1,57 @@
+---
+id: run-worker-process
+title: Worker 流程 - Ruby SDK
+description: 展示如何使用 Ruby SDK 运行 Worker 进程
+sidebar_label: Worker 流程
+slug: /develop/ruby/workers/run-worker-process
+toc_max_heading_level: 3
+tags:
+  - Ruby SDK
+  - Temporal SDKs
+  - Worker
+---
+
+## 运行 Worker 进程 {#run-Worker-process}
+
+[Worker Process](/Workers#Worker-process) 是 Workflow 函数和 Activity 函数实际执行的地方。
+在 Temporal 应用程序部署中，您可以根据需要运送和扩展任意数量的 Worker，以处理 Workflow 和活动的负载。
+
+- Worker 进程中的每个 [Worker 实体](/Workers#Worker-entity) 必须注册其可能执行的确切 Workflow Type 和 Activity 类型。
+- 每个 Worker 实体还必须将自己与一个 [Task Queue](/task-queue) 关联。
+- 轮询相同 Task Queue 的每个 Worker 实体必须使用相同的 Workflow Type 和 Activity 类型进行注册。
+
+[Worker 实体](/Workers#Worker-entity) 是 Worker 进程中侦听特定 Task Queue 的组件。
+
+Worker 实体包含 Workflow Worker 和/或 Activity Worker，它们分别在 Workflow Execution 和 Activity 执行上取得进展。
+
+Worker 在每个 Temporal SDK 中实现，并且只需一些样板即可部署。
+要创建 Worker，请使用“Temporalio::Worker.new()”，提供 Worker 选项，其中包括 Task Queue、Workflows 和活动等。
+
+以下代码示例创建一个 Worker，该 Worker 轮询来自 Task Queue 的任务并执行 Workflow。
+创建 Worker 时，它接受 Workflow 列表、活动列表或两者。
+
+```ruby
+# Create a client to localhost on default namespace
+client = Temporalio::Client.connect('localhost:7233', 'default')
+
+# Create a worker with the client, activities, and workflows
+worker = Temporalio::Worker.new(
+  client:,
+  task_queue: 'my-task-queue',
+  workflows: [MyWorkflow],
+  # This provides the activity instance which means it is reused for each attempt, but
+  # just the class can be provided to instantiate for each attempt
+  activities: [MyActivity.new]
+)
+
+# Run the worker until SIGINT. There are other ways to wait for shutdown, or a block can
+# be provided that will shutdown when the block completes
+worker.run(shutdown_signals: ['SIGINT'])
+```
+
+要运行多个 Worker，可以使用“Temporalio::Worker.run_all”。
+
+所有监听相同 Task Queue 名称的 Worker 必须注册才能处理完全相同的 Workflow 类型和 Activity 类型。
+
+如果 Worker 轮询任务以查找它不知道的 Workflow Type 或 Activity 类型，则该任务将失败。
+但是，任务失败不会导致关联的 Workflow Execution 失败。

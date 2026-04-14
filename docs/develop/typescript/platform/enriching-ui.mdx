@@ -1,8 +1,8 @@
 ---
 id: enriching-ui
-title: Enriching the user interface - TypeScript SDK
-sidebar_label: Enriching the UI
-description: Add contextual information to workflows and events in the Temporal UI using the TypeScript SDK.
+title: "丰富用户界面 - TypeScript SDK"
+sidebar_label: "丰富用户界面"
+description: "使用 TypeScript SDK 将上下文信息添加到 Workflow 和 Temporal UI 中的事件。"
 toc_max_heading_level: 3
 keywords:
   - ui enrichment
@@ -17,14 +17,16 @@ tags:
   - Temporal SDKs
 ---
 
-Temporal supports adding context to Workflows and Events with metadata. 
-This helps users identify and understand Workflows and their operations.
+Temporal 支持使用元数据向 Workflow 和事件添加上下文。 
+这有助于用户识别和了解 Workflow 及其操作。
 
-## Adding Summary and Details to Workflows
+<a id="adding-summary-and-details-to-workflows"></a>
+## 添加摘要和详细信息到 Workflow {#adding-summary-and-details-to-workflows}
 
-### Starting a Workflow
+<a id="starting-a-workflow"></a>
+### 启动 Workflow {#starting-a-workflow}
 
-When starting a Workflow, you can provide a static summary and details to help identify the workflow in the UI:
+启动 Workflow 时，您可以提供静态摘要和详细信息以帮助在 UI 中识别 Workflow：
 
 ```typescript
 import { Client } from '@temporalio/client';
@@ -41,12 +43,12 @@ const handle = await client.workflow.start(yourWorkflow, {
 });
 ```
 
-`staticSummary` is a single-line description that appears in the workflow list view, limited to 200 bytes.
-`staticDetails` can be multi-line and provides more comprehensive information that appears in the workflow details view, with a larger limit of 20K bytes.
+`staticSummary` 是出现在 Workflow 列表视图中的单行描述，限制为 200 字节。
+`staticDetails` 可以是多行的，并提供出现在 Workflow 详细信息视图中的更全面的信息，最大限制为 20K 字节。
 
-The input format is standard Markdown excluding images, HTML, and scripts.
+输入格式是标准 Markdown，不包括图像、HTML 和脚本。
 
-You can also use the `execute` method with the same parameters:
+您还可以使用具有相同参数的 `execute` 方法：
 
 ```typescript
 const result = await client.workflow.execute(yourWorkflow, {
@@ -58,11 +60,12 @@ const result = await client.workflow.execute(yourWorkflow, {
 });
 ```
 
-### Inside the Workflow
+<a id="inside-the-workflow"></a>
+### Workflow 内部 {#inside-the-workflow}
 
-Within a Workflow, you can get and set the _current workflow details_. 
-Unlike static summary/details set at Workflow start, this value can be updated throughout the life of the Workflow. 
-Current Workflow details also takes Markdown format (excluding images, HTML, and scripts) and can span multiple lines.
+在 Workflow 中，您可以获取并设置_当前 Workflow 详细信息_。 
+与 Workflow 启动时设置的静态摘要/详细信息不同，该值在 Workflow 的整个生命周期中可以是 Updated。 
+当前的 Workflow 详细信息也采用 Markdown 格式（不包括图像、HTML 和脚本）并且可以跨多行。
 
 ```typescript
 import { getCurrentDetails, setCurrentDetails } from '@temporalio/workflow';
@@ -79,9 +82,10 @@ export async function yourWorkflow(input: string): Promise<string> {
 }
 ```
 
-### Adding Summary to Activities and Timers
+<a id="adding-summary-to-activities-and-timers"></a>
+### 添加摘要到活动和 Timer {#adding-summary-to-activities-and-timers}
 
-You can attach a `summary` to activities by using `executeWithOptions` when calling them:
+您可以在调用活动时使用 `executeWithOptions` 将 `summary` 附加到活动：
 
 ```typescript
 import { proxyActivities } from '@temporalio/workflow';
@@ -104,7 +108,7 @@ export async function yourWorkflow(input: string): Promise<string> {
 }
 ```
 
-Similarly, you can attach a `summary` to timers within a workflow:
+同样，您可以将 `summary` 附加到 Workflow 内的 Timer：
 
 ```typescript
 import { sleep } from '@temporalio/workflow';
@@ -117,25 +121,27 @@ export async function yourWorkflow(input: string): Promise<string> {
 }
 ```
 
-The input format for `summary` is a string, and limited to 200 bytes.
+`summary` 的输入格式是字符串，且限制为 200 个字节。
 
-## Viewing Summary and Details in the UI
+<a id="viewing-summary-and-details-in-the-ui"></a>
+## 在 UI 中查看摘要和详细信息 {#viewing-summary-and-details-in-the-ui}
 
-Once you've added summaries and details to your Workflows, Activities, and Timers, you can view this enriched information in the Temporal Web UI.
-Navigate to your Workflow's details page to see the metadata displayed in two key locations:
+将摘要和详细信息添加到 Workflow、活动和 Timer 后，您可以在 Temporal Web UI 中查看这些丰富的信息。
+导航到 Workflow 的详细信息页面，查看两个关键位置显示的元数据：
 
-### Workflow Overview Section
+<a id="workflow-overview-section"></a>
+### Workflow 概述部分 {#workflow-overview-section}
 
-At the top of the workflow details page, you'll find the workflow-level metadata:
+在 Workflow 详细信息页面的顶部，您将找到 Workflow 级别的元数据：
 
-- **Summary & Details** - Displays the static summary and static details set when starting the workflow
-- **Current Details** - Displays the dynamic details that can be updated during workflow execution
+- **摘要和详细信息** - 显示启动 Workflow 时设置的静态摘要和静态详细信息
+- **当前详细信息** - 显示 Workflow Execution 期间可以是 Updated 的动态详细信息
 
-All Workflow details support standard Markdown formatting (excluding images, HTML, and scripts), allowing you to create rich, structured information displays.
+所有 Workflow 详细信息都支持标准 Markdown 格式（不包括图像、HTML 和脚本），允许您创建丰富的结构化信息显示。
 
 ### Event History
 
-Individual events in the Workflow's Event History display their associated summaries when available. 
+Workflow 和 Event History 中的各个事件会显示其关联的摘要（如果有）。
 
-Workflow, Activity and Timer summaries appear in purple text next to their corresponding Events, providing immediate context without requiring you to expand the event details. 
-When you do expand an Event, the summary is also prominently displayed in the detailed view.
+Workflow、Activity 和 Timer 摘要以紫色文本显示在其相应事件旁边，提供即时上下文，无需您展开事件详细信息。 
+当您展开事件时，摘要也会在详细视图中突出显示。

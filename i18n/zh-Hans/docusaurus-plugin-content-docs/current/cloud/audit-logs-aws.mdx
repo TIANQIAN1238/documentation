@@ -1,0 +1,135 @@
+---
+id: audit-logs-aws
+title: 审核日志 - AWS Kinesis
+sidebar_label: 亚马逊运动
+description: Temporal Cloud 中的审核日志提供取证信息，与 AWS Kinesis 集成以实现安全数据处理并支持关键管理和 API 密钥操作。这简化了审计和合规流程。
+slug: /cloud/audit-logs-aws
+toc_max_heading_level: 4
+keywords:
+  - audit logs
+  - explanation
+  - how-to
+  - operations
+  - temporal cloud
+  - term
+  - troubleshooting
+  - aws
+  - kinesis
+tags:
+  - Temporal Cloud
+  - Logs
+  - AWS
+---
+
+## 使用 AWS Kinesis {#configure-audit-log} 配置审核日志
+
+要设置审核日志，您必须拥有 Amazon Web Services (AWS) 账户并设置 Kinesis Data Streams。
+
+1. 如果您没有 AWS 账户，请按照 [创建并激活 AWS 账户](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/) 中 AWS 的说明进行操作。
+2. 要设置 Kinesis Data Streams，请打开 [AWS 管理控制台](https://aws.amazon.com/console/)，搜索 Kinesis，然后开始设置过程。
+
+您可以使用[此 AWS CloudFormation 模板](https://Temporal-auditlogs-config.s3.us-west-2.amazonaws.com/cloudformation/iam-role-for-Temporal-audit-logs.yaml) 创建一个 IAM 角色，该角色可以访问您账户中的 Kinesis 流。
+
+请注意，Kinesis 的速率限制为每秒 1,000 条消息，并且对写入的记录数量和记录大小都有配额。
+有关更多信息，请参阅[为什么我的 Kinesis 数据流受到限制？](https://aws.amazon.com/premiumsupport/knowledge-center/kinesis-data-stream-throtdling/)
+
+### 创建审核日志接收器
+
+1. 在 Temporal Cloud UI 中，选择 **设置**。
+1. 在**设置**页面上，选择**审核日志**。
+1. 在 **审核日志集成** 卡中，选择 **设置**。
+1. 在 **审核日志集成** 页面上，选择您的 **访问方法**（**自动** 或 **手动**）。
+   - **自动：** 从云 UI 在您的 AWS 账户中配置 AWS CloudFormation 堆栈。
+   - **手动：** 使用生成的 AWS CloudFormation 模板手动设置 Kinesis。
+1. 在 **Kinesis ARN** 中，粘贴您的 AWS 账户中的 Kinesis ARN。
+1. 在 **角色名称** 中，提供新 IAM 角色的名称。
+1. 在 **选择 AWS 区域** 中，为您的 Kinesis 流选择适当的区域。
+
+如果您选择 **自动** 访问方法，请继续执行以下步骤：
+
+1. 选择 **保存并启动堆栈**。
+1. 在 AWS CloudFormation 控制台的 **堆栈名称** 中，指定堆栈的名称。
+1. 在页面右下角，选择“**创建堆栈**”。
+
+如果您选择 **手动** 访问方法，请继续执行以下步骤：
+
+1. 选择**保存并下载模板**。
+1. 打开 [AWS CloudFormation 控制台](https://console.aws.amazon.com/cloudformation/)。
+1. 选择**创建堆栈**。
+1. 在 **创建堆栈** 页面上，选择 **模板已准备好** 和 **Update 模板文件**。
+1. 选择 **选择文件** 并指定您在步骤 1 中生成的模板。
+1. 在本页和接下来的两页上选择“**下一步**”。
+1. 在**查看**页面上，选择**创建堆栈**。
+
+为了确保审核日志可以流入 Kinesis 流，您可以使用 **验证** 按钮来确认其设置正确。这验证了 Temporal 可以成功写入您的流。
+如果一切配置正确，您将看到“成功”状态，表明 Temporal 已写入 kinesis 流。
+
+## 使用审核日志 {#consume-an-audit-log}
+
+**如何使用审核日志**
+
+创建审核日志接收器后，等待日志流入 Kinesis 流。
+配置接收器后 10 分钟内您将看到第一个日志。
+
+:::note
+
+您必须配置并实现您自己的 Kinesis 流使用者。
+有关示例，请参阅[使用审核日志的示例](#example-of-consuming-an-audit-log)。
+
+:::
+
+### 使用审核日志的示例
+
+以下 Go 代码是使用 Kinesis 流中的审核日志并将其传送到 S3 存储桶的示例。
+
+```go
+func main() {
+   fmt.Println("print audit log from S3")
+   cfg, err := config.LoadDefaultConfig(context.TODO(),
+      config.WithSharedConfigProfile("your_profile"),
+   )
+   if err != nil {
+      fmt.Println(err)
+   }
+   s3Client := s3.NewFromConfig(cfg)
+   response, err := s3Client.GetObject(
+      context.Background(),
+      &s3.GetObjectInput{
+         Bucket: aws.String("your_bucket_name"),
+         Key:    aws.String("your_s3_file_path")})
+   if err != nil {
+      fmt.Println(err)
+   }
+   defer response.Body.Close()
+
+   content, err := io.ReadAll(response.Body)
+
+   fmt.Println(string(content))
+}
+```
+
+前面的代码还在终端中打印日志。
+以下是示例结果。
+
+```json
+{
+  "emit_time": "2023-11-14T07:56:55Z",
+  "level": "LOG_LEVEL_INFO",
+  "caller_ip_address": "10.1.2.3, 10.4.5.6",
+  "user_email": "user1@example.com",
+  "operation": "DeleteUser",
+  "details": {
+    "target_users": ["d7dca96f-adcc-417d-aafc-e8f5d2ba9fe1"],
+    "search_attribute_update": {}
+  },
+  "status": "OK",
+  "category": "LOG_CATEGORY_ADMIN",
+  "log_id": "0mc69c0323b871293ce231dd1c7fb639",
+  "request_id": "445297d3-43a7-4793-8a04-1b1dd1999640",
+  "principal": {
+    "id": "988cb80b-d6be-4bb5-9c87-d09f93f58ed3",
+    "type": "user",
+    "name": "user1@example.com"
+  }
+}
+```

@@ -1,8 +1,8 @@
 ---
 id: data-encryption
-title: Data encryption - Temporal feature
-description: Implement data encryption in your Temporal Workflows to ensure the security and confidentiality of your data.
-sidebar_label: Data encryption
+title: "数据加密 - Temporal 功能"
+description: "在 Temporal Workflow 中实施数据加密，以确保数据的安全性和机密性。"
+sidebar_label: "数据加密"
 tags:
   - Codec Server
   - Security
@@ -19,14 +19,14 @@ keywords:
 
 import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
 
-Data Converters in Temporal are SDK components that handle the serialization and encoding of data transmitted and received by a Temporal Client.
-Workflow input and output need to be serialized and deserialized so they can be sent as JSON to the Temporal Service.
+Temporal 中的 Data Converter 是 SDK 组件，用于处理 Temporal CLIent 发送和接收的数据的序列化和编码。
+Workflow 输入和输出需要序列化和反序列化，以便它们可以作为 JSON 发送到 Temporal 服务。
 
-Temporal provides its own default Data Converter logic, which is not apparent to a user if payloads contain plain text or JSON data.
-For enhanced security, you can implement your own encryption standards using a Codec Server.
-Temporal's data encryption capabilities ensure the security and confidentiality of your Workflows and provides protection without compromising performance.
+Temporal 提供其自己的默认 Data Converter 逻辑，如果有效负载包含纯文本或 JSON 数据，则该逻辑对用户来说并不明显。
+为了增强安全性，您可以使用 Codec Server 实施您自己的加密标准。
+Temporal 的数据加密功能可确保您的 Workflow 的安全性和机密性，并在不影响性能的情况下提供保护。
 
-Jump straight to a Temporal SDK feature guide.
+直接跳至 ​​Temporal SDK 功能指南。
 
 <RelatedReadContainer>
     <RelatedReadItem path="/develop/go/data-handling/data-encryption" text="Data Encryption using the Go SDK" archetype="feature-guide" />

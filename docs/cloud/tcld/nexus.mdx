@@ -1,8 +1,8 @@
 ---
 id: nexus
-title: tcld nexus command reference
-sidebar_label: nexus
-description: Manage Nexus resources in Temporal Cloud
+title: "tcld Nexus 命令参考"
+sidebar_label: "Nexus"
+description: "管理 Temporal Cloud 中的 Nexus 资源"
 slug: /cloud/tcld/nexus
 toc_max_heading_level: 5
 keywords:
@@ -12,284 +12,309 @@ tags:
   - tcld
 ---
 
-The `tcld nexus` commands manage Nexus resources in Temporal Cloud.
+`tcld Nexus` 命令管理 Temporal Cloud 中的 Nexus 资源。
 
-Alias: `nxs`
+别名：`nxs`
 
-- [tcld nexus endpoint](#endpoint)
+- [tcld Nexus 端点](#endpoint)
 
-## endpoint
+<a id="endpoint"></a>
+## 端点 {#endpoint}
 
-The `tcld nexus endpoint` commands manage Nexus Endpoints in Temporal Cloud.
+`tcld Nexus endpoint` 命令管理 Temporal Cloud 中的 Nexus 端点。
 
-Alias: `ep`
+别名：`ep`
 
-- [tcld nexus endpoint allowed-namespace](#allowed-namespace)
-- [tcld nexus endpoint create](#create)
-- [tcld nexus endpoint delete](#delete)
-- [tcld nexus endpoint get](#get)
-- [tcld nexus endpoint list](#list)
-- [tcld nexus endpoint update](#update)
+- [tcld Nexus 允许端点-Namespace](#allowed-namespace)
+- [tcld Nexus 端点创建](#create)
+- [tcld Nexus 端点删除](#delete)
+- [tcld Nexus 端点获取](#get)
+- [tcld Nexus 端点列表](#list)
+- [tcld Nexus 端点 Update](#update)
 
-### allowed-namespace
+<a id="allowed-namespace"></a>
+### 允许-Namespace {#allowed-namespace}
 
-The `tcld nexus endpoint allowed-namespace` commands manage the allowed namespaces for a Nexus Endpoint.
+`tcld Nexus endpoint allowed-Namespace` 命令管理 Nexus 端点允许的 Namespace。
 
-Alias: `an`
+别名：`an`
 
-- [tcld nexus endpoint allowed-namespace add](#add)
-- [tcld nexus endpoint allowed-namespace list](#list)
-- [tcld nexus endpoint allowed-namespace remove](#remove)
-- [tcld nexus endpoint allowed-namespace set](#set)
+- [tcld Nexus 端点允许-Namespace 添加](#add)
+- [tcld Nexus 允许的端点-Namespace 列表](#list)
+- [tcld Nexus 端点允许-Namespace 删除](#remove)
+- [tcld Nexus 端点允许-Namespace 设置](#set)
 
-#### add
+#### 添加 {#add}
 
-The `tcld nexus endpoint allowed-namespace add` command adds allowed namespaces to a Nexus Endpoint.
+`tcld Nexus endpoint allowed-Namespace add` 命令将允许的 Namespace 添加到 Nexus 端点。
 
-Alias: `a`
+别名：`a`
 
-##### --name
+##### - 姓名 {#name}
 
-Endpoint name.
+端点名称。
 
-Alias: `n`
+别名：`n`
 
-##### --namespace
+<a id="add"></a>
+##### --Namespace {#namespace}
 
-Namespace that is allowed to call this endpoint.
+Namespace 表示允许调用此端点。
 
-Alias: `ns`
+别名：`ns`
 
-##### --request-id
+<a id="name"></a>
+##### --请求 ID {#request-id}
 
-The request-id to use for the asynchronous operation, if not set the server will assign one (optional).
+用于异步操作的 request-id，如果未设置，服务器将分配一个（可选）。
 
-Alias: `r`
+别名：`r`
 
-##### --resource-version
+<a id="namespace"></a>
+##### --资源版本 {#resource-version}
 
-The resource-version (etag) to update from, if not set the cli will use the latest (optional).
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
 
-Alias: `v`
+别名：`v`
 
-#### list
+#### 列表 {#list}
 
-The `tcld nexus endpoint allowed-namespace list` command lists the allowed namespaces of a Nexus Endpoint.
+`tcld Nexus endpoint allowed-Namespace list` 命令列出 Nexus 端点允许的 Namespace。
 
-Alias: `l`
+别名：`l`
 
-##### --name
+##### - 姓名 {#name}
 
-Endpoint name.
+端点名称。
 
-Alias: `n`
+别名：`n`
 
-#### remove
+#### 消除 {#remove}
 
-The `tcld nexus endpoint allowed-namespace remove` command removes allowed namespaces from a Nexus Endpoint.
+`tcld Nexus endpoint allowed-Namespace remove` 命令从 Nexus 端点删除允许的 Namespace。
 
-Alias: `r`
+别名：`r`
 
-##### --name
+##### - 姓名 {#name}
 
-Endpoint name.
+端点名称。
 
-Alias: `n`
+别名：`n`
 
-##### --namespace
+<a id="request-id"></a>
+##### --Namespace {#namespace}
 
-Namespace that is allowed to call this endpoint.
+Namespace 表示允许调用此端点。
 
-Alias: `ns`
+别名：`ns`
 
-##### --request-id
+<a id="resource-version"></a>
+##### --请求 ID {#request-id}
 
-The request-id to use for the asynchronous operation, if not set the server will assign one (optional).
+用于异步操作的 request-id，如果未设置，服务器将分配一个（可选）。
 
-Alias: `r`
+别名：`r`
 
-##### --resource-version
+<a id="list"></a>
+##### --资源版本 {#resource-version}
 
-The resource-version (etag) to update from, if not set the cli will use the latest (optional).
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
 
-Alias: `v`
+别名：`v`
 
-#### set
+#### 放 {#set}
 
-The `tcld nexus endpoint allowed-namespace set` command sets the allowed namespaces of a Nexus Endpoint.
+`tcld Nexus endpoint allowed-Namespace set` 命令设置 Nexus 端点允许的 Namespace。
 
-Alias: `s`
+别名：`s`
 
-##### --name
+##### - 姓名 {#name}
 
-Endpoint name.
+端点名称。
 
-Alias: `n`
+别名：`n`
 
-##### --namespace
+<a id="name"></a>
+##### --Namespace {#namespace}
 
-Namespace that is allowed to call this endpoint.
+Namespace 表示允许调用此端点。
 
-Alias: `ns`
+别名：`ns`
 
-##### --request-id
+<a id="remove"></a>
+##### --请求 ID {#request-id}
 
-The request-id to use for the asynchronous operation, if not set the server will assign one (optional).
+用于异步操作的 request-id，如果未设置，服务器将分配一个（可选）。
 
-Alias: `r`
+别名：`r`
 
-##### --resource-version
+<a id="name"></a>
+##### --资源版本 {#resource-version}
 
-The resource-version (etag) to update from, if not set the cli will use the latest (optional).
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
 
-Alias: `v`
+别名：`v`
 
-### create
+### 创造 {#create}
 
-The `tcld nexus endpoint create` command creates a new Nexus Endpoint on the Cloud Account.
-An endpoint name is used by in workflow code to invoke Nexus operations.
-The endpoint target is a worker and `--target-namespace` and `--target-task-queue` must both be provided.
-This will fail if an endpoint with the same name is already registered.
+`tcld Nexus endpoint create` 命令在云帐户上创建新的 Nexus 端点。
+Workflow 代码中使用端点名称来调用 Nexus 操作。
+端点目标是 Worker，并且必须同时提供 `--target-Namespace` 和 `--target-task-queue`。
+如果已注册同名端点，则此操作将会失败。
 
-Alias: `c`
+别名：`c`
 
-#### --allow-namespace
+<a id="namespace"></a>
+#### --允许-Namespace {#allow-namespace}
 
-Namespace that is allowed to call this endpoint (optional).
+Namespace 表示允许调用此端点（可选）。
 
-Alias: `ans`
+别名：`ans`
 
-#### --description
+#### - 描述 {#description}
 
-Endpoint description in markdown format (optional).
+Markdown 格式的端点描述（可选）。
 
-Alias: `d`
+别名：`d`
 
-#### --description-file
+<a id="request-id"></a>
+#### --描述文件 {#description-file}
 
-Endpoint description file in markdown format (optional).
+Markdown 格式的端点描述文件（可选）。
 
-Alias: `df`
+别名：`df`
 
-#### --name
+#### - 姓名 {#name}
 
-Endpoint name.
+端点名称。
 
-Alias: `n`
+别名：`n`
 
-#### --request-id
+<a id="resource-version"></a>
+#### --请求 ID {#request-id}
 
-The request-id to use for the asynchronous operation, if not set the server will assign one (optional).
+用于异步操作的 request-id，如果未设置，服务器将分配一个（可选）。
 
-Alias: `r`
+别名：`r`
 
-#### --target-namespace
+<a id="set"></a>
+#### --目标-Namespace {#target-namespace}
 
-Namespace in which a handler worker will be polling for Nexus tasks on.
+Namespace，其中处理程序 Worker 将轮询 Nexus 任务。
 
-Alias: `tns`
+别名：`tns`
 
-#### --target-task-queue
+<a id="name"></a>
+#### --目标任务队列 {#target-task-queue}
 
-Task Queue in which a handler worker will be polling for Nexus tasks on.
+Task Queue，其中处理程序 Worker 将轮询 Nexus 任务。
 
-Alias: `ttq`
+别名：`ttq`
 
-### delete
+### 删除 {#delete}
 
-The `tcld nexus endpoint delete` command deletes a Nexus Endpoint on the Cloud Account.
-.
+`tcld Nexus endpoint delete` 命令删除云帐户上的 Nexus 端点。
+。
 
-Alias: `d`
+别名：`d`
 
-#### --name
+#### - 姓名 {#name}
 
-Endpoint name.
+端点名称。
 
-Alias: `n`
+别名：`n`
 
-#### --request-id
+<a id="namespace"></a>
+#### --请求 ID {#request-id}
 
-The request-id to use for the asynchronous operation, if not set the server will assign one (optional).
+用于异步操作的 request-id，如果未设置，服务器将分配一个（可选）。
 
-Alias: `r`
+别名：`r`
 
-#### --resource-version
+<a id="request-id"></a>
+#### --资源版本 {#resource-version}
 
-The resource-version (etag) to update from, if not set the cli will use the latest (optional).
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
 
-Alias: `v`
+别名：`v`
 
-### get
+### 得到 {#get}
 
-The `tcld nexus endpoint get` command gets a Nexus Endpoint configuration by name from the Cloud Account.
+`tcld Nexus endpoint get` 命令按名称从云帐户获取 Nexus 端点配置。
 
-Alias: `g`
+别名：`g`
 
-#### --name
+#### - 姓名 {#name}
 
-Endpoint name.
+端点名称。
 
-Alias: `n`
+别名：`n`
 
-### list
+### 列表 {#list}
 
-The `tcld nexus endpoint list` command lists all Nexus Endpoint configurations on the Cloud Account.
+`tcld Nexus endpoint list` 命令列出云帐户上的所有 Nexus 端点配置。
 
-Alias: `l`
+别名：`l`
 
-### update
+<a id="resource-version"></a>
+### Update {#update}
 
-The `tcld nexus endpoint update` command updates an existing Nexus Endpoint on the Cloud Account.
-An endpoint name is used by in workflow code to invoke Nexus operations.
-The endpoint target is a worker and `--target-namespace` and `--target-task-queue` must both be provided.
+`tcld Nexus endpoint Update` 命令 Update 是云帐户上现有的 Nexus 端点。
+Workflow 代码中使用端点名称来调用 Nexus 操作。
+端点目标是 Worker，并且必须同时提供 `--target-Namespace` 和 `--target-task-queue`。
 
-The endpoint is patched leaving any existing fields for which flags are not provided as they were.
+端点被修补，留下未按原样提供标志的任何现有字段。
 
-Alias: `u`
+别名：`u`
 
-#### --description
+#### - 描述 {#description}
 
-Endpoint description in markdown format (optional).
+Markdown 格式的端点描述（可选）。
 
-Alias: `d`
+别名：`d`
 
-#### --description-file
+<a id="create"></a>
+#### --描述文件 {#description-file}
 
-Endpoint description file in markdown format (optional).
+Markdown 格式的端点描述文件（可选）。
 
-Alias: `df`
+别名：`df`
 
-#### --name
+#### - 姓名 {#name}
 
-Endpoint name.
+端点名称。
 
-Alias: `n`
+别名：`n`
 
-#### --request-id
+<a id="allow-namespace"></a>
+#### --请求 ID {#request-id}
 
-The request-id to use for the asynchronous operation, if not set the server will assign one (optional).
+用于异步操作的 request-id，如果未设置，服务器将分配一个（可选）。
 
-Alias: `r`
+别名：`r`
 
-#### --resource-version
+<a id="description"></a>
+#### --资源版本 {#resource-version}
 
-The resource-version (etag) to update from, if not set the cli will use the latest (optional).
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
 
-Alias: `v`
+别名：`v`
 
-#### --target-namespace
+<a id="description-file"></a>
+#### --目标-Namespace {#target-namespace}
 
-Namespace in which a handler worker will be polling for Nexus tasks on (optional).
+Namespace，其中处理程序 Worker 将轮询 Nexus 任务（可选）。
 
-Alias: `tns`
+别名：`tns`
 
-#### --target-task-queue
+<a id="name"></a>
+#### --目标任务队列 {#target-task-queue}
 
-Task Queue in which a handler worker will be polling for Nexus tasks on (optional).
+Task Queue，其中处理程序 Worker 将轮询 Nexus 任务（可选）。
 
-Alias: `ttq`
+别名：`ttq`
 
-#### --unset-description
+<a id="request-id"></a>
+#### --未设置描述 {#unset-description}
 
-Unset endpoint description.
+取消设置端点描述。

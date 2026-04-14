@@ -1,8 +1,8 @@
 ---
 id: low-latency
-title: Low latency - Temporal feature
-description: Discover how Temporal's design and features ensure low latency for your applications.
-sidebar_label: Low latency
+title: "低延迟 - Temporal 功能"
+description: "了解 Temporal 的设计和功能如何确保应用程序的低延迟。"
+sidebar_label: "低延迟"
 keywords:
   - low latency
   - temporal performance
@@ -20,19 +20,19 @@ tags:
 
 import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
 
-Temporal Cloud provides features that significantly reduce latency compared to self-hosted instances, making your applications faster, more performant, and more efficient.
-In the world of modern applications, low latency is crucial for ensuring minimal delay in Workflow Executions.
-This low-latency architecture ensures rapid Workflow Execution and responsiveness, critical for time-sensitive applications and high-performance systems.
+与自托管实例相比，Temporal Cloud 提供的功能可显着减少延迟，使您的应用程序更快、性能更高、效率更高。
+在现代应用程序领域，低延迟对于确保 Workflow Execution 的延迟最小至关重要。
+这种低延迟架构可确保快速的 Workflow Execution 和响应能力，这对于时间敏感的应用程序和高性能系统至关重要。
 
-Temporal Cloud's custom persistence layer incorporates three key components that contribute to low latency:
+Temporal Cloud 的自定义持久层包含三个有助于降低延迟的关键组件：
 
-- **Better Sharding:** Distributes load across multiple databases, preventing bottlenecks.
-  Enables independent resizing, improving scalability and handling high-traffic events without delay.
-- **Write-Ahead Log (WAL):** Aggregates updates before writing to the database, reducing write latency.
-  Stores writes in an append-only format, reducing latency and database size by batching updates before writing to the database.
-- **Tiered Storage of Workflow Event History:** Offloads completed Workflow Event Histories, improving database efficiency.
+- **更好的分片：** 在多个数据库之间分配负载，防止出现瓶颈。
+  支持独立调整大小、提高可扩展性并立即处理高流量事件。
+- **预写日志 (WAL)：** 在写入数据库之前聚合 Update，从而减少写入延迟。
+  以仅附加格式存储写入，通过在写入数据库之前批处理 Update 来减少延迟和数据库大小。
+- **Workflow Event History 的分层存储：** 卸载已完成的 Workflow 事件历史记录，提高数据库效率。
 
-Temporal Cloud provides lower latency, making it suitable for latency-sensitive, large-scale, or business-critical applications.
+Temporal Cloud 提供较低的延迟，使其适合对延迟敏感、大规模或业务关键型应用程序。
 
 <RelatedReadContainer>
   <RelatedReadItem path="https://temporal.io/blog/exploring-temporal-cloud-automation-features" text="Exploring Temporal Cloud Automation Features" archetype="blog-post" />

@@ -1,8 +1,8 @@
 ---
 id: index
-title: tcld command reference
-sidebar_label: CLI (tcld)
-description: The Temporal Cloud CLI (tcld) is a command-line tool for interacting with Temporal Cloud, offering commands for account management, login, namespace, and more. Install via Homebrew or build from source.
+title: "tcld 命令参考"
+sidebar_label: "CLI (tcld)"
+description: "Temporal Cloud CLI (tcld) 是一个用于与 Temporal Cloud 交互的命令行工具，提供用于帐户管理、登录、Namespace 等的命令。通过 Homebrew 安装或从源代码构建。"
 slug: /cloud/tcld
 toc_max_heading_level: 4
 keywords:
@@ -13,55 +13,60 @@ tags:
   - tcld
 ---
 
-The Temporal Cloud CLI (tcld) is a command-line tool that you can use to interact with Temporal Cloud.
+Temporal Cloud CLI (tcld) 是一个命令行工具，可用于与 Temporal Cloud 交互。
 
-- [How to install tcld](#install-tcld)
+- [如何安装tcld](#install-tcld)
 
-### tcld commands
+<a id="tcld-commands"></a>
+### tcld 命令 {#tcld-commands}
 
-- [tcld account](/cloud/tcld/account)
+- [tcld账户](/cloud/tcld/account)
 - [tcld apikey](/cloud/tcld/apikey)
-- [tcld connectivity-rule](/cloud/tcld/connectivity-rule)
-- [tcld feature](/cloud/tcld/feature)
-- [tcld generate-certificates](/cloud/tcld/generate-certificates)
-- [tcld login](/cloud/tcld/login)
-- [tcld logout](/cloud/tcld/logout/)
-- [tcld namespace](/cloud/tcld/namespace)
-- [tcld nexus](/cloud/tcld/nexus)
-- [tcld request](/cloud/tcld/request)
-- [tcld user](/cloud/tcld/user)
-- [tcld version](/cloud/tcld/version/)
+- [tcld 连接规则](/cloud/tcld/connectivity-rule)
+- [tcld特点](/cloud/tcld/feature)
+- [tcld 生成证书](/cloud/tcld/generate-certificates)
+- [tcld 登录](/cloud/tcld/login)
+- [tcld 注销](/cloud/tcld/logout/)
+- [tcld Namespace](/cloud/tcld/namespace)
+- [tcld Nexus](/cloud/tcld/nexus)
+- [tcld 请求](/cloud/tcld/request)
+- [tcld 用户](/cloud/tcld/user)
+- [tcld版本](/cloud/tcld/version/)
 
-### Global modifiers
+<a id="global-modifiers"></a>
+### 全局修饰符 {#global-modifiers}
 
-#### --auto_confirm
+<a id="autoconfirm"></a>
+#### --自动确认 {#autoconfirm}
 
-Automatically confirm all prompts.
+自动确认所有提示。
 
-You can specify the value for this modifier by setting the AUTO_CONFIRM environment variable.
-The default value is `false`.
+您可以通过设置 AUTO_CONFIRM 环境变量来指定此修饰符的值。
+默认值为 `false`。
 
-## How to install tcld {#install-tcld}
+## 如何安装 tcld {#install-tcld}
 
-You can install [tcld](/cloud/tcld) in two ways.
+您可以通过两种方式安装 [tcld](/cloud/tcld)。
 
-### Install tcld by using Homebrew
+<a id="install-tcld-by-using-homebrew"></a>
+### 使用 Homebrew 安装 tcld {#install-tcld-by-using-homebrew}
 
 ```bash
 brew install temporalio/brew/tcld
 ```
 
-### Build tcld from source
+<a id="build-tcld-from-source"></a>
+### 从源代码构建 tcld {#build-tcld-from-source}
 
-1. Verify that you have Go 1.18 or later installed.
+1. 确认您已安装 Go 1.18 或更高版本。
 
    ```bash
    go version
    ```
 
-   If Go 1.18 or later is not installed, follow the [Download and install](https://go.dev/doc/install) instructions on the Go website.
+如果未安装 Go 1.18 或更高版本，请按照 Go 网站上的 [下载并安装](https://go.dev/doc/install) 说明进行操作。
 
-1. Clone the tcld repository and run make.
+1. 克隆 tcld 存储库并运行 make。
 
    ```bash
    git clone https://github.com/temporalio/tcld.git
@@ -69,13 +74,13 @@ brew install temporalio/brew/tcld
    make
    ```
 
-1. Copy the tcld executable to any directory that appears in the PATH environment variable, such as `/usr/local/bin`.
+1. 将 tcld 可执行文件复制到 PATH 环境变量中出现的任何目录，例如 `/usr/local/bin`。
 
    ```bash
    cp tcld /usr/local/bin/tcld
    ```
 
-1. Verify that tcld is installed.
+1. 验证是否已安装 tcld。
 
    ```bash
    tcld version

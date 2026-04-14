@@ -1,0 +1,237 @@
+---
+id: basics
+title: Workflow 基础知识 - Python SDK
+sidebar_label: Workflow 基础知识
+description: 本节介绍 Workflow 与 Python SDK 的基础知识
+toc_max_heading_level: 4
+keywords:
+  - Python SDK
+tags:
+  - Python SDK
+  - Temporal SDKs
+---
+
+## 开发基本的 Workflow {#develop-Workflows}
+
+**如何使用 Temporal Python SDK 开发基本的 Workflow。**
+
+Workflow 是 Temporal 应用程序的基本单元，这一切都始于开发
+[Workflow Definition]（/Workflow-定义）。
+
+在 Temporal Python SDK 编程模型中，Workflow 被定义为类。
+
+在 Workflow 类上指定“@Workflow.defn”装饰器来标识 Workflow。
+
+使用“@Workflow.run”标记要调用的入口点方法。必须在一个异步方法上设置此项
+在与“@Workflow.defn”相同的类上定义。 Run 方法具有位置参数。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/your_app/your_Workflows_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+from temporalio import workflow
+# ...
+# ...
+@workflow.defn(name="YourWorkflow")
+class YourWorkflow:
+    @workflow.run
+    async def run(self, name: str) -> str:
+        return await workflow.execute_activity(
+            your_activity,
+            YourParams("Hello", name),
+            start_to_close_timeout=timedelta(seconds=10),
+        )
+```
+
+### 定义 Workflow 参数 {#Workflow-parameters}
+
+**如何使用 Temporal Python SDK 定义 Workflow 参数。**
+
+Temporal Workflows 可以具有任意数量的自定义参数。但是，我们强烈建议将对象用作
+参数，以便可以在不破坏 Workflow 签名的情况下更改对象的各个字段。全部
+Workflow Definition 参数必须可序列化。
+
+Workflow参数是用“@Workflow.run”修饰的单一方法的方法参数。这些可以是任何
+Temporal 可以转换的数据类型，包括 [`dataclasses`](https://docs.python.org/3/library/dataclasses.html)
+正确的类型注释。从技术上讲，这可以是多个参数，但 Temporal 强烈鼓励使用单个参数
+包含所有输入字段的“dataclass”参数。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/your_app/your_dataobject_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+from dataclasses import dataclass
+# ...
+# ...
+@dataclass
+class YourParams:
+    greeting: str
+    name: str
+```
+
+### 定义 Workflow 返回参数 {#Workflow-return-values}
+
+**如何使用 Temporal Python SDK 定义 Workflow 返回参数。**
+
+Workflow 返回值也必须是可序列化的。返回结果、返回错误或抛出异常都是公平的
+每种受支持语言的惯用语。但是，必须使用 Temporal API 才能获取 Workflow 的结果
+执行只会收到结果或错误之一。
+
+要返回 Workflow 的值，请使用“return”返回一个对象。
+
+要返回 Workflow Execution 的结果，请使用异步“start_Workflow()”或“execute_Workflow()”
+方法。
+
+出于性能和行为原因，用户应遍历所有模块，包括活动、Nexus Service 和
+第三方插件，其调用将使用确定性
+[`imports_passed_through`](https://python.Temporal.io/Temporalio.Workflow.unsafe.html#imports_passed_through) 或
+Worker 通过自定义跑步者的限制来创建时间
+[`with_passthrough_modules`](https://python.Temporal.io/Temporalio.Worker.Workflow_sandbox.SandboxRestrictions.html#with_passthrough_modules)。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/your_app/run_Workflow_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    from your_activities_dacx import your_activity
+    from your_dataobject_dacx import YourParams
+# ...
+@workflow.defn(name="YourWorkflow")
+class YourWorkflow:
+    @workflow.run
+    async def run(self, name: str) -> str:
+        return await workflow.execute_activity(
+            your_activity,
+            YourParams("Hello", name),
+            start_to_close_timeout=timedelta(seconds=10),
+        )
+```
+
+### 定制您的 Workflow Type {#Workflow-type}
+
+**如何使用 Temporal Python SDK 自定义您的 Workflow Type。**
+
+Workflow 具有称为 Workflow 名称的类型。
+
+以下示例演示如何为 Workflow Type 设置自定义名称。
+
+您可以使用装饰器参数中的自定义名称来自定义 Workflow 名称。例如，
+`@Workflow.defn(name="your-Workflow-name")`。如果未指定 name 参数，Workflow 名称默认为
+不合格的类名。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/your_app/your_Workflows_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    from your_activities_dacx import your_activity
+    from your_dataobject_dacx import YourParams
+# ...
+@workflow.defn(name="YourWorkflow")
+class YourWorkflow:
+    @workflow.run
+    async def run(self, name: str) -> str:
+        return await workflow.execute_activity(
+            your_activity,
+            YourParams("Hello", name),
+            start_to_close_timeout=timedelta(seconds=10),
+        )
+```
+
+### 开发 Workflow 逻辑 {#Workflow-logic-requirements}
+
+**如何使用 Temporal Python SDK 开发 Workflow 逻辑。**
+
+Workflow 逻辑受到[确定性执行要求](/Workflow-definition#definition-constraints) 的约束。
+因此，每种语言都仅限于使用某些惯用技术。然而，每个 Temporal SDK 都提供了一个
+一组 API，可在 Workflow 内部使用，与外部（Workflow）应用程序代码进行交互。
+
+Workflow 代码必须是确定性的，因为 Temporal Server 可能会[重播](/develop/python/best-practices/testing-suite#replay)您的 Workflow 来重建其状态。这意味着：
+
+- 无螺纹
+- 没有随机性
+- 没有对进程的外部调用
+- 无网络 I/O
+- 没有全局状态突变
+- 无系统日期或时间
+
+[`Temporalio.Workflow`](https://python.Temporal.io/Temporalio.Workflow.html) 中使用的所有对 Workflow 安全的 API 必须
+在隐式 [`asyncio` 事件循环](https://docs.python.org/3/library/asyncio-eventloop.html) 中运行并
+_确定性_。
+
+SDK 提供了满足常见需求的重放安全替代方案：
+
+#### 日志记录
+
+使用 [`Workflow.logger`](https://python.Temporal.io/Temporalio.Workflow.html#logger) 而不是 `print()` 或标准的 `logging` 模块。
+SDK 记录器在重播期间自动抑制日志消息以避免重复：
+
+```python
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self, name: str) -> str:
+        workflow.logger.info("Starting workflow", name)
+        # ...
+```
+
+有关记录器配置，请参阅 [Observability：从 Workflow 记录日志](/develop/python/platform/observability#logging)。
+
+#### 随机数和 UUID
+
+使用 [`Workflow.random()`](https://python.Temporal.io/Temporalio.Workflow.html#random) 获取每个 Workflow Execution 播种的确定性 `random.Random` 实例。切勿直接使用“random.random()”或其他“random”模块函数。
+对于 UUID，请使用 [`Workflow.uuid4()`](https://python.Temporal.io/Temporalio.Workflow.html#uuid4) 而不是 `uuid.uuid4()`：
+
+```python
+# Good - deterministic across replays
+value = workflow.random().randint(1, 100)
+unique_id = workflow.uuid4()
+
+# Bad - different result on every replay
+import random
+value = random.randint(1, 100)
+```
+
+#### 当前时间
+
+使用 [`Workflow.now()`](https://python.Temporal.io/Temporalio.Workflow.html#now) 而不是 `datetime.now()` 或 `time.time()`。 SDK 返回最后一次 Workflow Task 的时间，该时间在回放中保持一致：
+
+```python
+current_time = workflow.now()
+```
+
+#### 检测重播（高级）
+
+使用 [`Workflow.unsafe.is_replaying`](https://python.Temporal.io/Temporalio.Workflow.html#is_replaying) 来保护仅应在第一次执行时运行的代码，例如发出指标或从 [Interceptor](/develop/python/Workers/interceptors) 发送外部通知。
+:::caution
+
+切勿使用它来影响 Workflow 业务逻辑 - 重播状态分支会破坏确定性。
+
+:::
+
+```python
+if not workflow.unsafe.is_replaying():
+    emit_metric("workflow_started", 1)
+```
+
+如果您的目标是在发生新情况时始终采取行动，请检查“Workflow.unsafe.is_replaying_history_events()”是否为 false。在查询和 Update 验证器等只读操作期间，这将是错误的。  这是 SDK 的内置记录器和跟踪拦截器在内部使用的。

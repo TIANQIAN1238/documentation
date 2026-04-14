@@ -1,8 +1,8 @@
 ---
 id: timeouts
-title: Activity Timeouts - Java SDK
-sidebar_label: Timeouts
-description:
+title: "Activity 超时 - Java SDK"
+sidebar_label: "超时"
+description: This section explains how to implement Workers with the Java SDK
   This section explains how to implement Workers with the Java SDK
 toc_max_heading_level: 4
 keywords:
@@ -12,29 +12,30 @@ tags:
   - Temporal SDKs
 ---
 
-## Activity timeouts
+<a id="activity-timeouts"></a>
+## Activity 超时 {#activity-timeouts}
 
-Each Activity timeout controls the maximum duration of a different aspect of an Activity Execution.
+每个 Activity 超时控制 Activity 执行不同方面的最大持续时间。
 
-The following timeouts are available in the Activity Options.
+Activity 选项中提供以下超时。
 
-- **[Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout):** is the maximum amount of time allowed for the overall [Activity Execution](/activity-execution).
-- **[Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout):** is the maximum time allowed for a single [Activity Task Execution](/tasks#activity-task-execution).
-- **[Schedule-To-Start Timeout](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout):** is the maximum amount of time that is allowed from when an [Activity Task](/tasks#activity-task) is scheduled to when a [Worker](/workers#worker) starts that Activity Task.
+- **[Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout)：** 是整个 [Activity 执行](/activity-execution) 允许的最大时间量。
+- **[开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)：** 是单个 [Activity 任务执行](/tasks#activity-task-execution) 允许的最长时间。
+- **[Schedule-启动超时](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout)：** 是从 [Activity 任务](/tasks#activity-task) 为 Scheduled 到 [Worker](/workers#worker) 启动该 Activity 任务所允许的最长时间。
 
-An Activity Execution must have either the Start-To-Close or the Schedule-To-Close Timeout set.
+Activity 执行必须设置“开始到关闭”或“Schedule 到关闭超时”。
 
-Set your Activity Timeout from the [`ActivityOptions.Builder`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html) class.
+设置 [`ActivityOptions.Builder`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html) 类的 Activity 超时。
 
-Available timeouts are:
+可用的超时有：
 
 - ScheduleToCloseTimeout()
 - ScheduleToStartTimeout()
-- StartToCloseTimeout()
+- 开始到关闭超时()
 
-You can set Activity Options using an `ActivityStub` within a Workflow implementation, or per-Activity using `WorkflowImplementationOptions` within a Worker.
+您可以在 Workflow 实现中使用 `ActivityStub` 设置 Activity 选项，或者在 Worker 中使用 `WorkflowImplementationOptions` 按 Activity 设置 Activity 选项。
 
-The following uses `ActivityStub`.
+以下使用`ActivityStub`。
 
 ```java
 GreetingActivities activities = Workflow.newActivityStub(GreetingActivities.class,
@@ -45,7 +46,7 @@ GreetingActivities activities = Workflow.newActivityStub(GreetingActivities.clas
         .build());
 ```
 
-The following uses `WorkflowImplementationOptions`.
+以下使用`WorkflowImplementationOptions`。
 
 ```java
 WorkflowImplementationOptions options =
@@ -64,22 +65,23 @@ WorkflowImplementationOptions options =
 
 :::note
 
-If you define options per-Activity Type options with `WorkflowImplementationOptions.setActivityOptions()`, setting them again specifically with `ActivityStub` in a Workflow will override this setting.
+如果您使用 `WorkflowImplementationOptions.setActivityOptions()` 定义每个 Activity 类型选项，则在 Workflow 中使用 `ActivityStub` 再次专门设置它们将覆盖此设置。
 
 :::
 
-### Custom Activity Retry Policy {#activity-retries}
+<a id="activity-retries"></a>
+### 自定义 Activity Retry Policy {#activity-retries}
 
-A Retry Policy works in cooperation with the timeouts to provide fine controls to optimize the execution experience.
+Retry Policy 与超时配合提供精细控制以优化执行体验。
 
-Activity Executions are automatically associated with a default [Retry Policy](/encyclopedia/retry-policies) if a custom one is not provided.
+Activity 如果未提供自定义执行，则执行会自动与默认 [Retry Policy](/encyclopedia/retry-policies) 关联。
 
-To set a Retry Policy, known as the [Retry Options](/encyclopedia/retry-policies) in Java, use [`ActivityOptions.newBuilder.setRetryOptions()`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html).
+要设置 Retry Policy（在 Java 中称为 [重试选项](/encyclopedia/retry-policies)），请使用 [`ActivityOptions.newBuilder.setRetryOptions()`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html)。
 
-- Type: `RetryOptions`
-- Default: Server-defined Activity Retry policy.
+- 型号：`RetryOptions`
+- 默认值：服务器定义的 Activity Retry Policy。
 
-- With `ActivityStub`
+- 与`ActivityStub`
 
   ```java
   private final ActivityOptions options =
@@ -95,7 +97,7 @@ To set a Retry Policy, known as the [Retry Options](/encyclopedia/retry-policies
           .build();
   ```
 
-- With `WorkflowImplementationOptions`
+- 与`WorkflowImplementationOptions`
 
   ```java
   WorkflowImplementationOptions options =
@@ -115,11 +117,12 @@ To set a Retry Policy, known as the [Retry Options](/encyclopedia/retry-policies
             .build();
   ```
 
-## Activity next retry delay {#activity-next-retry-delay}
+<a id="activity-next-retry-delay"></a>
+## Activity 下一次重试延迟 {#activity-next-retry-delay}
 
-You may throw an [`ApplicationFailure`](/references/failures#application-failure) with the `NextRetryDelay` field set. This value will replace and override whatever the retry interval would be on the retry policy.
+您可以投掷 [`ApplicationFailure`](/references/failures#application-failure) 并设置 `NextRetryDelay` 字段。该值将替换并覆盖 Retry Policy 上的任何重试间隔。
 
-For example, if in an activity, you want to base the interval on the number of attempts, you might do:
+例如，如果在 Activity 中，您希望间隔基于尝试次数，您可以执行以下操作：
 
 ```java
 int attempt = Activity.getExecutionContext().getInfo().getAttempt();
@@ -131,21 +134,22 @@ throw ApplicationFailure.newFailureWithCauseAndDelay(
     3 * Duration.ofSeconds(attempt));
 ```
 
-## Heartbeat an Activity {#activity-heartbeats}
+<a id="activity-heartbeats"></a>
+## 心跳 Activity {#activity-heartbeats}
 
-An [Activity Heartbeat](/encyclopedia/detecting-activity-failures#activity-heartbeat) is a ping from the [Worker Process](/workers#worker-process) that is executing the Activity to the [Temporal Service](/temporal-service).
-Each Heartbeat informs the Temporal Service that the [Activity Execution](/activity-execution) is making progress and the Worker has not crashed.
-If the Temporal Service does not receive a Heartbeat within a [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout) time period, the Activity will be considered failed and another [Activity Task Execution](/tasks#activity-task-execution) may be scheduled according to the Retry Policy.
+[Activity 心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 是从正在执行 Activity 的 [Worker 流程](/workers#worker-process) 到 [Temporal 服务](/temporal-service) 的 ping。
+每个心跳都会通知 Temporal 服务 [Activity 执行](/activity-execution) 正在取得进展并且 Worker 尚未崩溃。
+如果Temporal服务在[心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout)时间段内没有收到Heartbeat，则Activity将被视为失败，并且根据Retry Policy，另一个[Activity 任务执行](/tasks#activity-task-execution)可能是Scheduled。
 
-Heartbeats may not always be sent to the Temporal Service—they may be [throttled](/encyclopedia/detecting-activity-failures#throttling) by the Worker.
+心跳可能并不总是发送到 Temporal 服务 — 它们可能是由 Worker 发送的 [节流](/encyclopedia/detecting-activity-failures#throttling)。
 
-Activity Cancellations are delivered to Activities from the Temporal Service when they Heartbeat. Activities that don't Heartbeat can't receive a Cancellation.
-Heartbeat throttling may lead to Cancellation getting delivered later than expected.
+Activity 取消会在活动检测到时从 Temporal 服务传递到活动。没有心跳的活动无法收到取消。
+心跳限制可能会导致取消的发送时间晚于预期。
 
-Heartbeats can contain a `details` field describing the Activity's current progress.
-If an Activity gets retried, the Activity can access the `details` from the last Heartbeat that was sent to the Temporal Service.
+心跳可以包含描述 Activity 当前进度的 `details` 字段。
+如果重试 Activity，则 Activity 可以从发送到 Temporal 服务的最后一个心跳访问 `details`。
 
-To Heartbeat an Activity Execution in Java, use the `Activity.getExecutionContext().heartbeat()` Class method.
+要在 Java 中对 Activity 执行进行检测，请使用 `Activity.getExecutionContext().heartbeat()` 类方法。
 
 ```java
 public class YourActivityDefinitionImpl implements YourActivityDefinition {
@@ -160,27 +164,27 @@ public class YourActivityDefinitionImpl implements YourActivityDefinition {
 }
 ```
 
-The method takes an optional argument, the `details` variable above that represents latest progress of the Activity Execution.
-This method can take a variety of types such as an exception object, custom object, or string.
+该方法采用一个可选参数，即上面的 `details` 变量，它表示 Activity 执行的最新进度。
+此方法可以采用多种类型，例如异常对象、自定义对象或字符串。
 
-If the Activity Execution times out, the last Heartbeat `details` are included in the thrown `ActivityTimeoutException`, which can be caught by the calling Workflow.
-The Workflow can then use the `details` information to pass to the next Activity invocation if needed.
+如果Activity执行超时，则最后一个心跳`details`将包含在抛出的`ActivityTimeoutException`中，可以被调用Workflow捕获。
+然后，如果需要，Workflow 可以使用 `details` 信息传递到下一个 Activity 调用。
 
-In the case of Activity retries, the last Heartbeat's `details` are available and can be extracted from the last failed attempt by using `Activity.getExecutionContext().getHeartbeatDetails(Class<V> detailsClass)`
+在 Activity 重试的情况下，最后一次心跳的 `details` 可用，并且可以使用 `Activity.getExecutionContext().getHeartbeatDetails(Class<V> detailsClass)` 从上次失败的尝试中提取
 
-### Heartbeat Timeout {#heartbeat-timeout}
+### 心跳超时 {#heartbeat-timeout}
 
-A [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout) works in conjunction with [Activity Heartbeats](/encyclopedia/detecting-activity-failures#activity-heartbeat).
+[心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout) 与 [Activity 心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 配合使用。
 
-To set a [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout), use [`ActivityOptions.newBuilder.setHeartbeatTimeout`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html).
+要设置 [心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout)，请使用 [`ActivityOptions.newBuilder.setHeartbeatTimeout`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html)。
 
-- Type: `Duration`
-- Default: None
+- 型号：`Duration`
+- 默认：无
 
-You can set Activity Options using an `ActivityStub` within a Workflow implementation, or per-Activity using `WorkflowImplementationOptions` within a Worker.
-Note that if you define options per-Activity Type options with `WorkflowImplementationOptions.setActivityOptions()`, setting them again specifically with `ActivityStub` in a Workflow will override this setting.
+您可以在 Workflow 实现中使用 `ActivityStub` 设置 Activity 选项，或者在 Worker 中使用 `WorkflowImplementationOptions` 按 Activity 设置 Activity 选项。
+请注意，如果您使用 `WorkflowImplementationOptions.setActivityOptions()` 定义每个 Activity 类型选项，则在 Workflow 中使用 `ActivityStub` 再次专门设置它们将覆盖此设置。
 
-- With `ActivityStub`
+- 与`ActivityStub`
 
   ```java
   private final GreetingActivities activities =
@@ -194,7 +198,7 @@ Note that if you define options per-Activity Type options with `WorkflowImplemen
               .build());
   ```
 
-- With `WorkflowImplementationOptions`
+- 与`WorkflowImplementationOptions`
 
   ```java
   WorkflowImplementationOptions options =

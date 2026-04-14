@@ -1,8 +1,8 @@
 ---
 id: audit-logs-gcp
-title: Audit Logs - GCP Pub/Sub
-sidebar_label: GCP Pub/Sub
-description: Audit Logs in Temporal Cloud provides forensic information, integrating with GCP Pub/Sub for secure data handling and supporting key Admin and API Key operations. This streamlines audit and compliance processes.
+title: "审核日志 - GCP Pub/Sub"
+sidebar_label: "GCP 发布/订阅"
+description: "Temporal Cloud 中的审核日志提供取证信息，与 GCP Pub/Sub 集成以实现安全数据处理并支持关键管理和 API 密钥操作。这简化了审计和合规流程。"
 draft: false
 slug: /cloud/audit-logs-gcp
 toc_max_heading_level: 4
@@ -24,41 +24,43 @@ tags:
 
 import * as Components from '@site/src/components';
 
-## Manual Setup Prerequisites
+<a id="manual-setup-prerequisites"></a>
+## 手动设置先决条件 {#manual-setup-prerequisites}
 
 :::note
 
-These steps are only required for manual setup.
-If you use Terraform for your deployment, you don't need to complete these prerequisites.
+仅手动设置需要这些步骤。
+如果您使用 Terraform 进行部署，则无需满足这些先决条件。
 
 :::
 
-Before configuring the manual Audit Log sink, complete the following steps in Google Cloud:
+在配置手动审核日志接收器之前，请在 Google Cloud 中完成以下步骤：
 
-1. Create a Pub/Sub topic and make a note of its topic name, such as `test-auditlog`.
-1. Set up a service account in the same project in Google Cloud and follow the instructions in the
-   Temporal Cloud UI to configure the permissions for that service account.
+1. 创建一个 Pub/Sub 主题并记下其主题名称，例如 `test-auditlog`。
+1. 在 Google Cloud 中的同一项目中设置服务帐号，然后按照
+   Temporal Cloud 用于配置该服务帐户权限的 UI。
 
-## Create an Audit Log sink
+<a id="create-an-audit-log-sink"></a>
+## 创建审计日志接收器 {#create-an-audit-log-sink}
 
-1. In the Temporal Cloud UI, select **Settings**.
-1. On the **Settings** page, select **Audit Logs**.
-1. In the **Audit Logs Integration** card, select **Setup**.
-1. On the **Audit Log Integration** page, select **Pub/Sub**.
-1. In the **service account email** field, enter the email of the service account you created in the prerequisites.
-1. In the **Topic name** field, enter the topic name of the Pub/Sub topic you created in the prerequisites.
-1. There are two ways to configure the service account to write to the Pub/Sub sink: select **Manual** to configure the account manually, or **Deploy with Terraform** to use Terraform.
-   If you use Terraform, you don't need to complete the prerequisite steps above.
-1. Follow the instructions in the Temporal Cloud UI for the method you chose.
-1. To ensure that audit logs can reach your Pub/Sub topic, you can use the **Verify** button to confirm it is set up correctly. This validates that Temporal can successfully write to your topic.
-If everything is configured correctly, you will see a `Success` status indicating Temporal has written to the Pub/Sub topic.
-1. Click **Create** to configure the audit log.
-   Audit Logs will begin to show up in Pub/Sub within 10 minutes 
+1. 在 Temporal Cloud 用户界面中，选择“**设置**”。
+1. 在**设置**页面上，选择**审核日志**。
+1. 在 **审核日志集成** 卡中，选择 **设置**。
+1. 在 **审核日志集成** 页面上，选择 **Pub/Sub**。
+1. 在 **服务帐户电子邮件** 字段中，输入您在先决条件中创建的服务帐户的电子邮件。
+1. 在 **主题名称** 字段中，输入您在先决条件中创建的 Pub/Sub 主题的主题名称。
+1. 有两种方法可以配置服务帐户以写入 Pub/Sub 接收器：选择 **Manual** 手动配置帐户，或 **Deploy with Terraform** 使用 Terraform。
+   如果您使用 Terraform，则无需完成上述先决步骤。
+1. 按照您选择的方法的 Temporal Cloud UI 中的说明进行操作。
+1. 为确保审核日志能够到达您的 Pub/Sub 主题，您可以使用 **验证** 按钮来确认其设置是否正确。这验证了 Temporal 可以成功写入您的主题。
+如果一切配置正确，您将看到 `Success` 状态，指示 Temporal 已写入 Pub/Sub 主题。
+1. 点击**创建**配置审核日志。
+   审核日志将在 10 分钟内开始显示在 Pub/Sub 中
 
-![Temporal Cloud UI Setup for Audit Logs with GCP Pub/Sub](/img/cloud/gcp/audit-logging-pub-sub-gcp.png)
+![Temporal Cloud 使用 GCP Pub/Sub 审核日志的 UI 设置](/img/cloud/gcp/audit-logging-pub-sub-gcp.png)
 
 :::info MORE INFORMATION
 
-For more details, refer to [Audit Logs with Temporal Cloud](https://docs.temporal.io/cloud/audit-logs).
+有关更多详细信息，请参阅 [使用 Temporal Cloud 审核日志](https://docs.temporal.io/cloud/audit-logs)。
 
 :::

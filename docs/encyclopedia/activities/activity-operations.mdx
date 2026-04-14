@@ -1,8 +1,8 @@
 ---
 id: activity-operations
-title: Activity Operations
-sidebar_label: Activity Operations
-description: Operations you can perform on an Activity - Pause, Unpause, Reset, and Update Options.
+title: "Activity 操作"
+sidebar_label: "Activity 操作"
+description: "您可以在 Activity 上执行的操作 - 暂停、取消暂停、重置和 Update 选项。"
 slug: /activity-operations
 toc_max_heading_level: 4
 keywords:
@@ -16,59 +16,63 @@ tags:
   - Activities
 ---
 
-This page discusses the following:
+本页讨论以下内容：
 
-- [Pause](#pause)
-- [Unpause](#unpause)
-- [Reset](#reset)
-- [Update Options](#update-options)
-- [Observability](#observability)
+- [暂停](#pause)
+- [取消暂停](#unpause)
+- [重置](#reset)
+- [Update 选项](#update-options)
+- [可观察性](#observability)
 
-Activity Operations are deliberate actions you perform on a specific [Activity Execution](/activity-execution), as opposed to lifecycle behaviors like [retries](/encyclopedia/retry-policies) and [timeouts](/encyclopedia/detecting-activity-failures) which happen automatically.
+Activity 操作是您对特定 [Activity 执行](/activity-execution) 执行的有意操作，而不是像 [重试](/encyclopedia/retry-policies) 和 [超时](/encyclopedia/detecting-activity-failures) 这样自动发生的生命周期行为。
 
-You can perform Activity Operations through the [CLI](/cli/activity), the UI, or directly via the gRPC API.
-Not all operations are available in all interfaces yet - see the [summary table](#operations-summary) for current support.
-Activity Operations don't apply to [Local Activities](/local-activity) or [Standalone Activities](/standalone-activity).
+您可以通过 [命令行界面](/cli/activity)、UI 或直接通过 gRPC API 执行 Activity 操作。
+并非所有操作都可在所有界面中使用 - 请参阅 [汇总表](#operations-summary) 以了解当前支持。
+Activity 操作不适用于 [当地活动](/local-activity) 或 [独立活动](/standalone-activity)。
 
 :::note Public Preview
 
-Activity Operations are in [Public Preview](/evaluate/development-production-features/release-stages#public-preview).
-Pause, Unpause, and Reset are available in Server v1.28.0+. Self-hosted UI requires v2.47.0+.
+Activity 操作在 [公开预览](/evaluate/development-production-features/release-stages#public-preview) 中。
+服务器 v1.28.0+ 中提供了暂停、取消暂停和重置功能。自托管 UI 需要 v2.47.0+。
 
-Activity Operations aren't available as SDK client methods. They're operational controls designed for the CLI, UI, and gRPC API - not for programmatic use in Workflow or Activity code.
+Activity 操作不可用作 SDK 客户端方法。它们是为 CLI、UI 和 gRPC API 设计的操作控件 - 不适用于 Workflow 或 Activity 代码中的编程使用。
 
 :::
 
-## Operations summary
+<a id="operations-summary"></a>
+## 操作总结 {#operations-summary}
 
-| Operation | What it does | CLI |
+| 手术 | 它的作用 | 命令行界面 |
 |-----------|-------------|-----|
-| [Pause](#pause) | Stops retries. In-flight execution continues unless the Activity uses Heartbeat. | [`temporal activity pause`](/cli/activity#pause) |
-| [Unpause](#unpause) | Resumes a Paused Activity. The next execution starts immediately. | [`temporal activity unpause`](/cli/activity#unpause) |
-| [Reset](#reset) | Clears retry state (attempts, backoff) and schedules a new execution. | [`temporal activity reset`](/cli/activity#reset) |
-| [Update Options](#update-options) | Changes timeouts, Retry Policy, or Task Queue without restarting the Activity. | [`temporal activity update-options`](/cli/activity#update-options) |
+| [暂停](#pause) | 停止重试。除非 Activity 使用 Heartbeat，否则飞行中执行将继续。 | [`Temporal Activity pause`](/cli/activity#pause) |
+| [取消暂停](#unpause) | 恢复暂停的 Activity。下一次执行立即开始。 | [`Temporal Activity unpause`](/cli/activity#unpause) |
+| [重置](#reset) | 清除重试状态（尝试、退避）并 Schedule 执行新的操作。 | [`Temporal Activity reset`](/cli/activity#reset) |
+| [Update 选项](#update-options) | 更改超时、Retry Policy 或 Task Queue，无需重新启动 Activity。 | [`Temporal Activity Update-options`](/cli/activity#update-options) |
 
-## Pause {#pause}
+## 暂停 {#pause}
 
-Pause stops the Temporal Service from scheduling new retries of an [Activity Execution](/activity-execution).
+暂停会阻止 Temporal 服务安排 [Activity 执行](/activity-execution) 的新重试。
 
-### When to Pause
+<a id="when-to-pause"></a>
+### 何时暂停 {#when-to-pause}
 
-- An Activity is calling an external service that's experiencing issues, and you want to stop retries until the service recovers.
-- You need to inspect or change configuration before the Activity retries.
-- You're rolling out a new Worker version and want to hold specific Activities until the deploy is complete.
+- Activity 正在调用遇到问题的外部服务，并且您希望停止重试直到服务恢复。
+- 您需要在 Activity 重试之前检查或更改配置。
+- 您正在推出新的 Worker 版本，并希望保留特定活动直至部署完成。
 
-### What happens when you Pause an Activity
+<a id="what-happens-when-you-pause-an-activity"></a>
+### 暂停 Activity 时会发生什么 {#what-happens-when-you-pause-an-activity}
 
-- **Pausing an Activity doesn't affect the parent Workflow.** The Workflow continues Running, and [Signals, Queries, and Updates](/encyclopedia/workflow-message-passing) on the parent Workflow are unaffected.
-- **No further retries are scheduled.** The Temporal Service stops scheduling retries. This is enforced server-side, not by the SDK.
-- **Workflow code has no visibility into Activity Operations.** Pause doesn't produce an Event History event, so the Workflow can't detect or react to it. See [Observability](#observability).
-- **[Heartbeating](/encyclopedia/detecting-activity-failures#activity-heartbeat) determines whether the in-flight execution is interrupted:**
-  - **Activities with Heartbeat** are interrupted on their next Heartbeat. The SDK raises a Pause-specific error, and the Activity can catch this to clean up resources before exiting.
-  - **Activities without Heartbeat** continue running to completion. If the execution succeeds, the result is delivered to the Workflow normally. If it fails, no retry is scheduled. Pause takes effect after the in-flight execution ends.
-- **Pause is idempotent.** Pausing an already-Paused Activity has no effect. Pausing a completed Activity returns an error.
+- **暂停 Activity 不会影响父 Workflow。** Workflow 继续运行，父 Workflow 上的 [Signal、查询和 Update](/encyclopedia/workflow-message-passing) 不受影响。
+- **Scheduled 不再进行重试。** Temporal 服务停止安排重试。这是由服务器端强制执行的，而不是由 SDK 强制执行的。
+- **Workflow 代码没有 Visibility 进入 Activity 操作。** 暂停不会产生 Event History 事件，因此 Workflow 无法检测到该事件或对其做出反应。参见 [可观察性](#observability)。
+- **[心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 判断运行中执行是否被中断：**
+  - **带有 Heartbeat 的活动**在下一个 Heartbeat 时被中断。 SDK 会引发特定于暂停的错误，Activity 可以捕获此错误以在退出之前清理资源。
+  - **没有 Heartbeat 的活动**继续运行直至完成。如果执行成功，则结果正常下发至Workflow。如果失败，则不重试 Scheduled。暂停在运行中执行结束后生效。
+- **暂停是幂等的。** 暂停已经暂停的 Activity 没有任何效果。暂停已完成的 Activity 会返回错误。
 
-### CLI usage
+<a id="cli-usage"></a>
+### CLI 用法 {#cli-usage}
 
 ```bash
 temporal activity pause \
@@ -77,59 +81,66 @@ temporal activity pause \
   --reason "Downstream API is down, pausing until recovery"
 ```
 
-See the [CLI reference for `temporal activity pause`](/cli/activity#pause) for all options, including `--activity-type` for targeting by type.
+请参阅 [`Temporal Activity pause` 的 CLI 参考](/cli/activity#pause) 了解所有选项，包括用于按类型定位的 `--Activity-type`。
 
-### Detect Pause in Activity code
+<a id="detect-pause-in-activity-code"></a>
+### 检测 Activity 代码中的暂停 {#detect-pause-in-activity-code}
 
-Activities with Heartbeat can detect that an interruption was caused by Pause rather than a timeout or Workflow Cancellation.
-A Paused Activity resumes later. A Cancelled Activity doesn't.
-Your Activity code may need to handle these cases differently, for example releasing held resources on Pause while preserving them on Cancellation, or vice versa.
+使用 Heartbeat 的活动可以检测到中断是由暂停而不是超时或 Workflow 取消引起的。
+暂停的 Activity 稍后恢复。取消的 Activity 则不会。
+您的 Activity 代码可能需要以不同的方式处理这些情况，例如在暂停时释放保留的资源，同时在取消时保留它们，反之亦然。
 
-| SDK | Version | How to detect Pause |
+| 软件开发工具包 | 版本 | 如何检测暂停 |
 |-----|---------|---------------------|
-| Go | v1.34.0+ | Catch `activity.ErrActivityPaused` |
-| Java | v1.29.0+ | Catch `ActivityPausedException` |
-| TypeScript | v1.12.3+ | Check `cancellationDetails.paused === true` |
-| Python | v1.12.0+ | Check `cancellation_details().paused` on `asyncio.CancelledError` |
-| .NET | v1.7.0+ | Check `CancellationDetails.IsPaused` on `OperationCanceledException` |
+| 去 | v1.34.0+ | 捕获`Activity.ErrActivityPaused` |
+| 爪哇 | v1.29.0+ | 捕获`ActivityPausedException` |
+| 打字稿 | v1.12.3+ | 检查 `cancellationDetails.paused === true` |
+| Python | v1.12.0+ | 检查 `asyncio.CancelledError` 上的 `cancellation_details().paused` |
+| 。网 | v1.7.0+ | 检查 `OperationCanceledException` 上的 `CancellationDetails.IsPaused` |
 
-### Interaction with Workflow Pause
+<a id="interaction-with-workflow-pause"></a>
+### 与 Workflow 交互暂停 {#interaction-with-workflow-pause}
 
-[Workflow Pause](/cli/workflow#pause) and Activity Pause are independent. Both stop Activity retries, but they must be Unpaused separately.
+[Workflow 暂停](/cli/workflow#pause) 和 Activity 暂停是独立的。两者都会停止 Activity 重试，但必须单独取消暂停。
 
-- Workflow Pause blocks retries but doesn't interrupt in-flight executions via Heartbeat. Activity Pause does.
-- If both are active, both must be Unpaused before the Activity resumes.
+- Workflow 暂停会阻止重试，但不会通过 Heartbeat 中断正在进行的执行。 Activity 暂停即可。
+- 如果两者都处于活动状态，则必须在 Activity 恢复之前取消暂停两者。
 
-### Important considerations
+<a id="important-considerations"></a>
+### 重要考虑因素 {#important-considerations}
 
-- **A Paused Activity can still time out.** Pause doesn't stop or extend the [Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout). Use [`update-options`](#update-options) to adjust the timeout if needed.
-- **Pause won't interrupt an Activity that doesn't Heartbeat.** The current execution runs to completion, which could take up to the full [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout).
-- **Pausing by `--activity-type` doesn't prevent new Activities of that type from running.** The command Pauses Activities that are pending when it runs. Activities that start afterward are unaffected.
+- **暂停的 Activity 仍可能超时。** 暂停不会停止或延长 [Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout)。如果需要，使用 [`Update-options`](#update-options) 调整超时。
+- **暂停不会中断没有心跳的 Activity。** 当前执行运行至完成，这可能会占用完整的 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。
+- **通过 `--Activity-type` 暂停不会阻止该类型的新活动运行。** 该命令会暂停运行时挂起的活动。之后开始的活动不受影响。
 
-### Limitations
+<a id="limitations"></a>
+### 限制 {#limitations}
 
-- **Pause doesn't support bulk operations.** Unlike Unpause, Reset, and Update Options, there's no `--query` flag. You can only Pause Activities within a single Workflow, by Activity Id or by Activity type.
-- **No Namespace-wide query for Paused Activities.** You must know the Workflow Id. See [Observability](#observability).
+- **暂停不支持批量操作。** 与取消暂停、重置和 Update 选项不同，没有 `--Query` 标志。您只能通过 Activity Id 或 Activity 类型暂停单个 Workflow 内的活动。
+- **没有用于暂停活动的 Namespace 范围的 Query。** 您必须知道 Workflow Id。参见 [可观察性](#observability)。
 
-## Unpause {#unpause}
+## 取消暂停 {#unpause}
 
-Unpause resumes a Paused Activity Execution.
+取消暂停可恢复暂停的 Activity 执行。
 
-### When to Unpause
+<a id="when-to-unpause"></a>
+### 何时取消暂停 {#when-to-unpause}
 
-- The downstream service or dependency that caused you to Pause has recovered.
-- A code deploy or configuration change is complete and the Activity is safe to retry.
-- You Paused an Activity for investigation and are ready to let it proceed.
+- 导致您暂停的下游服务或依赖项已恢复。
+- 代码部署或配置更改已完成，并且 Activity 可以安全地重试。
+- 您已暂停 Activity 进行调查，并准备好让它继续进行。
 
-### What happens when you Unpause an Activity
+<a id="what-happens-when-you-unpause-an-activity"></a>
+### 取消暂停 Activity 时会发生什么 {#what-happens-when-you-unpause-an-activity}
 
-- **The Activity is rescheduled immediately.** Any remaining retry backoff is discarded. The next execution starts right away.
-- **Attempt count and Heartbeat data are preserved by default.** The Activity resumes from where it left off. Use `--reset-attempts` or `--reset-heartbeats` on the CLI to clear these, or use [Reset](#reset) to restart from attempt 1.
+- **Activity 立即重新 Scheduled。** 任何剩余的重试退避都将被丢弃。下一次执行立即开始。
+- **默认情况下会保留尝试计数和心跳数据。** Activity 从中断处恢复。在 CLI 上使用 `--reset-attempts` 或 `--reset-heartbeats` 清除这些，或使用 [重置](#reset) 从尝试 1 重新启动。
 
-Unpause is idempotent. Unpausing an Activity that isn't Paused has no effect.
-Unpausing an Activity that has already completed returns an error.
+取消暂停是幂等的。取消暂停未暂停的 Activity 没有任何效果。
+取消暂停已完成的 Activity 会返回错误。
 
-### CLI usage
+<a id="cli-usage"></a>
+### CLI 用法 {#cli-usage}
 
 ```bash
 temporal activity unpause \
@@ -137,40 +148,44 @@ temporal activity unpause \
   --activity-id my-activity
 ```
 
-See the [CLI reference for `temporal activity unpause`](/cli/activity#unpause) for all options, including `--reset-attempts` and `--reset-heartbeats` to clear state on resume.
+请参阅 [`Temporal Activity unpause` 的 CLI 参考](/cli/activity#unpause) 了解所有选项，包括 `--reset-attempts` 和 `--reset-heartbeats` 以在恢复时清除状态。
 
-### Important considerations
+<a id="important-considerations"></a>
+### 重要考虑因素 {#important-considerations}
 
-- **Unpausing many Activities at once can overwhelm downstream services.** If you Paused multiple Activities because a service was down, Unpausing them all at the same time sends all retries simultaneously. Consider Unpausing in batches to avoid overwhelming a recovering service.
-- **Unpausing doesn't override Workflow Pause.** If the parent Workflow is also Paused, Unpausing the Activity alone isn't enough. Both must be Unpaused before the Activity resumes. See [Interaction with Workflow Pause](#interaction-with-workflow-pause).
-- **Unpausing doesn't reset the attempt count.** The Activity retries from its current attempt number. Use [Reset](#reset) to restart from attempt 1.
-- **A Paused Activity can time out before you Unpause it.** The [Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) isn't stopped or extended while Paused. Use [`update-options`](#update-options) to extend the timeout before Unpausing if needed.
-- **Unpause doesn't interrupt or duplicate an in-flight execution.** If an Activity without Heartbeat is still running when you Unpause, it continues to completion. The Temporal Service doesn't schedule a concurrent execution. If the in-flight execution fails, the next retry proceeds normally.
+- **一次取消暂停多个活动可能会压垮下游服务。** 如果您因服务关闭而暂停了多个活动，则同时取消暂停所有活动会同时发送所有重试。考虑批量取消暂停以避免压垮正在恢复的服务。
+- **取消暂停不会覆盖 Workflow 暂停。** 如果父级 Workflow 也已暂停，则单独取消暂停 Activity 是不够的。在 Activity 恢复之前，两者都必须取消暂停。参见 [与 Workflow 交互暂停](#interaction-with-workflow-pause)。
+- **取消暂停不会重置尝试计数。** Activity 从当前尝试次数重试。使用 [重置](#reset) 从尝试 1 重新启动。
+- **暂停的 Activity 可能会在您取消暂停之前超时。** [Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) 在暂停时不会停止或扩展。如果需要，请在取消暂停之前使用 [`Update-options`](#update-options) 延长超时。
+- **取消暂停不会中断或重复正在进行的执行。** 如果在您取消暂停时，没有心跳的 Activity 仍在运行，它将继续完成。 Temporal 服务不会并发执行 Schedule。如果运行中执行失败，下一次重试将正常进行。
 
-## Reset {#reset}
+## 重置 {#reset}
 
-Reset clears an Activity's retry state and schedules a fresh execution.
+重置会清除 Activity 的重试状态，并且 Schedule 会重新执行。
 
-### When to Reset
+<a id="when-to-reset"></a>
+### 何时重置 {#when-to-reset}
 
-- An Activity has exhausted most of its retries, and you want to give it a fresh set after fixing the underlying issue.
-- A Paused Activity needs to start clean after a configuration change or code deploy.
-- You want to clear accumulated retry backoff and retry immediately instead of waiting for the next backoff interval.
-- A batch of Activities failed due to a transient issue and you want to restart them all with staggered jitter.
+- Activity 已用尽大部分重试次数，并且您希望在解决根本问题后为其重新尝试一次。
+- 暂停的 Activity 需要在配置更改或代码部署后重新启动。
+- 您想要清除累积的重试退避并立即重试，而不是等待下一个退避间隔。
+- 由于暂时性问题，一批活动失败，并且您希望以交错抖动方式重新启动所有活动。
 
-### What happens when you Reset an Activity
+<a id="what-happens-when-you-reset-an-activity"></a>
+### 重置 Activity 时会发生什么 {#what-happens-when-you-reset-an-activity}
 
-- **The attempt count resets to 1.** The Activity gets a full set of retry attempts regardless of how many it had used.
-- **Retry backoff is discarded.** If the Activity was in a backoff wait, it's rescheduled to run immediately.
-- **If the Activity is Paused, Reset also Unpauses it.** Use `--keep-paused` to Reset the attempt count without resuming execution. With `--keep-paused`, the attempt count and Heartbeat data (if `--reset-heartbeats`) are reset, but the Activity stays Paused. No retry is scheduled until you [Unpause](#unpause) separately.
-- **Resetting an Activity doesn't affect the parent Workflow.** The Workflow continues Running, and Signals, Queries, and Updates on the parent Workflow are unaffected.
-- **Workflow code has no visibility into Activity Operations.** Reset doesn't produce an Event History event, so the Workflow can't detect or react to it. See [Observability](#observability).
-- **[Heartbeating](/encyclopedia/detecting-activity-failures#activity-heartbeat) determines whether an in-flight execution is interrupted:**
-  - **Activities with Heartbeat** are interrupted on their next Heartbeat. The SDK may raise a Reset-specific error so the Activity can clean up before exiting. The next execution starts at attempt 1.
-  - **Activities without Heartbeat** continue running to completion. Reset doesn't cancel, interrupt, or schedule a concurrent execution. If the Activity was already retrying, the Temporal Service rejects the current execution's result because Reset changed the expected attempt number, and a fresh execution is scheduled after the [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout) expires. If it was on its first execution, a successful result is still delivered to the Workflow normally.
-- **Reset is idempotent.** Resetting an Activity that's already at attempt 1 with no backoff has no effect. Resetting a completed Activity returns an error.
+- **尝试计数重置为 1。** Activity 会获得全套重试尝试，无论使用了多少次。
+- **重试退避被丢弃。** 如果 Activity 处于退避等待状态，则 reScheduled 立即运行。
+- **如果 Activity 已暂停，重置也会取消暂停。** 使用 `--keep-paused` 重置尝试计数而不恢复执行。对于 `--keep-paused`，尝试计数和心跳数据（如果是 `--reset-heartbeats`）将被重置，但 Activity 保持暂停状态。除非您单独 [取消暂停](#unpause)，否则不会重试 Scheduled。
+- **重置 Activity 不会影响父 Workflow。** Workflow 继续运行，父 Workflow 上的 Signal、查询和 Update 不受影响。
+- **Workflow 代码没有将 Visibility 转换为 Activity 操作。** 重置不会产生 Event History 事件，因此 Workflow 无法检测到该事件或对其做出反应。参见 [可观察性](#observability)。
+- **[心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 确定正在进行的执行是否被中断：**
+  - **带有 Heartbeat 的活动**在下一个 Heartbeat 时被中断。 SDK 可能会引发特定于重置的错误，以便 Activity 可以在退出之前进行清理。下一次执行从尝试 1 开始。
+  - **没有 Heartbeat 的活动**继续运行直至完成。重置不会取消、中断或 Schedule 并发执行。如果 Activity 已经重试，则 Temporal 服务会拒绝当前执行的结果，因为重置更改了预期的尝试次数，并且 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout) 过期后，新的执行是 Scheduled。如果是第一次执行，仍会正常向 Workflow 发送成功结果。
+- **重置是幂等的。** 重置已经在尝试 1 时没有退避的 Activity 没有效果。重置已完成的 Activity 会返回错误。
 
-### CLI usage
+<a id="cli-usage"></a>
+### CLI 用法 {#cli-usage}
 
 ```bash
 temporal activity reset \
@@ -184,56 +199,62 @@ temporal activity reset \
   --keep-paused
 ```
 
-See the [CLI reference for `temporal activity reset`](/cli/activity#reset) for all options, including `--reset-heartbeats` and bulk mode via `--query`.
+请参阅 [`Temporal Activity reset` 的 CLI 参考](/cli/activity#reset) 了解所有选项，包括 `--reset-heartbeats` 和通过 `--Query` 的批量模式。
 
-### Detect Reset in Activity code
+<a id="detect-reset-in-activity-code"></a>
+### 在 Activity 代码中检测重置 {#detect-reset-in-activity-code}
 
-Activities with Heartbeat can detect that an interruption was caused by Reset rather than a timeout or Workflow Cancellation.
-A Reset Activity is retried from attempt 1. A Cancelled Activity isn't.
-Your Activity code may need to handle these cases differently, for example saving partial progress on Reset while discarding it on Cancellation.
+使用 Heartbeat 的活动可以检测到中断是由重置而不是超时或 Workflow 取消引起的。
+从尝试 1 开始重试重置 Activity。取消的 Activity 则不会。
+您的 Activity 代码可能需要以不同的方式处理这些情况，例如在重置时保存部分进度，而在取消时丢弃它。
 
-| SDK | How to detect Reset |
+| 软件开发工具包 | 如何检测重置 |
 |-----|---------------------|
-| Go | `activity.GetCancellationDetails(ctx).Cause()` returns `activity.ErrActivityReset` |
-| Java | Catch `ActivityResetException` |
-| TypeScript | Catch `ApplicationFailure` with `error.type === "ActivityReset"` |
-| Python | Check `cancellation_details().reset` on `asyncio.CancelledError` |
-| .NET | Check `CancellationDetails.IsReset` on `OperationCanceledException` |
+| 去 | `Activity.GetCancellationDetails(ctx).Cause()` 返回 `Activity.ErrActivityReset` |
+| 爪哇 | 捕获`ActivityResetException` |
+| 打字稿 | 使用 `error.type === "ActivityReset"` 捕获 `ApplicationFailure` |
+| Python | 检查 `asyncio.CancelledError` 上的 `cancellation_details().reset` |
+| 。网 | 检查 `OperationCanceledException` 上的 `CancellationDetails.IsReset` |
 
-### Important considerations
+<a id="important-considerations"></a>
+### 重要考虑因素 {#important-considerations}
 
-- **A Reset Activity can still time out.** Reset doesn't restart the [Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout). The deadline is calculated from when the Activity was originally scheduled. Use [`update-options`](#update-options) to extend the timeout before or after Reset.
-- **Heartbeat details are preserved by default.** If your Activity uses Heartbeat details for progress tracking and you want a clean restart, pass `--reset-heartbeats`.
-- **Reset won't interrupt an Activity that doesn't Heartbeat.** The current execution runs to completion, which could take up to the full [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout). If the Activity had already retried (attempt > 1), the Temporal Service rejects the current execution's result because Reset changed the expected attempt number. The Activity waits for its Start-To-Close Timeout to expire before a new execution is scheduled.
-- **`--restore-original-options` restores the Activity's original configuration.** It reverts timeouts, Retry Policy, and Task Queue to the values from when the Activity was first scheduled.
-- **Resetting by `--activity-type` or `--match-all` doesn't affect new Activities of that type.** The command Resets Activities that are pending when it runs. Activities that start afterward are unaffected.
-- **Bulk Reset can overwhelm downstream services.** When using `--query` to Reset Activities across many Workflows, use `--jitter` to stagger the restart times.
+- **重置 Activity 仍可能超时。**重置不会重新启动 [Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout)。截止日期从Activity最初为Scheduled时开始计算。使用 [`Update-options`](#update-options) 延长复位之前或之后的超时。
+- **默认情况下会保留心跳详细信息。** 如果您的 Activity 使用心跳详细信息进行进度跟踪并且您想要干净重启，请传递 `--reset-heartbeats`。
+- **重置不会中断没有心跳的 Activity。** 当前执行运行至完成，这可能会占用完整的 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。如果 Activity 已重试（尝试 > 1），则 Temporal 服务将拒绝当前执行的结果，因为重置更改了预期的尝试次数。在新的执行 Scheduled 之前，Activity 等待其开始到关闭超时到期。
+- **`--restore-original-options` 恢复 Activity 的原始配置。** 它将超时、Retry Policy 和 Task Queue 恢复为 Activity 首次为 Scheduled 时的值。
+- **通过 `--Activity-type` 或 `--match-all` 重置不会影响该类型的新活动。** 该命令在运行时重置挂起的活动。之后开始的活动不受影响。
+- **批量重置可能会压垮下游服务。** 当使用 `--Query` 重置多个 Workflow 上的活动时，请使用 `--jitter` 错开重新启动时间。
 
-## Update Options {#update-options}
+<a id="update-options"></a>
+## Update 选项 {#update-options}
 
-Update Options changes an Activity's runtime configuration without restarting it.
+Update 选项可更改 Activity 的运行时配置，而无需重新启动它。
 
-### When to Update Options
+<a id="when-to-update-options"></a>
+### 何时使用 Update 选项 {#when-to-update-options}
 
-- The [Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) is about to expire on a Paused Activity, and you need to extend it before Unpausing.
-- An Activity's [Retry Policy](/encyclopedia/retry-policies) needs tuning based on observed failure patterns (for example, increasing the backoff interval or maximum attempts).
-- You want to move an Activity to a different [Task Queue](/task-queue) to route it to a specific set of [Workers](/workers).
-- You need to restore an Activity's original configuration after a temporary override.
+- [Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) 即将在暂停的 Activity 上过期，您需要在取消暂停之前延长它。
+- Activity 的 [Retry Policy](/encyclopedia/retry-policies) 需要根据观察到的故障模式进行调整（例如，增加退避间隔或最大尝试次数）。
+- 您想要将 Activity 移动到不同的 [Task Queue](/task-queue) 以将其路由到一组特定的 [Workers](/workers)。
+- 临时覆盖后，您需要恢复 Activity 的原始配置。
 
-### What happens when you Update an Activity's Options
+<a id="what-happens-when-you-update-an-activitys-options"></a>
+### 当您使用 Update 和 Activity 的选项时会发生什么 {#what-happens-when-you-update-an-activitys-options}
 
-You can change [timeouts](/encyclopedia/detecting-activity-failures) (Schedule-To-Close, Start-To-Close, Schedule-To-Start, Heartbeat), Retry Policy (initial interval, maximum interval, backoff coefficient, maximum attempts), and Task Queue.
-Only the fields you specify are changed. All other options remain unchanged.
+您可以更改 [超时](/encyclopedia/detecting-activity-failures)（Schedule-To-Close、Start-To-Close、Schedule-To-Start、Heartbeat）、Retry Policy（初始间隔、最大间隔、退避系数、最大尝试次数）和 Task Queue。
+仅更改您指定的字段。所有其他选项保持不变。
 
-- **If the Activity is waiting for retry (scheduled),** the new options take effect immediately. Any pending retry timer is regenerated with the updated configuration.
-- **If the Activity is currently running,** the new options are stored but take effect on the next execution. The in-flight execution isn't interrupted.
-- **If the Activity is Paused,** the new options are stored immediately. They take effect when the Activity is Unpaused and the next execution starts.
-- **Workflow code has no visibility into Activity Operations.** Update Options doesn't produce an Event History event, so the Workflow can't detect or react to it. See [Observability](#observability).
+- **如果Activity正在等待重试（Scheduled），**新选项立即生效。任何挂起的重试 Timer 都会使用 Updated 配置重新生成。
+- **如果 Activity 当前正在运行，** 新选项将被存储，但会在下次执行时生效。飞行中的执行不会被中断。
+- **如果 Activity 已暂停，** 新选项将立即存储。当 Activity 取消暂停并且下一次执行开始时它们生效。
+- **Workflow 代码没有 Visibility 进入 Activity 操作。** Update 选项不会生成 Event History 事件，因此 Workflow 无法检测到该事件或对其做出反应。参见 [可观察性](#observability)。
 
-Update Options is idempotent. Updating an Activity with the same values it already has produces no change.
-Updating options on an Activity that has already completed returns an error.
+Update 选项是幂等的。使用已有的相同值更新 Activity 不会产生任何变化。
+更新已完成的 Activity 上的选项会返回错误。
 
-### CLI usage
+<a id="cli-usage"></a>
+### CLI 用法 {#cli-usage}
 
 ```bash
 temporal activity update-options \
@@ -242,41 +263,46 @@ temporal activity update-options \
   --schedule-to-close-timeout 24h
 ```
 
-See the [CLI reference for `temporal activity update-options`](/cli/activity#update-options) for all options, including Retry Policy, Task Queue, and bulk mode via `--query`.
+请参阅 [`Temporal Activity Update-options` 的 CLI 参考](/cli/activity#update-options) 了解所有选项，包括 Retry Policy、Task Queue 和通过 `--Query` 的批量模式。
 
-### Important considerations
+<a id="important-considerations"></a>
+### 重要考虑因素 {#important-considerations}
 
-- **Changes to a running Activity take effect on the next execution, not the current one.** If you need the change to apply immediately, the Activity must finish or fail its current execution first.
-- **Updating by `--activity-type` or `--match-all` doesn't affect new Activities of that type.** The command updates Activities that are pending when it runs. Activities that start afterward are unaffected.
-- **`--restore-original-options` is batch-only.** This flag only works with `--query`. It's silently ignored in single-workflow mode. It can't be combined with other option changes in the same command.
+- **对正在运行的 Activity 的更改将在下一次执行时生效，而不是在当前执行时生效。** 如果您需要立即应用更改，则 Activity 必须首先完成或失败其当前执行。
+- **通过 `--Activity-type` 或 `--match-all` 进行更新不会影响该类型的新活动。** 命令 Update 运行时挂起的活动。之后开始的活动不受影响。
+- **`--restore-original-options` 仅适用于批处理。** 该标志仅适用于 `--Query`。在单 Workflow 模式下它会被默默地忽略。它不能与同一命令中的其他选项更改结合使用。
 
-### Limitations
+<a id="limitations"></a>
+### 限制 {#limitations}
 
-- **Update Options is CLI and gRPC only.** It's not available in the UI.
+- **Update 选项仅限 CLI 和 gRPC。** 它在 UI 中不可用。
 
-## Observability {#observability}
+<a id="observability"></a>
+## 可观察性 {#observability}
 
-Activity Operations have a limited audit trail because they are not recorded in a Workflow's Event History. However, you can use the CLI and the UI to check Activity state and find Paused Activities for running Workflows.
+Activity 操作的审核跟踪有限，因为它们未记录在 Workflow 的 Event History 中。但是，您可以使用 CLI 和 UI 检查 Activity 状态并查找运行 Workflow 的暂停活动。
 
-### Check Activity state
+<a id="check-activity-state"></a>
+### 检查 Activity 状态 {#check-activity-state}
 
-`temporal workflow describe` shows the current state of each pending Activity, including whether it's Paused, its current attempt count, and last failure.
-The UI shows who performed an operation, when, and why (if a `--reason` was provided).
+`Temporal Workflow describe` 显示每个挂起的 Activity 的当前状态，包括它是否已暂停、其当前尝试计数和上次失败。
+UI 显示执行操作的人员、时间和原因（如果提供了 `--reason`）。
 
-### Find Paused Activities
+<a id="find-paused-activities"></a>
+### 查找暂停的活动 {#find-paused-activities}
 
-The `TemporalPauseInfo` [Search Attribute](/search-attribute) is filterable by Activity type within a Workflow.
+`TemporalPauseInfo` [Search Attribute](/search-attribute) 可按 Workflow 内的 Activity 类型进行过滤。
 
-There's no Namespace-wide query to find all Paused Activities across Workflows.
-You must know the Workflow Id.
+没有 Namespace 范围内的 Query 来查找 Workflow 上的所有暂停活动。
+您必须知道 Workflow ID。
 
-### Audit trail {#audit-trail}
+### 审计跟踪 {#audit-trail}
 
-Activity Operations don't produce Event History events.
-There is no record of a Pause, Reset, or option change in the Workflow's [Event History](/workflow-execution/event#event-history).
-Nothing that reads the Event History - Workflow code, Replays, or external tooling - will see that an Operation occurred.
+Activity 操作不会产生 Event History 事件。
+Workflow 的 [Event History](/workflow-execution/event#event-history) 中没有暂停、重置或选项更改的记录。
+读取 Event History - Workflow 代码、重播或外部工具的任何内容都不会看到操作发生。
 
-Evidence of an Operation is gone when the Activity completes or the Workflow closes.
-There's no persistent record that an Activity was Paused, Reset, or had its options changed.
+当 Activity 完成或 Workflow 关闭时，操作的证据就会消失。
+没有关于 Activity 已暂停、重置或其选项已更改的持久记录。
 
-The only way to confirm the current state of an Activity is `temporal workflow describe` or the UI.
+确认 Activity 当前状态的唯一方法是 `Temporal Workflow describe` 或 UI。

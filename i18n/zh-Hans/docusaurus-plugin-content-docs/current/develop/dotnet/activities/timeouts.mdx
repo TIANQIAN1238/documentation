@@ -1,0 +1,129 @@
+---
+id: timeouts
+title: Activity 超时 - .NET SDK
+sidebar_label: 超时
+description: 所有 API 都是实验性的，可能会发生向后不兼容的更改。
+toc_max_heading_level: 4
+keywords:
+  - .NET
+  - failure detection
+  - timeouts
+tags:
+  - Activities
+  - Workflows
+  - Errors
+  - Failures
+  - .NET SDK
+  - Temporal SDKs
+---
+
+## Activity 超时 {#Activity-超时}
+
+每个 Activity 超时控制 Activity 执行不同方面的最大持续时间。
+
+Activity 选项中提供以下超时。
+
+- **[Schedule-To-Close Timeout](/encyclopedia/Detecting-Activity-failures#Schedule-to-close-timeout)：** 是整个 [Activity 执行](/Activity-执行) 允许的最长时间。
+- **[Start-To-Close Timeout](/encyclopedia/Detecting-Activity-failures#start-to-close-timeout):** 是单个 [Activity 任务执行](/tasks#Activity-task-execution) 允许的最长时间。
+- **[Schedule-To-Start Timeout](/encyclopedia/Detecting-Activity-failures#Schedule-to-start-timeout):** 是从 [Activity 任务](/tasks#Activity-task) 执行 Scheduled 到执行[Worker](/Workers#Worker) 启动 Activity 任务。
+
+Activity 执行必须设置“开始到关闭”或“Schedule 到关闭超时”。
+
+调用“ExecuteActivityAsync”时，可以在“ActivityOptions”中设置这些值。
+
+可用的超时有：
+
+- ScheduleToCloseTimeout
+- ScheduleToStartTimeout
+- 开始到关闭超时
+
+```csharp
+return await Workflow.ExecuteActivityAsync(
+    (MyActivities a) => a.MyActivity(param),
+    new() { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
+```
+
+### 设置 Activity Retry Policy {#Activity-重试}
+
+Retry Policy 与超时配合提供精细控制以优化执行体验。
+
+如果未提供自定义执行，Activity 执行将自动与默认 [Retry Policy](/encyclopedia/retry-policies) 关联。
+
+要在 .NET 中创建 Activity Retry Policy，请在调用“ExecuteActivityAsync”时在“ActivityOptions”上设置“RetryPolicy”。
+
+```csharp
+return await Workflow.ExecuteActivityAsync(
+    (MyActivities a) => a.MyActivity(param),
+    new()
+    {
+        StartToCloseTimeout = TimeSpan.FromMinutes(5),
+        RetryPolicy = new() { MaximumInterval = TimeSpan.FromSeconds(10) },
+    });
+```
+
+### 使用 `nextRetryDelay` 覆盖重试间隔 {#next-retry-delay}
+
+当您引发 [应用程序失败](/references/failures#application-failure) 并分配“nextRetryDelay”字段时，其值将替换并覆盖活动 Retry Policy 中定义的重试间隔。
+
+例如，您可以根据当前的尝试次数调整下一个重试延迟间隔。
+以下是在 Activity 中执行此操作的方法。
+在以下示例中，从 Activity 执行上下文中检索“尝试”计数，并用于设置下一次重试延迟的秒数：
+
+```csharp
+var attempt = ActivityExecutionContext.Current.Info.Attempt;
+
+throw new ApplicationFailureException(
+    $"Something bad happened on attempt {attempt}",
+    errorType: "my_failure_type",
+    nextRetryDelay: TimeSpan.FromSeconds(3 * attempt));
+```
+
+## 心跳 Activity {#Activity-heartbeats}
+
+[Activity 心跳](/encyclopedia/Detecting-Activity-failures#Activity-heartbeat) 是从正在执行 Activity 的 [Worker 进程](/Workers#Worker-process) 到 [Temporal] 的 ping服务](/Temporal-服务)。
+每个心跳都会通知 Temporal 服务 [Activity 执行](/Activity-执行) 正在取得进展，并且 Worker 尚未崩溃。
+如果 Temporal 服务在 [心跳超时](/encyclopedia/Detecting-Activity-failures#heartbeat-timeout) 时间内未收到心跳，则 Activity 将被视为失败，并且另一个 [Activity 任务执行](/tasks#Activity-task-execution) 可能会根据Retry Policy。
+
+心跳可能并不总是发送到 Temporal 服务 — 它们可能会被 Worker 限制。
+
+Activity 取消会在活动检测到时从 Temporal 服务传递到活动。没有心跳的活动无法收到取消。
+心跳限制可能会导致取消的发送时间晚于预期。
+
+心跳可以包含描述 Activity 当前进度的“详细信息”字段。
+如果 Activity 重试，Activity 可以访问发送到 Temporal 服务的最后一次心跳的“详细信息”。
+
+要在 .NET 中对 Activity 执行进行检测，请在`ActivityExecutionContext`。
+
+```csharp
+[Activity]
+public async Task MyActivityAsync()
+{
+    while (true)
+    {
+        // Send heartbeat
+        ActivityExecutionContext.Current.Heartbeat();
+
+        // Do some work, passing the cancellation token
+        await Task.Delay(1000, ActivityExecutionContext.Current.CancellationToken);
+    }
+}
+```
+
+除了获取取消信息外，Heartbeats 还支持保留在服务器上的详细数据，以便在 Activity 重试期间检索。
+如果 Activity 调用“Heartbeat(123, 456)”，然后失败并重试，“ActivityInfo”上的“HeartbeatDetails”将在下次运行时返回包含“123”和“456”的集合。
+
+### 设置心跳超时 {#heartbeat-timeout}
+
+[心跳超时](/encyclopedia/Detecting-Activity-failures#heartbeat-timeout) 与 [Activity 心跳](/encyclopedia/Detecting-Activity-failures#Activity-heartbeat) 结合使用。
+
+“HeartbeatTimeout”是“ExecuteActivityAsync”的“ActivityOptions”上的一个属性，用于设置 Activity 心跳之间的最长时间。
+
+```csharp
+await Workflow.ExecuteActivityAsync(
+    (MyActivities a) => a.MyActivity(param),
+    new()
+    {
+        StartToCloseTimeout = TimeSpan.FromMinutes(5),
+        HeartbeatTimeout = TimeSpan.FromSeconds(30),
+    });
+```

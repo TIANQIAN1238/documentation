@@ -2,7 +2,7 @@
 id: continue-as-new
 title: Continue-As-New - Go SDK
 sidebar_label: Continue-As-New
-description: Use Temporal's Continue-As-New in Go to manage large Event Histories by atomically creating new Workflow Executions with the same Workflow Id and fresh parameters.
+description: 在 Go 中使用 Temporal 的 Continue-As-New，通过以相同的 Workflow Id 和全新参数原子性地创建新的 Workflow Execution 来管理较大的 Event History。
 toc_max_heading_level: 4
 keywords:
   - continue-as-new workflow
@@ -17,31 +17,31 @@ tags:
   - Temporal SDKs
 ---
 
-This page answers the following questions for Go developers:
+本页面为 Go 开发者解答以下问题：
 
-- [What is Continue-As-New?](#what)
-- [How to Continue-As-New?](#how)
-- [When is it right to Continue-as-New?](#when)
-- [How to test Continue-as-New?](#how-to-test)
+- [什么是 Continue-As-New？](#what)
+- [如何使用 Continue-As-New？](#how)
+- [什么时候适合使用 Continue-as-New？](#when)
+- [如何测试 Continue-as-New？](#how-to-test)
 
-## What is Continue-As-New? {#what}
+## 什么是 Continue-As-New？ {#what}
 
-[Continue-As-New](/workflow-execution/continue-as-new) lets a Workflow Execution close successfully and creates a new Workflow Execution.
-You can think of it as a checkpoint when your Workflow gets too long or approaches certain scaling limits.
+[Continue-As-New](/workflow-execution/continue-as-new) 让 Workflow Execution 成功关闭并创建一个新的 Workflow Execution。
+当你的 Workflow 运行时间过长或接近某些扩展限制时，可以将其视为一个检查点。
 
-The new Workflow Execution is in the same [chain](/workflow-execution#workflow-execution-chain); it keeps the same Workflow Id but gets a new Run Id and a fresh Event History.
-It also receives your Workflow's usual parameters.
+新的 Workflow Execution 处于同一[执行链](/workflow-execution#workflow-execution-chain)中；它保留相同的 Workflow Id，但会获得新的 Run Id 和全新的 Event History。
+它还会接收 Workflow 的常规参数。
 
-## How to Continue-As-New using the Go SDK {#how}
+## 如何使用 Go SDK 实现 Continue-As-New {#how}
 
-First, design your Workflow parameters so that you can pass in the "current state" when you Continue-As-New into the next Workflow run.
-This state is typically set to `None` for the original caller of the Workflow.
+首先，设计你的 Workflow 参数，以便在 Continue-As-New 进入下一次 Workflow 运行时能够传入"当前状态"。
+对于 Workflow 的原始调用方，该状态通常设置为 `None`。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/samples-go/blob/main/safe_message_handler/workflow.go">
-    View the source code
+    查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+  以了解完整的应用程序代码上下文。
 </div>
 ```go
 ClusterManagerInput struct {
@@ -52,16 +52,16 @@ ClusterManagerInput struct {
 func newClusterManager(ctx workflow.Context, wfInput ClusterManagerInput) (*ClusterManager, error) {
 
 ````
-The test hook in the above snippet is covered [below](#how-to-test).
+上述代码片段中的测试钩子将在[下文](#how-to-test)中介绍。
 
-Inside your Workflow, return the [`NewContinueAsNewError`](https://pkg.go.dev/go.temporal.io/sdk/workflow#NewContinueAsNewError) error.
-This stops the Workflow right away and starts a new one.
+在 Workflow 内部，返回 [`NewContinueAsNewError`](https://pkg.go.dev/go.temporal.io/sdk/workflow#NewContinueAsNewError) 错误。
+这会立即停止当前 Workflow 并启动一个新的 Workflow。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/samples-go/blob/main/safe_message_handler/workflow.go">
-    View the source code
+    查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+  以了解完整的应用程序代码上下文。
 </div>
 ```go
 return ClusterManagerResult{}, workflow.NewContinueAsNewError(
@@ -74,26 +74,26 @@ return ClusterManagerResult{}, workflow.NewContinueAsNewError(
 )
 ````
 
-### Considerations for Workflows with Message Handlers {#with-message-handlers}
+### 含 Message Handler 的 Workflow 的注意事项 {#with-message-handlers}
 
-If you use Updates or Signals, don't call Continue-as-New from the handlers.
-Instead, wait for your handlers to finish in your main Workflow before you return `NewContinueAsNewError`.
-See the [`AllHandlersFinished`](message-passing#wait-for-message-handlers) example for guidance.
+如果你使用了 Update 或 Signal，请不要在处理器中调用 Continue-as-New。
+应在主 Workflow 中等待处理器执行完毕后，再返回 `NewContinueAsNewError`。
+参见 [`AllHandlersFinished`](message-passing#wait-for-message-handlers) 示例以获取指导。
 
-## When is it right to Continue-as-New using the Go SDK? {#when}
+## 什么时候适合使用 Go SDK 的 Continue-as-New？ {#when}
 
-Use Continue-as-New when your Workflow might hit [Event History Limits](/workflow-execution/event#event-history).
+当你的 Workflow 可能触及 [Event History 限制](/workflow-execution/event#event-history)时，使用 Continue-as-New。
 
-Temporal tracks your Workflow's progress against these limits to let you know when you should Continue-as-New.
-Call `GetInfo(ctx).GetContinueAsNewSuggested()` to check if it's time.
+Temporal 会追踪 Workflow 的进度是否接近这些限制，并告知你何时应该使用 Continue-as-New。
+调用 `GetInfo(ctx).GetContinueAsNewSuggested()` 来检查是否到了该使用的时候。
 
-## How to test Continue-as-New using the Go SDK {#how-to-test}
+## 如何使用 Go SDK 测试 Continue-as-New {#how-to-test}
 
-Testing Workflows that naturally Continue-as-New may be time-consuming and resource-intensive.
-Instead, add a test hook to check your Workflow's Continue-as-New behavior faster in automated tests.
+对自然触发 Continue-as-New 的 Workflow 进行测试可能既耗时又消耗资源。
+建议添加测试钩子，以便在自动化测试中更快速地检验 Workflow 的 Continue-as-New 行为。
 
-For example, when `TestContinueAsNew == True`, this sample creates a test-only variable called `maxHistoryLength` and sets it to a small value.
-A helper method in the Workflow checks it each time it considers using Continue-as-New:
+例如，当 `TestContinueAsNew == True` 时，此示例会创建一个仅用于测试的变量 `maxHistoryLength`，并将其设置为较小的值。
+Workflow 中的辅助方法会在每次考虑使用 Continue-as-New 时进行检查：
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/samples-go/blob/main/safe_message_handler/workflow.go">

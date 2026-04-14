@@ -1,0 +1,100 @@
+---
+id: error-handling
+title: 错误处理 - Ruby SDK
+sidebar_label: 错误处理
+description: 使用 Temporal Ruby SDK 处理错误
+toc_max_heading_level: 4
+keywords:
+  - guide context
+  - how to
+  - dotnet
+  - sdk
+  - failure detection
+tags:
+  - Activities
+  - Workflows
+  - Ruby SDK
+  - Temporal SDKs
+  - Failures
+  - Errors
+---
+
+## 引发和处理异常 {#exception-handling}
+
+在每个 Temporal SDK 中，错误处理都是按照语言约定惯用地实现的。
+Temporal 在内部使用多个不同的错误类 - 例如，Ruby SDK 中的 [`CancelledError`](https://ruby.Temporal.io/Temporalio/Error/CanceledError.html) 来处理 Workflow 取消。 
+您不应手动提出或以其他方式实现这些，因为它们与 Temporal Platform 逻辑相关。
+
+您通常会故意引发的一个 Temporal 错误类是 [`ApplicationError`](https://ruby.Temporal.io/Temporalio/Error/ApplicationError.html)。
+事实上，Temporal Activity 中的 Ruby 代码引发的“任何”其他异常都将在内部转换为“ApplicationError”。
+这样，错误的类型、严重性和任何其他详细信息都可以发送到 Temporal 服务，由 Web UI 进行索引，甚至可以跨语言边界进行序列化。
+
+换句话说，这两个代码示例执行相同的操作：
+
+```ruby
+class MyError < StandardError
+end
+
+class SomethingThatFails < Temporalio::Activity::Definition
+  def execute(details)
+    Temporalio::Activity::Context.current.logger.info(
+      "We have a problem."
+    )
+    raise MyError.new('Simulated failure')
+  end
+end
+```
+
+```ruby
+class SomethingThatFails < Temporalio::Activity::Definition
+  def execute(details)
+    Temporalio::Activity::Context.current.logger.info(
+      "We have a problem."
+    )
+    raise Temporalio::Error::ApplicationError.new('Simulated failure', type: 'MyError')
+  end
+end
+```
+
+根据您的实施情况，您可以决定使用任一方法。
+使用 Temporal `ApplicationError` 类的原因之一是它允许您设置额外的 `non_retryable` 参数。
+这样，您可以决定 Temporal 是否不应自动重试错误。
+这对于由于输入数据错误而故意使 Workflow 失败非常有用，而不是等待超时结束：
+
+```ruby
+class SomethingThatFails < Temporalio::Activity::Definition
+  def execute(details)
+    Temporalio::Activity::Context.current.logger.info(
+      "We have a problem."
+    )
+    raise Temporalio::Error::ApplicationError.new('Simulated failure', non_retryable: true)
+  end
+end
+```
+
+您也可以在 Activity [Retry Policy](/develop/ruby/activities/timeouts#Activity-retries) 中指定不可重试的错误列表。
+
+## Workflow 失败 {#Workflow-失败}
+
+Temporal 的核心设计原则之一是 Activity 故障永远不会直接导致 Workflow 故障 — Workflow 永远不应该返回“故障”，除非故意。
+与 Temporal 活动关联的默认 Retry Policy 会重试它们，直到达到某个超时阈值。
+在满足此条件或另一个不可重试的条件之前，活动实际上不会“返回” Workflow 失败。
+此时，您可以决定如何处理 Activity 返回的错误，就像处理任何其他程序一样。
+例如，您可以实现一个 [Saga 模式](https://github.com/Temporalio/samples-ruby/tree/main/saga)，它使用 `rescue` 块来“展开”Workflow 在 Activity 故障点之前执行的一些步骤。
+
+**您只能通过从 Workflow 代码中手动引发“ApplicationError”来使 Workflow 失败。**
+如果 Activity 的故障意味着您的 Workflow 不应继续，您可以执行此操作以响应 Activity 故障：
+
+```ruby
+class SagaWorkflow < Temporalio::Workflow::Definition
+  def execute(details)
+    Temporalio::Workflow.execute_activity(Activities::SomethingThatFails, details,start_to_close_timeout: 30)
+  rescue StandardError
+    raise Temporalio::Error::ApplicationError.new('Fail the Workflow')
+```
+
+这在 Workflow 中的工作方式与从活动中引发异常不同。
+在 Activity 中，任何 Ruby 异常或自定义异常都会转换为 Temporal“ApplicationError”。
+在 Workflow 中，除了显式 Temporal `ApplicationError` 之外引发的任何异常只会使特定的 [Workflow Task](https://docs.Temporal.io/tasks#Workflow-task-execution) 失败并重试。
+这包括自动引发的任何典型 Rub​​y `RuntimeError`。
+这些错误被视为可以通过固定部署纠正的错误，而不是 Temporal Workflow Execution 意外返回的原因。

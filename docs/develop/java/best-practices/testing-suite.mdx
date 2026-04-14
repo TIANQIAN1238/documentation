@@ -1,8 +1,8 @@
 ---
 id: testing-suite
-title: Testing - Java SDK
-sidebar_label: Testing
-description: The Testing section of the Temporal Application development guide covers frameworks for Workflow and integration testing, including end-to-end, integration, and unit tests. Unit tests can be set up and run using the Temporal Java SDK's TestWorkflowEnvironment and TestWorkflowExtension classes for automated testing, allowing developers to test Workflows
+title: "测试 - Java SDK"
+sidebar_label: "测试"
+description: "Temporal 应用程序开发指南的测试部分涵盖了 Workflow 和集成测试的框架，包括端到端、集成和单元测试。可以使用 Temporal Java SDK 的 TestWorkflowEnvironment 和 TestWorkflowExtension 类来设置和运行单元测试以进行自动化测试，从而允许开发人员测试 Workflow"
 toc_max_heading_level: 4
 keywords:
   - activity
@@ -22,37 +22,38 @@ tags:
   - Temporal SDKs
 ---
 
-The Testing section of the Temporal Application development guide describes the frameworks that facilitate Workflow and integration testing.
+Temporal 应用程序开发指南的测试部分描述了促进 Workflow 和集成测试的框架。
 
-In the context of Temporal, you can create these types of automated tests:
+在 Temporal 的上下文中，您可以创建以下类型的自动化测试：
 
-- **End-to-end:** Running a Temporal Server and Worker with all its Workflows, Activities, and Nexus Operations; starting and interacting with Workflows from a Client.
-- **Integration:** Anything between end-to-end and unit testing.
-  - Running Activities with mocked Context and other SDK imports (and usually network requests).
-  - Running Workers with mock Activities and Nexus Operations, and using a Client to start Workflows.
-  - Running Workflows with mocked SDK imports.
-- **Unit:** Running a piece of Workflow, Activity, or Nexus Operation code (a function or method) and mocking any code it calls.
+- **端到端：** 运行 Temporal Server 和 Worker 及其所有 Workflow、活动和 Nexus 操作；从客户端启动 Workflow 并与之交互。
+- **集成：** 端到端和单元测试之间的任何内容。
+  - 使用模拟上下文和其他 SDK 导入（通常是网络请求）运行活动。
+  - 通过模拟活动和 Nexus 操作运行 Worker，并使用客户端启动 Workflow。
+  - 使用模拟 SDK 导入运行 Workflow。
+- **单位：** 运行一段 Workflow、Activity 或 Nexus 操作代码（函数或方法）并模拟它调用的任何代码。
 
-We generally recommend writing the majority of your tests as integration tests.
+我们通常建议将大部分测试编写为集成测试。
 
-Because the test server supports skipping time, use the test server for both end-to-end and integration tests with Workers.
+由于测试服务器支持跳过时间，因此请使用测试服务器与 Worker 进行端到端测试和集成测试。
 
-## Test frameworks {#test-frameworks}
+## 测试框架 {#test-frameworks}
 
-The Temporal Java SDK provides a test framework to facilitate Workflow unit and integration testing.
-The test framework provides a `TestWorkflowEnvironment` class which includes an in-memory implementation
-of the Temporal service that supports automatic time skipping. This allows you to
-easily test long-running Workflows in seconds, without having to change your Workflow code.
+Temporal Java SDK 提供了一个测试框架来促进 Workflow 单元和集成测试。
+测试框架提供了一个 `TestWorkflowEnvironment` 类，其中包括内存中实现
+支持自动跳时的Temporal服务。这可以让您
+在几秒钟内轻松测试长时间运行的 Workflow，而无需更改您的 Workflow 代码。
 
-You can use the provided `TestWorkflowEnvironment` with a Java unit testing framework of your choice,
-such as JUnit.
+您可以将提供的 `TestWorkflowEnvironment` 与您选择的 Java 单元测试框架一起使用，
+例如JUnit。
 
-### Setup testing dependency
+<a id="setup-testing-dependency"></a>
+### 设置测试依赖 {#setup-testing-dependency}
 
-To start using the Java SDK test framework, you need to add [`io.temporal:temporal-testing`](https://search.maven.org/artifact/io.temporal/temporal-testing)
-as a dependency to your project:
+要开始使用Java SDK测试框架，您需要添加[`io.Temporal:Temporal-testing`](https://search.maven.org/artifact/io.temporal/temporal-testing)
+作为您项目的依赖项：
 
-**[Apache Maven](https://maven.apache.org/):**
+**[阿帕奇Maven](https://maven.apache.org/)：**
 
 ```maven
 <dependency>
@@ -63,17 +64,18 @@ as a dependency to your project:
 </dependency>
 ```
 
-**[Gradle Groovy DSL](https://gradle.org/):**
+**[Gradle Groovy DSL](https://gradle.org/)：**
 
 ```groovy
 testImplementation ("io.temporal:temporal-testing:1.17.0")
 ```
 
-Make sure to set the version that matches your dependency version of the [Temporal Java SDK](https://github.com/temporalio/sdk-java).
+确保设置的版本与您的 [Temporal Java SDK](https://github.com/temporalio/sdk-java) 依赖项版本相匹配。
 
-### Sample unit tests
+<a id="sample-unit-tests"></a>
+### 单元测试示例 {#sample-unit-tests}
 
-The following code implements unit tests for the `HelloActivity` sample:
+以下代码实现 `HelloActivity` 示例的单元测试：
 
 ```java
 public class HelloActivityTest {
@@ -119,11 +121,11 @@ public class HelloActivityTest {
 }
 ```
 
-In cases where you do not wish to execute your actual Activity or Nexus Operation implementations during
-unit testing, you can use a framework such as Mockito to mock them.
+如果您不希望在执行期间执行实际的 Activity 或 Nexus 操作实施
+单元测试时，您可以使用 Mockito 等框架来模拟它们。
 
-The following code implements a unit test for the `HelloActivity` sample which shows
-how activities can be mocked:
+以下代码实现了 `HelloActivity` 示例的单元测试，显示
+如何模拟活动：
 
 ```java
 public class HelloActivityTest {
@@ -171,14 +173,15 @@ public class HelloActivityTest {
 }
 ```
 
-### Testing with JUnit4
+<a id="testing-with-junit4"></a>
+### 使用 JUnit4 进行测试 {#testing-with-junit4}
 
-For Junit4 tests, Temporal provides the TestWorkflowRule class which simplifies the Temporal test environment setup, as well as the
-creation and shutdown of Workflow Workers in your tests.
+对于 Junit4 测试，Temporal 提供了 TestWorkflowRule 类，该类简化了 Temporal 测试环境设置以及
+在测试中创建和关闭 Workflow Worker。
 
-Make sure to set the version that matches your dependency version of the [Temporal Java SDK](https://github.com/temporalio/sdk-java).
+确保设置的版本与您的 [Temporal Java SDK](https://github.com/temporalio/sdk-java) 依赖项版本相匹配。
 
-We can now rewrite our above mentioned "HelloActivityTest" test class as follows:
+我们现在可以重写上面提到的“HelloActivityTest”测试类，如下所示：
 
 ```java
 public class HelloActivityJUnit4Test {
@@ -207,16 +210,17 @@ public class HelloActivityJUnit4Test {
 }
 ```
 
-### Testing with JUnit5
+<a id="testing-with-junit5"></a>
+### 使用 JUnit5 进行测试 {#testing-with-junit5}
 
-For Junit5 tests, Temporal also provides the TestWorkflowExtension helper class.
-This class can be used to simplify the Temporal test environment setup as well as Workflow Worker startup and shutdowns.
+对于 Junit5 测试，Temporal 还提供 TestWorkflowExtension 帮助程序类。
+此类可用于简化 Temporal 测试环境设置以及 Workflow Worker 启动和关闭。
 
-To start using JUnit5 TestWorkflowExtension in your tests with [Gradle](https://gradle.org/), you need to enable capability [`io.temporal:temporal-testing-junit5`]:
+要开始在 [摇篮](https://gradle.org/) 测试中使用 JUnit5 TestWorkflowExtension，您需要启用功能 [`io.Temporal:Temporal-testing-junit5`]：
 
-Make sure to set the version that matches your dependency version of the [Temporal Java SDK](https://github.com/temporalio/sdk-java).
+确保设置的版本与您的 [Temporal Java SDK](https://github.com/temporalio/sdk-java) 依赖项版本相匹配。
 
-We can now use JUnit5 and rewrite our above mentioned "HelloActivityTest" test class as follows:
+我们现在可以使用 JUnit5 并重写上面提到的“HelloActivityTest”测试类，如下所示：
 
 ```java
 public class HelloActivityJUnit5Test {
@@ -237,72 +241,78 @@ public class HelloActivityJUnit5Test {
 }
 ```
 
-You can find all unit tests for the [Temporal Java samples](https://github.com/temporalio/samples-java) repository in [its test package](https://github.com/temporalio/samples-java/tree/main/core/src/test/java/io/temporal/samples).
+您可以在 [它的测试包](https://github.com/temporalio/samples-java) 中找到 [Temporal Java 示例](https://github.com/temporalio/samples-java/tree/main/core/src/test/java/io/temporal/samples) 存储库的所有单元测试。
 
-## Test Activities {#test-activities}
+## 测试活动 {#test-activities}
 
-Mocking isolates code undergoing testing so the focus remains on the code, and not on external dependencies or other state. You can test Activities using a mocked Activity environment.
+模拟隔离了正在测试的代码，因此重点仍然放在代码上，而不是外部依赖项或其他状态。您可以使用模拟的 Activity 环境来测试活动。
 
-This approach offers a way to mock the Activity context, listen to Heartbeats, and cancel the Activity. You test the Activity in isolation, calling it directly without needing to create a Worker to run it.
+此方法提供了一种模拟 Activity 上下文、监听心跳和取消 Activity 的方法。您可以单独测试 Activity，直接调用它，而不需要创建 Worker 来运行它。
 
-Temporal provides the `TestActivityEnvironment` and `TestActivityExtension` classes for testing Activities outside the scope of a Workflow. Testing
-Activities are similar to testing non-Temporal Java code.
+Temporal 提供 `TestActivityEnvironment` 和 `TestActivityExtension` 类，用于测试 Workflow 范围之外的活动。测试
+活动类似于测试非 Temporal Java 代码。
 
-For example, you can test an Activity for:
+例如，您可以测试 Activity：
 
-- Exceptions thrown when invoking the Activity Execution.
-- Exceptions thrown when checking for the result of the Activity Execution.
-- Activity's return values. Check that the return value matches the expected value.
+- 调用 Activity 执行时引发异常。
+- 检查 Activity 执行结果时引发异常。
+- Activity 的返回值。检查返回值是否与预期值匹配。
 
-### Run an Activity {#run-an-activity}
+<a id="run-an-activity"></a>
+### 运行 Activity {#run-an-activity}
 
-During isolation testing, if an Activity references its context, you'll need to mock that context.
-Mocked information stands in for the context, allowing you to focus your testing on the Activity's code.
+在隔离测试期间，如果 Activity 引用其上下文，您将需要模拟该上下文。
+模拟信息代表上下文，使您可以将测试集中在 Activity 的代码上。
 
-### Listen to Heartbeats {#listen-to-heartbeats}
+<a id="listen-to-heartbeats"></a>
+### 聆听心跳 {#listen-to-heartbeats}
 
-Activities usually issue periodic Heartbeats, a feature that broadcasts recurring proof-of-life updates.
-Each ping shows that an Activity is making progress and the Worker hasn't crashed.
-Heartbeats may include details that report task progress in the event an Activity Worker crashes.
+活动通常会发出周期性的心跳，这是一种广播重复生命证明 Update 的功能。
+每个 ping 都显示 Activity 正在取得进展，而 Worker 尚未崩溃。
+心跳可能包括在 Activity Worker 崩溃时报告任务进度的详细信息。
 
-When testing Activities that support Heartbeats, make sure you can see those Heartbeats in your test code.
-Provide appropriate test coverage.
-This enables you to verify both the Heartbeat's content and behavior.
+在测试支持心跳的活动时，请确保您可以在测试代码中看到这些心跳。
+提供适当的测试覆盖率。
+这使您能够验证心跳的内容和行为。
 
-### Cancel an Activity {#cancel-an-activity}
+<a id="cancel-an-activity"></a>
+### 取消 Activity {#cancel-an-activity}
 
-Activity cancellation lets Activities know they don't need to continue work and gives time for the Activity to clean up any resources it's created. You can cancel Java-based activities if they emit Heartbeats. To test an Activity that reacts to Cancellations, make sure that the Activity reacts correctly and cancels.
+Activity 取消让活动知道它们不需要继续工作，并为 Activity 提供时间来清理其创建的任何资源。如果基于 Java 的活动发出心跳，您可以取消它们。要测试 Activity 对取消的反应，请确保 Activity 正确反应并取消。
 
-## Testing Workflows {#test-workflows}
+<a id="test-workflows"></a>
+## 测试 Workflows {#test-workflows}
 
-### How to mock Activities {#mock-activities}
+### 如何模拟活动 {#mock-activities}
 
-Mock the Activity invocation when unit testing your Workflows.
+在对 Workflow 进行单元测试时模拟 Activity 调用。
 
-When integration testing Workflows with a Worker, you can mock Activities by providing mock Activity implementations to the Worker.
-For more details on mocking activities, see [sample unit tests](#sample-unit-tests).
+当使用 Worker 集成测试 Workflow 时，您可以通过向 Worker 提供模拟 Activity 实现来模拟活动。
+有关模拟活动的更多详细信息，请参阅 [单元测试样本](#sample-unit-tests)。
 
-### How to mock Nexus Operations {#mock-nexus-operations}
+<a id="mock-nexus-operations"></a>
+### 如何模拟 Nexus 操作 {#mock-nexus-operations}
 
-When integration testing Workflows with a Worker, you can mock Nexus operations by providing mock Nexus Service handlers to the Worker.
-Alternatively, you could just mock the Nexus service itself.
+当使用 Worker 集成测试 Workflow 时，您可以通过向 Worker 提供模拟 Nexus 服务处理程序来模拟 Nexus 操作。
+或者，您可以模拟 Nexus 服务本身。
 
-You can find example unit tests for Nexus in the [Temporal Java samples](https://github.com/temporalio/samples-java) repository in [this test package](https://github.com/temporalio/samples-java/tree/main/core/src/test/java/io/temporal/samples/nexus/caller).
-These samples show how to call Nexus services in tests using the Temporal testing package and also how to mock them, for both JUnit 4 and 5.
-Detailed explanatory comments are included in the code in the repository.
+您可以在 [这个测试包](https://github.com/temporalio/samples-java) 的 [Temporal Java 示例](https://github.com/temporalio/samples-java/tree/main/core/src/test/java/io/temporal/samples/nexus/caller) 存储库中找到 Nexus 的示例单元测试。
+这些示例展示了如何使用 Temporal 测试包在测试中调用 Nexus 服务，以及如何针对 JUnit 4 和 5 模拟它们。
+详细的解释性注释包含在存储库的代码中。
 
-To mock Nexus handlers, create a Rule (for JUnit4) or Extension (for JUnit5) from the Temporal testing package, just as in the [sample unit tests](#sample-unit-tests) and add a call to `setNexusServiceImplementation` to the builder.
-That sets up the Nexus endpoints needed for testing as well as the Nexus handler workflows defined by the Nexus Service implementation.
-Everything is created and set up by the Temporal Testing package, so no more work is needed than that!
+要模拟 Nexus 处理程序，请从 Temporal 测试包创建规则（对于 JUnit4）或扩展（对于 JUnit5），就像在 [单元测试样本](#sample-unit-tests) 中一样，并向构建器添加对 `setNexusServiceImplementation` 的调用。
+这将设置测试所需的 Nexus 端点以及由 Nexus 服务实现定义的 Nexus 处理程序 Workflow。
+一切都是由 Temporal 测试包创建和设置的，因此不需要更多的工作！
 
-You will need to create workers for each handler just as normal, using either `setWorkflowTypes` (for JUnit4) or `registerWorkflowImplementationTypes` (for JUnit5).
-With that in place, you can then mock a Nexus endpoint exactly like any other workflow - again, just as in [the sample unit tests](#sample-unit-tests) above.
+您需要像往常一样使用 `setWorkflowTypes`（对于 JUnit4）或 `registerWorkflowImplementationTypes`（对于 JUnit5）为每个处理程序创建 Worker。
+完成后，您就可以像任何其他 Workflow 一样模拟 Nexus 端点 - 再次，就像上面的 [示例单元测试](#sample-unit-tests) 一样。
 
-The following are samples derived from [the test package](https://github.com/temporalio/samples-java/tree/main/core/src/test/java/io/temporal/samples/nexus/caller) to demonstrate this.
+以下是来自 [测试包](https://github.com/temporalio/samples-java/tree/main/core/src/test/java/io/temporal/samples/nexus/caller) 的示例来证明这一点。
 
-#### Mocking Nexus handlers with JUnit4
+<a id="mocking-nexus-handlers-with-junit4"></a>
+#### 使用 JUnit4 模拟 Nexus 处理程序 {#mocking-nexus-handlers-with-junit4}
 {/* SNIPSTART java-nexus-sample-junit4-mock */}
-[core/src/test/java/io/temporal/samples/nexus/caller/CallerWorkflowMockTest.java](https://github.com/temporalio/samples-java/blob/main/core/src/test/java/io/temporal/samples/nexus/caller/CallerWorkflowMockTest.java)
+[核心/src/test/java/io/temporal/samples/nexus/caller/CallerWorkflowMockTest.java](https://github.com/temporalio/samples-java/blob/main/core/src/test/java/io/temporal/samples/nexus/caller/CallerWorkflowMockTest.java)
 ```java
 public class CallerWorkflowMockTest {
   @Rule
@@ -340,9 +350,10 @@ public class CallerWorkflowMockTest {
 ```
 <!--SNIPEND-->
 
-#### Mocking Nexus handlers with JUnit5
+<a id="mocking-nexus-handlers-with-junit5"></a>
+#### 使用 JUnit5 模拟 Nexus 处理程序 {#mocking-nexus-handlers-with-junit5}
 {/* SNIPSTART java-nexus-sample-junit5-mock */}
-[core/src/test/java/io/temporal/samples/nexus/caller/CallerWorkflowJunit5MockTest.java](https://github.com/temporalio/samples-java/blob/main/core/src/test/java/io/temporal/samples/nexus/caller/CallerWorkflowJunit5MockTest.java)
+[核心/src/test/java/io/temporal/samples/nexus/caller/CallerWorkflowJunit5MockTest.java](https://github.com/temporalio/samples-java/blob/main/core/src/test/java/io/temporal/samples/nexus/caller/CallerWorkflowJunit5MockTest.java)
 ```java
 public class CallerWorkflowJunit5MockTest {
 
@@ -375,15 +386,16 @@ public class CallerWorkflowJunit5MockTest {
 ```
 <!--SNIPEND-->
 
-An alternative approach is to simply mock the Nexus service itself, instead of mocking the handlers.
-This is useful if you just want to test the calling logic but can't easily mock the Nexus handlers.
+另一种方法是简单地模拟 Nexus 服务本身，而不是模拟处理程序。
+如果您只想测试调用逻辑但无法轻松模拟 Nexus 处理程序，这非常有用。
 
-The code will just mock the implementation of the SampleNexusService class with the handler methods, but will need those methods stubbed in for the testing framework.
-Those methods can be directly mocked with static return values, or else they can return an instance variable which each unit test can modify to return a desired value.
+该代码将仅使用处理程序方法模拟 SampleNexusService 类的实现，但需要为测试框架插入这些方法。
+这些方法可以直接使用静态返回值进行模拟，或者它们可以返回一个实例变量，每个单元测试都可以修改该实例变量以返回所需的值。
 
-#### Mocking the Nexus Service with JUnit4
+<a id="mocking-the-nexus-service-with-junit4"></a>
+#### 使用 JUnit4 模拟 Nexus 服务 {#mocking-the-nexus-service-with-junit4}
 {/* SNIPSTART java-nexus-service-sample-junit4-mock */}
-[core/src/test/java/io/temporal/samples/nexus/caller/NexusServiceMockTest.java](https://github.com/temporalio/samples-java/blob/main/core/src/test/java/io/temporal/samples/nexus/caller/NexusServiceMockTest.java)
+[核心/src/test/java/io/temporal/samples/nexus/caller/nexusServiceMockTest.java](https://github.com/temporalio/samples-java/blob/main/core/src/test/java/io/temporal/samples/nexus/caller/nexusServiceMockTest.java)
 ```java
 public class NexusServiceMockTest {
 
@@ -444,9 +456,10 @@ public class NexusServiceMockTest {
 ```
 <!--SNIPEND-->
 
-#### Mocking the Nexus Service with JUnit5
+<a id="mocking-the-nexus-service-with-junit5"></a>
+#### 使用 JUnit5 模拟 Nexus 服务 {#mocking-the-nexus-service-with-junit5}
 {/* SNIPSTART java-nexus-service-sample-junit5-mock */}
-[core/src/test/java/io/temporal/samples/nexus/caller/NexusServiceJunit5Test.java](https://github.com/temporalio/samples-java/blob/main/core/src/test/java/io/temporal/samples/nexus/caller/NexusServiceJunit5Test.java)
+[核心/src/test/java/io/temporal/samples/nexus/caller/nexusServiceJunit5Test.java](https://github.com/temporalio/samples-java/blob/main/core/src/test/java/io/temporal/samples/nexus/caller/nexusServiceJunit5Test.java)
 ```java
 public class NexusServiceJunit5Test {
 
@@ -513,53 +526,53 @@ public class NexusServiceJunit5Test {
 ```
 <!--SNIPEND-->
 
-### How to skip time {#skip-time}
+### 如何跳过时间 {#skip-time}
 
-Some long-running Workflows can persist for months or even years.
-Implementing the test framework allows your Workflow code to skip time and complete your tests in seconds rather than the Workflow's specified amount.
+一些长期运行的 Workflow 可以持续数月甚至数年。
+实施测试框架允许您的 Workflow 代码跳过时间并在几秒钟内完成测试，而不是 Workflow 指定的数量。
 
-For example, if you have a Workflow sleep for a day, or have an Activity failure with a long retry interval, you don't need to wait the entire length of the sleep period to test whether the sleep function works.
-Instead, test the logic that happens after the sleep by skipping forward in time and complete your tests in a timely manner.
+例如，如果您的 Workflow 睡眠了一天，或者 Activity 发生了重试间隔较长的故障，则无需等待整个睡眠周期的长度来测试睡眠功能是否起作用。
+相反，通过及时向前跳跃并及时完成测试来测试睡眠后发生的逻辑。
 
-The test framework included in most SDKs is an in-memory implementation of Temporal Server that supports skipping time.
-Time is a global property of an instance of `TestWorkflowEnvironment`: skipping time (either automatically or manually) applies to all currently running tests.
-If you need different time behaviors for different tests, run your tests in a series or with separate instances of the test server.
-For example, you could run all tests with automatic time skipping in parallel, and then all tests with manual time skipping in series, and then all tests without time skipping in parallel.
+大多数 SDK 中包含的测试框架是 Temporal Server 的内存中实现，支持跳过时间。
+时间是 `TestWorkflowEnvironment` 实例的全局属性：跳过时间（自动或手动）适用于所有当前正在运行的测试。
+如果不同的测试需要不同的时间行为，请按系列运行测试或使用测试服务器的单独实例运行测试。
+例如，您可以并行运行所有具有自动时间跳过功能的测试，然后串行运行所有具有手动时间跳过功能的测试，然后并行运行所有不带时间跳过功能的测试。
 
-#### Set up time skipping {#setting-up}
+#### 设置时间跳过 {#setting-up}
 
-Set up the time-skipping test framework in the SDK of your choice.
+在您选择的 SDK 中设置跳时测试框架。
 
 {/* #### Skip time automatically {#automatic-method} */}
 
-You can skip time automatically in the SDK of your choice.
-Start a test server process that skips time as needed.
-For example, in the time-skipping mode, Timers, which include sleeps and conditional timeouts, are fast-forwarded except when Activities or Nexus Operation handlers are running. Nexus Operation handlers timeout after 10 seconds and time skipping is allowed while waiting for retries.
+您可以在您选择的 SDK 中自动跳过时间。
+启动一个测试服务器进程，根据需要跳过时间。
+例如，在跳时模式下，Timer（包括睡眠和条件超时）会快进，除非“活动”或“Nexus 操作”处理程序正在运行。 Nexus 操作处理程序在 10 秒后超时，并且在等待重试时允许跳过时间。
 
 {/* #### Skip time manually {#manual-method} */}
 
-Skip time manually in the SDK of your choice.
+在您选择的 SDK 中手动跳过时间。
 
-## How to Replay a Workflow Execution {#replay}
+## 如何重播 Workflow Execution {#replay}
 
-Replay recreates the exact state of a Workflow Execution.
-You can replay a Workflow from the beginning of its Event History.
+重播重新创建了 Workflow Execution 的确切状态。
+您可以从 Event History 的开头重播 Workflow。
 
-Replay succeeds only if the [Workflow Definition](/workflow-definition) is compatible with the provided history from a deterministic point of view.
+仅当 [Workflow Definition](/workflow-definition) 从确定性的角度来看与提供的历史记录兼容时，重播才会成功。
 
-When you test changes to your Workflow Definitions, we recommend doing the following as part of your CI checks:
+当您测试对 Workflow Definition 的更改时，我们建议执行以下操作作为 CI 检查的一部分：
 
-1. Determine which Workflow Types or Task Queues (or both) will be targeted by the Worker code under test.
-2. Download the Event Histories of a representative set of recent open and closed Workflows from each Task Queue, either programmatically using the SDK client or via the Temporal CLI.
-3. Run the Event Histories through replay.
-4. Fail CI if any error is encountered during replay.
+1. 确定被测 Worker 代码将针对哪些 Workflow 类型或 Task Queue（或两者）。
+2. 使用 SDK 客户端以编程方式或通过 Temporal CLI 从每个 Task Queue 下载一组代表性的最近打开和关闭的 Workflow 的事件历史记录。
+3. 通过重播运行事件历史记录。
+4. 如果重播期间遇到任何错误，则 CI 失败。
 
-The following are examples of fetching and replaying Event Histories:
+以下是获取和重播事件历史记录的示例：
 
-To replay Workflow Executions, use the [WorkflowReplayer](https://www.javadoc.io/doc/io.temporal/temporal-testing/latest/io/temporal/testing/WorkflowReplayer.html) class in the `temporal-testing` package.
+要重播 Workflow Execution，请使用 `Temporal-testing` 包中的 [Workflow重播器](https://www.javadoc.io/doc/io.temporal/temporal-testing/latest/io/temporal/testing/WorkflowReplayer.html) 类。
 
-In the following example, Event Histories are downloaded from the server, and then replayed.
-Note that this requires Advanced Visibility to be enabled.
+在以下示例中，从服务器下载事件历史记录，然后重播。
+请注意，这需要启用高级 Visibility。
 
 ```java
 // Note we assume you already have a WorkflowServiceStubs (`service`) and WorkflowClient (`client`)
@@ -590,12 +603,12 @@ WorkflowReplayer.replayWorkflowExecutions(
     histories, true, WorkflowA.class, WorkflowB.class, WorkflowC.class);
 ```
 
-In the next example, a single history is loaded from a JSON file on disk:
+在下一个示例中，从磁盘上的 JSON 文件加载单个历史记录：
 
 ```java
 File file = new File("my_history.json");
 WorkflowReplayer.replayWorkflowExecution(file, MyWorkflow.class);
 ```
 
-In both examples, if Event History is non-deterministic, an error is thrown.
-You can choose to wait until all histories have been replayed with `replayWorkflowExecutions` by setting the `failFast` argument to `false`.
+在这两个示例中，如果 Event History 是不确定的，则会引发错误。
+您可以通过将 `failFast` 参数设置为 `false` 来选择等待，直到使用 `replayWorkflowExecutions` 重播所有历史记录。

@@ -1,7 +1,7 @@
 ---
 id: entity-pattern
-title: Entity pattern - TypeScript SDK
-sidebar_label: Entity pattern
+title: "实体模式 - TypeScript SDK"
+sidebar_label: "实体模式"
 slug: /develop/typescript/best-practices/entity-pattern
 toc_max_heading_level: 4
 keywords:
@@ -9,13 +9,13 @@ keywords:
 tags:
   - TypeScript SDK
   - Temporal SDKs
-description: Implement the Single-Entity Design Pattern in TypeScript to manage Workflow iterations and handle Signals, ensuring efficient Workflow Execution with updates.
+description: "在 TypeScript 中实现单实体设计模式来管理 Workflow 迭代并处理 Signal，确保 Workflow Execution 与 Update 的高效运行。"
 ---
 
-### Single-entity design pattern in TypeScript {#single-entity-pattern}
+### TypeScript 中的单实体设计模式 {#single-entity-pattern}
 
-The following is a simple pattern that represents a single entity.
-It tracks the number of iterations regardless of frequency, and calls `continueAsNew` while properly handling pending updates from Signals.
+以下是表示单个实体的简单模式。
+无论频率如何，它都会跟踪迭代次数，并调用 `continueAsNew`，同时正确处理来自 Signal 的待处理 Update。
 
 ```ts
 interface Input {

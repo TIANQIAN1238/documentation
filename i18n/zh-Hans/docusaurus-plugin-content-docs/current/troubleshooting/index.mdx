@@ -1,0 +1,24 @@
+---
+id: index
+title: 错误处理和故障排除
+sidebar_label: 故障排除
+description: 通过我们的综合指南，发现潜在 Temporal 错误和边缘情况的有效故障排除解决方案，确保 Workflow Execution 和错误管理顺利进行。
+toc_max_heading_level: 4
+keywords:
+  - error handling
+  - guide-context
+  - troubleshooting
+tags:
+ - Errors
+ - Failures
+---
+
+即使是最可靠的系统也可能会遇到问题。
+我们的故障排除指南旨在帮助您快速识别和解决潜在错误，确保您的 Temporal 应用程序平稳高效地运行。
+
+- [BlobSizeLimitError 故障排除](/troubleshooting/blob-size-limit-error)：当 blob 的大小（包括 Workflow 上下文以及每个 Workflow 和 Activity 参数和返回值的有效负载）太大时，会发生“BlobSizeLimitError”。
+  单个请求的最大有效负载为 2 MB，任何 Event History 事务的最大大小为 4 MB。
+- [排除截止日期超出错误](/troubleshooting/deadline-exceeded-error)：
+  当客户端或 Worker 对 Temporal 服务的请求无法完成时，会出现“上下文：超出截止日期”错误。
+  这可能是由于网络问题、超时、服务器过载或 Query 错误造成的。
+- [解决无法到达服务器的错误](/troubleshooting/last-connection-error)：消息“无法到达服务器：上次连接错误”通常是由于 TLS 证书过期或在服务器启动过程中，当客户端请求在角色完全初始化之前到达服务器时发生的。

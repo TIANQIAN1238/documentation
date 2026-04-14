@@ -1,8 +1,8 @@
 ---
 id: operator
-title: Temporal CLI operator command reference
-sidebar_label: operator
-description: Operator commands in Temporal allow actions on Namespaces, Search Attributes, Clusters and Nexus Endpoints using specific subcommands. Execute with "temporal operator [command] [subcommand] [options]".
+title: "Temporal CLI 操作员命令参考"
+sidebar_label: "操作员"
+description: "Temporal 中的操作员命令允许使用特定子命令对 Namespace、Search Attribute、集群和 Nexus 端点执行操作。使用“Temporal 运算符 [命令] [子命令] [选项]”执行。"
 toc_max_heading_level: 4
 keywords:
   - cli reference
@@ -38,105 +38,106 @@ tags:
 ---
 
 {/* NOTE: This is an auto-generated file. Any edit to this file will be overwritten.
-This file is generated from https://github.com/temporalio/cli/blob/main/internal/commandsgen/commands.yml via internal/cmd/gen-docs */}
+该文件是通过内部/cmd/gen-docs 从 https://github.com/temporalio/cli/blob/main/internal/commandsgen/commands.yml 生成的 */}
 
-This page provides a reference for the `temporal` CLI `operator` command. The flags applicable to each subcommand are presented in a table within the heading for the subcommand. Refer to [Global Flags](#global-flags) for flags that you can use with every subcommand.
+本页提供 `Temporal` CLI `operator` 命令的参考。适用于每个子命令的标志显示在子命令标题内的表格中。请参阅 [全球旗帜](#global-flags) 了解可与每个子命令一起使用的标志。
 
-## cluster
+## 簇 {#cluster}
 
-Perform operator actions on Temporal Services (also known as Clusters).
+对 Temporal 服务（也称为集群）执行操作员操作。
 
 ```
 temporal operator cluster [subcommand] [options]
 ```
 
-For example to check Service/Cluster health:
+例如检查服务/集群运行状况：
 
 ```
 temporal operator cluster health
 ```
 
-### describe
+### 描述 {#describe}
 
-View information about a Temporal Cluster (Service), including Cluster Name,
-persistence store, and visibility store. Add `--detail` for additional info:
+查看有关 Temporal 集群（服务）的信息，包括集群名称、
+持久性存储和 Visibility 存储。添加 `--detail` 以获得更多信息：
 
 ```
 temporal operator cluster describe [--detail]
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--detail` | No | **bool** Show history shard count and Cluster/Service version information. |
+| `--detail` | 不 | **bool** 显示历史分片计数和集群/服务版本信息。 |
 
-### health
+### 健康 {#health}
 
-View information about the health of a Temporal Service:
+查看有关 Temporal 服务运行状况的信息：
 
 ```
 temporal operator cluster health
 ```
 
-Use [global flags](#global-flags) to customize the connection to the Temporal Service for this command.
+使用 [全局标志](#global-flags) 自定义此命令与 Temporal 服务的连接。
 
-### list
+### 列表 {#list}
 
-Print a list of remote Temporal Clusters (Services) registered to the local
-Service. Report details include the Cluster's name, ID, address, History Shard
-count, Failover version, and availability:
+打印注册到本地的远程Temporal集群（服务）列表
+服务。报告详细信息包括集群的名称、ID、地址、历史分片
+计数、故障转移版本和可用性：
 
 ```
 temporal operator cluster list [--limit max-count]
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--limit` | No | **int** Maximum number of Clusters to display. |
+| `--limit` | 不 | **int** 要显示的最大簇数。 |
 
-### remove
+### 消除 {#remove}
 
-Remove a registered remote Temporal Cluster (Service) from the local Service.
+从本地服务中删除已注册的远程 Temporal 集群（服务）。
 
 ```
 temporal operator cluster remove \
     --name YourClusterName
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--name` | Yes | **string** Cluster/Service name. |
+| `--name` | 是的 | **字符串** 集群/服务名称。 |
 
-### system
+### 系统 {#system}
 
-Show Temporal Server information for Temporal Clusters (Service): Server
-version, scheduling support, and more. This information helps diagnose
-problems with the Temporal Server.
+显示 Temporal 集群（服务）的 Temporal Server 信息：服务器
+版本、调度支持等等。这些信息有助于诊断
+Temporal Server 的问题。
 
-The command defaults to the local Service. Otherwise, use the
-`--frontend-address` option to specify a Cluster (Service) endpoint:
+该命令默认为本地服务。否则，请使用
+用于指定集群（服务）端点的 `--frontend-address` 选项：
 
 ```
 temporal operator cluster system \
     --frontend-address "YourRemoteEndpoint:YourRemotePort"
 ```
 
-Use [global flags](#global-flags) to customize the connection to the Temporal Service for this command.
+使用 [全局标志](#global-flags) 自定义此命令与 Temporal 服务的连接。
 
-### upsert
+<a id="cluster"></a>
+### 更新插入 {#upsert}
 
-Add, remove, or update a registered ("remote") Temporal Cluster (Service).
+添加、删除或 Update 已注册（“远程”）Temporal 集群（服务）。
 
 ```
 temporal operator cluster upsert [options]
 ```
 
-For example:
+例如：
 
 ```
 temporal operator cluster upsert \
@@ -144,32 +145,33 @@ temporal operator cluster upsert \
     --enable-connection false
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--enable-connection` | No | **bool** Set the connection to "enabled". |
-| `--enable-replication` | No | **bool** Set the replication to "enabled". |
-| `--frontend-address` | Yes | **string** Remote endpoint. |
+| `--enable-connection` | 不 | **布尔** 将连接设置为“启用”。 |
+| `--enable-replication` | 不 | **布尔** 将复制设置为“启用”。 |
+| `--frontend-address` | 是的 | **字符串** 远程端点。 |
 
-## namespace
+<a id="describe"></a>
+## Namespace {#namespace}
 
-Manage Temporal Cluster (Service) Namespaces:
+管理 Temporal 集群（服务）Namespace：
 
 ```
 temporal operator namespace [command] [command options]
 ```
 
-For example:
+例如：
 
 ```
 temporal operator namespace create \
     --namespace YourNewNamespaceName
 ```
 
-### create
+### 创造 {#create}
 
-Create a new Namespace on the Temporal Service:
+在 Temporal 服务上创建新的 Namespace：
 
 ```
 temporal operator namespace create \
@@ -177,7 +179,7 @@ temporal operator namespace create \
     [options]
 ```
 
-Create a Namespace with multi-region data replication:
+创建具有多区域数据复制的Namespace：
 
 ```
 temporal operator namespace create \
@@ -185,8 +187,8 @@ temporal operator namespace create \
     --namespace YourNewNamespaceName
 ```
 
-Configure settings like retention and Visibility Archival State as needed.
-For example, the Visibility Archive can be set on a separate URI:
+根据需要配置保留和 Visibility 存档状态等设置。
+例如，Visibility 存档可以在单独的 URI 上设置：
 
 ```
 temporal operator namespace create \
@@ -196,86 +198,87 @@ temporal operator namespace create \
     --namespace YourNewNamespaceName
 ```
 
-Note: URI values for archival states can't be changed once enabled.
+注意：存档状态的 URI 值一旦启用就无法更改。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--active-cluster` | No | **string** Active Cluster (Service) name. |
-| `--cluster` | No | **string[]** Cluster (Service) names for Namespace creation. Can be passed multiple times. |
-| `--data` | No | **string[]** Namespace data as `KEY=VALUE` pairs. Keys must be identifiers, and values must be JSON values. For example: `YourKey={"your": "value"}` Can be passed multiple times. |
-| `--description` | No | **string** Namespace description. |
-| `--email` | No | **string** Owner email. |
-| `--global` | No | **bool** Enable multi-region data replication. |
-| `--history-archival-state` | No | **string-enum** History archival state. Accepted values: disabled, enabled. |
-| `--history-uri` | No | **string** Archive history to this `URI`. Once enabled, can't be changed. |
-| `--retention` | No | **duration** Time to preserve closed Workflows before deletion. |
-| `--visibility-archival-state` | No | **string-enum** Visibility archival state. Accepted values: disabled, enabled. |
-| `--visibility-uri` | No | **string** Archive visibility data to this `URI`. Once enabled, can't be changed. |
+| `--active-cluster` | 不 | **字符串** 活动集群（服务）名称。 |
+| `--cluster` | 不 | **字符串[]** 用于 Namespace 创建的集群（服务）名称。可以多次通过。 |
+| `--data` | 不 | **字符串[]** Namespace 数据为 `KEY=VALUE` 对。键必须是标识符，值必须是 JSON 值。例如：`YourKey={"your": "value"}` 可以多次传递。 |
+| `--description` | 不 | **字符串** Namespace 描述。 |
+| `--email` | 不 | **字符串** 所有者电子邮件。 |
+| `--global` | 不 | **bool** 启用多区域数据复制。 |
+| `--history-archival-state` | 不 | **字符串枚举** 历史档案状态。接受的值：禁用、启用。 |
+| `--history-uri` | 不 | **字符串** 将历史记录存档到此 `URI`。一旦启用，就无法更改。 |
+| `--retention` | 不 | **持续时间** 删除前保留关闭的 Workflow 的时间。 |
+| `--Visibility-archival-state` | 不 | **字符串枚举** Visibility 存档状态。接受的值：禁用、启用。 |
+| `--Visibility-uri` | 不 | **字符串** 将 Visibility 数据存档到此 `URI`。一旦启用，就无法更改。 |
 
-### delete
+### 删除 {#delete}
 
-Removes a Namespace from the Service.
+从服务中删除 Namespace。
 
 ```
 temporal operator namespace delete [options]
 ```
 
-For example:
+例如：
 
 ```
 temporal operator namespace delete \
     --namespace YourNamespaceName
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--yes`, `-y` | No | **bool** Request confirmation before deletion. |
+| `--yes`、`-y` | 不 | **bool** 删除前请求确认。 |
 
-### describe
+### 描述 {#describe}
 
-Provide long-form information about a Namespace identified by its ID or name:
+提供有关通过 ID 或名称标识的 Namespace 的详细信息：
 
 ```
 temporal operator namespace describe \
     --namespace-id YourNamespaceId
 ```
 
-or
+或者
 
 ```
 temporal operator namespace describe \
     --namespace YourNamespaceName
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--namespace-id` | No | **string** Namespace ID. |
+| `--Namespace-id` | 不 | **字符串** Namespace ID。 |
 
-### list
+### 列表 {#list}
 
-Display a detailed listing for all Namespaces on the Service:
+显示服务上所有 Namespace 的详细列表：
 
 ```
 temporal operator namespace list
 ```
 
-Use [global flags](#global-flags) to customize the connection to the Temporal Service for this command.
+使用 [全局标志](#global-flags) 自定义此命令与 Temporal 服务的连接。
 
-### update
+<a id="health"></a>
+### Update {#update}
 
-Update a Namespace using properties you specify.
+Update 和 Namespace 使用您指定的属性。
 
 ```
 temporal operator namespace update [options]
 ```
 
-Assign a Namespace's active Cluster (Service):
+分配 Namespace 的活动集群（服务）：
 
 ```
 temporal operator namespace update \
@@ -283,7 +286,7 @@ temporal operator namespace update \
     --active-cluster NewActiveCluster
 ```
 
-Promote a Namespace for multi-region data replication:
+升级 Namespace 以进行多区域数据复制：
 
 ```
 temporal operator namespace update \
@@ -291,8 +294,8 @@ temporal operator namespace update \
     --promote-global
 ```
 
-You may update archives that were previously enabled or disabled. Note: URI
-values for archival states can't be changed once enabled.
+您可以 Update 存档之前启用或禁用的内容。注：URI
+归档状态的值一旦启用就无法更改。
 
 ```
 temporal operator namespace update \
@@ -301,54 +304,56 @@ temporal operator namespace update \
     --visibility-archival-state disabled
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--active-cluster` | No | **string** Active Cluster (Service) name. |
-| `--cluster` | No | **string[]** Cluster (Service) names. |
-| `--data` | No | **string[]** Namespace data as `KEY=VALUE` pairs. Keys must be identifiers, and values must be JSON values. For example: `YourKey={"your": "value"}` Can be passed multiple times. |
-| `--description` | No | **string** Namespace description. |
-| `--email` | No | **string** Owner email. |
-| `--history-archival-state` | No | **string-enum** History archival state. Accepted values: disabled, enabled. |
-| `--history-uri` | No | **string** Archive history to this `URI`. Once enabled, can't be changed. |
-| `--promote-global` | No | **bool** Enable multi-region data replication. |
-| `--replication-state` | No | **string-enum** Replication state. Accepted values: normal, handover. |
-| `--retention` | No | **duration** Length of time a closed Workflow is preserved before deletion. |
-| `--visibility-archival-state` | No | **string-enum** Visibility archival state. Accepted values: disabled, enabled. |
-| `--visibility-uri` | No | **string** Archive visibility data to this `URI`. Once enabled, can't be changed. |
+| `--active-cluster` | 不 | **字符串** 活动集群（服务）名称。 |
+| `--cluster` | 不 | **字符串[]** 集群（服务）名称。 |
+| `--data` | 不 | **字符串[]** Namespace 数据为 `KEY=VALUE` 对。键必须是标识符，值必须是 JSON 值。例如：`YourKey={"your": "value"}` 可以多次传递。 |
+| `--description` | 不 | **字符串** Namespace 描述。 |
+| `--email` | 不 | **字符串** 所有者电子邮件。 |
+| `--history-archival-state` | 不 | **字符串枚举** 历史档案状态。接受的值：禁用、启用。 |
+| `--history-uri` | 不 | **字符串** 将历史记录存档到此 `URI`。一旦启用，就无法更改。 |
+| `--promote-global` | 不 | **bool** 启用多区域数据复制。 |
+| `--replication-state` | 不 | **字符串枚举** 复制状态。接受值：正常、切换。 |
+| `--retention` | 不 | **持续时间** 关闭的 Workflow 在删除之前保留的时间长度。 |
+| `--Visibility-archival-state` | 不 | **字符串枚举** Visibility 存档状态。接受的值：禁用、启用。 |
+| `--Visibility-uri` | 不 | **字符串** 将 Visibility 数据存档到此 `URI`。一旦启用，就无法更改。 |
 
-## nexus
+<a id="list"></a>
+## Nexus {#nexus}
 
-These commands manage Nexus resources.
+这些命令管理 Nexus 资源。
 
-Nexus commands follow this syntax:
+Nexus 命令遵循以下语法：
 
 ```
 temporal operator nexus [command] [subcommand] [options]
 ```
 
-### endpoint
+<a id="remove"></a>
+### 端点 {#endpoint}
 
-These commands manage Nexus Endpoints.
+这些命令管理 Nexus 端点。
 
-Nexus Endpoint commands follow this syntax:
+Nexus 端点命令遵循以下语法：
 
 ```
 temporal operator nexus endpoint [command] [options]
 ```
 
-#### create
+#### 创造 {#create}
 
-Create a Nexus Endpoint on the Server.
+在服务器上创建 Nexus 端点。
 
-A Nexus Endpoint name is used in Workflow code to invoke Nexus Operations.
-The endpoint target may either be a Worker, in which case
-`--target-namespace` and `--target-task-queue` must both be provided, or
-an external URL, in which case `--target-url` must be provided.
+Nexus 端点名称在 Workflow 代码中用于调用 Nexus 操作。
+端点目标可以是 Worker，在这种情况下
+必须同时提供 `--target-Namespace` 和 `--target-task-queue`，或者
+外部 URL，在这种情况下必须提供 `--target-url`。
 
-This command will fail if an Endpoint with the same name is already
-registered.
+如果已存在同名端点，则此命令将失败
+已注册。
 
 ```
 temporal operator nexus endpoint create \
@@ -358,68 +363,69 @@ temporal operator nexus endpoint create \
   --description-file DESCRIPTION.md
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--description` | No | **string** Nexus Endpoint description. You may use Markdown formatting in the Nexus Endpoint description. |
-| `--description-file` | No | **string** Path to the Nexus Endpoint description file. The contents of the description file may use Markdown formatting. |
-| `--name` | Yes | **string** Endpoint name. |
-| `--target-namespace` | No | **string** Namespace where a handler Worker polls for Nexus tasks. |
-| `--target-task-queue` | No | **string** Task Queue that a handler Worker polls for Nexus tasks. |
-| `--target-url` | No | **string** An external Nexus Endpoint that receives forwarded Nexus requests. May be used as an alternative to `--target-namespace` and `--target-task-queue`. _(Experimental)_ |
+| `--description` | 不 | **字符串** Nexus 端点描述。您可以在 Nexus 端点描述中使用 Markdown 格式。 |
+| `--description-file` | 不 | **字符串** Nexus 端点描述文件的路径。描述文件的内容可以使用Markdown格式。 |
+| `--name` | 是的 | **字符串** 端点名称。 |
+| `--target-Namespace` | 不 | **字符串** Namespace，其中处理程序 Worker 轮询 Nexus 任务。 |
+| `--target-task-queue` | 不 | **字符串** Task Queue，处理程序 Worker 轮询 Nexus 任务。 |
+| `--target-url` | 不 | **字符串** 接收转发的 Nexus 请求的外部 Nexus 端点。可用作 `--target-Namespace` 和 `--target-task-queue` 的替代品。 _（实验性）_ |
 
-#### delete
+#### 删除 {#delete}
 
-Delete a Nexus Endpoint from the Server.
+从服务器中删除 Nexus 端点。
 
 ```
 temporal operator nexus endpoint delete --name your-endpoint
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--name` | Yes | **string** Endpoint name. |
+| `--name` | 是的 | **字符串** 端点名称。 |
 
-#### get
+#### 得到 {#get}
 
-Get a Nexus Endpoint by name from the Server.
+从服务器按名称获取 Nexus 端点。
 
 ```
 temporal operator nexus endpoint get --name your-endpoint
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--name` | Yes | **string** Endpoint name. |
+| `--name` | 是的 | **字符串** 端点名称。 |
 
-#### list
+#### 列表 {#list}
 
-List all Nexus Endpoints on the Server.
+列出服务器上的所有 Nexus 端点。
 
 ```
 temporal operator nexus endpoint list
 ```
 
-Use [global flags](#global-flags) to customize the connection to the Temporal Service for this command.
+使用 [全局标志](#global-flags) 自定义此命令与 Temporal 服务的连接。
 
-#### update
+<a id="system"></a>
+#### Update {#update}
 
-Update an existing Nexus Endpoint on the Server.
+Update 服务器上现有的 Nexus 端点。
 
-A Nexus Endpoint name is used in Workflow code to invoke Nexus Operations.
-The Endpoint target may either be a Worker, in which case
-`--target-namespace` and `--target-task-queue` must both be provided, or
-an external URL, in which case `--target-url` must be provided.
+Nexus 端点名称在 Workflow 代码中用于调用 Nexus 操作。
+端点目标可以是 Worker，在这种情况下
+必须同时提供 `--target-Namespace` 和 `--target-task-queue`，或者
+外部 URL，在这种情况下必须提供 `--target-url`。
 
-The Endpoint is patched; existing fields for which flags are not provided
-are left as they were.
+端点已打补丁；未提供标志的现有字段
+保持原样。
 
-Update only the target task queue:
+Update 仅目标 Task Queue：
 
 ```
 temporal operator nexus endpoint update \
@@ -427,7 +433,7 @@ temporal operator nexus endpoint update \
   --target-task-queue your-other-queue
 ```
 
-Update only the description:
+Update 仅说明：
 
 ```
 temporal operator nexus endpoint update \
@@ -435,22 +441,23 @@ temporal operator nexus endpoint update \
   --description-file DESCRIPTION.md
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--description` | No | **string** Nexus Endpoint description. You may use Markdown formatting in the Nexus Endpoint description. |
-| `--description-file` | No | **string** Path to the Nexus Endpoint description file. The contents of the description file may use Markdown formatting. |
-| `--name` | Yes | **string** Endpoint name. |
-| `--target-namespace` | No | **string** Namespace where a handler Worker polls for Nexus tasks. |
-| `--target-task-queue` | No | **string** Task Queue that a handler Worker polls for Nexus tasks. |
-| `--target-url` | No | **string** An external Nexus Endpoint that receives forwarded Nexus requests. May be used as an alternative to `--target-namespace` and `--target-task-queue`. _(Experimental)_ |
-| `--unset-description` | No | **bool** Unset the description. |
+| `--description` | 不 | **字符串** Nexus 端点描述。您可以在 Nexus 端点描述中使用 Markdown 格式。 |
+| `--description-file` | 不 | **字符串** Nexus 端点描述文件的路径。描述文件的内容可以使用Markdown格式。 |
+| `--name` | 是的 | **字符串** 端点名称。 |
+| `--target-Namespace` | 不 | **字符串** Namespace，其中处理程序 Worker 轮询 Nexus 任务。 |
+| `--target-task-queue` | 不 | **字符串** Task Queue，处理程序 Worker 轮询 Nexus 任务。 |
+| `--target-url` | 不 | **字符串** 接收转发的 Nexus 请求的外部 Nexus 端点。可用作 `--target-Namespace` 和 `--target-task-queue` 的替代品。 _（实验性）_ |
+| `--unset-description` | 不 | **布尔** 取消设置描述。 |
 
-## search-attribute
+<a id="upsert"></a>
+## 搜索属性 {#search-attribute}
 
-Create, list, or remove Search Attributes fields stored in a Workflow
-Execution's metadata:
+创建、列出或删除存储在 Workflow 中的 Search Attribute 字段
+执行的元数据：
 
 ```
 temporal operator search-attribute create \
@@ -458,15 +465,15 @@ temporal operator search-attribute create \
     --type Keyword
 ```
 
-Supported types include: Text, Keyword, Int, Double, Bool, Datetime, and
-KeywordList.
+支持的类型包括：文本、关键字、Int、Double、Bool、Datetime 和
+关键字列表。
 
-If you wish to delete a Search Attribute, please contact support
-at https://support.temporal.io.
+如果您想删除 Search Attribute，请联系支持人员
+在https://support.Temporal.io.
 
-### create
+### 创造 {#create}
 
-Add one or more custom Search Attributes:
+添加一个或多个自定义 Search Attribute：
 
 ```
 temporal operator search-attribute create \
@@ -474,35 +481,35 @@ temporal operator search-attribute create \
     --type Keyword
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--name` | Yes | **string[]** Search Attribute name. |
-| `--type` | Yes | **string-enum[]** Search Attribute type. Accepted values: Text, Keyword, Int, Double, Bool, Datetime, KeywordList. |
+| `--name` | 是的 | **字符串[]** Search Attribute 名称。 |
+| `--type` | 是的 | **字符串枚举[]** Search Attribute 类型。接受的值：文本、关键字、Int、Double、Bool、Datetime、KeywordList。 |
 
-### list
+### 列表 {#list}
 
-Display a list of active Search Attributes that can be assigned or used with
-Workflow Queries. You can manage this list and add attributes as needed:
+显示可分配或使用的活动 Search Attribute 列表
+Workflow 查询。您可以管理此列表并根据需要添加属性：
 
 ```
 temporal operator search-attribute list
 ```
 
-Use [global flags](#global-flags) to customize the connection to the Temporal Service for this command.
+使用 [全局标志](#global-flags) 自定义此命令与 Temporal 服务的连接。
 
-### remove
+### 消除 {#remove}
 
-Remove custom Search Attributes from the options that can be assigned or used
-with Workflow Queries.
+从可分配或使用的选项中删除自定义 Search Attribute
+使用 Workflow 查询。
 
 ```
 temporal operator search-attribute remove \
     --name YourAttributeName
 ```
 
-Remove attributes without confirmation:
+删除属性而不确认：
 
 ```
 temporal operator search-attribute remove \
@@ -510,49 +517,50 @@ temporal operator search-attribute remove \
     --yes
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--name` | Yes | **string[]** Search Attribute name. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm removal. |
+| `--name` | 是的 | **字符串[]** Search Attribute 名称。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认删除。 |
 
-## Global Flags
+<a id="namespace"></a>
+## 全局标志 {#global-flags}
 
-The following options can be used with any command.
+以下选项可与任何命令一起使用。
 
-| Flag | Required | Description | Default |
+| 旗帜 | 必需的 | 描述 | 默认 |
 |------|----------|-------------|--------|
-| `--address` | No | **string** Temporal Service gRPC endpoint. | `localhost:7233` |
-| `--api-key` | No | **string** API key for request. |  |
-| `--client-authority` | No | **string** Temporal gRPC client :authority pseudoheader. |  |
-| `--client-connect-timeout` | No | **duration** The client connection timeout. 0s means no timeout. |  |
-| `--codec-auth` | No | **string** Authorization header for Codec Server requests. |  |
-| `--codec-endpoint` | No | **string** Remote Codec Server endpoint. |  |
-| `--codec-header` | No | **string[]** HTTP headers for requests to codec server. Format as a `KEY=VALUE` pair. May be passed multiple times to set multiple headers. |  |
-| `--color` | No | **string-enum** Output coloring. Accepted values: always, never, auto. | `auto` |
-| `--command-timeout` | No | **duration** The command execution timeout. 0s means no timeout. |  |
-| `--config-file` | No | **string** File path to read TOML config from, defaults to `$CONFIG_PATH/temporalio/temporal.toml` where `$CONFIG_PATH` is defined as `$HOME/.config` on Unix, `$HOME/Library/Application Support` on macOS, and `%AppData%` on Windows. _(Experimental)_ |  |
-| `--disable-config-env` | No | **bool** If set, disables loading environment config from environment variables. _(Experimental)_ |  |
-| `--disable-config-file` | No | **bool** If set, disables loading environment config from config file. _(Experimental)_ |  |
-| `--env` | No | **string** Active environment name (`ENV`). | `default` |
-| `--env-file` | No | **string** Path to environment settings file. Defaults to `$HOME/.config/temporalio/temporal.yaml`. |  |
-| `--grpc-meta` | No | **string[]** HTTP headers for requests. Format as a `KEY=VALUE` pair. May be passed multiple times to set multiple headers. Can also be made available via environment variable as `TEMPORAL_GRPC_META_[name]`. |  |
-| `--identity` | No | **string** The identity of the user or client submitting this request. Defaults to "temporal-cli:$USER@$HOST". |  |
-| `--log-format` | No | **string-enum** Log format. Accepted values: text, json. | `text` |
-| `--log-level` | No | **string-enum** Log level. Default is "info" for most commands and "warn" for "server start-dev". Accepted values: debug, info, warn, error, never. | `info` |
-| `--namespace`, `-n` | No | **string** Temporal Service Namespace. | `default` |
-| `--no-json-shorthand-payloads` | No | **bool** Raw payload output, even if the JSON option was used. |  |
-| `--output`, `-o` | No | **string-enum** Non-logging data output format. Accepted values: text, json, jsonl, none. | `text` |
-| `--profile` | No | **string** Profile to use for config file. _(Experimental)_ |  |
-| `--time-format` | No | **string-enum** Time format. Accepted values: relative, iso, raw. | `relative` |
-| `--tls` | No | **bool** Enable base TLS encryption. Does not have additional options like mTLS or client certs. This is defaulted to true if api-key or any other TLS options are present. Use --tls=false to explicitly disable. |  |
-| `--tls-ca-data` | No | **string** Data for server CA certificate. Can't be used with --tls-ca-path. |  |
-| `--tls-ca-path` | No | **string** Path to server CA certificate. Can't be used with --tls-ca-data. |  |
-| `--tls-cert-data` | No | **string** Data for x509 certificate. Can't be used with --tls-cert-path. |  |
-| `--tls-cert-path` | No | **string** Path to x509 certificate. Can't be used with --tls-cert-data. |  |
-| `--tls-disable-host-verification` | No | **bool** Disable TLS host-name verification. |  |
-| `--tls-key-data` | No | **string** Private certificate key data. Can't be used with --tls-key-path. |  |
-| `--tls-key-path` | No | **string** Path to x509 private key. Can't be used with --tls-key-data. |  |
-| `--tls-server-name` | No | **string** Override target TLS server name. |  |
+| `--address` | 不 | **字符串** Temporal 服务 gRPC 端点。 | `localhost:7233` |
+| `--api-key` | 不 | **字符串** 请求的 API 密钥。 |  |
+| `--client-authority` | 不 | **字符串** Temporal gRPC 客户端：权限伪标头。 |  |
+| `--client-connect-timeout` | 不 | **持续时间** 客户端连接超时。 0s表示没有超时。 |  |
+| `--codec-auth` | 不 | **字符串** Codec Server 请求的授权标头。 |  |
+| `--codec-endpoint` | 不 | **字符串** 远程 Codec Server 端点。 |  |
+| `--codec-header` | 不 | **string[]** 向 Codec Server 发出请求的 HTTP 标头。格式为 `KEY=VALUE` 对。可以多次传递以设置多个标头。 |  |
+| `--color` | 不 | **字符串枚举** 输出着色。接受的值：始终、从不、自动。 | `auto` |
+| `--command-timeout` | 不 | **持续时间** 命令执行超时。 0s表示没有超时。 |  |
+| `--config-file` | 不 | **字符串** 从中读取 TOML 配置的文件路径，默认为 `$CONFIG_PATH/temporalio/temporal.toml`，其中 `$CONFIG_PATH` 在 Unix 上定义为 `$HOME/.config`，在 macOS 上定义为 `$HOME/Library/Application Support`，在 Windows 上定义为 `%AppData%`。 _（实验性）_ |  |
+| `--disable-config-env` | 不 | **bool** 如果设置，则禁用从环境变量加载环境配置。 _（实验性）_ |  |
+| `--disable-config-file` | 不 | **bool** 如果设置，则禁用从配置文件加载环境配置。 _（实验性）_ |  |
+| `--env` | 不 | **字符串** 活动环境名称 (`ENV`)。 | `default` |
+| `--env-file` | 不 | **字符串** 环境设置文件的路径。默认为 `$HOME/.config/temporalio/temporal.yaml`。 |  |
+| `--gRPC-meta` | 不 | **string[]** 请求的 HTTP 标头。格式为 `KEY=VALUE` 对。可以多次传递以设置多个标头。也可以通过环境变量 `Temporal_gRPC_META_[name]` 提供。 |  |
+| `--identity` | 不 | **字符串** 提交此请求的用户或客户端的身份。默认为“Temporal-cli:$USER@$HOST”。 |  |
+| `--log-format` | 不 | **字符串枚举** 日志格式。接受的值：文本、json。 | `text` |
+| `--log-level` | 不 | **字符串枚举** 日志级别。大多数命令的默认值为“info”，“server start-dev”的默认值为“warn”。接受的值：调试、信息、警告、错误、从不。 | `info` |
+| `--Namespace`、`-n` | 不 | **字符串** Temporal 服务 Namespace。 | `default` |
+| `--no-json-shorthand-payloads` | 不 | **bool** 原始负载输出，即使使用了 JSON 选项。 |  |
+| `--output`、`-o` | 不 | **字符串枚举** 非日志数据输出格式。接受的值：text、json、jsonl、none。 | `text` |
+| `--profile` | 不 | **字符串** 用于配置文件的配置文件。 _（实验性）_ |  |
+| `--time-format` | 不 | **字符串枚举** 时间格式。接受的值：relative、iso、raw。 | `relative` |
+| `--tls` | 不 | **布尔** 启用基本 TLS 加密。没有 mTLS 或客户端证书等附加选项。如果存在 api-key 或任何其他 TLS 选项，则默认为 true。使用 --tls=false 显式禁用。 |  |
+| `--tls-ca-data` | 不 | **字符串** 服务器 CA 证书的数据。不能与 --tls-ca-path 一起使用。 |  |
+| `--tls-ca-path` | 不 | **字符串** 服务器 CA 证书的路径。不能与 --tls-ca-data 一起使用。 |  |
+| `--tls-cert-data` | 不 | **字符串** x509 证书的数据。不能与 --tls-cert-path 一起使用。 |  |
+| `--tls-cert-path` | 不 | **字符串** x509 证书的路径。不能与 --tls-cert-data 一起使用。 |  |
+| `--tls-disable-host-verification` | 不 | **bool** 禁用 TLS 主机名验证。 |  |
+| `--tls-key-data` | 不 | **字符串** 私有证书密钥数据。不能与 --tls-key-path 一起使用。 |  |
+| `--tls-key-path` | 不 | **字符串** x509 私钥的路径。不能与 --tls-key-data 一起使用。 |  |
+| `--tls-server-name` | 不 | **字符串** 覆盖目标 TLS 服务器名称。 |  |
 

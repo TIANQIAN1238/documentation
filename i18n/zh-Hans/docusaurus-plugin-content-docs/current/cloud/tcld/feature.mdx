@@ -1,0 +1,82 @@
+---
+id: feature
+title: tcld功能命令参考
+sidebar_label: 特征
+description: 使用 tcld 功能命令管理 Temporal Cloud 中的功能。使用 tcld 功能获取详细信息，使用 tcld 功能切换来启用或禁用特定功能。
+toc_max_heading_level: 4
+keywords:
+  - cli reference
+  - tcld
+tags:
+  - Temporal Cloud
+  - tcld
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+“tcld feature”命令管理 Temporal Cloud 中的功能。
+
+别名：`f`
+
+- [tcld 功能获取](#get)
+- [tcld 功能切换](#toggle)
+
+＃＃ 得到
+
+“tcld feature get”命令获取有关您已启用的 Temporal Cloud 功能的信息。
+
+别名：`g`
+
+`tcld 功能获取`
+
+该命令没有修饰符。
+
+**例子**
+
+`tcld 功能获取`
+
+以下是示例输出：
+
+```json
+[
+  {
+    "Name": "enable-apikey",
+    "Value": true
+  }
+]
+```
+
+## 切换
+
+“tcld 功能切换-*”命令可打开或关闭 Temporal Cloud 中的“*”功能。
+
+:::note
+
+“*”符号代表功能的名称。
+将“*”替换为要切换的可用功能的名称。
+
+:::
+
+别名：`塔克`
+
+`tcld 功能切换-*`
+
+该命令没有修饰符。
+
+**例子**
+
+`tcld 功能切换 apikey`
+
+以下是示例输出：
+
+```json
+Feature flag enable-apikey is now true
+```
+
+:::note
+
+功能“apikey”就是一个例子。
+Update 用于切换不同功能的功能名称。
+
+:::

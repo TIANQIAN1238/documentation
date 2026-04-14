@@ -1,0 +1,347 @@
+---
+id: cluster-metrics
+title: OSS Temporal 服务指标参考
+sidebar_label: Temporal 服务指标
+description: Temporal 服务发出指标，帮助操作员监控性能并设置警报。跟踪服务请求、延迟和错误等指标。使用 metric_defs.go 了解更多信息。
+toc_max_heading_level: 4
+keywords:
+  - reference
+tags:
+  - Reference
+  - Metrics
+---
+
+:::info OSS Temporal Service metrics
+
+此页面上的信息与开源 [Temporal 服务部署](/Temporal-service) 相关。
+
+请参阅 [Cloud 指标](/cloud/metrics/) 了解 [Temporal Cloud](/cloud/overview) 发出的指标。
+
+### 数据库架构和设置
+
+:::
+
+Temporal 服务发出一系列指标，帮助操作员了解 Visibility 的 Temporal 服务性能并设置警报。
+
+Temporal 服务发出的所有指标均列在 [metric_defs.go](https://github.com/Temporalio/Temporal/blob/main/common/metrics/metric_defs.go) 中。
+
+有关在 Temporal 服务配置中设置指标的详细信息，请参阅 [Temporal 服务配置参考](/references/configuration#global)。
+
+[仪表板存储库](https://github.com/Temporalio/dashboards) 包含社区驱动的 Grafana 仪表板模板，可用作监控 Temporal 服务和 SDK 指标的起点。
+您可以使用这些模板作为参考来构建您自己的仪表板。
+对于仪表板中缺少的任何指标，请使用 [metric_defs.go](https://github.com/Temporalio/Temporal/blob/main/common/metrics/metric_defs.go) 作为参考。
+
+请注意，除了 Temporal 服务发出的这些指标之外，您还应该监控运行 Temporal 服务的所有主机的特定于基础设施的指标，例如 CPU、内存和网络。
+
+## 常用指标
+
+Temporal 为每个 gRPC 服务请求发出指标。
+这些指标通过“type”、“operation”和“Namespace”标签发出，这些标签将 Visibility 提供给服务使用情况，并显示跨服务、Namespace 和操作的请求率。
+
+- 使用 Query 中的“操作”标签来获取每个操作的请求率、错误率或延迟。
+- 使用“service_name”标签和[服务角色标签值](https://github.com/Temporalio/Temporal/blob/bba148cf1e1642fd39fa0174423b183d5fc62d95/common/metrics/defs.go#L108)来获取特定服务的详细信息。
+
+您可以在 Query 中添加的所有常见标签均在 [metric_defs.go](https://github.com/Temporalio/Temporal/blob/main/common/metrics/metric_defs.go) 文件中定义。
+
+例如，要按前端服务上的操作查看服务请求，请使用以下命令：
+
+`按（操作）求和（速率（service_requests{service_name="frontend"}[2m]））`
+
+注意：本主题中的所有指标查询都是[Prometheus 查询](https://prometheus.io/docs/prometheus/latest/Querying/basics/)。
+
+以下列表描述了您可以开始使用的一些指标。
+
+### `服务请求`
+
+显示每个 Task Queue 收到的服务请求。
+示例：按操作划分的服务请求
+`sum(rate(service_requests{操作=\"AddWorkflowTask\"}[2m]))`
+
+### `服务延迟`
+
+显示所有客户端请求操作的延迟。
+通常，这些是调查哪个操作遇到高延迟问题的起点。
+示例：按前端服务操作划分的 P95 服务延迟
+`histogram_quantile(0.95, sum(rate(service_latency_bucket{service_name="frontend"}[5m])) by (操作, le))`
+
+### `service_error_with_type`
+
+（仅在 v1.17.0+ 中可用）标识服务遇到的错误。
+示例：前端服务的服务错误类型
+`sum(rate(service_error_with_type{service_name="frontend"}[5m])) by (error_type)`
+
+### `客户端错误`
+
+不同服务器角色之间的连接问题的指示器。
+示例：客户端错误
+`sum(rate(client_errors{service_name="frontend",service_role="history"}[5m]))`
+
+除此之外，您还可以定义一些特定于服务的指标来获取每个服务的性能详细信息。
+从以下列表开始，并使用 [metric_defs.go](https://github.com/Temporalio/Temporal/blob/main/common/metrics/metric_defs.go) 根据需要定义其他指标。
+
+## 匹配服务指标
+
+### `轮询成功`
+
+显示与轮询器成功匹配的任务。
+示例：`sum(rate(poll_success{}[5m]))`
+
+### `轮询超时`
+
+当轮询超时内没有可供轮询器使用的任务时显示。
+示例：`sum(rate(poll_timeouts{}[5m]))`
+
+### `asyncmatch_latency`
+
+测量异步匹配任务从创建到交付的时间。
+该延迟越大，任务在队列中等待 Worker 接收的时间就越长。
+示例： `histogram_quantile(0.95, sum(rate(asyncmatch_latency_bucket{service_name="matching"}[5m])) by (operation, le))`
+
+### `no_poller_tasks`
+
+每当将任务添加到没有轮询器并且是计数器指标的 Task Queue 时发出。
+这通常表明 Worker 或启动程序使用了错误的 Task Queue。
+
+## 历史服务指标
+
+- 可等待：是的，XPROT002X 可以等待此命令产生的操作。
+- 对应事件：[XPROT041XStarted](/references/events#XPROT041Xstarted)
+
+### `任务请求`
+
+根据每个任务流程请求发出。
+示例：`sum(rate(task_requests{operation=~"TransferActive.*"}[1m]))`
+
+### `任务错误`
+
+在每个任务进程错误时发出。
+示例：`sum(rate(task_errors{operation=~"TransferActive.*"}[1m]))`
+
+### `任务尝试`
+
+每个任务执行的尝试次数。
+任务会永远重试，每次重试都会增加尝试计数。
+示例： `histogram_quantile(0.95, sum(rate(task_attempt_bucket{operation=~"TransferActive.*"}[1m])) by (operation, le))`
+
+### `任务延迟处理`
+
+显示每次尝试的处理延迟。
+示例： `histogram_quantile(0.95, sum(rate(task_latency_processing_bucket{operation=~"TransferActive.*",service_name="history"}[1m])) by (operation, le))`
+
+### `任务延迟`
+
+测量多次尝试的内存延迟。
+
+### `任务延迟队列`
+
+测量从应执行任务（从触发时间）到任务完成的端到端持续时间。
+
+### `任务延迟负载`
+
+（仅在 v1.18.0+ 中可用）测量从任务生成到任务加载的持续时间（任务 Schedule 启动持久性队列的延迟）。
+
+### `task_latency_Schedule`
+
+（仅在 v1.18.0+ 中可用）测量从任务提交（到任务 Scheduler）到处理（任务 Schedule 启动内存队列延迟）的持续时间。
+
+### `queue_latency_Schedule`
+
+（仅在 v1.18.0+ 中可用）测量主机级任务 Scheduler 中一个任务通道中 Schedule 100 个任务的时间。
+如果任务通道中持续 30 秒的任务少于 100 个，则延迟会在发射时缩放至 100 个任务。
+注意：这仍然是一个实验性指标，可能会发生变化。
+
+### `service_latency_userlatency`
+
+显示由于 Workflow 逻辑而引入的延迟。
+例如，如果您有一个 Workflow 同时调度多个活动或 Child Workflow，则可能会导致每个 Workflow 发生锁争用。
+每个 Workflow 锁定的等待时间计为“用户延迟”。
+
+“操作”标签包含有关任务类型以及活动与备用状态的详细信息，可用于获取请求率、错误率或每个操作的延迟，这可以帮助识别由数据库问题引起的问题。
+
+## 持久性指标
+
+Temporal Server 为每次持久性数据库读取和写入发出指标。
+其中一些最重要的如下：
+
+### `持久性请求`
+
+根据每个持久性请求发出。
+示例：
+
+- Prometheus Query 用于获取历史服务操作的持久化请求总数：
+  `按（操作）求和（速率（persistence_requests{service_name="history"}[1m]））`
+- Prometheus Query 用于获取匹配服务操作的持久性请求总数：
+  `按（操作）求和（速率（persistence_requests{service_name="matching"}[1m]））`
+
+### `持久性错误`
+
+显示所有持久性错误。
+该指标可以很好地指示 Temporal 服务和持久性存储之间的连接问题。
+例子：
+
+- Prometheus Query 用于按服务获取所有持久性错误（历史记录）
+  `总和（率（persistence_errors {service_name =“历史记录”} [1m]））`
+
+### `persistence_error_with_type`
+
+显示与持久性存储相关的所有错误类型，并包含“error_type”标签。
+
+- Prometheus Query 用于获取类型为（历史记录）和错误类型的持久性错误：
+  `sum(rate(persistence_error_with_type{service_name="history"}[1m])) by (error_type)`
+
+### `持久延迟`
+
+显示持久性操作的延迟。
+例子：
+
+- Prometheus Query 用于按百分位数获取延迟：
+  `histogram_quantile(0.95, sum(rate(persistence_latency_bucket{service_name="history"}[1m])) by (操作, le))`
+
+## Schedule 指标
+
+Temporal 发出跟踪这些 Scheduled 执行的性能和结果的指标。
+
+以下是可帮助您监控和优化 Scheduled Workflow Execution 的其他指标。
+
+### `Schedule_buffer_overruns`
+
+指示用于保存 Scheduled Workflows 的缓冲区超出其最大容量的情况。
+当具有“buffer_all”重叠策略的 Schedule 的平均运行长度超过平均 Schedule 间隔时，通常会发生这种情况。
+
+示例：监视缓冲区溢出。
+
+`sum(rate(Schedule_buffer_overruns{Namespace="$Namespace"}[5m]))`
+
+### `Schedule_missed_catchup_window`
+
+跟踪系统无法在定义的追赶窗口内执行 Scheduled 操作时发生的情况。
+错过追赶窗口可能是由于超出配置的追赶时段而导致长时间中断造成的。
+
+示例：识别错过的追赶机会。
+
+`sum(rate(Schedule_missed_catchup_window{Namespace="$Namespace"}[5m]))`
+
+### `Schedule_rate_limited`
+
+反映由于 Namespace 内的速率限制策略，Schedule 创建 Workflow 受到限制的实例。
+该指标对于识别经常达到速率限制（可能导致错过追赶窗口）的调度模式至关重要。
+
+示例：评估速率限制对 Scheduled 执行的影响。
+
+`sum(rate(Schedule_rate_limited{Namespace="$Namespace"}[5m]))`
+
+### `Schedule_action_success`
+
+根据 Schedule 或通过手动触发器测量 Workflow 的成功执行。
+该指标确认 Workflow 正在按预期运行，没有延迟或错误。
+
+示例：跟踪 Scheduled Workflow Executions 的成功率。
+
+`sum(率(Schedule_action_success{Namespace="$Namespace"}[5m]))`
+
+## Workflow 指标
+
+这些指标与 Workflow 统计数据有关。
+
+### `Workflow_取消`
+
+在完成执行之前取消的 Workflow 数量。
+
+例子：
+
+#### XPROT039X 注册表
+
+### `Workflow_失败`
+
+在完成之前失败的 Workflow 数量。
+
+### `Workflow_成功`
+
+成功完成的 Workflow 数量。
+
+### `Workflow_超时`
+
+在完成执行之前超时的 Workflow 数量。
+
+## Nexus 指标
+
+这些指标适用于 Nexus Operation。
+
+### Nexus 历史服务中的机械
+
+请参阅[架构文档](https://github.com/Temporalio/Temporal/blob/5d55d6c707bd68d8f3274c57ae702331adf05e6e/docs/architecture/Nexus.md#Scheduler)
+了解更多信息。
+
+#### 内存缓冲区
+
+`dynamic_Worker_pool_Scheduler_enqueued_tasks`：当任务排队到缓冲区时递增的计数器。
+
+`dynamic_Worker_pool_Scheduler_dequeued_tasks`：当任务从缓冲区出列时递增的计数器。
+
+`dynamic_Worker_pool_Scheduler_rejected_tasks`：当缓冲区已满并添加
+任务被拒绝。
+
+`dynamic_Worker_pool_Scheduler_buffer_size`：定期对缓冲区大小进行采样的仪表。
+
+### 并发限制器
+
+`dynamic_Worker_pool_Scheduler_active_Workers`：定期对正在运行的 goroutine 数量进行采样的仪表。
+
+#### 速率限制器
+
+`rate_limited_task_runnable_wait_time`：表示任务等待速率限制器所花费的时间的直方图。
+
+#### 断路器
+
+` Circuit_breaker_executable_blocked`：每次任务执行被阻止时都会递增的计数器
+断路器。
+
+#### 任务执行者
+
+`Nexus_outbound_requests`：表示历史服务发出的 Nexus 出站请求数量的计数器。
+
+`Nexus_outbound_latency`：表示历史服务发出的出站 Nexus 请求的延迟的直方图。
+
+`callback_outbound_requests`：表示历史发出的回调出站请求数量的计数器
+服务。
+
+`callback_outbound_latency`：表示出站回调请求的延迟直方图
+历史服务。
+
+### Nexus 前端服务机械
+
+#### `Nexus_requests`
+
+服务收到的 Nexus 请求数。
+
+类型：柜台
+
+#### `Nexus_延迟`
+
+Nexus 请求的延迟。
+
+类型：直方图
+
+#### `Nexus_request_preprocess_errors`
+
+预处理失败的 Nexus 请求数。
+
+类型：柜台
+
+#### `Nexus_completion_requests`
+
+服务收到的 Nexus 完成（回调）请求的数量。
+
+类型：柜台
+
+#### `Nexus_completion_latency`
+
+Nexus 完成（回调）请求的延迟直方图。
+
+类型：直方图
+
+#### `Nexus_completion_request_preprocess_errors`
+
+预处理失败的 Nexus 完成请求的数量。
+
+类型：柜台

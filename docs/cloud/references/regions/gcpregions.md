@@ -1,70 +1,75 @@
-### North America - Iowa (`us-central1`)
+<a id="north-america---iowa-us-central1"></a>
+### 北美 - 爱荷华州 (`us-central1`) {#north-america---iowa-us-central1}
 
-- **Cloud API Code**: `gcp-us-central1`
-- **Regional Endpoint**: `gcp-us-central1.region.tmprl.cloud`
-- **Private Service Connect Service Attachment URI**: `projects/prod-d9ch6v2ybver8d2a8fyf7qru9/regions/us-central1/serviceAttachments/pl-5xzng`
-- **Same Region Replication**:  Not Available
-- **Multi-Region Replication**:
+- **云API代码**：`gcp-us-central1`
+- **区域端点**：`gcp-us-central1.region.tmprl.cloud`
+- **私人服务连接服务附件 URI**：`projects/prod-d9ch6v2ybver8d2a8fyf7qru9/regions/us-central1/serviceAttachments/pl-5xzng`
+- **同区域复制**：不可用
+- **多区域复制**：
   - `gcp-us-west1`
   - `gcp-us-east4`
-- **Multi-Cloud Replication**:
+- **多云复制**：
   - `aws-ca-central-1`
   - `aws-us-east-1`
   - `aws-us-east-2`
   - `aws-us-west-2`
 
-### North America - Oregon (`us-west1`)
+<a id="north-america---oregon-us-west1"></a>
+### 北美 - 俄勒冈州 (`us-west1`) {#north-america---oregon-us-west1}
 
-- **Cloud API Code**: `gcp-us-west1`
-- **Regional Endpoint**: `gcp-us-west1.region.tmprl.cloud`
-- **Private Service Connect Service Attachment URI**: `projects/prod-rbe76zxxzydz4cbdz2xt5b59q/regions/us-west1/serviceAttachments/pl-94w0x`
-- **Same Region Replication**:  Not Available
-- **Multi-Region Replication**:
+- **云API代码**：`gcp-us-west1`
+- **区域端点**：`gcp-us-west1.region.tmprl.cloud`
+- **私人服务连接服务附件 URI**：`projects/prod-rbe76zxxzydz4cbdz2xt5b59q/regions/us-west1/serviceAttachments/pl-94w0x`
+- **同区域复制**：不可用
+- **多区域复制**：
   - `gcp-us-central1`
   - `gcp-us-east4`
-- **Multi-Cloud Replication**:
+- **多云复制**：
   - `aws-ca-central-1`
   - `aws-us-east-1`
   - `aws-us-east-2`
   - `aws-us-west-2`
 
-### North America - Northern Virginia (`us-east4`)
+<a id="north-america---northern-virginia-us-east4"></a>
+### 北美 - 北弗吉尼亚 (`us-east4`) {#north-america---northern-virginia-us-east4}
 
-- **Cloud API Code**: `gcp-us-east4`
-- **Regional Endpoint**: `gcp-us-east4.region.tmprl.cloud` 
-- **Private Service Connect Service Attachment URI**: `projects/prod-y399cvr9c2b43es2w3q3e4gvw/regions/us-east4/serviceAttachments/pl-8awsy`
-- **Same Region Replication**:  Not Available
-- **Multi-Region Replication**:
+- **云API代码**：`gcp-us-east4`
+- **区域端点**：`gcp-us-east4.region.tmprl.cloud` 
+- **私人服务连接服务附件 URI**：`projects/prod-y399cvr9c2b43es2w3q3e4gvw/regions/us-east4/serviceAttachments/pl-8awsy`
+- **同区域复制**：不可用
+- **多区域复制**：
   - `gcp-us-central1`
   - `gcp-us-west1`
-- **Multi-Cloud Replication**:
+- **多云复制**：
   - `aws-ca-central-1`
   - `aws-us-east-1`
   - `aws-us-east-2`
   - `aws-us-west-2`
 
-### Europe - Frankfurt (`europe-west3`)
+<a id="europe---frankfurt-europe-west3"></a>
+### 欧洲 - 法兰克福 (`europe-west3`) {#europe---frankfurt-europe-west3}
 
-- **Cloud API Code**: `gcp-europe-west3`
-- **Regional Endpoint**: `gcp-europe-west3.region.tmprl.cloud`
-- **Private Service Connect Service Attachment URI**: `projects/prod-kwy7d4faxp6qgrgd9x94du36g/regions/europe-west3/serviceAttachments/pl-acgsh`
-- **Same Region Replication**:  Not Available
-- **Multi-Region Replication**:
-  - None
-- **Multi-Cloud Replication**:
+- **云API代码**：`gcp-europe-west3`
+- **区域端点**：`gcp-europe-west3.region.tmprl.cloud`
+- **私人服务连接服务附件 URI**：`projects/prod-kwy7d4faxp6qgrgd9x94du36g/regions/europe-west3/serviceAttachments/pl-acgsh`
+- **同区域复制**：不可用
+- **多区域复制**：
+  - 无
+- **多云复制**：
   - `aws-eu-central-1`
   - `aws-eu-west-1`
   - `aws-eu-west-2`
 
-### Asia Pacific - Mumbai (`asia-south1`)
+<a id="asia-pacific---mumbai-asia-south1"></a>
+### 亚太地区 - 孟买 (`asia-south1`) {#asia-pacific---mumbai-asia-south1}
 
-- **Cloud API Code**: `gcp-asia-south1`
-- **Regional Endpoint**: `gcp-asia-south1.region.tmprl.cloud`
-- **Private Service Connect Service Attachment URI**: `projects/prod-d5spc2sfeshws33bg33vwdef7/regions/asia-south1/serviceAttachments/pl-7w7tw`
-- **Same Region Replication**:  Not Available
-- **Multi-Region Replication**:
-  - None
-- **Multi-Cloud Replication**:
+- **云API代码**：`gcp-asia-south1`
+- **区域端点**：`gcp-asia-south1.region.tmprl.cloud`
+- **私人服务连接服务附件 URI**：`projects/prod-d5spc2sfeshws33bg33vwdef7/regions/asia-south1/serviceAttachments/pl-7w7tw`
+- **同区域复制**：不可用
+- **多区域复制**：
+  - 无
+- **多云复制**：
   - `aws-ap-northeast-1`
   - `aws-ap-northeast-2`
   - `aws-ap-south-1`

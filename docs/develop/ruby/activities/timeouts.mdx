@@ -1,8 +1,8 @@
 ---
 id: timeouts
-title: Activity Timeouts - Ruby SDK
-sidebar_label: Timeouts
-description: Optimize Workflow Execution with Temporal Ruby SDK - Set Activity Timeouts and Retry Policies efficiently.
+title: "Activity 超时 - Ruby SDK"
+sidebar_label: "超时"
+description: "使用 Temporal 优化 Workflow Execution Ruby SDK - 有效设置 Activity 超时和重试策略。"
 toc_max_heading_level: 4
 keywords:
   - Ruby
@@ -17,15 +17,15 @@ tags:
   - Temporal SDKs
 ---
 
-## Activity timeouts {#activity-timeouts}
+<a id="activity-timeouts"></a>
+## Activity 超时 {#activity-timeouts}
+每个 Activity 超时控制 Activity 执行可以花费多长时间的不同方面：
 
-Each Activity Timeout controls a different aspect of how long an Activity Execution can take:
+- **[Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout)**
+- **[开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)**
+- **[Schedule-启动超时](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout)**
 
-- **[Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout)**
-- **[Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout)**
-- **[Schedule-To-Start Timeout](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout)**
-
-At least one of `start_to_close_timeout` or `schedule_to_close_timeout` is required.
+至少需要 `start_to_close_timeout` 或 `Schedule_to_close_timeout` 之一。
 
 ```ruby
 Temporalio::Workflow.execute_activity(
@@ -35,12 +35,12 @@ Temporalio::Workflow.execute_activity(
 )
 ```
 
+<a id="activity-retries"></a>
 ### Activity Retry Policy {#activity-retries}
+默认情况下，活动使用系统 Retry Policy。
+您可以通过指定自定义 Retry Policy 来覆盖它。
 
-By default, Activities use a system Retry Policy.
-You can override it by specifying a custom Retry Policy.
-
-To create an Activity Retry Policy in Ruby, set the `retry_policy` parameter when executing an activity.
+要在 Ruby 中创建 Activity Retry Policy，请在执行 Activity 时设置 `retry_policy` 参数。
 
 ```ruby
 Temporalio::Workflow.execute_activity(
@@ -51,9 +51,9 @@ Temporalio::Workflow.execute_activity(
 )
 ```
 
-### Override the retry interval with `next_retry_delay` {#next-retry-delay}
-
-If you raise an application-level error, you can override the Retry Policy's delay by specifying a new delay.
+<a id="next-retry-delay"></a>
+### 使用 `next_retry_delay` {#next-retry-delay} 覆盖重试间隔
+如果引发应用程序级错误，您可以通过指定新的延迟来覆盖 Retry Policy 的延迟。
 
 ```ruby
 raise Temporalio::Error::ApplicationError.new(
@@ -63,13 +63,13 @@ raise Temporalio::Error::ApplicationError.new(
 )
 ```
 
-## Heartbeat an Activity {#activity-heartbeats}
+<a id="activity-heartbeats"></a>
+## 心跳 Activity {#activity-heartbeats}
+心跳是从 Worker 到 Temporal 服务的周期性 Signal，指示 Activity 仍然活动并正在取得进展。
 
-A Heartbeat is a periodic signal from the Worker to the Temporal Service indicating the Activity is still alive and making progress.
-
-- Heartbeats are used to detect Worker failure.
-- Cancellations are delivered via Heartbeats.
-- Heartbeats may contain custom progress details.
+- 心跳用于检测 Worker 故障。
+- 取消是通过心跳传递的。
+- 心跳可能包含自定义进度详细信息。
 
 ```ruby
 class MyActivity < Temporalio::Activity::Definition
@@ -86,9 +86,9 @@ class MyActivity < Temporalio::Activity::Definition
 end
 ```
 
-### Heartbeat Timeout {#heartbeat-timeout}
-
-The Heartbeat Timeout sets the maximum duration between Heartbeats before the Temporal Service considers the Activity failed.
+<a id="heartbeat-timeout"></a>
+### 心跳超时 {#heartbeat-timeout}
+心跳超时设置 Temporal 服务认为 Activity 失败之前心跳之间的最大持续时间。
 
 ```ruby
 Temporalio::Workflow.execute_activity(

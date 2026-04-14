@@ -1,8 +1,8 @@
 ---
 id: patching
-title: Patching
-sidebar_label: Patching
-description: This Encyclopedia page provides an in-depth explanation of what happens during Workflow Patching
+title: "打补丁"
+sidebar_label: "打补丁"
+description: "此百科全书页面深入解释了 Workflow 修补过程中发生的情况"
 slug: /patching
 toc_max_heading_level: 4
 keywords:
@@ -13,86 +13,95 @@ tags:
 
 ---
 
-This page discusses [Patching](#patching).
+本页讨论 [打补丁](#patching)。
 
-## What is Patching? {#patching}
+<a id="patching"></a>
+## 什么是修补？ {#patching}
 
-A Patch defines a logical branch in a Workflow for a specific change, similar to a feature flag.
-It applies a code change to new Workflow Executions while avoiding disruptive changes to in-progress Workflow Executions.
-When you want to make substantive code changes that may affect existing Workflow executions, create a patch. Note that there's no need to patch [Pinned Workflows](/worker-versioning).
+补丁在 Workflow 中为特定更改定义逻辑分支，类似于功能标志。
+它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
+当您想要进行可能影响现有 Workflow Execution 的实质性代码更改时，请创建补丁。请注意，无需修补 [固定 Workflow](/worker-versioning)。
 
-### Detailed Description of the `patched()` Function
+<a id="detailed-description-of-the-patched-function"></a>
+### `patched()` 功能详细说明 {#detailed-description-of-the-patched-function}
 
-This applies to the `patched()` function in the Python, .NET, and Ruby SDKs.
+这适用于 Python、.NET 和 Ruby SDK 中的 `patched()` 函数。
 
-#### Behavior When Not Replaying
+<a id="behavior-when-not-replaying"></a>
+#### 不重播时的行为 {#behavior-when-not-replaying}
 
-If the execution is not replaying, when it encounters a call to `patched()`, it first checks the event history.
+如果执行不是重播，当它遇到对 `patched()` 的调用时，它首先检查 Event History。
 
-- If the patch ID is not in the event history, the execution adds a marker to the event history, upserts a search attribute, and returns `true`. This happens in the first block of the patch ID.
-- If the patch ID is in the event history, the execution doesn't modify the history, and returns `true`.
-  This happens in a patch ID's subsequent blocks, because the event history was updated in the first block.
+- 如果补丁 ID 不在 Event History 中，则执行会向 Event History 添加标记，更新插入 Search Attribute，并返回 `true`。这发生在补丁 ID 的第一个块中。
+- 如果补丁 ID 在 Event History 中，则执行不会修改历史记录，并返回 `true`。
+  这种情况发生在补丁 ID 的后续块中，因为第一个块中的 Event History 是 Updated。
 
-There is a caveat to this behavior, which we will cover below.
+对于这种行为有一个警告，我们将在下面介绍。
 
-#### Behavior When Replaying With Marker Before-Or-At Current Location
+<a id="behavior-when-replaying-with-marker-before-or-at-current-location"></a>
+#### 在当前位置之前或当前位置重放标记时的行为 {#behavior-when-replaying-with-marker-before-or-at-current-location}
 
-If the execution is replaying and has a call to `patched()`, and if the event history has a marker from a call to `patched()` in the same place (which means it will match the original event history), then it writes a marker to the replay event history and returns `true`.
+如果执行正在重播并且调用了 `patched()`，并且 Event History 在同一位置具有来自对 `patched()` 的调用的标记（这意味着它将与原始 Event History 匹配），则它将一个标记写入重播 Event History 并返回 `true`。
 
-This is similar to the behavior of the non-replay case, and also happens in a given patch ID's first block.
+这与非重放情况的行为类似，并且也发生在给定补丁 ID 的第一个块中。
 
-If the code has a call to `patched()`, and the event history has a marker with that Patch ID earlier in the history, it will return `true` and will not modify the replay event history.
+如果代码调用了 `patched()`，并且 Event History 具有历史记录中较早的带有该补丁 ID 的标记，则它将返回 `true` 并且不会修改重播 Event History。
 
-This is also similar to the behavior of the non-replay case, and also happens in a given patch ID's subsequent blocks.
+这也类似于非重放情况的行为，并且也发生在给定补丁 ID 的后续块中。
 
-#### Behavior When Replaying With Marker After Current Location
+<a id="behavior-when-replaying-with-marker-after-current-location"></a>
+#### 在当前位置后使用标记重放时的行为 {#behavior-when-replaying-with-marker-after-current-location}
 
-If the Event History's Marker Event is after the current execution point, that means the new patch is too early.
-The execution will encounter the new patch before the original.
-The execution will attempt to write the marker to the replay event history, but it will throw a non-deterministic exception because the replay and original event histories don't match.
+如果Event History的标记事件在当前执行点之后，则意味着新补丁为时过早。
+执行将在原始补丁之前遇到新补丁。
+该执行将尝试将标记写入重播 Event History，但会引发非确定性异常，因为重播和原始事件历史记录不匹配。
 
-#### Behavior When Replaying With No Marker For that Patch ID
+<a id="behavior-when-replaying-with-no-marker-for-that-patch-id"></a>
+#### 在没有该补丁 ID 的标记的情况下重放时的行为 {#behavior-when-replaying-with-no-marker-for-that-patch-id}
 
-During a Replay, if there is no marker for a given patch ID, the execution will return `false` and will not add a marker to the event history. In addition, all future calls to `patched()` with that ID will return `false` -- even after it is done replaying and is running new code.
+在重放期间，如果给定补丁 ID 没有标记，执行将返回 `false` 并且不会向 Event History 添加标记。此外，以后所有使用该 ID 对 `patched()` 的调用都将返回 `false`——即使在重放完成并正在运行新代码之后也是如此。
 
-The [preceding section](#behavior-when-not-replaying) states that if the execution is not replaying, the `patched()` function will always return `true`.
-If the marker doesn't exist, it will be added, and if the marker already exists, it won't be re-added.
+[前一节](#behavior-when-not-replaying) 声明，如果执行未重播，则 `patched()` 函数将始终返回 `true`。
+如果标记不存在，则会添加它，如果标记已存在，则不会重新添加。
 
-However, this behavior doesn't occur if there was already a call to `patched()` with that ID in the replay code, but not in the event history.
-In this situation, the function won't return `true`.
+但是，如果重播代码中已存在对 `patched()` 的调用（但不在 Event History 中），则不会发生此行为。
+在这种情况下，该函数不会返回 `true`。
 
-#### A Summary of the Two Potentially Unexpected Behaviors
+<a id="a-summary-of-the-two-potentially-unexpected-behaviors"></a>
+#### 两种潜在意外行为的总结 {#a-summary-of-the-two-potentially-unexpected-behaviors}
 
-Recapping the potentially unexpected behaviors that may occur during a Replay:
+回顾重播期间可能发生的潜在意外行为：
 
-If the execution hits a call to `patched()`, but that patch ID isn't _at or before that point_ in the event history, you may not realize that the event history _after_ the current execution location matters.
-This behavior occurs because:
+如果执行命中对 `patched()` 的调用，但补丁 ID 不在 Event History 中的“该点或之前”，您可能没有意识到当前执行位置“之后”的 Event History 很重要。
+出现此行为的原因是：
 
-- If that patch ID exists later, you get a non-determinism error
-- If the patch doesn't exist later, you don't get a non-determinism error, and the call returns `false`
+- 如果该补丁 ID 稍后存在，您会收到非确定性错误
+- 如果补丁稍后不存在，则不会收到非确定性错误，并且调用返回 `false`
 
-If the execution hits a call to `patched()` with an ID that doesn't exist in the history, then not only will it return `false` in that occurence, but it will also return `false` if the execution surpasses the Replay threshold and is running new code.
+如果执行使用历史记录中不存在的 ID 调用 `patched()`，那么它不仅会在该情况下返回 `false`，而且如果执行超过重播阈值并且正在运行新代码，它还会返回 `false`。
 
-#### Implications of the Behaviors
+<a id="implications-of-the-behaviors"></a>
+#### 行为的影响 {#implications-of-the-behaviors}
 
-If you deploy new code while Workflows are executing, any Workflows that were in the middle of executing will Replay up to the point they were at when the Worker was shut down.
-When they do this Replay, they will not follow the `patched()` branches in the code.
-For the rest of the execution after they have replayed to the point before the deployment and worker restart, they will either:
+如果您在 Workflow 执行时部署新代码，则任何正在执行的 Workflow 都将重播到 Worker 关闭时的位置。
+当他们执行此重播时，他们不会遵循代码中的 `patched()` 分支。
+对于重播到部署之前的点并重新启动 Worker 后的其余执行，它们将：
 
-- Use new code if there was no call to `patched()` in the replay code
-- If there was a call to `patched()` in the replay code, they will
-  run the non-patched code during and after replay
+- 如果重放代码中没有调用 `patched()`，则使用新代码
+- 如果重放代码中有对 `patched()` 的调用，他们将
+  在重播期间和之后运行未修补的代码
 
-This might sound odd, but it's actually exactly what's needed because that means that if the future patched code depends on earlier patched code, then it won't use the new code -- it will use the old code instead.
+这可能听起来很奇怪，但它实际上正是所需要的，因为这意味着如果未来修补的代码依赖于早期修补的代码，那么它将不会使用新代码 - 它将使用旧代码。
 
-But if there's new code in the future, and there was no code earlier in the body that required the new patch, then it can switch over to the new code, which it will do.
+但是，如果将来有新代码，并且主体中之前没有需要新补丁的代码，那么它可以切换到新代码，它会这样做。
 
-Note that this behavior means that the Workflow _does not always run the newest code_.
-It only does that if not replaying or if replay is surpassed and there hasn't been a call to `patched()` (with that ID) throughout the replay.
+请注意，此行为意味着 Workflow _并不总是运行最新的代码_。
+仅当未重播或超过重播并且在整个重播期间没有调用 `patched()`（具有该 ID）时，它才会执行此操作。
 
-#### Recommendations
+<a id="recommendations"></a>
+#### 建议 {#recommendations}
 
-Based on this behavior and the implications, when patching in new code, always put the newest code at the top of an if-patched-block.
+基于此行为及其含义，在修补新代码时，请始终将最新代码放在 if-patched-block 的顶部。
 
 ```python
 if patched('v3'):
@@ -108,9 +117,9 @@ else:
     pass
 ```
 
-The following sample shows how `patched()` will behave in a conditional block that's arranged differently.
-In this case, the code's conditional block doesn't have the newest code at the top.
-Because `patched()` will return `True` when not Replaying (except with the preceding caveats), this snippet will run the `v2` branch instead of `v3` in new executions.
+以下示例显示了 `patched()` 在以不同方式排列的条件块中的行为方式。
+在这种情况下，代码的条件块顶部没有最新代码。
+由于 `patched()` 在不重播时将返回 `True`（前面的注意事项除外），因此此代码段将在新执行中运行 `v2` 分支而不是 `v3`。
 
 ```python
 if patched('v2'):

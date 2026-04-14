@@ -1,8 +1,8 @@
 ---
 id: timeouts
-title: Activity Timeouts - Go SDK
-sidebar_label: Timeouts
-description: Optimize Workflow Execution with Temporal Go SDK - Set Activity Timeouts and Retry Policies efficiently.
+title: "Activity 超时 - Go SDK"
+sidebar_label: "超时"
+description: "使用 Temporal Go SDK 优化 Workflow Execution - 有效设置 Activity 超时和重试策略。"
 toc_max_heading_level: 4
 keywords:
   - Go
@@ -18,21 +18,22 @@ tags:
   - Temporal SDKs
 ---
 
-## How to set Activity timeouts {#activity-timeouts}
+<a id="activity-timeouts"></a>
+## 如何设置 Activity 超时 {#activity-timeouts}
 
-Each Activity timeout controls the maximum duration of a different aspect of an Activity Execution.
+每个 Activity 超时控制 Activity 执行不同方面的最大持续时间。
 
-The following timeouts are available in the Activity Options.
+Activity 选项中提供以下超时。
 
-- **[Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout):** is the maximum amount of time allowed for the overall [Activity Execution](/activity-execution).
-- **[Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout):** is the maximum time allowed for a single [Activity Task Execution](/tasks#activity-task-execution).
-- **[Schedule-To-Start Timeout](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout):** is the maximum amount of time that is allowed from when an [Activity Task](/tasks#activity-task) is scheduled to when a [Worker](/workers#worker) starts that Activity Task.
+- **[Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout)：** 是整个 [Activity 执行](/activity-execution) 允许的最大时间量。
+- **[开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)：** 是单个 [Activity 任务执行](/tasks#activity-task-execution) 允许的最长时间。
+- **[Schedule-启动超时](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout)：** 是从 [Activity 任务](/tasks#activity-task) 为 Scheduled 到 [Worker](/workers#worker) 启动该 Activity 任务所允许的最长时间。
 
-An Activity Execution must have either the Start-To-Close or the Schedule-To-Close Timeout set.
+Activity 执行必须设置“开始到关闭”或“Schedule 到关闭超时”。
 
-To set an Activity Timeout in Go, create an instance of `ActivityOptions` from the `go.temporal.io/sdk/workflow` package, set the Activity Timeout field, and then use the `WithActivityOptions()` API to apply the options to the instance of `workflow.Context`.
+要在 Go 中设置 Activity 超时，请从 `go.Temporal.io/sdk/Workflow` 包创建 `ActivityOptions` 实例，设置 Activity 超时字段，然后使用 `WithActivityOptions()` API 将选项应用到 `Workflow.Context` 实例。
 
-Available timeouts are:
+可用的超时有：
 
 - `StartToCloseTimeout`
 - `ScheduleToClose`
@@ -53,16 +54,17 @@ if err != nil {
 }
 ```
 
-### Set a custom Activity Retry Policy {#activity-retries}
+<a id="activity-retries"></a>
+### 设置自定义 Activity Retry Policy {#activity-retries}
 
-A Retry Policy works in cooperation with the timeouts to provide fine controls to optimize the execution experience.
+Retry Policy 与超时配合提供精细控制以优化执行体验。
 
-Activity Executions are automatically associated with a default [Retry Policy](/encyclopedia/retry-policies) if a custom one is not provided.
+Activity 如果未提供自定义执行，则执行会自动与默认 [Retry Policy](/encyclopedia/retry-policies) 关联。
 
-To set a [RetryPolicy](/encyclopedia/retry-policies), create an instance of `ActivityOptions` from the `go.temporal.io/sdk/workflow` package, set the `RetryPolicy` field, and then use the `WithActivityOptions()` API to apply the options to the instance of `workflow.Context`.
+要设置 [重试策略](/encyclopedia/retry-policies)，请从 `go.Temporal.io/sdk/Workflow` 包创建 `ActivityOptions` 实例，设置 `RetryPolicy` 字段，然后使用 `WithActivityOptions()` API 将选项应用到 `Workflow.Context` 实例。
 
-- Type: [`RetryPolicy`](https://pkg.go.dev/go.temporal.io/sdk/temporal#RetryPolicy)
-- Default:
+- 型号：[`RetryPolicy`](https://pkg.go.dev/go.temporal.io/sdk/temporal#RetryPolicy)
+- 默认：
 
 ```go
 retrypolicy := &temporal.RetryPolicy{
@@ -74,7 +76,7 @@ retrypolicy := &temporal.RetryPolicy{
 }
 ```
 
-Providing a Retry Policy here is a customization, and overwrites individual Field defaults.
+此处提供 Retry Policy 是一种自定义，并覆盖各个字段默认值。
 
 ```go
 retrypolicy := &temporal.RetryPolicy{
@@ -94,12 +96,12 @@ if err != nil {
 }
 ```
 
-### Overriding the retry interval with Next Retry Delay {#next-retry-delay}
+### 使用下次重试延迟覆盖重试间隔 {#next-retry-delay}
 
-You may return an [Application Failure](/references/failures#application-failure) with the `NextRetryDelay` field set.
-This value will replace and override whatever the Retry interval would be on the Retry Policy.
+您可以返回设置了 `NextRetryDelay` 字段的 [应用失败](/references/failures#application-failure)。
+该值将替换并覆盖 Retry Policy 上的任何重试间隔。
 
-For example, if in an Activity, you want to base the interval on the number of attempts:
+例如，如果在 Activity 中，您希望间隔基于尝试次数：
 
 ```go
 attempt := activity.GetInfo(ctx).Attempt;
@@ -109,21 +111,22 @@ return temporal.NewApplicationErrorWithOptions(fmt.Sprintf("Something bad happen
 })
 ```
 
-## Activity Heartbeats {#activity-heartbeats}
+<a id="activity-heartbeats"></a>
+## Activity 心跳 {#activity-heartbeats}
 
-An [Activity Heartbeat](/encyclopedia/detecting-activity-failures#activity-heartbeat) is a ping from the [Worker Process](/workers#worker-process) that is executing the Activity to the [Temporal Service](/temporal-service).
-Each Heartbeat informs the Temporal Service that the [Activity Execution](/activity-execution) is making progress and the Worker has not crashed.
-If the Temporal Service does not receive a Heartbeat within a [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout) time period, the Activity will be considered failed and another [Activity Task Execution](/tasks#activity-task-execution) may be scheduled according to the Retry Policy.
+[Activity 心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 是从正在执行 Activity 的 [Worker 流程](/workers#worker-process) 到 [Temporal 服务](/temporal-service) 的 ping。
+每个心跳都会通知 Temporal 服务 [Activity 执行](/activity-execution) 正在取得进展并且 Worker 尚未崩溃。
+如果Temporal服务在[心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout)时间段内没有收到Heartbeat，则Activity将被视为失败，并且根据Retry Policy，另一个[Activity 任务执行](/tasks#activity-task-execution)可能是Scheduled。
 
-Heartbeats may not always be sent to the Temporal Service—they may be [throttled](/encyclopedia/detecting-activity-failures#throttling) by the Worker.
+心跳可能并不总是发送到 Temporal 服务 — 它们可能是由 Worker 发送的 [节流](/encyclopedia/detecting-activity-failures#throttling)。
 
-Activity Cancellations are delivered to Activities from the Temporal Service when they Heartbeat. Activities that don't Heartbeat can't receive a Cancellation.
-Heartbeat throttling may lead to Cancellation getting delivered later than expected.
+Activity 取消会在活动检测到时从 Temporal 服务传递到活动。没有心跳的活动无法收到取消。
+心跳限制可能会导致取消的发送时间晚于预期。
 
-Heartbeats can contain a `details` field describing the Activity's current progress.
-If an Activity gets retried, the Activity can access the `details` from the last Heartbeat that was sent to the Temporal Service.
+心跳可以包含描述 Activity 当前进度的 `details` 字段。
+如果重试 Activity，则 Activity 可以从发送到 Temporal 服务的最后一个心跳访问 `details`。
 
-To [Heartbeat](/encyclopedia/detecting-activity-failures#activity-heartbeat) in an Activity in Go, use the `RecordHeartbeat` API.
+对于 Go 中 Activity 中的 [心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat)，请使用 `RecordHeartbeat` API。
 
 ```go
 import (
@@ -139,9 +142,9 @@ func YourActivityDefinition(ctx, YourActivityDefinitionParam) (YourActivityDefin
 }
 ```
 
-When an Activity Task Execution times out due to a missed Heartbeat, the last value of the `details` variable above is returned to the calling Workflow in the `details` field of `TimeoutError` with `TimeoutType` set to `Heartbeat`.
+当 Activity 任务执行由于错过心跳而超时时，上述 `details` 变量的最后一个值将返回到 `TimeoutError` 的 `details` 字段中的调用 Workflow，并将 `TimeoutType` 设置为 `Heartbeat`。
 
-You can also Heartbeat an Activity from an external source:
+您还可以从外部源对 Activity 进行心跳检测：
 
 ```go
 // The client is a heavyweight object that should be created once per process.
@@ -150,14 +153,14 @@ temporalClient, err := client.Dial(client.Options{})
 err := temporalClient.RecordActivityHeartbeat(ctx, taskToken, details)
 ```
 
-The parameters of the `RecordActivityHeartbeat` function are:
+`RecordActivityHeartbeat`函数的参数为​​：
 
-- `taskToken`: The value of the binary `TaskToken` field of the `ActivityInfo` struct retrieved inside
-  the Activity.
-- `details`: The serializable payload containing progress information.
+- `taskToken`：内部检索的 `ActivityInfo` 结构的二进制 `TaskToken` 字段的值
+  Activity。
+- `details`：包含进度信息的可序列化有效负载。
 
-If an Activity Execution Heartbeats its progress before it failed, the retry attempt will have access to the progress information, so that the Activity Execution can resume from the failed state.
-Here's an example of how this can be implemented:
+如果 Activity 执行在失败之前检测其进度，则重试尝试将有权访问进度信息，以便 Activity 执行可以从失败状态恢复。
+以下是如何实现这一点的示例：
 
 ```go
 func SampleActivity(ctx context.Context, inputArg InputParams) error {
@@ -178,11 +181,11 @@ func SampleActivity(ctx context.Context, inputArg InputParams) error {
 }
 ```
 
-### Set a Heartbeat Timeout {#heartbeat-timeout}
+### 设置心跳超时 {#heartbeat-timeout}
 
-A [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout) works in conjunction with [Activity Heartbeats](/encyclopedia/detecting-activity-failures#activity-heartbeat).
+[心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout) 与 [Activity 心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 配合使用。
 
-To set a [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout), Create an instance of `ActivityOptions` from the `go.temporal.io/sdk/workflow` package, set the `HeartbeatTimeout` field, and then use the `WithActivityOptions()` API to apply the options to the instance of `workflow.Context`.
+要设置 [心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout)，请从 `go.Temporal.io/sdk/Workflow` 包创建 `ActivityOptions` 实例，设置 `HeartbeatTimeout` 字段，然后使用 `WithActivityOptions()` API 将选项应用到 `Workflow.Context` 实例。
 
 ```go
 activityoptions := workflow.ActivityOptions{

@@ -1,8 +1,8 @@
 ---
 id: namespaces
-title: Managing Namespaces
-sidebar_label: Namespaces
-description:
+title: "管理 Namespace"
+sidebar_label: "Namespaces"
+description: How to create and manage Namespaces in open source Temporal, including registration, configuration, and security.
   How to create and manage Namespaces in open source Temporal, including registration, configuration, and security.
 slug: /self-hosted-guide/namespaces
 keywords:
@@ -16,76 +16,81 @@ tags:
 
 :::info Open source Temporal
 
-This page covers namespace operations for **open source Temporal**. For core namespace concepts, see
-[Temporal Namespace](/namespaces). For Temporal Cloud, see [Temporal Cloud Namespaces](/cloud/namespaces).
+本页介绍了 **开源 Temporal** 的 Namespace 操作。有关 Namespace 核心概念，请参阅
+[Temporal Namespace](/namespaces)。对于 Temporal Cloud，请参见 [Temporal Cloud Namespaces](/cloud/namespaces)。
 
 :::
 
-A [Namespace](/namespaces) is a unit of isolation within the Temporal Platform. Before you can run Workflows, you must
-register at least one Namespace with your Temporal Service.
+[Namespace](/namespaces) 是 Temporal 平台内的一个隔离单元。在运行 Workflow 之前，您必须
+使用您的 Temporal 服务注册至少一个 Namespace。
 
-## Create a Namespace
+<a id="create-a-namespace"></a>
+## 创建一个 Namespace {#create-a-namespace}
 
-Registering a Namespace creates it on the Temporal Service. When you register a Namespace, you must set a
-[Retention Period](/temporal-service/temporal-server#retention-period) that determines how long closed Workflow
-execution history is kept.
+注册 Namespace 会在 Temporal 服务上创建它。当您注册 Namespace 时，您必须设置
+[保留期限](/temporal-service/temporal-server#retention-period) 确定 Workflow 关闭多长时间
+执行历史记录被保留。
 
-You can create Namespaces using:
+您可以使用以下命令创建 Namespace：
 
-- **Temporal CLI** (recommended): [`temporal operator namespace create`](/cli/operator#create)
-- **Go SDK**: [`RegisterNamespace`](/develop/go/client/namespaces#register-namespace)
-- **Java SDK**: [`RegisterNamespace`](/develop/java/client/namespaces#register-namespace)
-- **TypeScript SDK**: [Namespace management](/develop/typescript/client/namespaces#register-namespace)
+- **Temporal CLI**（推荐）：[`Temporal operator Namespace create`](/cli/operator#create)
+- **Go SDK**：[`RegisterNamespace`](/develop/go/client/namespaces#register-namespace)
+- **Java SDK**：[`RegisterNamespace`](/develop/java/client/namespaces#register-namespace)
+- **TypeScript SDK**：[Namespace 管理](/develop/typescript/client/namespaces#register-namespace)
 
-### The default Namespace
+<a id="the-default-namespace"></a>
+### 默认Namespace {#the-default-namespace}
 
-If no Namespace is specified, SDKs and CLI use the `default` Namespace. You must register this Namespace before using
-it.
+如果未指定 Namespace，SDK 和 CLI 将使用 `default` Namespace。使用前您必须注册此 Namespace
+它。
 
-For local development, the [`temporal server start-dev`](/cli/server#start-dev) command automatically creates the
-`default` Namespace.
+对于本地开发，[`Temporal Server start-dev`](/cli/server#start-dev) 命令会自动创建
+`default` Namespace。
 
-For all other deployment methods, create the `default` Namespace manually using the Temporal CLI:
+对于所有其他部署方法，请使用 Temporal CLI 手动创建 `default` Namespace：
 
 ```bash
 temporal operator namespace create --namespace default
 ```
 
-Namespace registration takes up to 15 seconds to complete. Wait for this process to finish before making calls to the
-Namespace.
+Namespace 注册最多需要 15 秒才能完成。等待此过程完成后再调用
+Namespace。
 
-## Manage Namespaces
+<a id="manage-namespaces"></a>
+## 管理 Namespace {#manage-namespaces}
 
-Common namespace management operations:
+常见Namespace管理操作：
 
-| Operation | CLI Command                                                      | Description                         |
+| 手术 | CLI 命令                                                      | 描述                         |
 | --------- | ---------------------------------------------------------------- | ----------------------------------- |
-| List      | [`temporal operator namespace list`](/cli/operator#list)         | List all registered Namespaces      |
-| Describe  | [`temporal operator namespace describe`](/cli/operator#describe) | Get details for a Namespace         |
-| Update    | [`temporal operator namespace update`](/cli/operator#update)     | Update Namespace configuration      |
-| Delete    | [`temporal operator namespace delete`](/cli/operator#delete)     | Delete a Namespace and all its data |
+| 列表      | [`Temporal operator Namespace list`](/cli/operator#list)         | 列出所有已注册的 Namespace      |
+| 描述  | [`Temporal operator Namespace describe`](/cli/operator#describe) | 获取 Namespace 的详细信息         |
+| Update    | [`Temporal operator Namespace Update`](/cli/operator#update)     | Update Namespace 配置      |
+| 删除    | [`Temporal operator Namespace delete`](/cli/operator#delete)     | 删除 Namespace 及其所有数据 |
 
-For SDK-based namespace management:
+对于基于SDK的Namespace管理：
 
-- [Go SDK namespace management](/develop/go/client/namespaces#manage-namespaces)
-- [Java SDK namespace management](/develop/java/client/namespaces#manage-namespaces)
-- [TypeScript SDK namespace management](/develop/typescript/client/namespaces#manage-namespaces)
+- [Go SDK Namespace 管理](/develop/go/client/namespaces#manage-namespaces)
+- [Java SDK Namespace 管理](/develop/java/client/namespaces#manage-namespaces)
+- [TypeScript SDK Namespace 管理](/develop/typescript/client/namespaces#manage-namespaces)
 
-### Deprecate vs Delete
+<a id="deprecate-vs-delete"></a>
+### 弃用与删除 {#deprecate-vs-delete}
 
-- **Deprecate**: Prevents new Workflow Executions from starting, but existing Workflows continue to run.
-- **Delete**: Removes the Namespace and all Workflow Executions. This is irreversible.
+- **弃用**：阻止新的 Workflow Execution 启动，但现有的 Workflow 继续运行。
+- **删除**：删除 Namespace 和所有 Workflow Execution。这是不可逆转的。
 
-## Security
+＃＃ 安全
 
-Use a custom [Authorizer](/self-hosted-guide/security#authorizer-plugin) on your Frontend Service to control who can
-create, update, or deprecate Namespaces.
+在前端服务上使用自定义 [授权人](/self-hosted-guide/security#authorizer-plugin) 来控制谁可以
+创建 Update 或弃用 Namespace。
 
-Without an Authorizer configured, Temporal uses the `nopAuthority` authorizer that allows all API calls unconditionally.
+如果没有配置授权者，Temporal 使用 `nopAuthority` 授权者无条件允许所有 API 调用。
 
-For Temporal Cloud, [role-based access controls](/cloud/manage-access/roles-and-permissions#namespace-level-permissions) provide namespace-level authorization without custom configuration.
+对于Temporal Cloud、[基于角色的访问控制](/cloud/manage-access/roles-and-permissions#namespace-level-permissions)提供Namespace级别的授权，无需自定义配置。
 
-## Best practices
+<a id="security"></a>
+## 最佳实践 {#security}
 
-For namespace naming conventions, organizational patterns, and production safeguards, see
-[Namespace Best Practices](/best-practices/managing-namespace).
+有关 Namespace 命名约定、组织模式和生产保障措施，请参阅
+[Namespace 最佳实践](/best-practices/managing-namespace)。

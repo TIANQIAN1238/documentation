@@ -1,8 +1,8 @@
 ---
 id: throughput-composability
-title: Child Workflows - Temporal feature
-description: Leverage Temporal Child Workflows for enhanced composability and efficiency. Partition steps, manage resources, invoke multiple services, and execute periodic logic seamlessly.
-sidebar_label: Composability
+title: "Child Workflows - Temporal 功能"
+description: "利用 Temporal Child Workflow 增强可组合性和效率。对步骤进行分区、管理资源、调用多个服务并无缝执行周期性逻辑。"
+sidebar_label: "可组合性"
 tags:
   - Child Workflows
 keywords:
@@ -20,16 +20,16 @@ keywords:
 
 import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
 
-In Temporal, **Child Workflows** enable applications to achieve another level of composability when it comes to throughput.
+在 Temporal 中，**Child Workflow** 使应用程序能够在吞吐量方面实现另一个级别的可组合性。
 
-The following example scenarios are a few reasons to use this feature:
+以下示例场景是使用此功能的几个原因：
 
-- To create a separate service that can be invoked from multiple other services or applications.
-- To partition a step into smaller chunks.
-- To manage a dedicated resource and guarantee uniqueness.
-- To execute logic periodically without overwhelming the parent business process.
+- 创建可以从多个其他服务或应用程序调用的单独服务。
+- 将一个步骤分成更小的块。
+- 管理专用资源并保证唯一性。
+- 定期执行逻辑，而不会压垮父业务流程。
 
-See the SDK feature guides for implementation details:
+有关实现详细信息，请参阅 SDK 功能指南：
 
 <RelatedReadContainer>
   <RelatedReadItem path="/develop/go/workflows/child-workflows" text="Go SDK Child Workflow feature guide" archetype="feature-guide" />
@@ -41,4 +41,4 @@ See the SDK feature guides for implementation details:
   <RelatedReadItem path="/develop/ruby/workflows/child-workflows" text="Ruby SDK Child Workflow feature guide" archetype="feature-guide" />
 </RelatedReadContainer>
 
-For a deep dive into Child Workflows see the [Child Workflows Encyclopedia page](/child-workflows).
+要深入了解 Child Workflow，请参阅 [Child Workflows百科页面](/child-workflows)。

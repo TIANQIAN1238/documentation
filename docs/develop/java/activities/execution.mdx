@@ -1,8 +1,8 @@
 ---
 id: execution
-title: Activity execution - Java SDK
-description: Shows how to perform Activity execution with the Java SDK
-sidebar_label: Activity Execution
+title: "Activity 执行 - Java SDK"
+description: "展示如何使用 Java SDK 执行 Activity"
+sidebar_label: "Activity 执行"
 slug: /develop/java/activities/execution
 toc_max_heading_level: 3
 tags:
@@ -11,44 +11,46 @@ tags:
   - Activity
 ---
 
-## Start an Activity Execution {#activity-execution}
+<a id="activity-execution"></a>
+## 启动 Activity 执行 {#activity-execution}
 
-Calls to spawn [Activity Executions](/activity-execution) are written within a [Workflow Definition](/workflow-definition).
-The call to spawn an Activity Execution generates the [ScheduleActivityTask](/references/commands#scheduleactivitytask) Command.
-This results in the set of three [Activity Task](/tasks#activity-task) related Events ([ActivityTaskScheduled](/references/events#activitytaskscheduled), [ActivityTaskStarted](/references/events#activitytaskstarted), and ActivityTask[Closed]) in your Workflow Execution Event History.
+对生成 [Activity 执行](/activity-execution) 的调用写入 [Workflow Definition](/workflow-definition) 中。
+调用生成 Activity 执行会生成 [ScheduleActivity任务](/references/commands#scheduleactivitytask) 命令。
+这会在 Workflow Execution Event History 中产生一组三个 [Activity 任务](/tasks#activity-task) 相关事件（[Activity任务Scheduled](/references/events#activitytaskscheduled)、[Activity任务已开始](/references/events#activitytaskstarted) 和 ActivityTask[Closed]）。
 
-A single instance of the Activities implementation is shared across multiple simultaneous Activity invocations.
-Activity implementation code should be _idempotent_.
+活动实现的单个实例在多个同时的 Activity 调用之间共享。
+Activity 实现代码应该是_幂等的_。
 
-The values passed to Activities through invocation parameters or returned through a result value are recorded in the Execution history.
-The entire Execution history is transferred from the Temporal service to Workflow Workers when a Workflow state needs to recover.
-A large Execution history can thus adversely impact the performance of your Workflow.
+通过调用参数传递给活动的值或通过结果值返回的值都记录在执行历史记录中。
+当 Workflow 状态需要恢复时，整个执行历史记录将从 Temporal 服务传输到 Workflow Worker。
+因此，大量执行历史记录可能会对 Workflow 的性能产生不利影响。
 
-Therefore, be mindful of the amount of data you transfer through Activity invocation parameters or Return Values.
-Otherwise, no additional limitations exist on Activity implementations.
+因此，请注意通过 Activity 调用参数或返回值传输的数据量。
+否则，Activity 实现不存在其他限制。
 
-Activities are remote procedure calls that must be invoked from within a Workflow using `ActivityStub`.
-Activities are not executable on their own. You cannot start an Activity Execution by itself.
+活动是远程过程调用，必须使用 `ActivityStub` 从 Workflow 内调用。
+活动本身不能执行。您无法自行启动 Activity 执行。
 
-Note that before an Activity Execution is invoked:
+请注意，在调用 Activity 执行之前：
 
-- Activity options (either [`setStartToCloseTimeout`](/encyclopedia/detecting-activity-failures#start-to-close-timeout) or [`ScheduleToCloseTimeout`](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) are required) must be set for the Activity.
-  For details, see [How to set Activity timeouts](/develop/java/activities/timeouts).
-- The Activity must be registered with a Worker.
-  See [Worker Program](/develop/java/workers/run-worker-process#run-a-dev-worker)
-- Activity code must be thread-safe.
+- 必须为 Activity 设置 Activity 选项（需要 [`setStartToCloseTimeout`](/encyclopedia/detecting-activity-failures#start-to-close-timeout) 或 [`ScheduleToCloseTimeout`](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout)）。
+  详细信息请参见[如何设置 Activity 超时](/develop/java/activities/timeouts)。
+- Activity 必须使用 Worker 注册。
+  参见 [Worker 程序](/develop/java/workers/run-worker-process#run-a-dev-worker)
+- Activity 代码必须是线程安全的。
 
-Activities should only be instantiated using stubs from within a Workflow.
-An `ActivityStub` returns a client-side stub that implements an Activity interface.
-You can invoke Activities using `Workflow.newActivityStub`(type-safe) or `Workflow.newUntypedActivityStub` (untyped).
+活动只能使用 Workflow 中的存根进行实例化。
+`ActivityStub` 返回实现 Activity 接口的客户端存根。
+您可以使用 `Workflow.newActivityStub`（类型安全）或 `Workflow.newUntypedActivityStub`（无类型）调用活动。
 
-Calling a method on the Activity interface schedules the Activity invocation with the Temporal service, and generates an [`ActivityTaskScheduled` Event](/references/events#activitytaskscheduled).
+调用 Activity 接口 Schedule 上的方法会通过 Temporal 服务进行 Activity 调用，并生成 [`ActivityTaskScheduled` 事件](/references/events#activitytaskscheduled)。
 
-Activities can be invoked synchronously or asynchronously.
+活动可以同步或异步调用。
 
-### Invoking Activities Synchronously
+<a id="invoking-activities-synchronously"></a>
+### 同步调用活动 {#invoking-activities-synchronously}
 
-In the following example, we use the type-safe `Workflow.newActivityStub` within the "FileProcessingWorkflow" Workflow implementation to create a client-side stub of the `FileProcessingActivities` class. We also define `ActivityOptions` and set `setStartToCloseTimeout` option to one hour.
+在以下示例中，我们在“FileProcessingWorkflow”Workflow 实现中使用类型安全的 `Workflow.newActivityStub` 来创建 `FileProcessingActivities` 类的客户端存根。我们还定义了 `ActivityOptions` 并将 `setStartToCloseTimeout` 选项设置为一小时。
 
 ```java
 public class FileProcessingWorkflowImpl implements FileProcessingWorkflow {
@@ -84,8 +86,8 @@ public class FileProcessingWorkflowImpl implements FileProcessingWorkflow {
 }
 ```
 
-A Workflow can have multiple Activity stubs. Each Activity stub can have its own `ActivityOptions` defined.
-The following example shows a Workflow implementation with two typed Activity stubs.
+一个 Workflow 可以有多个 Activity 存根。每个 Activity 存根都可以定义自己的 `ActivityOptions`。
+以下示例显示了具有两个类型化 Activity 存根的 Workflow 实现。
 
 ```java
 public FileProcessingWorkflowImpl() {
@@ -103,8 +105,8 @@ public FileProcessingWorkflowImpl() {
 }
 ```
 
-To invoke Activities inside Workflows without referencing the interface it implements, use an untyped Activity stub `Workflow.newUntypedActivityStub`.
-This is useful when the Activity type is not known at compile time, or to invoke Activities implemented in different programming languages.
+要调用 Workflow 内的活动而不引用其实现的接口，请使用非类型化的 Activity 存根 `Workflow.newUntypedActivityStub`。
+当编译时未知 Activity 类型或调用以不同编程语言实现的活动时，这非常有用。
 
 ```java
    // Workflow code
@@ -118,20 +120,21 @@ This is useful when the Activity type is not known at compile time, or to invoke
     activity.execute("ComposeGreeting", String.class, "Hello World", "Spanish");
 ```
 
-### Invoking Activities Asynchronously
+<a id="invoking-activities-asynchronously"></a>
+### 异步调用活动 {#invoking-activities-asynchronously}
 
-Sometimes Workflows need to perform certain operations in parallel.
-The Temporal Java SDK provides the `Async` class which includes static methods used to invoke any Activity asynchronously.
-The calls return a result of type `Promise` which is similar to the Java `Future` and `CompletionStage`.
-When invoking Activities, use `Async.function` for Activities that return a result, and `Async.procedure` for Activities that return void.
+有时，Workflow 需要并行执行某些操作。
+Temporal Java SDK 提供 `Async` 类，其中包括用于异步调用任何 Activity 的静态方法。
+这些调用返回 `Promise` 类型的结果，该结果类似于 Java `Future` 和 `CompletionStage`。
+调用活动时，对于返回结果的活动使用 `Async.function`，对于返回 void 的活动使用 `Async.procedure`。
 
-In the following asynchronous Activity invocation, the method reference is passed to `Async.function` followed by Activity arguments.
+在以下异步 Activity 调用中，方法引用传递给 `Async.function`，后跟 Activity 参数。
 
 ```java
 Promise<String> localNamePromise = Async.function(activities::download, sourceBucket, sourceFile);
 ```
 
-The following example shows how to call two Activity methods, "download" and "upload", in parallel on multiple files.
+以下示例演示如何在多个文件上并行调用两个 Activity 方法“下载”和“上传”。
 
 ```java
   public void processFile(Arguments args) {
@@ -179,16 +182,17 @@ The following example shows how to call two Activity methods, "download" and "up
   }
 ```
 
-### Activity Execution Context
+<a id="activity-execution-context"></a>
+### Activity 执行上下文 {#activity-execution-context}
 
-`ActivityExecutionContext` is a context object passed to each Activity implementation by default.
-You can access it in your Activity implementations via `Activity.getExecutionContext()`.
+`ActivityExecutionContext` 是默认传递给每个 Activity 实现的上下文对象。
+您可以通过 `Activity.getExecutionContext()` 在 Activity 实现中访问它。
 
-It provides getters to access information about the Workflow that invoked the Activity.
-Note that the Activity context information is stored in a thread-local variable.
-Therefore, calls to `getExecutionContext()` succeed only within the thread that invoked the Activity function.
+它提供 getter 来访问有关调用 Activity 的 Workflow 的信息。
+请注意，Activity 上下文信息存储在线程局部变量中。
+因此，对 `getExecutionContext()` 的调用仅在调用 Activity 函数的线程内成功。
 
-Following is an example of using the `ActivityExecutionContext`:
+以下是使用 `ActivityExecutionContext` 的示例：
 
 ```java
 public class FileProcessingActivitiesImpl implements FileProcessingActivities {
@@ -211,25 +215,25 @@ public class FileProcessingActivitiesImpl implements FileProcessingActivities {
 }
 ```
 
-For details on getting the results of an Activity Execution, see [Activity Execution Result](#activity-execution-result).
+有关获取 Activity 执行结果的详细信息，请参阅 [Activity 执行结果](#activity-execution-result)。
 
-## Set required Activity Timeouts {#required-timeout}
+## 设置所需的 Activity 超时 {#required-timeout}
 
-Activity Execution semantics rely on several parameters.
-The only required value that needs to be set is either a [Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) or a [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout).
-These values are set in the Activity Options.
+Activity 执行语义依赖于多个参数。
+唯一需要设置的值是 [Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) 或 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。
+这些值在 Activity 选项中设置。
 
-Set your Activity Timeout from the [`ActivityOptions.Builder`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html) class.
+设置 [`ActivityOptions.Builder`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html) 类的 Activity 超时。
 
-Available timeouts are:
+可用的超时有：
 
 - ScheduleToCloseTimeout()
 - ScheduleToStartTimeout()
-- StartToCloseTimeout()
+- 开始到关闭超时()
 
-You can set Activity Options using an `ActivityStub` within a Workflow implementation, or per-Activity using `WorkflowImplementationOptions` within a Worker.
+您可以在 Workflow 实现中使用 `ActivityStub` 设置 Activity 选项，或者在 Worker 中使用 `WorkflowImplementationOptions` 按 Activity 设置 Activity 选项。
 
-The following uses `ActivityStub`.
+以下使用`ActivityStub`。
 
 ```java
 GreetingActivities activities = Workflow.newActivityStub(GreetingActivities.class,
@@ -240,7 +244,7 @@ GreetingActivities activities = Workflow.newActivityStub(GreetingActivities.clas
                         .build());
 ```
 
-The following uses `WorkflowImplementationOptions`.
+以下使用`WorkflowImplementationOptions`。
 
 ```java
 WorkflowImplementationOptions options =
@@ -259,43 +263,44 @@ WorkflowImplementationOptions options =
 
 :::note
 
-If you define options per-Activity Type options with `WorkflowImplementationOptions.setActivityOptions()`, setting them again specifically with `ActivityStub` in a Workflow will override this setting.
+如果您使用 `WorkflowImplementationOptions.setActivityOptions()` 定义每个 Activity 类型选项，则在 Workflow 中使用 `ActivityStub` 再次专门设置它们将覆盖此设置。
 
 :::
 
-## Java ActivityOptions reference {#activity-options-reference}
+<a id="activity-options-reference"></a>
+## Java ActivityOptions 参考 {#activity-options-reference}
 
-Use [`ActivityOptions`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html) to configure how to invoke an Activity Execution.
+使用 [`ActivityOptions`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html) 配置如何调用 Activity 执行。
 
-You can set Activity Options using an `ActivityStub` within a Workflow implementation, or per-Activity using `WorkflowImplementationOptions` within a Worker.
-Note that if you define options per-Activity Type options with `WorkflowImplementationOptions.setActivityOptions()`, setting them again specifically with `ActivityStub` in a Workflow will override this setting.
+您可以在 Workflow 实现中使用 `ActivityStub` 设置 Activity 选项，或者在 Worker 中使用 `WorkflowImplementationOptions` 按 Activity 设置 Activity 选项。
+请注意，如果您使用 `WorkflowImplementationOptions.setActivityOptions()` 定义每个 Activity 类型选项，则在 Workflow 中使用 `ActivityStub` 再次专门设置它们将覆盖此设置。
 
-The following table lists all `ActivityOptions` that can be configured for an Activity invocation.
+下表列出了可为 Activity 调用配置的所有 `ActivityOptions`。
 
-| Option                                                 | Required                                           | Type                     |
+| 选项                                                 | 必需的                                           | 类型                     |
 | ------------------------------------------------------ | -------------------------------------------------- | ------------------------ |
-| [`setScheduleToCloseTimeout`](#scheduletoclosetimeout) | Yes (if `StartToCloseTimeout` is not specified)    | Duration                 |
-| [`setScheduleToStartTimeout`](#scheduletostarttimeout) | No                                                 | Duration                 |
-| [`setStartToCloseTimeout`](#starttoclosetimeout)       | Yes (if `ScheduleToCloseTimeout` is not specified) | Duration                 |
-| [`setHeartbeatTimeout`](#heartbeattimeout)             | No                                                 | Duration                 |
-| [`setTaskQueue`](#taskqueue)                           | No                                                 | String                   |
-| [`setRetryOptions`](#retryoptions)                     | No                                                 | RetryOptions             |
-| [`setCancellationType`](#setcancellationtype)          | No                                                 | ActivityCancellationType |
+| [`setScheduleToCloseTimeout`](#scheduletoclosetimeout) | 是（如果未指定 `StartToCloseTimeout`）    | 期间                 |
+| [`setScheduleToStartTimeout`](#scheduletostarttimeout) | 不                                                 | 期间                 |
+| [`setStartToCloseTimeout`](#starttoclosetimeout)       | 是（如果未指定 `ScheduleToCloseTimeout`） | 期间                 |
+| [`setHeartbeatTimeout`](#heartbeattimeout)             | 不                                                 | 期间                 |
+| [`setTaskQueue`](#taskqueue)                           | 不                                                 | 细绳                   |
+| [`setRetryOptions`](#retryoptions)                     | 不                                                 | 重试选项             |
+| [`setCancellationType`](#setcancellationtype)          | 不                                                 | Activity取消类型 |
 
 ### ScheduleToCloseTimeout
 
-To set a [Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout), use [`ActivityOptions.newBuilder.setScheduleToCloseTimeout​`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html).
+要设置 [Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout)，请使用 [`ActivityOptions.newBuilder.setScheduleToCloseTimeout​`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html)。
 
-This or `StartToCloseTimeout` must be set.
+必须设置此项或 `StartToCloseTimeout`。
 
-- Type: `Duration`
-- Default: Unlimited.
-  Note that if `WorkflowRunTimeout` and/or `WorkflowExecutionTimeout` are defined in the Workflow, all Activity retries will stop when either or both of these timeouts are reached.
+- 型号：`Duration`
+- 默认：无限制。
+  请注意，如果在 Workflow 中定义了 `WorkflowRunTimeout` 和/或 `WorkflowExecutionTimeout`，则当达到其中一个或两个超时时，所有 Activity 重试都将停止。
 
-You can set Activity Options using an `ActivityStub` within a Workflow implementation, or per-Activity using `WorkflowImplementationOptions` within a Worker.
-Note that if you define options per-Activity Type options with `WorkflowImplementationOptions.setActivityOptions()`, setting them again specifically with `ActivityStub` in a Workflow will override this setting.
+您可以在 Workflow 实现中使用 `ActivityStub` 设置 Activity 选项，或者在 Worker 中使用 `WorkflowImplementationOptions` 按 Activity 设置 Activity 选项。
+请注意，如果您使用 `WorkflowImplementationOptions.setActivityOptions()` 定义每个 Activity 类型选项，则在 Workflow 中使用 `ActivityStub` 再次专门设置它们将覆盖此设置。
 
-- With `ActivityStub`
+- 与`ActivityStub`
 
   ```java
   GreetingActivities activities = Workflow.newActivityStub(GreetingActivities.class,
@@ -304,7 +309,7 @@ Note that if you define options per-Activity Type options with `WorkflowImplemen
                           .build());
   ```
 
-- With `WorkflowImplementationOptions`
+- 与`WorkflowImplementationOptions`
 
   ```java
   WorkflowImplementationOptions options =
@@ -320,15 +325,15 @@ Note that if you define options per-Activity Type options with `WorkflowImplemen
 
 ### ScheduleToStartTimeout
 
-To set a [Schedule-To-Start Timeout](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout), use [`ActivityOptions.newBuilder.setScheduleToStartTimeout​`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html).
+要设置 [Schedule-启动超时](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout)，请使用 [`ActivityOptions.newBuilder.setScheduleToStartTimeout​`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html)。
 
-- Type: `Duration`
-- Default: Unlimited. This timeout is non-retryable.
+- 型号：`Duration`
+- 默认：无限制。此超时是不可重试的。
 
-You can set Activity Options using an `ActivityStub` within a Workflow implementation, or per-Activity using `WorkflowImplementationOptions` within a Worker.
-Note that if you define options per-Activity Type options with `WorkflowImplementationOptions.setActivityOptions()`, setting them again specifically with `ActivityStub` in a Workflow will override this setting.
+您可以在 Workflow 实现中使用 `ActivityStub` 设置 Activity 选项，或者在 Worker 中使用 `WorkflowImplementationOptions` 按 Activity 设置 Activity 选项。
+请注意，如果您使用 `WorkflowImplementationOptions.setActivityOptions()` 定义每个 Activity 类型选项，则在 Workflow 中使用 `ActivityStub` 再次专门设置它们将覆盖此设置。
 
-- With `ActivityStub`
+- 与`ActivityStub`
 
   ```java
   GreetingActivities activities = Workflow.newActivityStub(GreetingActivities.class,
@@ -340,7 +345,7 @@ Note that if you define options per-Activity Type options with `WorkflowImplemen
                           .build());
   ```
 
-- With `WorkflowImplementationOptions`
+- 与`WorkflowImplementationOptions`
 
   ```java
   WorkflowImplementationOptions options =
@@ -354,19 +359,20 @@ Note that if you define options per-Activity Type options with `WorkflowImplemen
                       .build();
   ```
 
-### StartToCloseTimeout
+<a id="starttoclosetimeout"></a>
+### 开始到关闭超时 {#starttoclosetimeout}
 
-To set a [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout), use [`ActivityOptions.newBuilder.setStartToCloseTimeout​`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html).
+要设置 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)，请使用 [`ActivityOptions.newBuilder.setStartToCloseTimeout​`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html)。
 
-This or `ScheduleToClose` must be set.
+必须设置此项或 `ScheduleToClose`。
 
-- Type: `Duration`
-- Default: Defaults to [`ScheduleToCloseTimeout`](#scheduletoclosetimeout) value
+- 型号：`Duration`
+- 默认值：默认为 [`ScheduleToCloseTimeout`](#scheduletoclosetimeout) 值
 
-You can set Activity Options using an `ActivityStub` within a Workflow implementation, or per-Activity using `WorkflowImplementationOptions` within a Worker.
-Note that if you define options per-Activity Type options with `WorkflowImplementationOptions.setActivityOptions()`, setting them again specifically with `ActivityStub` in a Workflow will override this setting.
+您可以在 Workflow 实现中使用 `ActivityStub` 设置 Activity 选项，或者在 Worker 中使用 `WorkflowImplementationOptions` 按 Activity 设置 Activity 选项。
+请注意，如果您使用 `WorkflowImplementationOptions.setActivityOptions()` 定义每个 Activity 类型选项，则在 Workflow 中使用 `ActivityStub` 再次专门设置它们将覆盖此设置。
 
-- With `ActivityStub`
+- 与`ActivityStub`
 
   ```java
   GreetingActivities activities = Workflow.newActivityStub(GreetingActivities.class,
@@ -375,7 +381,7 @@ Note that if you define options per-Activity Type options with `WorkflowImplemen
                       .build());
   ```
 
-- With `WorkflowImplementationOptions`
+- 与`WorkflowImplementationOptions`
 
   ```java
   WorkflowImplementationOptions options =
@@ -390,17 +396,18 @@ Note that if you define options per-Activity Type options with `WorkflowImplemen
                       .build();
   ```
 
-### HeartbeatTimeout
+<a id="heartbeattimeout"></a>
+### 心跳超时 {#heartbeattimeout}
 
-To set a [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout), use [`ActivityOptions.newBuilder.setHeartbeatTimeout`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html).
+要设置 [心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout)，请使用 [`ActivityOptions.newBuilder.setHeartbeatTimeout`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html)。
 
-- Type: `Duration`
-- Default: None
+- 型号：`Duration`
+- 默认：无
 
-You can set Activity Options using an `ActivityStub` within a Workflow implementation, or per-Activity using `WorkflowImplementationOptions` within a Worker.
-Note that if you define options per-Activity Type options with `WorkflowImplementationOptions.setActivityOptions()`, setting them again specifically with `ActivityStub` in a Workflow will override this setting.
+您可以在 Workflow 实现中使用 `ActivityStub` 设置 Activity 选项，或者在 Worker 中使用 `WorkflowImplementationOptions` 按 Activity 设置 Activity 选项。
+请注意，如果您使用 `WorkflowImplementationOptions.setActivityOptions()` 定义每个 Activity 类型选项，则在 Workflow 中使用 `ActivityStub` 再次专门设置它们将覆盖此设置。
 
-- With `ActivityStub`
+- 与`ActivityStub`
 
   ```java
   private final GreetingActivities activities =
@@ -414,7 +421,7 @@ Note that if you define options per-Activity Type options with `WorkflowImplemen
               .build());
   ```
 
-- With `WorkflowImplementationOptions`
+- 与`WorkflowImplementationOptions`
 
   ```java
   WorkflowImplementationOptions options =
@@ -431,12 +438,13 @@ Note that if you define options per-Activity Type options with `WorkflowImplemen
                       .build();
   ```
 
-### TaskQueue
+<a id="taskqueue"></a>
+### 任务队列 {#taskqueue}
 
-- Type: `String`
-- Default: Defaults to the Task Queue that the Workflow was started with.
+- 型号：`String`
+- 默认值：默认为 Workflow 启动时使用的 Task Queue。
 
-- With `ActivityStub`
+- 与`ActivityStub`
 
   ```java
   GreetingActivities activities = Workflow.newActivityStub(GreetingActivities.class,
@@ -448,7 +456,7 @@ Note that if you define options per-Activity Type options with `WorkflowImplemen
                           .build());
   ```
 
-- With `WorkflowImplementationOptions`
+- 与`WorkflowImplementationOptions`
 
   ```java
   WorkflowImplementationOptions options =
@@ -465,16 +473,17 @@ Note that if you define options per-Activity Type options with `WorkflowImplemen
                       .build();
   ```
 
-See [Task Queue](/task-queue)
+参见 [Task Queue](/task-queue)
 
-### RetryOptions
+<a id="retryoptions"></a>
+### 重试选项 {#retryoptions}
 
-To set a Retry Policy, known as the [Retry Options](/encyclopedia/retry-policies) in Java, use [`ActivityOptions.newBuilder.setRetryOptions()`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html).
+要设置 Retry Policy（在 Java 中称为 [重试选项](/encyclopedia/retry-policies)），请使用 [`ActivityOptions.newBuilder.setRetryOptions()`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/activity/ActivityOptions.Builder.html)。
 
-- Type: `RetryOptions`
-- Default: Server-defined Activity Retry policy.
+- 型号：`RetryOptions`
+- 默认值：服务器定义的 Activity Retry Policy。
 
-- With `ActivityStub`
+- 与`ActivityStub`
 
   ```java
   private final ActivityOptions options =
@@ -490,7 +499,7 @@ To set a Retry Policy, known as the [Retry Options](/encyclopedia/retry-policies
           .build();
   ```
 
-- With `WorkflowImplementationOptions`
+- 与`WorkflowImplementationOptions`
 
   ```java
   WorkflowImplementationOptions options =
@@ -510,12 +519,13 @@ To set a Retry Policy, known as the [Retry Options](/encyclopedia/retry-policies
                 .build();
   ```
 
-### setCancellationType
+<a id="setcancellationtype"></a>
+### 设置取消类型 {#setcancellationtype}
 
-- Type: `ActivityCancellationType`
-- Default: `ActivityCancellationType.TRY_CANCEL`
+- 型号：`ActivityCancellationType`
+- 默认：`ActivityCancellationType.TRY_CANCEL`
 
-- With `ActivityStub`
+- 与`ActivityStub`
 
   ```java
   private final GreetingActivities activities =
@@ -526,7 +536,7 @@ To set a Retry Policy, known as the [Retry Options](/encyclopedia/retry-policies
             .build());
   ```
 
-- With `WorkflowImplementationOptions`
+- 与`WorkflowImplementationOptions`
 
   ```java
   WorkflowImplementationOptions options =
@@ -540,23 +550,24 @@ To set a Retry Policy, known as the [Retry Options](/encyclopedia/retry-policies
                 .build();
   ```
 
-## Get the result of an Activity Execution {#activity-execution-result}
+<a id="activity-execution-result"></a>
+## 获取 Activity 执行的结果 {#activity-execution-result}
 
-The call to spawn an [Activity Execution](/activity-execution) generates the [ScheduleActivityTask](/references/commands#scheduleactivitytask) Command and provides the Workflow with an Awaitable.
-Workflow Executions can either block progress until the result is available through the Awaitable or continue progressing, making use of the result when it becomes available.
+调用生成 [Activity 执行](/activity-execution) 会生成 [ScheduleActivity任务](/references/commands#scheduleactivitytask) 命令，并为 Workflow 提供 Awaitable。
+Workflow Execution 可以阻止进度，直到结果通过 Awaitable 可用为止，或者继续进度，在结果可用时使用它。
 
-To get the results of an asynchronously invoked Activity method, use the `Promise` `get` method to block until the Activity method result is available.
+要获取异步调用的 Activity 方法的结果，请使用 `Promise` `get` 方法进行阻止，直到 Activity 方法结果可用。
 
-Sometimes an Activity Execution lifecycle goes beyond a synchronous method invocation.
-For example, a request can be put in a queue and later a reply comes and is picked up by a different Worker process.
-The whole request-reply interaction can be modeled as a single Activity.
+有时，Activity 执行生命周期超出同步方法调用。
+例如，可以将请求放入队列中，稍后收到回复并由不同的 Worker 进程获取。
+整个请求-回复交互可以建模为单个 Activity。
 
-To indicate that an Activity should not be completed upon its method return, call `ActivityExecutionContext.doNotCompleteOnReturn()` from the original Activity thread.
+要指示 Activity 不应在其方法返回时完成，请从原始 Activity 线程调用 `ActivityExecutionContext.doNotCompleteOnReturn()`。
 
-Then later, when replies come, complete the Activity using the `ActivityCompletionClient`.
-To correlate Activity invocation with completion, use either a `TaskToken` or Workflow and Activity Ids.
+然后，当收到答复时，使用 `ActivityCompletionClient` 完成 Activity。
+要将 Activity 调用与完成关联起来，请使用 `TaskToken` 或 Workflow 和 Activity Id。
 
-Following is an example of using `ActivityExecutionContext.doNotCompleteOnReturn()`:
+以下是使用 `ActivityExecutionContext.doNotCompleteOnReturn()` 的示例：
 
 ```java
 public class FileProcessingActivitiesImpl implements FileProcessingActivities {
@@ -578,7 +589,7 @@ public class FileProcessingActivitiesImpl implements FileProcessingActivities {
 }
 ```
 
-When the download is complete, the download service potentially can complete the Activity, or fail it from a different process, for example:
+下载完成后，下载服务可能会完成 Activity，或者从不同的进程中失败，例如：
 
 ```java
   public <R> void completeActivity(byte[] taskToken, R result) {

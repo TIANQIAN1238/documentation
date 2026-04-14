@@ -1,0 +1,65 @@
+---
+id: codec-server
+title: Codec Server
+sidebar_label: Codec Server
+description: Codec Server 是一个 HTTP 服务器，为 Temporal 有效负载提供远程编码和解码。
+slug: /codec-server
+toc_max_heading_level: 4
+keywords:
+  - encryption
+  - explanation
+  - keys
+  - payloads
+  - secrets
+  - data-converters
+  - codec-server
+tags:
+  - codec-server
+  - Concepts
+  - Encryption
+  - Data Converters
+  - Security
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+本页讨论 [Codec Server](#codec-server)。
+
+## 什么是 Codec Server？ {#编解码器服务器}
+
+Codec Server 是一个 HTTP/HTTPS 服务器，它使用[自定义有效负载编解码器](/生产部署/数据加密)通过端点远程解码您的数据。
+
+{/* tctl-to-Temporal 不应改变这一点 */}
+
+<CaptionedImage
+src="/diagrams/tctl-diagram-codec-server.svg"
+    标题=“Codec Server”
+    宽度=“50%”
+    缩放=“真”
+/>
+
+Codec Server 遵循 Temporal [Codec Server 协议](https://github.com/Temporalio/samples-go/tree/main/codec-server#codec-server-protocol)。
+它实现了两个端点：
+
+- `/编码`
+- `/解码`
+
+每个端点接收并响应一个 JSON 正文，该正文具有“payloads”属性和 [Payloads](/dataconversion#payload) 数组。
+端点在返回有效负载之前通过[有效负载编解码器](/payload-codec)运行有效负载。
+
+大多数 SDK 都提供 Codec Server 实现示例，如下所示：
+
+- [转到](https://github.com/Temporalio/samples-go/tree/main/codec-server)
+- [Java](https://github.com/Temporalio/sdk-java/tree/master/Temporal-remote-data-encoder)
+- [.NET](https://github.com/Temporalio/samples-dotnet/tree/main/src/Encryption)
+- [Python](https://github.com/Temporalio/samples-python/blob/main/encryption/codec_server.py)
+- [TypeScript](https://github.com/Temporalio/samples-typescript/blob/main/encryption/src/codec-server.ts)
+
+＃＃＃＃ 用法
+
+当您对 Workflow 数据应用加密或压缩的自定义编码时，它会以加密/压缩格式存储在 Temporal Server 上。有关对哪些数据进行编码的详细信息，请参阅[保护您的数据](/生产部署/数据加密)。
+
+要在使用 Temporal CLI 或 Web UI 对 Workflow Execution 执行某些操作时查看解码数据，请在 Web UI 和 Temporal CLI 中配置 Codec Server 端点。
+配置 Codec Server 端点时，Temporal CLI 和 Web UI 将编码数据发送到 Codec Server，并显示从 Codec Server 接收的解码数据。
+
+有关创建 Codec Server 的详细信息，请参阅 [Codec Server 设置](/生产部署/数据加密#codec-server-setup)。

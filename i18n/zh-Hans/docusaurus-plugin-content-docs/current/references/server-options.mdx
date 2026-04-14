@@ -1,0 +1,130 @@
+---
+id: server-options
+title: Temporal Server 选项参考
+sidebar_label: 服务器选项
+description: 通过合并包 go.Temporal.io/server/Temporal 将 Temporal Server 作为 Go 应用程序运行。自定义服务器选项，例如配置、授权和 TLS。
+toc_max_heading_level: 4
+keywords:
+  - reference
+  - web-ui
+tags:
+  - Reference
+---
+
+您可以通过包含服务器包 `go.Temporal.io/server/Temporal` 并使用它来创建和启动 Temporal Server，将 [Temporal Server](/Temporal-service/Temporal-server) 作为 Go 应用程序运行。
+
+Temporal Server 服务可以通过多种方式运行。
+我们建议在有限的情况下使用这种方法。
+
+```go
+s, err := temporal.NewServer()
+if err != nil {
+	log.Fatal(err)
+}
+err = s.Start()
+if err != nil{
+	log.Fatal(err)
+}
+```
+
+`NewServer()` 接受函数作为参数。
+每个函数都会返回一个应用于实例的“ServerOption”。
+参数参考的源代码在这里：https://github.com/Temporalio/Temporal/blob/main/Temporal/server_option.go
+
+### WithConfig
+
+要启动 Temporal Server，需要配置文件。服务器自动搜索该配置
+启动时在默认位置 ./config/development.yaml 中。如果您需要使用自定义配置，您可以
+通过服务器的配置选项指定它。有关配置参数的全面详细信息和
+结构，参考【官方配置文档】(https://pkg.go.dev/go.Temporal.io/server/common/config)。
+
+```go
+s, err := temporal.NewServer(
+	temporal.WithConfig(cfg),
+)
+```
+
+### WithConfigLoader
+
+从文件加载自定义配置。
+
+```go
+s, err := temporal.NewServer(
+	temporal.WithConfigLoader(configDir, env, zone),
+)
+```
+
+### 对于服务
+
+设置所有有效 Temporal 服务的列表。
+默认值可以从 `go.Temporal.io/server/Temporal` 包中使用。
+
+```go
+s, err := temporal.NewServer(
+	temporal.ForServices(temporal.Services),
+)
+```
+
+### 中断
+
+此选项提供了一个通道，可从该通道中断 Signal 上的服务器。
+
+- 如果未传递“Temporal.InterruptOn()”，则“server.Start()”永远不会被阻止，您需要在某处调用“server.Stop()”。
+- 如果传递“Temporal.InterruptOn(nil)”，则“server.Start()”将永远阻塞，直到进程被终止。
+- 如果传递了“Temporal.InterruptOn(Temporal.InterruptCh())”，则“server.Start()”会阻塞，直到您使用 Ctrl+C，然后正常关闭服务器。
+- 如果传递了“Temporal.Interrupt(someCustomChan)”，则“server.Start()”将阻塞，直到将 Signal 发送到“someCustomChan”。
+
+```go
+s, err := temporal.NewServer(
+	temporal.InterruptOn(temporal.InterruptCh()),
+)
+```
+
+### WithAuthorizer
+
+设置低级别[授权机制](/self-hosted-guide/security#authorizer-plugin)，用于确定是否允许或拒绝入站 API 调用。
+
+```go
+s, err := temporal.NewServer(
+	temporal.WithAuthorizer(myAuthorizer),
+)
+```
+
+### WithTLSConfigFactory
+
+覆盖默认的 TLS 配置提供程序。
+`TLSConfigProvider` 在 `go.Temporal.io/server/common/rpc/encryption` 包中定义。
+
+```go
+s, err := temporal.NewServer(
+	temporal.WithTLSConfigFactory(yourTLSConfigProvider),
+)
+```
+
+### WithClaimMapper
+
+配置[将角色映射的机制](/self-hosted-guide/security#claim-mapper)到“Claims”以进行授权。
+
+```go
+s, err := temporal.NewServer(
+  temporal.WithClaimMapper(func(cfg *config.Config) authorization.ClaimMapper {
+  		logger := getYourLogger() // Replace with how you retrieve or initialize your logger
+		return authorization.NewDefaultJWTClaimMapper(
+			authorization.NewDefaultTokenKeyProvider(cfg, logger),
+			cfg
+		)
+	}),
+)
+```
+
+### WithCustomMetricsReporter
+
+设置自定义计数指标报告器。
+
+```go
+s, err := temporal.NewServer(
+	temporal.WithCustomMetricsReporter(myReporter),
+)
+```
+
+您可以查看 [关于自定义报告器的 Uber 统计文档](https://github.com/uber-go/tally#report-your-metrics) 并查看 [Datadog 的 `dogstatsd` 格式的报告器](https://github.com/Temporalio/Temporal/pull/998#issuecomment-857884983) 的社区实现。

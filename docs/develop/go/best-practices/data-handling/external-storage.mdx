@@ -1,47 +1,49 @@
 ---
 id: external-storage
-title: External Storage - Go SDK
-sidebar_label: External Storage
+title: "外部存储 - Go SDK"
+sidebar_label: "外部存储"
 slug: /develop/go/data-handling/external-storage
 toc_max_heading_level: 3
 tags:
   - Go SDK
   - Temporal SDKs
   - Data Converters
-description: Offload large payloads to external storage using the claim check pattern in the Go SDK.
+description: "使用 Go SDK 中的声明检查模式将大型有效负载卸载到外部存储。"
 ---
 
 :::info Release, stability, and dependency info
 
-External Storage is in [Pre-Release](/evaluate/development-production-features/release-stages#pre-release). APIs and
-configuration may change before the stable release. Join the
-[#large-payloads Slack channel](https://temporalio.slack.com/archives/C09VA2DE15Y) to provide feedback or ask for help.
+外部存储位于 [预发布](/evaluate/development-production-features/release-stages#pre-release)。 API 和
+在稳定版本发布之前配置可能会发生变化。加入
+[#large-payloads Slack 通道](https://temporalio.slack.com/archives/C09VA2DE15Y) 提供反馈或寻求帮助。
 
 :::
 
-The Temporal Service enforces a 2 MB per-payload limit by default. This limit is configurable on self-hosted
-deployments. When your Workflows or Activities handle data larger than the limit, you can offload payloads to external
-storage, such as Amazon S3, and pass a small reference token through the Event History instead. This page shows you how
-to set up External Storage with Amazon S3 and how to implement a custom storage driver.
+默认情况下，Temporal 服务强制执行每个有效负载 2 MB 的限制。此限制可在自托管上配置
+部署。当您的 Workflow 或活动处理的数据大于限制时，您可以将有效负载卸载到外部
+存储，例如 Amazon S3，并通过 Event History 传递一个小的引用令牌。本页向您展示如何
+使用 Amazon S3 设置外部存储以及如何实施自定义存储驱动程序。
 
-For a conceptual overview of External Storage and its use cases, see [External Storage](/external-storage).
+有关外部存储及其用例的概念概述，请参阅 [外部存储](/external-storage)。
 
-## Store and retrieve large payloads with Amazon S3
+<a id="store-and-retrieve-large-payloads-with-amazon-s3"></a>
+## 使用 Amazon S3 存储和检索大型负载 {#store-and-retrieve-large-payloads-with-amazon-s3}
 
-The Go SDK includes an S3 storage driver. Follow these steps to set it up:
+Go SDK 包含 S3 存储驱动程序。请按照以下步骤进行设置：
 
-### Prerequisites
+<a id="prerequisites"></a>
+### 先决条件 {#prerequisites}
 
-- An Amazon S3 bucket that you have read and write access to. Refer to [lifecycle management](/external-storage#lifecycle)
-  to ensure that your payloads remain available for the entire lifetime of the Workflow.
-- Install the S3 driver module: `go get go.temporal.io/sdk/contrib/aws/s3driver`
+- 您具有读写访问权限的 Amazon S3 存储桶。参考[生命周期管理](/external-storage#lifecycle)
+  确保您的有效负载在 Workflow 的整个生命周期内保持可用。
+- 安装S3驱动模块：`go get go.Temporal.io/sdk/contrib/aws/s3driver`
 
-### Procedure
+＃＃＃ 程序
 
-1. Load your AWS configuration and create the S3 storage driver. The driver uses your standard AWS
-   credentials from the environment (environment variables, IAM role, or AWS config file):
+1. 加载您的 AWS 配置并创建 S3 存储驱动程序。驱动程序使用您的标准 AWS
+   来自环境的凭证（环境变量、IAM 角色或 AWS 配置文件）：
 
-   <!--SNIPSTART go-s3-driver-create-->
+<!--SNIPSTART go-s3-driver-create-->
 
    ```go
    import (
@@ -67,11 +69,11 @@ The Go SDK includes an S3 storage driver. Follow these steps to set it up:
    }
    ```
 
-   <!--SNIPEND-->
+<!--SNIPEND-->
 
-2. Configure the driver on `ExternalStorage` and pass it in your Client options:
+2. 在 `ExternalStorage` 上配置驱动程序并将其传递到您的客户端选项中：
 
-   <!--SNIPSTART go-s3-external-storage-setup-->
+<!--SNIPSTART go-s3-external-storage-setup-->
 
    ```go
    import (
@@ -94,23 +96,24 @@ The Go SDK includes an S3 storage driver. Follow these steps to set it up:
    w := worker.New(c, "my-task-queue", worker.Options{})
    ```
 
-   <!--SNIPEND-->
+<!--SNIPEND-->
 
-   By default, payloads larger than 256 KiB are offloaded to external storage. You can adjust this with the
-   `PayloadSizeThreshold` option, even setting it to 1 to externalize all payloads regardless of size. Refer to
-   [Configure payload size threshold](#configure-payload-size-threshold) for more information.
+默认情况下，大于 256 KiB 的有效负载将卸载到外部存储。您可以使用以下命令进行调整
+   `PayloadSizeThreshold` 选项，甚至将其设置为 1 以外部化所有有效负载，无论大小如何。参考
+   [配置负载大小阈值](#configure-payload-size-threshold) 了解更多信息。
 
-   All Workflows and Activities running on the Worker use the storage driver automatically without changes to your
-   business logic. The driver uploads and downloads payloads concurrently and validates payload integrity on retrieve.
+所有在 Worker 上运行的 Workflow 和活动都会自动使用存储驱动程序，而无需更改您的
+   业务逻辑。驱动程序同时上传和下载有效负载，并在检索时验证有效负载的完整性。
 
-## Implement a custom storage driver
+<a id="procedure"></a>
+## 实现自定义存储驱动程序 {#procedure}
 
-If you need a storage backend other than what the built-in drivers allow, you can implement your own storage driver.
-Store payloads durably so that they survive process crashes and remain available for debugging and auditing after the
-Workflow completes. Refer to [lifecycle management](/external-storage#lifecycle) for retention requirements.
+如果您需要内置驱动程序允许之外的存储后端，您可以实现自己的存储驱动程序。
+持久存储有效负载，以便它们能够在进程崩溃时幸存下来，并在崩溃后仍可用于调试和审核
+Workflow 完成。请参阅 [生命周期管理](/external-storage#lifecycle) 了解保留要求。
 
-The following example shows a custom driver that uses local disk as the backing store. This example is for local
-development and testing only. In production, use a durable storage system that is accessible to all Workers:
+以下示例显示使用本地磁盘作为后备存储的自定义驱动程序。此示例适用于本地
+仅开发和测试。在生产中，使用所有 Worker 都可以访问的耐用存储系统：
 
 <!--SNIPSTART go-custom-storage-driver-->
 
@@ -208,43 +211,47 @@ func (d *LocalDiskStorageDriver) Retrieve(
 
 <!--SNIPEND-->
 
-The following sections walk through the key parts of the driver implementation.
+以下各节将介绍驱动程序实现的关键部分。
 
-### 1. Implement the StorageDriver interface
+<a id="implement-a-custom-storage-driver"></a>
+### 1.实现StorageDriver接口 {#implement-a-custom-storage-driver}
 
-A custom driver implements the `converter.StorageDriver` interface with four methods:
+自定义驱动程序通过四种方法实现 `converter.StorageDriver` 接口：
 
-- `Name()` returns a unique string that identifies the driver instance. The SDK stores this name in the claim check
-  reference so it can route retrieval requests to the correct driver. Changing the name after payloads have been stored
-  breaks retrieval. For example, two S3 drivers could be named `"s3-primary"` and `"s3-archive"`.
-- `Type()` returns a string that identifies the driver implementation. Unlike `Name()`, this must be the same across all
-  instances of the same driver type regardless of configuration. Two S3 drivers named `"s3-primary"` and `"s3-archive"` would both return
-  `"aws.s3driver"` as their type, while the local disk driver in the custom driver code sample returns `"local-disk"`.
-- `Store()` receives a slice of payloads and returns one `StorageDriverClaim` per payload. A claim is a set of string
-  key-value pairs that the driver uses to locate the payload later.
-- `Retrieve()` receives the claims that `Store()` produced and returns the original payloads.
+- `Name()` 返回标识驱动程序实例的唯一字符串。 SDK 将此名称存储在声明检查中
+  引用，以便它可以将检索请求路由到正确的驱动程序。存储有效负载后更改名称
+  中断检索。例如，两个 S3 驱动程序可以命名为 `"s3-primary"` 和 `"s3-archive"`。
+- `Type()` 返回一个标识驱动程序实现的字符串。与 `Name()` 不同，这必须在所有
+  相同驱动程序类型的实例，无论配置如何。两名名为 `"s3-primary"` 和 `"s3-archive"` 的 S3 车手都将回归
+  `"aws.s3driver"` 作为其类型，而自定义驱动程序代码示例中的本地磁盘驱动程序返回 `"local-disk"`。
+- `Store()` 接收一片有效负载并为每个有效负载返回一个 `StorageDriverClaim`。声明是一组字符串
+  驱动程序稍后使用键值对来定位有效负载。
+- `Retrieve()` 接收 `Store()` 生成的声明并返回原始有效负载。
 
-### 2. Store payloads
+<a id="1-implement-the-storagedriver-interface"></a>
+### 2. 存储有效负载 {#1-implement-the-storagedriver-interface}
 
-In `Store()`, marshal each Payload protobuf message to bytes with `proto.Marshal(payload)` and write the bytes to
-your storage system. The application data has already been serialized by the [Payload Converter](/develop/go/data-handling/data-conversion)
-and [Payload Codec](/develop/go/data-handling/data-encryption) before it reaches the driver.
-See the [data conversion pipeline](/external-storage#data-pipeline) for more details.
+在 `Store()` 中，将每个 Payload Protobuf 消息编组为 `proto.Marshal(payload)` 字节，并将字节写入
+你的存储系统。应用数据已被 [有效负载转换器](/develop/go/data-handling/data-conversion) 序列化
+和 [有效负载编解码器](/develop/go/data-handling/data-encryption) 在到达驾驶员之前。
+有关详细信息，请参阅 [数据转换管道](/external-storage#data-pipeline)。
 
-Return a `StorageDriverClaim` for each payload with enough information to retrieve it later. The `ctx.Target`
-provides identity information (namespace, Workflow ID) depending on the operation. Use a type switch on
-`StorageDriverWorkflowInfo` and `StorageDriverActivityInfo` to access the concrete values. Consider structuring
-your storage keys to include this information so that you can identify which Workflow owns each payload.
+为每个有效负载返回 `StorageDriverClaim`，其中包含足够的信息以便稍后检索。 `ctx.Target`
+根据操作提供身份信息（Namespace、Workflow ID）。使用类型开关
+`StorageDriverWorkflowInfo` 和 `StorageDriverActivityInfo` 访问具体值。考虑构建
+您的存储密钥包含此信息，以便您可以识别哪个 Workflow 拥有每个有效负载。
 
-### 3. Retrieve payloads
+<a id="2-store-payloads"></a>
+### 3. 检索有效负载 {#2-store-payloads}
 
-In `Retrieve()`, download the bytes using the claim data, then reconstruct the Payload protobuf message with
-`proto.Unmarshal(data, payload)`. The Payload Converter handles deserializing the application data after the driver
-returns the payload.
+在 `Retrieve()` 中，使用声明数据下载字节，然后使用以下命令重建有效负载 Protobuf 消息
+`proto.Unmarshal(data, payload)`。 Payload Converter 在驱动程序之后处理应用程序数据的反序列化
+返回有效负载。
 
-### 4. Configure the Client
+<a id="3-retrieve-payloads"></a>
+### 4. 配置客户端 {#3-retrieve-payloads}
 
-Pass an `ExternalStorage` struct with your driver in the Client options:
+在客户端选项中将 `ExternalStorage` 结构与您的驱动程序一起传递：
 
 ```go
 c, err := client.Dial(client.Options{
@@ -254,11 +261,12 @@ c, err := client.Dial(client.Options{
 })
 ```
 
-## Configure payload size threshold
+<a id="4-configure-the-client"></a>
+## 配置负载大小阈值 {#4-configure-the-client}
 
-You can configure the payload size threshold that triggers external storage. By default, payloads larger than 256 KiB
-are offloaded to external storage. You can adjust this with the `PayloadSizeThreshold` option, or set it to 1 to
-externalize all payloads regardless of size. A value of 0 is interpreted as the default (256 KiB).
+您可以配置触发外部存储的负载大小阈值。默认情况下，有效负载大于 256 KiB
+被卸载到外部存储。您可以使用 `PayloadSizeThreshold` 选项调整此值，或将其设置为 1 以
+外部化所有有效负载，无论其大小如何。值 0 被解释为默认值 (256 KiB)。
 
 <!--SNIPSTART go-external-storage-threshold-->
 
@@ -275,25 +283,26 @@ c, err := client.Dial(client.Options{
 
 <!--SNIPEND-->
 
-## Use multiple storage drivers
+<a id="configure-payload-size-threshold"></a>
+## 使用多个存储驱动程序 {#configure-payload-size-threshold}
 
-When you register multiple drivers, you must provide a `DriverSelector` that implements the `StorageDriverSelector`
-interface. The SDK returns an error at client creation if multiple drivers are registered without a selector. The
-selector chooses which driver stores each payload. Any driver in the list that is not selected for storing is still
-available for retrieval, which is useful when migrating between storage backends. Return `nil` from the selector to
-keep a specific payload inline in Event History.
+当您注册多个驱动程序时，您必须提供实现 `StorageDriverSelector` 的 `DriverSelector`
+界面。如果在没有选择器的情况下注册了多个驱动程序，则 SDK 在创建客户端时会返回错误。的
+选择器选择哪个驱动程序存储每个有效负载。列表中未选择存储的任何驱动程序仍然是
+可用于检索，这在存储后端之间迁移时非常有用。从选择器返回 `nil`
+在 Event History 中保留特定的有效负载。
 
-Multiple drivers are useful in scenarios such as:
+多个驱动程序在以下场景中很有用：
 
-- Driver migration. Your Worker needs to retrieve payloads created by clients that use a different driver than the
-  one you prefer. Register both drivers and use the selector to always pick your preferred driver for new payloads.
-  The old driver remains available for retrieving existing claims.
-- Latency vs. durability tradeoffs. Some Workflow types may benefit from a faster storage backend
-  at the cost of durability, while others require a durable backend like S3. Use the selector to route based on
-  Workflow context.
+- 驱动程序迁移。您的 Worker 需要检索由使用与该驱动程序不同的驱动程序的客户端创建的有效负载
+  你喜欢的一个。注册两个驱动程序并使用选择器始终为新负载选择您首选的驱动程序。
+  老司机仍然可以检索现有的索赔。
+- 延迟与持久性的权衡。某些 Workflow 类型可能受益于更快的存储后端
+  以耐用性为代价，而其他人则需要像 S3 这样的耐用后端。使用选择器根据
+  Workflow 上下文。
 
-The following example registers two drivers but always selects `preferredDriver` for new payloads. The `legacyDriver`
-is only registered so the Worker can retrieve payloads that were previously stored with it:
+以下示例注册两个驱动程序，但始终选择 `preferredDriver` 作为新负载。 `legacyDriver`
+注册只是为了让 Worker 可以检索之前存储的有效负载：
 
 <!--SNIPSTART go-external-storage-multiple-drivers-->
 

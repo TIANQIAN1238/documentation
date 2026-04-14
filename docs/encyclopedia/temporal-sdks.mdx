@@ -1,8 +1,8 @@
 ---
 id: temporal-sdks
-title: About Temporal SDKs
-sidebar_label: About the SDKs
-description: Temporal SDKs are open-source tools enabling scalable and reliable application development. They feature APIs for Workflow and Activity execution, automatic retries, and resilience mechanisms, making it easier to build fault-tolerant applications.
+title: "关于 Temporal SDK"
+sidebar_label: "关于 SDK"
+description: "Temporal SDK 是用于构建可扩展、可靠应用的开源工具，提供 Workflow 与 Activity 执行 API、自动重试和故障恢复机制。"
 toc_max_heading_level: 4
 keywords:
   - components
@@ -22,70 +22,70 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-Temporal SDKs (software development kits) are an open source collection of tools, libraries, and APIs that enable Temporal Application development.
+Temporal SDK（软件开发套件）是支持 Temporal 应用程序开发的工具、库和 API 的开源集合。
 
-They offer a [Temporal Client](#temporal-client) to interact with the [Temporal Service](/temporal-service), APIs to develop your [Temporal Application](#temporal-application), and APIs to run horizontally scalable [Workers](/workers#worker).
+他们提供 [Temporal 客户端](#temporal-client) 与 [Temporal 服务](/temporal-service) 交互、用于开发 [Temporal 应用程序](#temporal-application) 的 API 以及用于运行水平可扩展的 [Workers](/workers#worker) 的 API。
 
-SDKs are more than just a development tool, however.
-The SDK APIs enable developers to write code in a particular pattern that mirrors real world processes.
-The SDK's internal implementation, working in collaboration with the Temporal Service, steps through that code, guaranteeing execution progression during application runtime.
+然而，SDK 不仅仅是一个开发工具。
+SDK API 使开发人员能够以反映现实世界流程的特定模式编写代码。
+SDK 的内部实现与 Temporal 服务协作，逐步执行该代码，保证应用程序运行时的执行进度。
 
-## Temporal Applications {#temporal-application}
+## Temporal应用 {#temporal-application}
 
-A Temporal Application is the code you write, comprised of [Workflow Definitions](/workflow-definition), [Activity Definitions](/workflow-definition), code used to configure [Temporal Clients](#temporal-client), and code used to configure and start [Workers](/workers#worker).
-Developers create Temporal Applications using an [official Temporal SDK](#official-sdks).
+Temporal 应用程序是您编写的代码，由 [Workflow Definitions](/workflow-definition)、[Activity Definitions](/workflow-definition)、用于配置 [Temporal 客户端](#temporal-client) 的代码以及用于配置和启动 [Workers](/workers#worker) 的代码组成。
+开发人员使用[官方 Temporal SDK](#official-sdks) 创建 Temporal 应用程序。
 
-Consider that the Workflow Definition code can be executed repeatedly.
-The Temporal Platform can concurrently support millions to billions of Workflow Executions, each of which representing an invoked Workflow Definition.
+考虑到 Workflow Definition 代码可以重复执行。
+Temporal平台可以同时支持数百万到数十亿个Workflow Execution，每个Workflow Execution代表一个被调用的Workflow Definition。
 
-Additionally, a Temporal Workflow Execution is both resumable and recoverable, and it can react to external events.
+此外，Temporal Workflow Execution 既可恢复又可恢复，并且可以对外部事件做出反应。
 
-- Resumable: The ability of a process to resume execution after suspending on an _awaitable_.
-- Recoverable: The ability of a process to resume execution after suspending due to a _failure_.
-- Reactive: The ability of a process to respond to external events.
+- 可恢复：进程在 _awaitable_ 上挂起后恢复执行的能力。
+- 可恢复：进程在因失败而挂起后恢复执行的能力。
+- 反应性：流程响应外部事件的能力。
 
-Hence, a Temporal Application can run for seconds or years in the presence of arbitrary load and failures.
+因此，Temporal 应用程序可以在任意负载和故障的情况下运行数秒或数年。
 
-## Official SDKs {#official-sdks}
+## 官方SDK {#official-sdks}
 
-**What are the officially supported SDKs?**
+**官方支持的SDK有哪些？**
 
-Each Temporal SDK targets a specific programming language.
+每个 Temporal SDK 都针对特定的编程语言。
 
-- [Go SDK feature guides](/develop/go)
-- [Java SDK feature guides](/develop/java)
-- [Python SDK feature guides](/develop/python/)
-- [TypeScript SDK feature guides](/develop/typescript/)
-- [.NET SDK feature guides](/develop/dotnet)
-- [Ruby SDK feature guides](/develop/ruby/)
-- [PHP SDK feature guides](/develop/php)
+- [Go SDK功能指南](/develop/go)
+- [Java SDK功能指南](/develop/java)
+- [Python SDK功能指南](/develop/python/)
+- [TypeScript SDK功能指南](/develop/typescript/)
+- [.NET SDK功能指南](/develop/dotnet)
+- [Ruby SDK功能指南](/develop/ruby/)
+- [PHP SDK功能指南](/develop/php)
 
-Despite supporting multiple languages, and supporting many features, Temporal SDKs aim to make developers feel at home in their language.
+尽管支持多种语言并支持许多功能，但 Temporal SDK 的目标是让开发人员对自己的语言感到宾至如归。
 
-### Third-party SDKs
+### 第三方SDK
 
-The following third-party SDKs exist but are not officially supported by Temporal:
+以下第三方 SDK 存在，但不受 Temporal 官方支持：
 
-- [Swift](https://github.com/apple/swift-temporal-sdk) from [@Swift Community](https://github.com/apple)
-- [Haskell](https://github.com/MercuryTechnologies/hs-temporal-sdk) from [@MercuryTechnologies](https://github.com/MercuryTechnologies) 
-- [Clojure](https://github.com/manetu/temporal-clojure-sdk) from [@Manetu](https://github.com/manetu)
-- [Scala](https://github.com/vitaliihonta/zio-temporal) from [@vitaliihonta](https://github.com/vitaliihonta)
+- [Swift](https://github.com/apple/swift-temporal-sdk) 来自 [@Swift 社区](https://github.com/apple)
+- [Haskell]（https://github.com/MercuryTechnologies/hs-temporal-sdk) 来自 [@MercuryTechnologies]（https://github.com/MercuryTechnologies)
+- [Clojure](https://github.com/manetu/temporal-clojure-sdk) 来自 [@Manetu](https://github.com/manetu)
+- [Scala](https://github.com/vitaliihonta/zio-temporal) 来自 [@vitaliihonta](https://github.com/vitaliihonta)
 
-## Why use a Temporal SDK? {#why-use-an-sdk}
+## 为什么使用Temporal SDK？ {#why-use-an-sdk}
 
-Temporal SDKs empower developers to concentrate on creating dependable and scalable business logic, alleviating the need to build home-grown supervisor systems to ensure reliability and fault-tolerance. This is possible because the Temporal SDK provides a unified library that abstracts the intricacies of how Temporal handles distributed systems.
+Temporal SDK 使开发人员能够专注于创建可靠且可扩展的业务逻辑，从而无需构建本地监控系统以确保可靠性和容错能力。这是可能的，因为 Temporal SDK 提供了一个统一的库，抽象了 Temporal 如何处理分布式系统的复杂性。
 
-### Development pattern
+### 发展格局
 
-By abstracting complexities and streamlining boilerplate code, developers can craft straightforward code that directly aligns with their business logic, enhancing code readability and bolstering developer productivity.
+通过抽象复杂性和简化样板代码，开发人员可以编写直接与其业务逻辑一致的简单代码，从而增强代码可读性并提高开发人员的工作效率。
 
-Consider a bank loan application.
-Developers can design the business logic of a bank loan using the Temporal SDK.
-The Workflow defines the overarching business logic, encompassing tasks such as validating applicant information, credit checks, loan approval, and applicant notifications, as Activities.
+考虑银行贷款申请。
+开发者可以使用Temporal SDK设计银行贷款的业务逻辑。
+Workflow 将总体业务逻辑定义为活动，包括验证申请人信息、信用检查、贷款审批和申请人通知等任务。
 
 :::caution Do not copy and use code
 
-The following is pseudocode. For tested samples see your language SDK's developer's guide.
+以下是伪代码。有关测试示例，请参阅您的语言 SDK 的开发人员指南。
 
 :::
 
@@ -102,12 +102,12 @@ func LoanApplicationWorkflow {
 }
 ```
 
-For instance, Temporal SDKs have built-in support for handling failures, timeouts, and retries.
-In the event of an Activity failure, the SDK automatically initiates retries according to configurable policies established by the developer within the SDK. This streamlined process simplifies the integration of fault-tolerance mechanisms into applications.
+例如，Temporal SDK 内置了对处理失败、超时和重试的支持。
+如果 Activity 失败，SDK 将根据开发人员在 SDK 内建立的可配置策略自动启动重试。这种简化的流程简化了容错机制到应用程序的集成。
 
 :::caution Do not copy and use code
 
-The following is pseudocode. For tested samples see your language SDK's developer's guide.
+以下是伪代码。有关测试示例，请参阅您的语言 SDK 的开发人员指南。
 
 :::
 
@@ -132,59 +132,59 @@ func LoanApplicationWorkflow {
 
 ### Replays
 
-Another quality of the SDKs lies in their ability to replay Workflow Executions, a complex operation that contributes significantly to the Platform's promised reliability.
+SDK 的另一个品质在于其重放 Workflow Execution 的能力，这是一项复杂的操作，对平台承诺的可靠性做出了重大贡献。
 
 <CaptionedImage
-    src="/diagrams/replay-basic.svg"
-    title="The SDKs Replay code execution to continue from the last step" />
+src="/diagrams/replay-basic.svg"
+title="SDK 重放代码执行以从上一步继续" />
 
-We will delve into this idea more later, but for now, it signifies that the SDKs can automatically continue a process from the point of interruption, should a failure occur.
-This capability stems from the SDK's ability to persist each step the program takes.
+我们稍后将更深入地探讨这个想法，但就目前而言，它意味着如果发生故障，SDK 可以自动从中断点继续进程。
+此功能源于 SDK 保留程序执行的每个步骤的能力。
 
-{/* - [Developing for Durable Execution using the Go SDK](/develop/go/durable-execution) */}
+{/* - [使用 Go SDK 进行持久执行开发](/develop/go/durable-execution) */}
 
-## Temporal SDKs major components {#major-components}
+## Temporal SDK主要组件 {#major-components}
 
-**What are the major components of Temporal SDKs?**
+**Temporal SDK的主要组件是什么？**
 
-Temporal SDKs offer developers the following:
+Temporal SDK为开发者提供以下功能：
 
-- A Temporal Client to communicate with a Temporal Service
-- APIs to develop application code (Workflows & Activities)
-- APIs to configure and run Workers
+- 用于与 Temporal 服务通信的 Temporal 客户端
+- 用于开发应用程序代码的 API（Workflow 和活动）
+- 用于配置和运行 Worker 的 API
 
 <CaptionedImage
-    src="/diagrams/temporal-sdk-components.svg"
-    title="Temporal SDK components create a runtime across your environment and a Temporal Service" />
+src="/diagrams/temporal-sdk-components.svg"
+title="Temporal SDK 组件在您的环境中创建运行时和 Temporal 服务" />
 
-Let's break down each one.
+让我们逐一分解。
 
-### Temporal Client
+### Temporal客户端
 
-A Temporal Client acts as the bridge for communication between your applications and the Temporal Service.
-The Client performs key functions that facilitate the execution of, management of, and communication with Workflows.
+Temporal 客户端充当您的应用程序和 Temporal 服务之间通信的桥梁。
+客户端执行促进 Workflow 的执行、管理和通信的关键功能。
 
-The most common operations that a Temporal Client enables you to perform are the following:
+Temporal 客户端允许您执行的最常见操作如下：
 
-- Get the result of Workflow Execution.
-- List Workflow Executions.
-- Query a Workflow Execution.
-- Signal a Workflow Execution.
-- Start a Workflow Execution.
+- 获取Workflow Execution的结果。
+- 列出 Workflow Execution。
+- Query 和 Workflow Execution。
+- Signal 和 Workflow Execution。
+- 启动 Workflow Execution。
 
-The following code is an example using the Go SDK.
-It showcases how to initialize a Temporal Client, create a connection to a local Temporal Service, and start a Workflow Execution:
+以下代码是使用 Go SDK 的示例。
+它展示了如何初始化 Temporal 客户端、创建与本地 Temporal 服务的连接以及启动 Workflow Execution：
 
 :::caution Do not copy and use code
 
-The following code is for example purposes only.
-For tested code samples and best practices, use your preferred language SDK's developer's guide.
+以下代码仅用于示例目的。
+有关经过测试的代码示例和最佳实践，请使用您首选语言 SDK 的开发人员指南。
 
-- [Go SDK Temporal Client feature guide](/develop/go/client/temporal-client)
-- [Java SDK Temporal Client feature guide](/develop/java/client/temporal-client)
-- [PHP SDK Temporal Client feature guide](/develop/php/client/temporal-client)
-- [Python SDK Temporal Client feature guide](/develop/python/client)
-- [TypeScript SDK Temporal Client feature guide](/develop/typescript/client)
+- [Go SDK Temporal 客户端功能指南](/develop/go/client/temporal-client)
+- [Java SDK Temporal客户端功能指南](/develop/java/client/temporal-client)
+- [PHP SDK Temporal 客户端功能指南](/develop/php/client/temporal-client)
+- [Python SDK Temporal客户端功能指南](/develop/python/client)
+- [TypeScript SDK Temporal客户端功能指南](/develop/typescript/client)
 
 :::
 
@@ -221,20 +221,20 @@ func main() {
 }
 ```
 
-Developers can then use the Client as the main entry point for interacting with the application through Temporal.
-Using that Client, developers may for example start or Signal Workflows, Query a Workflow's state, etc.
-We can see in the example above how the developer has used `ExecuteWorkflow` API to start a Workflow.
+然后，开发人员可以使用客户端作为通过 Temporal 与应用程序交互的主要入口点。
+使用该客户端，开发人员可以启动 Signal、Workflow、Query 或 Workflow 的状态等。
+我们可以在上面的示例中看到开发人员如何使用 `ExecuteWorkflow` API 来启动 Workflow。
 
-### APIs to Develop Workflows
+### 用于开发 Workflow 的 API
 
-Workflows are defined as code: either a function or an object method, depending on the language.
+Workflow 被定义为代码：函数或对象方法，具体取决于语言。
 
-For example, the following is a valid Temporal Workflow in Go:
+例如，以下是 Go 中有效的 Temporal Workflow：
 
 :::caution Do not copy and use code
 
-The following code is for example purposes only.
-For tested code samples and best practices, use your preferred language SDK's developer's guide.
+以下代码仅用于示例目的。
+有关经过测试的代码示例和最佳实践，请使用您首选语言 SDK 的开发人员指南。
 
 :::
 
@@ -245,12 +245,12 @@ func LoanApplication(ctx context.Context) (error) {
 }
 ```
 
-The Workflow code uses Temporal SDK APIs to orchestrate the steps of the application.
+Workflow 代码使用 Temporal SDK API 来编排应用程序的步骤。
 
 :::caution Do not copy and use code
 
-The following code is for example purposes only.
-For tested code samples and best practices, use your preferred language SDK's developer's guide.
+以下代码仅用于示例目的。
+有关经过测试的代码示例和最佳实践，请使用您首选语言 SDK 的开发人员指南。
 
 :::
 
@@ -266,21 +266,21 @@ func LoanApplication(ctx workflow.Context, input *LoanApplicationWorkflowInput) 
 }
 ```
 
-A Workflow executes Activities (other functions that interact with external systems), handles and sends messages (Queries, Signals, Updates), and interacts with other Workflows.
+Workflow 执行活动（与外部系统交互的其他功能），处理和发送消息（查询、Signal、Update），并与其他 Workflow 交互。
 
-This Workflow code, while executing, can be paused, resumed, and migrated across physical machines without losing state.
+此 Workflow 代码在执行时可以暂停、恢复和跨物理机迁移，而不会丢失状态。
 
-When a Workflow calls the API to execute an Activity, the Worker sends a [Command](https://docs.temporal.io/references/commands) back to the Temporal Service. The Temporal Service creates Activity Tasks in response which the same or a different Worker can then pick up and begin executing. In this way, the Worker and Temporal Service work together to incrementally execute Workflow code in a reliable way.
-We discuss this more in detail in [The SDK and Temporal Service relationship](/encyclopedia/temporal-sdks#sdk-and-cluster-relationship) section.
+当 Workflow 调用 API 来执行 Activity 时，Worker 会将 [命令](https://docs.temporal.io/references/commands) 发送回 Temporal 服务。Temporal 服务创建 Activity 任务作为响应，然后相同或不同的 Worker 可以拾取并开始执行。这样，Worker 和Temporal 服务协同工作，以可靠的方式增量执行 Workflow 代码。
+我们在【SDK 与 Temporal 服务关系】(/encyclopedia/temporal-sdks#sdk-and-cluster-relationship) 部分对此进行了更详细的讨论。
 
-The SDK APIs also enable developers to write code that more genuinely maps to their process. This is because without a specialized SDK, developers might have to write a lot of boilerplate code. This can lead to code that's hard to maintain, difficult to understand, or that doesn't directly correspond to the underlying business process.
+SDK API 还使开发人员能够编写更真实地映射到其流程的代码。这是因为如果没有专门的 SDK，开发人员可能必须编写大量样板代码。这可能会导致代码难以维护、难以理解，或者与底层业务流程不直接对应。
 
-For example, the bank loan application Workflow might actually look like this:
+例如，银行贷款申请Workflow实际上可能如下所示：
 
 :::caution Do not copy and use code
 
-The following code is for example purposes only.
-For tested code samples and best practices, use your preferred language SDK's developer's guide.
+以下代码仅用于示例目的。
+有关经过测试的代码示例和最佳实践，请使用您首选语言 SDK 的开发人员指南。
 
 :::
 
@@ -318,21 +318,21 @@ func LoanApplicationWorkflow(ctx workflow.Context, applicantName string, loanAmo
 }
 ```
 
-The level of abstraction that APIs offer enables the developer to focus on business logic without having to worry about the intricacies of distributed computing such as retries, or having to explicitly maintain a state machine and the intermediate state for each step of the process.
+API 提供的抽象级别使开发人员能够专注于业务逻辑，而不必担心分布式计算的复杂性（例如重试），也不必为流程的每个步骤显式维护状态机和中间状态。
 
-Additionally, the state of the Workflow is automatically persisted so if a failure does occur, it resumes right where it left off.
+此外，Workflow 的状态会自动保留，因此如果发生故障，它会从中断处恢复。
 
-### APIs to create and manage Worker Processes
+### 用于创建和管理 Worker 流程的 API
 
-Workers are responsible for executing Workflow and Activity code (application code). The SDK provides APIs for configuring and starting Workers, enabling developers to control how the code is executed.
-Workers are horizontally scalable, often run with systems like Kubernetes, and configured according to the application's needs.
+Worker 负责执行 Workflow 和 Activity 代码（应用程序代码）。 SDK提供了用于配置和启动Worker的API，使开发人员能够控制代码的执行方式。
+Worker 具有水平可扩展性，通常与 Kubernetes 等系统一起运行，并根据应用程序的需求进行配置。
 
-Here is an example of how you could initialize a Worker using the Go SDK.
+以下是如何使用 Go SDK 初始化 Worker 的示例。
 
 :::caution Do not copy and use code
 
-The following code is for example purposes only.
-For tested code samples and best practices, use your preferred language SDK's developer's guide.
+以下代码仅用于示例目的。
+有关经过测试的代码示例和最佳实践，请使用您首选语言 SDK 的开发人员指南。
 
 :::
 
@@ -360,22 +360,22 @@ func main() {
 }
 ```
 
-The Worker polls on the specified Task Queue, processing those Tasks, and reporting the results back to the Temporal Service. They execute both the Workflows and Activities, and the SDK ensures that they perform these tasks efficiently and reliably.
+Worker 轮询指定的 Task Queue，处理这些任务，并将结果报告给 Temporal 服务。它们执行 Workflow 和活动，SDK 确保它们高效可靠地执行这些任务。
 
-### APIs to customize Activity Execution behavior
+### 用于自定义 Activity 执行行为的 API
 
-Activities in Temporal are individual units of work that often represent non-deterministic parts of the code logic, such as querying a database or calling an external service. The SDK provides APIs to customize the behavior of an Activity Execution.
+Temporal 中的活动是单独的工作单元，通常代表代码逻辑的非确定性部分，例如查询数据库或调用外部服务。 SDK 提供 API 来自定义 Activity 执行的行为。
 
-By default, if an Activity attempts to communicate with another system and encounters a transient failure like a network issue, Temporal ensures the Activity is tried again automatically.
+默认情况下，如果 Activity 尝试与另一个系统通信并遇到暂时性故障（例如网络问题），Temporal 将确保自动再次尝试 Activity。
 
-However, Temporal enables developers to control a variety of timeouts, a Retry Policy, Heartbeat monitoring, and asynchronous completion.
+然而，Temporal 使开发人员能够控制各种超时、Retry Policy、心跳监控和异步完成。
 
-The following code is an example of a custom set of Activity Execution options that affect the timeout and retry behavior of the execution, should the Activity encounter a failure.
+以下代码是自定义 Activity 执行选项集的示例，如果 Activity 遇到故障，这些选项会影响执行的超时和重试行为。
 
 :::caution Do not copy and use code
 
-The following code is for example purposes only.
-For tested code samples and best practices, use your preferred language SDK's developer's guide.
+以下代码仅用于示例目的。
+有关经过测试的代码示例和最佳实践，请使用您首选语言 SDK 的开发人员指南。
 
 :::
 
@@ -411,22 +411,22 @@ func LoanCreditCheckActivity(ctx context.Context, loanAmount int) (string, error
 }
 ```
 
-## The SDK and Temporal Service relationship {#sdk-and-cluster-relationship}
+## SDK与Temporal服务关系 {#sdk-and-cluster-relationship}
 
-**How do the Temporal SDKs work with the Temporal Service?**
+**Temporal SDK如何与Temporal服务配合使用？**
 
-The Temporal Service functions more as a choreographer than a conductor. Rather than directly assigning tasks to Workers, the Temporal Service arranges the Tasks into a Task Queue while Workers poll the Task Queue. Developers may create a fleet of Workers and tune them so that a Task is picked up as soon as it is available. If a Worker goes down, Tasks can wait until the next Worker is available.
+Temporal服务更像是编舞者而不是指挥者。 Temporal 服务不是直接将任务分配给 Worker，而是将任务安排到 Task Queue，同时 Worker 轮询 Task Queue。开发人员可以创建一组 Worker 并对其进行调整，以便任务一可用就被拾取。如果 Worker 发生故障，任务可以等待，直到下一个 Worker 可用。
 
-A Workflow might request to execute an Activity, start a Timer, or start a Child Workflow, each of which translates into a Command, dispatched to the Temporal Service.
-In addition to acting on these Commands, the Temporal Service documents that interaction by appending their corresponding Events into the Workflow Execution's Event History.
+Workflow 可能请求执行 Activity、启动 Timer 或启动 Child Workflow，其中每个都转换为命令，分派到 Temporal 服务。
+除了执行这些命令之外，Temporal 服务还通过将相应的事件附加到 Workflow Execution 的 Event History 中来记录交互。
 
-Take for instance the call to execute an Activity. When a Workflow invokes it, the Worker doesn't immediately execute that Activity code. Instead, it generates a ScheduleActivityTask Command, dispatching it to the Cluster. In response, the Cluster queues up a new Activity Task. Only when a Worker finds itself free, it collects the task and begins executing the Activity code.
+以执行 Activity 的调用为例。当 Workflow 调用它时，Worker 不会立即执行该 Activity 代码。相反，它会生成 ScheduleActivityTask 命令，并将其分派到集群。作为响应，集群将新的 Activity 任务排队。仅当 Worker 发现自己空闲时，它才会收集任务并开始执行 Activity 代码。
 
-The Temporal Service persists Workflow Execution Event History, so that if there is a failure, the SDK Worker is able to Replay the execution and resume where it left off.
+Temporal 服务会保留 Workflow Execution Event History，因此如果发生故障，SDK Worker 能够重播执行并从中断处恢复。
 
-This is where the deterministic constraints of the Workflow code comes into play, requiring the use of Activities to create side effects and interact with the outside world.
+这就是 Workflow 代码的确定性约束发挥作用的地方，需要使用活动来创建副作用并与外界交互。
 
-Let's look at an example Workflow with a single Activity.
+让我们看一下带有单个 Activity 的 Workflow 示例。
 
 ```go
 func LoanApplication(ctx workflow.Context, input *LoanApplicationWorkflowInput) (*LoanApplicationWorkflowResult, error) {
@@ -455,66 +455,66 @@ func (a *Activities) NotifyApplicantActivity(ctx context.Context, input *NotifyA
 }
 ```
 
-The Activity above is performing a single call to an external API. Since the call can fail due to transient issues, we define it outside of the Workflow and provide it with retry options.
+上面的 Activity 正在执行对外部 API 的单个调用。由于调用可能会因暂时性问题而失败，因此我们将其定义在 Workflow 之外，并为其提供重试选项。
 
-When you create a new Worker process, the Worker creates a long-lasting connection to the Temporal Service, polling a Task Queue for Tasks that are related to the code it is capable of executing.
-
-<CaptionedImage
-    src="/diagrams/how-sdk-works-1.svg"
-    title="A Worker long polls for Tasks" />
-
-Although the Worker is now running, unless a Workflow is explicitly started, the Task Queue doesn't have any Tasks on it and so, no code executes.
-We can use a Temporal Client (available in Temporal SDKs and the Temporal CLI) to start a new Workflow.
+当您创建新的 Worker 进程时，Worker 会创建与 Temporal 服务的持久连接，轮询 Task Queue 以获得与其能够执行的代码相关的任务。
 
 <CaptionedImage
-    src="/diagrams/how-sdk-works-2.svg"
-    title="Start a Workflow using a Temporal Client" />
+src="/diagrams/how-sdk-works-1.svg"
+title="Worker 任务长轮询" />
 
-Starting a Workflow Execution creates a new Event, WorkflowExecutionStarted, and adds it to the Workflow Execution's Event History.
-
-The Temporal Service then schedules a Workflow Task by adding it to the Task Queue.
-When the Worker has capacity, it picks up this Task, and begin executing code.
-
-Each step of the Task (e.g. Scheduled, Started, and Completed), gets recorded into the Event History.
-
-- Scheduled means that the Temporal Service has added a Task to the Task Queue.
-- Started means that the Worker has dequeued the Task.
-- Completed means that the Worker finished executing the Task by responding to the Temporal Service.
-
-When the call to invoke the Activity is evaluated, the Worker suspends executing the code and sends a Command to the Temporal Service to schedule an Activity Task.
+尽管 Worker 现在正在运行，但除非显式启动 Workflow，否则 Task Queue 上没有任何任务，因此不会执行任何代码。
+我们可以使用 Temporal 客户端（在 Temporal SDK 和 Temporal CLI 中提供）来启动新的 Workflow。
 
 <CaptionedImage
-    src="/diagrams/how-sdk-works-3.svg"
-    title="Worker suspends code execution and sends a Command to the Temporal Service" />
+src="/diagrams/how-sdk-works-2.svg"
+title="使用 Temporal 客户端启动 Workflow" />
 
-When the Worker process can perform more work, it picks up the Activity Task and begins executing the Activity code, which includes the call to the external API.
+启动 Workflow Execution 会创建一个新事件 WorkflowExecutionStarted，并将其添加到 Workflow Execution 的 Event History 中。
 
-If the Activity fails, say the API goes down, Temporal will automatically retry the Activity with one second between intervals, as the configurations have defined, an infinite number of times until the Activity succeeds or is canceled.
+然后，Temporal 服务通过将 Workflow 任务添加到 Task Queue 来调度 Workflow 任务。
+当Worker有容量时，它会拿起这个任务，并开始执行代码。
 
-In the case where the calls succeeds, and the code completes, the Worker tells the Temporal Service the Activity Task completed.
+任务的每个步骤（例如 Scheduled、开始和完成）都会记录到 Event History 中。
 
-<CaptionedImage
-    src="/diagrams/how-sdk-works-activity.svg"
-    title="The Worker reports that the Activity Execution completed" />
+- Scheduled 表示 Temporal 服务已向 Task Queue 添加了任务。
+- Started 意味着 Worker 已使任务出列。
+- 完成意味着Worker通过响应Temporal服务完成了任务的执行。
 
-Included is any data that was returned from the Activity (results of the API call), which is then persisted in the Workflow Execution Event History, and is now accessible to the Workflow code.
-
-The Temporal Service creates a new Workflow Task which the Worker picks up.
-
-<CaptionedImage
-    src="/diagrams/how-sdk-works-1.svg"
-    title="The Worker picks up the new Task" />
-
-This is when the SDK Worker Replays the Workflow code, using the Event History as guidance on what to expect. If the Replay encounters an Event that doesn't match up with what is expected from the code, a [non-determinism](/references/errors#non-deterministic-error) error gets thrown.
-
-If there is alignment, the Worker continues evaluating code.
-
-Assuming the Activity Execution is successful, the Workflow now has the result of the Activity and the Worker is able to finish evaluating and executing the Workflow code, responding to the Temporal Service when complete.
-
-The result of the Workflow can now be retrieved using a Temporal Client.
+当评估调用 Activity 的调用时，Worker 暂停执行代码并向 Temporal 服务发送命令以调度 Activity 任务。
 
 <CaptionedImage
-    src="/diagrams/how-sdk-works-4.svg"
-    title="The Temporal Client can now access the result of the Workflow" />
+src="/diagrams/how-sdk-works-3.svg"
+title="Worker 暂停代码执行并向 Temporal 服务发送命令" />
 
-And that’s how a Temporal Worker and Temporal Service work together.
+当 Worker 进程可以执行更多工作时，它会拿起 Activity 任务并开始执行 Activity 代码，其中包括对外部 API 的调用。
+
+如果 Activity 失败，比如 API 出现故障，Temporal 将自动重试 Activity，间隔一秒（如配置所定义），无限次，直到 Activity 成功或被取消。
+
+在调用成功并且代码完成的情况下，Worker 告诉 Temporal 服务 Activity 任务已完成。
+
+<CaptionedImage
+src="/diagrams/how-sdk-works-activity.svg"
+title="Worker 报告 Activity 执行已完成" />
+
+其中包括从 Activity 返回的任何数据（API 调用的结果），这些数据随后保留在 Workflow Execution Event History 中，并且现在可供 Workflow 代码访问。
+
+Temporal 服务创建一个新的 Workflow 任务，Worker 将拾取该任务。
+
+<CaptionedImage
+src="/diagrams/how-sdk-works-1.svg"
+title="Worker 领取新任务" />
+
+此时，SDK Worker 会重放 Workflow 代码，并使用 Event History 作为预期的指导。如果重放遇到与代码预期不匹配的事件，则会引发[非确定性](/references/errors#non-deterministic-error)错误。
+
+如果存在对齐，则 Worker 继续评估代码。
+
+假设 Activity 执行成功，Workflow 现在具有 Activity 的结果，并且 Worker 能够完成评估和执行 Workflow 代码，并在完成时响应 Temporal 服务。
+
+现在可以使用 Temporal 客户端检索 Workflow 的结果。
+
+<CaptionedImage
+src="/diagrams/how-sdk-works-4.svg"
+title="Temporal 客户端现在可以访问 Workflow 的结果" />
+
+这就是 Temporal Worker 和 Temporal 服务协同工作的方式。

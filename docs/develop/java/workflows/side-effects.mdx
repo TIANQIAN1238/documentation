@@ -1,7 +1,7 @@
 ---
 id: side-effects
-title: Side Effects - Java SDK
-sidebar_label: Side Effects
+title: "Side Effects - Java SDK"
+sidebar_label: "Side Effects"
 slug: /develop/java/workflows/side-effects
 toc_max_heading_level: 2
 keywords:
@@ -10,27 +10,28 @@ tags:
   - Side-effects
   - Java SDK
   - Temporal SDKs
-description: Side Effects in a Workflow execute non-deterministic code like generating a UUID. The result is saved in Workflow Event History for consistent replays without re-execution.
+description: "Workflow 中的 Side Effect 执行非确定性代码，例如生成 UUID。结果保存在 Workflow Event History 中，以便一致重播而无需重新执行。"
 ---
 
+<a id="side-effects"></a>
 ## Side Effects {#side-effects}
 
-Side Effects are used to execute non-deterministic code, such as generating a UUID or a random number, without compromising determinism in the Workflow.
-This is done by storing the non-deterministic results of the Side Effect into the Workflow [Event History](/workflow-execution/event#event-history).
+Side Effect 用于执行非确定性代码，例如生成 UUID 或随机数，而不影响 Workflow 中的确定性。
+这是通过将 Side Effect 的非确定性结果存储到 Workflow [Event History](/workflow-execution/event#event-history) 中来完成的。
 
-A Side Effect does not re-execute during a Replay. Instead, it returns the recorded result from the Workflow Execution Event History.
+Side Effect 在重播期间不会重新执行。相反，它返回 Workflow Execution Event History 的记录结果。
 
-Side Effects should not fail. An exception that is thrown from the Side Effect causes failure and retry of the current Workflow Task.
+Side Effect 不应失败。从 Side Effect 引发的异常会导致当前 Workflow 任务失败并重试。
 
-An Activity or a Local Activity may also be used instead of a Side effect, as its result is also persisted in Workflow Execution History.
+也可以使用 Activity 或本地 Activity 来代替 Side Effect，因为其结果也保留在 Workflow Execution 历史记录中。
 
 :::note
 
-You shouldn't modify the Workflow state inside a Side Effect function, because it is not reexecuted during Replay. Side Effect function should be used to return a value.
+您不应修改 Side Effect 函数内的 Workflow 状态，因为它在重播期间不会重新执行。应使用 Side Effect 函数返回值。
 
 :::
 
-To use a Side Effect in Java, set the [`sideEffect()`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#sideEffect(java.lang.Class,io.temporal.workflow.Functions.Func)) function in your Workflow Execution and return the non-deterministic code.
+要在 Java 中使用 Side Effect，请在 Workflow Execution 中设置 [`sideEffect()`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#sideEffect(java.lang.Class,io.temporal.workflow.Functions.Func)) 函数并返回非确定性代码。
 
 ```java
 int random = Workflow.sideEffect(Integer.class, () -> random.nextInt(100));
@@ -41,7 +42,7 @@ if random < 50 {
 }
 ```
 
-Here's another example that uses `sideEffect()`.
+这是使用 `sideEffect()` 的另一个示例。
 
 ```java
 // implementation of the @WorkflowMethod
@@ -61,9 +62,9 @@ public void execute() {
 }
 ```
 
-Java also provides a deterministic method to generate random numbers or random UUIDs.
+Java 还提供了一种确定性方法来生成随机数或随机 UUID。
 
-To generate random numbers in a deterministic method, use [`newRandom()`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#newRandom).
+要以确定性方法生成随机数，请使用 [`newRandom()`](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#newRandom)。
 
 ```java
 // implementation of the @WorkflowMethod
@@ -73,7 +74,7 @@ public void execute() {
 }
 ```
 
-To generate a random UUID in a deterministic method, use [`randomUUID()`](https://www.javadoc.io/static/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#newRandom()).
+要以确定性方法生成随机 UUID，请使用 [`randomUUID()`](https://www.javadoc.io/static/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#newRandom()）。
 
 ```java
 // implementation of the @WorkflowMethod

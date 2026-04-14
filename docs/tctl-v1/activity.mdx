@@ -1,8 +1,8 @@
 ---
 id: activity
-title: tctl v1.17 activity command reference
-sidebar_label: activity
-description: Experience the new Temporal CLI public preview for streamlined Workflow and Activity management. Utilize tctl commands like `complete` and `fail` with various modifiers for precise control.
+title: "tctl v1.17 Activity 命令参考"
+sidebar_label: "Activity"
+description: "体验新的 Temporal CLI 公共预览版，以简化 Workflow 和 Activity 管理。利用 tctl 命令（例如 `complete` 和 `fail`）以及各种修饰符来实现精确控制。"
 toc_max_heading_level: 4
 keywords:
   - cli
@@ -15,147 +15,153 @@ keywords:
 
 :::info tctl is deprecated
 
-The tctl command line utility has been deprecated and is no longer actively supported.
-We recommend transitioning to [Temporal CLI](/cli) for continued use and access to new features.
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议过渡到 [Temporal CLI](/cli) 以继续使用和访问新功能。
 
-Thank you for being a valued part of the Temporal community.
+感谢您成为 Temporal 社区的重要组成部分。
 
 :::
 
-The `tctl activity` commands enable [Activity Execution](/activity-execution) operations.
+`tctl Activity` 命令启用 [Activity 执行](/activity-execution) 操作。
 
-- [tctl activity complete](#complete)
-- [tctl activity fail](#fail)
+- [tctl Activity 完整](#complete)
+- [tctl Activity 失败](#fail)
 
-## complete
+## 完全的 {#complete}
 
-The `tctl activity complete` command completes an [Activity Execution](/activity-execution).
+`tctl Activity complete` 命令完成 [Activity 执行](/activity-execution)。
 
-`tctl activity complete <modifiers>`
+`tctl Activity complete <modifiers>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --workflow_id
+<a id="complete"></a>
+### --Workflow_id {#workflowid}
 
-Specify the [Workflow Id](/workflow-execution/workflowid-runid#workflow-id) of an [Activity Execution](/activity-execution) to complete.
+指定要完成的 [Activity 执行](/workflow-execution/workflowid-runid#workflow-id) 的 [Workflow ID](/activity-execution)。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl activity complete --workflow_id <id>
 ```
 
-### --run_id
+<a id="workflowid"></a>
+### --run_id {#runid}
 
-Specify the [Run Id](/workflow-execution/workflowid-runid#run-id) of an [Activity Execution](/activity-execution) to complete.
+指定要完成的 [Activity 执行](/workflow-execution/workflowid-runid#run-id) 的 [运行 ID](/activity-execution)。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tctl activity complete --run_id <id>
 ```
 
-### --activity_id
+<a id="runid"></a>
+### --Activity_id {#activityid}
 
-Specify the [Activity Id](/activity-execution#activity-id) of an [Activity Execution](/activity-execution) to complete.
+指定要完成的 [Activity 执行](/activity-execution#activity-id) 的 [Activity ID](/activity-execution)。
 
-**Example**
+**例子**
 
 ```bash
 tctl activity complete --activity_id <id>
 ```
 
-### --result
+### - 结果 {#result}
 
-Specify the result of an [Activity Execution](/activity-execution) when using tctl to complete the Activity Execution.
+指定使用 tctl 完成 Activity 执行时 [Activity 执行](/activity-execution) 的结果。
 
-**Example**
+**例子**
 
 ```bash
 tctl activity complete --result <value>
 ```
 
-### --identity
+### - 身份 {#identity}
 
-Specify the identity of the operator when using tctl to complete an [Activity Execution](/activity-execution).
+使用 tctl 完成 [Activity 执行](/activity-execution) 时指定操作员的身份。
 
-**Example**
+**例子**
 
 ```bash
 tctl activity complete --identity <value>
 ```
 
-## fail
+## 失败 {#fail}
 
-The `tctl activity fail` command fails an [Activity Execution](/activity-execution).
+`tctl Activity fail` 命令失败 [Activity 执行](/activity-execution)。
 
-`tctl activity fail [<modifiers>]`
+`tctl Activity fail [<modifiers>]`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --workflow_id
+<a id="activityid"></a>
+### --Workflow_id {#workflowid}
 
-Specify the [Workflow Id](/workflow-execution/workflowid-runid#workflow-id) of an [Activity Execution](/activity-execution) to fail.
+指定 [Activity 执行](/workflow-execution/workflowid-runid#workflow-id) 的 [Workflow ID](/activity-execution) 失败。
 
-Alias: `-w`
+别名：`-w`
 
-**Example**
+**例子**
 
 ```bash
 tctl activity fail --workflow_id <id>
 ```
 
-### --run_id
+<a id="result"></a>
+### --run_id {#runid}
 
-Specify the [Run Id](/workflow-execution/workflowid-runid#run-id) of an [Activity Execution](/activity-execution) to fail.
+指定 [Activity 执行](/workflow-execution/workflowid-runid#run-id) 的 [运行 ID](/activity-execution) 失败。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tctl activity fail --run_id <id>
 ```
 
-### --activity_id
+<a id="identity"></a>
+### --Activity_id {#activityid}
 
-Specify the [Activity Id](/activity-execution#activity-id) of an [Activity Execution](/activity-execution) to fail.
+指定 [Activity 执行](/activity-execution#activity-id) 的 [Activity ID](/activity-execution) 失败。
 
-**Example**
+**例子**
 
 ```bash
 tctl activity fail --activity_id <id>
 ```
 
-### --reason
+### - 原因 {#reason}
 
-Specify the reason for failing an [Activity Execution](/activity-execution).
+指定 [Activity 执行](/activity-execution) 失败的原因。
 
-**Example**
+**例子**
 
 ```bash
 tctl activity fail --reason <value>
 ```
 
-### --detail
+### - 细节 {#detail}
 
-Specify details of the reason for failing an [Activity Execution](/activity-execution).
+指定 [Activity 执行](/activity-execution) 失败原因的详细信息。
 
-**Example**
+**例子**
 
 ```bash
 tctl activity fail --detail <value>
 ```
 
-### --identity
+### - 身份 {#identity}
 
-Specify the identity of the operator when using tctl to fail an [Activity Execution](/activity-execution).
+使用 tctl 使 [Activity 执行](/activity-execution) 失败时指定操作员的身份。
 
-**Example**
+**例子**
 
 ```bash
 tctl activity complete --identity <value>

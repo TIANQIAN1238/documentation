@@ -1,0 +1,86 @@
+---
+id: taskqueue
+title: tctl v1.17 任务队列命令参考
+sidebar_label: 任务队列
+description: 尝试新的 Temporal CLI 公共预览版！将 tctl 替换为 v1.0 版本。使用 tctl 任务队列描述获取 Task Queue 详细信息，使用 tctl 任务队列列表分区获取分区信息。
+toc_max_heading_level: 4
+keywords:
+  - cli
+  - cli reference
+  - tctl
+  - temporal
+  - temporal cli
+  - temporal server
+---
+
+:::info tctl is deprecated
+
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议转换到 [Temporal CLI](/cli) 以继续使用和访问新功能。
+
+感谢您成为 Temporal 社区的重要组成部分。
+
+:::
+
+`tctl taskqueue` 命令启用 [Task Queue](/task-queue) 操作。
+
+别名：`t`
+
+- [tctl 任务队列描述](#描述)
+- [tctl 任务队列列表分区](#列表分区)
+
+＃＃ 描述
+
+`tctl taskqueue describe` 命令描述 [Task Queue](/task-queue) 的轮询器信息。
+
+`tctl 任务队列描述 <修饰符> <值>`
+
+以下修饰符控制命令的行为。
+
+### --任务队列
+
+_所需修饰符_
+
+指定 [Task Queue](/任务队列)。
+
+别名：`--t`
+
+**例子**
+
+```bash
+tctl taskqueue describe --taskqueue <value>
+```
+
+### --任务队列类型
+
+指定 [Task Queue](/task-queue) 的类型。
+类型可以是“Workflow”或“Activity”。
+默认为“Workflow”。
+
+**例子**
+
+```bash
+tctl taskqueue describe --taskqueue <value> --taskqueuetype <type>
+```
+
+## 列表分区
+
+`tctl taskqueue list-partition` 命令列出 [Task Queue](/task-queue) 的分区以及分区的主机名。
+
+`tctl 任务队列列表分区 --taskqueue <值>`
+
+以下修饰符控制命令的行为。
+
+### --任务队列
+
+_所需修饰符_
+
+指定 [Task Queue](/task-queue) 描述。
+
+别名：`--t`
+
+**例子**
+
+```bash
+tctl taskqueue list-partition --taskqueue <value>
+```

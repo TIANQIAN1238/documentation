@@ -1,0 +1,303 @@
+---
+id: permissions-reference
+title: 权限参考
+description: Temporal Cloud 中的权限参考
+toc_max_heading_level: 4
+keywords:
+  - permissions
+  - reference
+  - temporal cloud
+---
+
+Temporal Cloud 访问控制分为两个范围：
+
+- 账户级角色权限
+- Namespace级权限
+
+在每个范围内，权限适用于公开记录的 [Temporal Cloud Ops API](https://docs.Temporal.io/ops)
+端点以及其他非云运营功能，例如 Temporal Cloud UI 和内部自动化行为。
+
+## 帐户级别访问权限 {#account-level-access}
+
+通过为用户和服务帐户分配帐户级角色来授予帐户级访问权限。 Temporal Cloud
+支持以下帐户级别角色：
+
+- 账户所有者
+- 全局管理员
+- 开发商
+- 财务管理员
+- 只读
+
+### Cloud Ops API 权限
+
+此表提供通过账户级角色授予的权限的 API 级详细信息。这些权限是
+每个用户配置。
+
+|许可 |只读 |开发商|财务管理|全局管理|帐户所有者 |
+| ------------------------ | | :-----: | :-----: | :------------: | :----------: | :------------: |
+| [AddUserGroupMember](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/groups/POST/cloud/user-groups/%7BgroupId%7D/members) |           |           |               |      ✔ |       ✔ |
+| [CreateAccountAuditLogSink](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/account/POST/cloud/audit-log-sinks) |           |           |               |      ✔ |       ✔ |
+| [CreateApiKey](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/api-keys/POST/cloud/api-keys) |    ✔\* |    ✔\* |      ✔\* |     ✔\* |      ✔\* |
+| [CreateConnectivityRule](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/connectivity-rules/POST/cloud/connectivity-rules) |           |           |               |      ✔ |       ✔ |
+| [CreateNamespace](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Namespaces/POST/cloud/Namespaces) |           |     ✔ |               |      ✔ |       ✔ |
+| [CreateNexusEndpoint](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Nexus/POST/cloud/Nexus/endpoints) |           |     ✔ |               |      ✔ |       ✔ |
+| [创建服务帐户](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/service-accounts/POST/cloud/service-accounts) |    ✔† |    ✔† |      ✔† |      ✔† |      ✔† |
+| [创建用户](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users/POST/cloud/users) |           |           |               |      ✔ |       ✔ |
+| [创建用户组](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/groups/POST/cloud/user-groups) |           |           |               |      ✔ |       ✔ |
+| [DeleteAccountAuditLogSink](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/account/DELETE/cloud/audit-log-sinks/%7Bname%7D) |           |           |               |      ✔ |       ✔ |
+| [DeleteApiKey](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/api-keys/DELETE/cloud/api-keys/%7BkeyId%7D) |    ✔\* |    ✔\* |      ✔\* |     ✔\* |      ✔\* |
+| [删除ConnectivityRule](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/connectivity-rules/DELETE/cloud/connectivity-rules/%7BconnectivityRuleId%7D) |           |           |               |      ✔ |       ✔ |
+| [删除NexusEndpoint](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Nexus/DELETE/cloud/Nexus/endpoints/%7BendpointId%7D) |           |     ✔ |               |      ✔ |       ✔ |
+| [删除服务帐户](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/service-accounts/DELETE/cloud/service-accounts/%7BserviceAccountId%7D) |    ✔† |    ✔† |      ✔† |      ✔† |      ✔† |
+| [删除用户](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users/DELETE/cloud/users/%7BuserId%7D) |           |           |               |      ✔ |       ✔ |
+| [删除用户组](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/groups/DELETE/cloud/user-groups/%7BgroupId%7D) |           |           |               |      ✔ |       ✔ |
+| [GetAccount](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/account/GET/cloud/account) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [GetAccountAuditLogSink](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/account/GET/cloud/audit-log-sinks/%7Bname%7D) |           |           |               |      ✔ |       ✔ |
+| [GetAccountAuditLogSinks](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/account/GET/cloud/audit-log-sinks) |           |           |               |      ✔ |       ✔ |
+| [GetApiKey](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/api-keys/GET/cloud/api-keys/%7BkeyId%7D) |    ✔\* |    ✔\* |      ✔\* |     ✔\* |      ✔\* |
+| [GetApiKeys](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/api-keys/GET/cloud/api-keys) |    ✔\* |    ✔\* |      ✔\* |     ✔\* |      ✔\* |
+| [GetAsyncOperation](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/operations/GET/cloud/operations/%7BasyncOperationId%7D) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [GetAuditLogs](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/account/GET/cloud/audit-logs) |           |           |               |      ✔ |       ✔ |
+| [GetConnectivityRule](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/connectivity-rules/GET/cloud/connectivity-rules/%7BconnectivityRuleId%7D) |           |     ✔ |               |      ✔ |       ✔ |
+| [GetConnectivityRules](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/connectivity-rules/GET/cloud/connectivity-rules) |           |     ✔ |               |      ✔ |       ✔ |
+| [获取当前身份](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/account/GET/cloud/current-identity) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [GetNamespaces](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Namespaces/GET/cloud/Namespaces) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [GetNexusEndpoint](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Nexus/GET/cloud/Nexus/endpoints/%7BendpointId%7D) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [GetNexusEndpoints](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Nexus/GET/cloud/Nexus/endpoints) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [GetRegion](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/regions/GET/cloud/regions/%7Bregion%7D) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [GetRegions](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/regions/GET/cloud/regions) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [GetServiceAccount](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/service-accounts/GET/cloud/service-accounts/%7BserviceAccountId%7D) |    ✔† |    ✔† |      ✔† |      ✔† |      ✔† |
+| [GetServiceAccounts](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/service-accounts/GET/cloud/service-accounts) |    ✔† |    ✔† |      ✔† |      ✔† |      ✔† |
+| [GetUsage](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/account/GET/cloud/usage) |           |           |       ✔ |      ✔ |       ✔ |
+| [GetUser](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users/GET/cloud/users/%7BuserId%7D) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [GetUserGroup](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/groups/GET/cloud/user-groups/%7BgroupId%7D) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [GetUserGroupMembers](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/groups/GET/cloud/user-groups/%7BgroupId%7D/members) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [GetUserGroups](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/groups/GET/cloud/user-groups) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [获取用户](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users/GET/cloud/users) |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+| [删除用户组成员](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/groups/POST/cloud/user-groups/%7BgroupId%7D/remove-member) |           |           |               |      ✔ |       ✔ |
+| [UpdateAccount](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/account/POST/cloud/account) |           |           |               |      ✔ |       ✔ |
+| [UpdateAccountAuditLogSink](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/account/POST/cloud/audit-log-sinks/%7Bspec.name%7D) |           |           |               |      ✔ |       ✔ |
+| [UpdateApiKey](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/api-keys/POST/cloud/api-keys/%7BkeyId%7D) |    ✔\* |    ✔\* |      ✔\* |     ✔\* |      ✔\* |
+| [UpdateNamespaceTags](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Namespaces/POST/cloud/Namespaces/%7BNamespace%7D/Update-tags) |           |           |               |      ✔ |       ✔ |
+| [UpdateNexusEndpoint](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Nexus/POST/cloud/Nexus/endpoints/%7BendpointId%7D) |           |     ✔ |               |      ✔ |       ✔ |
+| [UpdateServiceAccount](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/service-accounts/POST/cloud/service-accounts/%7BserviceAccountId%7D) |    ✔† |    ✔† |      ✔† |      ✔† |      ✔† |
+| [UpdateUser](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users/POST/cloud/users/%7BuserId%7D) |           |           |               |      ✔ |       ✔ |
+| [UpdateUserGroup](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/groups/POST/cloud/user-groups/%7BgroupId%7D) |           |           |               |      ✔ |       ✔ |
+| [ValidateAccountAuditLogSink](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/account/POST/cloud/audit-log-sink-validate) |           |           |               |      ✔ |       ✔ |
+
+- \* 请参阅 [API 密钥授权行为](#api-key-authorization-behavior)
+- † 请参阅[服务帐户授权行为](#service-account-authorization-behavior)
+
+{/* ### 额外的账户级功能
+
+|能力|只读 |开发商|财务管理|全局管理|帐户所有者 |
+| ---------------------------------------------------------------- | :-----: | :-----: | :------------: | :----------: | :------------: |
+|查看计费计划信息 |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+|管理 MFA 注册、密码重置和解码证书 |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+|管理自己的 API 密钥和服务帐户 API 密钥 |   ✔\*†    |   ✔\*† |     ✔\*† |     ✔\*† |     ✔\*† |
+|管理自托管到云的迁移 |           |     ✔ |               |      ✔ |       ✔ |
+|完整的用户入门和快速入门 Workflows |           |     ✔ |               |      ✔ |       ✔ |
+|查看每月费用 |           |           |       ✔ |              |       ✔ |
+|查看发票、信用分类帐条目、赠款和促销 |           |           |       ✔ |      ✔‡ |       ✔ |
+|管理 Stripe 支付门户 |           |           |       ✔ |      ✔‡ |       ✔ |
+|查看使用指标 |           |           |       ✔ |      ✔ |       ✔ |
+|邀请和重新邀请用户 |           |           |               |      ✔ |       ✔ |
+|管理标签键 |           |           |               |      ✔ |       ✔ |
+|配置帐户设置 |           |           |               |      ✔ |       ✔ |
+|自助账户注销 |           |           |               |              |       ✔ |
+| SCIM 管理 |           |           |               |              |       ✔ |
+|更改帐户计划类型 |           |           |               |              |       ✔ |
+
+- \* 请参阅 [API 密钥授权行为](#api-key-authorization-behavior) — 旧版 API 密钥端点具有相同的
+  范围内的行为与其 Cloud Ops API 的对应行为相同。
+- † 请参阅[服务帐户授权行为](#service-account-authorization-behavior) — 创建服务帐户 API
+  密钥遵循与其他服务帐户操作相同的范围授权。 ‡ 临时 — 全局管理员访问权限
+  一旦帐户所有者角色完全推出，计费和发票数据将被删除。
+
+> **注意：** 对外部可观测性端点（指标和指标描述符）的访问是单独控制的，并且
+> 不依赖于标准帐户级角色层次结构。 */}
+
+## Namespace级权限
+
+通过为用户和服务帐户分配 Namespace 级别的权限，可以向用户和服务帐户授予 Namespace 级别的权限。
+Temporal Cloud 支持以下 Namespace 级别权限：
+
+- Namespace 管理员
+- 写
+- 阅读
+
+具有全局管理员和帐户所有者角色的用户自动拥有对以下位置的所有 Namespace 的 Namespace 管理员权限：
+帐户。
+
+### Cloud Ops API 权限
+
+此表提供通过 Namespace 级别权限授予的权限的 API 级别详细信息。这些权限是
+每个用户按 Namespace 进行配置。
+
+|许可 |阅读 |写 | Namespace 管理员 |
+| -------------------------------- | :--: | :---: | :-------------: |
+| [AddNamespaceRegion](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/high-availability/POST/cloud/Namespaces/%7BNamespace%7D/add-region) |      |       |        ✔ |
+| [CreateNamespaceExportSink](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/export/POST/cloud/Namespaces/%7BNamespace%7D/export-sinks) |      |       |        ✔ |
+| [删除Namespace](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Namespaces/DELETE/cloud/Namespaces/%7BNamespace%7D) |      |       |        ✔ |
+| [DeleteNamespaceExportSink](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/export/DELETE/cloud/Namespaces/%7BNamespace%7D/export-sinks/%7Bname%7D) |      |       |        ✔ |
+| [删除NamespaceRegion](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/high-availability/DELETE/cloud/Namespaces/%7BNamespace%7D/regions/%7Bregion%7D) |      |       |        ✔ |
+| [故障转移NamespaceRegion](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/high-availability/POST/cloud/Namespaces/%7BNamespace%7D/failover-region) |      |       |        ✔ |
+| [GetNamespace](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Namespaces/GET/cloud/Namespaces/%7BNamespace%7D) |  ✔ |   ✔ |        ✔ |
+| [GetNamespaceCapacityInfo](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Namespaces/GET/cloud/Namespaces/%7BNamespace%7D/capacity-info) |  ✔ |   ✔ |        ✔ |
+| [GetNamespaceExportSink](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/export/GET/cloud/Namespaces/%7BNamespace%7D/export-sinks/%7Bname%7D) |  ✔ |   ✔ |        ✔ |
+| [GetNamespaceExportSinks](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/export/GET/cloud/Namespaces/%7BNamespace%7D/export-sinks) |  ✔ |   ✔ |        ✔ |
+| [RenameCustomSearchAttribute](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Namespaces/POST/cloud/Namespaces/%7BNamespace%7D/rename-custom-search-attribute) |      |       |        ✔ |
+| [SetServiceAccountNamespaceAccess](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/service-accounts/POST/cloud/Namespaces/%7BNamespace%7D/service-accounts/%7BserviceAccountId%7D/access) |      |       |        ✔ |
+| [SetUserGroupNamespaceAccess](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/groups/POST/cloud/Namespaces/%7BNamespace%7D/user-groups/%7BgroupId%7D/access) |      |       |        ✔ |
+| [SetUserNamespaceAccess](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/users/POST/cloud/Namespaces/%7BNamespace%7D/users/%7BuserId%7D/access) |      |       |        ✔ |
+| [UpdateNamespace](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/Namespaces/POST/cloud/Namespaces/%7BNamespace%7D) |      |       |        ✔ |
+| [UpdateNamespaceExportSink](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/export/POST/cloud/Namespaces/%7BNamespace%7D/export-sinks/%7Bspec.name%7D) |      |       |        ✔ |
+| [ValidateNamespaceExportSink](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/export/POST/cloud/Namespaces/%7BNamespace%7D/export-sink-validate) |      |       |        ✔ |
+
+### Workflow级别权限
+
+此表提供通过 Namespace 级别授予的 Workflow 级别数据平面权限的 API 级别详细信息
+权限。这些权限是根据每个用户的 Namespace 配置的。
+
+|许可|阅读 |写 | Namespace 管理员 |
+| -------------------------------------------------- | :--: | :---: | :-------------: |
+| CountActivity 执行次数 |  ✔ |   ✔ |        ✔ |
+| CountSchedules |  ✔ |   ✔ |        ✔ |
+| CountWorkflow 执行次数 |  ✔ |   ✔ |        ✔ |
+|创建Schedule |      |   ✔ |        ✔ |
+|创建Workflow规则|      |   ✔ |        ✔ |
+|删除Activity执行 |      |   ✔ |        ✔ |
+|删除Schedule |      |   ✔ |        ✔ |
+|删除Worker部署|      |   ✔ |        ✔ |
+|删除Worker部署版本|      |   ✔ |        ✔ |
+|删除Workflow执行 |      |   ✔ |        ✔ |
+|删除Workflow规则|      |   ✔ |        ✔ |
+|描述Activity执行 |  ✔ |   ✔ |        ✔ |
+|描述批量操作 |  ✔ |   ✔ |        ✔ |
+|描述Namespace |  ✔ |   ✔ |        ✔ |
+|描述Schedule |  ✔ |   ✔ |        ✔ |
+|描述任务队列 |  ✔ |   ✔ |        ✔ |
+|描述Worker |  ✔ |   ✔ |        ✔ |
+|描述Worker部署|  ✔ |   ✔ |        ✔ |
+|描述Worker部署版本 |  ✔ |   ✔ |        ✔ |
+|描述Workflow执行|  ✔ |   ✔ |        ✔ |
+|描述Workflow规则 |  ✔ |   ✔ |        ✔ |
+|执行多重操作 |      |   ✔ |        ✔ |
+|获取Worker配置|  ✔ |   ✔ |        ✔ |
+|获取搜索属性 |  ✔ |   ✔ |        ✔ |
+|获取WorkerBuildIdCompatibility |  ✔ |   ✔ |        ✔ |
+| GetWorkerTask可达性|  ✔ |   ✔ |        ✔ |
+|获取Worker版本控制规则|  ✔ |   ✔ |        ✔ |
+|获取Workflow执行历史记录|  ✔ |   ✔ |        ✔ |
+| GetWorkflowExecutionHistory反向|  ✔ |   ✔ |        ✔ |
+|列表Activity执行|  ✔ |   ✔ |        ✔ |
+|列表批量操作|  ✔ |   ✔ |        ✔ |
+|列表ClosedWorkflow执行|  ✔ |   ✔ |        ✔ |
+|列表OpenWorkflow执行|  ✔ |   ✔ |        ✔ |
+|列表Schedule匹配次数|  ✔ |   ✔ |        ✔ |
+|列表Schedules |  ✔ |   ✔ |        ✔ |
+|列表任务队列分区 |  ✔ |   ✔ |        ✔ |
+|列出Worker部署|  ✔ |   ✔ |        ✔ |
+|列表Workers |  ✔ |   ✔ |        ✔ |
+|列表Workflow执行|  ✔ |   ✔ |        ✔ |
+|列表Workflow规则|  ✔ |   ✔ |        ✔ |
+|补丁Schedule |      |   ✔ |        ✔ |
+|暂停Activity |      |   ✔ |        ✔ |
+|暂停Workflow执行|      |   ✔ |        ✔ |
+| PollActivity执行 |      |   ✔ |        ✔ |
+| PollActivityTaskQueue | PollActivityTaskQueue      |   ✔ |        ✔ |
+| PollNexusTaskQueue | PollNexusTaskQueue      |   ✔ |        ✔ |
+| PollWorkflow执行Update |      |   ✔ |        ✔ |
+| PollWorkflowTaskQueue | PollWorkflowTaskQueue      |   ✔ |        ✔ |
+| QueryWorkflow |  ✔ |   ✔ |        ✔ |
+|记录ActivityTaskHeartbeat |      |   ✔ |        ✔ |
+| RecordActivityTaskHeartbeatById | 记录ActivityTaskHeartbeatById      |   ✔ |        ✔ |
+| RecordWorker心跳|      |   ✔ |        ✔ |
+|请求取消Activity执行 |      |   ✔ |        ✔ |
+|请求取消Workflow执行 |      |   ✔ |        ✔ |
+|重置Activity |      |   ✔ |        ✔ |
+|重置StickyTaskQueue |      |   ✔ |        ✔ |
+| ResetWorkflow执行 |      |   ✔ |        ✔ |
+|响应ActivityTask取消|      |   ✔ |        ✔ |
+|响应ActivityTaskCanceledById |      |   ✔ |        ✔ |
+|响应Activity任务已完成 |      |   ✔ |        ✔ |
+|响应ActivityTaskCompletedById |      |   ✔ |        ✔ |
+|响应ActivityTask失败 |      |   ✔ |        ✔ |
+|响应ActivityTaskFailedById |      |   ✔ |        ✔ |
+|响应Nexus任务已完成 |      |   ✔ |        ✔ |
+|响应NexusTask失败 |      |   ✔ |        ✔ |
+|响应Query任务已完成|      |   ✔ |        ✔ |
+|响应Workflow任务已完成 |      |   ✔ |        ✔ |
+|响应WorkflowTask失败 |      |   ✔ |        ✔ |
+| SetWorker部署当前版本 |      |   ✔ |        ✔ |
+| SetWorker部署管理器 |      |   ✔ |        ✔ |
+| SetWorkerDeploymentRamping版本|      |   ✔ |        ✔ |
+|关机Worker |      |   ✔ |        ✔ |
+| SignalWithStartWorkflow执行|      |   ✔ |        ✔ |
+| SignalWorkflow执行|      |   ✔ |        ✔ |
+|启动Activity执行 |      |   ✔ |        ✔ |
+|开始批量操作|      |   ✔ |        ✔ |
+|启动Workflow执行 |      |   ✔ |        ✔ |
+|停止批量操作|      |   ✔ |        ✔ |
+|终止Activity执行 |      |   ✔ |        ✔ |
+|终止Workflow执行 |      |   ✔ |        ✔ |
+|触发Workflow规则|      |   ✔ |        ✔ |
+|取消暂停Activity |      |   ✔ |        ✔ |
+|取消暂停Workflow执行|      |   ✔ |        ✔ |
+| UpdateActivity选项 |      |   ✔ |        ✔ |
+| UpdateSchedule |      |   ✔ |        ✔ |
+| UpdateTaskQueueConfig | UpdateTaskQueueConfig |      |   ✔ |        ✔ |
+| UpdateWorkerBuildId兼容性 |      |   ✔ |        ✔ |
+| UpdateWorker配置|      |   ✔ |        ✔ |
+| UpdateWorker部署版本元数据 |      |   ✔ |        ✔ |
+| UpdateWorker版本控制规则 |      |   ✔ |        ✔ |
+| UpdateWorkflow执行 |      |   ✔ |        ✔ |
+| UpdateWorkflow执行选项 |      |   ✔ |        ✔ |
+
+{/* ### 额外的 Namespace 级别功能
+
+|能力|阅读 |写 | Namespace 管理员 |
+| ------------------------------------------------------------------------ | :--: | :---: | :-------------: |
+|查看扩展的 Namespace 详细信息和使用指标 |  ✔ |   ✔ |        ✔ |
+|查看导出接收器配置 |  ✔ |   ✔ |        ✔ |
+|查看 Namespace 用户访问分配 |  ✔ |   ✔ |        ✔ |
+|查看复制状态、副本运行状况和故障转移历史记录 |  ✔ |   ✔ |        ✔ |
+|管理导出接收器 — 创建、Update、验证和删除 |      |       |        ✔ |
+|批量 Update 定制 Search Attributes |      |       |        ✔ |
+|管理用户和身份 Namespace 访问 |      |       |        ✔ |
+|启动 Namespace 故障转移 |      |       |        ✔ |
+|将单区域 Namespace 转换为多区域 |      |       |        ✔ | */}
+
+## 额外的授权行为
+
+某些 API 被授予所有帐户级角色，但在运行时强制执行额外的授权规则。行动组
+授予调用 API 的权限，但调用者可以交互的范围取决于他们的角色。
+
+### API密钥授权行为
+
+所有角色都可以创建和管理自己的**自己的** API 密钥。 API 密钥继承其所有者的权限 - 它不能
+授予超出所属用户或服务帐户已有权限的访问权限。
+
+|行为 |只读 |开发商|财务管理|全局管理|帐户所有者 |
+| --------------------------------------------------- | :-----: | :-----: | :------------: | :----------: | :------------: |
+|创建、查看、Update 和删除自己的 API 密钥 |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+|查看、Update 和删除帐户中的任何 API 密钥 |           |           |               |      ✔ |       ✔ |
+
+**受影响的 API：** CreateApiKey、GetApiKey、GetApiKeys、UpdateApiKey、DeleteApiKey
+
+### 服务帐户授权行为
+
+所有角色都可以在其帐户中列出服务帐户。但是，创建、Update 和删除服务的能力
+帐户取决于服务帐户的范围和调用者的角色。
+
+|行为 |只读 |开发商|财务管理|全局管理|帐户所有者 |
+| ------------------------------------------------ | :-----: | :-----: | :------------: | :----------: | :------------: |
+|列出帐户中的所有服务帐户 |     ✔ |     ✔ |       ✔ |      ✔ |       ✔ |
+|管理无范围（帐户级）服务帐户 |           |           |               |      ✔ |       ✔ |
+|管理 Namespace 范围的服务帐户 |     §|     §|       §|      ✔ |       ✔ |
+
+§ 需要目标 Namespace 的 Namespace 管理员权限。任何角色都可以管理 Namespace 范围的服务帐户，如果
+他们在 Namespace 上持有 Namespace 管理员。
+
+**受影响的 API：** CreateServiceAccount、GetServiceAccount、GetServiceAccounts、UpdateServiceAccount、
+删除服务帐户

@@ -1,8 +1,8 @@
 ---
 id: dynamic-configuration
-title: Temporal Cluster dynamic configuration reference
-sidebar_label: Dynamic configuration
-description: Temporal Cluster offers dynamic configuration keys that you can update on the fly to optimize performance without service interruption. Customize these settings to meet specific Workflow, Activity, Namespace, or Task Queue requirements, and test thoroughly before deploying to production. For more details, visit the Temporal GitHub repository.
+title: "Temporal 集群动态配置参考"
+sidebar_label: "动态配置"
+description: "Temporal 集群提供动态配置密钥，您可以在 Update 运行时优化性能，而不会中断服务。自定义这些设置以满足特定的 Workflow、Activity、Namespace 或 Task Queue 要求，并在部署到生产之前进行彻底测试。有关更多详细信息，请访问 Temporal GitHub 存储库。"
 toc_max_heading_level: 4
 keywords:
   - reference
@@ -10,29 +10,29 @@ tags:
   - Reference
 ---
 
-Temporal Cluster provides [dynamic configuration](/temporal-service/configuration#dynamic-configuration) keys that you can update and apply to a running Cluster without restarting your services.
+Temporal 集群提供 [动态配置](/temporal-service/configuration#dynamic-configuration) 密钥，您可以将其应用于正在运行的集群，而无需重新启动服务。
 
-The dynamic configuration keys are set with default values when you create your Cluster configuration.
-You can override these values as you test your Cluster setup for optimal performance according to your workload requirements.
+创建集群配置时，动态配置键将设置为默认值。
+您可以在测试集群设置时覆盖这些值，以根据工作负载要求获得最佳性能。
 
-For the complete list of dynamic configuration keys, see [https://github.com/temporalio/temporal/blob/main/common/dynamicconfig/constants.go](https://github.com/temporalio/temporal/blob/main/common/dynamicconfig/constants.go).
-Ensure that you check server release notes for any changes to these keys and values.
+有关动态配置键的完整列表，请参阅 [https://github.com/temporalio/temporal/blob/main/common/dynamicconfig/constants.go](https://github.com/temporalio/temporal/blob/main/common/dynamicconfig/constants.go)。
+确保检查服务器发行说明以了解这些键和值的任何更改。
 
-For the default values of dynamic configuration keys, check the following links:
+对于动态配置键的默认值，请检查以下链接：
 
-- [Frontend Service](https://github.com/temporalio/temporal/blob/5783e781504d8ffac59f9848b830868f3139b980/service/frontend/service.go#L176)
-- [History Service](https://github.com/temporalio/temporal/blob/5783e781504d8ffac59f9848b830868f3139b980/service/history/configs/config.go#L309)
-- [Matching Service](https://github.com/temporalio/temporal/blob/5783e781504d8ffac59f9848b830868f3139b980/service/matching/config.go#L125)
-- [Worker Service](https://github.com/temporalio/temporal/blob/5783e781504d8ffac59f9848b830868f3139b980/service/worker/service.go#L193)
+- [前端服务](https://github.com/temporalio/temporal/blob/5783e781504d8ffac59f9848b830868f3139b980/service/frontend/service.go#L176)
+- [历史服务](https://github.com/temporalio/temporal/blob/5783e781504d8ffac59f9848b830868f3139b980/service/history/configs/config.go#L309)
+- [配对服务](https://github.com/temporalio/temporal/blob/5783e781504d8ffac59f9848b830868f3139b980/service/matching/config.go#L125)
+- [Worker 服务](https://github.com/temporalio/temporal/blob/5783e781504d8ffac59f9848b830868f3139b980/service/worker/service.go#L193)
 
-Setting dynamic configuration is optional.
-Change these values only if you need to override the default values to achieve better performance on your Temporal Cluster.
-Also, ensure that you test your changes before setting these in production.
+设置动态配置是可选的。
+仅当您需要覆盖默认值以在 Temporal 集群上获得更好的性能时才更改这些值。
+另外，请确保在将这些更改投入生产之前测试您的更改。
 
-## Format
+＃＃ 格式
 
-To override the default dynamic configuration values, specify your custom values and constraints for the dynamic configuration keys that you want to change in a YAML configuration file.
-Use the following format when creating your dynamic configuration file.
+要覆盖默认动态配置值，请为要在 YAML 配置文件中更改的动态配置键指定自定义值和约束。
+创建动态配置文件时使用以下格式。
 
 ```yaml
 testGetBoolPropertyKey:
@@ -62,20 +62,21 @@ testGetMapPropertyKey:
           key5: 2.0
 ```
 
-### Constraints
+<a id="format"></a>
+### 约束 {#format}
 
-You can define constraints on some dynamic configuration keys to set specific values that apply on a Namespace or Task Queue level.
-Not defining constraints on a dynamic configuration key sets the values across the Cluster.
+您可以对某些动态配置键定义约束，以设置应用于 Namespace 或 Task Queue 级别的特定值。
+不对动态配置键定义约束会在集群中设置值。
 
-- To set global values for the configuration key with no constraints, use the following:
+- 要无限制地设置配置键的全局值，请使用以下命令：
 
   ```yaml
   frontend.globalNamespaceRPS: # Total per-Namespace RPC rate limit applied across the Cluster.
     - value: 5000
   ```
 
-- For keys that can be customized at Namespace level, you can specify multiple values for different Namespaces in addition to one default value that applies globally to all Namespaces.
-  To set values at a Namespace level, use `namespace` (String) as shown in the following example.
+- 对于可在 Namespace 级别自定义的键，除了全局适用于所有 Namespace 的一个默认值之外，您还可以为不同的 Namespace 指定多个值。
+  要在 Namespace 级别设置值，请使用 `Namespace`（字符串），如以下示例所示。
 
   ```yaml
   frontend.persistenceNamespaceMaxQPS: # Rate limit on the number of queries the Frontend sends to the Persistence store.
@@ -87,12 +88,12 @@ Not defining constraints on a dynamic configuration key sets the values across t
       value: 1000
   ```
 
-- For keys that can be customized at a Task Queue level, you can specify Task Queue name and Task type in addition to Namespace.
-  To set values at a Task Queue level, use `taskQueueName` (String) with `taskType` (optional; supported values: `Workflow` and `Activity`).
+- 对于可以在 Task Queue 级别自定义的键，除了 Namespace 之外，您还可以指定 Task Queue 名称和任务类型。
+  要在 Task Queue 级别设置值，请将 `taskQueueName`（字符串）与 `taskType`（可选；支持的值：`Workflow` 和 `Activity`）结合使用。
 
-  For example if you have Workflow Executions creating a large number of Workflow and Activity tasks per second, you can add more partitions to your Task Queues (default is 4) to handle the high throughput of tasks.
-  To do this, add the following to your dynamic configuration file.
-  Note that if changing the number of partitions, you must set the same count for both read and write operations on Task Queues.
+例如，如果您的 Workflow Execution 每秒创建大量 Workflow 和 Activity 任务，则可以向 Task Queue 添加更多分区（默认为 4）以处理任务的高吞吐量。
+  为此，请将以下内容添加到动态配置文件中。
+  请注意，如果更改分区数量，则必须为 Task Queue 上的读取和写入操作设置相同的计数。
 
   ```yaml
   matching.numTaskqueueReadPartitions: # Number of Task Queue partitions for read operations.
@@ -125,127 +126,135 @@ Not defining constraints on a dynamic configuration key sets the values across t
 
 {/* Note that the values set with most constraints take priority over values that are set with fewer constraints, regardless of the order in which they are set in the dynamic configuration key. */}
 
-For more examples on how dynamic configuration is set, see [samples-server](https://github.com/temporalio/samples-server/blob/main/tls/config/dynamicconfig/development.yaml).
+有关如何设置动态配置的更多示例，请参阅 [样本服务器](https://github.com/temporalio/samples-server/blob/main/tls/config/dynamicconfig/development.yaml)。
 
-## Commonly used dynamic configuration keys
+<a id="constraints"></a>
+## 常用动态配置键 {#constraints}
 
-The following table lists commonly used dynamic configuration keys that can be used for rate limiting requests to the Temporal Cluster.
+下表列出了可用于对 Temporal 集群的速率限制请求的常用动态配置键。
 
-Setting dynamic configuration keys is optional.
-If you choose to update these values for your Temporal Cluster, ensure that you are provisioning enough resources to handle the load.
+设置动态配置键是可选的。
+如果您选择为 Temporal 集群设置 Update 这些值，请确保您配置了足够的资源来处理负载。
 
-All values listed here are for Temporal server v1.21.
-Check [server release notes](https://github.com/temporalio/temporal/releases) to verify any potential breaking changes when upgrading your versions.
+此处列出的所有值均适用于 Temporal Server v1.21。
+检查 [服务器发行说明](https://github.com/temporalio/temporal/releases) 以验证升级版本时是否存在任何潜在的重大更改。
 
-### Service-level RPS limits
+<a id="commonly-used-dynamic-configuration-keys"></a>
+### 服务级别 RPS 限制 {#commonly-used-dynamic-configuration-keys}
 
-The Requests Per Second (RPS) dynamic configuration keys set the rate at which requests can be made to each service in your Cluster.
+每秒请求数 (RPS) 动态配置键设置向集群中的每个服务发出请求的速率。
 
-When scaling your services, tune the RPS to test your workload and set acceptable provisioning benchmarks.
-Exceeding these limits results in `ResourceExhaustedError`.
+扩展服务时，调整 RPS 以测试您的工作负载并设置可接受的配置基准。
+超过这些限制会导致 `ResourceExhaustedError`。
 
-| Dynamic configuration key              | Type | Description                                                                                                                                                                                                                                          | Default value |
+| 动态配置键              | 类型 | 描述                                                                                                                                                                                                                                          | 默认值 |
 | -------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Frontend                               |      |                                                                                                                                                                                                                                                      |               |
-| `frontend.rps`                         | Int  | Rate limit (requests/second) for requests accepted by each Frontend Service host.                                                                                                                                                                    | 2400          |
-| `frontend.namespaceRPS`                | Int  | Rate limit (requests/second) for requests accepted by each Namespace on the Frontend Service.                                                                                                                                                        | 2400          |
-| `frontend.namespaceCount`              | Int  | Limit on the number of concurrent Task Queue polls per Namespace per Frontend Service host.                                                                                                                                                          | 1200          |
-| `frontend.globalNamespaceRPS`          | Int  | Rate limit (requests/second) for requests accepted per Namespace, applied across Cluster. The limit is evenly distributed among available Frontend Service instances. If this is set, it overrides the per-instance limit (`frontend.namespaceRPS`). | 0             |
-| `internal-frontend.globalNamespaceRPS` | Int  | Rate limit (requests/second) for requests accepted on each Internal-Frontend Service host applied across the Cluster.                                                                                                                                | 0             |
-| History                                |      |                                                                                                                                                                                                                                                      |               |
-| `history.rps`                          | Int  | Rate limit (requests/second) for requests accepted by each History Service host.                                                                                                                                                                     | 3000          |
-| Matching                               |      |                                                                                                                                                                                                                                                      |               |
-| `matching.rps`                         | Int  | Rate limit (requests/second) for requests accepted by each Matching Service host.                                                                                                                                                                    | 1200          |
-| `matching.numTaskqueueReadPartitions`  | Int  | Number of read partitions for a Task Queue. Must be set with `matching.numTaskqueueWritePartitions`.                                                                                                                                                 | 4             |
-| `matching.numTaskqueueWritePartitions` | Int  | Number of write partitions for a Task Queue.                                                                                                                                                                                                         | 4             |
+| 前端                               |      |                                                                                                                                                                                                                                                      |               |
+| `frontend.rps`                         | INT  | 每个前端服务主机接受的请求的速率限制（请求/秒）。                                                                                                                                                                    | 2400          |
+| `frontend.NamespaceRPS`                | INT  | 前端服务上每个 Namespace 接受的请求的速率限制（请求/秒）。                                                                                                                                                        | 2400          |
+| `frontend.NamespaceCount`              | INT  | 每个前端服务主机上每个 Namespace 的并发 Task Queue 轮询数量的限制。                                                                                                                                                          | 1200          |
+| `frontend.globalNamespaceRPS`          | INT  | 根据 Namespace 接受的请求的速率限制（请求/秒），跨集群应用。该限制均匀分布在可用的前端服务实例中。如果设置了此项，它将覆盖每个实例的限制 (`frontend.NamespaceRPS`)。 | 0             |
+| `internal-frontend.globalNamespaceRPS` | INT  | 跨集群应用的每个内部前端服务主机上接受的请求的速率限制（请求/秒）。                                                                                                                                | 0             |
+| 历史                                |      |                                                                                                                                                                                                                                                      |               |
+| `history.rps`                          | INT  | 每个历史服务主机接受的请求的速率限制（请求/秒）。                                                                                                                                                                     | 3000          |
+| 匹配                               |      |                                                                                                                                                                                                                                                      |               |
+| `matching.rps`                         | INT  | 每个匹配服务主机接受的请求的速率限制（请求/秒）。                                                                                                                                                                    | 1200          |
+| `matching.numTaskqueueReadPartitions`  | INT  | Task Queue 的读取分区数。必须使用 `matching.numTaskqueueWritePartitions` 进行设置。                                                                                                                                                 | 4             |
+| `matching.numTaskqueueWritePartitions` | INT  | Task Queue 的写入分区数。                                                                                                                                                                                                         | 4             |
 
-### QPS limits for Persistence store
+<a id="service-level-rps-limits"></a>
+### 持久性存储的 QPS 限制 {#service-level-rps-limits}
 
-The Queries Per Second (QPS) dynamic configuration keys set the maximum number of queries a service can make per second to the Persistence store.
+每秒查询数 (QPS) 动态配置键设置服务每秒可以向持久性存储进行的最大查询数。
 
-Persistence store rate limits are evaluated synchronously.
-Adjust these keys according to your database capacity and workload.
-If the number of queries made to the Persistence store exceeds the dynamic configuration value, you will see latencies and timeouts on your tasks.
+持久性存储速率限制是同步评估的。
+根据您的数据库容量和工作负载调整这些键。
+如果对持久性存储进行的查询数量超过动态配置值，您将看到任务出现延迟和超时。
 
-| Dynamic configuration key                 | Type | Description                                                                                                                                                                                                                                             | Default value |
+| 动态配置键                 | 类型 | 描述                                                                                                                                                                                                                                             | 默认值 |
 | ----------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Frontend                                  |      |                                                                                                                                                                                                                                                         |               |
-| `frontend.persistenceMaxQPS`              | Int  | Maximum number queries per second that the Frontend Service host can send to the Persistence store.                                                                                                                                                     | 2000          |
-| `frontend.persistenceNamespaceMaxQPS`     | Int  | Maximum number of queries per second that each Namespace on the Frontend Service host can send to the Persistence store. <br /> If the value set for this config is less than or equal to 0, the value set for `frontend.persistenceMaxQPS` will apply. | 0             |
-| History                                   |      |                                                                                                                                                                                                                                                         |               |
-| `history.persistenceMaxQPS`               | Int  | Maximum number of queries per second that the History host can send to the Persistence store.                                                                                                                                                           | 9000          |
-| `history.persistenceNamespaceMaxQPS`      | Int  | Maximum number of queries per second for each Namespace that the History host can send to the Persistence store. <br /> If the value set for this config is less than or equal to 0, then the value set for `history.persistenceMaxQPS` will apply.     | 0             |
-| Matching                                  |      |                                                                                                                                                                                                                                                         |               |
-| `matching.persistenceMaxQPS`              | Int  | Maximum number of queries per second that the Matching Service host can send to the Persistence store.                                                                                                                                                  | 9000          |
-| `matching.persistenceNamespaceMaxQPS`     | Int  | Maximum number of queries per second that the Matching host can send to the Persistence store for each Namespace.<br /> If the value set for this config is less than or equal to 0, the value set for `matching.persistenceMaxQPS` will apply.         | 0             |
+| 前端                                  |      |                                                                                                                                                                                                                                                         |               |
+| `frontend.persistenceMaxQPS`              | INT  | 前端服务主机每秒可以发送到持久性存储的最大查询数。                                                                                                                                                     | 2000年          |
+| `frontend.persistenceNamespaceMaxQPS`     | INT  | 前端服务主机上的每个 Namespace 每秒可以发送到持久性存储的最大查询数。 <br /> 如果为此配置设置的值小于或等于 0，则将应用为 `frontend.persistenceMaxQPS` 设置的值。 | 0             |
+| 历史                                   |      |                                                                                                                                                                                                                                                         |               |
+| `history.persistenceMaxQPS`               | INT  | 历史记录主机每秒可以发送到持久性存储的最大查询数。                                                                                                                                                           | 9000          |
+| `history.persistenceNamespaceMaxQPS`      | INT  | 历史主机可以发送到持久性存储的每个 Namespace 每秒的最大查询数。 <br /> 如果为此配置设置的值小于或等于 0，则将应用为 `history.persistenceMaxQPS` 设置的值。     | 0             |
+| 匹配                                  |      |                                                                                                                                                                                                                                                         |               |
+| `matching.persistenceMaxQPS`              | INT  | 匹配服务主机每秒可以发送到持久性存储的最大查询数。                                                                                                                                                  | 9000          |
+| `matching.persistenceNamespaceMaxQPS`     | INT  | 匹配主机每秒可以为每个 Namespace.<br /> 发送到持久性存储的最大查询数。如果为此配置设置的值小于或等于 0，则将应用为 `matching.persistenceMaxQPS` 设置的值。         | 0             |
 | Worker                                    |      |                                                                                                                                                                                                                                                         |               |
-| `worker.persistenceMaxQPS`                | Int  | Maximum number of queries per second that the Worker Service host can send to the Persistence store.                                                                                                                                                    | 100           |
-| `worker.persistenceNamespaceMaxQPS`       | Int  | Maximum number of queries per second that the Worker host can send to the Persistence store for each Namespace. <br /> If the value set for this config is less than or equal to 0, the value set for `worker.persistenceMaxQPS` will apply.            | 0             |
+| `Worker.persistenceMaxQPS`                | INT  | Worker 服务主机每秒可以发送到持久性存储的最大查询数。                                                                                                                                                    | 100           |
+| `Worker.persistenceNamespaceMaxQPS`       | INT  | Worker 主机每秒可以向每个 Namespace 发送到持久性存储的最大查询数。 <br /> 如果为此配置设置的值小于或等于 0，则将应用为 `Worker.persistenceMaxQPS` 设置的值。            | 0             |
 | Visibility                                |      |                                                                                                                                                                                                                                                         |               |
-| `system.visibilityPersistenceMaxReadQPS`  | Int  | Maximum number queries per second that Visibility database can receive for read operations.                                                                                                                                                             | 9000          |
-| `system.visibilityPersistenceMaxWriteQPS` | Int  | Maximum number of queries per second that Visibility database can receive for write operations.                                                                                                                                                         | 9000          |
+| `system.VisibilityPersistenceMaxReadQPS`  | INT  | Visibility 数据库每秒可以接收的读取操作的最大查询数。                                                                                                                                                             | 9000          |
+| `system.VisibilityPersistenceMaxWriteQPS` | INT  | Visibility 数据库每秒可以接收的写入操作的最大查询数。                                                                                                                                                         | 9000          |
 
-### Activity and Workflow default policy setting
+<a id="qps-limits-for-persistence-store"></a>
+### Activity 和 Workflow 默认策略设置 {#qps-limits-for-persistence-store}
 
-You can define default values for Activity and Workflow [Retry Policies](/encyclopedia/retry-policies) at the Cluster level with the following dynamic configuration keys.
+您可以使用以下动态配置键在集群级别定义 Activity 和 Workflow [重试策略](/encyclopedia/retry-policies) 的默认值。
 
-| Dynamic configuration key            | Type                          | Description                                                                                                       | Default value                                                                                   |
+| 动态配置键            | 类型                          | 描述                                                                                                       | 默认值                                                                                   |
 | ------------------------------------ | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `history.defaultActivityRetryPolicy` | Map (key-value pair elements) | Server configuration for an Activity Retry Policy when it is not explicitly set for the Activity in your code.    | [Default values for retry Policy](/encyclopedia/retry-policies#default-values-for-retry-policy) |
-| `history.defaultWorkflowRetryPolicy` | Map (key-value pair elements) | Retry Policy for unset fields where the user has set an explicit `RetryPolicy`, but not specified all the fields. | [Default values for retry Policy](/encyclopedia/retry-policies#default-values-for-retry-policy) |
+| `history.defaultActivityRetryPolicy` | Map（键值对元素） | 当代码中未为 Activity 显式设置时，Activity Retry Policy 的服务器配置。    | [Retry Policy 的默认值](/encyclopedia/retry-policies#default-values-for-retry-policy) |
+| `history.defaultWorkflowRetryPolicy` | Map（键值对元素） | Retry Policy 用于未设置的字段，其中用户已设置显式 `RetryPolicy`，但未指定所有字段。 | [Retry Policy 的默认值](/encyclopedia/retry-policies#default-values-for-retry-policy) |
 
-### Size limit settings
+<a id="activity-and-workflow-default-policy-setting"></a>
+### 大小限制设置 {#activity-and-workflow-default-policy-setting}
 
-The Persistence store in the Cluster has default size limits set for optimal performance. The dynamic configuration keys relating to some of these are listed below.
+集群中的持久性存储具有为实现最佳性能而设置的默认大小限制。下面列出了与其中一些相关的动态配置键。
 
-The default values on these keys are based on extensive testing.
-You can change these values, but ensure that you are provisioning enough database resources to handle the changed values.
+这些键的默认值基于广泛的测试。
+您可以更改这些值，但请确保配置足够的数据库资源来处理更改的值。
 
-For details on platform limits, see the [Temporal Platform limits sheet](/self-hosted-guide/defaults).
+有关平台限制的详细信息，请参阅 [Temporal 平台限制表](/self-hosted-guide/defaults)。
 
-| Dynamic configuration key               | Type | Description                                                                                                                                                                                                                                     | Default value            |
+| 动态配置键               | 类型 | 描述                                                                                                                                                                                                                                     | 默认值            |
 | --------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `limit.maxIDLength`                     | Int  | Length limit for various Ids, including: `Namespace`, `TaskQueue`, `WorkflowID`, `ActivityID`, `TimerID`, `WorkflowType`, `ActivityType`, `SignalName`, `MarkerName`, `ErrorReason`/`FailureReason`/`CancelCause`, `Identity`, and `RequestID`. | 1000                     |
-| `limit.blobSize.warn`                   | Int  | Limit, in bytes, for BLOBs size in an Event when a warning is thrown in the server logs.                                                                                                                                                        | 512 KB (512 × 1024)      |
-| `limit.blobSize.error`                  | Int  | Limit, in bytes, for BLOBs size in an Event when an error occurs in the transaction.                                                                                                                                                            | 2 MB (2 × 1024 × 1024)   |
-| `limit.historySize.warn`                | Int  | Limit, in bytes, at which a warning is thrown for the Workflow Execution Event History size.                                                                                                                                                    | 10 MB (10 × 1024 × 1024) |
-| `limit.historySize.error`               | Int  | Limit, in bytes, at which an error occurs in the Workflow Execution for exceeding allowed size.                                                                                                                                                 | 50 MB (50 × 1024 × 1024) |
-| `limit.historyCount.warn`               | Int  | Limit, in count, at which a warning is thrown for the Workflow Execution Event History size.                                                                                                                                                    | 10,240 Events            |
-| `limit.historyCount.error`              | Int  | Limit, in count, at which an error occurs in the Workflow Execution for exceeding allowed number of Events.                                                                                                                                     | 51,200 events            |
-| `limit.numPendingActivities.error`      | Int  | Maximum number of pending Activities that a Workflow Execution can have before the `ScheduleActivityTask` fails with an error.                                                                                                                  | 2000                     |
-| `limit.numPendingSignals.error`         | Int  | Maximum number of pending Signals that a Workflow Execution can have before the `SignalExternalWorkflowExecution` commands from this Workflow fail with an error.                                                                               | 2000                     |
-| `history.maximumSignalsPerExecution`    | Int  | Maximum number of Signals that a Workflow Execution can receive before it throws an `Invalid Argument` error.                                                                                                                                   | 10000                    |
-| `limit.numPendingCancelRequests.error`  | Int  | Maximum number of pending requests to cancel other Workflows that a Workflow Execution can have before the `RequestCancelExternalWorkflowExecution` commands fail with an error.                                                                | 2000                     |
-| `limit.numPendingChildExecutions.error` | Int  | Maximum number of pending Child Workflows that a Workflow Execution can have before the `StartChildWorkflowExecution` commands fail with an error.                                                                                              | 2000                     |
-| `frontend.visibilityMaxPageSize`        | Int  | Maximum number of Workflow Executions shown from the ListWorkflowExecutions API in one page.                                                                                                                                                    | 1000                     |
+| `limit.maxIDLength`                     | INT  | 各种Id的长度限制，包括：`Namespace`、`TaskQueue`、`WorkflowID`、`ActivityID`、`TimerID`、`WorkflowType`、`ActivityType`、`SignalName`、`MarkerName`、 `ErrorReason`/`FailureReason`/`CancelCause`、`Identity` 和 `RequestID`。 | 1000                     |
+| `limit.blobSize.warn`                   | INT  | 当服务器日志中引发警告时，限制事件中 BLOB 的大小（以字节为单位）。                                                                                                                                                        | 512KB（512×1024）      |
+| `limit.blobSize.error`                  | INT  | 当事务中发生错误时，限制事件中 BLOB 的大小（以字节为单位）。                                                                                                                                                            | 2MB（2×1024×1024）   |
+| `limit.historySize.warn`                | INT  | 针对 Workflow Execution Event History 大小引发警告的限制（以字节为单位）。                                                                                                                                                    | 10MB（10×1024×1024） |
+| `limit.historySize.error`               | INT  | 限制（以字节为单位），当 Workflow Execution 超出允许的大小时发生错误。                                                                                                                                                 | 50MB（50×1024×1024） |
+| `limit.historyCount.warn`               | INT  | 限制（以计数为单位），达到 Workflow Execution Event History 大小的警告。                                                                                                                                                    | 10,240 场活动            |
+| `limit.historyCount.error`              | INT  | 限制（以计数为单位），当 Workflow Execution 中发生超出允许的事件数量的错误时。                                                                                                                                     | 51,200 场活动            |
+| `limit.numPendingActivities.error`      | INT  | 在 `ScheduleActivityTask` 因错误而失败之前，Workflow Execution 可以拥有的最大待处理活动数。                                                                                                                  | 2000年                     |
+| `limit.numPendingSignals.error`         | INT  | 在来自此 Workflow 的 `SignalExternalWorkflowExecution` 命令因错误而失败之前，Workflow Execution 可以拥有的待处理 Signal 的最大数量。                                                                               | 2000年                     |
+| `history.maximumSignalsPerExecution`    | INT  | Workflow Execution 在引发 `Invalid Argument` 错误之前可以接收的 Signal 的最大数量。                                                                                                                                   | 10000                    |
+| `limit.numPendingCancelRequests.error`  | INT  | 在 `RequestCancelExternalWorkflowExecution` 命令因错误而失败之前，Workflow Execution 可以拥有的取消其他 Workflow 的挂起请求的最大数量。                                                                | 2000年                     |
+| `limit.numPendingChildExecutions.error` | INT  | 在 `StartChildWorkflowExecution` 命令因错误而失败之前，Workflow Execution 可以拥有的挂起 Child Workflow 的最大数量。                                                                                              | 2000年                     |
+| `frontend.VisibilityMaxPageSize`        | INT  | 一页中从 ListWorkflowExecutions API 显示的 Workflow Execution 的最大数量。                                                                                                                                                    | 1000                     |
 
-### Secondary visibility settings
+<a id="size-limit-settings"></a>
+### 辅助 Visibility 设置 {#size-limit-settings}
 
-Secondary visibility configuration keys enable Dual Visibility on your Temporal Cluster.
-This can be useful when migrating a Visibility database or creating a backup Visibility store.
+辅助 Visibility 配置密钥可在 Temporal 集群上启用双 Visibility。
+这在迁移 Visibility 数据库或创建备份 Visibility 存储时非常有用。
 
-| Dynamic configuration key                  | Type    | Description                                                                                                                                                                                                                                                                                                                                                                                                          | Default value |
+| 动态配置键                  | 类型    | 描述                                                                                                                                                                                                                                                                                                                                                                                                          | 默认值 |
 | ------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| `system.enableReadFromSecondaryVisibility` | Boolean | Enables reading from the [secondary visibility store](/dual-visibility), and can be set per Namespace. Allowed values are `true` or `false`.                                                                                                                                                                                                                                                                         | `false`       |
-| `system.secondaryVisibilityWritingMode`    |         | Enables writing Visibility data to the secondary Visibility store and can be set per Namespace. Setting this value to `on` disables write operations to the primary Visibility store. Allowed values:<br /> `off`: Enables writing to primary Visibility store only. <br /> `on`: Enables writing to secondary Visibility store only.<br /> `dual`: Enables writing to both primary and secondary Visibility stores. | `off`         |
+| `system.enableReadFromSecondaryVisibility` | 布尔值 | 启用从 [二级Visibility商店](/dual-visibility) 读取，并且可以根据 Namespace 进行设置。允许的值为 `true` 或 `false`。                                                                                                                                                                                                                                                                         | `false`       |
+| `system.secondaryVisibilityWritingMode`    |         | 允许将 Visibility 数据写入辅助 Visibility 存储，并且可以按 Namespace 进行设置。将此值设置为 `on` 将禁用对主 Visibility 存储的写入操作。允许的值：<br /> `off`：仅允许写入主 Visibility 存储。 <br /> `on`：仅允许写入辅助 Visibility 存储。<br /> `dual`：允许写入主要和辅助 Visibility 存储。 | `off`         |
 
-### Server version check settings
+<a id="secondary-visibility-settings"></a>
+### 服务器版本检查设置 {#secondary-visibility-settings}
 
-The Temporal server reports the server version and the version of the SDK that it is connected to in order to determine if the Web UI should show a banner that states a new version is available to install. This can be disabled by defining the following value or by setting the `TEMPORAL_VERSION_CHECK_DISABLED` environment variable to `1`.
+Temporal Server 报告服务器版本及其连接的 SDK 版本，以确定 Web UI 是否应显示一条横幅，表明有新版本可供安装。可以通过定义以下值或将 `Temporal_VERSION_CHECK_DISABLED` 环境变量设置为 `1` 来禁用此功能。
 
-| Dynamic configuration key           | Type    | Description                                                                                                                       | Default value |
+| 动态配置键           | 类型    | 描述                                                                                                                       | 默认值 |
 | ----------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| `frontend.enableServerVersionCheck` | Boolean | Enables the Temporal server to report version information about the current server and SDK. Allowed values are `true` or `false`. | `true`        |
+| `frontend.enableServerVersionCheck` | 布尔值 | 使Temporal Server能够报告有关当前服务器和SDK的版本信息。允许的值为 `true` 或 `false`。 | `true`        |
 
-### Nexus settings
+<a id="server-version-check-settings"></a>
+### Nexus 设置 {#server-version-check-settings}
 
-Settings related to the management of Nexus.
+与Nexus的管理相关的设置。
 
-For more detailed explanation of these configs see the [in-repo Nexus architecture doc](https://github.com/temporalio/temporal/blob/6cb70c0785fd7ba4574ed91d772fe17dff4981b4/docs/architecture/nexus.md).
+有关这些配置的更详细说明，请参阅 [仓库内 Nexus 架构文档](https://github.com/temporalio/temporal/blob/6cb70c0785fd7ba4574ed91d772fe17dff4981b4/docs/architecture/nexus.md)。
 
-| Dynamic configuration key                              | Type    | Description                                                                                                                                                                                                                                      | Default value       |
+| 动态配置键                              | 类型    | 描述                                                                                                                                                                                                                                      | 默认值       |
 | ------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
-| `system.enableNexus`                                   | Boolean | Enables Nexus Features. Removed in 1.31.0 (Nexus is always enabled).                                                                                                                                                                            | `true` (since 1.27) |
-| `component.nexusoperations.useSystemCallbackURL`       | String  | Controls whether to use temporal://system as the callback URL generated by the server. (Server 1.30 or newer)     											                                              | `false`             |
-| `component.nexusoperations.callback.endpoint.template` | String  | Defines the URL template used to construct Nexus callback URLs. (Only required for the experimental external endpoint target feature or servers older than 1.30.) 										      | unset               |
-| `component.callbacks.allowedAddresses`                 | Object  | Defines the security allow-list of callback URL patterns that the server will accept; used to restrict what callback endpoints can be invoked. (Only required for the experimental external endpoint target feature or servers older than 1.30.) | unset               |
+| `system.enableNexus`                                   | 布尔值 | 启用 Nexus 功能。在 1.31.0 中删除（Nexus 始终启用）。                                                                                                                                                                            | `true`（自 1.27 起） |
+| `component.Nexusoperations.useSystemCallbackURL`       | 细绳  | 控制是否使用 Temporal://system 作为服务器生成的回调 URL。 （服务器1.30或更高版本）                                              | `false`             |
+| `component.Nexusoperations.callback.endpoint.template` | 细绳  | 定义用于构造 Nexus 回调 URL 的 URL 模板。 （仅实验性外部端点目标功能或早于 1.30 的服务器需要。）      | 未设置               |
+| `component.callbacks.allowedAddresses`                 | 目的  | 定义服务器将接受的回调 URL 模式的安全允许列表；用于限制可以调用哪些回调端点。 （仅实验性外部端点目标功能或早于 1.30 的服务器需要。） | 未设置               |

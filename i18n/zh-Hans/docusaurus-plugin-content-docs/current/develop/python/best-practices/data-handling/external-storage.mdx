@@ -1,0 +1,241 @@
+---
+id: external-storage
+title: 外部存储 - Python SDK
+sidebar_label: 外部存储
+slug: /develop/python/data-handling/external-storage
+toc_max_heading_level: 3
+tags:
+  - Python SDK
+  - Temporal SDKs
+  - Data Converters
+description: 使用 Python SDK 中的声明检查模式将大型有效负载卸载到外部存储。
+---
+
+:::info Release, stability, and dependency info 
+
+外部存储处于[预发布](/evaluate/development-product-features/release-stages#pre-release)。 API 和
+在稳定版本发布之前配置可能会发生变化。加入
+[#large-payloads Slack 频道](https://Temporalio.slack.com/archives/C09VA2DE15Y) 提供反馈或寻求帮助。
+
+:::
+
+默认情况下，Temporal 服务强制执行每个有效负载 2 MB 的限制。此限制可在自托管上配置
+部署。当您的 Workflow 或 Activity 处理的数据超过限制时，您可以将有效负载卸载到外部
+存储，例如 Amazon S3，并通过 Event History 传递一个小的参考令牌。本页向您展示如何
+使用 Amazon S3 设置外部存储以及如何实施自定义存储驱动程序。
+
+有关外部存储及其用例的概念概述，请参阅[外部存储](/external-storage)。
+
+## 使用 Amazon S3 存储和检索大型负载
+
+Python SDK 包含 S3 存储驱动程序。请按照以下步骤进行设置：
+
+### 先决条件
+
+- 您具有读写访问权限的 Amazon S3 存储桶。参考【生命周期管理】(/external-storage#lifecycle)
+  确保您的有效负载在 Workflow 的整个生命周期内保持可用。
+- 安装额外的`aioboto3`：`python -m pip install "Temporalio[aioboto3]"`
+
+＃＃＃ 程序
+
+1. 使用 `aioboto3` 创建一个 S3 客户端并将其传递给 `S3StorageDriver`。驱动程序使用您的标准 AWS
+   来自环境的凭证（环境变量、IAM 角色或 AWS 配置文件）：
+
+<!--SNIPSTART python-s3-driver-create-->
+[features/snippets/external_storage/s3_setup/s3_driver_create.py](https://github.com/Temporalio/features/blob/main/features/snippets/external_storage/s3_setup/s3_driver_create.py)
+```py
+session = aioboto3.Session(profile_name=AWS_PROFILE, region_name=AWS_REGION)
+async with session.client("s3") as s3_client:
+    driver = S3StorageDriver(
+        client=new_aioboto3_client(s3_client),
+        bucket="my-temporal-payloads",
+    )
+```
+<!--SNIPEND-->
+
+2. 在 `DataConverter` 上配置驱动程序并将转换器传递给您的客户端和 Worker：
+
+<!--SNIPSTART python-s3-external-storage-setup-->
+[features/snippets/external_storage/s3_setup/s3_external_storage_setup.py](https://github.com/Temporalio/features/blob/main/features/snippets/external_storage/s3_setup/s3_external_storage_setup.py)
+```py
+data_converter = dataclasses.replace(
+    DataConverter.default,
+    external_storage=ExternalStorage(drivers=[driver]),
+)
+
+client_config = ClientConfig.load_client_connect_config()
+
+client = await Client.connect(**client_config, data_converter=data_converter)
+
+worker = Worker(
+    client,
+    task_queue="my-task-queue",
+    workflows=[],
+    activities=[],
+)
+```
+<!--SNIPEND-->
+
+默认情况下，大于 256 KiB 的有效负载将卸载到外部存储。您可以使用以下命令进行调整
+   `payload_size_threshold` 参数，甚至将其设置为 0 以外部化所有有效负载，无论大小如何。参考
+   [配置负载大小阈值](#configure-payload-size-threshold) 了解更多信息。
+
+所有 Workflow 和 Worker 上运行的活动都会自动使用存储驱动程序，无需更改您的
+   业务逻辑。驱动程序同时上传和下载有效负载，并在检索时验证有效负载的完整性。
+
+## 实现自定义存储驱动程序
+
+如果您需要内置驱动程序允许之外的存储后端，您可以实现自己的存储驱动程序。
+持久存储有效负载，以便它们能够在进程崩溃时幸存下来，并在崩溃后仍可用于调试和审核
+Workflow 完成。请参阅[生命周期管理](/external-storage#lifecycle) 了解保留要求。
+
+以下示例显示使用本地磁盘作为后备存储的自定义驱动程序。此示例适用于本地
+仅开发和测试。在生产中，使用所有 Worker 都可以访问的耐用存储系统：
+
+<!--SNIPSTART python-custom-storage-driver-->
+[features/snippets/external_storage/custom_driver/custom_storage_driver.py](https://github.com/Temporalio/features/blob/main/features/snippets/external_storage/custom_driver/custom_storage_driver.py)
+```py
+class LocalDiskStorageDriver(StorageDriver):
+    def __init__(self, store_dir: str = "/tmp/temporal-payload-store") -> None:
+        self._store_dir = store_dir
+
+    def name(self) -> str:
+        return "local-disk"
+
+    async def store(
+        self,
+        context: StorageDriverStoreContext,
+        payloads: Sequence[Payload],
+    ) -> list[StorageDriverClaim]:
+        os.makedirs(self._store_dir, exist_ok=True)
+
+        prefix = self._store_dir
+        target = context.target
+        if isinstance(target, StorageDriverWorkflowInfo) and target.id:
+            prefix = os.path.join(self._store_dir, target.namespace, target.id)
+            os.makedirs(prefix, exist_ok=True)
+
+        claims = []
+        for payload in payloads:
+            key = f"{uuid.uuid4()}.bin"
+            file_path = os.path.join(prefix, key)
+            with open(file_path, "wb") as f:
+                f.write(payload.SerializeToString())
+            claims.append(StorageDriverClaim(claim_data={"path": file_path}))
+        return claims
+
+    async def retrieve(
+        self,
+        context: StorageDriverRetrieveContext,
+        claims: Sequence[StorageDriverClaim],
+    ) -> list[Payload]:
+        payloads = []
+        for claim in claims:
+            file_path = claim.claim_data["path"]
+            with open(file_path, "rb") as f:
+                raw = f.read()
+            payload = Payload()
+            payload.ParseFromString(raw)
+            payloads.append(payload)
+        return payloads
+
+
+```
+<!--SNIPEND-->
+
+以下各节将介绍驱动程序实现的关键部分。
+
+### 1.扩展StorageDriver类
+
+自定义驱动程序扩展了“StorageDriver”抽象类并实现了三个方法：
+
+- `name()` 返回标识驱动程序的唯一字符串。 SDK 将此名称存储在声明检查引用中，以便
+  它可以将检索请求路由到正确的驱动程序。存储有效负载后更改名称会中断检索。
+- `store()` 接收有效负载列表并为每个有效负载返回一个 `StorageDriverClaim`。声明是一组字符串
+  驱动程序稍后使用键值对来定位有效负载。
+- `retrieve()` 接收 `store()` 生成的声明并返回原始有效负载。
+
+### 2. 存储有效负载
+
+在“store()”中，使用“payload.SerializeToString()”将每个 Payload Protobuf 消息转换为字节，并将字节写入
+你的存储系统。应用程序数据已被[Payload Converter](/develop/python/data-handling/data-conversion)序列化 
+和 [Payload Codec](/develop/python/data-handling/data-encryption) 在到达驱动程序之前。
+有关更多详细信息，请参阅[数据转换管道](/external-storage#data-pipeline)。
+
+为每个有效负载返回一个“StorageDriverClaim”，其中包含足够的信息以便稍后检索。 `context.target`
+根据操作提供身份信息（Namespace、Workflow Id 或 Activity ID）。考虑构建
+您的存储密钥包含此信息，以便您可以识别哪个 Workflow 拥有每个有效负载。在那之内
+在范围内，内容可寻址密钥（例如有效负载字节的 SHA-256 哈希值）可以帮助删除相同有效负载的重复数据。
+
+### 3. 检索有效负载
+
+在“retrieve()”中，使用声明数据下载字节，然后使用以下命令重建有效负载 Protobuf 消息
+`payload.ParseFromString(data)`。 Payload Converter 在驱动程序之后处理应用程序数据的反序列化
+返回有效负载。
+
+### 4.配置Data Converter
+
+将 `ExternalStorage` 实例传递给您的 `DataConverter` 并在创建客户端和 Worker 时使用转换器。 
+您还可以将驱动程序打包为[插件](/develop/plugins-guide)，以便更轻松地跨服务重用：
+
+<!--SNIPSTART python-custom-driver-data-converter-->
+[features/snippets/external_storage/custom_driver/custom_driver_data_converter.py](https://github.com/Temporalio/features/blob/main/features/snippets/external_storage/custom_driver/custom_driver_data_converter.py)
+```py
+data_converter = dataclasses.replace(
+    DataConverter.default,
+    external_storage=ExternalStorage(
+        drivers=[LocalDiskStorageDriver()],
+    ),
+)
+```
+<!--SNIPEND-->
+
+## 配置负载大小阈值
+
+您可以配置触发外部存储的负载大小阈值。默认情况下，有效负载大于 256 KiB
+被卸载到外部存储。您可以使用“payload_size_threshold”参数调整此值，或将其设置为 0
+外部化所有有效负载，无论其大小如何。
+
+<!--SNIPSTART python-external-storage-threshold-->
+[features/snippets/external_storage/threshold/threshold_config.py](https://github.com/Temporalio/features/blob/main/features/snippets/external_storage/threshold/threshold_config.py)
+```py
+data_converter = dataclasses.replace(
+    DataConverter.default,
+    external_storage=ExternalStorage(
+        drivers=[driver],
+        payload_size_threshold=0,
+    ),
+)
+```
+<!--SNIPEND-->
+
+## 使用多个存储驱动程序
+
+当您注册多个驱动程序时，您必须提供一个“driver_selector”函数来选择哪个驱动程序存储每个驱动程序
+有效负载。列表中未选择存储的任何驱动程序仍可用于检索，这在以下情况下很有用：
+在存储后端之间迁移。从选择器返回“None”以将特定有效负载保持在 Event History 中内联。
+
+多个驱动程序在以下场景中很有用：
+
+- 驱动程序迁移。您的 Worker 需要检索由使用与 Worker 不同的驱动程序的客户端创建的有效负载
+  你喜欢的一个。注册两个驱动程序并使用选择器始终为新负载选择您首选的驱动程序。
+  老司机仍然可以检索现有的索赔。
+- 延迟与持久性的权衡。一些 Workflow Type 可能会受益于更快的存储后端 
+  以耐用性为代价，而其他人则需要像 S3 这样的耐用后端。使用选择器根据
+  Workflow 上下文。
+
+以下示例注册了两个驱动程序，但始终为新负载选择“preferred_driver”。 `legacy_driver`
+注册只是为了让 Worker 可以检索之前存储的有效负载：
+
+<!--SNIPSTART python-external-storage-multiple-drivers-->
+[features/snippets/external_storage/multiple_drivers/multiple_drivers.py](https://github.com/Temporalio/features/blob/main/features/snippets/external_storage/multiple_drivers/multiple_drivers.py)
+```py
+preferred_driver = S3StorageDriver(client=s3_client, bucket="my-bucket")
+legacy_driver = LegacyStorageDriver()
+
+ExternalStorage(
+    drivers=[preferred_driver, legacy_driver],
+    driver_selector=lambda context, payload: preferred_driver,
+)
+```
+<!--SNIPEND-->

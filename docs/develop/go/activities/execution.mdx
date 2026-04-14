@@ -1,8 +1,8 @@
 ---
 id: execution
-title: Activity execution - Go SDK
-description: Shows how to perform Activity execution with the Go SDK
-sidebar_label: Activity Execution
+title: "Activity 执行 - Go SDK"
+description: "展示如何使用 Go SDK 执行 Activity"
+sidebar_label: "Activity 执行"
 slug: /develop/go/activities/execution
 toc_max_heading_level: 3
 tags:
@@ -11,34 +11,35 @@ tags:
   - Activity
 ---
 
-## How to start an Activity Execution {#activity-execution}
+<a id="activity-execution"></a>
+## 如何启动 Activity 执行 {#activity-execution}
 
-Calls to spawn [Activity Executions](/activity-execution) are written within a [Workflow Definition](/workflow-definition).
-The call to spawn an Activity Execution generates the [ScheduleActivityTask](/references/commands#scheduleactivitytask) Command.
-This results in the set of three [Activity Task](/tasks#activity-task) related Events ([ActivityTaskScheduled](/references/events#activitytaskscheduled), [ActivityTaskStarted](/references/events#activitytaskstarted), and ActivityTask[Closed]) in your Workflow Execution Event History.
+对生成 [Activity 执行](/activity-execution) 的调用写入 [Workflow Definition](/workflow-definition) 中。
+调用生成 Activity 执行会生成 [ScheduleActivity任务](/references/commands#scheduleactivitytask) 命令。
+这会在 Workflow Execution Event History 中产生一组三个 [Activity 任务](/tasks#activity-task) 相关事件（[Activity任务Scheduled](/references/events#activitytaskscheduled)、[Activity任务已开始](/references/events#activitytaskstarted) 和 ActivityTask[Closed]）。
 
-A single instance of the Activities implementation is shared across multiple simultaneous Activity invocations.
-Activity implementation code should be _idempotent_.
+活动实现的单个实例在多个同时的 Activity 调用之间共享。
+Activity 实现代码应该是_幂等的_。
 
-The values passed to Activities through invocation parameters or returned through a result value are recorded in the Execution history.
-The entire Execution history is transferred from the Temporal Service to Workflow Workers when a Workflow state needs to recover.
-A large Execution history can thus adversely impact the performance of your Workflow.
+通过调用参数传递给活动的值或通过结果值返回的值都记录在执行历史记录中。
+当 Workflow 状态需要恢复时，整个执行历史记录将从 Temporal 服务传输到 Workflow Worker。
+因此，大量执行历史记录可能会对 Workflow 的性能产生不利影响。
 
-Therefore, be mindful of the amount of data you transfer through Activity invocation parameters or Return Values.
-Otherwise, no additional limitations exist on Activity implementations.
+因此，请注意通过 Activity 调用参数或返回值传输的数据量。
+否则，Activity 实现不存在其他限制。
 
-    To spawn an [Activity Execution](/activity-execution), call [`ExecuteActivity()`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ExecuteActivity) inside your Workflow Definition.
-    The API is available from the [`go.temporal.io/sdk/workflow`](https://pkg.go.dev/go.temporal.io/sdk/workflow) package.
-    The `ExecuteActivity()` API call requires an instance of `workflow.Context`, the Activity function name, and any variables to be passed to the Activity Execution.
-        The Activity function name can be provided as a variable object (no quotations) or as a string.
-        The benefit of passing the actual function object is that the framework can validate the parameters against the Activity Definition.
-        The `ExecuteActivity` call returns a Future, which can be used to get the result of the Activity Execution.
+要生成 [Activity 执行](/activity-execution)，请在 Workflow Definition 中调用 [`ExecuteActivity()`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ExecuteActivity)。
+    该 API 可从 [`go.Temporal.io/sdk/Workflow`](https://pkg.go.dev/go.temporal.io/sdk/workflow) 包中获取。
+    `ExecuteActivity()` API 调用需要 `Workflow.Context` 的实例、Activity 函数名称以及要传递给 Activity 执行的任何变量。
+        Activity 函数名称可以作为变量对象（无引号）或字符串提供。
+        传递实际函数对象的好处是框架可以根据 Activity Definition 验证参数。
+        `ExecuteActivity` 调用返回一个 Future，可用于获取 Activity 执行的结果。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/yourapp/your_workflow_definition_dacx.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -66,15 +67,15 @@ func YourWorkflowDefinition(ctx workflow.Context, param YourWorkflowParam) (*You
 }
 ```
 
-### How to set the required Activity Timeouts {#required-timeout}
+### 如何设置所需的 Activity 超时 {#required-timeout}
 
-Activity Execution semantics rely on several parameters.
-The only required value that needs to be set is either a [Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) or a [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout).
-These values are set in the Activity Options.
+Activity 执行语义依赖于多个参数。
+唯一需要设置的值是 [Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) 或 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。
+这些值在 Activity 选项中设置。
 
-To set an Activity Timeout in Go, create an instance of `ActivityOptions` from the `go.temporal.io/sdk/workflow` package, set the Activity Timeout field, and then use the `WithActivityOptions()` API to apply the options to the instance of `workflow.Context`.
+要在 Go 中设置 Activity 超时，请从 `go.Temporal.io/sdk/Workflow` 包创建 `ActivityOptions` 实例，设置 Activity 超时字段，然后使用 `WithActivityOptions()` API 将选项应用到 `Workflow.Context` 实例。
 
-Available timeouts are:
+可用的超时有：
 
 - `StartToCloseTimeout`
 - `ScheduleToClose`
@@ -95,28 +96,29 @@ if err != nil {
 }
 ```
 
-### Go ActivityOptions reference {#activity-options-reference}
+<a id="activity-options-reference"></a>
+### 转到 ActivityOptions 参考 {#activity-options-reference}
 
-Create an instance of [`ActivityOptions`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ActivityOptions) from the `go.temporal.io/sdk/workflow` package and use [`WithActivityOptions()`](https://pkg.go.dev/go.temporal.io/sdk/workflow#WithActivityOptions) to apply it to the instance of `workflow.Context`.
+从 `go.Temporal.io/sdk/Workflow` 包创建 [`ActivityOptions`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ActivityOptions) 的实例，并使用 [`WithActivityOptions()`](https://pkg.go.dev/go.temporal.io/sdk/workflow#WithActivityOptions) 将其应用到 `Workflow.Context` 的实例。
 
-The instance of `workflow.Context` is then passed to the `ExecuteActivity()` call.
+然后，`Workflow.Context` 的实例将传递给 `ExecuteActivity()` 调用。
 
-| Field                                               | Required                          | Type                                                                        |
+| 场地                                               | 必需的                          | 类型                                                                        |
 | --------------------------------------------------- | --------------------------------- | --------------------------------------------------------------------------- |
-| [`ActivityID`](#activityid)                         | No                                | `string`                                                                    |
-| [`TaskQueueName`](#taskqueuename)                   | No                                | `string`                                                                    |
-| [`ScheduleToCloseTimeout`](#scheduletoclosetimeout) | Yes (or `StartToCloseTimeout`)    | `time.Duration`                                                             |
-| [`ScheduleToStartTimeout`](#scheduletostarttimeout) | No                                | `time.Duration`                                                             |
-| [`StartToCloseTimeout`](#scheduletoclosetimeout)    | Yes (or `ScheduleToCloseTimeout`) | `time.Duration`                                                             |
-| [`HeartbeatTimeout`](#heartbeattimeout)             | No                                | `time.Duration`                                                             |
-| [`WaitForCancellation`](#waitforcancellation)       | No                                | `bool`                                                                      |
-| [`OriginalTaskQueueName`](#originaltaskqueuename)   | No                                | `string`                                                                    |
-| [`RetryPolicy`](#retrypolicy)                       | No                                | [`RetryPolicy`](https://pkg.go.dev/go.temporal.io/sdk/temporal#RetryPolicy) |
+| [`ActivityID`](#activityid)                         | 不                                | `string`                                                                    |
+| [`TaskQueueName`](#taskqueuename)                   | 不                                | `string`                                                                    |
+| [`ScheduleToCloseTimeout`](#scheduletoclosetimeout) | 是（或 `StartToCloseTimeout`）    | `time.Duration`                                                             |
+| [`ScheduleToStartTimeout`](#scheduletostarttimeout) | 不                                | `time.Duration`                                                             |
+| [`StartToCloseTimeout`](#scheduletoclosetimeout)    | 是（或 `ScheduleToCloseTimeout`） | `time.Duration`                                                             |
+| [`HeartbeatTimeout`](#heartbeattimeout)             | 不                                | `time.Duration`                                                             |
+| [`WaitForCancellation`](#waitforcancellation)       | 不                                | `bool`                                                                      |
+| [`OriginalTaskQueueName`](#originaltaskqueuename)   | 不                                | `string`                                                                    |
+| [`RetryPolicy`](#retrypolicy)                       | 不                                | [`RetryPolicy`](https://pkg.go.dev/go.temporal.io/sdk/temporal#RetryPolicy) |
 
 #### ActivityID
 
-- Type: `string`
-- Default: None
+- 型号：`string`
+- 默认：无
 
 ```go
 activityOptions := workflow.ActivityOptions{
@@ -130,12 +132,13 @@ if err != nil {
 }
 ```
 
-- [What is an Activity Id](/activity-execution#activity-id)
+- [什么是 Activity ID](/activity-execution#activity-id)
 
-#### TaskQueueName
+<a id="taskqueuename"></a>
+#### 任务队列名称 {#taskqueuename}
 
-- Type: `string`
-- Default: Inherits the TaskQueue name from the Workflow.
+- 型号：`string`
+- 默认：从 Workflow 继承任务队列名称。
 
 ```go
 activityOptions := workflow.ActivityOptions{
@@ -149,16 +152,16 @@ if err != nil {
 }
 ```
 
-- [What is a Task Queue](/task-queue)
+- [什么是 Task Queue](/task-queue)
 
 #### ScheduleToCloseTimeout
 
-To set a [Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout), create an instance of `ActivityOptions` from the `go.temporal.io/sdk/workflow` package, set the `ScheduleToCloseTimeout` field, and then use the `WithActivityOptions()` API to apply the options to the instance of `workflow.Context`.
+要设置 [Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout)，请从 `go.Temporal.io/sdk/Workflow` 包创建 `ActivityOptions` 实例，设置 `ScheduleToCloseTimeout` 字段，然后使用 `WithActivityOptions()` API 将选项应用到 `Workflow.Context` 实例。
 
-This or `StartToCloseTimeout` must be set.
+必须设置此项或 `StartToCloseTimeout`。
 
-- Type: `time.Duration`
-- Default: ∞ (infinity - no limit)
+- 型号：`time.Duration`
+- 默认：∞（无穷大 - 无限制）
 
 ```go
 activityOptions := workflow.ActivityOptions{
@@ -174,10 +177,10 @@ if err != nil {
 
 #### ScheduleToStartTimeout
 
-To set a [Schedule-To-Start Timeout](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout), create an instance of `ActivityOptions` from the `go.temporal.io/sdk/workflow` package, set the `ScheduleToStartTimeout` field, and then use the `WithActivityOptions()` API to apply the options to the instance of `workflow.Context`.
+要设置 [Schedule-启动超时](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout)，请从 `go.Temporal.io/sdk/Workflow` 包创建 `ActivityOptions` 实例，设置 `ScheduleToStartTimeout` 字段，然后使用 `WithActivityOptions()` API 将选项应用到 `Workflow.Context` 实例。
 
-- Type: `time.Duration`
-- Default: ∞ (infinity - no limit)
+- 型号：`time.Duration`
+- 默认：∞（无穷大 - 无限制）
 
 ```go
 activityOptions := workflow.ActivityOptions{
@@ -191,14 +194,15 @@ if err != nil {
 }
 ```
 
-#### StartToCloseTimeout
+<a id="starttoclosetimeout"></a>
+#### 开始到关闭超时 {#starttoclosetimeout}
 
-To set a [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout), create an instance of `ActivityOptions` from the `go.temporal.io/sdk/workflow` package, set the `StartToCloseTimeout` field, and then use the `WithActivityOptions()` API to apply the options to the instance of `workflow.Context`.
+要设置 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)，请从 `go.Temporal.io/sdk/Workflow` 包创建 `ActivityOptions` 实例，设置 `StartToCloseTimeout` 字段，然后使用 `WithActivityOptions()` API 将选项应用到 `Workflow.Context` 实例。
 
-This or `ScheduleToCloseTimeout` must be set.
+必须设置此项或 `ScheduleToCloseTimeout`。
 
-- Type: `time.Duration`
-- Default: Same as the `ScheduleToCloseTimeout`
+- 型号：`time.Duration`
+- 默认：与 `ScheduleToCloseTimeout` 相同
 
 ```go
 activityOptions := workflow.ActivityOptions{
@@ -212,9 +216,10 @@ if err != nil {
 }
 ```
 
-#### HeartbeatTimeout
+<a id="heartbeattimeout"></a>
+#### 心跳超时 {#heartbeattimeout}
 
-To set a [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout), create an instance of `ActivityOptions` from the `go.temporal.io/sdk/workflow` package, set the `HeartbeatTimeout` field, and then use the `WithActivityOptions()` API to apply the options to the instance of `workflow.Context`.
+要设置 [心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout)，请从 `go.Temporal.io/sdk/Workflow` 包创建 `ActivityOptions` 实例，设置 `HeartbeatTimeout` 字段，然后使用 `WithActivityOptions()` API 将选项应用到 `Workflow.Context` 实例。
 
 ```go
 activityOptions := workflow.ActivityOptions{
@@ -228,12 +233,13 @@ if err != nil {
 }
 ```
 
-#### WaitForCancellation
+<a id="waitforcancellation"></a>
+#### 等待取消 {#waitforcancellation}
 
-If `true` the Activity Execution will finish executing should there be a Cancellation request.
+如果是 `true`，则如果存在取消请求，则 Activity 执行将完成执行。
 
-- Type: `bool`
-- Default: `false`
+- 型号：`bool`
+- 默认：`false`
 
 ```go
 activityOptions := workflow.ActivityOptions{
@@ -247,7 +253,8 @@ if err != nil {
 }
 ```
 
-#### OriginalTaskQueueName
+<a id="originaltaskqueuename"></a>
+#### 原始任务队列名称 {#originaltaskqueuename}
 
 ```go
 activityOptions := workflow.ActivityOptions{
@@ -261,12 +268,13 @@ if err != nil {
 }
 ```
 
-#### RetryPolicy
+<a id="retrypolicy"></a>
+#### 重试策略 {#retrypolicy}
 
-To set a [RetryPolicy](/encyclopedia/retry-policies), create an instance of `ActivityOptions` from the `go.temporal.io/sdk/workflow` package, set the `RetryPolicy` field, and then use the `WithActivityOptions()` API to apply the options to the instance of `workflow.Context`.
+要设置 [重试策略](/encyclopedia/retry-policies)，请从 `go.Temporal.io/sdk/Workflow` 包创建 `ActivityOptions` 实例，设置 `RetryPolicy` 字段，然后使用 `WithActivityOptions()` API 将选项应用到 `Workflow.Context` 实例。
 
-- Type: [`RetryPolicy`](https://pkg.go.dev/go.temporal.io/sdk/temporal#RetryPolicy)
-- Default:
+- 型号：[`RetryPolicy`](https://pkg.go.dev/go.temporal.io/sdk/temporal#RetryPolicy)
+- 默认：
 
 ```go
 retryPolicy := &temporal.RetryPolicy{
@@ -278,7 +286,7 @@ retryPolicy := &temporal.RetryPolicy{
 }
 ```
 
-Providing a Retry Policy here is a customization that overwrites individual Field defaults.
+此处提供 Retry Policy 是覆盖各个字段默认值的自定义。
 
 ```go
 retryPolicy := &temporal.RetryPolicy{
@@ -298,20 +306,21 @@ if err != nil {
 }
 ```
 
-### How to get the results of an Activity Execution {#get-activity-results}
+<a id="get-activity-results"></a>
+### 如何获取 Activity 执行的结果 {#get-activity-results}
 
-The call to spawn an [Activity Execution](/activity-execution) generates the [ScheduleActivityTask](/references/commands#scheduleactivitytask) Command and provides the Workflow with an Awaitable.
-Workflow Executions can either block progress until the result is available through the Awaitable or continue progressing, making use of the result when it becomes available.
+调用生成 [Activity 执行](/activity-execution) 会生成 [ScheduleActivity任务](/references/commands#scheduleactivitytask) 命令，并为 Workflow 提供 Awaitable。
+Workflow Execution 可以阻止进度，直到结果通过 Awaitable 可用为止，或者继续进度，在结果可用时使用它。
 
-The `ExecuteActivity` API call returns an instance of [`workflow.Future`](https://pkg.go.dev/go.temporal.io/sdk/workflow#Futures) which has the following two methods:
+`ExecuteActivity` API 调用返回 [`Workflow.Future`](https://pkg.go.dev/go.temporal.io/sdk/workflow#Futures) 的实例，该实例具有以下两个方法：
 
-- `Get()`: Takes an instance of the `workflow.Context`, that was passed to the Activity Execution, and a pointer as parameters.
-  The variable associated with the pointer is populated with the Activity Execution result.
-  This call blocks until the results are available.
-- `IsReady()`: Returns `true` when the result of the Activity Execution is ready.
+- `Get()`：采用传递给 Activity 执行的 `Workflow.Context` 实例，以及一个指针作为参数。
+  与指针关联的变量由 Activity 执行结果填充。
+  此调用会阻塞，直到结果可用为止。
+- `IsReady()`：当 Activity 执行的结果准备就绪时，返回 `true`。
 
-Call the `Get()` method on the instance of `workflow.Future` to get the result of the Activity Execution.
-The type of the result parameter must match the type of the return value declared by the Activity function.
+在 `Workflow.Future` 实例上调用 `Get()` 方法以获取 Activity 执行的结果。
+结果参数的类型必须与 Activity 函数声明的返回值的类型匹配。
 
 ```go
 func YourWorkflowDefinition(ctx workflow.Context, param YourWorkflowParam) (YourWorkflowResponse, error) {
@@ -325,7 +334,7 @@ func YourWorkflowDefinition(ctx workflow.Context, param YourWorkflowParam) (Your
 }
 ```
 
-Use the `IsReady()` method first to make sure the `Get()` call doesn't cause the Workflow Execution to wait on the result.
+首先使用 `IsReady()` 方法确保 `Get()` 调用不会导致 Workflow Execution 等待结果。
 
 ```go
 func YourWorkflowDefinition(ctx workflow.Context, param YourWorkflowParam) (YourWorkflowResponse, error) {
@@ -342,5 +351,5 @@ func YourWorkflowDefinition(ctx workflow.Context, param YourWorkflowParam) (Your
 }
 ```
 
-It is idiomatic to invoke multiple Activity Executions from within a Workflow.
-Therefore, it is also idiomatic to either block on the results of the Activity Executions or continue on to execute additional logic, checking for the Activity Execution results at a later time.
+从 Workflow 中调用多个 Activity 执行是惯用的做法。
+因此，通常会阻止 Activity 执行的结果，或者继续执行其他逻辑，稍后检查 Activity 执行结果。

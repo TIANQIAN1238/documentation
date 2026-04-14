@@ -1,8 +1,8 @@
 ---
 id: cancellation
-title: Interrupt a Workflow Execution - Java SDK
-sidebar_label: Interrupt a Workflow
-description:
+title: "中断 Workflow Execution - Java SDK"
+sidebar_label: "中断 Workflow"
+description: Interrupt a Workflow Execution using the Temporal Java SDK. Choose between canceling for a graceful stop or
   Interrupt a Workflow Execution using the Temporal Java SDK. Choose between canceling for a graceful stop or
   terminating for a forceful stop.
 keywords:
@@ -20,91 +20,92 @@ tags:
   - Temporal SDKs
 ---
 
-You can interrupt a Workflow Execution in one of the following ways:
+您可以通过以下方式之一中断 Workflow Execution：
 
-- [Cancel](#cancellation): Canceling a Workflow provides a graceful way to stop Workflow Execution.
-- [Terminate](#termination): Terminating a Workflow forcefully stops Workflow Execution.
+- [取消](#cancellation)：取消 Workflow 提供了一种停止 Workflow Execution 的优雅方法。
+- [终止](#termination)：终止 Workflow 会强制停止 Workflow Execution。
 
-Terminating a Workflow forcefully stops Workflow Execution. This action resembles killing a process.
+终止 Workflow 会强制停止 Workflow Execution。此操作类似于终止进程。
 
-- The system records a `WorkflowExecutionTerminated` event in the Workflow History.
-- The termination forcefully and immediately stops the Workflow Execution.
-- The Workflow code gets no chance to handle termination.
-- A Workflow Task doesn't get scheduled.
+- 系统在 Workflow 历史记录中记录 `WorkflowExecutionTerminated` 事件。
+- 强制终止并立即停止 Workflow Execution。
+- Workflow 代码没有机会处理终止。
+- Workflow 任务不会获得 Scheduled。
 
-In most cases, canceling is preferable because it allows the Workflow to finish gracefully. Terminate only if the
-Workflow is stuck and cannot be canceled normally.
+在大多数情况下，取消是更好的选择，因为它允许 Workflow 优雅地完成。仅在以下情况下终止
+Workflow被卡住，无法正常取消。
 
-## Cancel a Workflow Execution {#cancellation}
+## 取消 Workflow Execution {#cancellation}
 
-Canceling a Workflow provides a graceful way to stop Workflow Execution. This action resembles sending a `SIGTERM` to a
-process.
+取消 Workflow 提供了一种停止 Workflow Execution 的优雅方法。此操作类似于将 `SIGTERM` 发送到
+过程。
 
-- The system records a `WorkflowExecutionCancelRequested` event in the Workflow History.
-- A Workflow Task gets scheduled to process the cancelation.
-- The Workflow code can handle the cancelation and execute any cleanup logic.
-- The system doesn't forcefully stop the Workflow.
+- 系统在 Workflow 历史记录中记录 `WorkflowExecutionCancelRequested` 事件。
+- Workflow 任务获取 Scheduled 来处理取消。
+- Workflow 代码可以处理取消并执行任何清理逻辑。
+- 系统不会强制停止Workflow。
 
-To cancel a Workflow Execution in Java, use the
-[cancel()](<https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#cancel()>)
-function on the WorkflowStub.
+要在 Java 中取消 Workflow Execution，请使用
+[取消（）](<https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#cancel()>)
+WorkflowStub 上的功能。
 
 ```java
 WorkflowStub workflowStub = WorkflowStub.fromTyped(workflow);
 workflowStub.cancel();
 ```
 
-## Cancellation scopes in Java {#cancellation-scopes}
+## Java 中的取消范围 {#cancellation-scopes}
 
-In the Java SDK, Workflows are represented internally by a tree of cancellation scopes, each with cancellation behaviors
-you can specify. By default, everything runs in the "root" scope.
+在 Java SDK 中，Workflow 在内部由取消范围树表示，每个取消范围都有取消行为
+你可以指定。默认情况下，一切都在“root”范围内运行。
 
-Scopes are created using the
+范围是使用创建的
 [Workflow.newCancellationScope](<https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#newCancellationScope(io.temporal.workflow.Functions.Proc1)>)
-constructor
+构造函数
 
-Cancellations are applied to cancellation scopes, which can encompass an entire Workflow or just part of one. Scopes can
-be nested, and cancellation propagates from outer scopes to inner ones. A Workflow's method runs in the outermost scope.
-Cancellations are handled by catching `CanceledFailure`s thrown by cancelable operations.
+取消应用于取消范围，可以包含整个 Workflow 或仅包含其中的一部分。范围可以
+被嵌套，并且取消从外部作用域传播到内部作用域。 Workflow 的方法在最外层作用域中运行。
+取消是通过捕获可取消​​操作抛出的 `CanceledFailure` 来处理的。
 
-You can also use the following APIs:
+您还可以使用以下 API：
 
-- `CancellationScope.current()`: Get the current scope.
-- `scope.cancel()`: Cancel all operations inside a `scope`.
-- `scope.getCancellationRequest()`: A promise that resolves when a scope cancellation is requested, such as when
-  Workflow code calls `cancel()` or the entire Workflow is cancelled by an external client.
+- `CancellationScope.current()`：获取当前范围。
+- `scope.cancel()`：取消`scope`内的所有操作。
+- `scope.getCancellationRequest()`：当请求范围取消时解决的承诺，例如当
+  Workflow 代码调用 `cancel()` 或整个 Workflow 被外部客户端取消。
 
-When a `CancellationScope` is cancelled, it propagates cancellation in any child scopes and of any cancelable operations
-created within it, such as the following:
+当 `CancellationScope` 被取消时，它会在任何子作用域和任何可取消操作中传播取消
+在其中创建，例如以下内容：
 
-- Activities
-- Timers (created with the
-  [sleep](<https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#sleep(java.time.Duration)>)
-  function)
+- 活动
+- Timers（使用
+  [睡觉](<https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#sleep(java.time.Duration)>)
+  函数）
 - Child Workflows
-- Nexus Operations
+- Nexus 操作
 
-### Cancel an Activity from a Workflow {#cancel-activity}
+<a id="cancel-activity"></a>
+### 从 Workflow 取消 Activity {#cancel-activity}
 
-Canceling an Activity from within a Workflow requires that the Activity Execution sends Heartbeats and sets a Heartbeat
-Timeout. If the Heartbeat is not invoked, the Activity cannot receive a cancellation request. When any non-immediate
-Activity is executed, the Activity Execution should send Heartbeats and set a
-[Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout) to ensure that the server knows it is
-still working.
+从 Workflow 内取消 Activity 要求 Activity 执行发送心跳并设置心跳
+超时。如果不调用Heartbeat，Activity将无法接收取消请求。当任何非立即
+Activity 被执行，Activity 执行应该发送心跳并设置
+[心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout) 确保服务器知道它是
+仍在工作。
 
-When an Activity is canceled, an error is raised in the Activity at the next available opportunity. If cleanup logic
-needs to be performed, it can be done in a `finally` clause or inside a caught cancel error. However, for the Activity
-to appear canceled the exception needs to be re-raised.
+当取消 Activity 时，在下一个可用机会时 Activity 中会引发错误。如果清理逻辑
+需要执行，可以在 `finally` 子句中或在捕获的取消错误内完成。然而，对于 Activity
+要显示已取消，需要重新引发异常。
 
 :::note
 
-Unlike regular Activities, [Local Activities](/local-activity) currently do not support cancellation.
+与常规活动不同，[当地活动](/local-activity) 目前不支持取消。
 
 :::
 
-To cancel an Activity from a Workflow Execution, call the
-[cancel()](<https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/CancellationScope.html#cancel()>)
-method on the CancellationScope that the activity was started in.
+要从 Workflow Execution 取消 Activity，请调用
+[取消（）](<https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/CancellationScope.html#cancel()>)
+Activity 启动所在的 CancellationScope 上的方法。
 
 ```java
 public class GreetingWorkflowImpl implements GreetingWorkflow {
@@ -158,52 +159,52 @@ public class GreetingWorkflowImpl implements GreetingWorkflow {
 }
 ```
 
-## Terminate a Workflow Execution {#termination}
+## 终止 Workflow Execution {#termination}
 
-Terminating a Workflow forcefully stops Workflow Execution. This action resembles killing a process.
+终止 Workflow 会强制停止 Workflow Execution。此操作类似于终止进程。
 
-- The system records a `WorkflowExecutionTerminated` event in the Workflow History.
-- The termination forcefully and immediately stops the Workflow Execution.
-- The Workflow code gets no chance to handle termination.
-- A Workflow Task doesn't get scheduled.
+- 系统在 Workflow 历史记录中记录 `WorkflowExecutionTerminated` 事件。
+- 强制终止并立即停止 Workflow Execution。
+- Workflow 代码没有机会处理终止。
+- Workflow 任务不会获得 Scheduled。
 
-To terminate a Workflow Execution in Java, use the
-[terminate()](<https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#terminate(java.lang.String,java.lang.Object...)>)
-function on the WorkflowStub.
+要在 Java 中终止 Workflow Execution，请使用
+[终止（）](<https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html#terminate(java.lang.String,java.lang.Object...)>)
+WorkflowStub 上的功能。
 
 ```java
 WorkflowStub untyped = WorkflowStub.fromTyped(myWorkflowStub);
 untyped.terminate("Sample reason");
 ```
 
-## Reset a Workflow Execution {#reset}
+## 重置 Workflow Execution {#reset}
 
-Resetting a Workflow Execution terminates the current Workflow Execution and starts a new Workflow Execution from a
-point you specify in its Event History. Use reset when a Workflow is blocked due to a non-deterministic error or other
-issues that prevent it from completing.
+重置 Workflow Execution 将终止当前的 Workflow Execution 并从
+您在其 Event History 中指定的点。当 Workflow 由于非确定性错误或其他原因而被阻止时，请使用重置
+阻止其完成的问题。
 
-When you reset a Workflow, the Event History up to the reset point is copied to the new Workflow Execution, and the
-Workflow resumes from that point with the current code. Reset only works if you've fixed the underlying issue, such as
-removing non-deterministic code. Any progress made after the reset point will be discarded. Provide a reason when
-resetting, as it will be recorded in the Event History.
+当您重置 Workflow 时，重置点之前的 Event History 将被复制到新的 Workflow Execution，并且
+Workflow 从该点使用当前代码恢复。仅当您解决了根本问题（例如
+删除不确定性代码。重置点之后取得的任何进度都将被丢弃。给出一个理由，当
+重置，因为它将记录在 Event History 中。
 
 <Tabs>
 
 <TabItem value="web-ui" label="Web UI">
 
-1. Navigate to the Workflow Execution details page,
-2. Click the **Reset** button in the top right dropdown menu,
-3. Select the Event ID to reset to,
-4. Provide a reason for the reset,
-5. Confirm the reset.
+1. 导航至Workflow Execution详细信息页面，
+2. 单击右上角下拉菜单中的 **重置** 按钮，
+3. 选择要重置的事件 ID，
+4. 提供重置原因，
+5. 确认重置。
 
-The Web UI shows available reset points and creates a link to the new Workflow Execution after the reset completes.
+Web UI 显示可用的重置点，并在重置完成后创建指向新 Workflow Execution 的链接。
 
 </TabItem>
 
 <TabItem value="cli" label="Temporal CLI">
 
-Use the `temporal workflow reset` command to reset a Workflow Execution:
+使用 `Temporal Workflow reset` 命令重置 Workflow Execution：
 
 ```bash
 temporal workflow reset \
@@ -212,7 +213,7 @@ temporal workflow reset \
     --reason "Reason for reset"
 ```
 
-For example:
+例如：
 
 ```bash
 temporal workflow reset \
@@ -221,8 +222,8 @@ temporal workflow reset \
     --reason "Fixed non-deterministic code"
 ```
 
-By default, the command resets the latest Workflow Execution in the `default` Namespace. Use `--run-id` to reset a
-specific run. Use `--namespace` to specify a different Namespace:
+默认情况下，该命令重置 `default` Namespace 中最新的 Workflow Execution。使用 `--run-id` 重置
+具体运行。使用 `--Namespace` 指定不同的 Namespace：
 
 ```bash
 temporal workflow reset \
@@ -234,7 +235,7 @@ temporal workflow reset \
     --tls-key-path /path/to/key.pem
 ```
 
-Monitor the new Workflow Execution after resetting to ensure it completes successfully.
+重置后监视新的 Workflow Execution 以确保其成功完成。
 
 </TabItem>
 

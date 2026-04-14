@@ -1,8 +1,8 @@
 ---
 id: message-passing
-title: Message passing - .NET SDK
-sidebar_label: Message passing
-description: Develop with Queries, Signals, and Updates with the Temporal .NET SDK.
+title: "消息传递 - .NET SDK"
+sidebar_label: "消息传递"
+description: "使用 Temporal .NET SDK 进行查询、Signal 和 Update 的开发。"
 toc_max_heading_level: 3
 keywords:
   - temporal dotnet signals
@@ -21,28 +21,28 @@ tags:
   - Temporal SDKs
 ---
 
-A Workflow can act like a stateful web service that receives messages: Queries, Signals, and Updates.
-The Workflow implementation defines these endpoints via handler methods that can react to incoming messages and return values.
-Temporal Clients use messages to read Workflow state and control execution.
-See [Workflow message passing](/encyclopedia/workflow-message-passing) for a general overview of this topic.
-This page introduces these features for the Temporal .NET SDK.
+Workflow 可以像有状态 Web 服务一样接收消息：查询、Signal 和 Update。
+Workflow 实现通过可以对传入消息和返回值做出反应的处理程序方法定义这些端点。
+Temporal CLIents 使用消息读取 Workflow 状态并控制执行。
+有关此主题的一般概述，请参阅 [Workflow消息传递](/encyclopedia/workflow-message-passing)。
+本页介绍 Temporal .NET SDK 的这些功能。
 
-## Write message handlers {#writing-message-handlers}
-
+<a id="writing-message-handlers"></a>
+## 编写消息处理程序 {#writing-message-handlers}
 :::info
-The code that follows is part of a [working solution](https://github.com/temporalio/samples-dotnet/tree/main/src/MessagePassing).
+以下代码是 [工作解决方案](https://github.com/temporalio/samples-dotnet/tree/main/src/MessagePassing) 的一部分。
 :::
 
-Follow these guidelines when writing your message handlers:
+编写消息处理程序时请遵循以下准则：
 
-- Message handlers are defined as methods on the Workflow class, using one of the three attributes: [`WorkflowQueryAttribute`](https://dotnet.temporal.io/api/Temporalio.Workflows.WorkflowQueryAttribute.html), [`WorkflowSignalAttribute`](https://dotnet.temporal.io/api/Temporalio.Workflows.WorkflowSignalAttribute.html), and [`WorkflowUpdateAttribute`](https://dotnet.temporal.io/api/Temporalio.Workflows.WorkflowUpdateAttribute.html).
-- The parameters and return values of handlers and the main Workflow function must be [serializable](/dataconversion).
-- Prefer data classes to multiple input parameters. Data class parameters allow you to add fields without changing the calling signature. Keep in mind that serialization and deserialization can fail with the default data converter if the new field does not have a default value.
+- 消息处理程序被定义为 Workflow 类上的方法，使用以下三个属性之一：[`WorkflowQueryAttribute`](https://dotnet.temporal.io/api/temporalio.Workflows.WorkflowQueryAttribute.html)、[`WorkflowSignalAttribute`](https://dotnet.temporal.io/api/temporalio.Workflows.WorkflowSignalAttribute.html) 和 [`WorkflowUpdateAttribute`](https://dotnet.temporal.io/api/temporalio.Workflows.WorkflowUpdateAttribute.html)。
+- 处理程序和主 Workflow 函数的参数和返回值必须是 [可序列化](/dataconversion)。
+- 优先选择数据类而不是多个输入参数。数据类参数允许您在不更改调用签名的情况下添加字段。请记住，如果新字段没有默认值，则序列化和反序列化可能会失败并显示默认的 Data Converter。
 
-### Query handlers {#queries}
-
-A [Query](/sending-messages#sending-queries) is a synchronous operation that retrieves state from a Workflow Execution.
-Define as a method:
+<a id="queries"></a>
+### Query 处理程序 {#queries}
+[Query](/sending-messages#sending-queries) 是从 Workflow Execution 检索状态的同步操作。
+定义为方法：
 
 ```csharp
 [Workflow]
@@ -70,7 +70,7 @@ public class GreetingWorkflow
     // ...
 ```
 
-Or as a property getter:
+或者作为财产获取者：
 
 ```csharp
 [Workflow]
@@ -93,14 +93,14 @@ public class GreetingWorkflow
     // ...
 ```
 
-- The Query attribute can accept arguments.
-  See the API reference docs: [`WorkflowQueryAttribute`](https://dotnet.temporal.io/api/Temporalio.Workflows.WorkflowQueryAttribute.html).
-- A Query handler must not modify Workflow state.
-- You can't perform async blocking operations such as executing an Activity in a Query handler.
+- Query 属性可以接受参数。
+  请参阅 API 参考文档：[`WorkflowQueryAttribute`](https://dotnet.temporal.io/api/temporalio.Workflows.WorkflowQueryAttribute.html)。
+- Query 处理程序不得修改 Workflow 状态。
+- 您无法执行异步阻塞操作，例如在 Query 处理程序中执行 Activity。
 
-### Signal handlers {#signals}
-
-A [Signal](/sending-messages#sending-signals) is an asynchronous message sent to a running Workflow Execution to change its state and control its flow:
+<a id="signals"></a>
+### Signal 处理程序 {#signals}
+[Signal](/sending-messages#sending-signals) 是发送到正在运行的 Workflow Execution 的异步消息，用于更改其状态并控制其流程：
 
 ```csharp
 [Workflow]
@@ -120,22 +120,22 @@ public class GreetingWorkflow
     // ...
 ```
 
-- The Signal attribute can accept arguments.
-  Refer to the API docs: [`WorkflowSignalAttribute`](https://dotnet.temporal.io/api/Temporalio.Workflows.WorkflowSignalAttribute.html).
+- Signal 属性可以接受参数。
+  请参阅 API 文档：[`WorkflowSignalAttribute`](https://dotnet.temporal.io/api/temporalio.Workflows.WorkflowSignalAttribute.html)。
 
-- The handler should not return a value.
-  The response is sent immediately from the server, without waiting for the Workflow to process the Signal.
+- 处理程序不应返回值。
+  服务器立即发送响应，无需等待 Workflow 处理 Signal。
 
-- Signal (and Update) handlers can be asynchronous and blocking.
-  This allows you to use Activities, Child Workflows, durable [`Workflow.DelayAsync`](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_DelayAsync_System_Int32_System_Nullable_System_Threading_CancellationToken__) Timers, [`Workflow.WaitConditionAsync`](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_WaitConditionAsync_System_Func_System_Boolean__System_Int32_System_Nullable_System_Threading_CancellationToken__) conditions, and more.
-  See [Async handlers](#async-handlers) and [Workflow message passing](/encyclopedia/workflow-message-passing) for guidelines on safely using async Signal and Update handlers.
+- Signal（和 Update）处理程序可以是异步和阻塞的。
+  这允许您使用活动、Child Workflow、持久 [`Workflow.DelayAsync`](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_DelayAsync_System_Int32_System_Nullable_System_Threading_CancellationToken__)、Timer、[`Workflow.WaitConditionAsync`](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_WaitConditionAsync_System_Func_System_Boolean__System_Int32_System_Nullable_System_Threading_CancellationToken__) 条件等。
+  有关安全使用异步 Signal 和 Update 处理程序的指南，请参阅 [异步处理程序](#async-handlers) 和 [Workflow消息传递](/encyclopedia/workflow-message-passing)。
 
-### Update handlers and validators {#updates}
-
-An [Update](/sending-messages#sending-updates) is a trackable synchronous request sent to a running Workflow Execution.
-It can change the Workflow state, control its flow, and return a result.
-The sender must wait until the Worker accepts or rejects the Update.
-The sender may wait further to receive a returned value or an exception if something goes wrong:
+<a id="updates"></a>
+### Update 处理程序和验证器 {#updates}
+[Update](/sending-messages#sending-updates) 是发送到正在运行的 Workflow Execution 的可跟踪同步请求。
+它可以更改 Workflow 状态、控制其流程并返回结果。
+发送方必须等待，直到 Worker 接受或拒绝 Update。
+如果出现问题，发送者可能会进一步等待接收返回值或异常：
 
 ```csharp
 [Workflow]
@@ -172,39 +172,39 @@ public class GreetingWorkflow
     // ...
 ```
 
-- The Update attribute can take arguments (like, `Name`, `Dynamic` and `UnfinishedPolicy`) as described in the API reference docs for [`WorkflowUpdateAttribute`](https://dotnet.temporal.io/api/Temporalio.Workflows.WorkflowUpdateAttribute.html).
+- Update 属性可以采用参数（例如 `Name`、`Dynamic` 和 `UnfinishedPolicy`），如 [`WorkflowUpdateAttribute`](https://dotnet.temporal.io/api/temporalio.Workflows.WorkflowUpdateAttribute.html) 的 API 参考文档中所述。
 
-- About validators:
-  - Use validators to reject an Update before it is written to History.
-    Validators are always optional.
-    If you don't need to reject Updates, you can skip them.
-  - Define an Update validator with the [`WorkflowUpdateValidatorAttribute`](https://dotnet.temporal.io/api/Temporalio.Workflows.WorkflowUpdateValidatorAttribute.html) attribute.
-    Use the Name argument when declaring the validator to connect it to its Update.
-    The validator must be a `void` type and accept the same argument types as the handler.
+- 关于验证器：
+  - 在将 Update 写入历史记录之前，使用验证器拒绝该 Update。
+    验证器始终是可选的。
+    如果您不需要拒绝 Update，则可以跳过它们。
+  - 使用 [`WorkflowUpdateValidatorAttribute`](https://dotnet.temporal.io/api/temporalio.Workflows.WorkflowUpdateValidatorAttribute.html) 属性定义 Update 验证器。
+    声明验证器时使用 Name 参数将其连接到其 Update。
+    验证器必须是 `void` 类型，并接受与处理程序相同的参数类型。
 
-- Accepting and rejecting Updates with validators:
-  - To reject an Update, raise an exception of any type in the validator.
-  - Without a validator, Updates are always accepted.
-- Validators and Event History:
-  - The `WorkflowExecutionUpdateAccepted` event is written into the History whether the acceptance was automatic or programmatic.
-  - When a Validator raises an error, the Update is rejected, the Update is not run, and `WorkflowExecutionUpdateAccepted` _won't_ be added to the Event History.
-    The caller receives an "Update failed" error.
+- 使用验证器接受和拒绝 Update：
+  - 要拒绝 Update，请在验证器中引发任何类型的异常。
+  - 如果没有验证器，则始终接受 Update。
+- 验证器和 Event History：
+  - 无论是自动接受还是编程接受，`WorkflowExecutionUpdateAccepted` 事件都会写入历史记录。
+  - 当验证器引发错误时，Update 会被拒绝，Update 不会运行，并且 `WorkflowExecutionUpdateAccepted` _不会_ 添加到 Event History 中。
+    调用者收到“Update 失败”错误。
 
-- Use [`Workflow.CurrentUpdateInfo`](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_CurrentUpdateInfo) to obtain information about the current Update.
-  This includes the Update ID, which can be useful for deduplication when using Continue-As-New: see [Ensuring your messages are processed exactly once](/handling-messages#exactly-once-message-processing).
-- Update (and Signal) handlers can be asynchronous and blocking.
-  This allows you to use Activities, Child Workflows, durable [`Workflow.DelayAsync`](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_DelayAsync_System_Int32_System_Nullable_System_Threading_CancellationToken__) Timers, [`Workflow.WaitConditionAsync`](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_WaitConditionAsync_System_Func_System_Boolean__System_Int32_System_Nullable_System_Threading_CancellationToken__) conditions, and more.
-  See [Async handlers](#async-handlers) and [Workflow message passing](/encyclopedia/workflow-message-passing) for guidelines on safely using async Update and Signal handlers.
+- 使用 [`Workflow.CurrentUpdateInfo`](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_CurrentUpdateInfo) 获取有关当前 Update 的信息。
+  这包括 Update ID，它在使用 Continue-As-New 时可用于重复数据删除：请参阅 [确保您的消息仅被处理一次](/handling-messages#exactly-once-message-processing)。
+- Update（和 Signal）处理程序可以是异步和阻塞的。
+  这允许您使用活动、Child Workflow、持久 [`Workflow.DelayAsync`](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_DelayAsync_System_Int32_System_Nullable_System_Threading_CancellationToken__)、Timer、[`Workflow.WaitConditionAsync`](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_WaitConditionAsync_System_Func_System_Boolean__System_Int32_System_Nullable_System_Threading_CancellationToken__) 条件等。
+  有关安全使用异步 Update 和 Signal 处理程序的指南，请参阅 [异步处理程序](#async-handlers) 和 [Workflow消息传递](/encyclopedia/workflow-message-passing)。
 
-## Send messages {#send-messages}
+<a id="send-messages"></a>
+## 发送消息 {#send-messages}
+要发送查询、Signal 或 Update，您可以调用 [`WorkflowHandle`](https://dotnet.temporal.io/api/temporalio.Client.WorkflowHandle.html) 对象上的方法。
+要获取WorkflowStub，您可以：
 
-To send Queries, Signals, or Updates you call methods on a [`WorkflowHandle`](https://dotnet.temporal.io/api/Temporalio.Client.WorkflowHandle.html) object.
-To obtain the WorkflowStub, you can:
+- 使用 [`TemporalClient.StartWorkflowAsync`](https://dotnet.temporal.io/api/temporalio.Client.TemporalClient.html#Temporalio_Client_TemporalClient_StartWorkflowAsync_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowOptions_) 启动 Workflow 并返回其句柄。
+- 使用 [`TemporalClient.GetWorkflowHandle`](https://dotnet.temporal.io/api/temporalio.Client.TemporalClient.html#Temporalio_Client_TemporalClient_GetWorkflowHandle_System_String_System_String_System_String_) 方法通过 Workflow Id 检索 Workflow 句柄。
 
-- Use [`TemporalClient.StartWorkflowAsync`](https://dotnet.temporal.io/api/Temporalio.Client.TemporalClient.html#Temporalio_Client_TemporalClient_StartWorkflowAsync_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowOptions_) to start a Workflow and return its handle.
-- Use the [`TemporalClient.GetWorkflowHandle`](https://dotnet.temporal.io/api/Temporalio.Client.TemporalClient.html#Temporalio_Client_TemporalClient_GetWorkflowHandle_System_String_System_String_System_String_) method to retrieve a Workflow handle by its Workflow Id.
-
-For example:
+例如：
 
 ```csharp
 var client = await TemporalClient.ConnectAsync(new("localhost:7233"));
@@ -213,54 +213,54 @@ var workflowHandle = await client.StartWorkflowAsync(
     new(id: "message-passing-workflow-id", taskQueue: "message-passing-sample"));
 ```
 
-To check the argument types required when sending messages -- and the return type for Queries and Updates -- refer to the corresponding handler method in the Workflow Definition.
+要检查发送消息时所需的参数类型以及查询和 Update 的返回类型，请参阅 Workflow Definition 中相应的处理程序方法。
 
 :::warning Using Continue-as-New and Updates
 
-- Temporal _does not_ support Continue-as-New functionality within Update handlers.
-- Complete all handlers _before_ using Continue-as-New.
-- Use Continue-as-New from your main Workflow Definition method, just as you would complete or fail a Workflow Execution.
+- Temporal_不_支持 Update 处理程序中的 Continue-As-New 功能。
+- 使用 Continue-As-New_之前_完成所有处理程序。
+- 从您的主要 Workflow Definition 方法中使用 Continue-As-New，就像完成或失败 Workflow Execution 一样。
 
 :::
 
-### Send a Query {#send-query}
-
-Call a Query method with [`WorkflowHandle.QueryAsync`](https://dotnet.temporal.io/api/Temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_QueryAsync__1_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowQueryOptions_):
+<a id="send-query"></a>
+### 发送 Query {#send-query}
+使用 [`WorkflowHandle.QueryAsync`](https://dotnet.temporal.io/api/temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_QueryAsync__1_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowQueryOptions_) 调用 Query 方法：
 
 ```csharp
 var supportedLanguages = await workflowHandle.QueryAsync(wf => wf.GetLanguages(new(false)));
 ```
 
-- Sending a Query doesn’t add events to a Workflow's Event History.
+- 发送 Query 不会将事件添加到 Workflow 的 Event History。
 
-- You can send Queries to closed Workflow Executions within a Namespace's Workflow retention period.
-  This includes Workflows that have completed, failed, or timed out.
-  Querying terminated Workflows is not safe and, therefore, not supported.
+- 您可以在 Namespace 的 Workflow 保留期内向已关闭的 Workflow Execution 发送查询。
+  这包括已完成、失败或超时的 Workflow。
+  Querying 终止的 Workflow 不安全，因此不受支持。
 
-- A Worker must be online and polling the Task Queue to process a Query.
+- Worker 必须在线并轮询 Task Queue 才能处理 Query。
 
-### Send a Signal {#send-signal}
+<a id="send-signal"></a>
+### 发送 Signal {#send-signal}
+您可以从 Temporal CLIent 或另一个 Workflow Execution 向 Workflow Execution 发送 Signal。
+但是，您只能将 Signal 发送到尚未关闭的 Workflow Execution。
 
-You can send a Signal to a Workflow Execution from a Temporal Client or from another Workflow Execution.
-However, you can only send Signals to Workflow Executions that haven’t closed.
-
-#### Send a Signal from a Client {#send-signal-from-client}
-
-Use [`WorkflowHandle.SignalAsync`](https://dotnet.temporal.io/api/Temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_SignalAsync_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowSignalOptions_) from Client code to send a Signal:
+<a id="send-signal-from-client"></a>
+#### 从客户端发送 Signal {#send-signal-from-client}
+使用客户端代码中的 [`WorkflowHandle.SignalAsync`](https://dotnet.temporal.io/api/temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_SignalAsync_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowSignalOptions_) 发送 Signal：
 
 ```csharp
 await workflowHandle.SignalAsync(wf => wf.ApproveAsync(new("MyUser")));
 ```
 
-- The call returns when the server accepts the Signal; it does _not_ wait for the Signal to be delivered to the Workflow Execution.
+- 当服务器接受 Signal 时调用返回；它并不等待 Signal 被传送到 Workflow Execution。
 
-- The [WorkflowExecutionSignaled](/references/events#workflowexecutionsignaled) Event appears in the Workflow's Event History.
+- [Workflow执行Signaled](/references/events#workflowexecutionsignaled) 事件出现在 Workflow 的 Event History 中。
 
-#### Send a Signal from a Workflow {#send-signal-from-workflow}
-
-A Workflow can send a Signal to another Workflow, known as an _External Signal_.
-In this case you need to obtain a Workflow handle for the external Workflow.
-Use `Workflow.GetExternalWorkflowHandle`, passing a running Workflow Id, to retrieve a typed Workflow handle:
+<a id="send-signal-from-workflow"></a>
+#### 从 Workflow 发送 Signal {#send-signal-from-workflow}
+Workflow 可以将 Signal 发送到另一个 Workflow，称为_外部 Signal_。
+在这种情况下，您需要获取外部 Workflow 的 Workflow 句柄。
+使用 `Workflow.GetExternalWorkflowHandle`，传递正在运行的 Workflow Id，以检索类型化的 Workflow 句柄：
 
 ```csharp
 // ...
@@ -278,17 +278,17 @@ public class WorkflowB
     // ...
 ```
 
-When an External Signal is sent:
+当发送外部 Signal 时：
 
-- A [SignalExternalWorkflowExecutionInitiated](/references/events#signalexternalworkflowexecutioninitiated) Event appears in the sender's Event History.
-- A [WorkflowExecutionSignaled](/references/events#workflowexecutionsignaled) Event appears in the recipient's Event History.
+- [Signal外部Workflow执行已启动](/references/events#signalexternalworkflowexecutioninitiated) 事件出现在发件人的 Event History 中。
+- [Workflow执行Signaled](/references/events#workflowexecutionsignaled) 事件出现在收件人的 Event History 中。
 
-#### Signal-With-Start {#signal-with-start}
-
-Signal-With-Start allows a Client to send a Signal to a Workflow Execution, starting the Execution if it is not already running.
-If there's a Workflow running with the given Workflow Id, it will be signaled.
-If there isn't, a new Workflow will be started and immediately signaled.
-To use Signal-With-Start, call `SignalWithStart` with a lambda expression invoking it:
+<a id="signal-with-start"></a>
+#### Signal-带启动 {#signal-with-start}
+Signal-With-Start 允许客户端将 Signal 发送到 Workflow Execution，如果尚未运行则启动执行。
+如果有一个 Workflow 使用给定的 Workflow Id 运行，则它将是 Signaled。
+如果没有，将启动新的 Workflow 并立即删除 Signal。
+要使用 Signal-With-Start，请使用调用它的 lambda 表达式来调用 `SignalWithStart`：
 
 ```csharp
 var client = await TemporalClient.ConnectAsync(new("localhost:7233"));
@@ -297,36 +297,36 @@ options.SignalWithStart((GreetingWorkflow wf) => wf.SubmitGreetingAsync("User Si
 await client.StartWorkflowAsync((GreetingWorkflow wf) => wf.RunAsync(), options);
 ```
 
-### Send an Update {#send-update-from-client}
+<a id="send-update-from-client"></a>
+### 发送 Update {#send-update-from-client}
+Update 是同步、阻塞调用，可以更改 Workflow 状态、控制其流程并返回结果。
 
-An Update is a synchronous, blocking call that can change Workflow state, control its flow, and return a result.
+发送 Update 的客户端必须等待，直到服务器将 Update 传递给 Worker。
+Worker 必须可用且响应迅速。
+如果服务器收到请求后需要立即响应，请改用 Signal。
+另请注意，您无法将 Update 发送到其他 Workflow Execution。
 
-A Client sending an Update must wait until the Server delivers the Update to a Worker.
-Workers must be available and responsive.
-If you need a response as soon as the Server receives the request, use a Signal instead.
-Also note that you can't send Updates to other Workflow Executions.
+- 当Worker确认Update通过验证时，`WorkflowExecutionUpdateAccepted`被添加到Event History。
+- 当Worker确认Update已完成时，`WorkflowExecutionUpdateCompleted`被添加到Event History。
 
-- `WorkflowExecutionUpdateAccepted` is added to the Event History when the Worker confirms that the Update passed validation.
-- `WorkflowExecutionUpdateCompleted` is added to the Event History when the Worker confirms that the Update has finished.
+要将 Update 发送到 Workflow Execution，您可以：
 
-To send an Update to a Workflow Execution, you can:
-
-- Call the Update method with `ExecuteUpdateAsync` from the Client and wait for the Update to complete.
-  This code fetches an Update result:
+- 从客户端使用 `ExecuteUpdateAsync` 调用 Update 方法并等待 Update 完成。
+  此代码获取 Update 结果：
 
   ```csharp
   var previousLanguage = await workflowHandle.ExecuteUpdateAsync(
     wf => wf.SetCurrentLanguageAsync(GreetingWorkflow.Language.Chinese));
   ```
 
-2. Use `StartUpdateAsync` to receive a handle as soon as the Update is accepted.
-     It returns an `UpdateHandle`
+2. 在接受 Update 后，立即使用 `StartUpdateAsync` 接收句柄。
+     它返回 `UpdateHandle`
 
-  - Use this `UpdateHandle` later to fetch your results.
-  - Asynchronous Update handlers normally perform long-running async Activities.
-  - `StartUpdateAsync` only waits until the Worker has accepted or rejected the Update, not until all asynchronous operations are complete.
+- 稍后使用此 `UpdateHandle` 获取结果。
+  - 异步 Update 处理程序通常执行长时间运行的异步活动。
+  - `StartUpdateAsync` 仅等待直到 Worker 接受或拒绝 Update，而不等待所有异步操作完成。
 
-  For example:
+例如：
 
   ```csharp
   // Wait until the update is accepted
@@ -337,32 +337,31 @@ To send an Update to a Workflow Execution, you can:
   var updateResult = await updateHandle.GetResultAsync();
   ```
 
-  For more details, see the "Async handlers" section.
+有关更多详细信息，请参阅“异步处理程序”部分。
 
-#### Update-with-Start {#update-with-start}
-
+#### Update-with-Start
 :::tip
 
-For open source server users, Temporal Server version [Temporal Server version 1.28](https://github.com/temporalio/temporal/releases/tag/v1.28.0) is recommended.
+对于开源服务器用户，建议使用Temporal Server版本[Temporal Server 版本 1.28](https://github.com/temporalio/temporal/releases/tag/v1.28.0)。
 
 :::
 
-[Update-with-Start](/sending-messages#update-with-start) lets you [send an Update](/develop/dotnet/workflows/message-passing#send-update-from-client) that checks whether an already-running Workflow with that ID exists:
+[Update-带启动](/sending-messages#update-with-start) 允许您 [发送 Update](/develop/dotnet/workflows/message-passing#send-update-from-client) 检查是否存在具有该 ID 的已运行的 Workflow：
 
-- If the Workflow exists, the Update is processed.
-- If the Workflow does not exist, a new Workflow Execution is started with the given ID, and the Update is processed before the main Workflow method starts to execute.
+- 如果 Workflow 存在，则处理 Update。
+- 如果 Workflow 不存在，则使用给定 ID 启动新的 Workflow Execution，并在主 Workflow 方法开始执行之前处理 Update。
 
-Use `ExecuteUpdateWithStartAsync` to start the Update and wait for the result in one go.
+使用`ExecuteUpdateWithStartAsync`启动Update，一次性等待结果。
 
-Alternatively, use `StartUpdateWithStartAsync` to start the Update and receive a `WorkflowUpdateHandle`, and then use `await updateHandle.GetResultAsync()` to retrieve the result from the Update.
+或者，使用 `StartUpdateWithStartAsync` 启动 Update 并接收 `WorkflowUpdateHandle`，然后使用 `await UpdateHandle.GetResultAsync()` 从 Update 检索结果。
 
-These calls return once the requested Update wait stage has been reached, or when the request times out.
+一旦到达所请求的 Update 等待阶段或请求超时，这些调用就会返回。
 
-- You will need to provide a `WithStartWorkflowOperation` to define the Workflow that will be started if necessary, and its arguments.
-- You must specify an [IdConflictPolicy](/workflow-execution/workflowid-runid#workflow-id-conflict-policy) when creating the `WithStartWorkflowOperation`.
-  Note that a `WithStartWorkflowOperation` can only be used once.
+- 您需要提供 `WithStartWorkflowOperation` 来定义必要时启动的 Workflow 及其参数。
+- 创建 `WithStartWorkflowOperation` 时必须指定 [ID冲突策略](/workflow-execution/workflowid-runid#workflow-id-conflict-policy)。
+  请注意，`WithStartWorkflowOperation` 只能使用一次。
 
-Here's an example taken from the [UpdateWithStartLazyInit](https://github.com/temporalio/samples-dotnet/blob/main/src/UpdateWithStartLazyInit/Program.cs) sample:
+以下是取自 [UpdateWithStartLazyInit](https://github.com/temporalio/samples-dotnet/blob/main/src/UpdateWithStartLazyInit/Program.cs) 样本的示例：
 
 ```csharp
 async Task<AddCartItemResult> AddCartItemAsync(string sessionId, ShoppingCartItem item)
@@ -399,44 +398,44 @@ async Task<AddCartItemResult> AddCartItemAsync(string sessionId, ShoppingCartIte
 
 :::info NON-TYPE SAFE API CALLS
 
-In real-world development, sometimes you may be unable to import Workflow Definition method signatures.
-When you don't have access to the Workflow Definition or it isn't written in .NET, you can still use non-type safe APIs and dynamic method invocation.
-Pass method names instead of method objects to:
+在实际开发中，有时您可能无法导入 Workflow Definition 方法签名。
+当您无权访问 Workflow Definition 或者它不是用 .NET 编写时，您仍然可以使用非类型安全 API 和动态方法调用。
+将方法名称而不是方法对象传递给：
 
-- [`TemporalClient.StartWorkflowAsync`](https://dotnet.temporal.io/api/Temporalio.Client.TemporalClient.html#Temporalio_Client_TemporalClient_StartWorkflowAsync_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowOptions_)
-- [`WorkflowHandle.QueryAsync`](https://dotnet.temporal.io/api/Temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_QueryAsync__1_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowQueryOptions_)
-- [`WorkflowHandle.SignalAsync`](https://dotnet.temporal.io/api/Temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_SignalAsync_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowSignalOptions_)
-- [`WorkflowHandle.ExecuteUpdateAsync`](https://dotnet.temporal.io/api/Temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_ExecuteUpdateAsync_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowUpdateOptions_)
-- [`WorkflowHandle.StartUpdateAsync`](https://dotnet.temporal.io/api/Temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_StartUpdateAsync_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowUpdateStartOptions_)
+- [`TemporalClient.StartWorkflowAsync`](https://dotnet.temporal.io/api/temporalio.Client.TemporalClient.html#Temporalio_Client_TemporalClient_StartWorkflowAsync_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowOptions_)
+- [`WorkflowHandle.QueryAsync`](https://dotnet.temporal.io/api/temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_QueryAsync__1_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowQueryOptions_)
+- [`WorkflowHandle.SignalAsync`](https://dotnet.temporal.io/api/temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_SignalAsync_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowSignalOptions_)
+- [`WorkflowHandle.ExecuteUpdateAsync`](https://dotnet.temporal.io/api/temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_ExecuteUpdateAsync_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowUpdateOptions_)
+- [`WorkflowHandle.StartUpdateAsync`](https://dotnet.temporal.io/api/temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_StartUpdateAsync_System_String_System_Collections_Generic_IReadOnlyCollection_System_Object__Temporalio_Client_WorkflowUpdateStartOptions_)
 
-Use non-type safe overloads of these APIs:
+使用这些 API 的非类型安全重载：
 
-- [`TemporalClient.GetWorkflowHandle`](https://dotnet.temporal.io/api/Temporalio.Client.TemporalClient.html#Temporalio_Client_TemporalClient_GetWorkflowHandle_System_String_System_String_System_String_)
-- [`Workflow.GetExternalWorkflowHandle`](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_GetExternalWorkflowHandle_System_String_System_String_)
+- [`TemporalClient.GetWorkflowHandle`](https://dotnet.temporal.io/api/temporalio.Client.TemporalClient.html#Temporalio_Client_TemporalClient_GetWorkflowHandle_System_String_System_String_System_String_)
+- [`Workflow.GetExternalWorkflowHandle`](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_GetExternalWorkflowHandle_System_String_System_String_)
 
 :::
 
-## Message handler patterns {#message-handler-patterns}
-
-This section covers common write operations, such as Signal and Update handlers.
-It doesn't apply to pure read operations, like Queries or Update Validators.
+<a id="message-handler-patterns"></a>
+## 消息处理程序模式 {#message-handler-patterns}
+本节介绍常见的写入操作，例如 Signal 和 Update 处理程序。
+它不适用于纯读取操作，例如查询或 Update 验证器。
 
 :::tip
 
-For additional information, see [Inject work into the main Workflow](/handling-messages#injecting-work-into-main-workflow) and [Ensuring your messages are processed exactly once](/handling-messages#exactly-once-message-processing).
+有关其他信息，请参阅 [将工作注入主 Workflow](/handling-messages#injecting-work-into-main-workflow) 和 [确保您的消息仅被处理一次](/handling-messages#exactly-once-message-processing)。
 
 :::
 
-### Add async handlers to use `await` {#async-handlers}
+<a id="async-handlers"></a>
+### 添加异步处理程序以使用 `await` {#async-handlers}
+Signal 和 Update 处理程序可以是异步的，也可以是阻塞的。
+使用异步调用允许您执行 `await` 活动、Child Workflow、[`Workflow.DelayAsync`](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_DelayAsync_System_Int32_System_Nullable_System_Threading_CancellationToken__) Timer、[`Workflow.WaitConditionAsync`](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_WaitConditionAsync_System_Func_System_Boolean__System_Int32_System_Nullable_System_Threading_CancellationToken__) 等待条件等。
+这扩展了处理程序可以完成的操作的可能性，但这也意味着处理程序执行和您的主 Workflow 方法都是同时运行的，并在调用 wait 时在它们之间进行切换。
 
-Signal and Update handlers can be asynchronous as well as blocking.
-Using asynchronous calls allows you to `await` Activities, Child Workflows, [`Workflow.DelayAsync`](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_DelayAsync_System_Int32_System_Nullable_System_Threading_CancellationToken__) Timers, [`Workflow.WaitConditionAsync`](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_WaitConditionAsync_System_Func_System_Boolean__System_Int32_System_Nullable_System_Threading_CancellationToken__) wait conditions, etc.
-This expands the possibilities for what can be done by a handler but it also means that handler executions and your main Workflow method are all running concurrently, with switching occurring between them at await calls.
+为了安全地使用异步处理程序，了解可能出错的事情至关重要。
+有关异步 Signal 和 Update 处理程序的安全使用指南，请参阅 [Workflow消息传递](/encyclopedia/workflow-message-passing) 以及下面的 [控制处理程序并发](#control-handler-concurrency) 和 [等待消息处理程序完成](#wait-for-message-handlers) 部分。
 
-It's essential to understand the things that could go wrong in order to use asynchronous handlers safely.
-See [Workflow message passing](/encyclopedia/workflow-message-passing) for guidance on safe usage of async Signal and Update handlers, and the [Controlling handler concurrency](#control-handler-concurrency) and [Waiting for message handlers to finish](#wait-for-message-handlers) sections below.
-
-The following code executes an Activity that simulates a network call to a remote service:
+以下代码执行模拟对远程服务的网络调用的 Activity：
 
 ```csharp
 public class MyActivities
@@ -461,7 +460,7 @@ public class MyActivities
 }
 ```
 
-The following code modifies a `WorkflowUpdate` for asynchronous use of the preceding Activity:
+以下代码修改 `WorkflowUpdate` 以异步使用前面的 Activity：
 
 ```csharp
 [Workflow]
@@ -506,32 +505,32 @@ public class GreetingWorkflow
 }
 ```
 
-After updating the code for asynchronous calls, your Update handler can schedule an Activity and await the result.
-Although an async Signal handler can initiate similar network tasks, using an Update handler allows the Client to receive a result or error once the Activity completes.
-This lets your Client track the progress of asynchronous work performed by the Update's Activities, Child Workflows, etc.
+更新异步调用的代码后，您的 Update 处理程序可以 Schedule 和 Activity 并等待结果。
+尽管异步 Signal 处理程序可以启动类似的网络任务，但使用 Update 处理程序允许客户端在 Activity 完成后接收结果或错误。
+这使您的客户端可以跟踪 Update 的活动、Child Workflow 等执行的异步工作的进度。
 
-### Add wait conditions to block {#block-with-wait}
+<a id="block-with-wait"></a>
+### 添加等待条件来阻止 {#block-with-wait}
+有时，异步 Signal 或 Update 处理程序需要满足某些条件才能继续。
+将等待条件与 [`Workflow.WaitConditionAsync`](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_WaitConditionAsync_System_Func_System_Boolean__System_Int32_System_Nullable_System_Threading_CancellationToken__) 一起使用会设置一个函数，该函数会阻止代码继续执行，直到条件返回 `true`。
+这是一个重要的功能，可以帮助您控制处理程序逻辑。
 
-Sometimes, async Signal or Update handlers need to meet certain conditions before they should continue.
-Using a wait condition with [`Workflow.WaitConditionAsync`](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_WaitConditionAsync_System_Func_System_Boolean__System_Int32_System_Nullable_System_Threading_CancellationToken__) sets a function that prevents the code from proceeding until the condition returns `true`.
-This is an important feature that helps you control your handler logic.
+以下是 `Workflow.WaitConditionAsync` 的两个重要用例：
 
-Here are two important use cases for `Workflow.WaitConditionAsync`:
+- 在处理程序中等待，直到适合继续。
+- 在主 Workflow 中等待，直到所有活动处理程序完成。
 
-- Waiting in a handler until it is appropriate to continue.
-- Waiting in the main Workflow until all active handlers have finished.
+您正在等待的条件状态可以是 Updated，并反映 Workflow 代码的任何部分。
+这包括主 Workflow 方法、其他处理程序或由主 Workflow 方法生成的子协程等。
 
-The condition state you're waiting for can be updated by and reflect any part of the Workflow code.
-This includes the main Workflow method, other handlers, or child coroutines spawned by the main Workflow method, and so forth.
+<a id="wait-in-handlers"></a>
+#### 在处理程序中使用等待条件 {#wait-in-handlers}
+有时，异步 Signal 或 Update 处理程序需要满足某些条件才能继续。
+将等待条件与 [`Workflow.WaitConditionAsync`](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_WaitConditionAsync_System_Func_System_Boolean__System_Int32_System_Nullable_System_Threading_CancellationToken__) 一起使用会设置一个函数，该函数会阻止代码继续执行，直到条件返回 `true`。
+这是一个重要的功能，可以帮助您控制处理程序逻辑。
 
-#### Use wait conditions in handlers {#wait-in-handlers}
-
-Sometimes, async Signal or Update handlers need to meet certain conditions before they should continue.
-Using a wait condition with [`Workflow.WaitConditionAsync`](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_WaitConditionAsync_System_Func_System_Boolean__System_Int32_System_Nullable_System_Threading_CancellationToken__) sets a function that prevents the code from proceeding until the condition returns `true`.
-This is an important feature that helps you control your handler logic.
-
-Consider a `ReadyForUpdateToExecute` method that runs before your Update handler executes.
-The [`Workflow.WaitConditionAsync`](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_WaitConditionAsync_System_Func_System_Boolean__System_Int32_System_Nullable_System_Threading_CancellationToken__) call waits until your condition is met:
+考虑在 Update 处理程序执行之前运行的 `ReadyForUpdateToExecute` 方法。
+[`Workflow.WaitConditionAsync`](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html?#Temporalio_Workflows_Workflow_WaitConditionAsync_System_Func_System_Boolean__System_Int32_System_Nullable_System_Threading_CancellationToken__) 调用将等待，直到满足您的条件：
 
 ```csharp
 [WorkflowUpdate]
@@ -542,14 +541,14 @@ public async Task<string> MyUpdateAsync(UpdateInput updateInput)
 }
 ```
 
-Remember: Handlers can execute before the main Workflow method starts.
+请记住：处理程序可以在主 Workflow 方法启动之前执行。
 
-#### Ensure your handlers finish before the Workflow completes {#wait-for-message-handlers}
-
-Workflow wait conditions can ensure your handler completes before a Workflow finishes.
-When your Workflow uses async Signal or Update handlers, your main Workflow method can return or continue-as-new while a handler is still waiting on an async task, such as an Activity result.
-The Workflow completing may interrupt the handler before it finishes crucial work and cause Client errors when trying retrieve Update results.
-Use `Workflow.AllHandlersFinished` to address this problem and allow your Workflow to end smoothly:
+<a id="wait-for-message-handlers"></a>
+#### 确保您的处理程序在 Workflow 完成 {#wait-for-message-handlers} 之前完成
+Workflow 等待条件可以确保您的处理程序在 Workflow 完成之前完成。
+当您的 Workflow 使用异步 Signal 或 Update 处理程序时，您的主 Workflow 方法可以在处理程序仍在等待异步任务（例如 Activity 结果）时返回 或 Continue-As-New 。
+Workflow 完成可能会在处理程序完成关键工作之前中断处理程序，并在尝试检索 Update 结果时导致客户端错误。
+使用`Workflow.AllHandlersFinished`来解决这个问题，让你的Workflow顺利结束：
 
 ```csharp
 [Workflow]
@@ -566,8 +565,8 @@ public class MyWorkflow
     // ...
 ```
 
-By default, your Worker will log a warning when you allow a Workflow Execution to finish with unfinished handler executions.
-You can silence these warnings on a per-handler basis by passing the `UnfinishedPolicy` argument to the [`WorkflowSignalAttribute`](https://dotnet.temporal.io/api/Temporalio.Workflows.WorkflowSignalAttribute.html) / [`WorkflowUpdateAttribute`](https://dotnet.temporal.io/api/Temporalio.Workflows.WorkflowUpdateAttribute.html) decorator:
+默认情况下，当您允许 Workflow Execution 完成未完成的处理程序执行时，您的 Worker 将记录一条警告。
+您可以通过将 `UnfinishedPolicy` 参数传递给 [`WorkflowSignalAttribute`](https://dotnet.temporal.io/api/temporalio.Workflows.WorkflowSignalAttribute.html) / [`WorkflowUpdateAttribute`](https://dotnet.temporal.io/api/temporalio.Workflows.WorkflowUpdateAttribute.html) 装饰器来在每个处理程序的基础上消除这些警告：
 
 ```csharp
 [WorkflowUpdate(UnfinishedPolicy = HandlerUnfinishedPolicy.Abandon)]
@@ -576,17 +575,18 @@ public async Task MyUpdateAsync()
     // ...
 ```
 
-See [Finishing handlers before the Workflow completes](/handling-messages#finishing-message-handlers) for more information.
+请参阅 [在 Workflow 完成之前完成处理程序](/handling-messages#finishing-message-handlers) 了解更多信息。
 
-### Use `[WorkflowInit]` to operate on Workflow input before any handler executes
+<a id="use-workflowinit-to-operate-on-workflow-input-before-any-handler-executes"></a>
+### 在执行任何处理程序之前，使用 `[WorkflowInit]` 对 Workflow 输入进行操作 {#use-workflowinit-to-operate-on-workflow-input-before-any-handler-executes}
 
-The `[WorkflowInit]` attribute gives message handlers access to [Workflow input](/handling-messages#workflow-initializers).
-When you use the `[WorkflowInit]` attribute on your constructor, you give the constructor the same Workflow parameters as your `[WorkflowRun]` method.
-The SDK will then ensure that your constructor receives the Workflow input arguments that the [Client sent](/develop/dotnet/client/temporal-client#start-workflow).
-The Workflow input arguments are also passed to your `[WorkflowRun]` method -- that always happens, whether or not you use the `[WorkflowInit]` attribute.
+`[WorkflowInit]` 属性使消息处理程序可以访问 [Workflow 输入](/handling-messages#workflow-initializers)。
+当您在构造函数上使用 `[WorkflowInit]` 属性时，您可以为构造函数提供与 `[WorkflowRun]` 方法相同的 Workflow 参数。
+然后，SDK 将确保您的构造函数接收到 [客户发送](/develop/dotnet/client/temporal-client#start-workflow) 的 Workflow 输入参数。
+Workflow 输入参数也会传递到您的 `[WorkflowRun]` 方法 - 无论您是否使用 `[WorkflowInit]` 属性，这种情况总是会发生。
 
-Here's an example.
-The constructor and `RunAsync` must have the same parameters with the same types:
+这是一个例子。
+构造函数和 `RunAsync` 必须具有相同类型的相同参数：
 
 ```csharp
 [Workflow]
@@ -622,11 +622,11 @@ public class WorkflowInitWorkflow
 }
 ```
 
-### Use locks to prevent concurrent handler execution {#control-handler-concurrency}
-
-Concurrent processes can interact in unpredictable ways.
-Incorrectly written [concurrent message-passing](/handling-messages#message-handler-concurrency) code may not work correctly when multiple handler instances run simultaneously.
-Here's an example of a pathological case:
+<a id="control-handler-concurrency"></a>
+### 使用锁来防止并发处理程序执行 {#control-handler-concurrency}
+并发进程可以以不可预测的方式交互。
+当多个处理程序实例同时运行时，编写不正确的 [并发消息传递](/handling-messages#message-handler-concurrency) 代码可能无法正常工作。
+这是一个病态病例的例子：
 
 ```csharp
 [Workflow]
@@ -649,8 +649,8 @@ public class MyWorkflow
 }
 ```
 
-Coordinating access with [`Workflows.Mutex`](https://dotnet.temporal.io/api/Temporalio.Workflows.Mutex.html), a mutual exclusion lock, corrects this code.
-Locking makes sure that only one handler instance can execute a specific section of code at any given time:
+与互斥锁 [`Workflows.Mutex`](https://dotnet.temporal.io/api/temporalio.Workflows.Mutex.html) 协调访问可以更正此代码。
+锁定可确保在任何给定时间只有一个处理程序实例可以执行特定的代码部分：
 
 ```csharp
 [Workflow]
@@ -683,112 +683,112 @@ public class MyWorkflow
 }
 ```
 
-For additional concurrency options, you can use [`Workflows.Semaphore`](https://dotnet.temporal.io/api/Temporalio.Workflows.Semaphore.html).
-Semaphores manage access to shared resources and coordinate the order in which threads or processes execute.
+对于其他并发选项，您可以使用 [`Workflows.Semaphore`](https://dotnet.temporal.io/api/temporalio.Workflows.Semaphore.html)。
+信号量管理对共享资源的访问并协调线程或进程的执行顺序。
 
-## Message handler troubleshooting {#message-handler-troubleshooting}
+<a id="message-handler-troubleshooting"></a>
+## 消息处理程序故障排除 {#message-handler-troubleshooting}
+将 Signal、Update 或 Query 发送到 Workflow 时，您的客户端可能会遇到以下错误：
 
-When sending a Signal, Update, or Query to a Workflow, your Client might encounter the following errors:
+- **客户端无法联系服务器**：
+  您将收到 [`Temporalio.Exceptions.RpcException`](https://dotnet.temporal.io/api/temporalio.Exceptions.RpcException.html) 异常，其 `Code` 属性为 [`RpcException.StatusCode`](https://dotnet.temporal.io/api/temporalio.Exceptions.RpcException.StatusCode.html)，状态为 `Unavailable`（重试几次后）。
 
-- **The Client can't contact the server**:
-  You'll receive a [`Temporalio.Exceptions.RpcException`](https://dotnet.temporal.io/api/Temporalio.Exceptions.RpcException.html) exception whose `Code` property is [`RpcException.StatusCode`](https://dotnet.temporal.io/api/Temporalio.Exceptions.RpcException.StatusCode.html) with a status of `Unavailable` (after some retries).
+- **Workflow 不存在**：
+  您将收到 [`Temporalio.Exceptions.RpcException`](https://dotnet.temporal.io/api/temporalio.Exceptions.RpcException.html) 异常，其 `Code` 属性为 [`RpcException.StatusCode`](https://dotnet.temporal.io/api/temporalio.Exceptions.RpcException.StatusCode.html)，状态为 `NotFound`。
 
-- **The Workflow does not exist**:
-  You'll receive a [`Temporalio.Exceptions.RpcException`](https://dotnet.temporal.io/api/Temporalio.Exceptions.RpcException.html) exception whose `Code` property is [`RpcException.StatusCode`](https://dotnet.temporal.io/api/Temporalio.Exceptions.RpcException.StatusCode.html) with a status of `NotFound`.
+有关此主题的非特定于 .NET 的讨论，请参阅 [消息处理程序中的异常](/handling-messages#exceptions)。
 
-See [Exceptions in message handlers](/handling-messages#exceptions) for a non–.NET-specific discussion of this topic.
+<a id="signal-problems"></a>
+### 发送 Signal 时出现问题 {#signal-problems}
+使用 Signal 时，您的请求在执行期间产生的唯一异常是 `RpcException`。
+所有处理程序在处理程序请求生命周期的初始（Worker 之前）部分都可能会遇到其他异常。
 
-### Problems when sending a Signal {#signal-problems}
+对于查询和 Update，客户端等待来自 Worker 的响应。
+如果在 Worker 执行处理程序期间出现问题，客户端可能会收到异常。
 
-When using Signal, the only exception that will result from your requests during its execution is `RpcException`.
-All handlers may experience additional exceptions during the initial (pre-Worker) part of a handler request lifecycle.
+<a id="update-problems"></a>
+### 发送 Update 时出现问题 {#update-problems}
+使用 Update 时，您可能会遇到以下错误：
 
-For Queries and Updates, the Client waits for a response from the Worker.
-If an issue occurs during the handler Execution by the Worker, the Client may receive an exception.
+- **没有 Workflow Worker 正在轮询 Task Queue**：
+  SDK 客户端将无限期地重试您的请求。
+  使用 [远程过程调用选项](https://dotnet.temporal.io/api/temporalio.Client.WorkflowUpdateOptions.html#Temporalio_Client_WorkflowUpdateOptions_Rpc) 中的 `CancellationToken` 取消 Update。
+  这会引发 [Temporalio.Exceptions.WorkflowUpdateRpcTimeoutOrCanceledException](https://dotnet.temporal.io/api/temporalio.Exceptions.WorkflowUpdateRpcTimeoutOrCanceledException.html) 异常。
 
-### Problems when sending an Update {#update-problems}
+- **Update 失败**：您将收到 [`Temporalio.Exceptions.WorkflowUpdateFailedException`](https://dotnet.temporal.io/api/temporalio.Exceptions.WorkflowUpdateFailedException.html) 异常。
+  有两种方式可以发生这种情况：
 
-When working with Updates, you may encounter these errors:
+- Update 被 Workflow 中与 Update 处理程序一起定义的 Update 验证器拒绝。
 
-- **No Workflow Workers are polling the Task Queue**:
-  Your request will be retried by the SDK Client indefinitely.
-  Use a `CancellationToken` in your [RPC options](https://dotnet.temporal.io/api/Temporalio.Client.WorkflowUpdateOptions.html#Temporalio_Client_WorkflowUpdateOptions_Rpc) to cancel the Update.
-  This raises a [Temporalio.Exceptions.WorkflowUpdateRpcTimeoutOrCanceledException](https://dotnet.temporal.io/api/Temporalio.Exceptions.WorkflowUpdateRpcTimeoutOrCanceledException.html) exception.
+- Update 被接受后失败。
 
-- **Update failed**: You'll receive a [`Temporalio.Exceptions.WorkflowUpdateFailedException`](https://dotnet.temporal.io/api/Temporalio.Exceptions.WorkflowUpdateFailedException.html) exception.
-  There are two ways this can happen:
+Update 故障类似于 [Workflow 故障](/references/failures)。
+  导致 main 方法中的 Workflow 失败的问题也会导致 Update 处理程序中的 Update 失败。
+  这些可能包括：
 
-  - The Update was rejected by an Update validator defined in the Workflow alongside the Update handler.
+- 失败的Child Workflow
+      - 失败的 Activity（如果 Activity 重试已设置为有限次数）
+      - Workflow 作者抚养 `ApplicationFailure`
+      - Worker 上的 [`TemporalWorkerOptions.WorkflowFailureExceptionTypes`](https://dotnet.temporal.io/api/temporalio.Worker.TemporalWorkerOptions.html#Temporalio_Worker_TemporalWorkerOptions_WorkflowFailureExceptionTypes) 或 Workflow 上的 [`WorkflowAttribute.FailureExceptionTypes`](https://dotnet.temporal.io/api/temporalio.Workflows.WorkflowAttribute.html#Temporalio_Workflows_WorkflowAttribute_FailureExceptionTypes) 中列出的任何错误（默认为空）
 
-  - The Update failed after having been accepted.
+- **处理程序导致 Workflow 任务失败**：
+  [Workflow 任务失败](/references/failures) 导致服务器无限期地重试 Workflow 任务。您的 Update 请求会发生什么情况取决于其阶段：
+  - 如果服务器未接受请求，您将收到 `FAILED_PRECONDITION` [`Temporalio.Exceptions.RpcException`](https://dotnet.temporal.io/api/temporalio.Exceptions.RpcException.html) 异常。
+  - 如果请求已被接受，则该请求是持久的。
+    代码部署后，一旦 Workflow 再次正常运行，请使用 [`UpdateHandle`](https://dotnet.temporal.io/api/temporalio.Client.WorkflowUpdateHandle.html) 获取 Update 结果。
 
-  Update failures are like [Workflow failures](/references/failures).
-  Issues that cause a Workflow failure in the main method also cause Update failures in the Update handler.
-  These might include:
+- **Workflow 已完成，而 Update 处理程序执行正在进行中**：
+  您将收到 [`Temporalio.Exceptions.RpcException`](https://dotnet.temporal.io/api/temporalio.Exceptions.RpcException.html)“Workflow Execution 已完成”。
 
-      - A failed Child Workflow
-      - A failed Activity (if the Activity retries have been set to a finite number)
-      - The Workflow author raising `ApplicationFailure`
-      - Any error listed in [`TemporalWorkerOptions.WorkflowFailureExceptionTypes`](https://dotnet.temporal.io/api/Temporalio.Worker.TemporalWorkerOptions.html#Temporalio_Worker_TemporalWorkerOptions_WorkflowFailureExceptionTypes) on the Worker or [`WorkflowAttribute.FailureExceptionTypes`](https://dotnet.temporal.io/api/Temporalio.Workflows.WorkflowAttribute.html#Temporalio_Workflows_WorkflowAttribute_FailureExceptionTypes) on the Workflow (empty by default)
+如果 Workflow 完成而 Update 处理程序执行正在进行中，则会发生这种情况，例如因为
 
-- **The handler caused the Workflow Task to fail**:
-  A [Workflow Task Failure](/references/failures) causes the server to retry Workflow Tasks indefinitely. What happens to your Update request depends on its stage:
-  - If the request hasn't been accepted by the server, you receive a `FAILED_PRECONDITION` [`Temporalio.Exceptions.RpcException`](https://dotnet.temporal.io/api/Temporalio.Exceptions.RpcException.html) exception.
-  - If the request has been accepted, it is durable.
-    Once the Workflow is healthy again after a code deploy, use an [`UpdateHandle`](https://dotnet.temporal.io/api/Temporalio.Client.WorkflowUpdateHandle.html) to fetch the Update result.
+- Workflow 已取消或失败。
 
-- **The Workflow finished while the Update handler execution was in progress**:
-  You'll receive a [`Temporalio.Exceptions.RpcException`](https://dotnet.temporal.io/api/Temporalio.Exceptions.RpcException.html) "workflow execution already completed".
+- Workflow 正常完成或继续如新，而 Workflow 作者没有 [等待处理程序完成](/handling-messages#finishing-message-handlers)。
 
-  This will happen if the Workflow finished while the Update handler execution was in progress, for example because
+<a id="query-problems"></a>
+### 发送 Query 时出现问题 {#query-problems}
+使用查询时，您可能会遇到以下错误：
 
-  - The Workflow was canceled or failed.
+- **没有 Workflow Worker 轮询 Task Queue**：
+  您将收到 [`Temporalio.Exceptions.RpcException`](https://dotnet.temporal.io/api/temporalio.Exceptions.RpcException.html)，其中 `Code` 是 [`RpcException.StatusCode`](https://dotnet.temporal.io/api/temporalio.Exceptions.RpcException.StatusCode.html)，状态为 `FailedPrecondition`。
 
-  - The Workflow completed normally or continued-as-new and the Workflow author did not [wait for handlers to be finished](/handling-messages#finishing-message-handlers).
+- **Query 失败**：
+  如果 Query 期间出现问题，您将收到 [`Temporalio.Exceptions.WorkflowQueryFailedException`](https://dotnet.temporal.io/api/temporalio.Exceptions.WorkflowQueryFailedException.html) 异常。
+  Query 处理程序中的任何异常都会触发此错误。
+  这与 Signal 和 Update 请求不同，其中异常可能会导致 Workflow 任务失败。
 
-### Problems when sending a Query {#query-problems}
+- **处理程序导致 Workflow 任务失败。**
+  例如，如果 Query 处理程序阻塞线程太长时间而没有屈服，就会发生这种情况。
 
-When working with Queries, you may encounter these errors:
+<a id="dynamic-handler"></a>
+## 动态处理程序 {#dynamic-handler}
+Temporal 支持动态查询、Signal、Update、Workflow 和活动。
+这些是未命名的处理程序，如果不存在具有给定名称的其他静态定义的处理程序，则会调用这些处理程序。
 
-- **There is no Workflow Worker polling the Task Queue**:
-  You'll receive a [`Temporalio.Exceptions.RpcException`](https://dotnet.temporal.io/api/Temporalio.Exceptions.RpcException.html) on which the `Code` is a [`RpcException.StatusCode`](https://dotnet.temporal.io/api/Temporalio.Exceptions.RpcException.StatusCode.html) with a status of `FailedPrecondition`.
-
-- **Query failed**:
-  You'll receive a [`Temporalio.Exceptions.WorkflowQueryFailedException`](https://dotnet.temporal.io/api/Temporalio.Exceptions.WorkflowQueryFailedException.html) exception if something goes wrong during a Query.
-  Any exception in a Query handler will trigger this error.
-  This differs from Signal and Update requests, where exceptions can lead to Workflow Task Failure instead.
-
-- **The handler caused the Workflow Task to fail.**
-  This would happen, for example, if the Query handler blocks the thread for too long without yielding.
-
-## Dynamic Handler {#dynamic-handler}
-
-Temporal supports Dynamic Queries, Signals, Updates, Workflows, and Activities.
-These are unnamed handlers that are invoked if no other statically defined handler with the given name exists.
-
-Dynamic Handlers provide flexibility to handle cases where the names of Queries, Signals, Updates, Workflows, or Activities, aren't known at run time.
+动态处理程序可以灵活地处理运行时未知的查询、Signal、Update、Workflow 或活动的名称的情况。
 
 :::caution
 
-Dynamic Handlers should be used judiciously as a fallback mechanism rather than the primary approach.
-Overusing them can lead to maintainability and debugging issues down the line.
+应明智地使用动态处理程序作为后备机制而不是主要方法。
+过度使用它们可能会导致可维护性和调试问题。
 
-Instead, Signals, Queries, Workflows, or Activities should be defined statically whenever possible, with clear names that indicate their purpose.
-Use static definitions as the primary way of structuring your Workflows.
+相反，Signal、查询、Workflow 或活动应尽可能静态定义，并使用表明其用途的清晰名称。
+使用静态定义作为构建 Workflow 的主要方式。
 
-Reserve Dynamic Handlers for cases where the handler names are not known at compile time and need to be looked up dynamically at runtime.
-They are meant to handle edge cases and act as a catch-all, not as the main way of invoking logic.
+保留动态处理程序，用于处理程序名称在编译时未知且需要在运行时动态查找的情况。
+它们旨在处理边缘情况并充当包罗万象的角色，而不是作为调用逻辑的主要方式。
 
 :::
 
-### Set a Dynamic Query {#set-a-dynamic-query}
+<a id="set-a-dynamic-query"></a>
+### 设置动态 Query {#set-a-dynamic-query}
+Temporal 中的动态 Query 是一个 Query 方法，如果没有注册其他同名的 Query，则在运行时动态调用该方法。
+通过将 `[WorkflowQuery]` 属性上的 `Dynamic` 设置为 `true` 可以使 Query 成为动态的。
+Workflow 上只能存在一个 Dynamic Query。
 
-A Dynamic Query in Temporal is a Query method that is invoked dynamically at runtime if no other Query with the same name is registered.
-A Query can be made dynamic by setting `Dynamic` to `true` on the `[WorkflowQuery]` attribute.
-Only one Dynamic Query can be present on a Workflow.
-
-The Query Handler parameters must accept a `string` name and `Temporalio.Converters.IRawValue[]` for the arguments.
-The [Workflow.PayloadConverter](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_PayloadConverter) property is used to convert an `IRawValue` object to the desired type using extension methods in the `Temporalio.Converters` Namespace.
+Query 处理程序参数必须接受 `string` 名称和 `Temporalio.Converters.IRawValue[]` 作为参数。
+[Workflow.PayloadConverter](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_PayloadConverter) 属性用于使用 `Temporalio.Converters` Namespace 中的扩展方法将 `IRawValue` 对象转换为所需类型。
 
 ```csharp
 [WorkflowQuery(Dynamic = true)]
@@ -799,14 +799,14 @@ public string DynamicQueryAsync(string queryName, IRawValue[] args)
 }
 ```
 
-### Set a Dynamic Signal {#set-a-dynamic-signal}
+<a id="set-a-dynamic-signal"></a>
+### 设置动态 Signal {#set-a-dynamic-signal}
+Temporal 中的动态 Signal 是在运行时动态调用的 Signal，如果没有注册具有相同输入的其他 Signal。
+通过将 `[WorkflowSignal]` 属性上的 `Dynamic` 设置为 `true` 可以使 Signal 成为动态的。
+Workflow 上只能存在一个 Dynamic Signal。
 
-A Dynamic Signal in Temporal is a Signal that is invoked dynamically at runtime if no other Signal with the same input is registered.
-A Signal can be made dynamic by setting `Dynamic` to `true` on the `[WorkflowSignal]` attribute.
-Only one Dynamic Signal can be present on a Workflow.
-
-The Signal Handler parameters must accept a `string` name and `Temporalio.Converters.IRawValue[]` for the arguments.
-The [Workflow.PayloadConverter](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_PayloadConverter) property is used to convert an `IRawValue` object to the desired type using extension methods in the `Temporalio.Converters` Namespace.
+Signal 处理程序参数必须接受 `string` 名称和 `Temporalio.Converters.IRawValue[]` 作为参数。
+[Workflow.PayloadConverter](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_PayloadConverter) 属性用于使用 `Temporalio.Converters` Namespace 中的扩展方法将 `IRawValue` 对象转换为所需类型。
 
 ```csharp
 [WorkflowSignal(Dynamic = true)]
@@ -817,14 +817,14 @@ public async Task DynamicSignalAsync(string signalName, IRawValue[] args)
 }
 ```
 
-### Set a Dynamic Update {#set-a-dynamic-update}
+<a id="set-a-dynamic-update"></a>
+### 设置动态 Update {#set-a-dynamic-update}
+Temporal 中的动态 Update 是在运行时动态调用的 Update，如果没有注册具有相同输入的其他 Update。
+通过将 `[WorkflowUpdate]` 属性上的 `Dynamic` 设置为 `true` 可以使 Update 成为动态的。
+Workflow 上只能存在一个 Dynamic Update。
 
-A Dynamic Update in Temporal is an Update that is invoked dynamically at runtime if no other Update with the same input is registered.
-An Update can be made dynamic by setting `Dynamic` to `true` on the `[WorkflowUpdate]` attribute.
-Only one Dynamic Update can be present on a Workflow.
-
-The Update Handler parameters must accept a `string` name and `Temporalio.Converters.IRawValue[]` for the arguments.
-The [Workflow.PayloadConverter](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_PayloadConverter) property is used to convert an `IRawValue` object to the desired type using extension methods in the `Temporalio.Converters` Namespace.
+Update 处理程序参数必须接受 `string` 名称和 `Temporalio.Converters.IRawValue[]` 作为参数。
+[Workflow.PayloadConverter](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_PayloadConverter) 属性用于使用 `Temporalio.Converters` Namespace 中的扩展方法将 `IRawValue` 对象转换为所需类型。
 
 ```csharp
 [WorkflowUpdate(Dynamic = true)]

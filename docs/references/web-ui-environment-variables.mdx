@@ -1,8 +1,8 @@
 ---
 id: web-ui-environment-variables
-title: Temporal Web UI environment variables reference
-sidebar_label: Web UI env vars
-description:
+title: "Temporal Web UI 环境变量参考"
+sidebar_label: "Web UI 环境变量"
+description: Dynamically configure Temporal Web UI with environment variables in Docker for settings like TEMPORAL_ADDRESS,
   Dynamically configure Temporal Web UI with environment variables in Docker for settings like TEMPORAL_ADDRESS,
   authentication, TLS, OpenAPI, and more.
 toc_max_heading_level: 4
@@ -16,9 +16,9 @@ tags:
   - Temporal Web UI
 ---
 
-You can use environment variables to dynamically alter the configuration of your Temporal Web UI.
+您可以使用环境变量动态更改 Temporal Web UI 的配置。
 
-These can be used in many environments, such as with Docker. For example:
+这些可以在许多环境中使用，例如 Docker。例如：
 
 ```
 docker run\
@@ -52,178 +52,178 @@ docker run\
 temporalio/ui:<tag>
 ```
 
-The environment variables are defined in the
-[UI server configuration template file](https://github.com/temporalio/ui-server/blob/main/config/docker.yaml) and
-described in more detail below.
+环境变量定义在
+[UI服务器配置模板文件](https://github.com/temporalio/ui-server/blob/main/config/docker.yaml) 和
+下面更详细地描述。
 
-## `TEMPORAL_ADDRESS`
+## `Temporal_ADDRESS`
 
-The [Frontend Service](/temporal-service/temporal-server#frontend-service) address for the Temporal Cluster. This
-variable can be set [in the base configuration file](/references/web-ui-configuration#temporalgrpcaddress) using
-`temporalGrpcAddress`.
+Temporal 集群的 [前端服务](/temporal-service/temporal-server#frontend-service) 地址。这个
+变量可以设置 [在基本配置文件中](/references/web-ui-configuration#temporalgrpcaddress) 使用
+`TemporalgRPCAddress`。
 
-This variable is required for setting other environment variables.
+设置其他环境变量需要此变量。
 
-## `TEMPORAL_UI_PORT`
+## `Temporal_UI_PORT`
 
-The port used by the Temporal WebUI Server and the HTTP API.
+Temporal WebUI 服务器和 HTTP API 使用的端口。
 
-This variable is needed for `TEMPORAL_OPENAPI_ENABLED` and all auth-related settings to work properly.
+`Temporal_OPENAPI_ENABLED` 和所有与身份验证相关的设置需要此变量才能正常工作。
 
-## `TEMPORAL_UI_PUBLIC_PATH`
+## `Temporal_UI_PUBLIC_PATH`
 
-Stores a value such as "" or "/custom-path" that allows the UI to be served from a subpath.
+存储诸如“”或“/custom-path”之类的值，允许从子路径提供 UI。
 
-## `TEMPORAL_UI_ENABLED`
+## `Temporal_UI_ENABLED`
 
-Enables or disables the [browser UI](/references/web-ui-configuration#enableui) for the Temporal Cluster.
+启用或禁用 Temporal 集群的 [浏览器用户界面](/references/web-ui-configuration#enableui)。
 
-Enabling the browser UI allows the Server to be accessed from your web browser. If disabled, the server cannot be viewed
-on the web, but the UI server APIs remain available for use.
+启用浏览器 UI 允许从 Web 浏览器访问服务器。如果禁用，则无法查看服务器
+在 Web 上，但 UI 服务器 API 仍然可用。
 
-## `TEMPORAL_CLOUD_UI`
+## `Temporal_CLOUD_UI`
 
-If enabled, use the alternate UI from Temporal Cloud.
+如果启用，请使用 Temporal Cloud 中的备用 UI。
 
-## `TEMPORAL_DEFAULT_NAMESPACE`
+## `Temporal_DEFAULT_Namespace`
 
-The default [Namespace](/namespaces) that the Web UI opens first.
+Web UI 首先打开的默认 [Namespace](/namespaces)。
 
-## `TEMPORAL_FEEDBACK_URL`
+## `Temporal_FEEDBACK_URL`
 
-The URL that users are directed to when they click the Feedback button in the UI.
+用户单击 UI 中的“反馈”按钮时定向到的 URL。
 
-If not specified, this variable defaults to the UI's GitHub Issue page.
+如果未指定，此变量默认为 UI 的 GitHub 问题页面。
 
-## `TEMPORAL_CONFIG_REFRESH_INTERVAL`
+## `Temporal_CONFIG_REFRESH_INTERVAL`
 
-Determines how often the UI Server reads the configuration file for new values.
+确定 UI 服务器读取配置文件中新值的频率。
 
-## `TEMPORAL_SHOW_TEMPORAL_SYSTEM_NAMESPACE`
+## `Temporal_SHOW_Temporal_SYSTEM_Namespace`
 
-If enabled, shows the System Namespace that handles internal Temporal Workflows in the Web UI.
+如果启用，则在 Web UI 中显示处理内部 Temporal Workflow 的系统 Namespace。
 
-## `TEMPORAL_DISABLE_WRITE_ACTIONS`
+## `Temporal_DISABLE_WRITE_ACTIONS`
 
-Disables any button in the UI that allows the user to modify Workflows or Activities.
+禁用 UI 中允许用户修改 Workflow 或活动的任何按钮。
 
-## `TEMPORAL_AUTH_ENABLED`
+## `Temporal_AUTH_ENABLED`
 
-Enables or disables Web UI authentication and authorization methods.
+启用或禁用 Web UI 身份验证和授权方法。
 
-When enabled, the Web UI will use the provider information in the
-[UI configuration file](/references/web-ui-configuration#auth) to verify the identity of users.
+启用后，Web UI 将使用
+[用户界面配置文件](/references/web-ui-configuration#auth) 验证用户身份。
 
-All auth-related variables can be defined when `TEMPORAL_AUTH_ENABLED` is set to "true". Disabling the variable will
-retain given values.
+当 `Temporal_AUTH_ENABLED` 设置为“true”时，可以定义所有与身份验证相关的变量。禁用该变量将
+保留给定值。
 
-## `TEMPORAL_AUTH_TYPE`
+## `Temporal_AUTH_TYPE`
 
-Specifies the type of authentication. Defaults to `oidc`.
+指定身份验证的类型。默认为 `oidc`。
 
-## `TEMPORAL_AUTH_PROVIDER_URL`
+## `Temporal_AUTH_PROVIDER_URL`
 
-The .well-known IDP discovery URL for authentication and authorization.
+用于身份验证和授权的 .wellknown IDP 发现 URL。
 
-This can be set as in the UI server configuration with [auth](/references/web-ui-configuration#auth).
+这可以在 UI 服务器配置中使用 [授权](/references/web-ui-configuration#auth) 进行设置。
 
-## `TEMPORAL_AUTH_ISSUER_URL`
+## `Temporal_AUTH_ISSUER_URL`
 
-The URL for the authentication or authorization issuer.
+身份验证或授权颁发者的 URL。
 
-This value is only needed when the issuer differs from the auth provider URL.
+仅当颁发者与身份验证提供者 URL 不同时才需要此值。
 
-## `TEMPORAL_AUTH_CLIENT_ID`
+## `Temporal_AUTH_CLIENT_ID`
 
-The client ID used for authentication or authorization.
+用于身份验证或授权的客户端 ID。
 
-This value is a required parameter.
+该值是必需参数。
 
-## `TEMPORAL_AUTH_CLIENT_SECRET`
+## `Temporal_AUTH_CLIENT_SECRET`
 
-The client secret used for authentication and authorization.
+用于身份验证和授权的客户端密钥。
 
-Client Secrets are used by the oAuth Client for authentication.
+oAuth 客户端使用客户端密钥进行身份验证。
 
-## `TEMPORAL_AUTH_CALLBACK_URL`
+## `Temporal_AUTH_CALLBACK_URL`
 
-The callback URL used by Temporal for authentication and authorization.
+Temporal 用于身份验证和授权的回调 URL。
 
-Callback URLs are invoked by IDP after user has finished authenticating in IDP.
+用户在 IDP 中完成身份验证后，IDP 会调用回调 URL。
 
-## `TEMPORAL_AUTH_SCOPES`
+## `Temporal_AUTH_SCOPES`
 
-Specifies a set of scopes for auth. Typically, this is `openid`, `profile`, `email`.
+指定一组 auth 范围。通常，这是 `openid`、`profile`、`email`。
 
-## `TEMPORAL_TLS_CA`
+## `Temporal_TLS_CA`
 
-The path for the Transport Layer Security (TLS) Certificate Authority file.
+传输层安全 (TLS) 证书颁发机构文件的路径。
 
-In order to [configure TLS for your server](/references/web-ui-configuration#tls), you'll need a CA certificate issued
-by a trusted Certificate Authority. Set this variable to properly locate and use the file.
+为了获得 [为您的服务器配置 TLS](/references/web-ui-configuration#tls)，您需要颁发 CA 证书
+由受信任的证书颁发机构颁发。设置此变量以正确定位和使用该文件。
 
-## `TEMPORAL_TLS_CERT`
+## `Temporal_TLS_CERT`
 
-The path for the Transport Layer Security (TLS) Certificate.
+传输层安全 (TLS) 证书的路径。
 
-In order to [configure TLS for your server](/references/web-ui-configuration#tls), you'll need a self-signed
-certificate. Set the path to allow the environment to locate and use the certificate.
+为了 [为您的服务器配置 TLS](/references/web-ui-configuration#tls)，您需要一个自签名的
+证书。设置路径以允许环境找到并使用证书。
 
-## `TEMPORAL_TLS_KEY`
+## `Temporal_TLS_KEY`
 
-The path for the Transport Layer Security (TLS) [key file](/references/web-ui-configuration#tls).
+传输层安全 (TLS) [密钥文件](/references/web-ui-configuration#tls) 的路径。
 
-A key file is used to create private and public keys for encryption and signing. Together, these keys are used to create
-certificates.
+密钥文件用于创建用于加密和签名的私钥和公钥。这些键一起用于创建
+证书。
 
-## `TEMPORAL_TLS_CA_DATA`
+## `Temporal_TLS_CA_DATA`
 
-Stores the data for a TLS CA file.
+存储 TLS CA 文件的数据。
 
-This variable can be used instead of providing a path for `TEMPORAL_TLS_CA`.
+可以使用此变量来代替提供 `Temporal_TLS_CA` 的路径。
 
-## `TEMPORAL_TLS_CERT_DATA`
+## `Temporal_TLS_CERT_DATA`
 
-Stores the data for a TLS cert file.
+存储 TLS 证书文件的数据。
 
-This variable can be used instead of providing a path for `TEMPORAL_TLS_CERT`.
+可以使用此变量来代替提供 `Temporal_TLS_CERT` 的路径。
 
-## `TEMPORAL_TLS_KEY_DATA`
+## `Temporal_TLS_KEY_DATA`
 
-Stores the data for a TLS key file.
+存储 TLS 密钥文件的数据。
 
-This variable can be used instead of providing a path for `TEMPORAL_TLS_KEY`.
+可以使用此变量来代替提供 `Temporal_TLS_KEY` 的路径。
 
-## `TEMPORAL_TLS_ENABLE_HOST_VERIFICATION`
+## `Temporal_TLS_ENABLE_HOST_VERIFICATION`
 
-Enables or disables [Transport Layer Security (TLS) host verification](/references/web-ui-configuration#tls).
+启用或禁用 [传输层安全 (TLS) 主机验证](/references/web-ui-configuration#tls)。
 
-When enabled, TLS checks the Host Server to ensure that files are being sent to and from the correct URL.
+启用后，TLS 会检查主机服务器以确保文件发送到正确的 URL 或从正确的 URL 发送。
 
-## `TEMPORAL_TLS_SERVER_NAME`
+## `Temporal_TLS_SERVER_NAME`
 
-The server on which to operate [Transport Layer Security (TLS) protocols](/references/web-ui-configuration#tls).
+运行 [传输层安全 (TLS) 协议](/references/web-ui-configuration#tls) 的服务器。
 
-TLS allows the current server to transmit encrypted files to other URLs without having to reveal itself. Because of
-this, TLS operates a go-between server.
+TLS 允许当前服务器将加密文件传输到其他 URL，而无需暴露自身。因为
+为此，TLS 运行一个中间服务器。
 
-## `TEMPORAL_CODEC_ENDPOINT`
+## `Temporal_CODEC_ENDPOINT`
 
-The endpoint for the [Codec Server](/codec-server), if configured.
+[Codec Server](/codec-server) 的端点（如果已配置）。
 
-## `TEMPORAL_CODEC_PASS_ACCESS_TOKEN`
+## `Temporal_CODEC_PASS_ACCESS_TOKEN`
 
-Specifies whether to send a JWT access token as ‘authorization' header in requests with the Codec Server.
+指定是否在带有 Codec Server 的请求中发送 JWT 访问令牌作为“授权”标头。
 
-## `TEMPORAL_CODEC_INCLUDE_CREDENTIALS`
+## `Temporal_CODEC_INCLUDE_CREDENTIALS`
 
-Specifies whether to include credentials along with requests to the Codec Server.
+指定是否将凭据与对 Codec Server 的请求一起包含。
 
-## `TEMPORAL_FORWARD_HEADERS`
+## `Temporal_FORWARD_HEADERS`
 
-Forward-specified HTTP headers to direct from HTTP API requests to the Temporal gRPC backend. This is a comma-delimited
-list of the HTTP headers to be forwarded.
+转发指定的 HTTP 标头，将 HTTP API 请求定向到 Temporal gRPC 后端。这是一个逗号分隔的
+要转发的 HTTP 标头列表。
 
-## `TEMPORAL_HIDE_LOGS`
+## `Temporal_HIDE_LOGS`
 
-If enabled, does not print logs from the Temporal Service.
+如果启用，则不打印来自 Temporal 服务的日志。

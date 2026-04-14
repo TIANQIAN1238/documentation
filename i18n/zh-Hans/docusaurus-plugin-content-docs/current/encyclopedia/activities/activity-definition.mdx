@@ -1,0 +1,158 @@
+---
+id: activity-definition
+title: Activity Definition
+sidebar_label: Activity Definition
+description: 了解如何定义 Temporal 活动，包括 Activity 类型、参数和实现细节。
+slug: /activity-definition
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - term
+  - timeouts
+tags:
+  - Concepts
+  - Activities
+  - Durable Execution
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+本页讨论以下内容：
+
+- [Activity Definition](#Activity-定义)
+- [幂等性](#幂等性)
+- [约束](#Activity-约束)
+- [参数](#Activity-参数)
+- [Activity 型](#Activity-型)
+
+在日常对话中，术语 _Activity_ 表示 [Activity Definition](/Activity-definition)、[Activity Type](/Activity-definition#Activity-type) 或 [Activity Execution](/Activity-execution)。
+Temporal 文档旨在明确并区分它们。
+
+## 什么是 Activity Definition？ {#Activity-定义}
+
+Activity Definition 是定义 [Activity 任务执行](/tasks#Activity-task-execution) 约束的代码。
+活动封装了容易失败的业务逻辑，允许在出现问题时自动重试。
+
+- [如何使用 Go SDK 开发 Activity Definition](/develop/go/activities/basics)
+- [如何使用 Java SDK 开发 Activity Definition](/develop/java/activities/basics)
+- [如何使用 PHP SDK 开发 Activity Definition](/develop/php/activities/basics)
+- [如何使用 Python SDK 开发 Activity Definition](/develop/python/activities/basics)
+- [如何使用 TypeScript SDK 开发 Activity Definition](/develop/typescript/activities/basics)
+- [如何使用 .NET SDK 开发 Activity Definition](/develop/dotnet/activities/basics)
+
+术语“Activity Definition”用于指任何给定语言 SDK 中的完整原语集，它提供 Activity 函数定义的访问点——为 [Activity 任务执行](/tasks#Activity-task-execution) 调用的方法或函数。
+因此，术语“Activity 函数”和“Activity 方法”是指执行实例的源。
+
+Activity Definition 在代码中按其 [Activity 类型](/Activity-definition#Activity-type) 命名和引用。
+
+<CaptionedImage
+src="/diagrams/Activity-definition.svg"
+    标题=“Activity Definition”
+    />
+
+### 幂等性 {#idempotency}
+
+Temporal 建议活动是幂等的。
+
+幂等性意味着多次执行一个操作与执行一次具有相同的结果。
+在 Temporal 的上下文中，活动应设计为安全执行多次，而不会导致意外或不需要的 Side Effect。
+
+考虑笔记本电脑上的电源按钮。当您按下它时，机器从一种状态更改为另一种状态，从打开变为关闭，反之亦然。这不是幂等操作。每次调用都会导致不同的状态。但是，想象一下您将笔记本电脑修改为具有单独的打开和关闭按钮。由于笔记本电脑已经打开，因此多次按“打开”按钮不会产生超出初始调用的效果。此操作被认为是幂等的。
+
+<CaptionedImage
+src =“/diagrams/idempotence-image.png”
+/>
+
+幂等性也是软件应用程序中的一个重要设计考虑因素。您可能已经在工作中遇到过幂等操作。
+
+幂等操作至关重要的几个例子是：
+
+- **基础设施即代码 (IaC) 工具** - 在云中配置基础设施时，节省资源非常重要。如果 IaC 系统在设计时未考虑幂等性，则如果意外调用多次意外调用配置新服务器的功能，可能会导致高昂的成本。设计时考虑幂等性的 IaC 工具可确保多次调用该工具不会导致创建意外的实例。
+- **支付处理系统** - 支付处理系统必须针对特定购买仅向客户收取一次费用。如果系统没有设计成幂等的，重复的请求将导致额外的费用和客户不满意。设计为幂等的支付处理系统可确保客户不会为同一笔交易多次收取费用，从而防止财务差异。
+
+:::info
+
+根据设计，已完成的活动不会作为 [Workflow 重播](/Workflow-execution#replay) 的一部分重新执行。但是，活动在返回或产生错误之前不会记录到 [Event History](/encyclopedia/retry-policies#event-history)。如果 Activity 根本无法向服务器报告，则会重试。设计幂等性，特别是如果您有 [Global Namespace](/global-Namespace)，将提高可重用性和可靠性。
+
+:::
+
+如果多个 [Activity 任务执行](/tasks#Activity-task-execution) 在第一个 Activity 任务执行之后不会更改系统状态，则 Activity 是幂等的。
+
+缺乏幂等性可能会影响应用程序的正确性，但不会影响 Temporal Platform。
+换句话说，缺乏幂等性不会导致平台错误。
+
+在某些情况下，某些东西是否幂等并不影响应用程序的正确性。
+例如，如果您有一个单调递增的计数器，您可能不关心重试是否会递增计数器，因为您不关心实际值，只关心当前值是否大于先前的值。
+
+您应该始终使您的业务逻辑活动在 Temporal 中幂等。由于 Activity 可能会重试，因此这些函数可能会执行多次。非幂等 Activity 可能会对系统状态产生不利影响。
+
+活动是 Temporal 内执行的原子单元。它们被调用并且要么成功完成，要么失败。当您设计活动时请考虑到这一点。
+
+例如，考虑具有以下三个步骤的 Activity：
+
+1. 执行数据库查找
+2. 使用从数据库检索的参数调用微服务
+3.将微服务调用的结果写入文件系统
+
+想象一下，前两步成功，但第三步由于权限问题而失败。重试期间，整个 Activity 以及三个步骤中的每一个都会再次执行。为了保持幂等性，请将您的活动设计得更细化。在这种情况下，您可以有三个活动，每个步骤一个。这样，只有失败的步骤才会被再次执行。但是，您必须平衡这一点与更大 Event History 的潜力，因为现在将有 3 个 Activity 执行，而不是 1 个。
+
+由于分布式计算固有的特定边缘情况，活动的幂等性也很重要。考虑这样一种场景，其中 Worker 轮询 Temporal 服务、接受 Activity 任务并开始执行 Activity。 Activity 功能成功完成，但 Worker 在通知 Temporal 服务之前崩溃。在这种情况下，Event History不会反映任务成功完成，因此Activity将重试。如果 Activity 不是幂等的，则可能会产生负面后果，例如支付处理场景中的重复收费。
+
+您可以通过使用唯一标识符（称为幂等键）在应用程序中实现幂等性，这些标识符用于检测重复请求。这些是由您从 Activity 调用的服务强制执行的，而不是由 Activity 本身强制执行。
+
+例如，大多数支付处理器提供的 API 允许客户端在请求中包含幂等密钥。当支付服务收到请求时，它会检查数据库以确定是否已经存在使用该密钥的请求。如果是这样，重复的请求将被忽略，并且不会导致另一笔费用。如果没有，那么它会使用该键将一条新记录写入数据库，从而允许它在将来识别重复的请求。
+
+在 Temporal 中，对支付服务的请求将从 Activity 内发出。您可以使用 Workflow 运行 ID 和 Activity ID 的组合作为幂等性密钥，因为这可以保证在重试尝试中保持一致，但在 Workflow Execution 中是唯一的。
+
+有关 Temporal 幂等性的更多信息，请参阅以下帖子：
+
+[幂等性和持久执行](https://Temporal.io/blog/idempotency-and-durable-execution)
+
+### Activity Retry Policy
+
+Activity 重试机制为应用程序提供了持久执行的优势。
+例如，即使 Worker 崩溃，Temporal 也会跟踪[指数退避延迟](/encyclopedia/retry-policies#backoff-coefficient)。由于 Temporal 无法判断 Worker 何时崩溃，因此 Workflow 依靠 [start_to_close 超时](/encyclopedia/Detecting-Activity-failures#start-to-close-timeout) 来了解在假设 Activity 处于非活动状态之前需要等待多长时间。
+
+对于具有允许重试的 [Retry Policy](/encyclopedia/retry-policies) 的 Activity，Temporal 保证 Activity 将被观察为仅完成一次。然而，Activity 可能会执行多次，甚至可能在此过程中多次部分完成。这可能会导致 Activity 的某些部分在成功执行之前被执行多次的情况。
+
+:::caution
+在 Activity 中重试时要小心，因为它会延长所需的 Activity 超时。  此类内部重试还会阻止用户计算故障指标，并使用户在出现问题时更难在 Temporal UI 中进行调试。
+:::
+
+### 约束 {#Activity-constraints}
+
+Activity Definitions are executed as normal functions.
+
+In the event of failure, the function begins at its initial state when retried (except when Activity Heartbeats are established).
+
+Therefore, an Activity Definition has no restrictions on the code it contains.
+
+### Parameters {#Activity-parameters}
+
+An Activity Definition can support as many parameters as needed.
+
+All values passed through these parameters are recorded in the [Event History](/Workflow-execution/event#event-history) of the Workflow Execution.
+Return values are also captured in the Event History for the calling Workflow Execution.
+
+Activity Definitions must contain the following parameters:
+
+- Context: an optional parameter that provides Activity context within multiple APIs.
+- Heartbeat: a notification from the Worker to the Temporal Service that the Activity Execution is progressing. Cancelations are allowed only if the Activity Definition permits Heartbeating.
+- Timeouts: intervals that control the execution and retrying of Activity Task Executions.
+
+Other parameters, such as [Retry Policies](/encyclopedia/retry-policies) and return values, can be seen in the implementation guides, listed in the next section.
+
+## What is an Activity Type? {#Activity-type}
+
+An Activity Type is the mapping of a name to an Activity Definition.
+
+Activity Types are scoped through Task Queues.
+
+## Best practices for defining Activities
+
+Here are some best practices you can use when you are creating Activities for your Workflow:
+
+- Activity arguments and return values should be serializable.
+- Activities that perform writes should be idempotent.
+- Activities have [timeouts](/develop/python/activities/timeouts#Activity-heartbeats) and [retry policies](/encyclopedia/retry-policies). For Activities, your operation should either complete within a few minutes or it should support the ability to heartbeat or poll for a result. This way it will be clear to the Workflow when the Activity is still making progress.
+- You need to specify at least one timeout, typically the [start_to_close timeout](/encyclopedia/detecting-Activity-failures#start-to-close-timeout). Keep in mind that the shorter the timeout, the faster Temporal will retry upon failure. See the [Activity Retry Policy section](#Activity-retry-policy) to learn more.

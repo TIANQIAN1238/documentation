@@ -1,9 +1,9 @@
 ---
 id: setup-cli
-title: Set up the Temporal CLI
-sidebar_label: Set up the CLI
+title: "设置 Temporal CLI"
+sidebar_label: "设置 CLI"
 slug: /cli/setup-cli
-description: Install the Temporal CLI and run a local development server.
+description: "安装 Temporal CLI 并运行本地开发服务器。"
 keywords:
   - Temporal CLI
   - Install CLI
@@ -11,79 +11,80 @@ keywords:
   - Run dev server
 ---
 
-The Temporal CLI is a command-line tool for interacting with the Temporal Service.
-It helps you manage, monitor, and debug Temporal applications.
-You can also use it to run a local development server and interact with Temporal Applications from the command line.
+Temporal CLI 是用于与 Temporal 服务交互的命令行工具。
+它可以帮助您管理、监视和调试 Temporal 应用程序。
+您还可以使用它来运行本地开发服务器并从命令行与 Temporal 应用程序交互。
 
-With the Temporal CLI, you can:
+使用 Temporal CLI，您可以：
 
-- Run a local Temporal Service for development
-- Start Workflow Executions on any Temporal Service (local, self-hosted, or Temporal Cloud)
-- Interact with running Workflows
-- Inspect the state of Workflows and Activities
-- Manage Namespaces, Schedules, and Task Queues
-- Monitor and debug application behavior
+- 运行本地 Temporal 服务进行开发
+- 在任何 Temporal 服务（本地、自托管或 Temporal Cloud）上启动 Workflow Execution
+- 与正在运行的 Workflow 交互
+- 检查 Workflow 和活动的状态
+- 管理 Namespace、Schedule 和 Task Queue
+- 监控和调试应用程序行为
 
-## Install the CLI
+<a id="install-the-cli"></a>
+## 安装 CLI {#install-the-cli}
 
-The CLI is available for macOS, Linux, and Windows, or as a Docker image.
+CLI 可用于 macOS、Linux 和 Windows，或作为 Docker 映像使用。
 
 <Tabs>
 
 <TabItem value="macosinstall" label="macOS">
 
-Install with Homebrew:
+使用自制程序安装：
 
 ```bash
 brew install temporal
 ```
 
-Or download from the CDN:
+或者从CDN下载：
 
-- [Darwin amd64](https://temporal.download/cli/archive/latest?platform=darwin&arch=amd64)
-- [Darwin arm64](https://temporal.download/cli/archive/latest?platform=darwin&arch=arm64)
+- [达尔文amd64](https://temporal.download/cli/archive/latest?platform=darwin&arch=amd64)
+- [达尔文arm64](https://temporal.download/cli/archive/latest?platform=darwin&arch=arm64)
 
-Extract the archive and add the `temporal` binary to your `PATH`.
+解压缩存档并将 `Temporal` 二进制文件添加到 `PATH`。
 
 </TabItem>
 
 <TabItem value="linuxinstall" label="Linux">
 
-Install with Homebrew (if available):
+使用 Homebrew 安装（如果可用）：
 
 ```bash
 brew install temporal
 ```
 
-Or install with Snap:
+或者使用 Snap 安装：
 
 ```bash
 snap install temporal
 ```
 
-Or download from the CDN:
+或者从CDN下载：
 
-- [Linux amd64](https://temporal.download/cli/archive/latest?platform=linux&arch=amd64)
-- [Linux arm64](https://temporal.download/cli/archive/latest?platform=linux&arch=arm64)
+- [Linux AMD64](https://temporal.download/cli/archive/latest?platform=linux&arch=amd64)
+- [Linux ARM64](https://temporal.download/cli/archive/latest?platform=linux&arch=arm64)
 
-Extract the archive and add the `temporal` binary to your `PATH`.
+解压缩存档并将 `Temporal` 二进制文件添加到 `PATH`。
 
 </TabItem>
 
 <TabItem value="windowsinstall" label="Windows">
 
-Download from the CDN:
+从 CDN 下载：
 
-- [Windows amd64](https://temporal.download/cli/archive/latest?platform=windows&arch=amd64)
-- [Windows arm64](https://temporal.download/cli/archive/latest?platform=windows&arch=arm64)
+- [Windows AMD64](https://temporal.download/cli/archive/latest?platform=windows&arch=amd64)
+- [视窗arm64](https://temporal.download/cli/archive/latest?platform=windows&arch=arm64)
 
-Extract the archive and add the `temporal.exe` binary to your `PATH`.
+解压缩存档并将 `Temporal.exe` 二进制文件添加到 `PATH`。
 
 </TabItem>
 
 <TabItem value="dockerinstall" label="Docker">
 
-Temporal CLI container image is available on [DockerHub](https://hub.docker.com/r/temporalio/temporal) and can be run directly:
+Temporal CLI容器镜像在[DockerHub](https://hub.docker.com/r/temporalio/temporal)上可用，可以直接运行：
 
 ```shell
 docker run --rm temporalio/temporal --help
@@ -93,18 +94,19 @@ docker run --rm temporalio/temporal --help
 
 </Tabs>
 
-## Run the development server
+<a id="run-the-development-server"></a>
+## 运行开发服务器 {#run-the-development-server}
 
-The CLI includes a local Temporal development service for fast feedback while building your application.
+CLI 包括本地 Temporal 开发服务，可在构建应用程序时提供快速反馈。
 
-Start the server:
+启动服务器：
 
 ```bash
 temporal server start-dev \
    --db-filename path/to/local-persistent-store
 ```
 
-View available options:
+查看可用选项：
 
 ```bash
 temporal server start-dev \
@@ -113,8 +115,8 @@ temporal server start-dev \
 
 :::note
 
-When running the CLI inside Docker, for the development server to be accessible from the host system,
-the server needs to be configured to listen on external IP and the ports need to be forwarded:
+在 Docker 内运行 CLI 时，为了可以从主机系统访问开发服务器，
+服务器需要配置为侦听外部IP并且需要转发端口：
 
 ```shell
 docker run --rm \
@@ -126,50 +128,53 @@ docker run --rm \
 
 :::
 
-### What the local server provides
+<a id="what-the-local-server-provides"></a>
+### 本地服务器提供什么 {#what-the-local-server-provides}
 
-- A local instance of the Temporal Service
-- Automatic startup of the Web UI
-- A default Namespace
-- Optional persistence using SQLite
+- Temporal 服务的本地实例
+- 自动启动Web UI
+- 默认Namespace
+- 使用 SQLite 的可选持久性
 
-Omitting `--db-filename` uses an in-memory database. This speeds up testing but does not persist Workflow data between sessions.
+省略 `--db-filename` 使用内存数据库。这可以加快测试速度，但不会在会话之间保留 Workflow 数据。
 
-### Access the Web UI
+<a id="access-the-web-ui"></a>
+### 访问 Web 用户界面 {#access-the-web-ui}
 
-- Temporal Service: `localhost:7233`
-- Web UI: [http://localhost:8233](http://localhost:8233)
+- Temporal 服务：`localhost:7233`
+- 网页用户界面：[http://localhost:8233](http://localhost:8233)
 
 :::tip
-The CLI works with all Temporal SDKs.
-Use it to develop and test your application before deploying to production.
+CLI 可与所有 Temporal SDK 配合使用。
+在部署到生产环境之前，使用它来开发和测试您的应用程序。
 :::
 
-## Getting CLI help
+<a id="getting-cli-help"></a>
+## 获取 CLI 帮助 {#getting-cli-help}
 
-From the command line:
+从命令行：
 
 ```
 temporal <command> <subcommand> --help
 ```
 
-For example:
+例如：
 
-- `temporal --help`
-- `temporal workflow --help`
-- `temporal workflow delete --help`
+- `Temporal --help`
+- `Temporal Workflow --help`
+- `Temporal Workflow delete --help`
 
-Available commands
+可用命令
 
-| Command                            | Description                                                 |
+| 命令                            | 描述                                                 |
 | ---------------------------------- | ----------------------------------------------------------- |
-| [**activity**](/cli/activity)      | Complete, update, pause, unpause, reset or fail an Activity |
-| [**batch**](/cli/batch)            | Manage running batch jobs                                   |
-| [**completion**](/cli/cmd-options) | Generate the autocompletion script for the specified shell  |
-| [**env**](/cli/env)                | Manage environments                                         |
-| [**operator**](/cli/operator)      | Manage Temporal deployments                                 |
-| [**schedule**](/cli/schedule)      | Perform operations on Schedules                             |
-| [**server**](/cli/server)          | Run Temporal Server                                         |
-| [**task-queue**](/cli/task-queue)  | Manage Task Queues                                          |
-| [**worker**](/cli/worker)          | Read or update Worker state                                 |
-| [**workflow**](/cli/workflow)      | Start, list, and operate on Workflows                       |
+| [**Activity**](/cli/activity)      | 完成、Update、暂停、取消暂停、重置 Activity 或失败 |
+| [**批**](/cli/batch)            | 管理正在运行的批处理作业                                   |
+| [**完成**](/cli/cmd-options) | 为指定的 shell 生成自动完成脚本  |
+| [**环境**](/cli/env)                | 管理环境                                         |
+| [**操作员**](/cli/operator)      | 管理 Temporal 部署                                 |
+| [**Schedule**](/cli/schedule)      | 对 Schedule 执行操作                             |
+| [**服务器**](/cli/server)          | 运行Temporal Server                                         |
+| [**任务队列**](/cli/task-queue)  | 管理 Task Queue                                          |
+| [**Worker**](/cli/worker)          | 读取 Update 或 Worker 状态                                 |
+| [**Workflow**](/cli/workflow)      | 在 Workflow 上启动、列出和操作                       |

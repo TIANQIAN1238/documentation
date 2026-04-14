@@ -1,8 +1,8 @@
 ---
 id: security
-title: Temporal Platform security
-sidebar_label: Security
-description: Discover general security practices of Temporal Technologies, SaaS security with Temporal Cloud, and how to self-host a secure Temporal Platform on our security pages.
+title: "Temporal 平台安全"
+sidebar_label: "安全"
+description: "了解 Temporal Technologies 的一般安全实践、Temporal Cloud 的 SaaS 安全性，以及如何在我们的安全页面上自行托管安全的 Temporal 平台。"
 slug: /security
 toc_max_heading_level: 4
 keywords:
@@ -11,7 +11,7 @@ tags:
   - Security
 ---
 
-Find security information for your Temporal deployment, whether you're using Temporal Cloud or self-hosting.
+查找 Temporal 部署的安全信息，无论您使用的是 Temporal Cloud 还是自托管。
 
 <div className="pattern-grid">
   <a href="https://trust.temporal.io" className="pattern-card">
@@ -47,101 +47,101 @@ Find security information for your Temporal deployment, whether you're using Tem
 
 
 <style jsx>{`
-  .security-cards-container {
-    margin: 2rem 0;
+.安全卡容器{
+    边距：2rem 0；
   }
 
-  .security-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
+.安全卡网格{
+    显示：网格；
+    网格模板列：重复（自动调整，minmax（300px，1fr））；
+    间隙：2rem；
+    顶部边距：2rem；
   }
 
-  .security-card {
-    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-    border: 1px solid #e1e8ed;
-    border-radius: 12px;
-    padding: 2rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    position: relative;
-    overflow: hidden;
+.安全卡{
+    背景：线性渐变（135deg，#ffffff 0%，#fafbfc 100%）；
+    边框：1px实线#e1e8ed；
+    边框半径：12px；
+    填充：2rem；
+    过渡：全部 0.3s 缓和；
+    盒子阴影: 0 2px 8px rgba(0, 0, 0, 0.04);
+    位置：相对；
+    溢出：隐藏；
   }
 
-  .security-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #444ce7 0%, #b664ff 100%);
+.安全卡::之前{
+    内容：''；
+    位置：绝对；
+    顶部：0；
+    左：0；
+    右：0；
+    高度：4px；
+    背景：线性渐变（90deg，#444ce7 0%，#b664ff 100%）；
   }
 
-  .security-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(68, 76, 231, 0.12);
-    border-color: #444ce7;
+.安全卡：悬停{
+    变换：翻译Y（-4px）；
+    盒子阴影: 0 8px 24px rgba(68, 76, 231, 0.12);
+    边框颜色：#444ce7；
   }
 
-  .security-card-header h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.375rem;
-    font-weight: 600;
-    color: #1a1b23;
-    line-height: 1.3;
+.安全卡标头 h3 {
+    保证金：0 0 0.5rem 0；
+    字体大小：1.375rem；
+    字体粗细：600；
+    颜色：#1a1b23；
+    行高：1.3；
   }
 
-  .security-card-divider {
-    width: 40px;
-    height: 3px;
-    background: linear-gradient(90deg, #444ce7 0%, #b664ff 100%);
-    border-radius: 2px;
-    margin-bottom: 1.5rem;
+.安全卡分隔符{
+    宽度：40px；
+    高度：3px；
+    背景：线性渐变（90deg，#444ce7 0%，#b664ff 100%）；
+    边框半径：2px；
+    下边距：1.5rem；
   }
 
-  .security-card-body p {
-    color: #5d6b7d;
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-    font-size: 0.95rem;
+.安全卡主体 p {
+    颜色：#5d6b7d；
+    行高：1.6；
+    下边距：1.5rem；
+    字体大小：0.95rem；
   }
 
-  .security-card-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #444ce7;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-    padding: 0.5rem 0;
+.安全卡按钮 {
+    显示：内联柔性；
+    对齐项目：居中；
+    间隙：0.5rem；
+    颜色：#444ce7；
+    文本装饰：无；
+    字体粗细：500；
+    字体大小：0.95rem；
+    过渡：全部 0.2s 缓和；
+    填充：0.5rem 0；
   }
 
-  .security-card-button:hover {
-    color: #3730a3;
-    text-decoration: none;
-    transform: translateX(2px);
+.安全卡按钮：悬停{
+    颜色：#3730a3；
+    文本装饰：无；
+    变换：translateX(2px)；
   }
 
-  .security-card-button svg {
-    transition: transform 0.2s ease;
+.安全卡按钮 svg {
+    过渡：变换0.2s缓和；
   }
 
-  .security-card-button:hover svg {
-    transform: translateX(2px);
+.security-card-button:悬停 svg {
+    变换：translateX(2px)；
   }
 
-  @media (max-width: 768px) {
-    .security-cards-grid {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
+@media（最大宽度：768px）{
+    .安全卡网格{
+      网格模板列：1fr；
+      间隙：1.5rem；
     }
 
-    .security-card {
-      padding: 1.5rem;
+.安全卡{
+      填充：1.5rem；
     }
   }
 `}</style>

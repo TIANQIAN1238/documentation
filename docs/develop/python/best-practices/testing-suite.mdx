@@ -1,8 +1,8 @@
 ---
 id: testing-suite
-title: Testing - Python SDK
-sidebar_label: Testing
-description: The Temporal Application Testing guide covers Frameworks facilitating Workflow and integration testing, including end-to-end, integration, and unit tests. Use mocked Activities, skip time in tests, and replay Workflow Executions.
+title: "测试 - Python SDK"
+sidebar_label: "测试"
+description: "Temporal 应用程序测试指南涵盖了促进 Workflow 和集成测试的框架，包括端到端、集成和单元测试。使用模拟活动、跳过测试时间并重播 Workflow Execution。"
 toc_max_heading_level: 2
 keywords:
   - python
@@ -15,47 +15,47 @@ tags:
   - Temporal SDKs
 ---
 
-The Testing section of the Temporal Application development guide describes the frameworks that facilitate Workflow and integration testing.
+Temporal 应用程序开发指南的测试部分描述了促进 Workflow 和集成测试的框架。
 
-In the context of Temporal, you can create these types of automated tests:
+在 Temporal 的上下文中，您可以创建以下类型的自动化测试：
 
-- **End-to-end:** Running a Temporal Server and Worker with all its Workflows and Activities; starting and interacting with Workflows from a Client.
-- **Integration:** Anything between end-to-end and unit testing.
-  - Running Activities with mocked Context and other SDK imports (and usually network requests).
-  - Running Workers with mock Activities, and using a Client to start Workflows.
-  - Running Workflows with mocked SDK imports.
-- **Unit:** Running a piece of Workflow or Activity code (a function or method) and mocking any code it calls.
+- **端到端：** 运行 Temporal Server 和 Worker 及其所有 Workflow 和活动；从客户端启动 Workflow 并与之交互。
+- **集成：** 端到端和单元测试之间的任何内容。
+  - 使用模拟上下文和其他 SDK 导入（通常是网络请求）运行活动。
+  - 使用模拟活动运行 Worker，并使用客户端启动 Workflow。
+  - 使用模拟 SDK 导入运行 Workflow。
+- **单元：** 运行一段 Workflow 或 Activity 代码（函数或方法）并模拟它调用的任何代码。
 
-We generally recommend writing the majority of your tests as integration tests.
+我们通常建议将大部分测试编写为集成测试。
 
-Because the test server supports skipping time, use the test server for both end-to-end and integration tests with Workers.
+由于测试服务器支持跳过时间，因此请使用测试服务器与 Worker 进行端到端测试和集成测试。
 
-## Test frameworks {#test-frameworks}
+<a id="test-frameworks"></a>
+## 测试框架 {#test-frameworks}
+一些 SDK 提供流行测试框架、运行器或库的支持或示例。
 
-Some SDKs have support or examples for popular test frameworks, runners, or libraries.
+用于 Temporal SDK 的 Python 测试的一种推荐框架是 [py测试](https://docs.pytest.org/)，它可以帮助固定装置建立和拆除测试环境，提供有用的测试发现，并使编写参数化测试变得容易。
 
-One recommended framework for testing in Python for the Temporal SDK is [pytest](https://docs.pytest.org/), which can help with fixtures to stand up and tear down test environments, provide useful test discovery, and make it easy to write parameterized tests.
+<a id="test-activities"></a>
+## 测试活动 {#test-activities}
+Activity 可以使用模拟 Activity 环境进行测试，该环境提供了一种模拟 Activity 上下文、监听心跳和取消 Activity 的方法。
+此行为允许您通过直接调用 Activity 来单独测试 Activity，而无需创建 Worker 来运行 Activity。
 
-## Testing Activities {#test-activities}
+<a id="run-an-activity"></a>
+### 运行 Activity {#run-an-activity}
+如果 Activity 引用其上下文，则在单独测试时需要模拟该上下文。
 
-An Activity can be tested with a mock Activity environment, which provides a way to mock the Activity context, listen to Heartbeats, and cancel the Activity.
-This behavior allows you to test the Activity in isolation by calling it directly, without needing to create a Worker to run the Activity.
+要在测试中运行 Activity，请使用 [`ActivityEnvironment`](https://python.temporal.io/temporalio.testing.ActivityEnvironment.html) 类。
 
-### Run an Activity {#run-an-activity}
+此类允许您在 Activity 上下文中运行任何可调用程序。
+使用它来测试代码在各种条件下的行为。
 
-If an Activity references its context, you need to mock that context when testing in isolation.
+<a id="listen-to-heartbeats"></a>
+### 聆听心跳 {#listen-to-heartbeats}
+当 Activity 发送心跳时，请确保您可以在测试代码中看到心跳，以便您可以验证它们。
 
-To run an Activity in a test, use the [`ActivityEnvironment`](https://python.temporal.io/temporalio.testing.ActivityEnvironment.html) class.
-
-This class allows you to run any callable inside an Activity context.
-Use it to test the behavior of your code under various conditions.
-
-### Listen to Heartbeats {#listen-to-heartbeats}
-
-When an Activity sends a Heartbeat, be sure that you can see the Heartbeats in your test code so that you can verify them.
-
-To test a Heartbeat in an Activity, use the [`on_heartbeat()`](https://python.temporal.io/temporalio.testing.ActivityEnvironment.html#on_heartbeat) property of the [`ActivityEnvironment`](https://python.temporal.io/temporalio.testing.ActivityEnvironment.html) class.
-This property sets a custom function that is called every time the `activity.heartbeat()` function is called within the Activity.
+要测试 Activity 中的心跳，请使用 [`ActivityEnvironment`](https://python.temporal.io/temporalio.testing.ActivityEnvironment.html#on_heartbeat) 类的 [`on_heartbeat()`](https://python.temporal.io/temporalio.testing.ActivityEnvironment.html) 属性。
+此属性设置一个自定义函数，每次在 Activity 内调用 `Activity.heartbeat()` 函数时都会调用该函数。
 
 ```python
 @activity.defn
@@ -73,15 +73,15 @@ await env.run(activity_with_heartbeats, "test")
 assert heartbeats == ["param: test", "second heartbeat"]
 ```
 
-## Testing Workflows {#test-workflows}
+<a id="test-workflows"></a>
+## 测试 Workflows {#test-workflows}
+<a id="mock-activities"></a>
+### 如何模拟活动 {#mock-activities}
+在对 Workflow 进行单元测试时模拟 Activity 调用。
 
-### How to mock Activities {#mock-activities}
+当使用 Worker 集成测试 Workflow 时，您可以通过向 Worker 提供模拟 Activity 实现来模拟活动。
 
-Mock the Activity invocation when unit testing your Workflows.
-
-When integration testing Workflows with a Worker, you can mock Activities by providing mock Activity implementations to the Worker.
-
-Provide mock Activity implementations to the Worker.
+为 Worker 提供模拟 Activity 实现。
 
 ```python
 import uuid
@@ -118,39 +118,39 @@ async def test_mock_activity(client: Client):
         )
 ```
 
-The mocked Activity implementation should have the same signature as the real implementation (including the input and output types) and the same name.
-When the Workflow invokes the Activity, it invokes the mocked implementation instead of the real one, allowing you to test your Workflow isolated.
+模拟的 Activity 实现应具有与真实实现相同的签名（包括输入和输出类型）和相同的名称。
+当 Workflow 调用 Activity 时，它会调用模拟实现而不是真实实现，从而允许您隔离测试 Workflow。
 
-### How to skip time {#skip-time}
+<a id="skip-time"></a>
+### 如何跳过时间 {#skip-time}
+一些长期运行的 Workflow 可以持续数月甚至数年。
+实施测试框架允许您的 Workflow 代码跳过时间并在几秒钟内完成测试，而不是 Workflow 指定的数量。
 
-Some long-running Workflows can persist for months or even years.
-Implementing the test framework allows your Workflow code to skip time and complete your tests in seconds rather than the Workflow's specified amount.
+例如，如果您的 Workflow 睡眠了一天，或者 Activity 发生了重试间隔较长的故障，则无需等待整个睡眠周期的长度来测试睡眠功能是否起作用。
+相反，通过及时向前跳跃并及时完成测试来测试睡眠后发生的逻辑。
 
-For example, if you have a Workflow sleep for a day, or have an Activity failure with a long retry interval, you don't need to wait the entire length of the sleep period to test whether the sleep function works.
-Instead, test the logic that happens after the sleep by skipping forward in time and complete your tests in a timely manner.
+大多数 SDK 中包含的测试框架是 Temporal Server 的内存中实现，支持跳过时间。
+时间是 `TestWorkflowEnvironment` 实例的全局属性：跳过时间（自动或手动）适用于所有当前正在运行的测试。
+如果不同的测试需要不同的时间行为，请按系列运行测试或使用测试服务器的单独实例运行测试。
+例如，您可以并行运行所有具有自动时间跳过功能的测试，然后串行运行所有具有手动时间跳过功能的测试，然后并行运行所有不带时间跳过功能的测试。
 
-The test framework included in most SDKs is an in-memory implementation of Temporal Server that supports skipping time.
-Time is a global property of an instance of `TestWorkflowEnvironment`: skipping time (either automatically or manually) applies to all currently running tests.
-If you need different time behaviors for different tests, run your tests in a series or with separate instances of the test server.
-For example, you could run all tests with automatic time skipping in parallel, and then all tests with manual time skipping in series, and then all tests without time skipping in parallel.
+<a id="automatic-method"></a>
+#### 自动跳过时间 {#automatic-method}
+您可以在您选择的 SDK 中自动跳过时间。
+启动一个测试服务器进程，根据需要跳过时间。
+例如，在跳时模式下，Timer（包括睡眠和条件超时）将快进，除非活动正在运行。
 
-#### Skip time automatically {#automatic-method}
+使用 [`start_time_skipping()`](https://python.temporal.io/temporalio.testing.WorkflowEnvironment.html#start_time_skipping) 方法启动测试服务器进程并自动跳过时间。
 
-You can skip time automatically in the SDK of your choice.
-Start a test server process that skips time as needed.
-For example, in the time-skipping mode, Timers, which include sleeps and conditional timeouts, are fast-forwarded except when Activities are running.
+对完整本地 Temporal Server 使用 [`start_local()`](https://python.temporal.io/temporalio.testing.WorkflowEnvironment.html#start_local) 方法。
 
-Use the [`start_time_skipping()`](https://python.temporal.io/temporalio.testing.WorkflowEnvironment.html#start_time_skipping) method to start a test server process and skip time automatically.
+对现有 Temporal Server 使用 [`from_client()`](https://python.temporal.io/temporalio.testing.WorkflowEnvironment.html#from_client) 方法。
 
-Use the [`start_local()`](https://python.temporal.io/temporalio.testing.WorkflowEnvironment.html#start_local) method for a full local Temporal Server.
+<a id="manual-method"></a>
+#### 手动跳过时间 {#manual-method}
+在您选择的 SDK 中手动跳过时间。
 
-Use the [`from_client()`](https://python.temporal.io/temporalio.testing.WorkflowEnvironment.html#from_client) method for an existing Temporal Server.
-
-#### Skip time manually {#manual-method}
-
-Skip time manually in the SDK of your choice.
-
-To implement time skipping, use the [`start_time_skipping()`](https://python.temporal.io/temporalio.testing.WorkflowEnvironment.html#start_time_skipping) static method.
+要实现时间跳跃，请使用 [`start_time_skipping()`](https://python.temporal.io/temporalio.testing.WorkflowEnvironment.html#start_time_skipping) 静态方法。
 
 ```python
 from temporalio.testing import WorkflowEnvironment
@@ -163,34 +163,34 @@ async def test_manual_time_skipping():
         # Your code here
 ```
 
-### Assert in Workflow {#assert-in-workflow}
+<a id="assert-in-workflow"></a>
+### 在 Workflow {#assert-in-Workflow} 中断言
+`assert` 语句是将调试断言插入 Workflow 上下文的便捷方法。
 
-The `assert` statement is a convenient way to insert debugging assertions into the Workflow context.
+`assert` 方法可在 Python 和 TypeScript 中使用。
 
-The `assert` method is available in Python and TypeScript.
+有关 Python 中的断言语句的信息，请参阅 Python 语言参考中的 [`assert`](https://docs.python.org/3/reference/simple_stmts.html#the-assert-statement)。
 
-For information about assert statements in Python, see [`assert`](https://docs.python.org/3/reference/simple_stmts.html#the-assert-statement) in the Python Language Reference.
+<a id="replay"></a>
+## 如何重播 Workflow Execution {#replay}
+重播重新创建了 Workflow Execution 的确切状态。
+您可以从 Event History 的开头重播 Workflow。
 
-## How to Replay a Workflow Execution {#replay}
+仅当 [Workflow Definition](/workflow-definition) 从确定性的角度来看与提供的历史记录兼容时，重播才会成功。
 
-Replay recreates the exact state of a Workflow Execution.
-You can replay a Workflow from the beginning of its Event History.
+当您测试对 Workflow Definition 的更改时，我们建议执行以下操作作为 CI 检查的一部分：
 
-Replay succeeds only if the [Workflow Definition](/workflow-definition) is compatible with the provided history from a deterministic point of view.
+1. 确定被测 Worker 代码将针对哪些 Workflow 类型或 Task Queue（或两者）。
+2. 使用 SDK 客户端以编程方式或通过 Temporal CLI 从每个 Task Queue 下载一组代表性的最近打开和关闭的 Workflow 的事件历史记录。
+3. 通过重播运行事件历史记录。
+4. 如果重播期间遇到任何错误，则 CI 失败。
 
-When you test changes to your Workflow Definitions, we recommend doing the following as part of your CI checks:
+以下是获取和重播事件历史记录的示例：
 
-1. Determine which Workflow Types or Task Queues (or both) will be targeted by the Worker code under test.
-2. Download the Event Histories of a representative set of recent open and closed Workflows from each Task Queue, either programmatically using the SDK client or via the Temporal CLI.
-3. Run the Event Histories through replay.
-4. Fail CI if any error is encountered during replay.
+要重播 Workflow Execution，请使用 [`replay_Workflows`](https://python.temporal.io/temporalio.worker.Replayer.html#replay_workflows) 或 [`replay_Workflow`](https://python.temporal.io/temporalio.worker.Replayer.html#replay_workflow) 方法，传递一个或多个事件历史记录作为参数。
 
-The following are examples of fetching and replaying Event Histories:
-
-To replay Workflow Executions, use the [`replay_workflows`](https://python.temporal.io/temporalio.worker.Replayer.html#replay_workflows) or [`replay_workflow`](https://python.temporal.io/temporalio.worker.Replayer.html#replay_workflow) methods, passing one or more Event Histories as arguments.
-
-In the following example (which, as of server v1.18, requires Advanced Visibility to be enabled), Event Histories are downloaded from the server and then replayed.
-If any replay fails, the code raises an exception.
+在以下示例中（从服务器 v1.18 开始，需要启用高级 Visibility），从服务器下载事件历史记录，然后重播。
+如果任何重放失败，代码都会引发异常。
 
 ```python
 workflows = client.list_workflows(f"TaskQueue=foo and StartTime > '2022-01-01T12:00:00'")
@@ -201,22 +201,22 @@ replayer = Replayer(
 await replayer.replay_workflows(histories)
 ```
 
-In the next example, a single history is loaded from a JSON string:
+在下一个示例中，从 JSON 字符串加载单个历史记录：
 
 ```python
 replayer = Replayer(workflows=[YourWorkflow])
 await replayer.replay_workflow(WorkflowHistory.from_json(history_json_str))
 ```
 
-In both examples, if Event History is non-deterministic, an error is thrown.
-You can choose to wait until all histories have been replayed with `replay_workflows` by setting the `fail_fast` option to `false`.
+在这两个示例中，如果 Event History 是不确定的，则会引发错误。
+您可以通过将 `fail_fast` 选项设置为 `false` 来选择等待所有历史记录都已用 `replay_Workflows` 重播。
 
 :::note
 
-If the Workflow History is exported by [Temporal Web UI](/web-ui) or through [Temporal CLI](/cli), you can pass the JSON file history object as a JSON string or as a Python dictionary through the `json.load()` function, which takes a file object and returns the JSON object.
+如果 Workflow 历史记录由 [Temporal 网页用户界面](/web-ui) 或通过 [Temporal CLI](/cli) 导出，您可以通过 `json.load()` 函数将 JSON 文件历史记录对象作为 JSON 字符串或作为 Python 字典传递，该函数接受文件对象并返回 JSON 对象。
 
 :::tip
-When fetching event histories directly from the server or exporting them, be aware that the data can be protobuf-encoded (`bytes`). The `Replayer`, however, often works with decoded histories (like a `dict`).
+直接从服务器获取事件历史记录或导出事件历史记录时，请注意数据可能是 Protobuf 编码 (`bytes`)。然而，`Replayer` 通常与解码历史一起使用（如 `dict`）。
 
-If you encounter `TypeError` exceptions related to `dict` vs. `bytes` mismatches during replay, ensure your event history is properly decoded before passing it to the Replayer.
+如果您在重放期间遇到与 `dict` 与 `bytes` 不匹配相关的 `TypeError` 异常，请确保您的 Event History 在传递到重放器之前已正确解码。
 :::

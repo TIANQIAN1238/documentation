@@ -1,0 +1,876 @@
+---
+id: terraform-provider
+title: Temporal Cloud Terraform 提供商
+sidebar_label: 地形提供商
+description: Automate resource management on Temporal Cloud with the Terraform Temporal provider. Manage Namespaces and users with
+  Automate resource management on Temporal Cloud with the Terraform Temporal provider. Manage Namespaces and users with
+  Terraform's infrastructure-as-code.
+tags:
+  - Temporal Cloud
+  - Terraform
+ssdi:
+  - The Terraform Provider is in a Public Preview release status for Temporal Cloud.
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+Terraform Temporal Cloud 提供程序允许您使用 Terraform 管理 Temporal Cloud 的资源。地形
+tool manages infrastructure as code (IaC).有了这个提供程序，您可以使用 Terraform 自动化 Temporal Cloud 资源
+管理，包括 Namespace、用户、服务帐户、API 密钥等。
+
+:::note Terraform Management
+
+一旦资源由 Terraform 管理，您就应该仅使用 Terraform 来管理该资源。
+
+:::
+
+资源：
+
+- [Temporal Cloud Terraform 提供程序](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest) 是
+  可在 Terraform 注册表中找到，您可以在其中找到有关提供商支持的资源的详细文档
+  和数据源。
+- Terraform 提供程序的 GitHub 存储库是
+  [terraform-provider-Temporalcloud](https://github.com/Temporalio/terraform-provider-Temporalcloud/tree/main)，其中
+  您可以报告错误、提供功能请求，以及
+  [贡献](https://github.com/Temporalio/terraform-provider-Temporalcloud/blob/main/CONTRIBUTING.md)
+  提供者。当我们与社区一起开发提供商时，我们鼓励您提供意见。
+- 要查看 Terraform 提供程序支持的可用 Temporal Cloud 资源列表，请访问
+  Hashi 中的 Terraform 文档
+  [注册表](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs)。
+
+### 先决条件
+
+要使用 Terraform 提供程序，您需要以下内容：
+
+- [Terraform CLI](https://developer.hashicorp.com/terraform/cli)
+- [API 密钥](/cloud/api-keys)：使用 Terraform 提供程序需要 API 密钥。
+  - 有关生成密钥的说明，请参阅 [API 文档](https://docs.Temporal.io/cloud/api-keys#generate-an-api-key)
+    API 密钥。
+
+:::note OpenTofu Registry
+
+我们的 Terraform Provider 已在 [OpenTofu](https://opentofu.org) 注册，但该注册未维护或
+由 Temporal 技术管理。
+
+:::
+
+＃＃ 设置
+
+生成 [API 密钥](https://docs.Temporal.io/cloud/api-keys#generate-an-api-key) 以验证 Terraform 操作
+使用您的 Temporal Cloud 帐户或服务帐户。然后，使用环境变量或将 API 密钥传递到
+提供商手动管理您的 Temporal Cloud Terraform 资源。
+
+按照以下示例使用环境变量将您的 API 密钥传递给提供商。
+
+<Tabs>
+  <TabItem value="macos" label="macOS" default>
+导出环境变量以安全访问 API 密钥。
+
+```bash
+# replace <your-secret-key> with the "secretKey": output from tcld apikey create command
+export TEMPORAL_CLOUD_API_KEY=<your-secret-key>
+```
+
+:::tip ENVIRONMENT VARIABLES
+
+不要将使用 shell 设置的环境变量与 Temporal env 选项混淆。
+
+:::
+
+</TabItem>
+  <TabItem value="windows" label="Windows">
+导出环境变量以安全访问 API 密钥。
+
+```bash
+# replace <your-secret-key> with the "secretKey": output from tcld apikey create command
+set TEMPORAL_CLOUD_API_KEY=<your-secret-key>
+```
+
+:::tip ENVIRONMENT VARIABLES
+
+不要将使用 shell 设置的环境变量与 Temporal env 选项混淆。
+
+:::
+
+</TabItem>
+</Tabs>
+
+或者，使用提供程序代码块将其手动传递到 .tf 文件中
+
+```yml
+provider "temporalcloud" { api_key = "my-temporalcloud-api-key" }
+```
+
+## 使用 Terraform 管理 Temporal Cloud Namespace
+
+Terraform 是自动管理 Temporal Namespace 的好方法。你是否想要并不重要
+管理集中在平台团队内或联合到不同的产品团队。提供商允许您
+使用 Terraform 导入、创建 Update 和删除 Namespace。
+
+您必须使用具有 Temporal Cloud Namespace 管理权限的身份。这包括账户所有者、全球
+管理员或开发者帐户角色。
+
+有关如何通过 Terraform 管理 Namespace 的更多详细示例，请查看 [Namespaces 的 Terraform 注册表文档](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs/resources/Namespace)。
+
+**如何使用 Terraform 创建 Namespace？**
+
+1. 创建 Terraform 配置文件 (`terraform.tf`) 来定义 Namespace。
+
+   ```hcl
+   terraform {
+     required_providers {
+       temporalcloud = {
+         source = "temporalio/temporalcloud"
+       }
+     }
+   }
+
+   provider "temporalcloud" {
+
+   }
+
+   resource "temporalcloud_namespace" "namespace" {
+     name               = "terraform"
+     regions            = ["aws-us-east-1"]
+     accepted_client_ca = base64encode(file("ca.pem"))
+     retention_days     = 14
+   }
+   ```
+
+在此示例中，您创建一个名为“terraform”的 Temporal Cloud Namespace，指定 AWS 区域“aws-us-east-1”，
+   并指定 CA 证书的路径。
+
+1. 初始化 Terraform 提供程序。
+
+运行以下命令来初始化 Terraform 提供程序。
+
+   ```bash
+   terraform init
+   ```
+
+1. 应用 Terraform 配置。
+
+初始化完成后，将 Terraform 配置应用到您的 Temporal Cloud 帐户。
+
+   ```bash
+   terraform apply
+   ```
+
+按照屏幕上的提示进行操作。
+
+完成后，您将看到一条成功消息，表明您的 Namespace 已创建。
+
+```bash
+temporalcloud_namespace.terraform: Creation complete after 2m17s [id=<your-namespace>]
+```
+
+您可以在位于 HashiCorp 的 Terraform Provider 文档中找到 Namespace 管理的更多示例
+[Terraform 注册表](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs/resources/Namespace)。
+Terraform Provider 文档展示了如何在 Terraform 配置文件中生成 CA 证书并创建 Namespace
+使用基于 API 密钥的身份验证。
+
+**如何验证 Namespace 的创建？**
+
+您可以通过 Temporal Web UI 或通过“tcld Namespace get”命令验证 Namespace 的创建。
+
+**使用 Temporal Web UI**
+
+1. 登录 Temporal Cloud Web UI。
+1. 导航至 Namespaces 页面。
+1. 搜索您创建的Namespace。
+
+**使用 tcld CLI 实用程序**
+
+通过 Terraform 提供程序验证 Namespace 的创建。要验证，请在云 UI 中查看您的 Namespace
+或通过“tcld Namespace get”命令。运行“tcld Namespace get”命令并传入您的
+[云 Namespace 名称](/cloud/Namespaces#Temporal-cloud-Namespace-name) 和
+[云帐户 ID](/cloud/Namespaces#Temporal-cloud-account-id):
+
+```bash
+tcld namespace get -n "<your-namespace>.<your-account-id>"
+```
+
+**如何使用 Update 和 Temporal Cloud Namespace？**
+
+Terraform 自动识别“.tf”文件中所做的更改，并将这些更改应用到 Temporal。
+
+例如，更改上一示例中 Terraform 文件中的保留期设置并观看 Terraform
+应用更改，无需您执行任何其他步骤。
+
+1. 将保留期限设置为30天。
+
+   ```hcl
+   terraform {
+     required_providers {
+       temporalcloud = {
+         source  = "temporalio/temporalcloud"
+         version = ">= 0.0.6"
+       }
+     }
+   }
+
+   provider "temporalcloud" {
+
+   }
+
+   resource "temporalcloud_namespace" "namespace" {
+     name               = "terraform"
+     regions            = ["aws-us-east-1"]
+     accepted_client_ca = base64encode(file("ca.pem"))
+     retention_days     = 30
+   }
+   ```
+
+1. 应用您的配置。出现提示时，回答“是”以继续：
+
+   ```command
+   terraform apply
+   ```
+
+完成后，您将看到一条成功消息，表明您的 Namespace 已成为 Updated。可能需要几分钟
+至 Update 至 Namespace。
+
+```text
+temporalcloud_namespace.namespace: Modifications complete after 10s [id=terraform.a1bb2]
+```
+
+**如何删除 Temporal Cloud Namespace？**
+
+要删除 Namespace，请从您的应用程序中删除“Temporalcloud_Namespace”资源和所有依赖资源配置。
+Terraform 文件并运行“terraform apply”命令。
+
+完成后，您将看到一条成功消息，指示资源已被销毁：
+
+```text
+temporalcloud_namespace.my_namespace: Destruction complete after 3s
+Apply complete! Resources: 0 added, 0 changed, 1 destroyed.
+```
+
+:::note Preventing Deletion
+
+您可以通过在 Terraform 中包含“prevent_destroy”参数来防止删除任何 Terraform 资源
+配置文件。
+
+:::
+
+**如何导入 Temporal Cloud Namespace？**
+
+如果您在 Temporal Cloud 中已有 Namespace，则可以将其导入 Terraform 来管理 Namespace
+使用“terraform import”命令进行 Terraform。
+
+1. 在 Terraform 配置中提供配置占位符。
+
+   ```yml
+   resource "temporalcloud_namespace" "namespace" { }
+   ```
+
+1. 从命令行运行 `terraform import` 命令并传入 Namespace ID。您的 Namespace ID 可用
+   位于 Temporal Cloud UI 中 Namespace 页面的顶部，格式为“Namespaceid.acctid”。
+
+   ```bash
+   terraform import temporalcloud_namespace.terraform namespaceid.acctid
+   ```
+
+Namespace 现在是 Terraform 状态的一部分，对 Namespace 的所有更改都应由 Terraform 管理。
+
+:::caution
+
+将资源导入 Terraform 后，对资源的外部更改将产生 Terraform“漂移”错误
+关于后续 Terraform 操作。
+
+:::
+
+## 使用 Terraform 管理 Temporal Cloud Nexus 端点
+
+Terraform 提供了一种自动管理 [Nexus 端点](/Nexus/endpoints) 的好方法。提供商允许
+您可以使用 Terraform 导入、创建 Update 和删除 Nexus 端点。
+
+您必须使用具有[开发人员角色（或更高）](/cloud/manage-access/roles-and-permissions#account-level-roles) 的身份，并且
+端点的目标 Namespace 上的 [Namespace 管理员权限](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions)。
+
+**如何使用 Terraform 创建 Nexus 端点？**
+
+1. 创建 Terraform 配置文件 (`terraform.tf`) 来定义 Nexus 端点。
+
+从
+   [Terraform 注册表中的示例](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs/resources/Nexus_endpoint)：
+
+   ```yml
+   terraform {
+     required_providers {
+       temporalcloud = {
+         source = "temporalio/temporalcloud"
+       }
+     }
+   }
+
+   provider "temporalcloud" {
+
+   }
+
+   resource "temporalcloud_namespace" "target_namespace" {
+     name           = "terraform-target-namespace"
+     regions        = ["aws-us-west-2"]
+     api_key_auth   = true
+     retention_days = 14
+     timeouts {
+       create = "10m"
+       delete = "10m"
+     }
+   }
+
+   resource "temporalcloud_namespace" "caller_namespace" {
+     name           = "terraform-caller-namespace"
+     regions        = ["aws-us-east-1"]
+     api_key_auth   = true
+     retention_days = 14
+     timeouts {
+       create = "10m"
+       delete = "10m"
+     }
+   }
+
+   resource "temporalcloud_namespace" "caller_namespace_2" {
+     name           = "terraform-caller-namespace-2"
+     regions        = ["gcp-us-central1"]
+     api_key_auth   = true
+     retention_days = 14
+     timeouts {
+       create = "10m"
+       delete = "10m"
+     }
+   }
+
+   resource "temporalcloud_nexus_endpoint" "nexus_endpoint" {
+     name        = "terraform-nexus-endpoint"
+     description = <<-EOT
+       Service Name:
+         my-hello-service
+       Operation Names:
+         echo
+         say-hello
+
+       Input / Output arguments are in the following repository:
+       https://github.com/temporalio/samples-go/blob/main/nexus/service/api.go
+     EOT
+     worker_target = {
+       namespace_id = temporalcloud_namespace.target_namespace.id
+       task_queue   = "terraform-task-queue"
+     }
+     allowed_caller_namespaces = [
+       temporalcloud_namespace.caller_namespace.id,
+       temporalcloud_namespace.caller_namespace_2.id,
+     ]
+   }
+   ```
+
+在此示例中，创建了 3 个 Namespace：
+
+- Nexus 端点的目标 Namespace - Nexus 请求将被路由到轮询目标 Namespace 的 Worker。
+   - 调用者 Namespace - Nexus Operation 由调用者 Namespace 调用，例如从调用者 Workflow 调用。
+
+这些 Namespace 在 [Nexus Endpoint](/Nexus/endpoints) 配置中引用：
+
+- `Worker_target`（Namespace 和 Task Queue）- 目前仅支持单个 Worker_target。
+   - `allowed_caller_Namespaces` - 用于强制 Nexus 端点
+     [运行时访问控制](/Nexus/security#runtime-access-controls)。
+
+1. 初始化 Terraform 提供程序。
+
+运行以下命令来初始化 Terraform 提供程序。
+
+   ```bash
+   terraform init
+   ```
+
+1. 应用 Terraform 配置。
+
+初始化完成后，将 Terraform 配置应用到您的 Temporal Cloud 帐户。
+
+   ```bash
+   terraform apply
+   ```
+
+按照屏幕上的提示进行操作。
+
+完成后，您将看到一条成功消息，指示已创建 3 个 Namespace 和一个 Nexus 端点。
+
+   ```bash
+   temporalcloud_nexus_endpoint.nexus_endpoint: Creation complete after 2s [id=b158063be978471fa1d200569b03834d]
+   ```
+
+您可以在位于 HashiCorp 的 Terraform Provider 文档中找到 Nexus 端点管理的更多示例
+[Terraform 注册表](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs/resources/Nexus_endpoint)。
+Terraform Provider 文档展示了如何在 Terraform 配置文件中生成 CA 证书并创建 Namespace
+使用基于 API 密钥的身份验证。
+
+**如何验证 Nexus 端点的创建？**
+
+您可以通过 Temporal Web UI 或通过“tcld Nexus 端点获取”来验证 Nexus 端点的创建
+命令。
+
+**使用 Temporal Web UI**
+
+1. 登录 Temporal Cloud Web UI。
+1. 导航至[Nexus页面](https://cloud.Temporal.io/Nexus)。
+1. 仅使用 Nexus 端点名称（无帐户后缀）搜索您创建的 Nexus 端点。
+
+**使用 tcld CLI 实用程序**
+
+通过 Terraform 提供程序验证 Nexus 端点的创建。要验证，请在以下位置查看您的 Nexus 端点：
+云 UI 或通过“tcld Nexus 端点获取”命令。
+
+使用您的 Nexus 端点名称运行以下命令。请勿将帐户 ID 后缀与此端点名称一起使用：
+
+```bash
+tcld nexus endpoint get -n "<your-nexus-endpoint-name-without-account-suffix>"
+```
+
+**如何将 Update 设为 Nexus 端点？**
+
+Terraform 自动识别“.tf”文件中所做的更改，并将这些更改应用到 Temporal。
+
+例如，要更改 Nexus 端点上允许的调用者 Namespace：
+
+1. 通过更新 Nexus 端点配置来添加或删除允许的呼叫者 Namespace，例如通过删除
+   上述配置中的“caller_Namespace_2”：
+
+   ```yml
+   resource "temporalcloud_nexus_endpoint" "nexus_endpoint" {
+     name        = "terraform-nexus-endpoint"
+     description = <<-EOT
+       Service Name:
+         my-hello-service
+       Operation Names:
+         echo
+         say-hello
+
+       Input / Output arguments are in the following repository:
+       https://github.com/temporalio/samples-go/blob/main/nexus/service/api.go
+     EOT
+     worker_target = {
+       namespace_id = temporalcloud_namespace.target_namespace.id
+       task_queue   = "terraform-task-queue"
+     }
+     allowed_caller_namespaces = [
+       temporalcloud_namespace.caller_namespace.id
+     ]
+   }
+   ```
+
+1. 应用您的配置。出现提示时，回答“是”以继续：
+
+   ```command
+   terraform apply
+   ```
+
+完成后，您将看到一条成功消息，指示您的 Nexus 端点已成为 Updated。可能需要几个
+   秒到 Update 控制平面中的 Nexus 端点，从 Temporal UI 或 tcld CLI 可见。
+   将 Nexus 端点更改传播到数据平面可能需要更长的时间，但通常在不到一小时内完成
+   分钟。
+
+   ```text
+   temporalcloud_nexus_endpoint.nexus_endpoint: Modifications complete after 1s [id=b158063be978471fa1d200569b03834d]
+   ```
+
+**如何删除 Nexus 端点？**
+
+要删除 Nexus 端点，请从 Terraform 文件中删除“Temporalcloud_Nexus_endpoint”资源配置
+并运行“terraform apply”命令。
+
+完成后，您将看到一条成功消息，指示资源已被销毁：
+
+```text
+temporalcloud_nexus_endpoint.my_nexus_endpoint: Destruction complete after 3s
+Apply complete! Resources: 0 added, 0 changed, 1 destroyed.
+```
+
+**如何导入 Temporal Cloud Nexus 端点？**
+
+如果您在 Temporal Cloud 中已有 Nexus 端点，则可以将其导入 Terraform 来管理 Nexus 端点
+使用“terraform import”命令从 Terraform 导入。
+
+1. 在新目录中初始化 Terraform 提供程序。
+
+运行以下命令来初始化 Terraform 提供程序。
+
+   ```bash
+   terraform init
+   ```
+
+1. 在 Terraform 配置中提供配置占位符，并确保您已包含
+   [API 密钥](#setup)。
+
+   ```yml
+   terraform { required_providers { temporalcloud = { source = "temporalio/temporalcloud" } } }
+
+   provider "temporalcloud" { }
+
+   resource "temporalcloud_nexus_endpoint" "nexus_endpoint" { }
+   ```
+
+1. 从命令行运行“terraform import”命令并传入 Nexus 端点 ID。
+
+   ```bash
+   terraform import temporalcloud_nexus_endpoint <your-nexus-endpoint-ID>
+   ```
+
+您的 Nexus 端点 ID 可在 Nexus 端点页面的顶部找到
+   [Temporal Cloud 用户界面](https://cloud.Temporal.io/Nexus)。
+
+   <CaptionedImage src="/img/cloud/nexus/nexus-endpoint-id.png" title="Nexus Endpoint ID" width="100%" zoom="false" />
+
+完成后，您将看到一条成功消息，指示 Nexus 端点已导入。
+
+   ```text
+   temporalcloud_nexus_endpoint.nexus_endpoint: Refreshing state... [id=3c0c75ccfa8144b092c13ce632463761]
+
+   Import successful!
+   ```
+
+Nexus 端点现在是 Terraform 状态的一部分，对 Nexus 端点的所有更改都应由
+地形。
+
+:::caution
+
+将资源导入 Terraform 后，对资源的外部更改将产生 Terraform“漂移”错误
+关于后续 Terraform 操作。
+
+:::
+
+## 使用 Terraform 管理 Temporal Cloud 用户
+
+使用与使用 Terraform 管理 Namespace 相同的流程来管理 Temporal Cloud 用户。下面的例子
+在 Terraform 配置上使用“terraform apply”命令创建、Update、删除和导入 Temporal Cloud 用户
+文件。
+
+:::note User Management
+
+Temporal用户管理注意事项：
+
+- Terraform 无法管理 Temporal 帐户所有者角色。虽然您可以将帐户所有者导入 Terraform，但不能
+  使用 Terraform 创建、Update 或删除帐户所有者。
+- 目前，您无法管理用户从 Namespace 资源对 Namespace 的访问。您必须管理 Namespace
+  从用户资源访问。对于服务帐户也是如此。
+- 帐户所有者和全局管理员自动获得对 Temporal 中所有 Namespace 的访问权限。因此，您不能
+  指定这些角色的 Namespace 访问权限。对于服务帐户也是如此。
+- 遵循 Terraform 资源管理最佳实践。在一个且唯一的一个 .tf 文件中管理特定用户。有
+  如果不这样做，则存在覆盖用户权限的风险。
+- 要导入用户，您需要用户 ID，该 ID 目前在 Temporal Cloud UI 中不可用。你可以取
+  通过运行“tcld user list”命令来获取当前用户 ID。
+
+:::
+
+有关如何通过 Terraform 管理 Namespace 的更多详细示例，请查看 Terraform 注册表文档 [配置 Temporal Cloud 用户](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs/resources/user)。
+
+**如何使用 Terraform 创建 Temporal Cloud 用户？**
+
+1. 将 Terraform 用户资源配置添加到 Terraform 文件中。
+
+   ```hcl
+   terraform {
+     required_providers {
+       temporalcloud = {
+         source = "temporalio/temporalcloud"
+       }
+     }
+   }
+
+   provider "temporalcloud" {
+
+   }
+
+   resource "temporalcloud_namespace" "namespace" {
+     name               = "terraform"
+     regions            = ["aws-us-east-1"]
+     accepted_client_ca = base64encode(file("ca.pem"))
+     retention_days     = 14
+   }
+
+   # Global admins automatically have access to all namespaces.
+   resource "temporalcloud_user" "global_admin" {
+     email          = "admin@example.com"
+     account_access = "Admin"
+   }
+
+   # Developers can be granted explicit namespace permissions.
+   resource "temporalcloud_user" "namespace_admin" {
+     email          = "developer@example.com"
+     account_access = "Developer"
+
+     namespace_accesses = [{
+       namespace_id = temporalcloud_namespace.namespace.id
+       permission   = "Write"
+     }]
+   }
+   ```
+
+将电子邮件和域名值替换为您的 Temporal Cloud 用户电子邮件地址和域名。
+
+1. 应用您的配置。出现提示时，回答“是”以继续：
+
+   ```command
+   terraform apply
+   ```
+
+完成后，您将看到一条成功消息，表明您的用户已创建。
+
+```text
+temporalcloud_user.namespace_admin: Creation complete after 1s [id=12a34bc5678910d38d9e8390636e7412]
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+```
+
+**如何使用 Terraform 作为 Temporal Cloud 用户的 Update？**
+
+要使用 Terraform Update 创建用户，请按照与创建用户相同的步骤操作。
+
+**如何使用 Terraform 删除 Temporal Cloud 用户？**
+
+要使用 Terraform 删除用户，请从 Terraform 文件中删除 Terraform 用户资源配置并运行
+`terraform apply` 命令。
+
+1. 从 Terraform 文件中删除 Terraform 用户资源配置。
+
+   ```hcl
+   terraform {
+     required_providers {
+       temporalcloud = {
+         source  = "temporalio/temporalcloud"
+         version = ">= 0.0.6"
+       }
+     }
+   }
+
+   provider "temporalcloud" {
+
+   }
+
+   resource "temporalcloud_namespace" "namespace" {
+     name               = "terraform"
+     regions            = ["aws-us-east-1"]
+     accepted_client_ca = base64encode(file("ca.pem"))
+     retention_days     = 14
+   }
+
+   # This user will be deleted after running `terraform apply`
+   resource "temporalcloud_user" "global_admin" {
+     email          = "admin@example.com"
+     account_access = "Admin"
+   }
+   # The following user resource has been removed (or commented out),
+   # so Terraform will delete it.
+   # resource "temporalcloud_user" "namespace_admin" {
+   #   email          = "developer@example.com"
+   #   account_access = "Developer"
+   #
+   #   namespace_accesses = [{
+   #     namespace_id = temporalcloud_namespace.namespace.id
+   #     permission   = "Write"
+   #   }]
+   # }
+   ```
+
+1. 运行“terraform apply”命令。出现提示时，回答“是”以继续：
+
+   ```command
+   terraform apply
+   ```
+
+完成后，您将看到一条成功消息，表明您的用户已被删除。
+
+```text
+temporalcloud_user.namespace_admin: Destruction complete after 2s
+Apply complete! Resources: 0 added, 0 changed, 1 destroyed.
+```
+
+按照以下步骤运行 XPROT039X 处理程序 XPROT035X、XPROT039X 调用程序 XPROT035X 和启动应用程序。
+
+1. 在 Terraform 配置中提供配置占位符。
+
+   ```yml
+   resource "temporalcloud_user" "user" { }
+   ```
+
+1. 运行 `terraform import` 命令并传入用户 ID。您可以使用 Temporal Cloud CLI“tcld u l”命令获取您的用户 ID。
+
+ ```bash
+ terraform import temporalcloud_user.user 72360058153949edb2f1d47019c1e85f
+ ```
+
+用户现在是 Terraform 状态的一部分，对用户的所有更改都应由 Terraform 管理。
+
+## 使用 Terraform 管理 Temporal Cloud 服务帐户
+
+使用 Terraform 管理服务帐户的过程和步骤与使用 Terraform 管理用户非常相似
+有一些小的差异：
+
+- 服务帐户使用服务帐户 Terraform 资源而不是用户资源。
+- 服务帐户没有电子邮件地址，而是有名称。这意味着您应该指定一个名称
+  服务帐户而不是电子邮件。
+
+有关使用 Terraform 管理服务帐户的其他所有内容都遵循相同的流程、指导和限制
+使用 Terraform 管理用户。
+
+## 使用 Terraform 管理 Temporal Cloud API 密钥
+
+您可以使用 Terraform 管理您自己的个人 API 密钥和服务帐户 API 密钥。流程和步骤
+使用 Terraform 管理 API 密钥与使用 Terraform 管理其他资源非常相似。您可以创建、删除、
+Update 并使用 Terraform 导入 API 密钥。使用 API 密钥作为 Terraform 资源之间的一个区别
+与其他 Temporal Cloud 资源相比，需要访问 Terraform 的 API 密钥安全令牌输出。步行穿过
+本指南“创建”部分中安全访问 API 密钥令牌的过程。
+
+:::note Limits and Best Practices
+
+- 有关限制和最佳选择的信息，请参阅 API 密钥 [文档](https://docs.Temporal.io/cloud/api-keys)
+  管理 API 密钥的做法。
+- 请参阅 Terraform 的有关使用的文档
+  [敏感数据](https://www.terraform.io/docs/language/values/variables.html#sensitive-values)了解更多信息
+  关于如何在 Terraform 中管理敏感数据。
+
+:::
+
+**How do I create a Temporal Cloud API Key with Terraform?**
+
+From the example in the [Terraform Registry](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs/resources/apikey):
+1. Add a Terraform API Key resources configuration to your Terraform file.
+
+   ```hcl
+   terraform {
+     required_providers {
+       temporalcloud = {
+         source = "temporalio/temporalcloud"
+       }
+     }
+   }
+
+   provider "temporalcloud" {
+
+   }
+
+   resource "temporalcloud_service_account" "global_service_account" {
+     name           = "admin"
+     account_access = "Admin"
+   }
+
+   resource "temporalcloud_apikey" "global_apikey" {
+     display_name = "admin"
+     owner_type   = "service-account"
+     owner_id     = temporalcloud_service_account.global_service_account.id
+     expiry_time  = "2024-11-01T00:00:00Z"
+     disabled     = false
+   }
+   ```
+
+   Make sure to:
+
+   - Replace the display_name, expiry_time, and disabled values with your Temporal Cloud API Key configuration.
+   - Replace the owner_type and owner_id values with your Temporal Cloud Service Account or other Identity information.
+
+1. Create an output.tf file and add the following code to output the API Key Token.
+
+   ```hcl
+   output "apikey_token" {
+     value     = temporalcloud_apikey.global_apikey.token
+     sensitive = true
+   }
+   ```
+
+1. Apply your configuration. When prompted, answer yes to continue:
+
+   ```command
+   terraform apply
+   ```
+
+   Upon completion, you will see a success message indicating the API Key has been created.
+
+   ```text
+   temporalcloud_apikey.global_apikey: Creation complete after 1s [id=kayBf38JIWkMPmnfr59iEIaEk2L7uqR4]
+   ```
+
+1. Access the API Key Token securely. You'll notice that if you view the state for the API Key resource, the token value
+   is not displayed.
+
+   ```bash
+   terraform state show temporalcloud_apikey.global_apikey
+
+   # temporalcloud_apikey.global_apikey:
+   resource "temporalcloud_apikey" "global_apikey" {
+       disabled     = false
+       display_name = "adminKey3"
+       expiry_time  = "2024-12-01T00:00:00Z"
+       id           = "kayBf38JIWkMPmnfr59iEIaEk2L7uqR4"
+       owner_id     = "b81336a6097449cba75c2e5500df3d31"
+       owner_type   = "service-account"
+       state        = "active"
+       token        = (sensitive value)
+   }
+   ```
+
+To access the token, you can use the Terraform output command.
+
+```bash
+terraform output -json apikey_token
+```
+
+This will display the token value in the terminal.
+
+:::info Security and API Keys
+
+Remember, keep your Terraform state files secure if you're managing API Keys with Terraform. The state file contains
+sensitive information, like the API Key Token, that should not be shared or exposed.
+
+:::
+
+**How do I Update a Temporal Cloud API Key with Terraform?**
+
+To Update an API Key with Terraform, follow the same steps used to create an API Key.
+
+:::note Editing Fields
+
+You can only edit an API Key's name or description field. Updating an API Key does not generate a new secure token
+
+:::
+
+**How do I delete a Temporal Cloud API Key with Terraform?**
+
+To delete an API Key with Terraform, remove the Terraform API Key resources configuration from your Terraform and
+output.tf files and run the `terraform apply` command.
+
+**How do I Import a Temporal API Key?**
+
+You cannot import an API Key into Terraform. Once created, the API Key secret isn't stored and can't be retrieved, so
+you can't access it using import.
+
+Instead, Temporal recommends creating a new API Key using Terraform directly.
+
+## Data Sources - Regions and Namespaces
+
+The Terraform provider also supports 2 data sources that provide you access to the available Regions and Namespaces in
+your Temporal Cloud account.
+
+:::note Terraform Data Sources
+
+See Terraform [documentation](https://developer.hashicorp.com/terraform/language/data-sources) to learn more about
+Terraform Data Sources
+
+:::
+
+For example, to retrieve a list of regions available for your account, you can use the regions data_source
+
+```hcl
+data "temporalcloud_regions" "regions" {}
+
+output "regions" {
+  value = data.temporalcloud_regions.regions.regions
+}
+```
+
+## Community Involvement
+
+Do you have feedback about the provider? Want to report a bug or request a feature? We'd love to hear from you.
+
+- Please reach out to us in the Temporal Community
+  [Slack](https://join.slack.com/t/Temporalio/shared_invite/zt-2u2ey8ilu-LRxnd3PSoAk9GZ94UuzoBA) in the #terraform
+  channel
+- Feel free to create issues and contribute PRs in the Temporal Terraform
+  [GitHub repository](https://github.com/Temporalio/terraform-provider-Temporalcloud/tree/main)

@@ -1,8 +1,8 @@
 ---
 id: cloud-worker
-title: Cloud Worker - Go SDK
-sidebar_label: Cloud Worker
-description: This section explains Cloud Workers with the Go SDK
+title: "云 Worker - Go SDK"
+sidebar_label: "云Worker"
+description: "本节介绍 Cloud Worker 与 Go SDK"
 toc_max_heading_level: 4
 keywords:
   - Go SDK
@@ -11,35 +11,36 @@ tags:
   - Temporal SDKs
 ---
 
-## How to run a Temporal Cloud Worker {#run-a-temporal-cloud-worker}
+<a id="run-a-temporal-cloud-worker"></a>
+## 如何运行 Temporal Cloud Worker {#run-a-temporal-cloud-worker}
 
-To run a Worker that uses [Temporal Cloud](/cloud), you need to provide additional connection and client options that include the following:
+要运行使用 [Temporal Cloud](/cloud) 的 Worker，您需要提供其他连接和客户端选项，其中包括以下内容：
 
-- An address that includes your [Cloud Namespace Name](/namespaces) and a port number: `<Namespace>.<ID>.tmprl.cloud:<port>`.
-- mTLS CA certificate.
-- mTLS private key.
+- 包含您的 [云 Namespace 名称](/namespaces) 和端口号的地址：`<Namespace>.<ID>.tmprl.cloud:<port>`。
+- mTLS CA 证书。
+- mTLS 私钥。
 
-For more information about managing and generating client certificates for Temporal Cloud, see [How to manage certificates in Temporal Cloud](/cloud/certificates).
+有关管理和生成 Temporal Cloud 客户端证书的更多信息，请参阅 [如何在Temporal Cloud中管理证书](/cloud/certificates)。
 
-For more information about configuring TLS to secure inter- and intra-network communication for a Temporal Service, see [Temporal Customization Samples](https://github.com/temporalio/samples-server).
+有关配置 TLS 以保护 Temporal 服务的网络间和网络内通信的更多信息，请参阅 [Temporal 定制样品](https://github.com/temporalio/samples-server)。
 
-To run a Worker that talks to Temporal Cloud, you need the following:
+要运行与 Temporal Cloud 对话的 Worker，您需要以下内容：
 
-- A compatible mTLS CA certificate and mTLS private key that has been added to your Namespace.
-  See [certificate requirements](/cloud/certificates#certificate-requirements).
-- Your [Temporal Cloud Namespace Id](/cloud/namespaces#temporal-cloud-namespace-id), which includes your [Temporal Cloud Namespace Name](/cloud/namespaces#temporal-cloud-namespace-name) and the unique five- or six-digit [Temporal Cloud Account Id](/cloud/namespaces#temporal-cloud-account-id) that is appended to it.
-  This information can be found in the URL of your Namespace; for example, `https://cloud.temporal.io/namespaces/yournamespace.a2fx6/`.
-  Remember that the Namespace Id must include the Account Id: `yournamespace.a2fx6`.
+- 已添加到您的 Namespace 的兼容 mTLS CA 证书和 mTLS 私钥。
+  参见 [证书要求](/cloud/certificates#certificate-requirements)。
+- 您的 [Temporal Cloud Namespace ID](/cloud/namespaces#temporal-cloud-namespace-id)，其中包括您的 [Temporal Cloud Namespace 名称](/cloud/namespaces#temporal-cloud-namespace-name) 以及附加的唯一的五位或六位数字 [Temporal Cloud 帐户 ID](/cloud/namespaces#temporal-cloud-account-id)。
+  此信息可以在您的 Namespace 的 URL 中找到；例如，`https://cloud.Temporal.io/namespaces/yourNamespace.a2fx6/`。
+  请记住，Namespace ID 必须包含帐户 ID：`yourNamespace.a2fx6`。
 
-For more information about managing and generating client certificates for Temporal Cloud, see [How to manage certificates in Temporal Cloud](/cloud/certificates).
+有关管理和生成 Temporal Cloud 客户端证书的更多信息，请参阅 [如何在Temporal Cloud中管理证书](/cloud/certificates)。
 
-For more information about configuring TLS to secure inter- and intra-network communication for a Temporal Service, see [Temporal Customization Samples](https://github.com/temporalio/samples-server).
+有关配置 TLS 以保护 Temporal 服务的网络间和网络内通信的更多信息，请参阅 [Temporal 定制样品](https://github.com/temporalio/samples-server)。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/cloud/worker/main_dacx.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -86,23 +87,24 @@ func main() {
 }
 ```
 
-### How to register types {#register-types}
+<a id="register-types"></a>
+### 如何注册类型{#register-types}
 
-All Workers listening to the same Task Queue name must be registered to handle the exact same Workflows Types and Activity Types.
+必须注册所有监听相同 Task Queue 名称的 Worker 才能处理完全相同的 Workflow 类型和 Activity 类型。
 
-If a Worker polls a Task for a Workflow Type or Activity Type it does not know about, it fails that Task.
-However, the failure of the Task does not cause the associated Workflow Execution to fail.
+如果 Worker 轮询任务以查找它不知道的 Workflow 类型或 Activity 类型，则该任务将失败。
+但是，任务失败不会导致关联的 Workflow Execution 失败。
 
-The `RegisterWorkflow()` and `RegisterActivity()` calls essentially create an in-memory mapping between the Workflow Types and their implementations, inside the Worker process.
+`RegisterWorkflow()` 和 `RegisterActivity()` 调用本质上是在 Worker 进程内创建 Workflow 类型及其实现之间的内存中映射。
 
-**Registering Activity `structs`**
+**注册 Activity `structs`**
 
-Per [Activity Definition](/develop/go/activities/basics#activity-definition) best practices, you might have an Activity struct that has multiple methods and fields.
-When you use `RegisterActivity()` for an Activity struct, that Worker has access to all exported methods.
+根据 [Activity Definition](/develop/go/activities/basics#activity-definition) 最佳实践，您可能有一个包含多个方法和字段的 Activity 结构。
+当您将 `RegisterActivity()` 用于 Activity 结构时，Worker 可以访问所有导出的方法。
 
-**Registering multiple Types**
+**注册多个类型**
 
-To register multiple Activity Types and/or Workflow Types with the Worker Entity, just make multiple Activity registration calls, but make sure each Type name is unique:
+要向 Worker 实体注册多个 Activity 类型和/或 Workflow 类型，只需进行多个 Activity 注册调用，但确保每个类型名称是唯一的：
 
 ```go
 w.RegisterActivity(ActivityA)
@@ -113,27 +115,29 @@ w.RegisterWorkflow(WorkflowB)
 w.RegisterWorkflow(WorkflowC)
 ```
 
-### How to set RegisterWorkflowOptions in Go {#registerworkflowoptions}
+<a id="registerworkflowoptions"></a>
+### 如何在 Go 中设置 RegisterWorkflowOptions {#registerworkflowoptions}
 
-Create an instance of [`RegisterOptions`](https://pkg.go.dev/go.temporal.io/sdk/workflow#RegisterOptions) from the `go.temporal.io/sdk/workflow` package and pass it to the [`RegisterWorkflowWithOptions`](https://pkg.go.dev/go.temporal.io/sdk/worker#WorkflowRegistry) call when registering the Workflow Type with the Worker.
+从 `go.Temporal.io/sdk/Workflow` 包创建 [`RegisterOptions`](https://pkg.go.dev/go.temporal.io/sdk/workflow#RegisterOptions) 的实例，并在使用 Worker 注册 Workflow 类型时将其传递给 [`RegisterWorkflowWithOptions`](https://pkg.go.dev/go.temporal.io/sdk/worker#WorkflowRegistry) 调用。
 
-- Used to set options for registering a Workflow
+- 用于设置注册 Workflow 的选项
 
-| Field                                                             | Required | Type     |
+| 场地                                                             | 必需的 | 类型     |
 | ----------------------------------------------------------------- | -------- | -------- |
-| [`Name`](#name)                                                   | No       | `string` |
-| [`DisableAlreadyRegisteredCheck`](#disablealreadyregisteredcheck) | No       | `bool`   |
+| [`Name`](#name)                                                   | 不       | `string` |
+| [`DisableAlreadyRegisteredCheck`](#disablealreadyregisteredcheck) | 不       | `bool`   |
 
-#### Name
+＃＃＃＃ 姓名
 
-See [How to customize a Workflow Type in Go](/develop/go/workflows/basics#customize-workflow-type)
+参见 [如何在 Go 中自定义 Workflow 类型](/develop/go/workflows/basics#customize-workflow-type)
 
-#### DisableAlreadyRegisteredCheck
+<a id="name"></a>
+#### 禁用已注册检查 {#name}
 
-Disables the check to see if the Workflow Type has already been registered.
+禁用检查 Workflow 类型是否已注册。
 
-- Type: `bool`
-- Default: `false`
+- 型号：`bool`
+- 默认：`false`
 
 ```go
 // ...
@@ -146,28 +150,30 @@ w.RegisterWorkflowWithOptions(YourWorkflowDefinition, registerOptions)
 // ...
 ```
 
-### How to set RegisterActivityOptions in Go {#registeractivityoptions}
+<a id="disablealreadyregisteredcheck"></a>
+### 如何在 Go 中设置 RegisterActivityOptions {#disablealreadyregisteredcheck}
 
-Create an instance of [`RegisterOptions`](https://pkg.go.dev/go.temporal.io/sdk/activity#RegisterOptions) from the `go.temporal.io/sdk/activity` package and pass it to the [`RegisterActivityWithOptions`](https://pkg.go.dev/go.temporal.io/sdk/worker#ActivityRegistry) call when registering the Activity Type with the Worker.
+从 `go.Temporal.io/sdk/Activity` 包创建 [`RegisterOptions`](https://pkg.go.dev/go.temporal.io/sdk/activity#RegisterOptions) 的实例，并在使用 Worker 注册 Activity 类型时将其传递给 [`RegisterActivityWithOptions`](https://pkg.go.dev/go.temporal.io/sdk/worker#ActivityRegistry) 调用。
 
-Options for registering an Activity
+注册 Activity 的选项
 
-| Field                                                             | Required | Type     |
+| 场地                                                             | 必需的 | 类型     |
 | ----------------------------------------------------------------- | -------- | -------- |
-| [`Name`](#name)                                                   | No       | `string` |
-| [`DisableAlreadyRegisteredCheck`](#disablealreadyregisteredcheck) | No       | `bool`   |
-| [`SkipInvalidStructFunctions`](#skipinvalidstructfunctions)       | No       | `bool`   |
+| [`Name`](#name)                                                   | 不       | `string` |
+| [`DisableAlreadyRegisteredCheck`](#disablealreadyregisteredcheck) | 不       | `bool`   |
+| [`SkipInvalidStructFunctions`](#skipinvalidstructfunctions)       | 不       | `bool`   |
 
-#### Name
+＃＃＃＃ 姓名
 
-See [How to customize Activity Type in Go](/develop/go/activities/basics#customize-activity-type).
+参见 [如何在 Go 中自定义 Activity 类型](/develop/go/activities/basics#customize-activity-type)。
 
-#### DisableAlreadyRegisteredCheck
+<a id="registeractivityoptions"></a>
+#### 禁用已注册检查 {#registeractivityoptions}
 
-Disables the check to see if the Activity has already been registered.
+禁用检查 Activity 是否已注册。
 
-- Type: `bool`
-- Default: `false`
+- 型号：`bool`
+- 默认：`false`
 
 ```go
 // ...
@@ -180,13 +186,14 @@ w.RegisterActivityWithOptions(a.YourActivityDefinition, registerOptions)
 // ...
 ```
 
-#### SkipInvalidStructFunctions
+<a id="name"></a>
+#### 跳过InvalidStructFunctions {#name}
 
-When registering a struct that has Activities, skip functions that are not valid.
-If false, registration panics.
+注册具有活动的结构时，跳过无效的函数。
+如果为 false，注册会发生混乱。
 
-- Type: `bool`
-- Default: `false`
+- 型号：`bool`
+- 默认：`false`
 
 ```go
 // ...

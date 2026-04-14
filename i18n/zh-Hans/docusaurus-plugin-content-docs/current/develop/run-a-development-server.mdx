@@ -1,0 +1,114 @@
+---
+id: run-a-development-server
+title: 运行开发服务器
+description: 展示如何运行开发 Temporal 服务
+sidebar_label: 运行开发服务器
+toc_max_heading_level: 3
+tags:
+  - Temporal Client
+  - Temporal SDKs
+---
+
+## 如何安装 Temporal CLI 并运行开发服务器 {#run-a-development-server}
+
+本页介绍如何安装 [Temporal CLI](/cli) 并运行开发 Temporal 服务。当地的
+开发 Temporal 服务与 [Temporal Web UI](/web-ui) 打包在一起。
+
+有关部署和运行自托管生产 Temporal 服务的信息，请参阅
+[自托管指南](/self-hosted-guide)，或注册 [Temporal Cloud](/cloud)，让我们运行您的生产 Temporal
+为您服务。
+
+Temporal CLI 是一个用于从命令行与 Temporal 服务交互的工具，它包括
+Temporal Server 和 Web UI。此本地开发 Temporal 服务作为单个进程运行，运行时间为零
+依赖项，它支持通过 SQLite 持久化到磁盘和内存模式。
+
+XPROT027X 所做的主要事情之一是协调活动的执行。 XPROT028X 是正常功能
+或旨在执行单个、明确定义的操作（短期或长期运行）的方法执行，例如
+XPROT040修复数据库、调用第三方API或转码媒体文件。 XPROT028X可以与外界互动
+XPROT003X 或使用 Temporal CLIent 与 XPROT026X 服务交互。为了使 XPROT027X 能够
+执行XPROT028X，我们必须定义[XPROT001X](/XPROT028X-definition)。
+
+Temporal CLI 可在 macOS、Windows 和 Linux 上使用。
+
+### macOS
+
+**如何在 macOS 上安装 Temporal CLI**
+
+选择以下安装方法之一在 macOS 上安装 Temporal CLI：
+
+**使用 Homebrew 安装 Temporal CLI**
+
+```bash
+brew install temporal
+```
+
+**从 CDN 安装 Temporal CLI**
+
+1. 选择所需的平台和架构。
+
+- 下载 Darwin amd64：https://Temporal.download/cli/archive/latest?platform=darwin&arch=amd64
+- 下载 Darwin arm64：https://Temporal.download/cli/archive/latest?platform=darwin&arch=arm64
+
+2. 解压下载的存档。
+
+3. 将“Temporal”二进制文件添加到您的路径中。
+
+### Linux
+
+**如何在 Linux 上安装 Temporal CLI**
+
+选择以下安装方法之一在 Linux 上安装 Temporal CLI：
+
+**使用 Homebrew 安装 Temporal CLI**
+
+```bash
+brew install temporal
+```
+
+**从 CDN 安装 Temporal CLI**
+
+1. 选择所需的平台和架构。
+
+- 下载适用于 Linux amd64 的版本：https://Temporal.download/cli/archive/latest?platform=linux&arch=amd64
+- 下载适用于 Linux arm64 的版本：https://Temporal.download/cli/archive/latest?platform=linux&arch=arm64
+
+2. 解压下载的存档。
+
+3. 将“Temporal”二进制文件添加到您的路径中。
+
+### 窗口
+
+**如何在 Windows 上安装 Temporal CLI**
+
+请按照以下说明在 Windows 上安装 Temporal CLI：
+
+**从 CDN 安装 Temporal CLI**
+
+1. 选择所需的平台和架构并下载二进制文件。
+
+- 下载 Windows amd64 版本：https://Temporal.download/cli/archive/latest?platform=windows&arch=amd64
+- 适用于 Windows arm64 的下载：https://Temporal.download/cli/archive/latest?platform=windows&arch=arm64
+
+2. 解压下载的存档。
+
+3. 将“Temporal.exe”二进制文件添加到您的路径中。
+
+### 启动Temporal开发服务器
+
+使用“server start-dev”命令启动 Temporal 开发服务器。
+
+```bash
+temporal server start-dev
+```
+
+此命令自动启动 Web UI，创建默认的 [Namespace](/Namespaces)，并使用内存中的
+数据库。
+
+Temporal Server 应在 `localhost:7233` 上可用，并且 Temporal Web UI 应可在
+[`http://localhost:8233`](http://localhost:8233/)。
+
+可以使用命令行选项自定义服务器的启动配置。要获得完整的选项列表，请运行：
+
+```bash
+temporal server start-dev --help
+```

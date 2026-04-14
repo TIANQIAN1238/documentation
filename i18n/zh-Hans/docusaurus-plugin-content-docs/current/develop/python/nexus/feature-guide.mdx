@@ -1,0 +1,468 @@
+---
+id: feature-guide
+slug: /develop/python/nexus/feature-guide
+title: Temporal Nexus - Python SDK 功能指南
+sidebar_label: 功能指南
+description: 使用 Python SDK 中的 Temporal Nexus，使用 Nexus 端点、Nexus Service 合约和 Nexus Operation 连接 Namespace 内部和 Namespace 之间的持久执行。
+toc_max_heading_level: 4
+keywords:
+  - temporal
+  - nexus
+  - Python
+  - sdk
+tags:
+  - Nexus
+  - Python SDK
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+
+Temporal Python SDK 对 Nexus 的支持[普遍可用](/evaluate/development-product-features/release-stages#general-availability)。
+
+:::
+
+使用 [Temporal Nexus](/evaluate/Nexus) 使用 Nexus 端点、Nexus Service 合约和 Nexus Operation 连接 Namespace 内部和 Namespace 之间的 Temporal 应用程序。
+
+此页面显示如何执行以下操作：
+
+- [运行启用 Nexus 的开发 Temporal 服务](#run-the-Temporal-Nexus-development-server)
+- [创建调用者和处理程序 Namespaces](#create-caller-handler-Namespaces)
+- [创建 Nexus 端点以将请求从调用者路由到处理程序](#create-Nexus-endpoint)
+- [定义 Nexus Service 合约](#define-Nexus-service-contract)
+- [开发 Nexus Service 和操作处理程序](#develop-Nexus-service-operation-handlers)
+- [开发使用 Nexus Service 的调用方 Workflow](#develop-caller-Workflow-Nexus-service)
+- [了解 Nexus Operation 中的异常](#exceptions-in-Nexus-operations)
+- [取消 Nexus Operation](#canceling-a-Nexus-操作)
+- [在 Temporal Cloud 中跨 Namespace 进行 Nexus 调用](#Nexus-calls-across-Namespaces-Temporal-cloud)
+
+<br />
+
+:::note
+
+本文档使用源自 [Python Nexus 示例](https://github.com/Temporalio/samples-python/tree/main/hello_Nexus) 的源代码。
+
+:::
+
+## 在启用 Nexus 的情况下运行 Temporal 开发服务器 {#run-the-Temporal-Nexus-development-server}
+
+先决条件：
+
+- [安装最新的 Temporal CLI](https://learn.Temporal.io/getting_started/python/dev_environment/#set-up-a-local-Temporal-service-for-development-with-Temporal-cli) (推荐`v1.3.0`或更高版本)
+- [安装最新的 Temporal Python SDK](https://learn.Temporal.io/getting_started/python/dev_environment/#add-Temporal-python-sdk-dependency) (`v1.14.1` 或更高版本)
+
+使用 Temporal Nexus 的第一步涉及启动启用 Nexus 的 Temporal Server。
+
+```
+temporal server start-dev
+```
+
+此命令自动使用 Web UI 启动 Temporal 开发服务器，并创建“默认”Namespace。它使用内存数据库，因此不要将其用于实际用例。
+
+现在应该可以通过 [http://localhost:8233](http://localhost:8233) 访问 Temporal Web UI，并且 Temporal Server 现在应该可以在 `localhost:7233` 上用于客户端连接。
+
+## 创建调用者和处理程序 Namespaces {#create-caller-handler-Namespaces}
+
+在设置 Nexus 端点之前，请为调用方和处理程序创建单独的 Namespace。
+
+```
+temporal operator namespace create --namespace my-target-namespace
+temporal operator namespace create --namespace my-caller-namespace
+```
+
+对于此示例，“my-target-Namespace”将包含 Nexus Operation 处理程序，您将在“my-caller-Namespace”中使用 Workflow 来调用该操作处理程序。
+我们使用不同的 Namespace 来演示跨 Namespace Nexus 调用。
+
+## 创建一个 Nexus 端点以将请求从调用者路由到处理程序 {#create-Nexus-endpoint}
+
+建立调用方和处理程序 Namespace 后，下一步是创建 Nexus 端点来路由请求。
+
+```
+temporal operator nexus endpoint create \
+  --name my-nexus-endpoint-name \
+  --target-namespace my-target-namespace \
+  --target-task-queue my-handler-task-queue
+```
+
+您还可以使用 Web UI 创建 Namespaces 和 Nexus 端点。
+
+## 定义 Nexus Service 合约 {#define-Nexus-service-contract}
+
+为 Nexus Service 定义明确的合同对于顺利沟通至关重要。
+
+在此示例中，有一个服务包描述了服务和操作名称以及调用者 Workflow 使用 Nexus 端点的输入/输出类型。
+
+每个 [Temporal SDK 都包含并使用默认的 Data Converter](https://docs.Temporal.io/dataconversion)。
+默认 Data Converter 按以下顺序对有效负载进行编码：Null、字节数组、Protobuf JSON 和 JSON。
+在多语言环境中，即使用不止一种语言和 SDK 来开发 Temporal 解决方案，Protobuf 和 JSON 是常见选择。
+此示例使用序列化为 JSON 的 Python 数据类。
+
+[hello_Nexus/service.py](https://github.com/Temporalio/samples-python/blob/main/hello_Nexus/service.py)
+
+```python
+from dataclasses import dataclass
+
+import nexusrpc
+
+
+@dataclass
+class MyInput:
+    name: str
+
+
+@dataclass
+class MyOutput:
+    message: str
+
+
+@nexusrpc.service
+class MyNexusService:
+    my_sync_operation: nexusrpc.Operation[MyInput, MyOutput]
+    my_workflow_run_operation: nexusrpc.Operation[MyInput, MyOutput]
+```
+
+## 开发 Nexus Service 处理程序和操作处理程序 {#develop-Nexus-service-operation-handlers}
+
+XPROT018X属性：
+- **`initial_interval`**：第一次重试之前的延迟（默认值：1 秒）
+- **`backoff_coefficient`**：后续延迟的乘数（默认值：2.0）
+- **`maximum_interval`**：重试延迟上限（默认值：100×初始间隔）
+- **`maximum_attempts`**：最大重试尝试次数（默认值：无限制）
+- **`non_retryable_error_types`**：不应重试的错误类型（默认值：空）
+
+`Nexusrpc.handler` 和 `Temporalio.Nexus` 模块具有帮助创建 Nexus Operation 的实用程序：
+
+- `Nexusrpc.handler.sync_operation` - 创建同步操作处理程序
+- `Nexus.Workflow_run_operation` - 创建启动 Workflow 的异步操作处理程序
+
+### 开发同步 Nexus Operation 处理程序
+
+`@Nexusrpc.handler.sync_operation` 装饰器用于公开简单的 RPC 处理程序。
+
+[hello_Nexus/handler/service_handler.py](https://github.com/Temporalio/samples-python/blob/main/hello_Nexus/handler/service_handler.py)
+
+```python
+import nexusrpc
+
+@nexusrpc.handler.service_handler(service=MyNexusService)
+class MyNexusServiceHandler:
+    @nexusrpc.handler.sync_operation
+    async def my_sync_operation(
+        self, ctx: nexusrpc.handler.StartOperationContext, input: MyInput
+    ) -> MyOutput:
+        return MyOutput(message=f"Hello {input.name} from sync operation!")
+```
+
+
+同步操作处理程序必须快速返回（少于“10 秒”）。
+实现还可以进行其他调用，但处理程序应该可靠，以避免触发[断路器](/Nexus/操作#电路中断)。
+
+### 将 Temporal CLIent 用于 Signal、查询和 Update
+
+常见模式是在 Signal、Query 或 Update 和 Workflow 的同步处理程序中使用 Temporal CLIent。
+您还可以使用 Signal-With-Start 或 Update-With-Start 确保 Workflow 启动并向其发送 Signal 或 Update。
+所有调用必须在 [Nexus 请求超时](/cloud/limits#Nexus-operation-request-timeout) 内完成。 Update 的寿命应该很短，才能在这个期限内完成。
+
+使用“Nexus.client()”获取 Worker 初始化所用的客户端。
+[Nexus_sync_operations](https://github.com/Temporalio/samples-python/blob/main/Nexus_sync_operations) 示例展示了如何创建使用同步操作发送 Update 和查询的 Nexus Service：
+
+[Nexus_sync_operations/handler/service_handler.py](https://github.com/Temporalio/samples-python/blob/main/Nexus_sync_operations/handler/service_handler.py)
+
+```python
+from temporalio import nexus
+
+@nexusrpc.handler.service_handler(service=GreetingService)
+class GreetingServiceHandler:
+
+    @property
+    def greeting_workflow_handle(self) -> WorkflowHandle[GreetingWorkflow, str]:
+        return nexus.client().get_workflow_handle_for(
+            GreetingWorkflow.run, self.workflow_id
+        )
+
+    ...
+```
+
+除了“Nexus.client()”之外，您还可以使用“Nexus.info()”来访问有关当前正在执行的 Nexus Operation 的信息，包括其 Task Queue。
+
+
+### 开发异步 Nexus Operation 处理程序来启动 Workflow
+
+使用“@Nexus.Workflow_run_operation”装饰器，这是将 Workflow 公开为操作的最简单方法。
+
+[hello_Nexus/handler/service_handler.py](https://github.com/Temporalio/samples-python/blob/main/hello_Nexus/handler/service_handler.py)
+
+```python
+import nexusrpc
+from temporalio import nexus
+
+@nexusrpc.handler.service_handler(service=MyNexusService)
+class MyNexusServiceHandler:
+    @nexus.workflow_run_operation
+    async def my_workflow_run_operation(
+        self, ctx: nexus.WorkflowRunOperationContext, input: MyInput
+    ) -> nexus.WorkflowHandle[MyOutput]:
+        return await ctx.start_workflow(
+            WorkflowStartedByNexusOperation.run,
+            input,
+            id=str(uuid.uuid4()),
+        )
+```
+
+Workflow Id 通常应该是具有业务意义的 ID，用于对 Workflow 启动进行重复数据删除。一般来说，ID 应作为 Nexus Service 合约的一部分在操作输入中传递。
+
+:::tip RESOURCES
+
+[将多个 Nexus 调用者附加到处理程序 Workflow](/Nexus/operations#attaching-multiple-Nexus-callers)，冲突策略为 Use-Existing。
+
+:::
+
+#### 将 Nexus Operation 输入映射到多个 Workflow 参数
+
+一台 Nexus Operation 只能采用一个输入参数。如果您希望 Nexus Operation 启动带有多个参数的 Workflow，请使用“ctx.start_Workflow”方法。
+
+<!--SNIPSTART 样本-python-Nexus-handler-multiargs-->
+[Nexus_multiple_args/handler/service_handler.py](https://github.com/Temporalio/samples-python/blob/main/Nexus_multiple_args/handler/service_handler.py)
+```py
+@nexusrpc.handler.service_handler(service=MyNexusService)
+class MyNexusServiceHandler:
+    """
+    Service handler that demonstrates multiple argument handling in Nexus operations.
+    """
+
+    # This is a nexus operation that is backed by a Temporal workflow.
+    # The key feature here is that it demonstrates how to map a single input object
+    # (HelloInput) to a workflow that takes multiple individual arguments.
+    @nexus.workflow_run_operation
+    async def hello(
+        self, ctx: nexus.WorkflowRunOperationContext, input: HelloInput
+    ) -> nexus.WorkflowHandle[HelloOutput]:
+        """
+        Start a workflow with multiple arguments unpacked from the input object.
+        """
+        return await ctx.start_workflow(
+            HelloHandlerWorkflow.run,
+            args=[
+                input.name,  # First argument: name
+                input.language,  # Second argument: language
+            ],
+            id=str(uuid.uuid4()),
+        )
+
+
+```
+<!--SNIPEND-->
+
+
+### 在 Worker 中注册您的 Nexus Service 处理程序
+
+开发异步 Nexus Operation 处理程序来启动 Workflow 后，下一步是在 Worker 中注册 Nexus Service 处理程序。
+在此阶段，您可以将所需的任何参数传递给服务处理程序的“__init__”方法。
+
+[hello_Nexus/handler/Worker.py](https://github.com/Temporalio/samples-python/blob/main/hello_Nexus/handler/Worker.py)
+
+```python
+async def main():
+    client = await Client.connect("localhost:7233", namespace=NAMESPACE)
+    worker = Worker(
+        client,
+        task_queue=TASK_QUEUE,
+        workflows=[WorkflowStartedByNexusOperation],
+        nexus_service_handlers=[MyNexusServiceHandler()],
+    )
+    await worker.run()
+```
+
+## 开发使用 Nexus Service 的调用方 Workflow {#develop-caller-Workflow-Nexus-service}
+
+要从调用者 Workflow 执行 Nexus Operation，请导入必要的服务定义和操作输入/输出类型：
+
+[hello_Nexus/caller/Workflows.py](https://github.com/Temporalio/samples-python/blob/main/hello_Nexus/caller/Workflows.py)
+
+```python
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    from hello_nexus.service import MyInput, MyNexusService, MyOutput
+
+@workflow.defn
+class CallerWorkflow:
+    @workflow.run
+    async def run(self, name: str) -> tuple[MyOutput, MyOutput]:
+        nexus_client = workflow.create_nexus_client(
+            service=MyNexusService,
+            endpoint=NEXUS_ENDPOINT,
+        )
+        # Start the nexus operation and wait for the result in one go, using execute_operation.
+        wf_result = await nexus_client.execute_operation(
+            MyNexusService.my_workflow_run_operation,
+            MyInput(name),
+        )
+        # Alternatively, you can use start_operation to obtain the operation handle and
+        # then `await` the handle to obtain the result.
+        sync_operation_handle = await nexus_client.start_operation(
+            MyNexusService.my_sync_operation,
+            MyInput(name),
+        )
+        sync_result = await sync_operation_handle
+        return sync_result, wf_result
+```
+
+### 在 Worker 中注册调用者 Workflow 并启动调用者 Workflow
+
+开发完调用方 Workflow 后，下一步是将其注册到 Worker 上。
+
+最后，调用者 Workflow 必须使用 client.start_Workflow() 或 client.execute_Workflow() 启动
+
+这些步骤与任何普通 Workflow 相同。
+Python 示例将它们组合在一个应用程序中。
+请参阅 [hello_Nexus/caller/app.py](https://github.com/Temporalio/samples-python/blob/main/hello_Nexus/caller/app.py) 以供参考。
+
+## Nexus Operation 中的异常 {#exceptions-in-Nexus-operations}
+
+Temporal 提供有关 [Nexus Operation 中的错误](https://docs.Temporal.io/references/failures#errors-in-Nexus-operations) 的一般指导。
+在 Python 中，存在三个 Nexus 特定的异常类：
+
+- [`Nexusrpc.OperationError`](https://Nexus-rpc.github.io/sdk-python/Nexusrpc.OperationError.html)：这是您应该在 Nexus Operation 中引发的异常类型，以表明它根据自己的应用程序逻辑失败了，不应重试。
+- [`Nexusrpc.HandlerError`](https://Nexus-rpc.github.io/sdk-python/Nexusrpc.HandlerError.html)：您可以使用特定的 Nexus Operation 引发此异常类型[HandlerErrorType](https://Nexus-rpc.github.io/sdk-python/Nexusrpc.HandlerErrorType.html)。错误将根据类型标记为可重试或不可重试，遵循 [Nexus 规范](https://github.com/Nexus-rpc/api/blob/main/SPEC.md#predefined-handler-errors)。不可重试的处理程序错误类型为“BAD_REQUEST”、“UNAUTHENTICATED”、“UNAUTHORIZED”、“NOT_FOUND”、“NOT_IMPLMENTED”；可重试的类型有“RESOURCE_EXHAUSTED”、“INTERNAL”、“UNAVAILABLE”、“UPSTREAM_TIMEOUT”。
+- [`Temporalio.exceptions.NexusOperationError`](https://python.Temporal.io/Temporalio.exceptions.NexusOperationError.html)：这是当 Nexus Operation 因任何原因失败时 Workflow 内部引发的错误。使用异常上的“__cause__”属性来访问原因链。
+
+## 取消 Nexus Operation {#canceling-a-Nexus-操作}
+
+要从 Workflow 中取消 Nexus Operation，请在操作句柄上调用“handle.cancel()”。在 Nexus 中只能取消异步操作，因为取消是使用操作令牌发送的。
+Workflow 或支持操作的其他资源可以选择忽略取消请求。
+如果忽略，操作可能会进入终止状态。
+
+当 Nexus Operation 启动时，调用者可以指定不同的取消类型来控制调用者对取消的反应：
+
+- `ABANDON` - 不请求取消操作。
+- `TRY_CANCEL` - 发起取消请求并立即向调用者报告取消。请注意，如果调用者在传递完成之前退出，则此类型不能保证将取消传递给操作处理程序。
+- `WAIT_REQUESTED` 请求取消操作并等待收到请求的确认。不等待实际取消。
+- `WAIT_COMPLETED` - 等待操作完成。操作可能会或可能不会按取消的方式完成。
+
+默认为“WAIT_COMPLETED”。用户可以在开始或执行操作时为“cancellation_type”设置不同的选项。
+
+一旦调用者 Workflow 完成，调用者的 Nexus 机器将不会再尝试取消仍在运行的操作。
+在某些用例中让操作保持运行是可以的。
+为确保取消已交付，请等待所有待处理操作完成，然后再退出 Workflow。
+
+请参阅[Nexus取消示例](https://github.com/Temporalio/samples-python/tree/main/Nexus_cancel)以供参考。
+
+## 在 Temporal Cloud 中跨 Namespace 进行 Nexus 调用 {#Nexus-calls-across-Namespaces-Temporal-cloud}
+
+本节假设您已经熟悉如何将 Worker 连接到 Temporal Cloud。
+“tcld”CLI 用于创建 Namespace 和 Nexus 端点，mTLS 客户端证书将用于将调用方和处理程序 Worker 安全连接到其各自的 Temporal Cloud Namespace。
+
+### 安装最新的 `tcld` CLI 并生成证书
+
+要安装最新版本的“tcld”CLI，请运行以下命令（在 macOS 上）：
+
+```
+brew install temporalio/brew/tcld
+```
+
+如果您还没有证书，可以使用以下命令生成用于 mTLS Worker 身份验证的证书：
+
+```
+tcld gen ca --org $YOUR_ORG_NAME --validity-period 1y --ca-cert ca.pem --ca-key ca.key
+```
+
+这些证书的有效期为一年。
+
+### 创建调用者和处理程序 Namespaces
+
+在部署到 Temporal Cloud 之前，请确保为调用方和处理程序创建适当的 Namespace。
+如果您已经拥有这些 Namespace，则无需执行此操作。
+
+```
+tcld login
+
+tcld namespace create \
+	--namespace <your-caller-namespace> \
+    --cloud-provider aws \
+	--region us-west-2 \
+	--ca-certificate-file 'path/to/your/ca.pem' \
+	--retention-days 1
+
+tcld namespace create \
+	--namespace <your-target-namespace> \
+    --cloud-provider aws \
+	--region us-west-2 \
+	--ca-certificate-file 'path/to/your/ca.pem' \
+	--retention-days 1
+```
+
+或者，您可以通过 UI 创建 Namespace：[https://cloud.Temporal.io/Namespaces](https://cloud.Temporal.io/Namespaces)。
+
+### 创建一个 Nexus 端点以将请求从调用者路由到处理程序
+
+要创建 Nexus 端点，您必须具有开发人员帐户角色或更高级别，并且对“--target-Namespace”具有 NamespaceAdmin 权限。
+
+```
+tcld nexus endpoint create \
+  --name <my-nexus-endpoint-name> \
+  --target-task-queue my-handler-task-queue \
+  --target-namespace <my-target-namespace.account> \
+  --allow-namespace <my-caller-namespace.account> \
+  --description-file hello_nexus/endpoint_description.md
+```
+
+`--allow-Namespace` 用于构建可以使用 Nexus 端点的调用者 Namespace 的端点白名单，如运行时访问控制中所述。
+
+或者，您可以通过 UI 创建 Nexus 端点：[https://cloud.Temporal.io/Nexus](https://cloud.Temporal.io/Nexus)。
+
+## 可观察性
+
+### 网页用户界面
+
+同步 Nexus Operation 将在调用者 Workflow 中出现，如下所示，调用者的 Workflow 历史记录中仅包含“NexusOperationScheduled”和“NexusOperationCompleted”事件：
+
+<CaptionedImage
+src =“/img/cloud/Nexus/go-sdk-observability-sync.png”
+    title="可观测性同步"
+/>
+
+异步 Nexus Operation 将在调用方 Workflow 中出现，如下所示，在调用方的 Workflow 历史记录中包含“NexusOperationScheduled”、“NexusOperationStarted”和“NexusOperationCompleted”：
+
+<CaptionedImage
+src =“/img/cloud/Nexus/go-sdk-observability-async.png”
+    title="可观察性异步"
+/>
+
+### Temporal CLI
+
+使用“Workflow描述”命令显示调用者Workflow中待处理的Nexus Operation以及处理程序Workflow上的任何附加回调：
+
+```
+temporal workflow describe -w <ID>
+```
+
+Nexus 事件包含在调用者的 Workflow 历史记录中：
+
+```
+temporal workflow show -w <ID>
+```
+
+对于**异步 Nexus Operation**，调用者历史记录中会报告以下内容：
+
+- `Nexus操作Scheduled`
+- `Nexus操作开始`
+- `Nexus操作已完成`
+
+对于**同步 Nexus Operation**，调用者历史记录中会报告以下内容：
+
+- `Nexus操作Scheduled`
+- `Nexus操作已完成`
+
+:::note
+
+同步操作的调用者历史记录中不会报告“NexusOperationStarted”。
+
+:::
+
+＃＃ 了解更多
+
+- 阅读 [Temporal Nexus 功能](/evaluate/Nexus) 的高级说明并观看 [Nexus 主题演讲和演示](https://youtu.be/qqc2vsv1mrU?feature=shared&t=2082)。
+- 通过 [Nexus 深入探讨](https://www.youtube.com/watch?v=izR9dQ_eIe4) 和 [百科全书](/Nexus) 了解 Nexus 的工作原理。
+- 使用 [Temporal Cloud](/cloud/Nexus) 在生产中部署 Nexus 端点。

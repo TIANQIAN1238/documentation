@@ -1,8 +1,8 @@
 ---
 id: nexus-patterns
-title: Nexus Patterns
-sidebar_label: Nexus Patterns
-description: Common patterns for building Nexus Services including the collocated pattern and the router-queue pattern for flexible deployment topologies.
+title: "Nexus 图案"
+sidebar_label: "Nexus 图案"
+description: "构建 Nexus 服务的常见模式包括并置模式和用于灵活部署拓扑的路由器队列模式。"
 slug: /nexus/patterns
 keywords:
   - nexus patterns
@@ -19,57 +19,63 @@ tags:
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal Nexus is now [Generally Available](/evaluate/development-production-features/release-stages#general-availability) for [Temporal Cloud](/cloud/nexus) and [self-hosted deployments](/production-deployment/self-hosted-guide/nexus).
+[Temporal Cloud](/evaluate/development-production-features/release-stages#general-availability) 和 [自托管部署](/cloud/nexus) 的 Temporal Nexus 现在为 [一般可用](/production-deployment/self-hosted-guide/nexus)。
 
 :::
 
-There are two common patterns for building and deploying [Nexus Services](/nexus/services): 
-- **[Collocated pattern](#collocated-pattern)**: Runs on the same Workers as your existing Workflows and Activities. Use by default.
-- **[Router pattern](#router-queue-pattern)**: Separates Nexus routing from Workflow execution. A dedicated Nexus Worker on a “router” Task Queue routes Operations to Workflows on other Task Queues. 
-Use when you need independent scaling, different IAM permissions per Worker fleet, or want to add Nexus to without modifying existing Workers.
+构建和部署 [Nexus 服务](/nexus/services) 有两种常见模式： 
+- **[搭配图案](#collocated-pattern)**：在与现有 Workflow 和活动相同的 Worker 上运行。默认使用。
+- **[路由器模式](#router-queue-pattern)**：将 Nexus 路由与 Workflow Execution 分开。 “路由器”Task Queue 上的专用 Nexus Worker 将操作路由到其他 Task Queue 上的 Workflow。 
+当您需要独立扩展、每个 Worker 队列不同的 IAM 权限，或者想要添加 Nexus 而不修改现有 Worker 时，请使用。
 
-## Collocated pattern (default) {#collocated-pattern}
+## 并置模式（默认） {#collocated-pattern}
 
-The **collocated pattern** runs Nexus Operation handlers in the same Worker and on the same Task Queue as the underlying Workflows.
-This is the default and simplest deployment.
+**并置模式**在与底层 Workflow 相同的 Worker 和相同 Task Queue 上运行 Nexus 操作处理程序。
+这是默认且最简单的部署。
 
-The Nexus Endpoint targets the same Task Queue used by the underlying Workflows.
-A single Worker registers both Nexus Services and Workflow types, so everything runs together.
+Nexus 端点的目标与底层 Workflow 使用的 Task Queue 相同。
+单个 Worker 注册 Nexus 服务和 Workflow 类型，因此一切都一起运行。
 
-### Why start here
+<a id="why-start-here"></a>
+### 为什么从这里开始 {#why-start-here}
 
-- **Simplest setup:** One Worker, one Task Queue, one deployment. No extra infrastructure.
-- **Eager Workflow Start:** When the handler starts a Workflow in the same Worker, you can use [Eager Workflow Start](/develop/worker-performance#eager-workflow-start) to execute the first Workflow Task locally without an extra call to the Temporal Server - while still recording durable state. If the process crashes, the Workflow resumes on another Worker.
-- **Clean facade:** Operations act as a stable contract. You can change the underlying implementation (Signal today, Workflow tomorrow) without impacting callers.
+- **最简单的设置：** 一台 Worker，一台 Task Queue，一次部署。没有额外的基础设施。
+- **Eager Workflow Start：** 当处理程序在同一 Worker 中启动 Workflow 时，您可以使用 [渴望Workflow开始](/develop/worker-performance#eager-workflow-start) 在本地执行第一个 Workflow 任务，而无需额外调用 Temporal Server - 同时仍然记录持久状态。如果进程崩溃，Workflow 将在另一个 Worker 上恢复。
+- **干净的外观：** 运营充当稳定的合同。您可以更改底层实现（今天为 Signal，明天为 Workflow），而不会影响调用者。
 
-### When to use this pattern
+<a id="when-to-use-this-pattern"></a>
+### 何时使用此模式 {#when-to-use-this-pattern}
 
-- Getting started with Nexus.
-- The same team owns both the Nexus Service and underlying Workflows.
-- You don't need to scale Nexus routing separately from Workflow execution.
-- You are setting up a simple test environment
+- Nexus 入门。
+- 同一团队拥有 Nexus 服务和基础 Workflow。
+- 您不需要将 Nexus 路由与 Workflow Execution 分开缩放。
+- 您正在设置一个简单的测试环境
 
-Use this pattern by default unless you have a good reason to use the Router-queue pattern below
+默认情况下使用此模式，除非您有充分的理由使用下面的路由器队列模式
 
-## Router-queue pattern
+<a id="router-queue-pattern"></a>
+## 路由器队列模式 {#router-queue-pattern}
 
-The **router-queue pattern** separates Nexus routing from Workflow execution. A dedicated Nexus Worker on a "router" Task Queue routes Operations to Workflows on other Task Queues in the same Namespace.
+**路由器队列模式**将 Nexus 路由与 Workflow Execution 分开。 “路由器”Task Queue 上的专用 Nexus Worker 将操作路由到同一 Namespace 中其他 Task Queue 上的 Workflow。
 
-### When to use this pattern
+<a id="when-to-use-this-pattern"></a>
+### 何时使用此模式 {#when-to-use-this-pattern}
 
-- **Separate scaling:** Scale Nexus routing independently from Workflow execution.
-- **Dedicated routing layer:** A single Nexus Worker routes requests to multiple Workflow types on different Task Queues.
-- **Different IAM permissions:** Worker fleets behind different Task Queues may have different IAM permissions to different underlying resources.
-- **Avoid modifying existing Workers:** Add a router Worker to a Namespace without changing any existing Workers or Workflows.
+- **单独缩放：** 独立于 Workflow Execution 缩放 Nexus 路由。
+- **专用路由层：** 单个 Nexus Worker 将请求路由到不同 Task Queue 上的多个 Workflow 类型。
+- **不同的 IAM 权限：** 不同 Task Queue 后面的 Worker 队列可能对不同的底层资源具有不同的 IAM 权限。
+- **避免修改现有的 Worker：** 将路由器 Worker 添加到 Namespace，而不更改任何现有的 Worker 或 Workflow。
 
-### How it works
+<a id="how-it-works"></a>
+### 它是如何工作的 {#how-it-works}
 
-1. Register a Nexus Worker that polls a dedicated "router" Task Queue.
-2. Configure the Nexus Endpoint's target Task Queue to point to this router Task Queue.
-3. In each Nexus Operation handler, specify a different target Task Queue in the Workflow start options.
-4. Existing Workers continue to poll their own Task Queues and execute the Workflows started by the router.
+1. 注册一个 Nexus Worker 来轮询专用“路由器”Task Queue。
+2. 配置 Nexus 端点的目标 Task Queue 以指向此路由器 Task Queue。
+3. 在每个 Nexus 操作处理程序中，在 Workflow 启动选项中指定不同的目标 Task Queue。
+4. 现有的Worker继续轮询自己的Task Queue并执行路由器启动的Workflow。
 
-### Production usage
+<a id="production-usage"></a>
+### 生产使用 {#production-usage}
 
-Used in production by organizations running self-service platforms where a central gateway routes requests to domain-specific Namespaces and Task Queues.
-The router Worker is lightweight - it only handles routing logic.
+由运行自助服务平台的组织在生产中使用，其中中央网关将请求路由到特定于域的 Namespace 和 Task Queue。
+路由器 Worker 是轻量级的 - 它只处理路由逻辑。

@@ -1,0 +1,218 @@
+---
+id: schedules
+title: Schedules - .NET SDK
+sidebar_label: Schedules
+description: 使用 Temporal .NET SDK 管理和优化 Scheduled Workflow； Schedule、创建、回填、Update、删除、描述、列出、暂停、触发和使用开始延迟选项。
+keywords:
+  - sdk
+  - dotnet
+  - schedules
+tags:
+  - Workflows
+  - .Net SDK
+  - Temporal SDKs
+  - Schedules
+---
+
+此页面显示如何执行以下操作：
+
+- [Schedule a Workflow](#Schedule-a-Workflow)
+- [创建 Scheduled Workflow](#create-a-Workflow)
+- [回填 Scheduled Workflow](#backfill-a-Scheduled-Workflow)
+- [删除 Scheduled Workflow](#delete-a-Scheduled-Workflow)
+- [描述 Scheduled Workflow](#describe-a-Scheduled-Workflow)
+- [列出 Scheduled Workflow](#list-a-Scheduled-Workflow)
+- [暂停 Scheduled Workflow](#pause-a-Scheduled-Workflow)
+- [触发 Scheduled Workflow](#trigger-a-Scheduled-Workflow)
+- [Update a Scheduled Workflow](#Update-a-Scheduled-Workflow)
+- [使用开始延迟](#start-delay)
+
+## Schedule Workflow {#Schedule-a-Workflow}
+
+调度 Workflow 是任何自动化流程的一个重要方面，尤其是在处理时间敏感的任务时。通过调度 Workflow，您可以自动执行重复任务，减少手动干预的需要，并确保及时执行业务流程。
+
+使用以下任一操作来帮助 Schedule 和 Workflow Execution 并控制您的自动化流程。
+
+### 创建 Scheduled Workflow {#create-a-Workflow}
+
+创建操作使您能够创建新的 Schedule。创建新的 Schedule 时，会生成唯一的 Schedule ID，您可以使用该 ID 在其他 Schedule 命令中引用 Schedule。
+
+要在 .NET 中创建 Scheduled Workflow Execution，请使用[CreateScheduleAsync](https://dotnet.Temporal.io/api/Temporalio.Client.ITemporalClient.html#Temporalio_Client_ITemporalCl ient_CreateScheduleAsync_System_String_Temporalio_Client_Schedules_Schedule_Temporalio_Client_Schedules_ScheduleOptions_)
+客户端上的方法。
+然后将 Schedule ID 和 Schedule 对象传递给该方法以创建 Scheduled Workflow Execution。
+将 Schedule 的“Action”属性设置为“ScheduleActionStartWorkflow”到 Schedule a Workflow Execution 的实例。
+
+```csharp
+using Temporalio.Client;
+using Temporalio.Client.Schedules;
+
+var client = await TemporalClient.ConnectAsync(new("localhost:7233"));
+
+var handle = await client.CreateScheduleAsync(
+    "my-schedule-id",
+    new(
+        Action: ScheduleActionStartWorkflow.Create(
+            (MyWorkflow wf) => wf.RunAsync(),
+            new(id: "my-workflow-id", taskQueue: "my-task-queue")),
+        Spec: new()
+        {
+            Intervals = new List<ScheduleIntervalSpec> { new(Every: TimeSpan.FromDays(5)) },
+        }));
+```
+
+:::tip Schedule Auto-Deletion
+
+一旦 Schedule 完成创建所有 Workflow Execution，Temporal 服务就会将其删除，因为它不会再次触发。
+Temporal 服务不保证何时会发生此删除。
+
+:::
+
+### 回填 Scheduled Workflow {#backfill-a-Scheduled-Workflow}
+
+回填操作会在指定时间范围之前执行操作。当您需要执行错过或延迟的操作时，或者当您想要在 Scheduled 时间之前测试 Workflow 时，此命令非常有用。
+
+要在 .NET 中回填 Scheduled Workflow Execution，请使用[BackfillAsync()](https://dotnet.Temporal.io/api/Temporalio.Client.Schedules.ScheduleHandle.html#Temporalio_Client_Schedules_ScheduleHand le_BackfillAsync_System_Collections_Generic_IReadOnlyCollection_Temporalio_Client_Schedules_ScheduleBackfill__Temporalio_Client_RpcOptions_)
+Schedule 手柄上的方法。
+
+```csharp
+using Temporalio.Client;
+using Temporalio.Client.Schedules;
+
+var client = await TemporalClient.ConnectAsync(new("localhost:7233"));
+
+var handle = client.GetScheduleHandle("my-schedule-id");
+var now = DateTime.Now;
+await handle.BackfillAsync(new List<ScheduleBackfill>
+{
+    new(
+        StartAt: now - TimeSpan.FromDays(30),
+        EndAt: now - TimeSpan.FromDays(20),
+        Overlap: ScheduleOverlapPolicy.AllowAll),
+});
+```
+
+### 删除 Scheduled Workflow {#delete-a-Scheduled-Workflow}
+
+删除操作使您能够删除 Schedule。删除 Schedule 时，不会影响由 Schedule 启动的任何 Workflow。
+
+要在 .NET 中删除 Scheduled Workflow Execution，请使用方法Schedule 手柄。
+
+```csharp
+using Temporalio.Client;
+using Temporalio.Client.Schedules;
+
+var client = await TemporalClient.ConnectAsync(new("localhost:7233"));
+
+var handle = client.GetScheduleHandle("my-schedule-id");
+await handle.DeleteAsync();
+```
+
+### 描述 Scheduled Workflow {#describe-a-Scheduled-Workflow}
+
+描述操作显示当前的 Schedule 配置，包括有关过去、当前和未来 Workflow 运行的信息。当您想要获取 Schedule 及其关联的 Workflow 运行的详细视图时，此命令非常有用。
+
+要在 .NET 中描述 Scheduled Workflow Execution，请使用方法Schedule 手柄。
+
+```csharp
+using Temporalio.Client;
+using Temporalio.Client.Schedules;
+
+var client = await TemporalClient.ConnectAsync(new("localhost:7233"));
+
+var handle = client.GetScheduleHandle("my-schedule-id");
+var desc = await handle.DescribeAsync();
+Console.WriteLine("Schedule info: {0}", desc.Info);
+```
+
+### 列出 Scheduled Workflow {#list-a-Scheduled-Workflow}
+
+列表操作列出了所有可用的 Schedule。当您想要查看所有 Schedule 及其各自的 Schedule ID 的列表时，此命令非常有用。
+
+要列出所有 Schedule，请使用[ListSchedulesAsync()](https://dotnet.Temporal.io/api/Temporalio.Client.ITemporalClient.html#XPROT 026Xio_Client_ITemporalClient_ListSchedulesAsync_Temporalio_Client_Schedules_ScheduleListOptions_)客户端上的异步方法。
+这将返回一个异步枚举。
+如果添加或删除 Schedule，它可能不会立即在列表中可用。
+
+```csharp
+using Temporalio.Client;
+using Temporalio.Client.Schedules;
+
+var client = await TemporalClient.ConnectAsync(new("localhost:7233"));
+await foreach (var desc in client.ListSchedulesAsync())
+{
+    Console.WriteLine("Schedule info: {0}", desc.Info);
+}
+```
+
+某些 SDK 要求您传递上下文对象，而其他 SDK 则不需要。
+当涉及到您的应用程序数据（即序列化并编码到有效负载中的数据）时，我们建议您使用单个对象作为包装传递给活动的应用程序数据的参数。
+这样您就可以更改传递到 XPROT028X 的数据，而不会破坏函数或方法签名。
+
+暂停操作使您能够暂停和取消暂停 Schedule。当您暂停 Schedule 时，与 Schedule 关联的所有未来 Workflow 运行都会暂时停止。当您由于维护或任何其他原因想要暂时停止 Workflow 时，此命令非常有用。
+
+To pause a Scheduled Workflow Execution in .NET, use the [PauseAsync()](https://dotnet.Temporal.io/api/Temporalio.Client.Schedules.ScheduleHandle.html#Temporalio_Client_Schedules_ScheduleHandle_PauseAsync_System_String_Temporalio_Client_RpcOptions_) method on the Schedule Handle.
+You can pass a note to the `PauseAsync()` method to provide a reason for pausing the Schedule.
+
+```csharp
+using Temporalio.Client;
+using Temporalio.Client.Schedules;
+
+var client = await TemporalClient.ConnectAsync(new("localhost:7233"));
+
+var handle = client.GetScheduleHandle("my-schedule-id");
+await handle.PauseAsync("Pausing the schedule for now");
+```
+
+### Trigger a Scheduled Workflow {#trigger-a-Scheduled-Workflow}
+
+The trigger action triggers an immediate action with a given Schedule. By default, this action is subject to the Overlap Policy of the Schedule. This command is helpful when you want to execute a Workflow outside of its Scheduled time.
+
+To trigger a Scheduled Workflow Execution in .NET, use the [TriggerAsync()](https://dotnet.Temporal.io/api/Temporalio.Client.Schedules.ScheduleHandle.html#Temporalio_Client_Schedules_ScheduleHandle_TriggerAsync_Temporalio_Client_Schedules_ScheduleTriggerOptions_) method on the Schedule Handle.
+
+```csharp
+using Temporalio.Client;
+using Temporalio.Client.Schedules;
+
+var client = await TemporalClient.ConnectAsync(new("localhost:7233"));
+
+var handle = client.GetScheduleHandle("my-schedule-id");
+await handle.TriggerAsync();
+```
+
+### Update a Scheduled Workflow {#Update-a-Scheduled-Workflow}
+
+The Update action enables you to Update an existing Schedule. This command is useful when you need to modify the Schedule's configuration, such as changing the start time, end time, or interval.
+
+To Update a Scheduled Workflow Execution in .NET, use the [UpdateAsync()](https://dotnet.Temporal.io/api/Temporalio.Client.Schedules.ScheduleHandle.html#Temporalio_Client_Schedules_ScheduleHandle_UpdateAsync_System_Func_Temporalio_Client_Schedules_ScheduleUpdateInput_Temporalio_Client_Schedules_ScheduleUpdate__Temporalio_Client_RpcOptions_) method on the Schedule Handle.
+This method accepts a callback that provides input with the current Schedule.
+A new Schedule can be created and returned from that callback to perform the Update.
+
+```csharp
+using Temporalio.Client;
+using Temporalio.Client.Schedules;
+
+var client = await TemporalClient.ConnectAsync(new("localhost:7233"));
+
+var handle = client.GetScheduleHandle("my-schedule-id");
+await handle.UpdateAsync(input =>
+{
+    var newAction =  ScheduleActionStartWorkflow.Create(
+        (MyWorkflow wf) => wf.RunAsync(),
+        new(id: "my-workflow-id", taskQueue: "my-task-queue"));
+    return new(input.Description.Schedule with { Action = newAction });
+});
+```
+
+## Use Start Delay {#start-delay}
+
+Use the `StartDelay` to Schedule a Workflow Execution at a specific one-time future point rather than on a recurring Schedule.
+
+Use the `StartDelay` option on `WorkflowOptions` in either the `StartWorkflowAsync()` or `ExecuteWorkflowAsync()` methods in the Client.
+
+```csharp
+var handle = await client.StartWorkflowAsync(
+    (MyWorkflow wf) => wf.RunAsync(),
+    new(id: "my-workflow-id", taskQueue: "my-task-queue")
+    {
+        StartDelay = TimeSpan.FromHours(3),
+    });
+```

@@ -1,0 +1,263 @@
+---
+id: versioning
+title: 版本控制 - Python SDK
+sidebar_label: 版本控制
+description: 确保 Temporal Workflow Execution 的确定性，并使用 Python SDK 的修补和 Worker 版本控制 API 安全地部署 Update，以实现可扩展的长期运行的 Workflow。
+slug: /develop/python/workflows/versioning
+toc_max_heading_level: 4
+keywords:
+  - best practices
+  - code sample
+  - deployment
+  - deployment safety
+  - deprecated patches
+  - how-to
+  - patching
+  - python
+  - python sdk
+  - version
+  - versioning
+  - workflow completion
+  - workflow history
+  - workflow transition
+tags:
+  - Workflows
+  - Versioning
+  - Patching
+  - Python SDK
+  - Temporal SDKs
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+由于 Temporal 中的 Workflow Execution 可以运行很长时间（有时是几个月甚至几年），因此通常需要对 Workflow Definition 进行更改，即使特定的 Workflow Execution 正在运行也是如此。
+
+Temporal Platform 要求 Workflow 代码是[确定性](/Workflow-definition#definition-constraints)。
+如果您对 Workflow 代码进行的更改会导致重播时出现不确定行为，则您需要使用我们的版本控制方法之一来优雅地对正在运行的 Workflow 进行 Update。
+通过版本控制，您可以修改 Workflow Definition，以便新的执行使用 Updated 代码，而现有的执行继续运行原始版本。
+您可以使用两种主要的版本控制方法：
+
+- [Worker 版本控制](/生产部署/Worker-部署/Worker-版本控制)。 Worker 版本控制功能允许您标记 Worker 并以编程方式在版本化部署中推出它们，以便旧的 Worker 可以运行旧的代码路径，而新的 Worker 可以运行新的代码路径。
+- [使用补丁进行版本控制](#patching)。此方法的工作原理是向与特定修订版相关的代码添加分支。它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
+
+:::danger
+2025 年之前对实验性 Worker 版本控制方法的支持将于 2026 年 3 月从 Temporal Server 中删除。请参阅[最新 Worker 版本控制文档](/Worker-versioning) 以获取指导。如果需要，您仍然可以参考 [Worker Versioning Legacy](Worker-versioning-legacy) 文档。
+:::
+
+## Worker 版本控制
+
+Temporal 的 [Worker 版本控制](/生产部署/Worker-deployments/Worker-versioning) 功能允许您标记 Worker 并以编程方式在部署版本中推出它们，以便旧的 Worker 可以运行旧的代码路径，新的 Worker 可以运行新的代码路径。这样，您就可以将 Workflow 固定到特定版本，从而无需修补。
+
+## 使用补丁进行版本控制 {#patching}
+
+### 添加补丁
+
+补丁在 Workflow 中定义特定更改的逻辑分支，类似于功能标志。
+它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
+当您想要进行可能影响现有 Workflow Execution 的实质性代码更改时，请创建补丁。请注意，无需修补 [固定 Workflows](/Worker-版本控制)。
+
+假设您有一个名为“pre_patch_Activity”的初始 Workflow 版本：
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/version_your_Workflows/Workflow_1_initial_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+from datetime import timedelta
+
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    from activities import pre_patch_activity
+# ...
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self) -> None:
+        self._result = await workflow.execute_activity(
+            pre_patch_activity,
+            schedule_to_close_timeout=timedelta(minutes=5),
+        )
+```
+
+现在，您希望 Update 您的代码来运行“post_patch_Activity”。这代表您想要的最终状态。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/version_your_Workflows/Workflow_4_patch_complete_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+from datetime import timedelta
+
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    from activities import post_patch_activity
+# ...
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self) -> None:
+        self._result = await workflow.execute_activity(
+            post_patch_activity,
+            schedule_to_close_timeout=timedelta(minutes=5),
+        )
+```
+
+问题是，在确定不再有使用“pre_patch_Activity”代码创建的正在运行的 Workflow 之前，您无法直接部署“post_patch_Activity”，否则可能会导致不确定性错误。
+相反，您需要部署 post_patched_Activity 并使用 [patched](https://python.Temporal.io/Temporalio.Workflow.html#patched) 函数来确定要执行的代码版本。
+
+修补过程分为三个步骤：
+
+1. 使用“patched()”函数修补任何新的 Updated 代码。 Run the new patched code alongside old code.
+2. 删除旧代码并使用“deprecate_patch()”将特定补丁标记为已弃用。
+3. 一旦不再有任何打开的先前版本代码的 Workflow Execution，请删除 `deprecate_patch()`。
+   Let's walk through this process in sequence.
+
+### 修补新代码 {#using-patched-for-Workflow-history-markers}
+
+使用“patched”将标记插入 Workflow 历史记录中。
+在重放期间，如果 Worker 遇到带有该标记的历史记录，当 Workflow 代码不生成相同的补丁标记（在本例中为“my-patch”）时，Workflow Task 将会失败。
+这确保您可以安全地将“post_patch_Activity”中的代码作为“功能标志”与原始版本（“pre_patch_Activity”）一起部署。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/version_your_Workflows/Workflow_2_patched_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+# ...
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self) -> None:
+        if workflow.patched("my-patch"):
+            self._result = await workflow.execute_activity(
+                post_patch_activity,
+                schedule_to_close_timeout=timedelta(minutes=5),
+            )
+        else:
+            self._result = await workflow.execute_activity(
+                pre_patch_activity,
+                schedule_to_close_timeout=timedelta(minutes=5),
+            )
+```
+
+### 弃用补丁 {#deprecated-patches}
+
+确保所有以“pre_patch_Activity”代码启动的 Workflow 都保留保留后，您可以[弃用该补丁](https://python.Temporal.io/Temporalio.Workflow.html#deprecate_patch)。
+
+一旦您的 Workflow 不再运行补丁前代码路径，您就可以使用“deprecate_patch()”部署代码。
+这些 Worker 将运行最新版本的 Workflow 代码，不再需要补丁。
+已弃用的补丁充当修补过程的最后阶段和不再有补丁的最终状态之间的桥梁。它们的功能与常规补丁类似，通过在 Workflow 历史记录中添加标记来实现。但是，当 Workflow 代码不生成该标记时，该标记不会导致重放失败。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/version_your_Workflows/Workflow_3_patch_deprecated_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+# ...
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self) -> None:
+        workflow.deprecate_patch("my-patch")
+        self._result = await workflow.execute_activity(
+            post_patch_activity,
+            schedule_to_close_timeout=timedelta(minutes=5),
+        )
+```
+
+### 删除补丁 {#deploy-new-code}
+
+一旦预补丁 Workflow 保留，您就可以安全地部署不再使用“patched()”或“deprecate_patch()”调用的 Worker：
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/version_your_Workflows/Workflow_4_patch_complete_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+# ...
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self) -> None:
+        self._result = await workflow.execute_activity(
+            post_patch_activity,
+            schedule_to_close_timeout=timedelta(minutes=5),
+        )
+```
+
+修补允许您对当前运行的 Workflow 进行更改。
+它是一种引入兼容更改而不引入非确定性错误的强大方法。
+
+### 补丁功能详细说明
+
+该视频概述了“patched()”函数的工作原理：
+
+<div style={{ 位置：“相对”，paddingBottom：“56.25%”，高度：0 }}>
+  <iframe
+    src="https://www.youtube.com/embed/videoseries?list=PLytZkHFJwKUdfxFQnuo0Fson0QM0VL9hL"
+    样式={{位置：“绝对”，顶部：0，左侧：0，宽度：“100％”，高度：“100％”}}
+    框架边框=“0”
+    允许=“加速度计；剪贴板写入；加密媒体；陀螺仪；画中画”
+    允许全屏>
+  </iframe>
+</div>
+<br/>
+有关更深入的解释，请参阅[修补](/patching) 百科全书条目。
+
+### Workflow 转换
+
+要了解修补为何有用，演示剪切整个 Workflow 会很有帮助。
+
+由于不兼容的更改仅影响相同类型的打开的 Workflow Execution，因此您可以通过在进行更改时创建全新的 Workflow 来避免确定性错误。
+为此，您可以复制 Workflow Definition 函数，为其指定不同的名称，然后将这两个名称注册到您的 Worker。
+
+例如，您可以将“PizzaWorkflow”复制为“PizzaWorkflowV2”：
+
+```python
+@workflow.defn(name="PizzaWorkflow")
+class PizzaWorkflow:
+    @workflow.run
+    async def run(self, name: str) -> str:
+        # this function contains the original code
+
+@workflow.defn(name="PizzaWorkflowV2")
+class PizzaWorkflowV2:
+    @workflow.run
+    async def run(self, name: str) -> str:
+        # this function contains the updated code
+```
+
+然后，您需要 Update、Worker 配置以及任何其他标识符字符串来注册两个 Workflow Type：
+
+```python
+worker = Worker(
+    client,
+    task_queue="your-task-queue",
+    workflows=[PizzaWorkflow, PizzaWorkflowV2],
+)
+```
+
+此方法的缺点是，它需要您复制代码并向 Update 复制用于启动 Workflow 的任何命令。
+随着时间的推移，这可能变得不切实际。
+此方法也不提供对任何仍在运行的 Workflow 进行版本控制的方法——它本质上只是一个转换，与修补不同。
+
+### 测试 Workflow 的重放安全性
+
+要确定您的 Workflow 是否需要修补程序，或者您已成功修补它，您应该合并 [重放测试](/develop/python/best-practices/testing-suite#replay)。

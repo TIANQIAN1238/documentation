@@ -1,0 +1,257 @@
+---
+id: aws-connectivity
+title: AWS PrivateLink 连接
+sidebar_label: 帐单报告包含：
+slug: /cloud/connectivity/aws-connectivity
+description: 使用 AWS PrivateLink 连接到 Temporal Cloud
+tags:
+  - AWS
+  - Connectivity
+  - Production
+  - Temporal Cloud
+keywords:
+  - availability
+  - explanation
+  - failover
+  - high-availability
+  - multi-region
+  - multi-region namespace
+  - namespaces
+  - temporal-cloud
+  - term
+---
+
+import { ToolTipTerm, DiscoverableDisclosure, CaptionedImage, JsonTable } from '@site/src/components';
+
+[AWS PrivateLink](https://aws.amazon.com/privatelink/) 允许您打开 Temporal 的路径，而无需打开公共出口。
+它在您的 Amazon Virtual Private Cloud (VPC) 和 Temporal Cloud 之间建立私有连接。
+这种单向连接意味着 Temporal 无法建立与您的服务的连接。
+如果您通常将阻止流量出口作为安全协议的一部分，那么这非常有用。
+如果您使用不允许外部连接的私有环境，您将保持孤立状态。
+
+创建 PrivateLink 终端节点后，将您的客户端配置为通过 [私有 DNS](#configuring-private-dns-for-aws-privatelink) 或 [直接 VPCE 定位](#direct-vpce)（仅限单区域 Namespace）使用它。
+
+＃＃ 要求
+
+您的 AWS PrivateLink 终端节点必须与 Temporal Cloud Namespace 位于同一区域。如果使用[高可用性复制](/cloud/high-availability)，PL 连接必须与副本之一位于同一区域。
+
+不支持 AWS 跨区域终端节点。
+
+## 创建 AWS PrivateLink 连接
+
+通过以下步骤设置与 Temporal Cloud 的 PrivateLink 连接：
+
+1. 打开包含您要用于建立 PrivateLink 的区域的 AWS 控制台。
+2. 在_服务_中搜索“VPC”并选择该选项。
+
+![AWS 控制台显示服务、功能、资源](/img/cloud/privatelink/aws-console.png)
+3. 从左侧菜单栏中选择_虚拟私有云_ > _端点_。
+4. 单击_操作_下拉菜单右侧的_创建端点_按钮。
+5. 在_类型_类别下，选择_使用 NLB 和 GWLB 的端点服务_。
+   通过此选项，您可以按服务名称查找与您共享的服务。
+6. 在_服务设置_下，用您尝试连接的区域的 PrivateLink 服务名称填写_服务名称_：
+
+:::tip
+
+PrivateLink 端点服务是区域性的。
+各个 Namespace 不使用单独的服务。
+
+:::
+
+<JsonTable filename="/json/privatelink_aws.json" />
+
+7. 单击_验证服务_按钮确认您的服务。 AWS 应响应“服务名称已验证”。
+
+![服务名称字段已填写，并显示验证服务按钮](/img/cloud/privatelink/service-settings.png)
+8. 选择与 Temporal Cloud 服务终端节点建立对等关系的 VPC 和子网。
+9. 选择将控制此 VPC 终端节点的流量源的安全组。
+   安全组必须接受到端口 7233 的 TCP 入口流量，以便 gRPC 与 Temporal Cloud 进行通信。
+10. 单击屏幕底部的_创建端点_按钮。
+    如果成功，AWS 会报告“已成功创建 VPC 终端节点”。并列出新端点。
+    新端点及其 ID 将显示在端点列表中。
+
+![创建的端点出现在端点列表中](/img/cloud/privatelink/endpoint-created.png)
+11. 单击终端节点列表中的 VPC 终端节点 ID 以检查其状态。
+    等待状态变为“可用”。
+    这最多可能需要 10 分钟。
+12. 一旦状态变为“可用”，AWS PrivateLink 就可以使用了。
+
+![突出显示的 DNS 名称部分显示您的主机名](/img/cloud/privatelink/details.png)
+
+下一步是[配置私有 DNS](#configuring-private-dns-for-aws-privatelink)，以便您的客户端可以使用 PrivateLink 连接。对于不需要每个 Namespace DNS 记录的单区域 Namespace，您可以改用[直接 VPCE 定位](#direct-vpce)。
+
+## 为 AWS PrivateLink 配置私有 DNS
+
+### 为什么要配置私有DNS？
+
+当您通过 AWS PrivateLink 连接到 Temporal Cloud 时，您通常必须：
+
+1. **将您的 SDK/Worker 指向 VPC 终端节点的 PrivateLink DNS 名称**（例如“vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com”），**和**
+2. **覆盖服务器名称指示符 (SNI)**，以便 TLS 握手仍显示公共 Temporal Cloud 主机名（例如“my-Namespace.my-account.tmprl.cloud”）。
+
+通过创建将公共 Temporal Cloud 主机名（或区域主机名）映射到您的 VPC 终端节点的 Route 53 **私有托管区域 (PHZ)**，您可以：
+
+- 在代码和配置中继续使用标准 Temporal Cloud 主机名。
+- 无需设置自定义 SNI 覆盖。
+- 使未来的端点轮换变得透明——只有 PHZ 记录发生变化。
+
+这种方法是**可选的**； Temporal Cloud 无需它即可工作。它只是简化了配置和操作。如果您无法使用私有 DNS，请参阅[更新客户端上的服务器和 TLS 设置的指南](/cloud/connectivity#Update-dns-or-clients-to-use-private-connectivity)。
+
+### 先决条件
+
+|要求|笔记|
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+|启用 DNS 解析和 DNS 主机名的 AWS VPC | _VPC 控制台 → 编辑 DNS 设置 → 启用两个复选框。_ |
+| Temporal Cloud 的接口 VPC 端点 |子网必须与 VPC 关联，并且安全组必须允许 TCP 入口流量从适当的主机流向端口 7233。 |
+| Route 53 在您的 AWS 账户中可用 |您需要获得创建私有托管区域和记录的权限。                                                                    |
+| Namespace详情|需要在下面选择正确的覆盖域模式。                                                                        |
+
+### 选择覆盖域和端点
+
+| Temporal Cloud 设置 |使用此 PHZ 域 |示例|
+| ---------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------- |
+|具有 mTLS 身份验证的单区域 Namespace | `<帐户>.tmprl.cloud` | ` payment.abcde.tmprl.cloud` ↔ `vpce-...` |
+|具有 API 密钥身份验证的单区域 Namespace | `<cloud_provider>.api.Temporal.io` | `us-east-1.aws.api.Temporal.io` ↔ `vpce-...` |
+|多区域 Namespace | `region.tmprl.cloud` | `aws-us-east-1.region.tmprl.cloud` ↔ `vpce-...` |
+
+### 分步说明
+
+#### 1. 收集您的 PrivateLink 端点 DNS 名称
+
+```bash
+aws ec2 describe-vpc-endpoints \
+  --vpc-endpoint-ids $VPC_ENDPOINT_ID \
+  --query "VpcEndpoints[0].DnsEntries[0].DnsName" \
+  --output text
+
+# Example output:
+# vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com
+```
+
+保存 **`vpce-*.amazonaws.com`** 值 - 您将在 CNAME 记录中定位它。
+
+#### 2. 创建 Route 53 私有托管区域
+
+1. 打开_Route 53 → 托管区域→ 创建托管区域_。
+2. 输入从上表中选择的域名，例如“ payments.abcde.tmprl.cloud”。
+3. 输入：_Temporal Cloud 的私有托管区域_。
+4. 将托管区域与包含 Temporal Worker 和/或 SDK 客户端的每个 VPC 关联。
+5. 创建托管区域。
+
+#### 3.添加CNAME记录
+
+新 PHZ 内部：
+
+|领域 |价值|
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| **记录名称** | Namespace 端点（例如“ payments.abcde.tmprl.cloud ”）。                          |
+| **记录类型** | `CNAME` |
+| **价值** |您的 VPC 终端节点 DNS 名称 (`vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com`) |
+| **TTL** | 60 年代是典型的； MRN Namespace 为 15 秒；根据需要进行调整。                             |
+
+#### 4. 从 VPC 内部验证 DNS 解析
+
+```bash
+dig payments.abcde.tmprl.cloud
+```
+
+如果记录解析为 VPC 终端节点，您就可以使用 Temporal Cloud 而不进行 SNI 覆盖。
+
+### 更新您的 Worker/客户端
+
+部署好私有 DNS 后，按照公共互联网示例所示配置您的 SDK（填写您自己的 Namespace）：
+
+```go
+clientOptions := client.Options{
+    HostPort: "payments.abcde.tmprl.cloud:7233",
+    Namespace: "payments",
+    // No TLS SNI override needed
+}
+```
+
+VPC 内的 DNS 解析器返回专用终端节点，而 TLS 仍验证原始主机名，从而简化了代码和证书管理。
+
+## 为多区域 Namespace 配置私有 DNS
+
+:::tip Namespaces with High Availability features and AWS PrivateLink
+
+使用 PrivateLink 时，需要正确的网络配置才能使故障转移对客户端和 Worker 透明。
+本页面介绍如何在 AWS PrivateLink 上为具有高可用性功能的 Namespace 配置路由。
+
+:::
+
+要将 AWS PrivateLink 与高可用性功能结合使用，您可能需要：
+
+- 覆盖区域 DNS 区域。
+- 确保两个区域之间的网络连接。
+
+此页面提供了进行此设置所需的详细信息。
+
+### 客户端解决方案
+
+使用 PrivateLink 时，您通过 VPC 终端节点连接到 Temporal Cloud，该终端节点使用您网络的本地地址。
+Temporal 将每个“region.<tmprl_domain>”视为单独的区域。
+此设置允许您覆盖默认区域，确保流量在您正在使用的区域内部路由。
+
+Namespace 的活动区域反映在 CNAME 记录的目标中。
+例如，如果 Namespace 的活动区域是 AWS us-west-2，则 DNS 配置将如下所示：
+
+| Record name                         |记录类型 | Value                            |
+| ----------------------------------- | ----------- | -------------------------------- |
+| ha-Namespace.account-id.tmprl.cloud | ha-Namespace.account-id.tmprl.cloud |别名 | aws-us-west-2.region.tmprl.cloud |
+
+故障转移后，CNAME 记录将为 Updated 以指向故障转移区域，例如：
+
+|记录名称 |记录类型 |价值|
+| ----------------------------------- | ----------- | -------------------------------- |
+| ha-Namespace.account-id.tmprl.cloud | ha-Namespace.account-id.tmprl.cloud |别名 | aws-us-east-1.region.tmprl.cloud |
+
+Temporal 域没有更改，但 CNAME Updated 从 us-west-2 更改为 us-east-1。
+
+<CaptionedImage
+src =“/img/cloud/high-availability/private-link.png”
+    title="客户端解决方案示例"
+    缩放=“真”
+/>
+
+### 设置 DNS 覆盖
+
+要设置 DNS 覆盖，请配置特定区域以定位内部 VPC 终端节点 IP 地址。
+例如，您可以将 aws-us-west-1.region.tmprl.cloud 设置为目标 192.168.1.2。
+在 AWS 中，可以使用“region.tmprl.cloud”的 Route 53 私有托管区域来完成此操作。
+将该私有区域链接到您用于 Worker 的 VPC。
+
+当您的 Worker 连接到 Namespace 时，它们首先解析 `<ns>.<acct>.<tmprl_domain>` 记录。
+这指向“<aws-active-region>.region.tmprl.cloud”，然后解析为您的内部 IP 地址。
+
+考虑如何为此设置配置 Worker。
+您可以让 Worker 在两个区域中持续运行，也可以使用 Transit Gateway 或 VPC 对等互连在区域之间建立连接。
+这样，一旦发生故障转移，Worker 就可以访问新激活的区域。
+
+## 直接 VPCE 定位，无需每 Namespace DNS {#direct-vpce}
+
+对于单区域 Namespace，您可以通过将 Worker 直接指向 VPC 终端节点并覆盖 TLS 服务器名称指示符 (SNI) 来避免为每个 Namespace 创建 DNS 记录：
+
+1. 创建 PrivateLink VPC 终端节点（每个区域一个 — 该区域中的所有 Namespace 共享它）。
+2. 配置每个 Worker：
+   - **端点**：VPC 端点 DNS 名称（例如“vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com:7233”）
+   - **服务器名称**（SNI 覆盖）：Namespace 端点值（例如“my-Namespace.my-account.tmprl.cloud”）
+
+通过这种方法，新的 Namespace 不需要新的 DNS 记录。
+
+:::warning Not compatible with High Availability Namespaces
+
+此方法不适用于具有高可用性功能的 Namespace。
+HA Namespace 依靠 Temporal 的公共 DNS CNAME 记录在故障转移期间将流量路由到活动区域。
+如果您绕过 DNS，您的 Worker 将无法遵循 CNAME 到达新区域。
+对于 HA Namespace，请改用 [私有 DNS](#configuring-private-dns-for-aws-privatelink)。
+
+:::
+
+## 可用的 AWS 区域、PrivateLink 终端节点和 DNS 记录覆盖
+
+下表列出了可用的 Temporal 区域、PrivateLink 终端节点和用于 DNS 记录覆盖的区域终端节点：
+
+import AWSRegions from '@site/docs/cloud/references/regions/awsregions.md';
+
+<AWSRegions />

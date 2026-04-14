@@ -1,8 +1,8 @@
 ---
 id: operation-list
-title: Operations
-sidebar_label: Operations
-description: Temporal Cloud limits the number of operations per second per namespace to keep the service reliable. This page lists all those operations.
+title: "运营"
+sidebar_label: "运营"
+description: "Temporal Cloud 限制每个 Namespace 每秒的操作数，以保持服务可靠。此页面列出了所有这些操作。"
 toc_max_heading_level: 4
 keywords:
   - limits
@@ -15,15 +15,15 @@ tags:
 
 import OperationsTable from '@site/src/components/formatting/OperationsTable';
 
-# Operations
+＃ 运营
 
-Temporal Cloud [rate limits operations per second (OPS)](/cloud/limits#operations-per-second) per namespace. An operation is anything 1. a user does directly, or 2. Temporal does on behalf of the user in the background that results in load on Temporal Server. The exception is visibility queries: they do hit the Server (the query is passed from the server to the visibility store), but primarily the load is on the visibility system. Visibility rate limits are separate from OPS rate limits.
+Temporal Cloud [速率限制每秒操作数 (OPS)](/cloud/limits#operations-per-second) 根据 Namespace。操作是指 1. 用户直接执行的任何操作，或 2. Temporal 代表用户在后台执行的、导致 Temporal Server 上加载的任何操作。 Visibility 查询是例外：它们确实会命中服务器（Query 从服务器传递到 Visibility 存储），但主要负载位于 Visibility 系统上。 Visibility 速率限制与 OPS 速率限制是分开的。
 
-Below is the list of operations, including:
-- operation name
-- description
-- priority (foreground is higher priority, background is lower priority)
-- effect of that operation being throttled
+以下是操作列表，包括：
+- 操作名称
+- 描述
+- 优先级（前景优先级较高，背景优先级较低）
+- 该操作的效果被限制
 
 <OperationsTable />
 

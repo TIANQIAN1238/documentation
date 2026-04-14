@@ -1,8 +1,8 @@
 ---
 id: request
-title: tcld request command reference
-sidebar_label: request
-description: Manage asynchronous requests in Temporal Cloud using tcld request commands. Use "get" to check request status with modifiers for Namespace or request ID for tailored control.
+title: "tcld 请求命令参考"
+sidebar_label: "要求"
+description: "使用 tcld 请求命令管理 Temporal Cloud 中的异步请求。使用“get”检查带有 Namespace 修饰符的请求状态或定制控制的请求 ID。"
 slug: /cloud/tcld/request/
 toc_max_heading_level: 4
 keywords:
@@ -13,31 +13,31 @@ tags:
   - tcld
 ---
 
-The `tcld request` commands manage asynchronous requests in Temporal Cloud.
+`tcld request` 命令管理 Temporal Cloud 中的异步请求。
 
-Alias: `r`
+别名：`r`
 
-- [tcld request get](#get)
+- [tcld 请求获取](#get)
 
-## get
+## 得到 {#get}
 
-The `tcld request get` command gets the status of the specified request in Temporal Cloud.
+`tcld request get` 命令获取 Temporal Cloud 中指定请求的状态。
 
 `tcld request get --request-id <request_id>`
 
-Alias: `g`
+别名：`g`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-#### --request
+#### - 要求 {#request}
 
-_Required modifier_
+_所需修饰符_
 
-Specify a request identifier.
+指定请求标识符。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tcld request get --request-id <request_id>

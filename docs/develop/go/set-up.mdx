@@ -1,8 +1,8 @@
 ---
 id: set-up-your-local-go
-title: Set up your local with the Go SDK
-sidebar_label: Quickstart
-description: Configure your local development environment to get started developing with Temporal
+title: "使用 Go SDK 设置本地"
+sidebar_label: "快速入门"
+description: "配置本地开发环境以开始使用 Temporal 进行开发"
 keywords:
   - set up
   - getting started
@@ -17,9 +17,10 @@ hide_table_of_contents: true
 import { SetupSteps, SetupStep, CodeSnippet } from '@site/src/components/elements/SetupSteps';
 import { CallToAction } from '@site/src/components/elements/CallToAction';
 
-# Quickstart
+<a id="quickstart"></a>
+# 快速入门 {#quickstart}
 
-Configure your local development environment to get started developing with Temporal.
+配置本地开发环境以开始使用 Temporal 进行开发。
 
 <SetupSteps>
 <SetupStep code={
@@ -33,12 +34,13 @@ Configure your local development environment to get started developing with Temp
   </>
 }>
 
-## Install Go
+<a id="install-go"></a>
+## 安装 Go {#install-go}
 
-Make sure you have Go installed. These tutorials were produced using Go 1.18. Check your version of Go with the
-following command:
+确保您已安装 Go。这些教程是使用 Go 1.18 制作的。使用以下命令检查您的 Go 版本
+以下命令：
 
-This will return your installed Go version.
+这将返回您安装的 Go 版本。
 
 </SetupStep>
 
@@ -65,15 +67,16 @@ go mod tidy
 </>
 }>
 
-## Install the Temporal Go SDK
+<a id="install-the-temporal-go-sdk"></a>
+## 安装 Temporal Go SDK {#install-the-temporal-go-sdk}
 
-If you are creating a new project using the Temporal Go SDK, you can start by creating a new directory.
+如果您要使用 Temporal Go SDK 创建新项目，则可以从创建新目录开始。
 
-Next, switch to the new directory.
+接下来，切换到新目录。
 
-Then, initialize a Go project in that directory.
+然后，在该目录中初始化一个 Go 项目。
 
-Finally, install the Temporal SDK with `go get`.
+最后，使用 `go get` 安装 Temporal SDK。
 
 </SetupStep>
 
@@ -113,12 +116,13 @@ Finally, install the Temporal SDK with `go get`.
 </>
 }>
 
-## Install Temporal CLI and start the development server
+<a id="install-temporal-cli-and-start-the-development-server"></a>
+## 安装Temporal CLI并启动开发服务器 {#install-temporal-cli-and-start-the-development-server}
 
-The fastest way to get a development version of the Temporal Service running on your local machine is to use
-[Temporal CLI](https://docs.temporal.io/cli).
+在本地计算机上运行 Temporal 服务的开发版本的最快方法是使用
+[Temporal CLI](https://docs.temporal.io/cli)。
 
-Choose your operating system to install Temporal CLI:
+选择您的操作系统来安装 Temporal CLI：
 
 </SetupStep>
 
@@ -139,44 +143,47 @@ temporal server start-dev --ui-port 8080
 </>
 }>
 
-## Start the development server
+<a id="start-the-development-server"></a>
+## 启动开发服务器 {#start-the-development-server}
 
-Once you've installed Temporal CLI and added it to your PATH, open a new Terminal window and run the following command.
+安装 Temporal CLI 并将其添加到 PATH 后，打开一个新的终端窗口并运行以下命令。
 
-This command starts a local Temporal Service. It starts the Web UI, creates the default Namespace, and uses an in-memory
-database.
+此命令启动本地 Temporal 服务。它启动 Web UI，创建默认的 Namespace，并使用内存中的
+数据库。
 
-The Temporal Service will be available on localhost:7233. The Temporal Web UI will be available at
+Temporal 服务将在 localhost:7233 上可用。 Temporal Web UI 将在以下网址提供：
 http://localhost:8233.
 
-Leave the local Temporal Service running as you work through tutorials and other projects. You can stop the Temporal
-Service at any time by pressing CTRL+C.
+当您完成教程和其他项目时，让本地 Temporal 服务保持运行。您可以停止 Temporal
+按 CTRL+C 可随时提供服务。
 
-Once you have everything installed, you're ready to build apps with Temporal on your local machine.
+安装完所有内容后，您就可以在本地计算机上使用 Temporal 构建应用程序了。
 
 </SetupStep>
 </SetupSteps>
 
-## Run Hello World: Test Your Installation
+<a id="run-hello-world-test-your-installation"></a>
+## 运行 Hello World：测试您的安装 {#run-hello-world-test-your-installation}
 
-Now let's verify your setup is working by creating and running a complete Temporal application with both a Workflow and
-Activity.
+现在，让我们通过创建并运行一个完整的 Temporal 应用程序来验证您的设置是否正常工作，其中包含 Workflow 和
+Activity。
 
-This test will confirm that:
+该测试将确认：
 
-- The Temporal Go SDK is properly installed
-- Your local Temporal Service is running
-- You can successfully create and execute Workflows and Activities
-- The communication between components is functioning correctly
+- Temporal Go SDK 已正确安装
+- 您本地的 Temporal 服务正在运行
+- 您可以成功创建并执行 Workflow 和活动
+- 组件之间的通信功能正常
 
-### 1. Create the Activity
+<a id="1-create-the-activity"></a>
+### 1.创建Activity {#1-create-the-activity}
 
-An Activity is a normal function or method that executes a single, well-defined action (either short- or long-running)
-that is typically prone to failure. Examples include any action that interacts with the outside world, such as sending
-emails, making network requests, writing to a database, or calling an API. If an Activity fails, Temporal automatically
-retries it based on your configuration.
+Activity 是执行单个明确定义的操作（短期或长期运行）的普通函数或方法
+这通常很容易失败。示例包括与外界交互的任何操作，例如发送
+电子邮件、发出网络请求、写入数据库或调用 API。如果 Activity 失败，Temporal 自动
+根据您的配置重试。
 
-Create an Activity file (activity.go):
+创建 Activity 文件 (Activity.go)：
 
 ```go
 package greeting
@@ -191,13 +198,14 @@ func Greet(ctx context.Context, name string) (string, error) {
 }
 ```
 
-### 2. Create the Workflow
+<a id="2-create-the-workflow"></a>
+### 2.创建Workflow {#2-create-the-workflow}
 
-Workflows orchestrate Activities and contain the application logic. Temporal Workflows are resilient. They can run—and
-keep running—for years, even if the underlying infrastructure fails. If the application itself crashes, Temporal will
-automatically recreate its pre-failure state so it can continue right where it left off.
+Workflow 编排活动并包含应用程序逻辑。 Temporal Workflow 具有弹性。他们可以奔跑，而且
+即使底层基础设施出现故障，也能持续运行数年。如果应用程序本身崩溃，Temporal 将
+自动重新创建故障前的状态，以便可以从中断处继续。
 
-Create a Workflow file (workflow.go):
+创建 Workflow 文件（Workflow.go）：
 
 ```go
 package greeting
@@ -225,17 +233,18 @@ func SayHelloWorkflow(ctx workflow.Context, name string) (string, error) {
 
 ```
 
-### 3. Create and Run the Worker
+<a id="3-create-and-run-the-worker"></a>
+### 3. 创建并运行 Worker {#3-create-and-run-the-worker}
 
-With your Activity and Workflow defined, you need a Worker to execute them. A Worker polls a Task Queue, that you
-configure it to poll, looking for work to do. Once the Worker dequeues a Workflow or Activity task from the Task Queue,
-it then executes that task.
+定义了 Activity 和 Workflow 后，您需要 Worker 来执行它们。 Worker 轮询 Task Queue，您
+将其配置为轮询，寻找要做的工作。一旦 Worker 将 Workflow 或 Activity 任务从 Task Queue 中出列，
+然后它执行该任务。
 
-Workers are a crucial part of your Temporal application as they're what actually execute the tasks defined in your
-Workflows and Activities. For more information on Workers, see
-[Understanding Temporal](/evaluate/understanding-temporal#workers) and a [deep dive into Workers](/workers).
+Worker 是 Temporal 应用程序的重要组成部分，因为它们实际执行您的 Temporal 应用程序中定义的任务。
+Workflow 和活动。有关 Worker 的更多信息，请参阅
+[了解 Temporal](/evaluate/understanding-temporal#workers) 和 [深入研究 Worker](/workers)。
 
-Create a Worker file (worker/main.go):
+创建 Worker 文件（Worker/main.go）：
 
 ```go
 package main
@@ -268,17 +277,18 @@ func main() {
 }
 ```
 
-Run the Worker:
+运行 Worker：
 
 ```bash
 go run worker/main.go
 ```
 
-### 4. Execute the Workflow
+<a id="4-execute-the-workflow"></a>
+### 4.执行Workflow {#4-execute-the-workflow}
 
-Now that your Worker is running, it's time to start a Workflow Execution.
+现在您的 Worker 正在运行，是时候启动 Workflow Execution 了。
 
-Create a separate file called start/main.go:
+创建一个名为 start/main.go 的单独文件：
 
 ```go
 package main
@@ -320,19 +330,20 @@ func main() {
 }
 ```
 
-Then run:
+然后运行：
 
 ```bash
 go run start/main.go Temporal
 ```
 
-### Verify Success
+<a id="verify-success"></a>
+### 验证成功 {#verify-success}
 
-If everything is working correctly, you should see:
+如果一切正常，您应该看到：
 
-- Worker processing the workflow and activity
-- Output: `Workflow result: Hello Temporal`
-- Workflow Execution details in the [Temporal Web UI](http://localhost:8233)
+- Worker 处理 Workflow 和 Activity
+- 输出：`Workflow result: Hello Temporal`
+- [Temporal 网页用户界面](http://localhost:8233) 中的 Workflow Execution 详细信息
 
 <CallToAction href="https://learn.temporal.io/getting_started/go/first_program_in_go/">
   <h3>Next: Run your first Temporal Application</h3>

@@ -1,8 +1,8 @@
 ---
 id: basics
-title: Workflow basics - Go SDK
-sidebar_label: Workflow basics
-description: This section explains Workflow basics with the Go SDK
+title: "Workflow 基础知识 - Go SDK"
+sidebar_label: "Workflow 基础知识"
+description: "本节介绍 Workflow 与 Go SDK 的基础知识"
 toc_max_heading_level: 4
 keywords:
   - Go SDK
@@ -11,18 +11,19 @@ tags:
   - Temporal SDKs
 ---
 
-## How to develop a basic Workflow {#develop-workflows}
+<a id="develop-workflows"></a>
+## 如何开发基本的 Workflow {#develop-workflows}
 
-Workflows are the fundamental unit of a Temporal Application, and it all starts with the development of a [Workflow Definition](/workflow-definition).
+Workflow 是 Temporal 应用程序的基本单元，这一切都始于 [Workflow Definition](/workflow-definition) 的开发。
 
-In the Temporal Go SDK programming model, a [Workflow Definition](/workflow-definition) is an exportable function.
-Below is an example of a basic Workflow Definition.
+在 Temporal Go SDK 编程模型中，[Workflow Definition](/workflow-definition) 是可导出函数。
+以下是基本 Workflow Definition 的示例。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/yourapp/your_workflow_definition_dacx.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -42,31 +43,32 @@ func YourSimpleWorkflowDefinition(ctx workflow.Context) error {
 }
 ```
 
-### How to define Workflow parameters {#workflow-parameters}
+<a id="workflow-parameters"></a>
+### 如何定义 Workflow 参数 {#workflow-parameters}
 
-Temporal Workflows may have any number of custom parameters.
-However, we strongly recommend that objects are used as parameters, so that the object's individual fields may be altered without breaking the signature of the Workflow.
-All Workflow Definition parameters must be serializable.
+Temporal Workflow 可以具有任意数量的自定义参数。
+但是，我们强烈建议将对象用作参数，以便可以在不破坏 Workflow 签名的情况下更改对象的各个字段。
+所有 Workflow Definition 参数都必须可序列化。
 
-The first parameter of a Go-based Workflow Definition must be of the [`workflow.Context`](https://pkg.go.dev/go.temporal.io/sdk/workflow#Context) type.
-It is used by the Temporal Go SDK to pass around Workflow Execution context, and virtually all the Go SDK APIs that are callable from the Workflow require it.
-It is acquired from the [`go.temporal.io/sdk/workflow`](https://pkg.go.dev/go.temporal.io/sdk/workflow) package.
+基于 Go 的 Workflow Definition 的第一个参数必须是 [`Workflow.Context`](https://pkg.go.dev/go.temporal.io/sdk/workflow#Context) 类型。
+Temporal Go SDK 使用它来传递 Workflow Execution 上下文，并且几乎所有可从 Workflow 调用的 Go SDK API 都需要它。
+它是从 [`go.Temporal.io/sdk/Workflow`](https://pkg.go.dev/go.temporal.io/sdk/workflow) 包中获取的。
 
-The `workflow.Context` entity operates similarly to the standard `context.Context` entity provided by Go.
-The only difference between `workflow.Context` and `context.Context` is that the `Done()` function, provided by `workflow.Context`, returns `workflow.Channel` instead of the standard Go `chan`.
+`Workflow.Context` 实体的运行方式与 Go 提供的标准 `context.Context` 实体类似。
+`Workflow.Context` 和 `context.Context` 之间的唯一区别是 `Workflow.Context` 提供的 `Done()` 函数返回 `Workflow.Channel` 而不是标准的 Go `chan`。
 
-Additional parameters can be passed to the Workflow when it is invoked.
-A Workflow Definition may support multiple custom parameters, or none.
-These parameters can be regular type variables or safe pointers.
-However, the best practice is to pass a single parameter that is of a `struct` type, so there can be some backward compatibility if new parameters are added.
+调用 Workflow 时，可以将其他参数传递给它。
+Workflow Definition 可能支持多个自定义参数，也可能不支持。
+这些参数可以是常规类型变量或安全指针。
+但是，最佳实践是传递 `struct` 类型的单个参数，因此如果添加新参数，则可以具有一定的向后兼容性。
 
-All Workflow Definition parameters must be serializable and can't be channels, functions, variadic, or unsafe pointers.
+所有 Workflow Definition 参数必须可序列化，并且不能是通道、函数、变量或不安全指针。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/yourapp/your_workflow_definition_dacx.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -90,24 +92,25 @@ func YourWorkflowDefinition(ctx workflow.Context, param YourWorkflowParam) (*You
 }
 ```
 
-### How to define Workflow return parameters {#workflow-return-values}
+<a id="workflow-return-values"></a>
+### 如何定义 Workflow 返回参数 {#workflow-return-values}
 
-Workflow return values must also be serializable.
-Returning results, returning errors, or throwing exceptions is fairly idiomatic in each language that is supported.
-However, Temporal APIs that must be used to get the result of a Workflow Execution will only ever receive one of either the result or the error.
+Workflow 返回值也必须是可序列化的。
+返回结果、返回错误或引发异常在每种受支持的语言中都是相当惯用的。
+但是，必须用于获取 Workflow Execution 结果的 Temporal API 将仅收到结果或错误之一。
 
-A Go-based Workflow Definition can return either just an `error` or a `customValue, error` combination.
-Again, the best practice here is to use a `struct` type to hold all custom values.
-A Workflow Definition written in Go can return both a custom value and an error.
-However, it's not possible to receive both a custom value and an error in the calling process, as is normal in Go.
-The caller will receive either one or the other.
-Returning a non-nil `error` from a Workflow indicates that an error was encountered during its execution and the Workflow Execution should be terminated, and any custom return values will be ignored by the system.
+基于 Go 的 Workflow Definition 可以仅返回 `error` 或 `customValue, error` 组合。
+同样，此处的最佳实践是使用 `struct` 类型来保存所有自定义值。
+用 Go 编写的 Workflow Definition 可以返回自定义值和错误。
+但是，在调用过程中不可能同时接收自定义值和错误，这在 Go 中是正常的。
+呼叫者将收到其中之一。
+从 Workflow 返回非零 `error` 表示在执行过程中遇到错误，并且 Workflow Execution 应终止，并且系统将忽略任何自定义返回值。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/yourapp/your_workflow_definition_dacx.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -141,17 +144,18 @@ func YourWorkflowDefinition(ctx workflow.Context, param YourWorkflowParam) (*You
 }
 ```
 
-### How to customize Workflow Type in Go {#customize-workflow-type}
+<a id="customize-workflow-type"></a>
+### 如何在 Go 中自定义 Workflow 类型 {#customize-workflow-type}
 
-In Go, by default, the Workflow Type name is the same as the function name.
+在 Go 中，默认情况下，Workflow 类型名称与函数名称相同。
 
-To customize the Workflow Type, set the `Name` parameter with `RegisterOptions` when registering your Workflow with a Worker.
+要自定义 Workflow 类型，请在使用 Worker 注册 Workflow 时使用 `RegisterOptions` 设置 `Name` 参数。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/yourapp/worker/main_dacx.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -181,29 +185,30 @@ func main() {
 }
 ```
 
-### How to develop Workflow logic {#workflow-logic-requirements}
+<a id="workflow-logic-requirements"></a>
+### 如何开发 Workflow 逻辑 {#workflow-logic-requirements}
 
-Workflow logic is constrained by [deterministic execution requirements](/workflow-definition#deterministic-constraints).
-Therefore, each language is limited to the use of certain idiomatic techniques.
-However, each Temporal SDK provides a set of APIs that can be used inside your Workflow to interact with external (to the Workflow) application code.
+Workflow 逻辑受 [确定性执行要求](/workflow-definition#deterministic-constraints) 约束。
+因此，每种语言都仅限于使用某些惯用技术。
+但是，每个 Temporal SDK 都提供了一组 API，可在 Workflow 内部使用这些 API 来与外部（对于 Workflow）应用程序代码进行交互。
 
-In Go, Workflow Definition code cannot directly do the following:
+在 Go 中，Workflow Definition 代码不能直接执行以下操作：
 
-- Iterate over maps using `range`, because with `range` the order of the map's iteration is randomized.
-  Instead you can collect the keys of the map, sort them, and then iterate over the sorted keys to access the map.
-  This technique provides deterministic results.
-  You can also use a Side Effect or an Activity to process the map instead.
-- Call an external API, conduct a file I/O operation, talk to another service, etc. (Use an Activity for these.)
+- 使用 `range` 迭代地图，因为使用 `range` 地图迭代的顺序是随机的。
+  相反，您可以收集映射的键，对它们进行排序，然后迭代排序的键以访问映射。
+  该技术提供了确定性结果。
+  您还可以使用 Side Effect 或 Activity 来处理地图。
+- 调用外部 API、执行文件 I/O 操作、与其他服务通信等（使用 Activity 执行这些操作。）
 
-The Temporal Go SDK has APIs to handle equivalent Go constructs:
+Temporal Go SDK 具有处理等效 Go 结构的 API：
 
-- `workflow.Now()` This is a replacement for `time.Now()`.
-- `workflow.Sleep()` This is a replacement for `time.Sleep()`.
-- `workflow.GetLogger()` This ensures that the provided logger does not duplicate logs during a replay.
-- `workflow.Go()` This is a replacement for the `go` statement.
-- `workflow.Channel` This is a replacement for the native `chan` type.
-  Temporal provides support for both buffered and unbuffered channels.
-- `workflow.Selector` This is a replacement for the `select` statement.
-  Learn more on the [Go SDK Selectors](https://legacy-documentation-sdks.temporal.io/go/selectors) page.
-- `workflow.Context` This is a replacement for `context.Context`.
-  See [Tracing](/develop/go/platform/observability#tracing) for more information about context propagation.
+- `Workflow.Now()` 这是 `time.Now()` 的替代品。
+- `Workflow.Sleep()` 这是 `time.Sleep()` 的替代品。
+- `Workflow.GetLogger()` 这可确保提供的记录器在重放期间不会重复日志。
+- `Workflow.Go()` 这是 `go` 语句的替代。
+- `Workflow.Channel` 这是原生 `chan` 类型的替代品。
+  Temporal 提供对缓冲和非缓冲通道的支持。
+- `Workflow.Selector` 这是 `select` 语句的替代。
+  请访问 [Go SDK 选择器](https://legacy-documentation-sdks.temporal.io/go/selectors) 页面了解更多信息。
+- `Workflow.Context` 这是 `context.Context` 的替代品。
+  有关上下文传播的更多信息，请参阅 [追踪](/develop/go/platform/observability#tracing)。

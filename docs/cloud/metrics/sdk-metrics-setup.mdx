@@ -1,8 +1,8 @@
 ---
 id: sdk-metrics-setup
-title: Monitor SDK metrics with Prometheus and Grafana
-sidebar_label: SDK Metrics
-description: Set up Temporal SDK metrics with Prometheus and Grafana for monitoring Workers and Client performance.
+title: "使用 Prometheus 和 Grafana 监控 SDK 指标"
+sidebar_label: "SDK指标"
+description: "使用 Prometheus 和 Grafana 设置 Temporal SDK 指标，以监控 Worker 和客户端性能。"
 slug: /cloud/metrics/sdk-metrics-setup
 toc_max_heading_level: 4
 keywords:
@@ -22,56 +22,56 @@ tags:
 
 import { ZoomingImage } from '@site/src/components';
 
-SDK metrics are emitted by SDK Clients used to start your Workers and to start, signal, or query your Workflow Executions.
-Unlike [Temporal Cloud metrics](/cloud/metrics/), which are exposed through a Prometheus HTTP API endpoint, SDK metrics require you to set up a Prometheus scrape endpoint in your application code for Prometheus to collect and aggregate.
+SDK 指标由用于启动 Worker 和启动 Signal 或 Query Workflow Execution 的 SDK 客户端发出。
+与通过 Prometheus HTTP API 端点公开的 [Temporal Cloud 指标](/cloud/metrics/) 不同，SDK 指标要求您在应用程序代码中设置 Prometheus 抓取端点，以便 Prometheus 收集和聚合。
 
-For a full list of available SDK metrics and their descriptions, see the [SDK metrics reference](/references/sdk-metrics).
+有关可用 SDK 指标及其描述的完整列表，请参阅 [SDK指标参考](/references/sdk-metrics)。
 
-The process for setting up SDK metrics includes the following steps:
+设置 SDK 指标的过程包括以下步骤：
 
-1. [Expose a metrics endpoint](#sdk-metrics-setup) in your application code where Prometheus can scrape SDK metrics.
-2. [Configure Prometheus](#prometheus-configuration) to scrape your SDK metrics endpoints.
-3. [Add an SDK metrics data source](#grafana-data-source-configuration) in Grafana.
-4. [Set up dashboards](#grafana-dashboards-setup) to visualize SDK metrics.
+1. 应用程序代码中的 [公开指标端点](#sdk-metrics-setup)，Prometheus 可以在其中抓取 SDK 指标。
+2. [配置普罗米修斯](#prometheus-configuration) 抓取您的 SDK 指标端点。
+3. Grafana 中的 [添加SDK指标数据源](#grafana-data-source-configuration)。
+4. [设置仪表板](#grafana-dashboards-setup) 用于可视化 SDK 指标。
 
-Set up your connections to Temporal Cloud using an SDK of your choice and have some Workflows running on Temporal Cloud.
-Ensure Prometheus and Grafana are installed.
+使用您选择的 SDK 设置与 Temporal Cloud 的连接，并在 Temporal Cloud 上运行一些 Workflow。
+确保 Prometheus 和 Grafana 已安装。
 
-- [Go](/develop/go/client/temporal-client#connect-to-temporal-cloud)
-- [Java](/develop/java/client/temporal-client#connect-to-temporal-cloud)
+- [去](/develop/go/client/temporal-client#connect-to-temporal-cloud)
+- [爪哇](/develop/java/client/temporal-client#connect-to-temporal-cloud)
 - [Python](/develop/python/client/temporal-client#connect-to-temporal-cloud)
-- [TypeScript](/develop/typescript/client/temporal-client#connect-to-temporal-cloud)
-- [.NET](/develop/dotnet/client/temporal-client#connect-to-temporal-cloud)
+- [打字稿](/develop/typescript/client/temporal-client#connect-to-temporal-cloud)
+- [。网](/develop/dotnet/client/temporal-client#connect-to-temporal-cloud)
 
-## Expose a metrics endpoint {#sdk-metrics-setup}
+## 公开指标端点 {#sdk-metrics-setup}
 
-You must configure a Prometheus scrape endpoint for Prometheus to collect and aggregate your SDK metrics.
-Each language development guide has details on how to set this up.
+您必须为 Prometheus 配置一个 Prometheus 抓取端点来收集和聚合您的 SDK 指标。
+每种语言开发指南都有有关如何设置的详细信息。
 
 - [Go SDK](/develop/go/platform/observability#metrics)
 - [Java SDK](/develop/java/platform/observability#metrics)
 - [TypeScript SDK](/develop/typescript/platform/observability#metrics)
 - [Python](/develop/python/platform/observability#metrics)
-- [.NET](/develop/dotnet/platform/observability#metrics)
+- [。网](/develop/dotnet/platform/observability#metrics)
 
-For working examples of how to configure metrics in each SDK, see the metrics samples:
+有关如何在每个 SDK 中配置指标的工作示例，请参阅指标示例：
 
-- [Go SDK Samples](https://github.com/temporalio/samples-go/tree/main/metrics)
-- [Java SDK Samples](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/metrics)
-- [TypeScript SDK Samples](https://github.com/temporalio/samples-typescript/tree/main/interceptors-opentelemetry)
-- [Python SDK Samples](https://github.com/temporalio/samples-python/tree/main/custom_metric)
-- [.NET SDK Samples](https://github.com/temporalio/samples-dotnet/tree/main/src/OpenTelemetry/DotNetMetrics)
+- [Go SDK 样品](https://github.com/temporalio/samples-go/tree/main/metrics)
+- [Java SDK 样品](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/metrics)
+- [TypeScript SDK 样品](https://github.com/temporalio/samples-typescript/tree/main/interceptors-opentelemetry)
+- [Python SDK 样品](https://github.com/temporalio/samples-python/tree/main/custom_metric)
+- [.NET SDK 样品](https://github.com/temporalio/samples-dotnet/tree/main/src/OpenTelemetry/DotNetMetrics)
 
-Some examples use OpenTelemtry to instrument metrics. It is useful to use a
-[Prometheus exporter with OpenTelemetry](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/prometheusexporter) to expose metrics for scraping.
+一些示例使用 OpenTelemtry 来检测指标。使用
+[使用 OpenTelemetry 的 Prometheus 导出器](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/prometheusexporter) 公开抓取指标。
 
-## Configure Prometheus {#prometheus-configuration}
+## 配置 Prometheus {#prometheus-configuration}
 
-For Temporal SDKs, you must have Prometheus running and configured to listen on the scrape endpoints exposed in your application code.
+对于 Temporal SDK，您必须运行 Prometheus 并将其配置为侦听应用程序代码中公开的抓取端点。
 
-For this example, you can run Prometheus locally or as a Docker container.
-In either case, ensure that you set the listen targets to the ports where you expose your scrape endpoints.
-This configuration assumes the scrape endpoint is set to port 8077 as in the [SDK metrics setup](#sdk-metrics-setup) example.
+对于此示例，您可以在本地运行 Prometheus 或作为 Docker 容器运行。
+无论哪种情况，请确保将侦听目标设置为公开抓取端点的端口。
+此配置假设抓取端点设置为端口 8077，如 [SDK指标设置](#sdk-metrics-setup) 示例中所示。
 
 ```yaml
 global:
@@ -90,58 +90,58 @@ scrape_configs:
         # You can have multiple targets here, provided they are set up in your application code.
 ```
 
-See the [Prometheus documentation](https://prometheus.io/docs/introduction/first_steps/) for more details on how you can run Prometheus locally or using Docker.
+有关如何在本地或使用 Docker 运行 Prometheus 的更多详细信息，请参阅 [普罗米修斯文档](https://prometheus.io/docs/introduction/first_steps/)。
 
-To check whether Prometheus is receiving metrics from your SDK target, go to [http://localhost:9090](http://localhost:9090) and navigate to **Status&nbsp;> Targets**.
-The status of your target endpoint defined in your configuration appears here.
+要检查 Prometheus 是否正在从您的 SDK 目标接收指标，请转到 [http://localhost:9090](http://localhost:9090) 并导航到 **状态 > 目标**。
+您的配置中定义的目标端点的状态显示在此处。
 
-## Add an SDK metrics data source in Grafana {#grafana-data-source-configuration}
+## 在 Grafana 中添加 SDK 指标数据源 {#grafana-data-source-configuration}
 
-Depending on how you use Grafana, you can either install and run it locally, run it as a Docker container, or log in to Grafana Cloud to set up your data sources.
+根据您使用 Grafana 的方式，您可以在本地安装并运行它，将其作为 Docker 容器运行，或者登录 Grafana Cloud 以设置数据源。
 
-If you have installed and are running Grafana locally, go to [http://localhost:3000](http://localhost:3000) and sign in.
+如果您已在本地安装并运行 Grafana，请转至 [http://localhost:3000](http://localhost:3000) 并登录。
 
-To add the SDK metrics Prometheus endpoint as a data source, do the following:
+要将 SDK 指标 Prometheus 端点添加为数据源，请执行以下操作：
 
-1. Go to **Configuration&nbsp;> Data sources**.
-2. Select **Add data source&nbsp;> Prometheus**.
-3. Enter a name for your SDK metrics data source, such as _Temporal SDK metrics_.
-4. In the **HTTP** section, enter your Prometheus endpoint in the URL field.
-   If running Prometheus locally as described in the examples in this article, enter `http://localhost:9090`.
-5. For this example, enable **Skip TLS Verify** in the **Auth** section.
-6. Click **Save and test** to verify that the data source is working.
+1. 转至 **配置 > 数据源**。
+2. 选择 **添加数据源 > Prometheus**。
+3. 输入 SDK 指标数据源的名称，例如 _Temporal SDK 指标_。
+4. 在 **HTTP** 部分的 URL 字段中输入您的 Prometheus 端点。
+   如果按照本文示例中所述在本地运行 Prometheus，请输入 `http://localhost:9090`。
+5. 对于本示例，在 **Auth** 部分中启用 **Skip TLS verify**。
+6. 单击“**保存并测试**”以验证数据源是否正常工作。
 
-If you see issues in setting this data source, check whether the endpoints set in your SDKs are showing metrics.
-If you don't see your SDK metrics at the scrape endpoints defined, check whether your Workers and Workflow Executions are running.
-If you see metrics on the scrape endpoints, but Prometheus shows your targets are down, then there is an issue with connecting to the targets set in your SDKs.
-Verify your Prometheus configuration and restart Prometheus.
+如果您在设置此数据源时发现问题，请检查 SDK 中设置的端点是否显示指标。
+如果您在定义的抓取端点处看不到 SDK 指标，请检查您的 Worker 和 Workflow Execution 是否正在运行。
+如果您在抓取端点上看到指标，但 Prometheus 显示您的目标已关闭，则表明连接到 SDK 中设置的目标存在问题。
+验证您的 Prometheus 配置并重新启动 Prometheus。
 
-If you're running Grafana as a container, you can set your SDK metrics Prometheus data source in your Grafana configuration.
-See the example Grafana configuration described in the [Prometheus and Grafana setup for open-source Temporal Service](/self-hosted-guide/monitoring#grafana) article.
+如果您将 Grafana 作为容器运行，则可以在 Grafana 配置中设置 SDK 指标 Prometheus 数据源。
+请参阅 [开源 Temporal 服务的 Prometheus 和 Grafana 设置](/self-hosted-guide/monitoring#grafana) 文章中描述的示例 Grafana 配置。
 
-## Set up Grafana dashboards {#grafana-dashboards-setup}
+## 设置 Grafana 仪表板 {#grafana-dashboards-setup}
 
-To set up SDK metrics dashboards in Grafana, you can use the UI or configure them directly in your Grafana deployment.
+要在 Grafana 中设置 SDK 指标仪表板，您可以使用 UI 或直接在 Grafana 部署中配置它们。
 
 :::tip
 
-Temporal provides community-driven [example dashboards for Temporal SDKs](https://github.com/temporalio/dashboards/tree/master/sdk) that you can customize to meet your needs.
+Temporal 提供社区驱动的 [Temporal SDK 的示例仪表板](https://github.com/temporalio/dashboards/tree/master/sdk)，您可以对其进行定制以满足您的需求。
 
 :::
 
-To import a dashboard in Grafana:
+要在 Grafana 中导入仪表板：
 
-1. In the navigation bar, select **Dashboards** > **Import dashboard**.
-2. You can either copy and paste the JSON from the [Temporal SDK sample dashboards](https://github.com/temporalio/dashboards/tree/master/sdk), or import the JSON files into Grafana.
-3. Save the dashboard and review the metrics data in the graphs.
+1. 在导航栏中，选择**仪表板** > **导入仪表板**。
+2. 您可以从 [Temporal SDK 示例仪表板](https://github.com/temporalio/dashboards/tree/master/sdk) 复制并粘贴 JSON，或将 JSON 文件导入 Grafana。
+3. 保存仪表板并查看图表中的指标数据。
 
-To configure dashboards with the UI:
+要使用 UI 配置仪表板：
 
-1. Go to **Create > Dashboard** and add an empty panel.
-2. On the **Panel configuration** page, in the **Query** tab, select the "Temporal SDK metrics" data source that you configured earlier.
-3. Expand the **Metrics browser** and select the metrics you want.
-   A list of Worker performance metrics is described in the [Developer's Guide - Worker performance](/develop/worker-performance).
-   All SDK-related metrics are listed in the [SDK metrics](/references/sdk-metrics) reference.
-4. The graph should now display data based on your selected queries.
-   Note that SDK metrics will only show if you have Workflow Execution data and running Workers.
-   If you don't see SDK metrics, run your Worker and Workflow Executions, then monitor the dashboard.
+1. 转到 **创建 > 仪表板** 并添加一个空面板。
+2. 在 **面板配置** 页面的 **Query** 选项卡中，选择您之前配置的“Temporal SDK 指标”数据源。
+3. 展开**指标浏览器**并选择所需的指标。
+   [开发人员指南 - Worker 性能](/develop/worker-performance) 中描述了 Worker 性能指标的列表。
+   [SDK指标](/references/sdk-metrics) 参考中列出了所有与 SDK 相关的指标。
+4. 图表现在应该根据您选择的查询显示数据。
+   请注意，仅当您拥有 Workflow Execution 数据并运行 Worker 时，SDK 指标才会显示。
+   如果您没有看到 SDK 指标，请运行 Worker 和 Workflow Execution，然后监视仪表板。

@@ -1,8 +1,8 @@
 ---
 id: api-reference
-title: OpenMetrics API reference
-sidebar_label: API reference
-description: Detailed API documentation for the Temporal Cloud OpenMetrics endpoint.
+title: "OpenMetrics API 参考"
+sidebar_label: "API参考"
+description: "Temporal Cloud OpenMetrics 端点的详细 API 文档。"
 keywords:
   - temporal cloud metrics configuration
   - configure metrics endpoint
@@ -23,156 +23,175 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-The Temporal Cloud OpenMetrics API provides actionable operational metrics about your Temporal Cloud deployment. This is a scrapable HTTP API that returns metrics in OpenMetrics format, suitable for ingestion by Prometheus-compatible monitoring systems.
+Temporal Cloud OpenMetrics API 提供有关 Temporal Cloud 部署的可操作操作指标。这是一个可抓取的 HTTP API，它返回 OpenMetrics 格式的指标，适合由 Prometheus 兼容的监控系统摄取。
 
 
-## Available Metrics Reference
+<a id="available-metrics-reference"></a>
+## 可用指标参考 {#available-metrics-reference}
 
-Metrics descriptions are also available programmatically via the `/v1/descriptors` endpoint. You can see the Metrics Reference for a list of available metrics.
+还可以通过 `/v1/descriptors` 端点以编程方式获取指标描述。您可以查看指标参考以获取可用指标的列表。
 
-## Authentication
+＃＃ 验证
 
-Temporal uses API keys for integrating with the OpenMetrics endpoint. Applications must be authorized and authenticated before they can access metrics from Temporal Cloud.
+Temporal 使用 API 密钥与 OpenMetrics 端点集成。应用程序必须经过授权和身份验证才能从 Temporal Cloud 访问指标。
 
-An API key is owned by a Service Account and inherits the permissions granted to the owner.
+API 密钥由服务帐户拥有，并继承授予所有者的权限。
 
-### Creating API Keys
+<a id="authentication"></a>
+### 创建 API 密钥 {#authentication}
 
-API keys can be created using the [Temporal Cloud UI](https://cloud.temporal.io):
+可以使用 [Temporal Cloud 用户界面](https://cloud.temporal.io) 创建 API 密钥：
 
-1. Navigate to Settings → Service Accounts  
-2. Create a service account with **"Metrics Read-Only"** Account Level Role
-3. Generate an API key within the service account
+1. 导航至设置 → 服务帐户  
+2. 创建具有**“Metrics Read-Only”**帐户级别角色的服务帐户
+3. 在服务帐户内生成 API 密钥
 
 :::info
 
-See the [docs](https://docs.temporal.io/cloud/api-keys#serviceaccount-api-keys) for more details on generating API keys.
+有关生成 API 密钥的更多详细信息，请参阅 [文档](https://docs.temporal.io/cloud/api-keys#serviceaccount-api-keys)。
 
 :::
 
-### Using API Keys
+<a id="creating-api-keys"></a>
+### 使用 API 密钥 {#creating-api-keys}
 
-All API requests must be made over HTTPS. Calls made over plain HTTP will fail. API requests without authentication will also fail.
+所有 API 请求都必须通过 HTTPS 发出。通过纯 HTTP 进行的调用将会失败。未经身份验证的 API 请求也会失败。
 
 ```shell
 curl -H "Authorization: Bearer <API_KEY>" https://metrics.temporal.io/v1/metrics
 ```
 
-## Object Model
+<a id="using-api-keys"></a>
+## 对象模型 {#using-api-keys}
 
-The object model for the Metrics API follows the [OpenMetrics](https://openmetrics.io/) standard.
+Metrics API 的对象模型遵循 [开放指标](https://openmetrics.io/) 标准。
 
-### Metrics
+<a id="object-model"></a>
+### 指标 {#object-model}
 
-A metric is a numeric attribute measured at a specific point in time, labeled with contextual metadata gathered at the point of instrumentation.
+指标是在特定时间点测量的数字属性，标有在检测点收集的上下文元数据。
 
-### Metric Types
+<a id="metrics"></a>
+### 指标类型 {#metrics}
 
-All Temporal Cloud metrics are exposed as *gauges* in OpenMetrics format, but represent different measurement types:
+所有 Temporal Cloud 指标均以 OpenMetrics 格式公开为*规格*，但代表不同的测量类型：
 
-* **Rate metrics**: Pre-computed per-second rates with delta temporality (e.g., `temporal_cloud_v1_workflow_success_count` \- workflows completed per second)  
-* **Value metrics**: Current or instantaneous values (e.g., `temporal_cloud_v1_approximate_backlog_count` \- current number of tasks in queue)
+* **速率指标**：预先计算的每秒速率以及增量 Temporality（例如，`Temporal_cloud_v1_Workflow_success_count` \- 每秒完成的 Workflow）  
+* **值指标**：当前或瞬时值（例如，`Temporal_cloud_v1_approximate_backlog_count` \- 队列中的当前任务数）
 
-The list of metrics and their labels are available via the [List Descriptors](/cloud/metrics/openmetrics/api-reference#list-metric-descriptors) endpoint or in the [Metrics Reference](/cloud/metrics/openmetrics/metrics-reference).
+指标列表及其标签可通过 [列表描述符](/cloud/metrics/openmetrics/api-reference#list-metric-descriptors) 端点或在 [指标参考](/cloud/metrics/openmetrics/metrics-reference) 中获取。
 
-### Labels
+<a id="metric-types"></a>
+### 标签 {#metric-types}
 
-A label is a key-value attribute associated with a metric data point. Labels can be used to filter or aggregate metrics.
+标签是与指标数据点关联的键值属性。标签可用于过滤或聚合指标。
 
-Common labels include:
+常见的标签包括：
 
-* `temporal_namespace`: The Temporal namespace  
-* `temporal_account`: The Temporal account  
-* `region`: The cloud region where the metric originated  
-* `temporal_workflow_type`: The workflow type (where applicable)  
-* `temporal_task_queue`: The task queue name (where applicable)
+* `Temporal_Namespace`：Temporal Namespace  
+* `Temporal_account`：Temporal 帐户  
+* `region`：指标源自的云区域  
+* `Temporal_Workflow_type`：Workflow 类型（如适用）  
+* `Temporal_task_queue`：Task Queue 名称（如适用）
 
-Each metric has its own set of applicable labels. See the Metrics Reference for complete details.
+每个指标都有自己的一组适用标签。有关完整详细信息，请参阅指标参考。
 
-### Metric Family
+<a id="labels"></a>
+### 公制系列 {#labels}
 
-A [Metric Family](https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md#metricfamily) may have zero or more metrics.  The set of metrics returned will vary based on actual system activity.  Metrics only appear in a Metric Family if they were reported during the aggregation window.
+[公制系列](https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md#metricfamily) 可能有零个或多个指标。  返回的指标集将根据实际系统 Activity 的不同而有所不同。  仅当在聚合窗口期间报告指标时，指标才会出现在指标系列中。
 
-## Client Considerations
+<a id="metric-family"></a>
+## 客户考虑因素 {#metric-family}
 
-### Rate Limiting
+<a id="client-considerations"></a>
+### 速率限制 {#client-considerations}
 
-To protect the stability of the API and keep it available to all users, Temporal employs multiple safeguards.
+为了保护 API 的稳定性并使其可供所有用户使用，Temporal 采用了多种保护措施。
 
-When a rate limit is breached, an HTTP `429 Too Many Requests` error is returned with the following headers:
+当违反速率限制时，将返回 HTTP `429 Too Many Requests` 错误，并包含以下标头：
 
-| Header | Description |
+| 标头 | 描述 |
 | ----- | ----- |
-| `Retry-After` | The time in seconds until the rate limit window resets |
+| `Retry-After` | 速率限制窗口重置之前的时间（以秒为单位） |
 
-#### Rate Limit Scopes
+<a id="rate-limiting"></a>
+#### 速率限制范围 {#rate-limiting}
 :::note
-Rate limit scopes are subject to change.
+速率限制范围可能会发生变化。
 
 :::
 
-| Scope | Limit |
+| 范围 | 限制 |
 | ----- | ----- |
-| Account | 180 requests per hour |
+| 帐户 | 每小时 180 个请求 |
 
-### Response Completeness
+<a id="rate-limit-scopes"></a>
+### 响应完整性 {#rate-limit-scopes}
 
-The `X-Completeness` header indicates whether the response contains all available data:
+`X-Completeness` 标头指示响应是否包含所有可用数据：
 
-* `complete`: The response contains all metrics requested  
-* `limited`: Response truncated due to size limits (30k metric data points max). Use namespace or metric filtering to reduce the response size.
-* `unknown`: Completeness cannot be determined (possibly due to regional issues or timeouts). Clients are encouraged to retry.
+* `complete`：响应包含请求的所有指标  
+* `limited`：由于大小限制（最多 30k 指标数据点），响应被截断。使用 Namespace 或指标过滤来减小响应大小。
+* `unknown`：无法确定完整性（可能是由于区域问题或超时）。鼓励客户重试。
 
-### Retry Logic
+<a id="response-completeness"></a>
+### 重试逻辑 {#response-completeness}
 
-Implement retry logic in your client to gracefully handle transient API failures. Use exponential backoff with jitter to avoid retry storms with reasonable retry intervals to avoid reaching rate limits.
+在客户端中实现重试逻辑，以优雅地处理暂时性 API 故障。使用带有抖动的指数退避来避免重试风暴，并通过合理的重试间隔来避免达到速率限制。
 
-### Data Latency
+<a id="retry-logic"></a>
+### 数据延迟 {#retry-logic}
 
-Metric data points are available for query within 3 minutes of their origination. This is in line with the freshest metrics [available from any major service provider](https://docs.datadoghq.com/integrations/guide/cloud-metric-delay/). This latency should be accounted for when setting up monitoring alerts.
+Query 的指标数据点在其生成后 3 分钟内可用。这与最新指标 [可从任何主要服务提供商处获得](https://docs.datadoghq.com/integrations/guide/cloud-metric-delay/) 一致。设置监控警报时应考虑到此延迟。
 
-## Endpoints
+<a id="data-latency"></a>
+## 端点 {#data-latency}
 
 :::info
 
-All endpoints are served from: `metrics.temporal.io`
+所有端点均由：`metrics.Temporal.io` 提供服务
 
 :::
 
-### Get Metrics
+<a id="endpoints"></a>
+### 获取指标 {#endpoints}
 
 `GET /v1/metrics`
 
-Returns metrics in OpenMetrics format suitable for scraping by Prometheus-compatible systems.
+返回适合 Prometheus 兼容系统抓取的 OpenMetrics 格式的指标。
 
-#### Timestamp Offset
+<a id="get-metrics"></a>
+#### 时间戳偏移量 {#get-metrics}
 
-To account for metric data latency, this endpoint returns metrics from the current timestamp minus a fixed offset.  The current offset is 3 minutes rounded down to the start of the minute. To accommodate this offset, the timestamps in the response should be honored when importing the metrics. For example, in Prometheus this can be controlled using the `honor\_timestamps` flag.
+为了考虑指标数据延迟，此端点返回当前时间戳减去固定偏移量的指标。  当前偏移量为 3 分钟，向下舍入到分钟的开始位置。为了适应此偏移量，在导入指标时应遵守响应中的时间戳。例如，在 Prometheus 中，可以使用 `honor\_timestamps` 标志来控制。
 
-#### Query Parameters
+<a id="timestamp-offset"></a>
+#### Query 参数 {#timestamp-offset}
 
-| Parameter | Type | Description |
+| 范围 | 类型 | 描述 |
 | ----- | ----- | ----- |
-| `namespaces` | string array | Filter to specific Namespaces. Supports wildcards (e.g., `production-*`) |
-| `metrics` | string array | Filter to specific metrics |
+| `Namespaces` | 字符串数组 | 过滤到特定的 Namespace。支持通配符（例如，`production-*`） |
+| `metrics` | 字符串数组 | 过滤到特定指标 |
 
-#### Response Headers
+<a id="query-parameters"></a>
+#### 响应标头 {#query-parameters}
 
-| Header | Description |
+| 标头 | 描述 |
 | ----- | ----- |
-| `X-Completeness` | Indicates the response status: `complete`, `limited`, or `unknown` |
+| `X-Completeness` | 指示响应状态：`complete`、`limited` 或 `unknown` |
 | `Content-Type` | `application/openmetrics-text` |
 
 :::info Example
 
-Request:
+要求：
 
 ```shell
 curl -H "Authorization: Bearer <API_KEY>" \
   "https://metrics.temporal.io/v1/metrics?namespaces=production-*"
 ```
 
-Response:
+回复：
 ```
 # TYPE temporal_cloud_v1_workflow_success_count gauge
 # HELP temporal_cloud_v1_workflow_success_count The number of successful workflows per second
@@ -186,36 +205,39 @@ temporal_cloud_v1_approximate_backlog_count{temporal_namespace="production",temp
 
 :::
 
-#### Summary of Best Practices
+<a id="response-headers"></a>
+#### 最佳实践总结 {#response-headers}
 
-* *Honor timestamps*: Set `honor_timestamps: true` in Prometheus  
-* *Scrape interval*: Use 30 or 60 second intervals  
-* *Timeout*: Set scrape timeout to 10 seconds for large responses  
-* *Filtering*: Use query parameters to reduce response size
+* *荣誉时间戳*：在 Prometheus 中设置 `honor_timestamps: true`  
+* *刮擦间隔*：使用 30 或 60 秒间隔  
+* *超时*：对于较大的响应，将抓取超时设置为 10 秒  
+* *过滤*：使用 Query 参数来减少响应大小
 
-### List Metric Descriptors
+<a id="summary-of-best-practices"></a>
+### 列出指标描述符 {#summary-of-best-practices}
 
 `GET /v1/descriptors`
 
-Lists all metric descriptors including metadata, data types, and available dimensions (a.k.a. labels).
+列出所有指标描述符，包括元数据、数据类型和可用维度（也称为标签）。
 
-#### Query Parameters
+<a id="list-metric-descriptors"></a>
+#### Query 参数 {#list-metric-descriptors}
 
-| Parameter | Type | Description |
+| 范围 | 类型 | 描述 |
 | ----- | ----- | ----- |
-| `limit` | integer | Page size (1-100, default: 100\) |
-| `offset` | integer | Page offset |
+| `limit` | 整数 | 页面大小（1-100，默认：100\） |
+| `offset` | 整数 | 页面偏移量 |
 
 :::info Example
 
-Request:
+要求：
 
 ```shell
 curl -H "Authorization: Bearer <API_KEY>" \
   "https://metrics.temporal.io/v1/descriptors"
 ```
 
-Response:
+回复：
 
 ```json
 {
@@ -243,41 +265,44 @@ Response:
 
 :::
 
-## Managing High Cardinality
+<a id="query-parameters"></a>
+## 管理高基数 {#query-parameters}
 
 :::caution
 
-High-cardinality labels like `temporal_task_queue` and `temporal_workflow_type` can significantly increase metric volume and impact performance of your monitoring system. 
+`Temporal_task_queue` 和 `Temporal_Workflow_type` 等高基数标签可以显着增加指标量并影响监控系统的性能。
 
 :::
 
-### Cardinality Estimation
+<a id="managing-high-cardinality"></a>
+### 基数估计 {#managing-high-cardinality}
 
-To estimate your metric cardinality and see if this is an issue:
+要估计您的指标基数并查看这是否是一个问题：
 
 ```
 Total series = Base metrics × Namespaces × Task queues × Workflow types
 ```
 
-Example:
+例子：
 
-* 6 workflow metrics with both labels  
-* 10 namespaces  
-* 50 task queues  
-* 20 workflow types  
-* \= 6 × 10 × 50 × 20 \= 60,000 time series
+* 6 个带有两个标签的 Workflow 指标  
+* 10 个 Namespace  
+* 50 个 Task Queue  
+* 20个Workflow类型  
+* \= 6 × 10 × 50 × 20 \= 60,000 个时间序列
 
 :::note
 
-60,000 time series in the above example results in exceeding the 30,000 data points per scrape limit.
+上述示例中的 60,000 个时间序列会导致每次抓取超过 30,000 个数据点限制。
 
 :::
 
-If the cardinality is too high or you are hitting API limits, consider the following strategies.
+如果基数太高或者您达到 API 限制，请考虑以下策略。
 
-### Filtering at Scrape Time
+<a id="cardinality-estimation"></a>
+### 在抓取时进行过滤 {#cardinality-estimation}
 
-You can isolate only the metrics/namespaces you need.  For example, the following shows examples of filtering by modifying the `metrics_path.`
+您可以仅隔离所需的指标/Namespace。  例如，下面是通过修改`metrics_path.`进行过滤的示例
 
 ```shell
 # Only specific namespaces matching the wildcard pattern
@@ -292,7 +317,7 @@ You can isolate only the metrics/namespaces you need.  For example, the followin
 
 :::info
 
-In Prometheus, the `params` config can be set to match the same behavior as above.
+在 Prometheus 中，可以设置 `params` 配置以匹配与上述相同的行为。
 
 ```yaml
 scrape_configs:
@@ -310,11 +335,13 @@ scrape_configs:
 :::
 
 
-### Label Management
+<a id="filtering-at-scrape-time"></a>
+### 标签管理 {#filtering-at-scrape-time}
 
-#### Prometheus
+<a id="label-management"></a>
+#### 普罗米修斯 {#label-management}
 
-If using Prometheus, you can configure it to drop metrics with a specific label or even rename specific label values to reduce the cardinality.
+如果使用 Prometheus，您可以将其配置为删除具有特定标签的指标，甚至重命名特定标签值以减少基数。
 
 ```yaml
 metric_relabel_configs:
@@ -333,9 +360,10 @@ metric_relabel_configs:
   action: labeldrop
 ```
 
-#### OpenTelemetry Collector
+<a id="prometheus"></a>
+#### 打开遥测收集器 {#prometheus}
 
-To accomplish the same as Prometheus, a filter can be used in the collector along with any other processors.
+为了实现与 Prometheus 相同的功能，可以在收集器中与任何其他处理器一起使用过滤器。
 
 ```
 processors:
@@ -348,9 +376,10 @@ processors:
           - Label("temporal_task_queue") == nil or IsMatch(Label("temporal_task_queue"), "^(critical-queue|payment-queue)$")
 ```
 
-### Monitoring Cardinality
+<a id="opentelemetry-collector"></a>
+### 监控基数 {#opentelemetry-collector}
 
-Cardinality can be monitored using this PromQL query.
+可以使用此 PromQL Query 来监控基数。
 
 ```shell
 # Count the total number of series
@@ -360,9 +389,10 @@ count({__name__=~"temporal_cloud_v1_.*"})
 count({__name__=~"temporal_cloud_v1_.*"}) by (__name__)
 ```
 
-## API Limits
+<a id="monitoring-cardinality"></a>
+## API 限制 {#monitoring-cardinality}
 
-| Limit | Impact | Mitigation |
+| 限制 | 影响 | 减轻 |
 | ----- | ----- | ----- |
-| 30k total datapoints per scrape | Response may be truncated | Use namespace/metric filtering |
-| 180 requests per account per hour (~3 requests per minute) | HTTP 429 returned | Set appropriate scrape interval of 30-60s |
+| 每次抓取总共 30k 个数据点 | 响应可能会被截断 | 使用Namespace/公制过滤 |
+| 每个帐户每小时 180 个请求（每分钟约 3 个请求） | 返回 HTTP 429 | 设置适当的刮擦间隔30-60s |

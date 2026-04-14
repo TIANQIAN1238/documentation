@@ -1,0 +1,59 @@
+---
+id: blob-size-limit-error
+title: 解决 blob 大小限制错误
+sidebar_label: Blob 大小限制错误
+description: 当 Workflow 的有效负载超过 2 MB 请求限制或 Temporal 设置的 4 MB Event History 事务限制时，会发生 BlobSizeLimitError。通过压缩或批处理减小 blob 大小。
+toc_max_heading_level: 4
+keywords:
+  - error
+  - troubleshooting
+tags:
+  - Errors
+  - Failures
+---
+
+“BlobSizeLimitError”是当 blob 的大小（包括 Workflow 上下文以及每个 Workflow 和 Activity 参数和返回值的有效负载）超过 Temporal 中设置的限制时发生的错误。
+
+- 单个请求的最大有效负载为 2 MB。
+- 任何给定 [Event History](/Workflow-execution/event#event-history) 事务的最大大小限制为 4 MB。
+
+## 为什么会出现这个错误？
+
+当 blob 的大小超过 Temporal 允许的最大大小时，会出现此错误。
+
+此限制有助于确保 Temporal 服务在处理大型负载时防止过度的资源使用和潜在的性能问题。
+
+## 如何解决此错误？
+
+要解决此错误，请减小 blob 的大小，使其不超过 4 MB 限制。
+
+您可以使用多种策略来避免此错误：
+
+1. 对于大负载，使用[自定义负载编解码器](/payload-codec) 进行压缩。
+
+#### --用户名
+
+数据库用户名。
+
+- Workflow级配料：
+     1. 修改 Workflow 以将活动或 Child Workflow 处理为较小的批次。
+     2. 迭代每个批次，等待完成后再进行下一个批次。
+   - Workflow Task级配料：
+     1. 在单个 Workflow Task 内小批量执行活动。
+     2. 在批次之间引入短暂的暂停或睡眠（例如 1 毫秒）。
+
+3. 考虑将大型有效负载卸载到对象存储，以降低超出 blob 大小限制的风险：
+   1. 传递对 Workflow 内存储的有效负载的引用，而不是实际数据。
+   2. 在执行过程中需要时从对象存储中检索有效负载。
+
+## Workflow 由于响应过大而终止
+
+当 Workflow Task 响应超过 4 MB gRPC 消息大小限制时，Temporal 自动终止 Workflow Execution。这是一个不可恢复的错误。如果 Workflow 生成太大的响应，则无法继续，因此重试也无济于事。
+
+当 Workflow、Schedule 在单个 Workflow Task 中执行过多活动、Child Workflow 或其他命令时，通常会发生这种情况。 Workflow Task 生成的所有命令的总大小必须在 4 MB 限制之内。
+
+如果您的 Workflow 由于此原因终止，您将在 Event History 中看到“WorkflowExecutionTermulated”事件，原因为“Workflow_TASK_FAILED_CAUSE_gRPC_MESSAGE_TOO_LARGE”。
+
+为了防止这种情况，请使用上述批处理策略将工作分配到多个 Workflow Task，而不是一次安排所有内容。
+
+有关更多详细信息，请参阅 [gRPC 消息过大错误参考](/references/errors#gRPC-message-too-large)。

@@ -1,0 +1,28 @@
+---
+id: visibility
+title: Visibility
+sidebar_label: Visibility
+description: The term Visibility, within the Temporal Platform, refers to the subsystems and APIs that enable an operator to view, filter, and search for Workflow Executions that currently exist within a Temporal Service.
+slug: /temporal-service/visibility
+toc_max_heading_level: 4
+keywords:
+  - visibility
+tags:
+  - Concepts
+  - Temporal Service
+---
+
+This page discusses [Visibility](#Visibility).
+
+## What is Visibility? {#Visibility}
+
+The term [Visibility](/Visibility), within the Temporal Platform, refers to the subsystems and APIs that enable an operator to view, filter, and search for Workflow Executions that currently exist within a Temporal Service.
+
+The [Visibility store](/self-hosted-guide/Visibility) in your Temporal Service stores persisted Workflow Execution Event History data and is set up as a part of your [Persistence store](/Temporal-service/persistence) to enable listing and filtering details about Workflow Executions that exist on your Temporal Service.
+
+- [How to set up a Visibility store](/self-hosted-guide/Visibility)
+
+With Temporal Server v1.21, you can set up [Dual Visibility](/dual-Visibility) to migrate your Visibility store from one database to another.
+
+Support for separate standard and advanced Visibility setups will be deprecated from Temporal Server v1.21 onwards.
+Check [Supported databases](/self-hosted-guide/Visibility) for Updates.

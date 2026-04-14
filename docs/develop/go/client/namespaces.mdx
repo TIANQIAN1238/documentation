@@ -1,7 +1,7 @@
 ---
 id: namespaces
-title: Namespaces - Go SDK
-sidebar_label: Namespaces
+title: "Namespaces - Go SDK"
+sidebar_label: "Namespaces"
 toc_max_heading_level: 4
 keywords:
   - namespaces
@@ -9,43 +9,44 @@ tags:
   - Namespaces
   - Go SDK
   - Temporal SDKs
-description: Register and manage Namespaces in Temporal using CLI or SDK APIs. Isolate Workflow Executions, match development lifecycles, and secure Namespace workflows.
+description: "使用 CLI 或 SDK API 在 Temporal 中注册和管理 Namespace。隔离 Workflow Execution、匹配开发生命周期并保护 Namespace Workflow。"
 ---
 
-This page shows how to do the following:
+此页面显示如何执行以下操作：
 
-- [Register Namespaces](#register-namespace)
-- [Manage Namespaces](#manage-namespaces)
+- [注册 Namespaces](#register-namespace)
+- [管理 Namespace](#manage-namespaces)
 
-You can create, update, deprecate, or delete your [Namespaces](/namespaces) using either the Temporal CLI or SDK APIs.
+您可以使用 Temporal CLI 或 SDK API 创建 Update、弃用或删除 [Namespaces](/namespaces)。
 
-Use Namespaces to isolate your Workflow Executions according to your needs.
-For example, you can use Namespaces to match the development lifecycle by having separate `dev` and `prod` Namespaces.
-You could also use them to ensure Workflow Executions between different teams never communicate - such as ensuring that the `teamA` Namespace never impacts the `teamB` Namespace.
+根据您的需要，使用 Namespace 隔离您的 Workflow Execution。
+例如，您可以使用 Namespace 通过单独的 `dev` 和 `prod` Namespace 来匹配开发生命周期。
+您还可以使用它们来确保不同团队之间的 Workflow Execution 永远不会进行通信 - 例如确保 `teamA` Namespace 永远不会影响 `teamB` Namespace。
 
-On Temporal Cloud, use the [Temporal Cloud UI](/cloud/namespaces#create-a-namespace) to create and manage a Namespace from the UI, or [tcld commands](https://docs.temporal.io/cloud/tcld/namespace/) to manage Namespaces from the command-line interface.
+在 Temporal Cloud 上，使用 [Temporal Cloud 用户界面](/cloud/namespaces#create-a-namespace) 从 UI 创建和管理 Namespace，或使用 [tcld 命令](https://docs.temporal.io/cloud/tcld/namespace/) 从命令行界面管理 Namespace。
 
-On self-hosted Temporal Service, you can register and manage your Namespaces using the Temporal CLI (recommended) or programmatically using APIs.
-Note that these APIs and Temporal CLI commands will not work with Temporal Cloud.
+在自托管的 Temporal 服务上，您可以使用 Temporal CLI（推荐）或以编程方式使用 API 来注册和管理您的 Namespace。
+请注意，这些 API 和 Temporal CLI 命令不适用于 Temporal Cloud。
 
-Use a custom [Authorizer](/self-hosted-guide/security#authorizer-plugin) on your Frontend Service in the Temporal Service to set restrictions on who can create, update, or deprecate Namespaces.
+在 Temporal 服务中的前端服务上使用自定义 [授权人](/self-hosted-guide/security#authorizer-plugin) 来设置对谁可以创建 Update 或弃用 Namespace 的限制。
 
-You must register a Namespace with the Temporal Service before setting it in the Temporal Client.
+您必须先向 Temporal 服务注册 Namespace，然后再在 Temporal CLIent 中设置它。
 
-### How to register Namespaces {#register-namespace}
+<a id="register-namespace"></a>
+### 如何注册 Namespace {#register-namespace}
 
-Registering a Namespace creates a Namespace on the Temporal Service or Temporal Cloud.
+注册 Namespace 会在 Temporal 服务或 Temporal Cloud 上创建 Namespace。
 
-On Temporal Cloud, use the [Temporal Cloud UI](/cloud/namespaces#create-a-namespace) or [tcld commands](https://docs.temporal.io/cloud/tcld/namespace/) to create Namespaces.
+在 Temporal Cloud 上，使用 [Temporal Cloud 用户界面](/cloud/namespaces#create-a-namespace) 或 [tcld 命令](https://docs.temporal.io/cloud/tcld/namespace/) 创建 Namespace。
 
-On self-hosted Temporal Service, you can register your Namespaces using the Temporal CLI (recommended) or programmatically using APIs.
-Note that these APIs and Temporal CLI commands will not work with Temporal Cloud.
+在自托管 Temporal 服务上，您可以使用 Temporal CLI（推荐）或以编程方式使用 API 注册您的 Namespace。
+请注意，这些 API 和 Temporal CLI 命令不适用于 Temporal Cloud。
 
-Use a custom [Authorizer](/self-hosted-guide/security#authorizer-plugin) on your Frontend Service in the Temporal Service to set restrictions on who can create, update, or deprecate Namespaces.
+在 Temporal 服务中的前端服务上使用自定义 [授权人](/self-hosted-guide/security#authorizer-plugin) 来设置对谁可以创建 Update 或弃用 Namespace 的限制。
 
-Use [`Register` API](https://pkg.go.dev/go.temporal.io/sdk/client#NamespaceClient) with the `NamespaceClient` interface to register a [Namespace](/namespaces) and set the [Retention Period](/temporal-service/temporal-server#retention-period) for the Workflow Execution Event History for the Namespace.
+使用[`Register` API](https://pkg.go.dev/go.temporal.io/sdk/client#NamespaceClient)和`NamespaceClient`接口来注册[Namespace](/namespaces)，并为Workflow Execution设置[保留期限](/temporal-service/temporal-server#retention-period)，为Namespace设置Event History。
 
-You can also [register Namespaces using the Temporal CLI command-line tool](/cli/operator#create).
+您也可以[使用 Temporal CLI 命令行工具注册 Namespace](/cli/operator#create)。
 
 ```go
 client, err := client.NewNamespaceClient(client.Options{HostPort: ts.config.ServiceAddr})
@@ -56,43 +57,44 @@ client, err := client.NewNamespaceClient(client.Options{HostPort: ts.config.Serv
     })
 ```
 
-The Retention Period setting using `WorkflowExecutionRetentionPeriod` is mandatory.
-The minimum value you can set for this period is 1 day.
+使用 `WorkflowExecutionRetentionPeriod` 的保留期设置是强制性的。
+您可以为此时间段设置的最小值为 1 天。
 
-Once registered, set Namespace using `Dial` in a Workflow Client to run your Workflow Executions within that Namespace.
-See [how to set Namespace in a Client in Go](/develop/go/client/temporal-client#connect-to-temporal-cloud) for details.
+注册后，在 Workflow 客户端中使用 `Dial` 设置 Namespace，以在该 Namespace 中运行 Workflow Execution。
+详细信息请参见 [如何在 Go 客户端中设置 Namespace](/develop/go/client/temporal-client#connect-to-temporal-cloud)。
 
-Note that Namespace registration using this API takes up to 10 seconds to complete.
-Ensure that you wait for this registration to complete before starting the Workflow Execution against the Namespace.
+请注意，使用此 API 进行 Namespace 注册最多需要 10 秒才能完成。
+确保在针对 Namespace 启动 Workflow Execution 之前等待此注册完成。
 
-To update your Namespace, use the [`Update` API](https://pkg.go.dev/go.temporal.io/sdk/client#NamespaceClient) with the `NamespaceClient`.
+对于 Update 和 Namespace，请将 [`Update` API](https://pkg.go.dev/go.temporal.io/sdk/client#NamespaceClient) 与 `NamespaceClient` 一起使用。
 
-To update your Namespace using the Temporal CLI, use the [temporal operator namespace update](/cli/operator#update) command.
+要使用 Temporal CLI 的 Update 或 Namespace，请使用 [Temporal 操作员 Namespace Update](/cli/operator#update) 命令。
 
-### How to manage Namespaces {#manage-namespaces}
+<a id="manage-namespaces"></a>
+### 如何管理 Namespaces {#manage-namespaces}
 
-You can get details for your Namespaces, update Namespace configuration, and deprecate or delete your Namespaces.
+您可以获取 Namespace、Update Namespace 配置的详细信息，并弃用或删除 Namespace。
 
-On Temporal Cloud, use the [Temporal Cloud UI](/cloud/namespaces#create-a-namespace) or [tcld commands](https://docs.temporal.io/cloud/tcld/namespace/) to manage Namespaces.
+在Temporal Cloud上，使用[Temporal Cloud 用户界面](/cloud/namespaces#create-a-namespace)或[tcld 命令](https://docs.temporal.io/cloud/tcld/namespace/)来管理Namespace。
 
-On self-hosted Temporal Service, you can manage your registered Namespaces using the Temporal CLI (recommended) or programmatically using APIs.
-Note that these APIs and Temporal CLI commands will not work with Temporal Cloud.
+在自托管的 Temporal 服务上，您可以使用 Temporal CLI（推荐）或以编程方式使用 API 来管理注册的 Namespace。
+请注意，这些 API 和 Temporal CLI 命令不适用于 Temporal Cloud。
 
-Use a custom [Authorizer](/self-hosted-guide/security#authorizer-plugin) on your Frontend Service in the Temporal Service to set restrictions on who can create, update, or deprecate Namespaces.
+在 Temporal 服务中的前端服务上使用自定义 [授权人](/self-hosted-guide/security#authorizer-plugin) 来设置对谁可以创建 Update 或弃用 Namespace 的限制。
 
-You must register a Namespace with the Temporal Service before setting it in the Temporal Client.
+您必须先向 Temporal 服务注册 Namespace，然后再在 Temporal CLIent 中设置它。
 
-On Temporal Cloud, use the [Temporal Cloud UI](/cloud/namespaces) or [tcld commands](/cloud/tcld/namespace/) to manage Namespaces.
+在Temporal Cloud上，使用[Temporal Cloud 用户界面](/cloud/namespaces)或[tcld 命令](/cloud/tcld/namespace/)来管理Namespace。
 
-On self-hosted Temporal Service, you can manage your registered Namespaces using the Temporal CLI (recommended) or programmatically using APIs.
-Note that these APIs and Temporal CLI commands will not work with Temporal Cloud.
+在自托管的 Temporal 服务上，您可以使用 Temporal CLI（推荐）或以编程方式使用 API 来管理注册的 Namespace。
+请注意，这些 API 和 Temporal CLI 命令不适用于 Temporal Cloud。
 
-- Update information and configuration for a registered Namespace on your Temporal Service:
+- 在您的 Temporal 服务上注册的 Namespace 的 Update 信息和配置：
 
-  - With the Temporal CLI: [`temporal operator namespace update`](/cli/operator#update)
-    Example
-  - Use the [`UpdateNamespace` API](https://pkg.go.dev/go.temporal.io/sdk/client#NamespaceClient) to update configuration on a Namespace.
-    Example
+- 使用 Temporal CLI：[`Temporal operator Namespace Update`](/cli/operator#update)
+    示例
+  - 在 Namespace 上使用 [`UpdateNamespace` API](https://pkg.go.dev/go.temporal.io/sdk/client#NamespaceClient) 至 Update 配置。
+    例子
 
     ```go
     //...
@@ -110,8 +112,8 @@ Note that these APIs and Temporal CLI commands will not work with Temporal Cloud
           //BadBinaries:                   nil,
           //HistoryArchivalState:          0,
           //HistoryArchivalUri:            "",
-          //VisibilityArchivalState:       0,
-          //VisibilityArchivalUri:         "",
+          //visibilityArchivalState:       0,
+          //visibilityArchivalUri:         "",
       },
       ReplicationConfig: &replication.NamespaceReplicationConfig{ //updates the replication configuration for the namespace
           //ActiveClusterName: "",
@@ -125,11 +127,11 @@ Note that these APIs and Temporal CLI commands will not work with Temporal Cloud
     //...
     ```
 
-- Get details for a registered Namespace on your Temporal Service:
+- 获取在 Temporal 服务上注册的 Namespace 的详细信息：
 
-  - With the Temporal CLI: [`temporal operator namespace describe`](/cli/operator#describe)
-  - Use the [`DescribeNamespace` API](https://pkg.go.dev/go.temporal.io/sdk/client#NamespaceClient) to return information and configuration details for a registered Namespace.
-    Example
+- 使用 Temporal CLI：[`Temporal operator Namespace describe`](/cli/operator#describe)
+  - 使用 [`DescribeNamespace` API](https://pkg.go.dev/go.temporal.io/sdk/client#NamespaceClient) 返回已注册 Namespace 的信息和配置详细信息。
+    例子
 
     ```go
     //...
@@ -139,11 +141,11 @@ Note that these APIs and Temporal CLI commands will not work with Temporal Cloud
     //...
     ```
 
-- Get details for all registered Namespaces on your Temporal Service:
+- 获取 Temporal 服务上所有已注册 Namespace 的详细信息：
 
-  - With the Temporal CLI: [`temporal operator namespace list`](/cli/operator#list)
-  - Use the [`ListNamespace` API](https://github.com/temporalio/api/blob/f0350f8032ad2f0c60c539b3b61ea37f412f1cf7/temporal/api/operatorservice/v1/service.proto) to return information and configuration details for all registered Namespaces on your Temporal Service.
-    Example
+- 使用 Temporal CLI：[`Temporal operator Namespace list`](/cli/operator#list)
+  - 使用 [`ListNamespace` API](https://github.com/temporalio/api/blob/f0350f8032ad2f0c60c539b3b61ea37f412f1cf7/temporal/api/operatorservice/v1/service.proto) 返回 Temporal 服务上所有已注册 Namespace 的信息和配置详细信息。
+    例子
 
   ```go
   //...
@@ -155,8 +157,8 @@ Note that these APIs and Temporal CLI commands will not work with Temporal Cloud
   //...
   ```
 
-- Delete a Namespace: The [`DeleteNamespace` API](https://github.com/temporalio/api/blob/f0350f8032ad2f0c60c539b3b61ea37f412f1cf7/temporal/api/operatorservice/v1/service.proto) deletes a Namespace. Deleting a Namespace deletes all running and completed Workflow Executions on the Namespace, and removes them from the persistence store and the visibility store.
-  Example:
+- 删除 Namespace：[`DeleteNamespace` API](https://github.com/temporalio/api/blob/f0350f8032ad2f0c60c539b3b61ea37f412f1cf7/temporal/api/operatorservice/v1/service.proto) 删除 Namespace。删除 Namespace 会删除 Namespace 上所有正在运行和已完成的 Workflow Execution，并将它们从持久性存储和 Visibility 存储中删除。
+  例子：
 
   ```go
   //...

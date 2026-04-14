@@ -1,7 +1,7 @@
 ---
 id: asynchronous-activity
-title: Asynchronous Activity - TypeScript SDK
-sidebar_label: Asynchronous Activity
+title: "异步 Activity - TypeScript SDK"
+sidebar_label: "异步 Activity"
 slug: /develop/typescript/activities/asynchronous-activity
 toc_max_heading_level: 2
 keywords:
@@ -10,24 +10,25 @@ tags:
   - Activities
   - TypeScript SDK
   - Temporal SDKs
-description: Asynchronously complete an Activity in Temporal by enabling the Activity Function to return before the Activity Execution finishes, using AsyncCompletionClient.
+description: "使用 AsyncCompletionClient，使 Activity 函数能够在 Activity 执行完成之前返回，从而异步完成 Temporal 中的 Activity。"
 ---
 
-## How to asynchronously complete an Activity {#asynchronous-activity-completion}
+<a id="asynchronous-activity-completion"></a>
+## 如何异步完成 Activity {#asynchronous-activity-completion}
 
-[Asynchronous Activity Completion](/activity-execution#asynchronous-activity-completion) enables the Activity Function to return without the Activity Execution completing.
+[异步 Activity 完成](/activity-execution#asynchronous-activity-completion) 使 Activity 函数能够在 Activity 执行未完成的情况下返回。
 
-There are three steps to follow:
+需要遵循三个步骤：
 
-1. The Activity provides the external system with identifying information needed to complete the Activity Execution.
-   Identifying information can be a [Task Token](/activity-execution#task-token), or a combination of Namespace, Workflow Id, and Activity Id.
-2. The Activity Function completes in a way that identifies it as waiting to be completed by an external system.
-3. The Temporal Client is used to Heartbeat and complete the Activity.
+1. Activity 向外部系统提供完成 Activity 执行所需的识别信息。
+   标识信息可以是 [任务令牌](/activity-execution#task-token)，也可以是 Namespace、Workflow Id 和 Activity Id 的组合。
+2. Activity 函数以将其标识为等待外部系统完成的方式完成。
+3. Temporal CLIent 用于心跳并完成 Activity。
 
-To asynchronously complete an Activity, call [`AsyncCompletionClient.complete`](https://typescript.temporal.io/api/classes/client.AsyncCompletionClient#complete).
+要异步完成 Activity，请调用 [`AsyncCompletionClient.complete`](https://typescript.temporal.io/api/classes/client.AsyncCompletionClient#complete)。
 
-<!--SNIPSTART typescript-activity-complete-async -->
-[activities-examples/src/activities/async-completion.ts](https://github.com/temporalio/samples-typescript/blob/main/activities-examples/src/activities/async-completion.ts)
+<!--SNIPSTART typescript-Activity-complete-async -->
+[活动示例/src/activities/async-completion.ts](https://github.com/temporalio/samples-typescript/blob/main/activities-examples/src/activities/async-completion.ts)
 ```ts
 import { CompleteAsyncError, activityInfo } from '@temporalio/activity';
 import { Client } from '@temporalio/client';
@@ -47,9 +48,9 @@ async function doSomeWork(taskToken: Uint8Array): Promise<void> {
 ```
 <!--SNIPEND-->
 
-## Local Activities {#local-activities}
+## 本地活动 {#local-activities}
 
-To call [Local Activities](/local-activity) in TypeScript, use [`proxyLocalActivities`](https://typescript.temporal.io/api/namespaces/workflow/#proxylocalactivities).
+要在 TypeScript 中调用 [当地活动](/local-activity)，请使用 [`proxyLocalActivities`](https://typescript.temporal.io/api/namespaces/workflow/#proxylocalactivities)。
 
 ```ts
 import * as workflow from '@temporalio/workflow';
@@ -64,4 +65,4 @@ export async function yourWorkflow(): Promise<void> {
 }
 ```
 
-Local Activities must be registered with the Worker the same way non-local Activities are.
+本地活动必须像非本地活动一样在 Worker 中注册。

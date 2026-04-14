@@ -1,8 +1,8 @@
 ---
 id: generate-certificates
-title: tcld generate-certificates command reference
-sidebar_label: generate-certificates
-description: Generate certificate authority and end-entity TLS certificates for Temporal Cloud with tcld generate-certificates commands. Use modifiers for customization.
+title: "tcld 生成证书命令参考"
+sidebar_label: "生成证书"
+description: "使用 tcldgenerate-certificates 命令为 Temporal Cloud 生成证书颁发机构和终端实体 TLS 证书。使用修饰符进行定制。"
 slug: /cloud/tcld/generate-certificates/
 toc_max_heading_level: 4
 keywords:
@@ -14,173 +14,185 @@ tags:
   - Certificates
 ---
 
-The `tcld generate-certificates` commands generate certificate authority (CA) and end-entity TLS certificates for Temporal Cloud.
+`tcld generate-certificates` 命令为 Temporal Cloud 生成证书颁发机构 (CA) 和最终实体 TLS 证书。
 
-Alias: `gen`
+别名：`gen`
 
-- [tcld generate-certificates certificate-authority-certificate](#certificate-authority-certificate)
-- [tcld generate-certificates end-entity-certificate](#end-entity-certificate)
+- [tcld 生成证书 证书颁发机构证书](#certificate-authority-certificate)
+- [tcld 生成证书最终实体证书](#end-entity-certificate)
 
-## tcld generate-certificates certificate-authority-certificate {#certificate-authority-certificate}
+<a id="certificate-authority-certificate"></a>
+## tcld 生成证书 证书颁发机构证书 {#certificate-authority-certificate}
 
-The `tcld generate-certificates certificate-authority-certificate` command generates certificate authority (CA) certificates for Temporal Cloud.
+`tcld generate-certificates certificate-authority-certificate` 命令为 Temporal Cloud 生成证书颁发机构 (CA) 证书。
 
 `tcld generate-certificates certificate-authority-certificate <modifiers>`
 
-Alias: `ca`
+别名：`ca`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-#### --organization
+#### - 组织 {#organization}
 
-Specify an organization name for certificate generation.
+指定证书生成的组织名称。
 
-Alias: `--org`
+别名：`--org`
 
-**Example**
+**例子**
 
 ```bash
 tcld generate-certificates certificate-authority-certificate --organization <value>
 ```
 
-#### --validity-period
+<a id="organization"></a>
+#### --有效期 {#validity-period}
 
-Specify the duration for which the certificate is valid.
-Format values as d/h (for example, `30d10h` for a certificate lasting 30 days and 10 hours).
+指定证书的有效期限。
+将值的格式设置为 d/h（例如，`30d10h` 表示持续 30 天 10 小时的证书）。
 
-Alias: `-d`
+别名：`-d`
 
-**Example**
+**例子**
 
 ```bash
 tcld generate-certificates certificate-authority-certificate --validity-period <value>
 ```
 
-#### --ca-certificate-file
+<a id="validity-period"></a>
+#### --ca 证书文件 {#ca-certificate-file}
 
-Specify a path to a `.pem` file where the generated X.509 certificate file will be stored.
+指定将存储生成的 X.509 证书文件的 `.pem` 文件的路径。
 
-Alias: `--ca-cert`
+别名：`--ca-cert`
 
-**Example**
+**例子**
 
 ```bash
 tcld generate-certificates certificate-authority-certificate --ca-certificate-file <path>
 ```
 
-#### --ca-key-file
+<a id="ca-certificate-file"></a>
+#### --ca-密钥文件 {#ca-key-file}
 
-Specify a path to a `.key` file where the certificate's private key will be stored.
+指定将存储证书私钥的 `.key` 文件的路径。
 
-Alias: `--ca-key`
+别名：`--ca-key`
 
-**Example**
+**例子**
 
 ```bash
 tcld generate-certificates certificate-authority-certificate --ca-key-file <path>
 ```
 
-#### --rsa-algorithm
+<a id="ca-key-file"></a>
+#### --rsa 算法 {#rsa-algorithm}
 
-When enabled, a 4096-bit RSA key pair is generated for the certificate instead of an ECDSA P-384 key pair.
-Because an ECDSA P-384 key pair is the recommended default, this option is disabled.
+启用后，将为证书生成 4096 位 RSA 密钥对，而不是 ECDSA P-384 密钥对。
+由于 ECDSA P-384 密钥对是建议的默认值，因此禁用此选项。
 
-Alias: `--rsa`
+别名：`--rsa`
 
-**Example**
+**例子**
 
 ```bash
 tcld generate-certificates certificate-authority-certificate --rsa-algorithm <boolean>
 ```
 
-## tcld generate-certificates end-entity-certificate {#end-entity-certificate}
+<a id="rsa-algorithm"></a>
+## tcld 生成证书最终实体证书 {#end-entity-certificate}
 
-The `tcld generate-certificates end-entity-certificate` command generates end-entity (leaf) certificates for Temporal Cloud.
+`tcld generate-certificates end-entity-certificate` 命令为 Temporal Cloud 生成最终实体（叶）证书。
 
 `tcld generate-certificates end-entity-certificate <modifiers>`
 
-Alias: `leaf`
+别名：`leaf`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-#### --organization
+#### - 组织 {#organization}
 
-Specify an organization name for certificate generation.
+指定证书生成的组织名称。
 
-Alias: `--org`
+别名：`--org`
 
-**Example**
+**例子**
 
 ```bash
 tcld generate-certificates end-entity-certificate --organization <value>
 ```
 
-#### --organization-unit
+<a id="end-entity-certificate"></a>
+#### --组织单位 {#organization-unit}
 
-Optional: Specify the name of the organization unit.
+可选：指定组织单位的名称。
 
-**Example**
+**例子**
 
 ```bash
 tcld generate-certificates end-entity-certificate --organization-unit <value>
 ```
 
-#### --validity-period
+<a id="organization"></a>
+#### --有效期 {#validity-period}
 
-Specify the duration for which the certificate is valid.
-Format values as d/h (for example, `30d10h` for a certificate lasting 30 days and 10 hours).
+指定证书的有效期限。
+将值的格式设置为 d/h（例如，`30d10h` 表示持续 30 天 10 小时的证书）。
 
-Alias: `-d`
+别名：`-d`
 
-**Example**
+**例子**
 
 ```bash
 tcld generate-certificates end-entity-certificate --validity-period <value>
 ```
 
-#### --ca-certificate-file
+<a id="organization-unit"></a>
+#### --ca 证书文件 {#ca-certificate-file}
 
-Specify the path of the X.509 CA certificate in a `.pem` file for the certificate authority.
+为证书颁发机构指定 `.pem` 文件中 X.509 CA 证书的路径。
 
-Alias: `--ca-cert`
+别名：`--ca-cert`
 
-**Example**
+**例子**
 
 ```bash
 tcld generate-certificates end-entity-certificate --ca-certificate-file <path>
 ```
 
-#### --ca-key-file
+<a id="validity-period"></a>
+#### --ca-密钥文件 {#ca-key-file}
 
-Specify the path of the private key in a `.key` file for the certificate authority.
+指定证书颁发机构的 `.key` 文件中私钥的路径。
 
-Alias: `--ca-key`
+别名：`--ca-key`
 
-**Example**
+**例子**
 
 ```bash
 tcld generate-certificates end-entity-certificate --ca-key-file <path>
 ```
 
-#### --certificate-file
+<a id="ca-certificate-file"></a>
+#### --证书文件 {#certificate-file}
 
-Specify a path to a `.pem` file where the generated X.509 leaf certificate file will be stored.
+指定将存储生成的 X.509 叶证书文件的 `.pem` 文件的路径。
 
-Alias: `--cert`
+别名：`--cert`
 
-**Example**
+**例子**
 
 ```bash
 tcld generate-certificates end-entity-certificate --certificate-file <path>
 ```
 
-#### --key-file
+<a id="ca-key-file"></a>
+#### --密钥文件 {#key-file}
 
-Specify a path to a `.key` file where the leaf certificate's private key will be stored.
+指定将存储叶证书私钥的 `.key` 文件的路径。
 
-Alias: `--key`
+别名：`--key`
 
-**Example**
+**例子**
 
 ```bash
 tcld generate-certificates end-entity-certificate --key-file <path>

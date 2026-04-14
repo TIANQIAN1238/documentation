@@ -1,0 +1,250 @@
+---
+id: python-sdk-sandbox
+title: Temporal Python SDK 沙箱环境
+sidebar_label: Python SDK沙箱
+description: Temporal Python SDK 提供了一个沙箱环​​境来运行 Workflow 代码，旨在通过隔离全局状态和应用限制来防止应用程序中的非确定性错误。
+toc_max_heading_level: 4
+keywords:
+  - temporal python sdk
+  - workflow sandbox
+  - non-determinism errors
+  - python sandbox environment
+  - global state isolation
+  - python workflow restrictions
+  - passthrough modules
+  - invalid module members
+  - sandbox_unrestricted
+  - unsandboxed workflow runner
+  - sandboxed workflow runner
+  - workflow determinism
+  - skip workflow sandboxing
+  - temporal workflow exceptions
+  - deterministic workflow execution
+tags:
+  - Temporal SDKs
+  - Python SDK
+  - Concepts
+---
+
+Temporal Python SDK 使您能够在沙箱环境中运行 Workflow 代码，以帮助防止应用程序中的非确定性错误。
+适用于 Python 的 Temporal Workflow 沙箱并非完全隔离，某些库可能会在内部改变状态，这可能会导致破坏确定性。
+
+＃＃ 好处
+
+Temporal的Python SDK使用沙箱环境进行Workflow运行，使开发Workflow代码更安全。
+
+If a Workflow Execution performs a non-deterministic event, an exception is thrown, which results in failing the Task Worker.
+在代码修复之前，Workflow 不会继续前进。
+
+Temporal Python 沙箱提供了一种从沙​​箱外部_传递模块_的机制。默认情况下，这包括所有标准库模块和 Temporal 模块。出于性能和行为原因，用户应遍历单独文件中的所有模型、活动、Nexus Service 或其他模块，这些文件的调用将是确定性的。有关更多信息，请参阅[直通模块](#passthrough-modules)。
+
+通过组合 XPROT027X 运行 ID 和 XPROT028X ID 创建幂等密钥：
+
+沙盒环境由两个主要组件组成。
+
+- [全局状态隔离](#global-state-isolation)
+- [限制](#限制)
+
+### 全局状态隔离
+
+沙箱的第一个组成部分是全局状态隔离。
+全局状态隔离使用“exec”来编译和评估语句。
+
+Workflow 启动后，定义 Workflow 的文件将导入到新创建的沙箱中。
+
+如果文件导入了一个模块，则从沙箱外部“传递”一个已知的集合，其中包括所有 Python 标准库。
+
+这些模块预计不受 Side Effect 的影响，并且其不确定性方面受到限制。
+
+有关导入模块的完整列表，请参阅[自定义沙箱](#customize-the-sandbox)。
+
+＃＃＃ 限制
+
+限制阻止已知的非确定性库调用。
+这是通过在沙箱中围绕自定义导入器集的模块上使用代理对象来实现的。
+
+限制适用于 Workflow 导入级别和 Workflow 运行时。
+
+一组默认的限制，可防止最危险的标准库调用。
+
+## 跳过 Workflow 沙箱
+
+不推荐使用以下技术，但它们可以让您避免、跳过或突破沙箱环境。
+
+跳过 Workflow 沙箱会导致缺乏确定性检查。使用 Workflow 沙盒环境有助于防止非确定性错误，但并不能完全消除风险。
+
+### 跳过代码块的沙箱
+
+要跳过 Workflow 中特定代码块的沙箱环境，请使用 [`sandbox_unrestricted()`](https://python.Temporal.io/Temporalio.Workflow.unsafe.html#sandbox_unrestricted)。 Workflow 将在没有沙箱限制的情况下运行。
+
+```python
+with temporalio.workflow.unsafe.sandbox_unrestricted():
+    # Your code
+```
+
+### 跳过整个 Workflow 的沙箱
+
+要跳过 Workflow 的沙箱环境，请将 [`@Workflow.defn`](https://python.Temporal.io/Temporalio.Workflow.html#defn) 装饰器中的“sandboxed”参数设置为 false。
+整个Workflow将在没有沙箱限制的情况下运行。
+
+```python
+@workflow.defn(sandboxed=False)
+```
+
+### 跳过 Worker 的沙箱
+
+要跳过 Worker 的沙箱环境，请将“Workflow_runner”关键字参数设置为将`Worker`初始化到[`UnsandboxedWorkflowRunner()`](https://python.Temporal.io/Temporalio.Worker.UnsandboxedWorkflowRunner.html)。
+
+## 自定义沙箱
+
+创建 Worker 时，`Workflow_runner` 默认为 [`SandboxedWorkflowRunner()`](https://python.Temporal.io/Temporalio.Worker.Workflow_sandbox.SandboxedWorkflowRunner.html)。
+`SandboxedWorkflowRunner` init 接受一个 `restrictions` 关键字参数，该参数定义了一组应用于此沙箱的限制。
+
+[`SandboxRestrictions`](https://python.Temporal.io/Temporalio.Worker.Workflow_sandbox.SandboxRestrictions.html) 数据类是不可变的，包含四个可以自定义的字段，但只有三个具有值得注意的值。
+
+- [`passthrough_modules`](https://python.Temporal.io/Temporalio.Worker.Workflow_sandbox.SandboxRestrictions.html#passthrough_modules)
+- [`invalid_modules_members`](https://python.Temporal.io/Temporalio.Worker.Workflow_sandbox.SandboxRestrictions.html#invalid_module_members)
+- [`import_notification_policy`](https://python.Temporal.io/Temporalio.Worker.Workflow_sandbox.SandboxRestrictions.html#import_notificaton_policy)
+
+### 直通模块
+
+默认情况下，沙箱会为每次 Workflow 运行完全重新加载非标准库和非 Temporal 模块。穿越模块意味着Workflow每次运行时都不会重新加载该模块。相反，该模块将从沙箱外部导入并直接在 Workflow 中使用。这可以提高性能，因为导入模块可能是一个耗时的过程，而传递模块可以避免这种开销。
+
+:::note
+值得注意的是，您应该只导入_known-side-effect-free_第三方模块：这意味着它们在多次导入和使用时不会产生任何意想不到的后果。这是因为穿过一个模块意味着它将在 Workflow 中多次使用而无需重新加载，因此它拥有的任何 Side Effect 都将被重复。因此，建议仅传递已知具有确定性的模块，这意味着在给定相同输入的情况下它们将始终产生相同的输出。
+:::
+
+传递模块的一种方法是在导入 Workflow 文件时使用 imports_passed_through 上下文管理器。
+
+```python
+# my_workflow_file.py
+
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    import pydantic
+
+@workflow.defn
+class MyWorkflow:
+     # ...
+```
+
+或者，这可以在 Worker 创建时通过自定义运行器的限制来完成。
+
+```python
+# my_worker_file.py
+
+from temporalio.worker import Worker
+from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner, SandboxRestrictions
+
+my_worker = Worker(
+  ...,
+  workflow_runner=SandboxedWorkflowRunner(
+    restrictions=SandboxRestrictions.default.with_passthrough_modules("pydantic")
+  )
+)
+```
+
+在这两种情况下，现在将从沙箱外部传递“pydantic”模块，而不是在每次 Workflow 运行时重新加载。
+
+### 无效的模块成员
+
+`invalid_module_members` 包含无法访问的模块。
+
+检查将与项目的完全限定路径进行比较。
+
+例如，要删除对“datetime.date.today()”的限制，请参阅以下示例。
+
+```python
+# my_worker_file.py
+
+import dataclasses
+from temporalio.worker import Worker
+from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner, SandboxRestrictions
+
+my_restrictions = dataclasses.replace(
+    SandboxRestrictions.default,
+    invalid_module_members=SandboxRestrictions.invalid_module_members_default.with_child_unrestricted(
+      "datetime", "date", "today",
+    ),
+)
+my_worker = Worker(..., workflow_runner=SandboxedWorkflowRunner(restrictions=my_restrictions))
+```
+
+还可以通过管道 (`|`) 将 [`SandboxMatcher`](https://python.Temporal.io/Temporalio.Worker.Workflow_sandbox.SandboxMatcher.html) 实例连接在一起来添加限制。
+
+以下示例限制使用“datetime.date”类。
+
+```python
+# my_worker_file.py
+
+import dataclasses
+from temporalio.worker import Worker
+from temporalio.worker.workflow_sandbox import (
+  SandboxedWorkflowRunner,
+  SandboxMatcher,
+  SandboxRestrictions,
+)
+
+my_restrictions = dataclasses.replace(
+    SandboxRestrictions.default,
+    invalid_module_members=SandboxRestrictions.invalid_module_members_default | SandboxMatcher(
+      children={"datetime": SandboxMatcher(use={"date"})},
+    ),
+)
+my_worker = Worker(..., workflow_runner=SandboxedWorkflowRunner(restrictions=my_restrictions))
+```
+
+### 进口通知政策
+
+沙箱的导入通知策略指定沙箱以可能无意的方式导入模块时的行为方式。它涵盖两种常见场景：动态导入和强制模块直通。每个都可以独立控制。
+
+当 Workflow 加载到沙箱后导入模块时，会发生动态导入。这些导入通常是不可见的，如果它们不执行沙箱限制的任何操作，则会导致内存开销。默认情况下，启用 [`WARN_ON_DYNAMIC_IMPORT`](https://python.Temporal.io/Temporalio.Workflow.SandboxImportNotificationPolicy.html#WARN_ON_DYNAMIC_IMPORT) 策略设置，并且当动态导入不在 [passthrough 模块](#passthrough-modules) 列表中的模块时，将发出警告。
+
+当模块导入到未通过的沙箱中时，将应用其他值得注意的策略设置。这些设置默认处于禁用状态，必须明确打开。
+当导入未包含在 [直通模块](#passthrough-modules) 列表中的模块时，[`WARN_ON_UNINTENTIONAL_PASSTHROUGH`](https://python.Temporal.io/Temporalio.Workflow.SandboxImportNotificationPolicy.html#WARN_ON_UNINTENTIONAL_PASSTHROUGH) 设置会发出警告。
+
+同样，导入非直通模块时， [`RAISE_ON_UNINTENTIONAL_PASSTHROUGH`](https://python.Temporal.io/Temporalio.Workflow.SandboxImportNotificationPolicy.html#RAISE_ON_UNINTENTIONAL_PASSTHROUGH) 设置将引发错误。
+
+可以使用 [`sandbox_import_notification_policy`](https://python.Temporal.io/Temporalio.Workflow.unsafe.html#sandbox_import_notification_policy) 上下文管理器为特定导入设置导入通知策略。
+
+```python
+# my_workflow_file.py
+
+from temporalio import workflow
+
+with workflow.unsafe.sandbox_import_notification_policy(
+    workflow.SandboxImportNotificationPolicy.SILENT
+):
+    import pydantic
+
+@workflow.defn
+class MyWorkflow:
+     # ...
+```
+
+## 注册一个拦截器 {#register}
+
+```python
+# my_worker_file.py
+
+from temporalio.worker import Worker
+from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner, SandboxRestrictions
+
+my_worker = Worker(
+  ...,
+  workflow_runner=SandboxedWorkflowRunner(
+    restrictions=SandboxRestrictions.default.with_import_notification_policy( 
+      workflow.SandboxImportNotificationPolicy.WARN_ON_DYNAMIC_IMPORT | workflow.SandboxImportNotificationPolicy.WARN_ON_UNINTENTIONAL_PASSTHROUGH
+    )
+  )
+)
+```
+
+如果与限制自定义结合使用，则 [`sandbox_import_notification_policy`](https://python.Temporal.io/Temporalio.Workflow.unsafe.html#sandbox_import_notification_policy) 上下文管理器将始终受到尊重。
+
+
+有关 Python 沙箱的更多信息，请参阅以下资源。
+
+- [Python SDK 自述文件](https://github.com/Temporalio/sdk-python)
+- [Python API 文档](https://python.Temporal.io/index.html)

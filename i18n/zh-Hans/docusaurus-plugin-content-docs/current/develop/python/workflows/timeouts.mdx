@@ -1,0 +1,91 @@
+---
+id: timeouts
+title: Workflow 超时 - Python SDK
+sidebar_label: 超时
+description: 使用 Temporal 优化 Workflow Execution Python SDK - 有效设置 Workflow 超时和重试策略。
+toc_max_heading_level: 4
+keywords:
+  - Python
+  - failure detection
+  - timeouts
+tags:
+  - Activities
+  - Workflows
+  - Errors
+  - Failures
+  - Python SDK
+  - Temporal SDKs
+---
+
+## Workflow 超时 {#Workflow-超时}
+
+每个 Workflow 超时控制 Workflow Execution 不同方面的最大持续时间。
+
+在继续之前，我们要注意，我们通常不建议设置 Workflow 超时，因为 Workflow 被设计为长期运行且具有弹性。
+相反，设置超时可能会限制其处理意外延迟或长时间运行的进程的能力。
+如果您需要在特定时间段后在 Workflow 内执行操作，我们建议使用 Timer。
+
+Workflow 超时在[启动 Workflow Execution](#Workflow-超时)时设置。
+
+- **[Workflow Execution Timeout](/encyclopedia/Detecting-Workflow-failures#Workflow-execution-timeout)** - 限制单个 Workflow Execution 可以执行的最长时间。
+- **[Workflow 运行超时](/encyclopedia/Detecting-Workflow-failures#Workflow-run-timeout)：**限制单次 Workflow 运行可以持续的最长时间。
+- **[Workflow Task 超时](/encyclopedia/Detecting-Workflow-failures#Workflow-task-timeout)：** 限制 Worker 可以执行 Workflow Task 的最长时间。
+
+将超时设置为 [`start_Workflow()`](https://python.Temporal.io/Temporalio.client.Client.html#start_Workflow) 或[`execute_Workflow()`](https://python.Temporal.io/Temporalio.client.Client.html#execute_Workflow) 异步方法。
+
+可用的超时有：
+
+- `执行超时`
+- `运行超时`
+- `任务超时`
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/Workflow_timeouts_retries/Workflows_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+# ...
+    result = await client.execute_workflow(
+        YourWorkflow.run,
+        "your timeout argument",
+        id="your-workflow-id",
+        task_queue="your-task-queue",
+        # Set Workflow Timeout duration
+        execution_timeout=timedelta(seconds=2),
+        # run_timeout=timedelta(seconds=2),
+        # task_timeout=timedelta(seconds=2),
+    )
+```
+
+## Workflow 重试 {#Workflow-重试}
+
+**如何使用 Temporal Python SDK 设置 Workflow Retry Policy**
+
+Retry Policy 可以与超时配合，提供精细控制以优化执行体验。
+
+如果发生故障，请使用 [Retry Policy](/encyclopedia/retry-policies) 重试 Workflow Execution。
+
+默认情况下，Workflow Execution 不会重试，并且仅在某些情况下才应将重试策略与 Workflow Execution 一起使用。
+
+将 Retry Policy 设置为 [`start_Workflow()`](https://python.Temporal.io/Temporalio.client.Client.html#start_Workflow) 或[`execute_Workflow()`](https://python.Temporal.io/Temporalio.client.Client.html#execute_Workflow) 异步方法。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/Workflow_timeouts_retries/Workflows_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+# ...
+    handle = await client.execute_workflow(
+        YourWorkflow.run,
+        "your retry policy argument",
+        id="your-workflow-id",
+        task_queue="your-task-queue",
+        retry_policy=RetryPolicy(maximum_interval=timedelta(seconds=2)),
+    )
+```

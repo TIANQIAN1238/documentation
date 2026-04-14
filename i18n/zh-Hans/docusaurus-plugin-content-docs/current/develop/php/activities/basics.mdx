@@ -1,0 +1,121 @@
+---
+id: basics
+title: Activity 基础知识 - PHP SDK
+sidebar_label: Activity 基础知识
+description: 本节介绍 Activity 与 PHP SDK 的基础知识
+toc_max_heading_level: 4
+keywords:
+  - PHP SDK
+tags:
+  - PHP SDK
+  - Temporal SDKs
+---
+
+## 如何开发基本的 Activity {#develop-activities}
+
+Workflow 所做的主要事情之一是协调活动的执行。
+Activity 是正常的函数或方法执行，旨在执行单个、明确定义的操作（短期或长期运行），例如 Querying 数据库、调用第三方 API 或转码媒体文件。
+Activity 可以与 Temporal Platform 之外的世界交互，或使用 Temporal CLIent 与 Temporal 服务交互。
+为了使 Workflow 能够执行 Activity，我们必须定义 [Activity Definition](/Activity-definition)。
+
+活动被定义为用“#[ActivityInterface]”注释的普通 PHP 接口的方法。
+
+## XPROT035X 版本控制
+
+```php
+#[ActivityInterface]
+// Defining an interface for the activities.
+interface FileProcessingActivities
+{
+    public function upload(string $bucketName, string $localName, string $targetName): void;
+
+    #[ActivityMethod("transcode_file")]
+    public function download(string $bucketName, string $remoteName): void;
+
+    public function processFile(): string;
+
+    public function deleteLocalFile(string $fileName): void;
+}
+```
+
+###如何开发Activity参数{#Activity-参数}
+
+[Activity Definition](/Activity-definition) 可以支持的参数总数没有明确的限制。
+但是，最终编码到 gRPC 消息有效负载中的数据的总大小是有限制的。
+
+单个参数的最大大小限制为 2 MB。
+gRPC 消息的总大小（包括所有参数）限制为最大 4 MB。
+
+另外，请记住，所有有效负载数据都记录在 [Workflow Execution Event History](/Workflow-execution/event#event-history) 中，大型事件历史记录可能会影响 Worker 性能。
+这是因为整个 Event History 可以通过 [Workflow Task](/tasks#Workflow-task) 传输到 Worker 进程。
+
+{/* TODO 链接到 gRPC 限制部分（如果可用）*/}
+
+某些 SDK 要求您传递上下文对象，而其他 SDK 则不需要。
+当涉及到您的应用程序数据（即序列化并编码到有效负载中的数据）时，我们建议您使用单个对象作为包装传递给活动的应用程序数据的参数。
+这样您就可以更改传递到 Activity 的数据，而不会破坏函数或方法签名。
+
+每个方法定义一个 Activity 类型。
+一台 Workflow 可以使用多个 Activity 接口，并从同一接口调用多个 Activity 方法。
+
+唯一的要求是 Activity 方法参数和返回值可以使用提供的 [DataConverter](https://github.com/Temporalio/sdk-php/blob/master/src/DataConverter/DataConverterInterface.php) 接口序列化为字节数组。
+默认实现使用 JSON 序列化器，但可以轻松配置替代实现。
+
+### 如何定义 Activity 返回值 {#Activity-return-values}
+
+从 Activity 返回的所有数据都必须是可序列化的。
+
+Activity 返回值受 Temporal 中的有效负载大小限制。默认负载大小限制为 2MB，Event History 事务中的任何 gRPC 消息大小都有 4MB 的硬性限制（[请参阅此处的云限制](https://docs.Temporal.io/cloud/limits#per-message-gRPC-limit)）。请记住，所有返回值都记录在 [Workflow Execution Event History](/Workflow-execution/event#event-history) 中。
+
+返回值必须可使用提供的 [DataConverter](https://github.com/Temporalio/sdk-php/blob/master/src/DataConverter/DataConverterInterface.php) 接口序列化为字节数组。
+默认实现使用 JSON 序列化器，但可以轻松配置替代实现。
+因此，您可以返回两种原始类型：
+
+```php
+class GreetingActivity implements GreetingActivityInterface
+{
+    public function composeGreeting(string $greeting, string $name): string
+    {
+        return $greeting . ' ' . $name;
+    }
+}
+```
+
+和对象：
+
+```php
+class GreetingActivity implements GreetingActivityInterface
+{
+    public function composeGreeting(string $greeting, string $name): Greeting
+    {
+        return new Greeting($greeting, $name);
+    }
+}
+```
+
+### 如何自定义您的 Activity 类型 {#Activity-type}
+
+活动有一个称为 Activity 名称的类型。
+以下示例演示如何为 Activity 类型设置自定义名称。
+
+可选的“#[ActivityMethod]”属性可用于覆盖默认的 Activity 名称。
+
+您可以通过将“prefix”选项添加到“ActivityInterface”属性来为所有 Activity 名称定义自己的前缀。
+（默认前缀为空。）
+
+```php
+#[ActivityInterface("file_activities.")]
+interface FileProcessingActivities
+{
+    public function upload(string $bucketName, string $localName, string $targetName);
+
+    #[ActivityMethod("transcode_file")]
+    public function download(string $bucketName, string $remoteName);
+
+    public function processFile(): string;
+
+    public function deleteLocalFile(string $fileName);
+}
+```
+
+`#[ActivityInterface("file_activities.")]` 是一个属性，它告诉 PHP SDK 生成一个类来实现 `FileProcessingActivities` 接口。这些函数定义了 Workflow 中使用的活动。

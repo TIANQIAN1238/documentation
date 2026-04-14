@@ -1,7 +1,7 @@
 ---
 id: nexus
-title: Temporal Nexus - Temporal feature
-description: Temporal Nexus enables durable execution across team and namespace boundaries and promotes a modular architecture that enables each team to have its own namespace for improved security, troubleshooting, and blast radius isolation.
+title: Temporal Nexus - Temporal 功能特性
+description: Temporal Nexus 支持跨团队和 Namespace 边界的持久执行，并促进模块化架构，使每个团队拥有自己的 Namespace，从而提升安全性、故障排查能力和爆炸半径隔离。
 sidebar_label: Temporal Nexus
 slug: /evaluate/nexus
 tags:
@@ -34,47 +34,47 @@ keywords:
 import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
 import ThemedImage from '@theme/ThemedImage';
 
-:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+:::tip 支持、稳定性和依赖信息
 
-Temporal Nexus is now [Generally Available](/evaluate/development-production-features/release-stages#general-availability) for [Temporal Cloud](/cloud/nexus) and [self-hosted deployments](/production-deployment/self-hosted-guide/nexus).
+Temporal Nexus 现已[正式发布（Generally Available）](/evaluate/development-production-features/release-stages#general-availability)，适用于 [Temporal Cloud](/cloud/nexus) 和[自托管部署](/production-deployment/self-hosted-guide/nexus)。
 
 :::
 
-As Temporal adoption grows across teams, organizations partition their applications into isolated Namespaces for security and fault isolation. 
-Nexus bridges these boundaries, connecting Temporal applications across Namespaces, regions, and clouds with built-in durable execution, observability, and access control. 
-Each team retains ownership of their own Namespace while sharing capabilities through clean service contracts. 
-Watch the [Nexus overview](https://www.youtube.com/watch?v=tJ1OwSFokOg&t=117s) for a walkthrough.
+随着 Temporal 在各团队中的普及，组织将应用程序划分为隔离的 Namespace 以实现安全性和故障隔离。
+Nexus 跨越这些边界，通过内置的持久执行、可观测性和访问控制，将跨 Namespace、跨地区和跨云的 Temporal 应用连接起来。
+每个团队保留对自己 Namespace 的所有权，同时通过简洁的服务契约共享能力。
+观看 [Nexus 概览](https://www.youtube.com/watch?v=tJ1OwSFokOg&t=117s) 了解详细介绍。
 
-## Before Nexus
-Connecting Namespaces was possible, but painful. It required extensive configuration, added operational overhead, and often depended on additional infrastructure
+## Nexus 之前的方式
+连接 Namespace 是可行的，但很痛苦。它需要大量配置，增加了运维开销，并且通常依赖额外的基础设施：
 
-- **Child Workflows** - Limited to the same Namespace. Cross-Namespace use leaks underlying implementation details, requiring callers to manage the target Namespace, Task Queue, and Workflow options.
-- **Activity wrappers** - Require per-target mTLS clients, adding configuration and certificate management overhead. Often over-permissioned, lack built-in observability, and require error-prone boilerplate for async results.
-- **Extra gateway infrastructure** - Not durable, difficult to debug across services, and adds another service to manage and patch.
+- **Child Workflow** - 仅限于同一 Namespace。跨 Namespace 使用会暴露底层实现细节，要求调用方管理目标 Namespace、Task Queue 和 Workflow 选项。
+- **Activity 包装器** - 每个目标都需要 mTLS 客户端，增加了配置和证书管理开销。通常权限过大，缺乏内置可观测性，且需要容易出错的异步结果样板代码。
+- **额外的网关基础设施** - 不具备持久性，跨服务难以调试，且增加了另一个需要管理和修补的服务。
 
-Nexus replaces all of these with a clean service contract between caller and handler, reducing code, and providing first-class observability.
+Nexus 用调用方和处理方之间的简洁服务契约替代了所有这些方式，减少了代码量，并提供了一等可观测性。
 
-## Benefits
+## 优势
 
-Connect Temporal Applications across teams, domains, regions, and clouds with:
+通过以下特性，跨团队、跨域、跨地区和跨云连接 Temporal 应用：
 
-- **Stronger security posture** - Built-in access controls for service contracts instead of broad Namespace access. Each team controls their own Namespace, Workers, and deployment lifecycle.
-- **Higher reliability** - Durable, atomic handoffs eliminate lost requests. Faults are isolated so misbehaving Workers don't impact other teams.
-- **Easier to build and maintain** - Less boilerplate code, custom retry and deduplication logic, and ongoing maintenance. Teams focus on business logic instead of infrastructure.
-- **Scalable platform patterns** - Enables cross-team and cross-region orchestration without centralizing ownership.
-- **Lower barriers to cross-team use cases** - Makes it easy to incrementally build and adopt shared services, with built-in discoverability.
-- **Compliance and data isolation** - Isolated Namespaces support auditability, data residency requirements, and dedicated encryption and access controls for sensitive data (PCI, PII).
+- **更强的安全态势** - 服务契约的内置访问控制，而非宽泛的 Namespace 访问。每个团队控制自己的 Namespace、Worker 和部署生命周期。
+- **更高的可靠性** - 持久的原子切换消除了请求丢失。故障被隔离，使得行为异常的 Worker 不会影响其他团队。
+- **更易于构建和维护** - 减少样板代码、自定义重试和去重逻辑以及持续维护。团队专注于业务逻辑而非基础设施。
+- **可扩展的平台模式** - 无需集中所有权即可实现跨团队和跨地区的编排。
+- **降低跨团队用例的门槛** - 通过内置可发现性，轻松逐步构建和采用共享服务。
+- **合规性和数据隔离** - 隔离的 Namespace 支持可审计性、数据驻留要求以及针对敏感数据（PCI、PII）的专用加密和访问控制。
 
-## What customers are using Nexus for
+## 客户使用 Nexus 的场景
 
-- **Duolingo** - Self-service infrastructure ([Case study](https://temporal.io/resources/case-studies/duolingo-temporal-nexus) | [Webinar](https://www.youtube.com/watch?v=tJ1OwSFokOg&t=524s))
-- **Netflix** - Infrastructure orchestration ([Replay talk](https://www.youtube.com/watch?v=izR9dQ_eIe4&t=470s) | [Webinar](https://www.youtube.com/watch?v=At1FfqGQiu0&t=1295s))
-- **Miro** - Cross-region data migration ([Replay talk](https://youtu.be/YLmFR-IAC3M?feature=shared&t=1488))
+- **Duolingo** - 自助服务基础设施（[案例研究](https://temporal.io/resources/case-studies/duolingo-temporal-nexus) | [网络研讨会](https://www.youtube.com/watch?v=tJ1OwSFokOg&t=524s)）
+- **Netflix** - 基础设施编排（[Replay 演讲](https://www.youtube.com/watch?v=izR9dQ_eIe4&t=470s) | [网络研讨会](https://www.youtube.com/watch?v=At1FfqGQiu0&t=1295s)）
+- **Miro** - 跨区域数据迁移（[Replay 演讲](https://youtu.be/YLmFR-IAC3M?feature=shared&t=1488)）
 
 
-## Should I use Nexus?
+## 我应该使用 Nexus 吗？
 
-Use the following decision tree to help determine if Nexus is right for your use case:
+使用以下决策树来帮助确定 Nexus 是否适合您的用例：
 
 <div style={{textAlign: 'center', margin: '2rem 0'}}>
   <a href="/diagrams/nexusadoptionlight.svg" target="_blank" rel="noopener noreferrer">
@@ -89,17 +89,17 @@ Use the following decision tree to help determine if Nexus is right for your use
   </a>
 </div>
 
-## Get started {#learn-more}
+## 开始使用 {#learn-more}
 
-Join the [#nexus](https://temporalio.slack.com/archives/C07LQN0JK9B) channel in [Temporal Slack](https://t.mp/slack) to connect with the Nexus community.
+加入 [Temporal Slack](https://t.mp/slack) 中的 [#nexus](https://temporalio.slack.com/archives/C07LQN0JK9B) 频道，与 Nexus 社区建立联系。
 
 <RelatedReadContainer>
-  <RelatedReadItem path="/nexus" text="Nexus concepts and architecture" archetype="encyclopedia" />
-  <RelatedReadItem path="/develop/go/nexus" text="Go SDK - Nexus quick start" archetype="feature-guide" />
-  <RelatedReadItem path="/develop/java/nexus" text="Java SDK - Nexus quick start" archetype="feature-guide" />
-  <RelatedReadItem path="/develop/python/nexus" text="Python SDK - Nexus quick start" archetype="feature-guide" />
-  <RelatedReadItem path="/develop/typescript/nexus" text="TypeScript SDK - Nexus quick start" archetype="feature-guide" />
-  <RelatedReadItem path="/develop/dotnet/nexus" text=".NET SDK - Nexus quick start" archetype="feature-guide" />
+  <RelatedReadItem path="/nexus" text="Nexus 概念与架构" archetype="encyclopedia" />
+  <RelatedReadItem path="/develop/go/nexus" text="Go SDK - Nexus 快速入门" archetype="feature-guide" />
+  <RelatedReadItem path="/develop/java/nexus" text="Java SDK - Nexus 快速入门" archetype="feature-guide" />
+  <RelatedReadItem path="/develop/python/nexus" text="Python SDK - Nexus 快速入门" archetype="feature-guide" />
+  <RelatedReadItem path="/develop/typescript/nexus" text="TypeScript SDK - Nexus 快速入门" archetype="feature-guide" />
+  <RelatedReadItem path="/develop/dotnet/nexus" text=".NET SDK - Nexus 快速入门" archetype="feature-guide" />
   <RelatedReadItem path="/cloud/nexus" text="Temporal Cloud" archetype="feature-guide" />
-  <RelatedReadItem path="/production-deployment/self-hosted-guide/nexus" text="Self-hosted deployment" archetype="feature-guide" />
+  <RelatedReadItem path="/production-deployment/self-hosted-guide/nexus" text="自托管部署" archetype="feature-guide" />
 </RelatedReadContainer>

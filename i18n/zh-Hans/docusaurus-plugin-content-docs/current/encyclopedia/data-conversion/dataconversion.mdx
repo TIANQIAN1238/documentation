@@ -1,0 +1,61 @@
+---
+id: dataconversion
+title: Temporal如何处理应用程序数据？
+sidebar_label: 数据转换
+description: 本指南探讨了 Temporal Platform 中的 Data Converter，详细介绍了它们如何处理 Workflow 输入和输出的序列化和编码，确保数据保持安全和可管理。
+slug: /dataconversion
+toc_max_heading_level: 4
+keywords:
+  - encryption
+  - explanation
+  - keys
+  - payloads
+  - secrets
+  - data-converters
+tags:
+  - Concepts
+  - Encryption
+  - Data Converters
+  - Security
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+本指南概述了在 Temporal Platform 上使用 Data Converter 的数据处理。
+
+Temporal 中的 Data Converter 是 SDK 组件，用于处理进入和退出 Temporal 服务的数据的序列化和编码。
+Workflow 输入和输出需要序列化和反序列化，以便它们可以作为 JSON 发送到 Temporal 服务。
+
+<CaptionedImage
+src="/diagrams/default-data-converter.svg"
+    title="Data Converter 编码和解码数据"
+    />
+
+Data Converter 将应用程序中的数据编码为 [Payload](/dataconversion#payload)，然后再将其发送到客户端调用中的 Temporal 服务。
+当 Temporal Server 将编码数据发送回 Worker 时，Data Converter 对其进行解码，以便在您的应用程序中进行处理。
+这可确保您的所有敏感数据仅以其原始格式存在于您控制的主机上。
+
+当数据发送到 Temporal 服务（作为 Workflow 的输入）以及从 Workflow 返回数据（作为输出）时，将遵循 Data Converter 步骤。
+由于 Temporal 提供对 Workflow 输出的访问的方式，此实现是不对称的：
+
+- 将输入传递到 Temporal 服务时，使用 Temporal 或您的自定义 Data Converter 提供的默认转换器自动执行数据编码。例如，纯文本输入通常会序列化为 JSON 对象。
+- 根据需要，您的应用程序逻辑可以在 Workflow 或活动期间执行数据解码，但解码的 Workflow 结果永远不会保留回 Temporal 服务。相反，它们以编码方式存储在 Temporal 服务上，并且在使用 [`Temporal Workflow show`](/cli/Workflow#show) 或浏览 Web UI 以查看输出时，您需要提供附加参数。
+
+每条数据（如单个参数或返回值）都被编码为 [Payload](/dataconversion#payload)，它由二进制数据和键值元数据组成。
+
+详细信息请参见API参考：
+
+- [转到](https://pkg.go.dev/go.Temporal.io/sdk/converter#DataConverter)
+- [Java](https://www.javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/common/converter/DataConverter.html)
+- [Python](https://python.Temporal.io/Temporalio.converter.DataConverter.html)
+- [TypeScript](https://typescript.Temporal.io/api/interfaces/common.DataConverter)
+
+### 什么是有效负载？ {#有效负载}
+
+[Payload](https://api-docs.Temporal.io/#Temporal.api.common.v1.Payload) 表示二进制数据，例如 Activity 和 Workflow 的输入和输出。
+有效负载还包含描述其数据类型或供自定义编码器/转换器使用的其他参数的元数据。
+
+通过 SDK 进行处理时，[默认 Data Converter](/default-custom-data-converters#default-data-converter) 将您的数据/值序列化为有效负载，然后再将其发送到 Temporal Server。
+默认 Data Converter 将支持的类型值处理为有效负载。您可以创建自定义 [Payload Converter](/payload-converter) 以应用不同的转换步骤。
+
+您还可以在有效负载上应用[自定义编解码器](/payload-codec)，例如加密或压缩。

@@ -1,0 +1,77 @@
+---
+id: data-encryption
+title: 有效负载加密 - Python SDK
+sidebar_label: 有效负载加密
+slug: /develop/python/data-handling/data-encryption
+toc_max_heading_level: 2
+tags:
+  - Security
+  - Encryption
+  - Codec Server
+  - Python SDK
+  - Temporal SDKs
+description: 使用 Python SDK 中的自定义有效负载编解码器对发送到 Temporal 服务和从 Temporal 服务发送的数据进行加密。
+---
+
+负载编解码器在序列化（由负载转换器）之后和数据发送到 Temporal 服务之前转换“负载”字节。
+与有效负载转换器不同，编解码器在 Workflow 沙箱外部运行，因此它们可以使用非确定性操作并调用外部服务。
+
+最常见的用例是加密：在有效负载到达 Temporal 服务之前对其进行加密，以便敏感数据永远不会以明文形式存储。
+
+## PayloadCodec接口
+
+使用“encode()”和“decode()”方法实现“PayloadCodec”。
+这些应该循环遍历 Workflow 的所有有效负载，按顺序执行编组、压缩或加密步骤，并设置“编码”元数据字段。
+
+在此示例中，“encode”方法使用 Python 的 [cramjam](https://github.com/milesgranger/cramjam) 库来压缩有效负载，以提供“snappy”压缩。
+`decode()` 函数反向实现了 `encode()` 逻辑：
+
+```python
+import cramjam
+from temporalio.api.common.v1 import Payload
+from temporalio.converter import PayloadCodec
+
+class EncryptionCodec(PayloadCodec):
+    async def encode(self, payloads: Iterable[Payload]) -> List[Payload]:
+        return [
+            Payload(
+                metadata={
+                    "encoding": b"binary/snappy",
+                },
+                data=(bytes(cramjam.snappy.compress(p.SerializeToString()))),
+            )
+            for p in payloads
+        ]
+
+    async def decode(self, payloads: Iterable[Payload]) -> List[Payload]:
+        ret: List[Payload] = []
+        for p in payloads:
+            if p.metadata.get("encoding", b"").decode() != "binary/snappy":
+                ret.append(p)
+                continue
+            ret.append(Payload.FromString(bytes(cramjam.snappy.decompress(p.data))))
+        return ret
+```
+
+## 在 Data Converter 上配置编解码器
+
+将“data_converter”参数添加到“Client.connect()”选项中，该选项将使用有效负载编解码器覆盖默认转换器：
+
+```python
+from codec import EncryptionCodec
+
+client = await Client.connect(
+    "localhost:7233",
+    data_converter=dataclasses.replace(
+        temporalio.converter.default(), payload_codec=EncryptionCodec()
+    ),
+)
+```
+
+有关参考，请参阅[加密](https://github.com/Temporalio/samples-python/tree/main/encryption) 示例。
+
+## Codec Server
+
+Codec Server 是远程运行“PayloadCodec”的 HTTP 服务器，以便 Temporal Web UI 和 CLI 可以解码加密的有效负载以进行显示。
+
+有关更多信息，请参阅 [Codec Server](/codec-server)。

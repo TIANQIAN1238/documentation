@@ -1,7 +1,7 @@
 ---
 id: timers
-title: Timers - TypeScript SDK
-sidebar_label: Timers
+title: "Timers - TypeScript SDK"
+sidebar_label: "Timers"
 slug: /develop/typescript/workflows/timers
 toc_max_heading_level: 2
 keywords:
@@ -11,30 +11,31 @@ tags:
   - Durable Timers
   - TypeScript SDK
   - Temporal SDKs
-description: A Workflow sets durable Timers for fixed periods using sleep() or timer(). Timers are persisted, ensuring execution continues after downtime, using minimal resources.
+description: "Workflow 使用 sleep() 或 Timer() 将持久的 Timer 设置为固定时间段。 Timer 被持久化，确保在停机后使用最少的资源继续执行。"
 ---
 
-## What is a Timer? {#timers}
+<a id="timers"></a>
+## 什么是 Timer？ {#timers}
 
-A Workflow can set a durable Timer for a fixed time period.
-In some SDKs, the function is called `sleep()`, and in others, it's called `timer()`.
+Workflow 可以将耐用的 Timer 设置为固定时间段。
+在某些 SDK 中，该函数称为 `sleep()`，而在其他 SDK 中，该函数称为 `Timer()`。
 
-A Workflow can sleep for months.
-Timers are persisted, so even if your Worker or Temporal Service is down when the time period completes, as soon as your Worker and Temporal Service are back up, the `sleep()` call will resolve and your code will continue executing.
+Workflow 可以休眠数月。
+Timer 是持久的，因此即使您的 Worker 或 Temporal 服务在时间段结束时关闭，只要您的 Worker 和 Temporal 服务备份，`sleep()` 调用就会解析，并且您的代码将继续执行。
 
-Sleeping is a resource-light operation: it does not tie up the process, and you can run millions of Timers off a single Worker.
+睡眠是一种轻资源操作：它不会占用进程，并且您可以在单个 Worker 上运行数百万个 Timer。
 
-## Asynchronous design patterns in TypeScript {#asynchronous-design-patterns}
+## TypeScript 中的异步设计模式 {#asynchronous-design-patterns}
 
-The real value of `sleep` and `condition` is in knowing how to use them to model asynchronous business logic.
-Here are some examples we use the most; we welcome more if you can think of them!
+`sleep` 和 `condition` 的真正价值在于了解如何使用它们来建模异步业务逻辑。
+以下是我们最常用的一些示例；如果您能想到的话，我们欢迎更多！
 
 <details>
 <summary>
-Racing Timers
+赛车 Timers
 </summary>
 
-Use `Promise.race` with Timers to dynamically adjust delays.
+将 `Promise.race` 与 Timer 一起使用可动态调整延迟。
 
 ```ts
 export async function processOrderWorkflow({
@@ -58,10 +59,10 @@ export async function processOrderWorkflow({
 </details>
 <details>
 <summary>
-Racing Signals
+赛车 Signal
 </summary>
 
-Use `Promise.race` with Signals and Triggers to have a promise resolve at the earlier of either system time or human intervention.
+将 `Promise.race` 与 Signal 和触发器结合使用，可以在系统时间或人工干预中较早的时间进行承诺解决。
 
 ```ts
 import { defineSignal, sleep, Trigger } from '@temporalio/workflow';
@@ -81,12 +82,12 @@ export async function yourWorkflow(userId: string) {
 }
 ```
 
-You can invert this to create a reminder pattern where the promise resolves _if_ no Signal is received.
+您可以反转它以创建一个提醒模式，其中承诺在没有收到 Signal 的情况下得到解决。
 
 :::caution Antipattern: Racing sleep.then
 
-Be careful when racing a chained `sleep`.
-This might cause bugs because the chained `.then` will still continue to execute.
+驾驶链式 `sleep` 赛车时要小心。
+这可能会导致错误，因为链接的 `.then` 仍将继续执行。
 
 ```ts
 await Promise.race([
@@ -104,10 +105,10 @@ if (status === 'processed') await complete(); // takes more than 5 seconds
 
 <details>
 <summary>
-Updatable Timer
+可更新 Timer
 </summary>
 
-Here is how you can build an updatable Timer with `condition`:
+以下是如何使用 `condition` 构建可更新的 Timer：
 
 ```ts
 import * as wf from '@temporalio/workflow';
@@ -128,7 +129,7 @@ export async function countdownWorkflow(): Promise<void> {
 }
 ```
 
-This is available in the third-party package [`temporal-time-utils`](https://www.npmjs.com/package/temporal-time-utils#user-content-updatabletimer), where you can also see the implementation:
+这可以在第三方包 [`Temporal-time-utils`](https://www.npmjs.com/package/temporal-time-utils#user-content-updatabletimer) 中找到，您还可以在其中看到实现：
 
 ```ts
 // implementation

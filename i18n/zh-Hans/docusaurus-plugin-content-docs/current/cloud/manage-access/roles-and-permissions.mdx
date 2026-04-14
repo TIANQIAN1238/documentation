@@ -1,0 +1,92 @@
+---
+id: roles-and-permissions
+title: 角色和权限
+description: 了解 Temporal Cloud 中的角色和权限
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - how-to
+  - introduction
+  - temporal cloud
+  - temporal cloud account
+  - users
+---
+
+Temporal Cloud 使用基于角色的访问控制 (RBAC) 来管理对资源的访问。访问权限受以下双方控制
+帐户级别并在 Namespace 内。在帐户级别，每个访问主体都分配有一个帐户级别角色。开
+Namespace 级别，每个访问主体可以分配一个 Namespace 级别权限。一些帐户级别的角色，
+例如帐户所有者和全局管理员，自动拥有帐户中所有 Namespace 的 Namespace 管理员权限。
+
+## 账户级别角色
+
+帐户级别角色分配给帐户级别的访问主体。他们控制对帐户资源的访问，
+如：
+
+- 用户和服务帐户
+- 计费和使用
+- Namespaces。这包括仅创建和管理 Namespace，而不是访问 Namespace 内的资源，即
+  由[Namespace级别权限](#Namespace级别权限)控制。
+- Nexus 端点
+
+下表提供了账户级角色及其主要用途的摘要。请参阅
+[权限参考](/cloud/manage-access/permissions-reference#account-level-access) 了解 API 级别的详细信息。
+
+|角色 |主要目的 |可以创建Namespaces |自动 Namespace 管理员 |计费和使用访问|
+| ------------- | ------------------------------------------- | -------------------- | --------------------------------------- | --------------------------------- |
+|帐户所有者 |拥有并管理该帐户 |是的 |所有 Namespace（无法撤销）|完整的计费、付款和使用情况 |
+|全局管理 |管理帐户配置和用户 |是的 |所有 Namespace（无法撤销）|仅供使用|
+|开发商 |创建和管理他们拥有的 Namespace |是的 |他们创建的 Namespace（可以撤销） |无 |
+|财务管理|管理账单和付款信息 |没有 |无 |完整的账单和付款|
+|只读 |查看帐户配置和资源 |没有 |无 |无 |
+
+帐户级角色不管理 Namespace 内的日常操作。访问 Namespace 内部的资源，例如
+与 Workflow 和 Workflow Execution 一样，由 [Namespace 级别权限](#Namespace 级别权限)控制。
+
+帐户所有者和全局管理员角色自动拥有帐户中所有 Namespace 的 Namespace 管理员权限，
+并且在不删除角色的情况下无法撤销这些权限。开发人员可以创建 Namespace，并拥有 Namespace
+他们创建的每个 Namespace 的管理员权限。该权限可以被撤销。开发者角色也没有
+自动访问他们未创建的 Namespace。
+
+### 分配帐户所有者角色的最佳实践
+
+帐户所有者角色拥有系统中最高级别的访问权限。该角色配置账户级参数
+并管理 Temporal 账单和付款信息。它允许用户执行 Temporal Cloud 内的所有操作
+帐户。
+
+我们强烈建议在向用户分配帐户所有者角色时采取以下预防措施：
+
+- 将角色分配给组织中的至少两名用户。否则，限制具有此角色的用户数量。
+- 将一个人的直接电子邮件地址与帐户所有者关联，而不是共享或通用地址，因此 Temporal
+  支持人员可以在紧急情况下联系合适的人。
+
+后一条规则对于团队中可能需要紧急联系的任何人都很有用，无论他们的帐户是什么
+角色。
+
+## Namespace 级别权限 {#Namespace-level-permissions}
+
+登录后，您可以通过导航至 **我的个人资料** > **密码和
+身份验证**，然后单击 **身份验证器应用程序** > **删除方法**。
+
+- Workflows
+- Workflow Executions
+- Task Queues
+- Activity 执行
+- Search Attributes
+- 历史
+- 活动
+
+Namespace 级别的权限分配给 Namespace 内的访问主体。每个权限都有一组操作
+授予对 Namespace 内特定资源的访问权限。
+
+下表提供了 Namespace 级别权限及其主要用途的摘要。请参阅
+[权限参考](/cloud/manage-access/permissions-reference#Namespace-level-permissions) 了解 API 级别的详细信息。
+
+|权限级别 |预期用途 |人类访问 | Worker运行时访问| Namespace 管理 |
+| ---------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+|阅读 |观察 Namespace Activity |查看 Workflow、Workflow Execution、Schedule、Task Queue 和元数据 |无 |无 |
+|写 |操作 Workflows 并运行 Workers |启动、Signal、取消、终止和重置 Workflow；管理 Schedule 和批量操作 |轮询 Task Queue 并完成 Workflow 和 Activity 任务 |无 |
+| Namespace 管理员 |管理 Namespace |所有读写功能 |所有读写功能 | Update Namespace 设置、管理 Search Attribute、导出接收器、复制和 Namespace 用户访问 |
+
+您可以向具有开发人员帐户级角色的主体授予 Namespace 管理、写入或只读权限，
+财务管理员，或只读。帐户所有者和全局管理员已拥有所有 Namespace 上的 Namespace 管理员权限
+在帐户中，不需要手动分配Namespace级别的权限。

@@ -1,8 +1,8 @@
 ---
 id: observability
-title: Observability - Ruby SDK
-sidebar_label: Observability
-description: Explore Temporal SDK observability features for Metrics, Tracing, Logging, and Visibility using the Ruby SDK.
+title: "可观察性 - Ruby SDK"
+sidebar_label: "可观察性"
+description: "使用 Ruby SDK 探索 Temporal SDK 的指标、跟踪、日志记录和 Visibility 的可观察性功能。"
 toc_max_heading_level: 4
 keywords:
   - logging
@@ -19,29 +19,30 @@ tags:
   - Workflows
 ---
 
-This page covers capabilities related to viewing the state of the application, including:
+此页面涵盖与查看应用程序状态相关的功能，包括：
 
-- [Metrics](#metrics)
-- [Tracing](#tracing)
-- [Logging](#logging)
+- [指标](#metrics)
+- [追踪](#tracing)
+- [记录](#logging)
 - [Visibility](#visibility)
 
-The observability guide covers the many ways to view the current state of your [Temporal Application](/temporal#temporal-application).
-This includes viewing [Workflow Executions](/workflow-execution) tracked by the [Temporal Platform](/temporal#temporal-platform), as well as inspecting state at any point during execution.
+可观察性指南涵盖了查看 [Temporal 应用](/temporal#temporal-application) 当前状态的多种方法。
+这包括查看 [Temporal平台](/workflow-execution) 跟踪的 [Workflow Executions](/temporal#temporal-platform)，以及检查执行期间任意时刻的状态。
 
-## Emit metrics {#metrics}
+<a id="metrics"></a>
+## 发出指标 {#metrics}
+每个 Temporal SDK 都可以选择从客户端或 Worker 进程发出指标。
+指标可以由 Prometheus 等系统抓取，图表可以使用 Grafana 等工具创建。
 
-Each Temporal SDK can optionally emit metrics from either the Client or Worker process.
-Metrics can be scraped by systems like Prometheus, and graphs can be created using tools like Grafana.
+- 有关 Prometheus 和 Grafana 集成的概述，请参阅 [监控](/self-hosted-guide/monitoring) 指南。
+- 有关指标列表，请参阅 [SDK指标参考](/references/sdk-metrics)。
 
-- For an overview of Prometheus and Grafana integration, refer to the [Monitoring](/self-hosted-guide/monitoring) guide.
-- For a list of metrics, see the [SDK metrics reference](/references/sdk-metrics).
+创建全局 `Temporalio::Runtime` 时，Ruby 中的指标是在 `telemetry` 参数的 `metrics` 参数上配置的。该对象应该是全局创建的，并且应该用于所有客户端；因此，您应该在任何其他 Temporal 代码之前配置此代码。
 
-Metrics in Ruby are configured on the `metrics` argument of the `telemetry` argument when creating a global `Temporalio::Runtime`. That object should be created globally and should be used for all clients; therefore, you should configure this before any other Temporal code.
+<a id="set-a-prometheus-endpoint"></a>
+## 设置 Prometheus 端点 {#set-a-prometheus-endpoint}
 
-## Set a Prometheus endpoint
-
-The following example exposes a Prometheus endpoint on port `9000`.
+以下示例在端口 `9000` 上公开 Prometheus 端点。
 
 ```ruby
 Temporalio::Runtime.default = Temporalio::Runtime.new(
@@ -55,16 +56,17 @@ Temporalio::Runtime.default = Temporalio::Runtime.new(
 )
 ```
 
-### Custom metric handling
+<a id="custom-metric-handling"></a>
+### 自定义指标处理 {#custom-metric-handling}
 
-Instead of Prometheus or OpenTelemetry, an instance of `Temporalio::Runtime::MetricBuffer` can be provided as a `buffer` argument to the `MetricsOptions`.
-`retrieve_updates` can then be periodically called on the buffer to get metric updates.
+可以将 `Temporalio::Runtime::MetricBuffer` 的实例作为 `buffer` 参数提供给 `MetricsOptions`，而不是 Prometheus 或 OpenTelemetry。
+然后可以在缓冲区上定期调用 `retrieve_Updates` 以获得指标 Update。
 
-## Setup Tracing {#tracing}
+<a id="tracing"></a>
+## 设置跟踪 {#tracing}
+跟踪可以观察整个应用程序的调用顺序，包括 Workflow 和活动。
 
-Tracing enables observability into the sequence of calls across your application, including Workflows and Activities.
-
-OpenTelemetry tracing for clients, activities, and workflows can be enabled using the `Temporalio::Contrib::OpenTelemetry::TracingInterceptor`. Specifically, when creating a client, set the interceptor like so:
+可以使用 `Temporalio::Contrib::OpenTelemetry::TracingInterceptor` 启用对客户端、活动和 Workflow 的 OpenTelemetry 跟踪。具体来说，在创建客户端时，设置拦截器如下：
 
 ```ruby
 require 'opentelemetry/api'
@@ -81,25 +83,25 @@ my_client = Temporalio::Client.connect(
 )
 ```
 
-When your Client is connected, spans are created for all Client calls, Activities, and Workflow invocations on the Worker.
-Spans are created and serialized through the server to give one trace for a Workflow Execution.
+连接客户端后，将为所有客户端调用、活动和 Worker 上的 Workflow 调用创建跨度。
+Span 是通过服务器创建和序列化的，以提供 Workflow Execution 的一个跟踪。
 
-## Log from a Workflow {#logging}
+<a id="logging"></a>
+## 从 Workflow {#logging} 记录
+日志记录使您能够捕获并保留 Workflow 和 Activity 代码中的重要执行详细信息。
 
-Logging enables you to capture and persist important execution details from your Workflow and Activity code.
+日志记录级别通常包括：
 
-Logging levels typically include:
-
-| Level   | Use                                                                                                       |
+| 等级   | 使用                                                                                                       |
 | ------- | --------------------------------------------------------------------------------------------------------- |
-| `DEBUG` | Detailed information, typically useful for debugging purposes.                                            |
-| `INFO`  | General information about the application's operation.                                                    |
-| `WARN`  | Indicates potentially harmful situations or minor issues that don't prevent the application from working. |
-| `ERROR` | Indicates error conditions that might still allow the application to continue running.                    |
+| `DEBUG` | 详细信息，通常可用于调试目的。                                            |
+| `INFO`  | 有关应用程序操作的一般信息。                                                    |
+| `WARN`  | 指示不会阻止应用程序运行的潜在有害情况或小问题。 |
+| `ERROR` | 指示可能仍允许应用程序继续运行的错误情况。                    |
 
-Logging uses the Ruby standard logging APIs.
-The `logger` can be set when connecting a client.
-The following example shows logging on the console and sets the level to `INFO`.
+日志记录使用 Ruby 标准日志记录 API。
+`logger`可以在连接客户端时设置。
+以下示例显示控制台上的日志记录并将级别设置为 `INFO`。
 
 ```ruby
 require 'logger'
@@ -111,57 +113,57 @@ my_client = Temporalio::Client.connect(
 )
 ```
 
-You can log from a Workflow using `Temporalio::Workflow.logger` which is a special instance of Ruby's `Logger` that
-appends workflow details to every log and does not log during replay.
+您可以使用 `Temporalio::Workflow.logger` 从 Workflow 登录，这是 Ruby 的 `Logger` 的一个特殊实例，
+将 Workflow 详细信息附加到每个日志中，并且在重播期间不记录。
 
 ```ruby
 Temporalio::Workflow.logger.info("Some log #{some_value}")
 ```
 
-There's also one for use in activities that appends Activity details to every log:
+还有一种用于将 Activity 详细信息附加到每个日志的活动：
 
 ```ruby
 Temporalio::Activity::Context.current.logger.info("Some log #{some_value}")
 ```
 
-## Use Visibility APIs {#visibility}
+<a id="visibility"></a>
+## 使用 Visibility API {#visibility}
+Visibility 指用于列出、过滤和检查 Workflow Execution 的 Temporal 功能。
 
-Visibility refers to Temporal features for listing, filtering, and inspecting Workflow Executions.
+<a id="search-attributes"></a>
+### 使用 Search Attributes {#search-attributes}
+- [默认 Search Attribute](/search-attribute#default-search-attribute) 与 `WorkflowType`、`StartTime` 和 `ExecutionStatus` 一样会自动索引。
+- [定制 Search Attribute](/search-attribute#custom-search-attribute) 允许您存储 Workflow 的特定于域的元数据。
 
-### Use Search Attributes {#search-attributes}
+检索 Workflow Execution 的典型方法是通过其 Workflow Id。
 
-- [Default Search Attributes](/search-attribute#default-search-attribute) like `WorkflowType`, `StartTime`, and `ExecutionStatus` are automatically indexed.
-- [Custom Search Attributes](/search-attribute#custom-search-attribute) let you store domain-specific metadata for Workflows.
+但是，有时您需要根据另一属性检索一个或多个 Workflow Execution。例如，假设您想要获取某个时间范围内失败的某种类型的所有 Workflow Execution，以便您可以使用相同的参数启动新的 Workflow Execution。
 
-The typical method of retrieving a Workflow Execution is by its Workflow Id.
+您可以使用 [Search Attributes](/search-attribute) 来完成此操作。
 
-However, sometimes you'll want to retrieve one or more Workflow Executions based on another property. For example, imagine you want to get all Workflow Executions of a certain type that have failed within a time range, so that you can start new ones with the same arguments.
+- [默认 Search Attribute](/search-attribute#default-search-attribute) 与 `WorkflowType`、`StartTime` 和 `ExecutionStatus` 一样，会自动添加到 Workflow Execution。
+- [定制 Search Attribute](/search-attribute#custom-search-attribute) 可以包含其自己的特定于域的数据（如 `customerId` 或 `numItems`）。
 
-You can do this with [Search Attributes](/search-attribute).
+使用自定义 Search Attribute 的步骤是：
 
-- [Default Search Attributes](/search-attribute#default-search-attribute) like `WorkflowType`, `StartTime` and `ExecutionStatus` are automatically added to Workflow Executions.
-- [Custom Search Attributes](/search-attribute#custom-search-attribute) can contain their own domain-specific data (like `customerId` or `numItems`).
+- 在 CLI 或 Web UI 中的 Temporal 服务中创建新的 Search Attribute。
+  - 例如：`Temporal operator search-attribute create --name CustomKeywordField --type Text`
+    - 将 `CustomKeywordField` 替换为您的 Search Attribute 的名称。
+    - 将 `Text` 替换为与 Search Attribute 关联的类型值：`Text` | `Keyword` | `Int` | `Double` | `Bool` | `Datetime` | `KeywordList`
+- 设置 Workflow Execution 的 Search Attribute 值：
+  - 在客户端上，在启动执行时将其作为参数包含在内。
+  - 在 Workflow 中通过调用 `Temporalio::Workflow.upsert_search_attributes`。
+- 读取Search Attribute的值：
+  - 在客户端上，通过在 `WorkflowHandle` 上调用 `describe`。
+  - 在 Workflow 中查看 `Temporalio::Workflow.search_attributes`。
+- Query Workflow Execution 由 Search Attribute 使用 [列表过滤器](/list-filter) 实现：
+  - [在Temporal CLI中](/cli/operator#list-2)
+  - 在代码中调用 `list_Workflows`。
 
-The steps to using custom Search Attributes are:
-
-- Create a new Search Attribute in your Temporal Service in the CLI or Web UI.
-  - For example: `temporal operator search-attribute create --name CustomKeywordField --type Text`
-    - Replace `CustomKeywordField` with the name of your Search Attribute.
-    - Replace `Text` with a type value associated with your Search Attribute: `Text` | `Keyword` | `Int` | `Double` | `Bool` | `Datetime` | `KeywordList`
-- Set the value of the Search Attribute for a Workflow Execution:
-  - On the Client by including it as an argument when starting the Execution.
-  - In the Workflow by calling `Temporalio::Workflow.upsert_search_attributes`.
-- Read the value of the Search Attribute:
-  - On the Client by calling `describe` on a `WorkflowHandle`.
-  - In the Workflow by looking at `Temporalio::Workflow.search_attributes`.
-- Query Workflow Executions by the Search Attribute using a [List Filter](/list-filter):
-  - [In the Temporal CLI](/cli/operator#list-2)
-  - In code by calling `list_workflows`.
-
-### List Workflow Executions {#list-workflow-executions}
-
-Use the [list_workflows](https://ruby.temporal.io/Temporalio/Client.html#list_workflows-instance_method) method on the Client and pass a [List Filter](/list-filter) as an argument to filter the listed Workflows.
-The result is a lazy enumerator/enumerable.
+<a id="list-workflow-executions"></a>
+### 列出 Workflow Execution {#list-workflow-executions}
+在客户端上使用 [list_Workflows](https://ruby.temporal.io/temporalio/Client.html#list_workflows-instance_method) 方法并传递 [列表过滤器](/list-filter) 作为参数来过滤列出的 Workflow。
+结果是一个惰性枚举器/可枚举。
 
 ```ruby
 my_client.list_workflows("WorkflowType='GreetingWorkflow'").each do |wf|
@@ -169,12 +171,12 @@ my_client.list_workflows("WorkflowType='GreetingWorkflow'").each do |wf|
 end
 ```
 
-### Set Custom Search Attributes {#custom-search-attributes}
+<a id="custom-search-attributes"></a>
+### 设置自定义 Search Attributes {#custom-search-attributes}
+在 Temporal 服务（使用 `Temporal operator search-attribute create` 或云 UI）中创建自定义 Search Attribute 后，您可以在启动 Workflow 时设置自定义 Search Attribute 的值。
 
-After you've created custom Search Attributes in your Temporal Service (using `temporal operator search-attribute create`or the Cloud UI), you can set the values of the custom Search Attributes when starting a Workflow.
-
-To set custom Search Attributes, use the `search_attributes` parameter for `start_workflow` or `execute_workflow`.
-Keys should be predefined for reuse.
+要设置自定义 Search Attribute，请使用 `start_Workflow` 或 `execute_Workflow` 的 `search_attributes` 参数。
+应预定义密钥以供重用。
 
 ```ruby
 # Predefined search attribute key, usually a global somewhere
@@ -193,12 +195,12 @@ handle = my_client.start_workflow(
 )
 ```
 
-### Upsert Search Attributes {#upsert-search-attributes}
+<a id="upsert-search-attributes"></a>
+### 更新插入 Search Attributes {#upsert-search-attributes}
+您可以更新插入 Search Attribute 以在 Workflow 代码中添加 Update 或删除 Search Attribute。
 
-You can upsert Search Attributes to add, update, or remove Search Attributes from within Workflow code.
-
-To upsert custom Search Attributes, use the [`upsert_search_attributes`](https://ruby.temporal.io/Temporalio/Workflow.html#upsert_search_attributes-class_method) method with a set of updates.
-Keys should be predefined for reuse.
+要更新插入自定义 Search Attribute，请将 [`upsert_search_attributes`](https://ruby.temporal.io/temporalio/Workflow.html#upsert_search_attributes-class_method) 方法与一组 Update 结合使用。
+应预定义密钥以供重用。
 
 ```ruby
 # Predefined search attribute key, usually a global somewhere

@@ -1,0 +1,147 @@
+---
+id: with-ai
+title: 利用人工智能进行开发
+sidebar_label: 利用人工智能进行开发
+description: 为您的 AI 编码代理 Temporal 提供专业知识并实时访问 Temporal 文档。
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+通过 Temporal Docs MCP 为您的 AI 编码代理 Temporal 提供技能和实时文档访问方面的专业知识
+服务器。
+
+## 技能
+
+技能为 AI 代理提供特定领域的 Temporal 专业知识。他们与 Claude Code、Codex、Cursor 以及任何代理合作
+支持[技能](https://agentskills.io)。
+
+### Temporal 开发者技能
+
+[Temporal 开发者技能](https://github.com/Temporalio/skill-Temporal-developer) 为您提供 AI 编码代理
+Temporal 编程模型的专家级知识 — Workflow 确定性规则、Activity 模式、重试策略、
+错误处理、测试策略、Worker 配置、版本控制和常见问题。
+
+<Tabs groupId="skill-install" queryString>
+<TabItem value="claude-code" label="Claude Code Plugin">
+
+1.将Temporal技能市场添加到Claude Code中：
+
+   ```bash
+   /plugin marketplace add temporalio/agent-skills
+   ```
+
+2. 通过在 Claude Code 中运行 `/plugin` 打开插件管理器，选择市场并安装
+   “Temporal-开发人员”。
+
+</TabItem>
+<TabItem value="npx" label="npx">
+
+这适用于 Claude Code、Codex、Cline 和其他代理。
+
+使用“技能” CLI 安装技能：
+
+```bash
+npx skills add https://github.com/temporalio/skill-temporal-developer
+```
+
+</TabItem>
+<TabItem value="manual" label="Manual">
+
+将技能存储库克隆到您的 Claude 技能目录中。如果您使用其他代理，请更改目标目录
+比克劳德：
+
+```bash
+git clone https://github.com/temporalio/skill-temporal-developer.git ~/.claude/skills/temporal-developer
+```
+
+</TabItem>
+</Tabs>
+
+安装后重新启动编码代理。
+
+### Temporal Cloud 技能
+
+[Temporal Cloud Skill](https://github.com/Temporalio/skill-Temporal-cloud)帮助您的AI编码代理排除故障
+Temporal Cloud 连接、身份验证和配置问题。
+
+<Tabs groupId="skill-install" queryString>
+<TabItem value="npx" label="npx">
+
+这适用于 Claude Code、Codex、Cline 和其他代理。
+
+使用“技能” CLI 安装技能：
+
+```bash
+npx skills add https://github.com/temporalio/skill-temporal-cloud
+```
+
+</TabItem>
+<TabItem value="manual" label="Manual">
+
+将技能存储库克隆到您的 Claude 技能目录中。如果您使用其他代理，请更改目标目录
+比克劳德：
+
+```bash
+git clone https://github.com/temporalio/skill-temporal-cloud.git ~/.claude/skills/temporal-cloud
+```
+
+</TabItem>
+</Tabs>
+
+安装后重新启动编码代理。
+
+## Temporal 文档 MCP 服务器
+
+将 Temporal 文档直接连接到您的 AI 助手，以获得有关 Temporal 的准确、最新答案。的
+Temporal 文档 MCP 服务器使 AI 工具能够实时访问我们的文档，因此可以从当前文档中获取响应
+而不是训练数据。
+
+服务器需要使用任何 Google 帐户进行匿名身份验证，以实施速率限制并防止滥用。我们
+我们看不到也不会从中收集任何联系信息。
+
+### 克劳德·代码
+
+全局添加 Temporal 文档 MCP 服务器，以便它在您的所有项目中可用：
+
+1.使用Claude代码注册MCP服务器：
+
+   ```bash
+   claude mcp add --scope user --transport http temporal-docs https://temporal.mcp.kapa.ai
+   ```
+
+2. 重新启动 Claude Code 并运行 `/mcp` 以使用您的 Google 帐户进行身份验证。
+
+要将服务器仅添加到特定项目，请省略“--scope user”标志。这会将配置存储在
+项目的`.mcp.json`文件：
+
+```bash
+claude mcp add --transport http temporal-docs https://temporal.mcp.kapa.ai
+```
+
+### 克劳德桌面
+
+1.打开克劳德桌面设置
+2. 导航至 **设置 > 连接器**
+3. 添加新的 MCP 服务器，其 URL 为：`https://Temporal.mcp.kapa.ai`
+
+### 其他 MCP 兼容工具
+
+对于支持模型上下文协议的任何工具，请使用以下服务器 URL：
+
+```
+https://temporal.mcp.kapa.ai
+```
+
+配置格式因工具而异。这是一个通用的 JSON 配置：
+
+```json
+{
+  "mcpServers": {
+    "temporal-docs": {
+      "transport": "http",
+      "url": "https://temporal.mcp.kapa.ai"
+    }
+  }
+}
+```

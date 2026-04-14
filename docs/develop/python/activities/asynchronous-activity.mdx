@@ -1,8 +1,8 @@
 ---
 id: asynchronous-activity
-title: Asynchronous Activity completion - Python SDK
-sidebar_label: Asynchronous Activity completion
-description: Asynchronously complete an Activity using the Temporal Python SDK. Follow three steps for Activity completion and use the Temporal Client for Heartbeat and updates.
+title: "异步 Activity 完成 - Python SDK"
+sidebar_label: "异步 Activity 完成"
+description: "使用 Temporal Python SDK 异步完成 Activity。按照三个步骤完成 Activity 并使用 Temporal CLIent 进行 Heartbeat 和 Update。"
 toc_max_heading_level: 2
 keywords:
   - asynchronous activity completion
@@ -19,18 +19,18 @@ tags:
   - Temporal SDKs
 ---
 
-**How to Asynchronously complete an Activity using the Temporal Python SDK.**
+**如何使用 Temporal Python SDK 异步完成 Activity。**
 
-[Asynchronous Activity Completion](/activity-execution#asynchronous-activity-completion) enables the Activity Function to return without the Activity Execution completing.
+[异步 Activity 完成](/activity-execution#asynchronous-activity-completion) 使 Activity 函数能够在 Activity 执行未完成的情况下返回。
 
-There are three steps to follow:
+需要遵循三个步骤：
 
-1. The Activity provides the external system with identifying information needed to complete the Activity Execution.
-   Identifying information can be a [Task Token](/activity-execution#task-token), or a combination of Namespace, Workflow Id, and Activity Id.
-2. The Activity Function completes in a way that identifies it as waiting to be completed by an external system.
-3. The Temporal Client is used to Heartbeat and complete the Activity.
+1. Activity 向外部系统提供完成 Activity 执行所需的识别信息。
+   标识信息可以是 [任务令牌](/activity-execution#task-token)，也可以是 Namespace、Workflow Id 和 Activity Id 的组合。
+2. Activity 函数以将其标识为等待外部系统完成的方式完成。
+3. Temporal CLIent 用于心跳并完成 Activity。
 
-To mark an Activity as completing asynchronously, do the following inside the Activity.
+要将 Activity 标记为异步完成，请在 Activity 内执行以下操作。
 
 ```python
 # Capture token for later completion
@@ -38,13 +38,13 @@ captured_token = activity.info().task_token
 activity.raise_complete_async()
 ```
 
-To update an Activity outside the Activity, use the [get_async_activity_handle()](https://python.temporal.io/temporalio.client.Client.html#get_async_activity_handle) method to get the handle of the Activity.
+对于 Update 和 Activity 之外的 Activity，请使用 [get_async_Activity_handle()](https://python.temporal.io/temporalio.client.Client.html#get_async_activity_handle) 方法获取 Activity 的句柄。
 
 ```python
 handle = my_client.get_async_activity_handle(task_token=captured_token)
 ```
 
-Then, on that handle, you can call the results of the Activity, `heartbeat`, `complete`, `fail`, or `report_cancellation` method to update the Activity.
+然后，在该句柄上，您可以将 Activity、`heartbeat`、`complete`、`fail` 或 `report_cancellation` 方法的结果调用到 Update 和 Activity。
 
 ```python
 await handle.complete("Completion value.")

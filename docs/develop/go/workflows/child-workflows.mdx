@@ -1,7 +1,7 @@
 ---
 id: child-workflows
-title: Child Workflows - Go SDK
-sidebar_label: Child Workflows
+title: "Child Workflows - Go SDK"
+sidebar_label: "Child Workflows"
 toc_max_heading_level: 4
 keywords:
   - child-workflows
@@ -10,39 +10,40 @@ tags:
   - Child Workflows
   - Go SDK
   - Temporal SDKs
-description: Use the Go SDK to start a Child Workflow Execution and set a Parent Close Policy, including details on Workflow Options and future management.
+description: "使用 Go SDK 启动子 Workflow Execution 并设置父关闭策略，包括有关 Workflow 选项和未来管理的详细信息。"
 ---
 
-This page shows how to do the following:
+此页面显示如何执行以下操作：
 
-- [Start a Child Workflow Execution](#child-workflows)
-- [Set a Parent Close Policy](#parent-close-policy)
+- [开始一个孩子 Workflow Execution](#child-workflows)
+- [设置父关闭策略](#parent-close-policy)
 
-## Start a Child Workflow Execution {#child-workflows}
+<a id="child-workflows"></a>
+## 启动一个子 Workflow Execution {#child-workflows}
 
-A [Child Workflow Execution](/child-workflows) is a Workflow Execution that is scheduled from within another Workflow using a Child Workflow API.
+[儿童 Workflow Execution](/child-workflows) 是一个 Workflow Execution，它是使用 Child Workflow API 来自另一个 Workflow 的 Scheduled。
 
-When using a Child Workflow API, Child Workflow related Events ([StartChildWorkflowExecutionInitiated](/references/events#startchildworkflowexecutioninitiated), [ChildWorkflowExecutionStarted](/references/events#childworkflowexecutionstarted), [ChildWorkflowExecutionCompleted](/references/events#childworkflowexecutioncompleted), etc...) are logged in the Workflow Execution Event History.
+使用 Child Workflow API 时，Child Workflow 相关事件（[StartChildWorkflowExecutionInitiated](/references/events#startchildworkflowexecutioninitiated)、[子WorkflowExecutionStarted](/references/events#childworkflowexecutionstarted)、[ChildWorkflowExecutionCompleted](/references/events#childworkflowexecutioncompleted) 等）将记录在 Workflow Execution Event History 中。
 
-Always block progress until the [ChildWorkflowExecutionStarted](/references/events#childworkflowexecutionstarted) Event is logged to the Event History to ensure the Child Workflow Execution has started.
-After that, Child Workflow Executions may be abandoned using the _Abandon_ [Parent Close Policy](/parent-close-policy) set in the Child Workflow Options.
+始终阻止进度，直到 [子WorkflowExecutionStarted](/references/events#childworkflowexecutionstarted) 事件记录到 Event History，以确保子 Workflow Execution 已启动。
+此后，可以使用 Child Workflow 选项中设置的 _Abandon_ [家长关闭政策](/parent-close-policy) 放弃子 Workflow Execution。
 
-To be sure that the Child Workflow Execution has started, first call the Child Workflow Execution method on the instance of Child Workflow future, which returns a different future.
+要确保 Child Workflow Execution 已启动，请首先在 Child Workflow future 实例上调用 Child Workflow Execution 方法，该方法返回不同的 future。
 
-Then get the value of an object that acts as a proxy for a result that is initially unknown, which is what waits until the Child Workflow Execution has spawned.
+然后获取一个对象的值，该对象充当最初未知的结果的代理，该结果将等待子 Workflow Execution 生成。
 
-To spawn a [Child Workflow Execution](/child-workflows) in Go, use the [`ExecuteChildWorkflow`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ExecuteChildWorkflow) API, which is available from the `go.temporal.io/sdk/workflow` package.
+要在 Go 中生成 [儿童 Workflow Execution](/child-workflows)，请使用 [`ExecuteChildWorkflow`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ExecuteChildWorkflow) API，该 API 可从 `go.Temporal.io/sdk/Workflow` 包中获取。
 
-The `ExecuteChildWorkflow` call requires an instance of [`workflow.Context`](https://pkg.go.dev/go.temporal.io/sdk/workflow#Context), with an instance of [`workflow.ChildWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ChildWorkflowOptions) applied to it, the Workflow Type, and any parameters that should be passed to the Child Workflow Execution.
+`ExecuteChildWorkflow` 调用需要一个 [`Workflow.Context`](https://pkg.go.dev/go.temporal.io/sdk/workflow#Context) 实例、一个应用于其的 [`Workflow.ChildWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ChildWorkflowOptions) 实例、Workflow 类型以及应传递给子 Workflow Execution 的任何参数。
 
-`workflow.ChildWorkflowOptions` contain the same fields as `client.StartWorkflowOptions`.
-Workflow Option fields automatically inherit their values from the Parent Workflow Options if they are not explicitly set.
-If a custom `WorkflowID` is not set, one is generated when the Child Workflow Execution is spawned.
-Use the [`WithChildOptions`](https://pkg.go.dev/go.temporal.io/sdk/workflow#WithChildOptions) API to apply Child Workflow Options to the instance of `workflow.Context`.
+`Workflow.ChildWorkflowOptions` 包含与 `client.StartWorkflowOptions` 相同的字段。
+如果未显式设置，Workflow 选项字段会自动从父 Workflow 选项继承其值。
+如果未设置自定义 `WorkflowID`，则会在生成子 Workflow Execution 时生成一个。
+使用 [`WithChildOptions`](https://pkg.go.dev/go.temporal.io/sdk/workflow#WithChildOptions) API 将 Child Workflow 选项应用到 `Workflow.Context` 的实例。
 
-The `ExecuteChildWorkflow` call returns an instance of a [`ChildWorkflowFuture`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ChildWorkflowFuture).
+`ExecuteChildWorkflow` 调用返回 [`ChildWorkflowFuture`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ChildWorkflowFuture) 的实例。
 
-Call the `.Get()` method on the instance of `ChildWorkflowFuture` to wait for the result.
+在 `ChildWorkflowFuture` 实例上调用 `.Get()` 方法以等待结果。
 
 ```go
 func YourWorkflowDefinition(ctx workflow.Context, params ParentParams) (ParentResp, error) {
@@ -65,15 +66,16 @@ func YourOtherWorkflowDefinition(ctx workflow.Context, params ChildParams) (Chil
 }
 ```
 
-### Async Child Workflows
+<a id="async-child-workflows"></a>
+### 异步 Child Workflows {#async-child-workflows}
 
-To asynchronously spawn a Child Workflow Execution, the Child Workflow must have an "Abandon" Parent Close Policy set in the Child Workflow Options.
-Additionally, the Parent Workflow Execution must wait for the `ChildWorkflowExecutionStarted` Event to appear in its Event History before it completes.
+要异步生成子 Workflow Execution，Child Workflow 必须在 Child Workflow 选项中设置“放弃”父关闭策略。
+此外，父 Workflow Execution 必须等待 `ChildWorkflowExecutionStarted` 事件出现在其 Event History 中才能完成。
 
-If the Parent makes the `ExecuteChildWorkflow` call and then immediately completes, the Child Workflow Execution does not spawn.
+如果父级进行 `ExecuteChildWorkflow` 调用然后立即完成，则子级 Workflow Execution 不会生成。
 
-To be sure that the Child Workflow Execution has started, first call the `GetChildWorkflowExecution` method on the instance of the `ChildWorkflowFuture`, which will return a different Future.
-Then call the `Get()` method on that Future, which is what will wait until the Child Workflow Execution has spawned.
+要确保子 Workflow Execution 已启动，请首先在 `ChildWorkflowFuture` 实例上调用 `GetChildWorkflowExecution` 方法，该方法将返回不同的 Future。
+然后在该 Future 上调用 `Get()` 方法，该方法将等待子 Workflow Execution 生成。
 
 ```go
 import (
@@ -104,23 +106,23 @@ func YourOtherWorkflowDefinition(ctx workflow.Context, params ChildParams) (Chil
 }
 ```
 
-#### Set a Parent Close Policy {#parent-close-policy}
+#### 设置父关闭策略 {#parent-close-policy}
 
-A [Parent Close Policy](/parent-close-policy) determines what happens to a Child Workflow Execution if its Parent changes to a Closed status (Completed, Failed, or Timed Out).
+[家长关闭政策](/parent-close-policy) 确定如果子 Workflow Execution 的父级更改为关闭状态（已完成、失败或超时），子级 Workflow Execution 会发生什么情况。
 
-The default Parent Close Policy option is set to terminate the Child Workflow Execution.
+默认“父关闭策略”选项设置为终止子 Workflow Execution。
 
-In Go, a Parent Close Policy is set on the `ParentClosePolicy` field of an instance of [`workflow.ChildWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ChildWorkflowOptions).
-The possible values can be obtained from the [`go.temporal.io/api/enums/v1`](https://pkg.go.dev/go.temporal.io/api/enums/v1#ParentClosePolicy) package.
+在 Go 中，父关闭策略是在 [`Workflow.ChildWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ChildWorkflowOptions) 实例的 `ParentClosePolicy` 字段上设置的。
+可能的值可以从 [`go.Temporal.io/api/enums/v1`](https://pkg.go.dev/go.temporal.io/api/enums/v1#ParentClosePolicy) 包中获取。
 
 - `PARENT_CLOSE_POLICY_ABANDON`
 - `PARENT_CLOSE_POLICY_TERMINATE`
 - `PARENT_CLOSE_POLICY_REQUEST_CANCEL`
 
-The Child Workflow Options are then applied to the instance of `workflow.Context` by using the `WithChildOptions` API, which is then passed to the `ExecuteChildWorkflow()` call.
+然后，通过使用 `WithChildOptions` API 将 Child Workflow 选项应用于 `Workflow.Context` 的实例，然后将其传递给 `ExecuteChildWorkflow()` 调用。
 
-- Type: [`ParentClosePolicy`](https://pkg.go.dev/go.temporal.io/api/enums/v1#ParentClosePolicy)
-- Default: `PARENT_CLOSE_POLICY_TERMINATE`
+- 型号：[`ParentClosePolicy`](https://pkg.go.dev/go.temporal.io/api/enums/v1#ParentClosePolicy)
+- 默认：`PARENT_CLOSE_POLICY_TERMINATE`
 
 ```go
 import (

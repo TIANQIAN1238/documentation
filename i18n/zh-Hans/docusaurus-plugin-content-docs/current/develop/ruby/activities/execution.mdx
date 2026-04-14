@@ -1,0 +1,48 @@
+---
+id: execution
+title: Activity 执行 - Ruby SDK
+description: 展示如何使用 Ruby SDK 执行 Activity
+sidebar_label: Activity执行
+slug: /develop/ruby/activities/execution
+toc_max_heading_level: 3
+tags:
+  - Ruby SDK
+  - Temporal SDKs
+  - Activity
+---
+
+## 启动 Activity 执行 {#Activity-execution}
+
+对生成 [Activity 执行](/Activity-执行) 的调用写入在 [Workflow Definition](/Workflow-定义) 中。
+调用生成 Activity 执行会生成 [ScheduleActivityTask](/references/commands#ScheduleActivitytask) 命令。
+这会产生三个 [Activity 任务](/tasks#Activity-task) 相关事件 ([ActivityTaskScheduled](/references/events#ActivitytaskScheduled)、[ActivityTaskStarted](/references/events#Activitytaskstarted) 和Workflow Execution Event History 中的“ActivityTask[已关闭]”）。
+
+通过调用参数传递给活动的值或通过结果值返回的值都记录在执行历史记录中。
+当 Workflow 状态需要恢复时，整个执行历史记录将从 Temporal 服务传输到 Workflow Worker。
+因此，大量执行历史记录可能会对 Workflow 的性能产生不利影响。
+
+因此，请注意通过 Activity 调用参数或返回值传输的数据量。
+除此之外，Activity 实现不存在其他限制。
+
+要生成 Activity 执行，请在 Workflow Definition 中使用“execute_Activity”操作。
+
+```ruby
+class MyWorkflow < Temporalio::Workflow::Definition
+  # Customize the name
+  workflow_name :MyDifferentWorkflowName
+
+  def execute(name)
+    Temporalio::Workflow.execute_activity(
+      MyActivity,
+      { greeting: 'Hello', name: },
+      start_to_close_timeout: 100
+    )
+  end
+end
+```
+
+Activity 执行语义依赖于多个参数。
+唯一需要设置的值是 [Schedule-To-Close Timeout](/encyclopedia/Detecting-Activity-failures#Schedule-to-close-timeout) 或 [Start-To-Close Timeout](/encyclopedia/Detecting-Activity-failures#start-to-close-timeout)。
+这些值被设置为关键字参数。
+
+Activity 结果是从“execute_Activity”调用返回的。

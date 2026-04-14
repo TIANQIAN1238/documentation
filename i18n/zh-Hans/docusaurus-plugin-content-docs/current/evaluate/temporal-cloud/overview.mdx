@@ -1,0 +1,198 @@
+---
+id: overview
+title: Overview - Temporal Cloud
+sidebar_label: Overview
+description: Temporal Cloud is a fully managed, globally distributed durable execution platform built on cell-based architecture. Available on AWS and GCP with consumption-based pricing and zero-downtime migration from self-hosted deployments.
+slug: /cloud/overview
+toc_max_heading_level: 4
+keywords:
+  - temporal cloud
+  - managed service
+  - durable execution
+  - cell-based architecture
+  - multi-cloud
+  - high availability
+tags:
+  - Temporal Cloud
+---
+
+Temporal Cloud is a fully managed durable execution platform.
+It handles the complexity of running Temporal at scale—persistence, replication, upgrades, and availability—so you can focus on building applications.
+
+Your code runs in your environment.
+Temporal Cloud never sees your application logic or sensitive data.
+The platform stores encrypted Workflow state and orchestrates execution, while your Workers execute business logic wherever you deploy them.
+
+## How Temporal Cloud works
+
+Temporal Cloud operates as the control plane for your distributed applications:
+
+1. **Your environment**: You run Workers that execute your Workflow and Activity code. These can be deployed anywhere—Kubernetes, VMs, serverless, on-premises.
+2. **Temporal Cloud**: Manages Workflow state, Event History, task queuing, and scheduling. All data is encrypted in transit and at rest.
+3. **Temporal SDKs**: Your applications use the SDK to communicate with Temporal Cloud over secure gRPC connections.
+
+This separation means Temporal Cloud scales independently of your application.
+You control compute resources for your Workers; Temporal handles the orchestration layer.
+
+## Architecture
+
+### Cell-based infrastructure
+
+Temporal Cloud uses a cell-based architecture to achieve isolation and scalability.
+Each cell is a self-contained deployment unit with its own:
+
+- Dedicated cloud account and VPC
+- Kubernetes cluster running Temporal services
+- Primary database with synchronous replication across three availability zones
+- Elasticsearch for Workflow Visibility and search
+- Load balancers and ingress management
+- Observability and certificate infrastructure
+
+Cells act as failure domains.
+If infrastructure within a cell experiences issues, only Namespaces in that cell are affected.
+This design limits blast radius and enables independent scaling.
+
+### Data plane and control plane
+
+**Data plane**: Where your Workflows execute. Each cell processes Workflow operations, persists state, and manages Task Queues. The data plane is optimized for low latency and high throughput.
+
+**Control plane**: Manages provisioning, configuration, and lifecycle operations. When you create a Namespace, the control plane:
+1. Selects an appropriate cell in your chosen region
+2. Provisions database resources and roles
+3. Generates and deploys mTLS certificates
+4. Configures ingress routes and validates connectivity
+
+The control plane uses Temporal itself (durable execution) to orchestrate these operations reliably.
+
+### Multi-cloud availability
+
+Temporal Cloud runs on both AWS and GCP:
+
+- **14 AWS regions** spanning North America, Europe, Asia Pacific, and South America
+- **5 GCP regions** in North America, Europe, and Asia Pacific
+
+You can create Namespaces in any supported region.
+For disaster recovery, you can replicate across regions within a cloud provider or across cloud providers entirely.
+
+See [Service regions](/cloud/regions) for the complete list of available regions.
+
+## Built-in reliability
+
+Every Temporal Cloud Namespace includes baseline high availability:
+
+- **Three-zone replication**: Workflow state synchronously replicates across three availability zones before acknowledging writes
+- **Automatic failover**: If one zone becomes unavailable, operations continue on the remaining zones
+- **99.9% SLA**: Contractual uptime guarantee for standard Namespaces
+
+### High Availability features
+
+For workloads requiring stronger guarantees, Temporal Cloud offers three replication options:
+
+| Deployment | Description | Use case |
+|------------|-------------|----------|
+| **Same-region** | Replicate across isolated cells within one region | Single-region applications needing cell-level isolation |
+| **Multi-region** | Replicate across regions within one cloud provider | Geographic redundancy and compliance requirements |
+| **Multi-cloud** | Replicate across cloud providers (AWS ↔ GCP) | Maximum resilience against provider-level outages |
+
+High Availability Namespaces include:
+- **99.99% SLA**: Four-nines contractual uptime guarantee
+- **Sub-1-minute RPO**: Recovery Point Objective for data loss
+- **20-minute RTO**: Recovery Time Objective for failover completion
+- **Automatic or manual failover**: Choose your preferred failover strategy
+
+See [High Availability](/cloud/high-availability) for configuration details.
+
+## Security model
+
+Temporal Cloud implements defense-in-depth security:
+
+### Your code stays with you
+
+Temporal Cloud never executes your application code.
+Workers run in your environment, connecting to Temporal Cloud over encrypted channels.
+You control access to your compute resources and secrets.
+
+### Client-side encryption
+
+The [Data Converter](/dataconversion) lets you encrypt payloads before they leave your Workers.
+Temporal Cloud stores ciphertext—if the service were compromised, your data remains encrypted.
+Deploy a [Codec Server](/production-deployment/data-encryption) to decrypt data in the Web UI without sharing keys.
+
+### 网络隔离
+
+- **mTLS 身份验证**：针对 gRPC 端点的基于每个 Namespace 证书的身份验证
+- **API 密钥身份验证**：替代证书以简化密钥管理
+- **私有连接**：AWS PrivateLink 和 GCP Private Service Connect 适用于从不经过公共互联网的流量
+
+＃＃＃ 遵守
+
+Temporal Technologies 保持 SOC 2 Type 2 认证，并符合 GDPR 和 HIPAA 法规。
+审核日志捕获所有 API 操作，并可以导出到您的安全监控系统。
+
+有关完整详细信息，请参阅[安全模型](/cloud/security)。
+
+## 基于消费的定价
+
+Temporal Cloud 根据您的使用情况收费：
+
+### 行动
+
+主要计费单位。
+操作是计费操作，例如启动 Workflow、发送 Signal、记录心跳和完成活动。
+起价为每百万次操作 50 美元，随着规模的扩大，可享受批量折扣。
+
+＃＃＃ 贮存
+
+- **主动存储**：Event History 用于运行 Workflow
+- **保留存储**：Event History 适用于已完成的 Workflow（可配置保留期长达 90 天）
+
+### 计划
+
+四个层——基本层、商业层、企业层和关键任务层——支持级别不断增加，包括操作/存储以及 SAML 和 SCIM 等功能。
+Essentials 计划起价为 100 美元/月。
+
+[cloud.Temporal.io](https://cloud.Temporal.io) 提供自助注册和计划管理。
+
+有关详细费率和示例，请参阅[定价](/cloud/pricing)。
+
+## 便携性
+
+Temporal Cloud 运行与开源发行版相同的 Temporal Server。
+这意味着：
+
+### 零代码更改
+
+为自托管 Temporal 构建的应用程序无需修改即可在 Temporal Cloud 上运行。
+Update 您的连接配置指向您的云 Namespace — 就是这样。
+
+### 零停机迁移
+
+[自动迁移](/cloud/migrate/automated) 使用 Workflow 复制将正在运行的 Workflow 从自托管移动到云（或在云区域之间），无需中断。
+Workflow 无需重新启动，无数据丢失，无停机时间。
+
+[手动迁移](/cloud/migrate/manual) 的工作原理是更新客户端和 Worker 以使用新的 Namespace 端点，同时现有 Workflow 自然完成。
+
+### 双向
+
+将工作负载从自托管移动到云、从云移动到自托管，或者在云区域和提供商之间移动。
+相同的迁移工具可以在任何方向上工作。
+
+## 自助操作
+
+Temporal Cloud 专为自助服务而设计：
+
+- **Web UI**：创建 Namespace、管理用户、在 [cloud.Temporal.io](https://cloud.Temporal.io) 配置设置
+- **CLI (`tcld`)**：从命令行自动执行操作
+- **Terraform 提供程序**：Namespace、用户和配置的基础设施即代码
+- **Cloud Ops API**：自定义工具和自动化的编程访问
+
+标准操作无需支持票证。
+
+＃＃ 入门
+
+1. [注册Temporal Cloud](https://Temporal.io/get-cloud)
+2. [创建您的第一个 Namespace](/cloud/Namespaces)
+3. [连接您的 Worker](/cloud/get-started#set-up-your-clients-and-Workers)
+4. [运行您的第一个 Workflow](/cloud/get-started#run-your-first-Workflow)
+
+对于现有 Temporal 用户，请参阅[迁移](/cloud/migrate)，将自托管工作负载迁移到云端。

@@ -1,0 +1,149 @@
+---
+id: run-worker-process
+title: 运行 Worker 进程 - PHP SDK
+description: 展示如何使用 PHP SDK 运行 Worker 进程
+sidebar_label: Worker 流程
+slug: /develop/php/workers/run-worker-process
+toc_max_heading_level: 3
+tags:
+  - PHP SDK
+  - Temporal SDKs
+  - Worker
+---
+
+## 如何运行 Worker 进程 {#run-a-dev-Worker}
+
+[Worker Process](/Workers#Worker-process) 是执行 Workflow 函数和 Activity 函数的位置。
+
+- Worker 进程中的每个 [Worker 实体](/Workers#Worker-entity) 必须注册其可能执行的确切 Workflow Type 和 Activity 类型。
+- 每个 Worker 实体还必须将自己与一个 [Task Queue](/task-queue) 关联。
+- 轮询相同 Task Queue 的每个 Worker 实体必须使用相同的 Workflow Type 和 Activity 类型进行注册。
+
+[Worker 实体](/Workers#Worker-entity) 是 Worker 进程中侦听特定 Task Queue 的组件。
+
+尽管多个 Worker 实体可以位于单个 Worker 进程中，但单个 Worker 实体 Worker 进程可能就足够了。
+有关更多信息，请参阅 [Worker 调优指南](/develop/Worker-performance)。
+
+Worker 实体包含 Workflow Worker 和/或 Activity Worker，它们分别在 Workflow Execution 和 Activity 执行上取得进展。
+
+[RoadRunner 应用程序服务器](https://roadrunner.dev/) 将根据提供的“.rr.yaml”配置启动多个 Temporal PHP Worker 进程。
+
+每个 Worker 都可以连接到一个或多个 Task Queue。
+Worker 轮询 _Temporal 服务_ 中的任务，执行这些任务，并将任务执行结果传送回 _Temporal 服务_。
+
+Worker 代码由 Temporal 客户开发、部署和运营。
+要创建 Worker，请使用“Temporal\WorkerFactory”：
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Temporal\WorkerFactory;
+
+ini_set('display_errors', 'stderr');
+include "vendor/autoload.php";
+
+// factory initiates and runs task queue specific activity and workflow workers
+$factory = WorkerFactory::create();
+
+// Worker that listens on a Task Queue and hosts both workflow and activity implementations.
+$worker = $factory->newWorker();
+
+// Workflows are stateful. So you need a type to create instances.
+$worker->registerWorkflowTypes(App\DemoWorkflow::class);
+
+// Activities are stateless and thread safe. So a shared instance is used.
+$worker->registerActivity(App\DemoActivity::class);
+
+// In case an activity class requires some external dependencies provide a callback - factory
+// that creates or builds a new activity instance. The factory should be a callable which accepts
+// an instance of ReflectionClass with an activity class which should be created.
+$worker->registerActivity(App\DemoActivity::class, fn(ReflectionClass $class) => $container->create($class->getName()));
+
+// start primary loop
+$factory->run();
+```
+
+您可以使用“WorkerFactory”->“newWorker”的第一个参数配置 Task Queue 名称：
+
+```php
+$worker = $factory->newWorker('your-task-queue');
+```
+
+如前所述，您可以根据需要在单个 Worker 进程内创建任意数量的 Task Queue 连接。
+
+要配置其他 WorkerOptions，请使用“Temporal\Worker\WorkerOptions”：
+
+```php
+use Temporal\Worker\WorkerOptions;
+
+$worker = $factory->newWorker(
+    'your-task-queue',
+    WorkerOptions::new()
+        ->withMaxConcurrentWorkflowTaskPollers(10)
+);
+```
+
+确保在应用程序服务器配置中指向 Worker 文件：
+
+```yaml
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+server:
+  command: 'php worker.php'
+
+temporal:
+  address: 'temporal:7233'
+  activities:
+    num_workers: 10
+```
+
+> 您可以使用相同的服务器设置为 HTTP 端点提供服务。
+
+要向 RoadRunner 提供 [API 密钥](/cloud/api-keys)，请在创建 WorkerFactory 时使用 `ServiceCredentials` DTO：
+
+```php
+use Temporal\Worker\ServiceCredentials;
+
+$workerFactory = \Temporal\WorkerFactory::create(
+    credentials: ServiceCredentials::create()->withApiKey('your-api-key'),
+);
+```
+
+[如何配置与 Temporal Cloud 的连接](/develop/php/client/Temporal-client#connect-to-Temporal-cloud)
+
+### 如何注册类型{#register-types}
+
+所有监听相同 Task Queue 名称的 Worker 必须注册才能处理完全相同的 Workflow 类型和 Activity 类型。
+
+如果 Worker 轮询任务以查找它不知道的 Workflow Type 或 Activity 类型，则该任务将失败。
+但是，任务失败不会导致关联的 Workflow Execution 失败。
+
+Worker 监听 Task Queue 并托管 Workflow 和 Activity 实现：
+
+```php
+// Workflows are stateful. So you need a type to create instances:
+$worker->registerWorkflowTypes(App\DemoWorkflow::class);
+// Activities are stateless and thread safe:
+$worker->registerActivity(App\DemoActivity::class);
+```
+
+如果 Activity 类需要一些外部依赖项，则提供回调 - 工厂
+创建或构建新的 Activity 实例。工厂应该是一个可调用的接受
+应该创建一个带有 Activity 类的 ReflectionClass 实例。
+
+```php
+$worker->registerActivity(
+    App\DemoActivity::class,
+    fn(ReflectionClass $class) => $container->create($class->getName())
+);
+```
+
+如果您想在 Activity 完成后清理一些资源，您可以注册一个终结器。这个回调被称为
+每次 Activity 调用后：
+
+```php
+$worker->registerActivityFinalizer(fn() => $kernel->shutdown());
+```

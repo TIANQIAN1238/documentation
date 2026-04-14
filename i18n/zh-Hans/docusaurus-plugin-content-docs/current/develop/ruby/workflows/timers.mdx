@@ -1,0 +1,40 @@
+---
+id: timers
+title: Timers - Ruby SDK
+description: Set a Durable Timer using the Temporal Ruby SDK. Pause Workflow execution for days or months. Timers are persisted and
+  Set a Durable Timer using the Temporal Ruby SDK. Pause Workflow execution for days or months. Timers are persisted and
+  efficient.
+sidebar_label: 耐用的 Timers
+keywords:
+  - sdk
+  - ruby
+  - durable timers
+  - sleep
+  - time-skipping
+tags:
+  - Workflows
+  - Durable Timers
+  - Ruby SDK
+  - Temporal SDKs
+---
+
+本页介绍如何使用 Temporal Ruby SDK 设置耐用 Timer。
+
+[Durable Timer](/Workflow-execution/Timers-delays) 用于暂停 Workflow 的执行指定时间
+持续时间。 Workflow 可以休眠数天甚至数月。 Timer 是持久的，因此即使您的 Worker 或 Temporal 服务
+当时间段结束时，一旦您的 Worker 和 Temporal 服务备份，持久 Timer 呼叫就会关闭
+将解决并且您的代码将继续执行。
+
+休眠是一种轻资源操作：它不会占用进程，并且您可以在单个设备上运行数百万个 Timer
+Worker。
+
+要在 Workflow 中添加 Timer，请使用“Temporalio::Workflow.sleep”。 _技术上_ `Kernel#sleep` 可以工作，但是 Workflow
+表单允许设置要在 UI 中查看的摘要。
+
+```ruby
+# Sleep for 72 hours
+Temporalio::Workflow.sleep(72 * 60 * 60, summary: 'my timer')
+```
+
+还有一个“Temporalio::Workflow.timeout”方法，它接受一个块并像标准 Ruby 一样工作
+如果需要使一组代码超时的能力，则使用“Timeout.timeout”。

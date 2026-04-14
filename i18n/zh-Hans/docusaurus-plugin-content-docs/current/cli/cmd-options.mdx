@@ -1,0 +1,731 @@
+---
+id: cmd-options
+title: Temporal CLI 命令选项参考
+sidebar_label: 命令选项
+description: Discover how to manage Temporal Workflows, from Activity Execution to Workflow Ids, using clusters, cron schedules,
+  Discover how to manage Temporal Workflows, from Activity Execution to Workflow Ids, using clusters, cron schedules,
+  dynamic configurations, and logging. Perfect for developers.
+toc_max_heading_level: 4
+keywords:
+  - actions
+  - active cluster
+  - activity
+  - activity execution
+  - activity id
+  - address
+  - archival
+  - backfill
+  - batch job
+  - build
+  - build id
+  - ca-certificate
+  - calendar
+  - certificate key
+  - child workflows
+  - cli reference
+  - cluster
+  - codec server
+  - command-line-interface-cli
+  - command-line-interface-cli,
+  - concurrency control
+  - configuration
+  - context
+  - continue-as-new
+  - cron
+  - cross-cluster-connection
+  - data converters
+  - endpoint
+  - environment
+  - event
+  - event id
+  - event type
+  - events
+  - external temporal and state events
+  - failures
+  - frontend
+  - frontend address
+  - frontend service
+  - goroutine
+  - grpc
+  - history
+  - http
+  - interval
+  - ip address
+  - job id
+  - log-feature
+  - logging
+  - logging and metrics
+  - memo
+  - metrics
+  - namespace
+  - namespace description
+  - namespace id
+  - namespace management
+  - nondeterministic
+  - notes
+  - operation
+  - operator
+  - options-feature
+  - overlap policy
+  - pager
+  - port
+  - pragma
+  - queries-feature
+  - query
+  - requests
+  - reset point
+  - resets-feature
+  - retention policy
+  - retries
+  - reuse policy
+  - schedule
+  - schedule backfill
+  - schedule id
+  - schedule pause
+  - schedule unpause
+  - schedules
+  - search attribute
+  - search attributes
+  - server
+  - server options and configurations
+  - sqlite
+  - start-to-close
+  - task queue
+  - task queue type
+  - temporal cli
+  - temporal ui
+  - time
+  - time zone
+  - timeout
+  - timeouts and heartbeats
+  - tls
+  - tls server
+  - uri
+  - verification
+  - visibility
+  - web ui
+  - workflow
+  - workflow execution
+  - workflow id
+  - workflow run
+  - workflow state
+  - workflow task
+  - workflow task failure
+  - workflow type
+  - workflow visibility
+  - x509-certificate
+tags:
+  - Temporal CLI
+---
+
+## 活动集群
+
+活动集群名称。
+
+## Activity-id
+
+标识 Activity 执行。
+
+## Activity-抖动
+
+如果设置，Activity 将在指定的抖动持续时间内随机启动。
+
+## Activity型
+
+命令适用于该类型的所有正在运行的活动。
+
+＃＃ 地址
+
+Temporal 前端服务的主机和端口（格式为主机:端口）。
+
+## API 密钥
+
+请求的 API 密钥。
+
+## 已存档
+
+列出存档的 Workflow Execution。
+
+:::note
+
+注意：“--archived”是实验性的。
+
+:::
+
+## 构建 ID
+
+标识要检索其可达性信息的构建。可以指定多次。
+
+＃＃ 日历
+
+JSON `({"dayOfWeek":"Fri","hour":"17","month":"5"})` 格式的日历规范或作为 Cron 字符串
+`("30 2 \* \* 5" 或 "@daily")`。
+
+## 追赶窗口
+
+服务器关闭时允许的最大追赶时间。
+
+＃＃ 簇
+
+集群名称。
+
+## 编解码器验证
+
+设置对 Codec Server 的请求的授权标头。
+
+## 编解码器端点
+
+远程 Codec Server 的端点。
+
+＃＃ 颜色
+
+何时使用颜色：自动、始终、从不。 （默认值：自动）
+
+## 命令超时
+
+命令执行超时。 0s表示没有超时。
+
+## 并发
+
+请求并发。
+
+## 计划任务
+
+Cron Schedule 的格式如下：
+
+```text
+┌───────────── minute (0 - 59)
+│ ┌───────────── hour (0 - 23)
+│ │ ┌───────────── day of the month (1 - 31)
+│ │ │ ┌───────────── month (1 - 12)
+│ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+│ │ │ │ │
+* * * * *
+```
+
+＃＃ 数据
+
+Namespace 数据采用键=值格式。
+
+值必须采用 JSON 格式。
+
+## 数据库文件名
+
+用于保留 Temporal 状态的文件。默认情况下，当进程终止时，Workflow 会丢失。
+
+＃＃ 深度
+
+要获取和扩展的 Child Workflow 的数量。使用“-1”可获取任意深度的 Child Workflow。
+
+＃＃ 描述
+
+Namespace 描述或 Nexus 端点描述。您可以在 Nexus 端点描述中使用 Markdown 格式。
+
+## 描述文件
+
+Nexus 端点描述文件的路径。描述文件的内容可以使用Markdown格式。
+
+＃＃ 细节
+
+提供了 Activity 失败的原因。
+
+## 试运行
+
+模拟重置而不重置任何 Workflow Execution。
+
+## 动态配置值
+
+动态配置值，格式为“KEY=JSON_VALUE”。字符串值需要引号。
+
+＃＃ 电子邮件
+
+所有者电子邮件。
+
+## 启用连接
+
+启用跨集群连接。
+
+## 结束时间
+
+回填结束时间。
+
+## 环境
+
+从中读取环境变量的环境名称。
+
+## 环境文件
+
+环境设置文件的路径。默认为“$HOME/.config/Temporalio/Temporal.yaml”。
+
+## 事件 ID
+
+WorkflowTaskStarted 之后您想要重置为的任何事件的事件 ID（独占）。可以由WorkflowTaskCompleted，
+WorkflowTaskFailed 或其他。
+
+## 排除文件
+
+指定要从重置中排除的 Workflow Execution 的输入文件。
+
+## 执行超时
+
+[Workflow Execution](/Workflow-执行) 的超时（以秒为单位），包括重试和 `ContinueAsNew` 任务。
+
+## 现有兼容构建 ID
+
+Task Queue 已知的版本集中已存在的构建 ID。新的构建 ID 存储在版本集中
+包含此 Id，使它们与该集中的版本兼容。
+
+## 字段
+
+自定义要打印的字段。设置为“long”以自动打印更多主要字段。
+
+## 首次执行运行 ID
+
+在以此运行 ID 开始的链中的最后一次执行上运行 Update。
+
+＃＃ 折叠
+
+Child Workflow 将折叠的状态（这将减少获取和显示的信息数量）。
+如果提供了“--no-fold”，则不区分大小写并忽略。
+
+＃＃ 跟随
+
+关注 Workflow Execution 的进展。
+
+## 前端地址
+
+远程集群的前端地址。
+
+＃＃ 全球的
+
+指示 Namespace 是否为全局 Namespace 的标志。
+
+## gRPC-元
+
+包含与请求一起发送的 gRPC 元数据（格式：`key=value`）。值必须采用有效的 JSON 格式。
+
+##无头
+
+禁用 Web 用户界面。
+
+## 心跳超时
+
+成功的 Worker 心跳之间允许的最大时间。
+
+## 历史档案状态
+
+设置历史归档状态。有效值为“禁用”和“启用”。
+
+## 历史 uri
+
+可以选择指定历史存档 URI（首次启用存档后无法更改）。
+
+## id 重用策略
+
+允许在新的 Workflow Execution 中使用相同的 Workflow Id。选项：允许重复、仅允许重复失败、
+拒绝重复，如果运行则终止。
+
+＃＃ 身份
+
+指定操作者的身份。
+
+＃＃ 输入
+
+使用“--input”命令选项在命令中包含数据。
+
+此命令选项接受有效的 JSON 字符串。如果命令所作用的实体接受多个
+参数，为 JSON 字符串中的 null 值传递“null”。
+
+以下是使用“--input”命令选项启动 Workflow 的示例。该 Workflow 需要一个
+字符串作为参数：
+
+```shell
+temporal workflow start --input '"+1 555-555-5555"'
+```
+
+## 输入文件
+
+从 JSON 文件传递​​ Workflow 的可选输入。如果有多个JSON文件，将它们连接起来并分开
+通过空格或换行符。命令行输入将覆盖文件输入。
+
+## 输入并行性
+
+并行运行的 goroutine 数量。每个 goroutine 每秒处理一行。
+
+## 输入分隔符
+
+输入文件的分隔符。默认为制表符 (`\t`)。
+
+＃＃ 间隔
+
+间隔持续时间，例如 90m 或 90m/13m 以包括相位偏移。
+
+## ip
+
+将前端服务绑定到的 IPv4 地址。 （默认：127.0.0.1）
+
+## 抖动
+
+抖动持续时间。
+
+## 职位 ID
+
+批处理作业 ID。
+
+## 保持暂停
+
+如果提供此标志并且 Activity 已暂停，则复位后它将保持暂停状态。
+
+＃＃ 限制
+
+一页上要打印的项目数。
+
+## 日志格式
+
+设置日志格式。选项：[“json”，“漂亮”]。
+
+## 日志级别
+
+设置日志级别。选项：[“调试”“信息”“警告”“错误”“致命”]。
+
+## 全部匹配
+
+如果设置，所有当前正在运行的活动都将取消暂停。
+
+## 最大字段长度
+
+## 全局标志
+
+## 最大组数
+
+限制返回的兼容集数量。指定 1 仅返回当前默认主要版本集。 0
+返回所有集合。
+
+## 备忘录
+
+在 Schedule 上设置备忘录（格式：键=值）。使用有效的 JSON 格式作为值。
+
+## 备忘录文件
+
+从文件中设置备忘录。每行应遵循格式 key=value。使用有效的 JSON 格式作为值。
+
+## 指标端口
+
+`/metrics` 的端口。默认情况下启用并随机分配端口。
+
+＃＃ 姓名
+
+远程集群的前端地址或端点名称。
+
+## Namespace
+
+标识 Temporal Workflow 中的 Namespace。
+
+## Namespace-id
+
+Namespace ID。
+
+## 不折叠
+
+禁用折叠。将获取并显示设定深度内的所有 Child Workflow。
+
+## 无 json-shorthand-payloads
+
+原始负载输出，即使使用了 JSON 选项。
+
+## 无寻呼机
+
+禁用交互式寻呼机。
+
+## 不确定性
+
+仅当 Workflow Execution 的最后一个事件是“WorkflowTaskFailed”且出现不确定性错误时，才重置 Workflow Execution。
+
+## 注释
+
+注释字段的初始值。
+
+＃＃ 输出
+
+输出的格式。选项：表、json、卡片。
+
+## 重叠策略
+
+重叠政策。选项：跳过、BufferOne、BufferAll、取消其他、终止其他、允许全部。
+
+＃＃ 寻呼机
+
+设置 Temporal CLI 使用的寻呼机。选项有 less、more 和 favoritePager。
+
+＃＃ 暂停
+
+暂停 Schedule。
+
+## 失败时暂停
+
+在任何 Workflow 故障后暂停 Schedule。
+
+＃＃ 港口
+
+前端 gRPC 服务的端口。
+
+## 推广全球
+
+将本地 Namespace 升级为全局 Namespace。
+
+## Query
+
+提供 Search Attribute 的类似 SQL 的 Query，以返回 Workflow Execution 进行重置。欲了解更多信息，请参阅
+[`Temporal Workflow 列表`](/cli/Workflow#list) 命令。
+
+＃＃ 生的
+
+以 JSON 格式打印原始数据。对于脚本编写，我们建议使用此选项而不是“-o json”。
+
+## 可达性类型
+
+指定您希望如何过滤构建 ID 的可达性。以下是有效的选择：
+
+- `open`：可由一个或多个打开的 Workflow 访问。
+- “封闭”：可由一个或多个封闭的 Workflow 访问。
+- “现有”：可通过打开或关闭的 Workflow 访问。
+
+始终报告新 Workflow 可访问的构建 ID。
+
+## 重新申请类型
+
+重置点后重新应用的事件类型。选项：Signal，无。
+
+＃＃ 原因
+
+操作原因。
+
+## 拒绝条件
+
+用于根据 Workflow 状态拒绝查询的可选标志。有效值为“not_open”和“not_completed_cleanly”。
+
+## 剩余操作
+
+允许的操作总数。
+
+## 重置尝试
+
+提供此标志将重置尝试次数。
+
+## 重置心跳
+
+提供此标志将重置心跳详细信息。
+
+## 重置点
+
+仅显示符合重置条件的 Workflow 事件。
+
+＃＃ 结果
+
+设置Activity完成的结果值。
+
+＃＃ 保留
+
+Workflow Execution 保留。
+
+## 重试退避系数
+
+用于计算下一次重试间隔的系数。下一个重试间隔是上一个间隔乘以
+系数。必须为 1 或更大。
+
+## 重试初始间隔
+
+第一次重试的时间间隔。如果 retryBackoffCoefficient 为 1.0，则它将用于所有重试。
+
+## 重试最大尝试次数
+
+最大尝试次数。当超过时，即使尚未过期，重试也会停止。 1 禁用重试。 0 表示
+无限制（直到超时）。
+
+## 重试最大间隔
+
+重试之间的最大间隔。指数退避导致间隔增加。该值是增量的上限。
+默认值为初始间隔的 100 倍。
+
+## 运行 ID
+
+标识当前的 Workflow 运行。
+
+## 运行超时
+
+单次 Workflow 运行的超时（以秒为单位）。
+
+## Schedule-id
+
+Schedule ID。
+
+## Schedule-关闭超时
+
+指示调用者愿意等待 Activity 完成的时间。限制重试的时间长度。
+
+## Schedule-启动超时
+
+限制 Activity 任务在 Worker 拾取之前可以在 Task Queue 中停留的时间。此超时始终不可重试，
+因为重试所能实现的只是将其放回到同一个队列中。默认为“Schedule_to_close_timeout”或 Workflow
+如果未指定则执行超时。
+
+## 搜索属性
+
+在 Schedule 上设置 Search Attribute（格式为“key=value”）。使用有效的 JSON 格式作为值。
+
+## 设置为默认值
+
+设置后，将目标兼容集设置为 Task Queue 的默认设置。
+
+如果当前默认值是不同的集，则目标集将替换它。
+
+## 跳过基础不是当前的
+
+如果基本 Workflow 运行不是当前的 Workflow 运行，则跳过 Workflow Execution。
+
+## 跳过当前打开
+
+如果当前运行针对与基本运行相同的 Workflow Id 开放，则跳过 Workflow Execution。
+
+## sqlite 编译指示
+
+以 pragma=value 格式指定 sqlite pragma 语句。编译指示选项：[“journal_mode”“同步”]。
+
+## 启动延迟
+
+指定 Workflow 启动之前的延迟。
+
+## 开始时间
+
+回填开始时间。
+
+## 开始到关闭超时
+
+Activity 在被 Worker 拾取后允许执行的最长时间。此超时始终可重试。
+
+## 目标-Namespace
+
+Namespace，其中处理程序 Worker 将轮询 Nexus 任务。
+
+## 目标任务队列
+
+Task Queue，其中处理程序 Worker 将轮询 Nexus 任务。
+
+## 目标网址
+
+Nexus 请求转发到的外部 Nexus 端点。可用作“--target-Namespace”的替代品
+和“--目标任务队列”。
+
+:::note
+
+注意：`--target-url` 是实验性的。
+
+:::
+
+## 任务队列
+
+Task Queue。
+
+## 任务队列类型
+
+Task Queue 类型，可以是 Workflow 或 Activity。默认类型为 Workflow。
+
+## 任务超时
+
+Workflow Task 的启动到关闭超时（以秒为单位）。
+
+## 时间格式
+
+时间格式为：relative、iso、raw。
+
+## 时区
+
+时区（IANA 名称）。
+
+## tls
+
+启用 TLS 加密，无需 mTLS 或客户端证书等其他选项。
+
+## tls-ca-数据
+
+服务器 CA 证书的数据。不能与 --tls-ca-path 一起使用。
+
+## tls-ca-路径
+
+服务器 CA 证书的路径。
+
+## tls-证书数据
+
+x509 证书的数据。不能与 --tls-cert-path 一起使用。
+
+## tls 证书路径
+
+x509 证书的路径。
+
+## tls-禁用主机验证
+
+禁用 TLS 主机名验证。
+
+## tls-键-数据
+
+私有证书密钥数据。不能与 --tls-key-path 一起使用。
+
+## tls 密钥路径
+
+私有证书密钥的路径。
+
+## tls-服务器名称
+
+覆盖目标 TLS 服务器名称。
+
+＃＃ 类型
+
+Search Attribute型。选项：文本、关键字、整数、双精度、布尔值、日期时间、关键字列表。
+
+## 用户界面资产路径
+
+UI 自定义资源路径。
+
+## ui-编解码器-端点
+
+UI 远程 Data Converter HTTP 端点。
+
+## 用户界面 IP
+
+Web UI 绑定到的 IPv4 地址。
+
+## 用户界面端口
+
+Web UI 的端口。默认值：`--port` + 1000（例如 4000）。
+
+## 取消暂停
+
+取消暂停 Schedule。
+
+## 取消设置描述
+
+取消设置描述。
+
+## 详细
+
+打印应用的 Namespace 更改。
+
+当您发现 XPROT035X 资源利用率突然下降时，请验证 XPROT009X 的 API 是否显示延迟和错误率增加。
+
+Visibility 存档状态。有效值：“禁用”、“启用”。
+
+## Visibility-uri
+
+指定 Visibility 存档的 URI。启用存档后无法更改。
+
+## Workflow-id
+
+Workflow Id。
+
+## Workflow型
+
+Workflow Type 名称。
+
+＃＃ 是的
+
+确认所有提示。

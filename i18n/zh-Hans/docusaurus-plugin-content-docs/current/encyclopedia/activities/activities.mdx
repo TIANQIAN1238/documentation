@@ -1,0 +1,47 @@
+---
+id: activities
+title: 什么是 Temporal Activity？
+sidebar_label: 活动
+description: Understand Temporal Activities, including  Activity Definitions, Types, Executions, idempotency, cancellations, Local Activities, and
+  Understand Temporal Activities, including  Activity Definitions, Types, Executions, idempotency, cancellations, Local Activities, and
+  Standalone Activities.
+slug: /activities
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - term
+  - timeouts
+tags:
+  - Concepts
+  - Activities
+  - Durable Execution
+---
+
+本指南全面概述了 Temporal 活动，包括
+[Activity Definition](/Activity-定义)、[Activity 类型](/Activity-定义#Activity-类型)、
+[Activity 执行](/Activity-执行)、[本地 Activity](/local-Activity) 和 [独立 Activity](/standalone-Activity)。
+
+Activity 是执行单个、明确定义的操作（短期或长期运行）的普通函数或方法，
+例如调用其他服务、对媒体文件进行转码或发送电子邮件。 Activity代码即可
+不确定的。我们建议它是[幂等](/Activity-definition#idempotency)。
+
+活动是最常见的 Temporal 原语，包含小型工作单元，例如：
+
+- 单次写入操作，例如更新用户信息或提交信用卡付款
+- 批量相似的写入，例如创建多个订单或发送多条消息
+- 一个或多个读取操作后跟写入操作，例如在更新订单状态之前检查产品状态和用户地址
+- 应该记住的读取，例如 LLM 调用、大量下载或慢速轮询读取
+
+较大的功能应该分解为多个活动。这使得故障恢复变得更容易，超时时间短并且具有幂等性。
+
+Workflow 代码协调活动的执行，并保存结果。如果 Activity 执行失败，
+任何未来的尝试都将从初始状态开始，除非您的代码使用 ([心跳详细信息有效负载](/encyclopedia/Detecting-Activity-failures#Activity-heartbeat))
+用于检查点（在服务器上存储状态，并在恢复后续尝试时使用它）。
+
+Activity 功能由 Worker 进程执行。当 Activity 函数返回时，Worker 发送结果
+作为 [ActivityTaskCompleted](/references/events#Activitytaskcompleted) 事件的一部分返回到 Temporal 服务。的
+事件被添加到Workflow Execution的Event History。其他 Activity 相关事件，请参见
+[Activity 事件](/Workflow-执行/事件#Activity-事件)。
+
+如果您只想执行一个 Activity 函数，那么您不需要使用 Workflow：您可以
+使用您的 SDK 客户端将其作为 [独立 Activity](/standalone-Activity) 直接调用。

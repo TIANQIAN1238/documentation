@@ -1,8 +1,8 @@
 ---
 id: dual-visibility
-title: Dual Visibility
-sidebar_label: Dual Visibility
-description: This guide on Temporal Dual Visibility explains how to set up, configure, and use Dual Visibility in Temporal Server versions. Learn about configuring primary and secondary Visibility stores, migrating databases, and ensuring a smooth transition for Visibility data.
+title: "双 Visibility"
+sidebar_label: "双 Visibility"
+description: "本 Temporal Dual Visibility 指南介绍了如何在 Temporal Server 版本中设置、配置和使用 Dual Visibility。了解如何配置主要和辅助 Visibility 存储、迁移数据库以及确保 Visibility 数据的平稳过渡。"
 slug: /dual-visibility
 toc_max_heading_level: 4
 keywords:
@@ -16,32 +16,33 @@ tags:
   - Visibility
 ---
 
-This page discusses [Dual Visibility](#dual-visibility).
+本页讨论 [双 Visibility](#dual-visibility)。
 
-## What is Dual Visibility? {#dual-visibility}
+<a id="dual-visibility"></a>
+## 什么是双 Visibility？ {#dual-visibility}
 
-Dual Visibility is a feature that lets you set a secondary Visibility store in addition to a primary store in your Temporal Service.
-Setting up Dual Visibility is optional and can be used to [migrate your Visibility database](/self-hosted-guide/visibility#migrating-visibility-database) or create a backup Visibility store.
+双 Visibility 功能允许您在 Temporal 服务中设置主存储之外的辅助 Visibility 存储。
+设置双 Visibility 是可选的，可用于 [迁移您的 Visibility 数据库](/self-hosted-guide/visibility#migrating-visibility-database) 或创建备份 Visibility 存储。
 
-For example, if you have Cassandra configured as your Visibility database, you can set up a supported SQL database as your secondary Visibility store and gradually migrate your data to the secondary store before deprecating your primary one.
+例如，如果您将 Cassandra 配置为 Visibility 数据库，则可以将受支持的 SQL 数据库设置为辅助 Visibility 存储，并在弃用主存储之前逐步将数据迁移到辅助存储。
 
-A Dual Visibility setup requires two Visibility store configurations:
+双 Visibility 设置需要两个 Visibility 存储配置：
 
-- **Primary Visibility:** The primary Visibility store where Visibility data is written to and read from by default. The primary Visibility store is set with the `visibilityStore` configuration key in your Temporal Service.
-- **Secondary Visibility:** A secondary storage for your Visibility data. The secondary Visibility store is set with the `secondaryVisibilityStore` configuration key in your Temporal Service.
+- **主 Visibility：** 默认情况下写入和读取 Visibility 数据的主 Visibility 存储。主 Visibility 存储是使用 Temporal 服务中的 `VisibilityStore` 配置密钥设置的。
+- **辅助 Visibility：** Visibility 数据的辅助存储。辅助 Visibility 存储使用 Temporal 服务中的 `secondaryVisibilityStore` 配置密钥进行设置。
 
-For configuration details, see [Dual Visibility setup](/self-hosted-guide/visibility#dual-visibility).
+有关配置详细信息，请参阅 [双 Visibility 设置](/self-hosted-guide/visibility#dual-visibility)。
 
-The following combinations are allowed in a Dual Visibility setting.
+双 Visibility 设置中允许使用以下组合。
 
-| Primary                     | Secondary                       |
+| 基本的                     | 中学                       |
 | --------------------------- | ------------------------------- |
-| Standard (Cassandra or SQL) | Advanced (SQL or Elasticsearch) |
-| Advanced (SQL)              | Advanced (SQL)                  |
-| Advanced (Elasticsearch)    | Advanced (Elasticsearch)        |
+| 标准（Cassandra 或 SQL） | 高级（SQL 或 Elasticsearch） |
+| 高级（SQL）              | 高级（SQL）                  |
+| 高级（弹性搜索）    | 高级（弹性搜索）        |
 
-With Dual Visibility, you can read from only one Visibility store at a time, but can configure your Temporal Service to write to primary only, secondary only, or to both primary and secondary Visibility stores.
-When migrating from one Visibility store database to another, set up the database you want to migrate to as your secondary Visibility store.
+使用双 Visibility，您一次只能从一个 Visibility 存储中读取数据，但可以将 Temporal 服务配置为仅写入主要存储、仅写入辅助存储，或者同时写入主要和辅助 Visibility 存储。
+从一个 Visibility 商店数据库迁移到另一个 Visibility 商店数据库时，请将要迁移到的数据库设置为辅助 Visibility 商店。
 
-You can plan your migration using specific dynamic configuration keys that help you transition your read and write operations from the primary to the secondary Visibility store.
-For details on migrating your Visibility store databases, see [Dual Visibility](/self-hosted-guide/visibility#dual-visibility).
+您可以使用特定的动态配置键来规划迁移，以帮助您将读写操作从主 Visibility 存储转移到辅助 Visibility 存储。
+有关迁移 Visibility 商店数据库的详细信息，请参阅 [双 Visibility](/self-hosted-guide/visibility#dual-visibility)。

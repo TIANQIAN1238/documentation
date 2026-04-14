@@ -1,0 +1,782 @@
+---
+id: worker-versioning
+title: Worker 版本控制
+sidebar_label: Worker 版本控制
+description: Use Worker Versioning to pin Workflow revisions to individual Worker Deployment Versions, avoiding the need for
+  Use Worker Versioning to pin Workflow revisions to individual Worker Deployment Versions, avoiding the need for
+  patching to support multiple code paths.
+slug: /production-deployment/worker-deployments/worker-versioning
+toc_max_heading_level: 4
+keywords:
+  - scaling
+  - workers
+  - versioning
+  - deploys
+tags:
+  - Temporal Service
+  - Durable Execution
+---
+
+import { LANGUAGE_TAB_GROUP, getLanguageLabel } from '@site/src/constants/languageTabs';
+import SdkTabs from '@site/src/components';
+
+Worker 版本控制是 Temporal 的一项功能，可让您自信地将新更改部署到运行于 Workflow 上的 Workflow。
+您的 Worker 不会损坏它们。 Temporal 通过帮助您正式管理不同的构建或版本来实现这一点
+称为 [Worker 部署版本](/Worker-versioning#deployment-versions)。
+
+对于大多数团队来说，Worker 版本控制应该是部署 Workflow 代码更改的默认建议
+生产。如果您可以运行版本化的 Worker 部署，则优先选择 Worker 版本控制而不是修补。
+
+Worker 版本控制为[蓝绿或彩虹部署](#deployment-systems)的用户带来了重要的好处。
+
+- 逐渐将流量增加到新的 Worker 部署版本。
+- 在向新的部署版本发送生产流量之前，通过测试验证新的部署版本。
+- 当您检测到新的部署版本损坏时立即回滚。
+- 提高了采用时的错误率。
+
+此外，Worker 版本控制引入了**Workflow 固定**。对于固定的 Workflow Type，每次执行都完全运行
+在它开始的 Worker 部署版本上。您不必担心对运行进行破坏性代码更改，
+固定 Workflows。
+
+要使用 Workflow Pinning，我们建议使用 [rainbow 部署](#deployment-systems)。
+
+:::tip
+
+观看 Temporal Replay 2025 演讲，了解有关 Worker 版本控制的更多信息并观看演示。
+
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <iframe
+    宽度=“560”
+    高度=“315”
+    src="https://www.youtube.com/embed/rm4BlD9WXqc"
+    title="YouTube 视频播放器"
+    框架边框=“0”
+    允许=“加速度计；自动播放；剪贴板写入；加密媒体；陀螺仪；画中画；网络共享”
+    referrerPolicy =“跨源时严格源”
+    允许全屏
+  ></iframe>
+</div>
+
+:::
+
+:::note
+
+Worker 版本控制目前在公共预览版中提供。
+
+最低版本：
+
+- Go SDK版本[v1.35.0](https://github.com/Temporalio/sdk-go/releases/tag/v1.35.0)
+- Python [v1.11](https://github.com/Temporalio/sdk-python/releases/tag/1.11.0)
+- Java [v1.29](https://github.com/Temporalio/sdk-java/releases/tag/v1.29.0)
+- Typescript [v1.12](https://github.com/Temporalio/sdk-typescript/releases/tag/v1.12.0)
+- .NET [v1.7.0](https://github.com/Temporalio/sdk-dotnet/releases/tag/1.7.0)
+- Ruby [v0.5.0](https://github.com/Temporalio/sdk-ruby/releases/tag/v0.5.0)
+- 其他 SDK：即将推出！
+
+自托管用户：
+
+- 最低 Temporal CLI 版本 [v1.4.1](https://github.com/Temporalio/cli/releases/tag/v1.4.1)
+- 最低 Temporal Server 版本：[v1.29.1](https://github.com/Temporalio/Temporal/releases/tag/v1.29.1)
+- 最低 Temporal UI 版本 [v2.38.0](https://github.com/Temporalio/ui/releases/tag/v2.38.0)
+
+:::
+
+## Worker 版本控制入门 {#definition}
+
+要开始使用 Worker 版本控制，您应该了解有关版本控制和部署的一些概念。
+
+- **Worker 部署** 是跨多个版本的部署或服务。在彩虹部署中，两个以上
+  活动部署版本可以立即运行。
+- **Worker 部署版本** 是部署或服务的版本。它可以有多个 Worker 进行轮询
+  多个 Task Queue，但它们都运行相同的版本。
+- **构建 ID** 与 Worker 部署名称相结合，标识单个 Worker 部署版本。
+- 当版本化的 Worker 在 Task Queue 上进行轮询时，该 Task Queue 将成为该 Worker 版本的一部分。那个版本的
+  Worker 部署控制 Task Queue 如何将 Workflow Task 与 Worker 匹配。
+- 使用 **Workflow 固定**，您可以声明每个 Workflow Type 具有 **版本控制行为**，固定或
+  自动升级。
+  - **固定** Workflow 保证在单个 Worker 部署版本上完成。
+  - **自动升级** Workflow 将在您推出时自动转移到新的代码版本，特别是其
+    目标 Worker 部署版本（定义如下）。因此，自动升级 Workflow 不限于单个
+    部署版本，需要手动保持重放安全，即
+    [修补](/Workflow-定义#Workflow-版本控制)。
+  - 固定和自动升级 Workflow 都保证仅在其当前版本或斜坡版本上启动
+    Worker 部署。
+  - 固定 Workflow 设计用于 Rainbow 部署。请参阅[部署系统](#deployment-systems)。
+  - 固定的 Workflow 不需要修补，因为它们在同一 Worker 上运行并构建直至完成。
+  - 如果您希望 Workflow 的运行时间比您希望 Worker 部署版本存在的时间长，您应该标记
+    您的 Workflow Type 作为自动升级。
+- 每个 Worker 部署都有一个 [**当前版本**](/Worker-versioning#versioning-definitions)，其中
+  Workflow 会被路由到，除非它们之前固定在不同的版本上。
+- 每个 Worker 部署都可以有一个 [**Ramping Version**](/Worker-versioning#versioning-definitions)，这是
+  路由到的 Workflow 的可配置百分比，除非它们之前固定在不同版本上。
+- 对于给定的 Workflow，其 [**目标 Worker 部署版本**](/Worker-versioning#versioning-definitions) 是
+  版本它将移至下一个版本。
+
+## 设置部署系统 {#deployment-systems}
+
+如果您还没有选择，您需要为您的 Worker 选择容器部署解决方案。
+
+您还需要在三种常见的部署策略中进行选择：
+
+- **滚动部署**策略将 Worker 就地升级，几乎无法控制它们切换和切换的速度
+  只有缓慢的回滚 Worker 的能力。滚动部署占用空间最小，但往往提供较低的
+  可用性高于其他策略，并且与 Worker 版本控制不兼容。
+- **蓝绿部署**策略同时维护两种“颜色”或 Worker 部署版本，并且可以
+  控制流量在它们之间的路由方式。这使您可以通过即时等功能最大限度地延长正常运行时间
+  回滚和斜坡。 Worker 版本控制支持蓝绿部署所需的路由控制。
+- **彩虹部署**策略类似于蓝绿色，但具有更多颜色，允许 Workflow 固定。您可以部署
+  您可以自由地使用 Workflow 的新版本，而旧版本则会耗尽。使用 Worker 版本控制，Temporal 让您知道
+  当给定版本的所有 Workflow 都耗尽时，您可以将其关闭。
+
+:::note
+
+您还可以选择使用
+[Temporal Worker Controller](/生产部署/Worker-deployments/kubernetes-controller)自动启用
+如果您使用 Kubernetes，则可以对 Worker 进行彩虹部署。
+
+:::
+
+如果您尚不能支持蓝绿或彩虹样式部署，请使用 [patching](/patching) 作为后备方案
+致力于版本化部署模型。
+
+## 配置 Worker 进行版本控制
+
+您需要向 Worker 添加一些额外的配置参数才能打开 Worker 版本控制。有
+三个新参数，根据语言具有不同的名称：
+
+- `UseVersioning`：这将启用此 Worker 的版本控制功能。
+- “版本”，用于标识允许此 Worker 执行的修订版。这是一个组合
+  部署名称和构建 ID 号。
+- （可选）[默认版本控制行为](#definition)。如果未设置，您将需要指定行为
+  每个 Workflow。或者您可以默认为“固定”或“自动升级”。
+
+请按照下面适用于您的 SDK 的示例进行操作：
+
+<SdkTabs>
+<SdkTabs.Go>
+```go
+buildID:= mustGetEnv("MY_BUILD_ID")
+w := worker.New(c, myTaskQueue, worker.Options{
+  DeploymentOptions: worker.DeploymentOptions{
+    UseVersioning: true,
+    Version: worker.WorkerDeploymentVersion{
+      DeploymentName: "llm_srv",
+      BuildId:        buildID,
+    },
+    DefaultVersioningBehavior: workflow.VersioningBehaviorUnspecified,
+  },
+})
+```
+</SdkTabs.Go>
+<SdkTabs.Java>
+```java
+import io.temporal.worker.WorkerOptions;
+import io.temporal.common.VersioningBehavior;
+import io.temporal.common.WorkerDeploymentVersion;
+import io.temporal.worker.WorkerDeploymentOptions;
+
+WorkerOptions.newBuilder()
+  .setDeploymentOptions(
+      WorkerDeploymentOptions.newBuilder()
+      .setVersion(new WorkerDeploymentVersion("llm_srv", "1.0"))
+      .setUseVersioning(true)
+      .setDefaultVersioningBehavior(VersioningBehavior.AUTO_UPGRADE)
+      .build())
+  .build();
+
+```
+</SdkTabs.Java>
+<SdkTabs.Python>
+```python
+from temporalio.common import WorkerDeploymentVersion, VersioningBehavior
+from temporalio.worker import Worker, WorkerDeploymentConfig
+
+Worker(
+    client,
+    task_queue="mytaskqueue",
+    workflows=workflows,
+    activities=activities,
+    deployment_config=WorkerDeploymentConfig(
+        version=WorkerDeploymentVersion(
+            deployment_name="llm_srv",
+            build_id=my_env.build_id),
+        use_worker_versioning=True,
+        default_versioning_behavior=VersioningBehavior.UNSPECIFIED
+    ),
+)
+```
+
+</SdkTabs.Python>
+<SdkTabs.TypeScript>
+
+```ts
+const myWorker = await Worker.create({
+  workflowsPath: require.resolve('./workflows'),
+  taskQueue,
+  workerDeploymentOptions: {
+    useWorkerVersioning: true,
+    version: { buildId: '1.0', deploymentName: 'llm_srv' },
+  },
+  connection: nativeConnection,
+});
+```
+
+</SdkTabs.TypeScript>
+<SdkTabs.DotNet>
+
+```csharp
+var myWorker = new TemporalWorker(
+    Client,
+    new TemporalWorkerOptions(taskQueue)
+    {DeploymentOptions = new(new("llm_srv", "1.0"), true)
+      { DefaultVersioningBehavior = VersioningBehavior.Unspecified },
+    }.AddWorkflow<MyWorkflow>());
+```
+
+</SdkTabs.DotNet>
+<SdkTabs.Ruby>
+
+```ruby
+worker = Temporalio::Worker.new(
+  client: client,
+  task_queue: task_queue,
+  workflows: [MyWorkflow],
+  deployment_options: Temporalio::Worker::DeploymentOptions.new(
+      version: Temporalio::WorkerDeploymentVersion.new(
+          deployment_name: 'llm_srv',
+          build_id: '1.0'
+      ),
+      use_worker_versioning: true,
+      default_versioning_behavior: Temporalio::VersioningBehavior::UNSPECIFIED
+  )
+)
+```
+
+</SdkTabs.Ruby>
+</SdkTabs>
+
+## 选择版本控制行为 {#choosing-behavior}
+
+正确的版本控制行为取决于 Workflow 相对于部署频率的运行时间。
+
+### 决策指南 {#decision-guide}
+
+| Workflow 持续时间 |使用 Continue-As-New？ |推荐行为 |需要打补丁吗？ |
+| ---------------------------------------------------- | -------------------- | -------------------------------------------------------------------- | ------------------ |
+| **简短**（在下次部署之前完成）|不适用 | ‘固定’ |从来没有|
+| **中**（跨越多个部署）|没有 | `自动升级` |是的 |
+| **长**（数周至数年）|是的 | `PINNED` + [CaN 升级](#upgrade-on-Continue-As-New) |从来没有|
+| **长**（数周至数年）|没有 | `AUTO_UPGRADE` + 修补 |是的 |
+
+### Workflow Type 的示例 {#behavior-examples}
+
+| Workflow Type |持续时间 |推荐行为 |笔记|
+| -------------------- | ------------ | -------------------------- | ----------------------------------- |
+|订单处理 |分钟 | ‘固定’ |在下次部署之前完成 |
+|付款重试 |营业时间 | `PINNED` 或 `AUTO_UPGRADE` |取决于部署频率 |
+|订阅计费 |天| `自动升级` |可能跨越多个部署 |
+|客户实体|月-年| ‘PINNED’ + CanN 升级 |使用 Continue-As-New 图案 |
+| AI代理/聊天机器人|周 | ‘PINNED’ + CanN 升级 |长时间睡眠，使用 CaN |
+|合规审核|几个月 | `AUTO_UPGRADE` + 修补 |无法使用 CaN（需要完整历史记录）|
+
+:::info Long-running Workflows with Continue-as-New
+
+如果您的 Workflow 使用 Continue-As-New 来管理历史大小，您可以在以下位置升级到新的 Worker 部署版本：
+无需修补的 CaN 边界。请参阅下面的[在 Continue-As-New 上升级](#upgrade-on-Continue-As-New)。
+
+:::
+
+### 默认版本控制行为注意事项
+
+如果您使用蓝绿部署，则应默认为自动升级，并且不应使用 Workflow 固定。
+否则，如果您的 Worker 和 Workflow 是新的，我们建议不要提供“DefaultVersioningBehavior”。
+
+一般来说，每个 Workflow Type 都应注释为“自动升级”或“固定”。如果您的所有 Workflow 都是
+在可预见的未来短期运行，您可以默认固定。
+
+许多正在迁移到 Worker 版本控制的用户将开始默认自动升级，直到他们有时间
+注释他们的 Workflow。此默认行为与旧版行为最相似。一旦每个 Workflow Type 被注释，
+您可以删除“DefaultVersioningBehavior”。
+
+如果存在斜坡，则新的或自动升级的 Workflow 可能会出现队列阻塞限制，但其中之一
+当前或渐变版本已关闭或没有足够的容量。这会导致其他版本无法获取任务
+或放慢速度。
+
+服务器选项
+
+:::note
+
+请记住，父级的 Child Workflow 或之前的自动升级 Workflow 默认为自动升级行为，而不是
+未指定。
+
+:::
+
+您还想确保了解您的活动将如何在不同的 Worker 部署中运行
+版本。请参阅 [Worker 版本控制 Activity 行为文档](#choosing-behavior)
+了解更多详情。
+
+## 使用 CLI 推出更改
+
+接下来，使用附加配置参数部署 Worker。在进行任何 Workflow 修订之前，您可以使用
+使用 `Temporal` CLI 检查当前正在轮询的 Worker 版本：
+
+您可以使用“Temporal Worker 部署描述”查看属于部署一部分的版本：
+
+```bash
+temporal worker deployment describe --name="$MY_DEPLOYMENT"
+```
+
+要激活部署版本，请使用“Temporal Worker 部署集当前版本”，并指定部署名称
+和构建 ID：
+
+```bash
+temporal worker deployment set-current-version \
+    --deployment-name "YourDeploymentName" \
+    --build-id "YourBuildID"
+```
+
+要将部署版本提升到整个 Worker 队列的一定百分比，请使用“set-ramp version”，其中
+相同的参数和斜坡百分比：
+
+```bash
+temporal worker deployment set-ramping-version \
+    --deployment-name "YourDeploymentName" \
+    --build-id "YourBuildID" \
+    --percentage=5
+```
+
+您可以使用“describe -w YourWorkflowID”验证 Workflow 是否正在切换到该版本：
+
+```bash
+temporal workflow describe -w YourWorkflowID
+```
+
+这将返回 Workflow 运行的新版本：
+
+```
+Versioning Info:
+
+  Behavior               AutoUpgrade
+  Version                llm_srv.2.0
+  OverrideBehavior       Unspecified
+```
+
+## 将 Workflow Type 标记为固定
+
+您可以在注册 Workflow Type 时通过添加附加固定参数将其标记为固定。这会导致
+保留其原始部署版本：
+
+<SdkTabs>
+<SdkTabs.Go>
+```go
+// w is the Worker configured as in the previous example
+w.RegisterWorkflowWithOptions(HelloWorld, workflow.RegisterOptions{
+	// or workflow.VersioningBehaviorAutoUpgrade
+    VersioningBehavior: workflow.VersioningBehaviorPinned,
+})
+```
+</SdkTabs.Go>
+<SdkTabs.Java>
+```java
+@WorkflowInterface
+public interface HelloWorld {
+    @WorkflowMethod
+    String hello();
+}
+
+public static class HelloWorldImpl implements HelloWorld {
+    @Override
+    @WorkflowVersioningBehavior(VersioningBehavior.PINNED)
+    public String hello() {
+        return "Hello, World!";
+    }
+}
+
+```
+</SdkTabs.Java>
+<SdkTabs.Python>
+```python
+@workflow.defn(versioning_behavior=VersioningBehavior.PINNED)
+class HelloWorld:
+    @workflow.run
+    async def run(self):
+        return "hello world!"
+
+```
+
+</SdkTabs.Python>
+<SdkTabs.TypeScript>
+
+```ts
+setWorkflowOptions({ versioningBehavior: 'PINNED' }, helloWorld);
+export async function helloWorld(): Promise<string> {
+  return 'hello world!';
+}
+```
+
+</SdkTabs.TypeScript>
+<SdkTabs.DotNet>
+
+```csharp
+[Workflow(VersioningBehavior = VersioningBehavior.Pinned)]
+public class HelloWorld
+{
+    [WorkflowRun]
+    public async Task<string> RunAsync()
+    {
+        return "hello world!";
+    }
+}
+```
+
+</SdkTabs.DotNet>
+<SdkTabs.Ruby>
+
+```ruby
+class HelloWorld < Temporalio::Workflow::Definition
+  workflow_versioning_behavior Temporalio::VersioningBehavior::PINNED
+
+  def execute
+    'hello world!'
+  end
+end
+```
+
+</SdkTabs.Ruby>
+</SdkTabs>
+
+## 移动固定的 Workflow
+
+有时，您需要手动将一组固定的 Workflow 从存在错误的版本移至具有以下错误的版本：
+修复。
+
+如果您需要将固定的 Workflow 移动到新版本，请使用“Temporal Workflow Update-options”：
+
+```bash
+temporal workflow update-options \
+    --workflow-id "$WORKFLOW_ID" \
+    --versioning-override-behavior pinned \
+    --versioning-override-deployment-name "$TARGET_DEPLOYMENT" \
+    --versioning-override-build-id "$TARGET_BUILD_ID"
+```
+
+您可以一次移动多个与“--Query”参数匹配的 Workflow：
+
+```bash
+temporal workflow update-options \
+  --query="TemporalWorkerDeploymentVersion=$TARGET_DEPLOYMENT:$BAD_BUILD_ID" \
+  --versioning-override-behavior pinned \
+  --versioning-override-deployment-name "$TARGET_DEPLOYMENT" \
+  --versioning-override-build-id "$FIXED_BUILD_ID"
+```
+
+在这种情况下，您可能还需要使用其他[版本控制 API](/Workflow-definition#Workflow-versioning)
+在“固定”版本中修补您的 Workflow，以便您的目标 Worker 可以正确处理移动的 Workflow。如果你
+对您的 Workflow 进行了[版本不兼容的更改](/Workflow-definition#确定性-约束)，并且您想要
+回滚到较早版本，无法修补。考虑使用
+[Workflow 重置](/Workflow-execution/event#reset) 随着您的移动。
+
+“Reset-with-Move”允许您自动重置 Workflow 并在新重置时设置版本控制覆盖
+Workflow，因此当它恢复执行时，所有新的 Workflow Task 将在您的新 Worker 上执行。
+
+```bash
+temporal workflow reset with-workflow-update-options \
+    --workflow-id "$WORKFLOW_ID" \
+    --event-id "$EVENT_ID" \
+    --reason "$REASON" \
+    --versioning-override-behavior pinned \
+    --versioning-override-deployment-name "$TARGET_DEPLOYMENT" \
+    --versioning-override-build-id "$TARGET_BUILD_ID"
+```
+
+## 将 Workflow 从固定迁移到自动升级
+
+有时，您可能需要将 Workflow 从固定迁移到自动升级，因为您配置了
+Workflow Type 行为错误，或者您错误地固定了真正长时间运行的 Workflow。
+
+固定的 Workflow 可以阻止版本排水，尤其是当它们长时间运行时。您可以将 Workflow 移动到
+新版本，但这只会将问题推到下一个版本。
+
+为了进行此更改，您需要将 Workflow 的版本控制行为从“固定”更改为“自动升级”。
+您可以使用“Temporal Workflow Update-options”来实现此目的：
+
+```bash
+temporal workflow update-options \
+    --workflow-id "$WORKFLOW_ID" \
+    --versioning-override-behavior auto_upgrade
+```
+
+如果您想将某种类型的所有 Workflow 移动到此新配置，您可以使用以下命令来完成：
+
+```bash
+temporal workflow update-options \
+    --query="WorkflowType='$WORKFLOW_TYPE'" \
+    --versioning-override-behavior auto_upgrade
+```
+
+您还可以过滤某个构建 ID，以限制将其应用到的 Workflow 的数量：
+
+```bash
+temporal workflow update-options \
+    --query="WorkflowType='$WORKFLOW_TYPE' AND TemporalWorkerDeploymentVersion='$TARGET_DEPLOYMENT:$OLD_VERSION'" \
+    --versioning-override-behavior auto_upgrade
+```
+
+:::note
+
+当您将行为更改为自动升级时，Workflow 将恢复 Workflow 目标版本的工作。因此，如果 Workflow 的目标版本与早期固定版本不同，您应该确保对 Workflow 代码进行[补丁](/patching#patching)。
+
+:::
+
+## 在 Continue-As-New 上升级 {#upgrade-on-Continue-As-New}
+
+使用 [Continue-As-New](/Workflow-execution/Continue-As-New) 的长期运行的 Workflow 可以升级到更新的 Worker
+Continue-As-New 边界的部署版本无需修补。
+
+此模式非常适合：
+
+- **实体 Workflows** 运行数月或数年
+- **批处理** Workflow 与 Continue-As-New 进行检查点
+- **AI 代理 Workflows** 长时间休眠等待用户输入
+
+:::note Public Preview
+
+此功能作为实验性 SDK 级选项在公共预览版中提供。
+
+:::
+
+### 工作原理 {#upgrade-on-can-how-it-works}
+
+默认情况下，固定的 Workflow 保留其原始 Worker 部署版本，即使它们是 Continue-As-New。随着
+启用升级选项：
+
+1. 每次 Workflow 运行都保持固定到其版本（运行期间无需修补）
+2. 当新的[目标版本](/Worker-versioning#versioning-definitions)可用时，Temporal Server 通知 Workflow
+3. 当 Workflow 使用升级选项执行 Continue-As-New 时，新的运行在 [目标版本](/Worker-versioning#versioning-definitions) 上开始
+
+### 检查新版本 {#checking-for-new-versions}
+
+当新的 Worker 部署版本变为当前或正在升级时，活动的 Workflow 可以通过以下方式检测到这一点：
+`target_Worker_deployment_version_changed`：
+
+```go
+func (w *Workflows) ContinueAsNewWithVersionUpgradeV1(
+  ctx workflow.Context,
+  attempt int,
+) (string, error) {
+  if attempt > 0 {
+    return "v1.0", nil
+  }
+
+	// Check GetTargetWorkerDeploymentVersionChanged periodically.
+	// GetTargetWorkerDeploymentVersionChanged is refreshed after each WFT completes.
+  for {
+	// Trigger a WFT when timer expires, thereby refreshing the GetTargetWorkerDeploymentVersionChanged flag.
+	// Since this is just a test workflow, we aren't doing any real work. In a real workflow regularly
+	// doing non-sleep workflow tasks, you would not need to artificially trigger a WFT to refresh the
+	// GetTargetWorkerDeploymentVersionChanged flag. You could choose to check the field periodically, or you
+	// might want to check before accepting updates, starting activities, or starting child workflows.
+	err := workflow.Sleep(ctx, 10*time.Millisecond)
+	if err != nil {
+	  return "", err
+	}
+	info := workflow.GetInfo(ctx)
+	if info.GetTargetWorkerDeploymentVersionChanged() {
+	  return "", workflow.NewContinueAsNewErrorWithOptions(
+		ctx,
+		workflow.ContinueAsNewErrorOptions{
+		  // Pass InitialVersioningBehavior=workflow.ContinueAsNewVersioningBehaviorAutoUpgrade
+		  // to make the new run start with AutoUpgrade behavior and use the Target Version of
+		  // its Worker Deployment.
+		  InitialVersioningBehavior: workflow.ContinueAsNewVersioningBehaviorAutoUpgrade,
+		},
+		"ContinueAsNewWithVersionUpgrade",
+		attempt+1,
+	  )
+	}
+  }
+}
+
+func (w *Workflows) ContinueAsNewWithVersionUpgradeV2(
+  ctx workflow.Context,
+  attempt int,
+) (string, error) {
+  return "v2.0", nil
+}
+```
+
+### 限制 {#upgrade-on-can-limitations}
+
+:::caution Current Limitations
+
+- **仅延迟移动：** Workflow 必须通过执行接收目标版本更改信息的步骤来调用。
+  休眠的 Workflow 不会主动获取目标版本更改信息。如果您有闲置的 Workflow，您可以
+  想要醒来以便他们可以检查“GetTargetWorkerDeploymentVersionChanged”，您可以向他们发送 Signal。
+- **接口兼容性：** 当作为新版本继续使用不同版本时，请确保您的 Workflow 输入由
+  旧版本的 Workflow Definition 与新版本的 Workflow Definition 兼容。如果不兼容，则
+  新运行可能会在第一个 Workflow Task 上失败。
+
+:::
+
+## 废弃旧的部署版本
+
+Worker 部署版本会经历以下状态：
+
+1. **非活动**：该版本存在，因为具有该版本的 Worker 已轮询服务器。如果这个版本从来没有
+   变为 Active 时，它永远不会处于 Draining 或 Drained 状态。
+2. **活动**：版本是当前版本或正在升级，因此它接受新的 Workflow 和现有的自动升级
+   Workflows。
+3. **耗尽**：该版本不再是当前版本或斜坡版本，并且它已在其上运行开放固定的 Workflow。它是
+   由于排水状态为 Updated，因此可能正在排水并且短时间内没有开路固定 Workflows
+   定期。
+4. **耗尽**：该版本正在耗尽，现在所有在其上运行的固定 Workflow 都已关闭。
+
+当您在每个部署的“WorkerDeploymentVersionStatus”中描述 Worker 部署时，您可以看到这些状态
+`VersionSummary`，或者直接描述版本。当版本处于 Draining 或 Drained 状态时，会显示在
+称为“DrainageStatus”的值。 Temporal 服务将定期通过计算任何打开的固定状态来刷新此状态
+Workflows 使用该版本。
+
+每次刷新时，“DrainageInfo.last_checked_time”为 Updated。最终，“DrainageInfo”将报告版本是
+完全排干。此时，没有 Workflow 仍在该版本上运行，并且不会再自动路由到
+因此您可以考虑关闭正在运行的 Worker。
+
+您可以通过检查“WorkerDeploymentInfo.VersionSummaries”或使用
+`Temporal Worker 部署描述版本`：
+
+```bash
+temporal worker deployment describe-version \
+    --deployment-name "YourDeploymentName" \
+    --build-id "YourBuildID"
+```
+
+```
+Worker Deployment Version:
+  Version                  llm_srv.1.0
+  CreateTime               5 hours ago
+  RoutingChangedTime       32 seconds ago
+  RampPercentage           0
+  DrainageStatus           draining
+  DrainageLastChangedTime  31 seconds ago
+  DrainageLastCheckedTime  31 seconds ago
+
+Task Queues:
+     Name        Type
+  hello-world  activity
+  hello-world  workflow
+```
+
+如果您已在封闭固定的 Workflow 上实现了 [Queries](/sending-messages#sending-queries)，则可能需要保留
+一些 Worker 正在运行来处理它们。
+
+### 添加部署前测试
+
+在部署新的 Workflow 修订版之前，您可以使用合成流量对其进行测试。
+
+为此，请按照以下示例在测试中使用固定
+
+<SdkTabs>
+<SdkTabs.Go>
+```go
+workflowOptions := client.StartWorkflowOptions{
+	ID:        "MyWorkflowId",
+	TaskQueue: "MyTaskQueue",
+	VersioningOverride: &client.PinnedVersioningOverride{
+        Version: worker.WorkerDeploymentVersion{
+            DeploymentName: "DeployName",
+            BuildId:        "1.0",
+        },
+    },
+}
+// c is an initialized Client
+we, err := c.ExecuteWorkflow(context.Background(), workflowOptions, HelloWorld, "Hello")
+```
+</SdkTabs.Go>
+<SdkTabs.Java>
+```java
+MyWorkflow handle = client.newWorkflowStub(
+    MyWorkflow.class,
+    WorkflowOptions.newBuilder()
+        .setWorkflowId("MyWorkflowId")
+        .setTaskQueue("MyTaskQueue")
+        .setVersioningOverride(new VersioningOverride.PinnedVersioningOverride(
+            new WorkerDeploymentVersion("DeployName", "1.0")))
+        .build()
+);
+WorkflowExecution we = WorkflowClient.start(handle::execute, "Hello");
+```
+</SdkTabs.Java>
+<SdkTabs.Python>
+```python
+handle = client.start_workflow(
+    MyWorkflow.run,
+    "Hello",
+    id="MyWorkflowId",
+    task_queue="MyTaskQueue",
+    versioning_override=PinnedVersioningOverride(
+        WorkerDeploymentVersion("DeployName", "1.0")
+    ),
+)
+```
+</SdkTabs.Python>
+<SdkTabs.TypeScript>
+```ts
+const handle = await client.workflow.start('helloWorld', {
+  taskQueue: 'MyTaskQueue',
+  workflowId: 'MyWorkflowId',
+  versioningOverride: {
+    pinnedTo: { buildId: '1.0', deploymentName: 'deploy-name' },
+  },
+});
+```
+</SdkTabs.TypeScript>
+<SdkTabs.DotNet>
+```csharp
+var workerV1 = new WorkerDeploymentVersion("deploy-name", "1.0");
+var handle = await Client.StartWorkflowAsync(
+    (HelloWorld wf) => wf.RunAsync(),
+      	new(id: "MyWorkflowId", taskQueue: "MyTaskQueue")
+      	{
+           VersioningOverride = new VersioningOverride.Pinned(workerV1),
+        }
+);
+```
+</SdkTabs.DotNet>
+<SdkTabs.Ruby>
+```ruby
+worker_v1 = Temporalio::WorkerDeploymentVersion.new(
+  deployment_name: 'deploy-name',
+  build_id: '1.0'
+)
+handle = env.client.start_workflow(
+  HelloWorld,
+  id: 'MyWorkflowId',
+  task_queue: 'MyTaskQueue',
+  versioning_override: Temporalio::VersioningOverride.pinned(worker_v1)
+)
+```
+</SdkTabs.Ruby>
+</SdkTabs>
+
+## 垃圾收集
+
+Worker 部署永远不会被垃圾收集，但_Worker 部署版本_（通常称为版本，Worker
+版本、部署版本）是。
+
+删除版本以使一个 Worker 部署中的版本总数小于或等于
+[`matching.maxVersionsInDeployment`](https://github.com/Temporalio/Temporal/blob/a3a53266c002ae33b630a41977274f8b5b587031/common/dynamicconfig/constants.go#L1317-L1321),
+目前在 Temporal Cloud 中设置为 100，但这是一个保守的数字，如果需要的话可以增加。
+
+例如，当您在 Worker 部署中部署第 101 个 Worker 版本时，服务器会查看最旧的耗尽版本
+Worker 部署中的版本。如果过去 5 分钟内没有轮询器，服务器将删除它。如果那个版本
+仍然有轮询器，服务器将尝试下一个最旧的版本。如果这100个版本中没有一个符合删除条件
+（即，没有轮询器时，它们都不会被耗尽），那么不会删除任何版本，并且从第 101 个版本进行轮询
+会失败的。
+
+此时，要成功部署第 101 个版本，您需要增加“matching.maxVersionsInDeployment”
+或者停止对旧版本之一进行轮询，使其符合清理条件。
+
+如果您想重新部署以前删除的版本，请使用具有相同构建 ID 的 Worker 开始轮询，并且
+部署名称为已删除的版本，服务器将重新创建它。
+
+这涵盖了使用 Worker 版本控制的完整生命周期。我们正在继续改进此功能，并且我们
+欢迎使用侧边栏链接提出任何反馈或功能请求！

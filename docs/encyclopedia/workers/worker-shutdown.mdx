@@ -1,58 +1,65 @@
-# Worker Shutdown Behavior
+<a id="worker-shutdown-behavior"></a>
+# Worker 关闭行为 {#worker-shutdown-behavior}
 
-When a Worker shuts down, it stops polling for new tasks and begins the shutdown sequence.
-In the case of in-flight Workflow Tasks, shutdown may cause them to fail if they aren’t completed in time, after exhausting Retry Policy attempts.
+当 Worker 关闭时，它会停止轮询新任务并开始关闭序列。
+对于正在进行的 Workflow 任务，如果在尝试完 Retry Policy 尝试后未及时完成，关闭可能会导致它们失败。
 
-There are two types of shutdown behavior that can occur, depending on whether an idea of “graceful shutdown” is configured.
+可能会发生两种类型的关闭行为，具体取决于是否配置了“正常关闭”的概念。
 
-## Graceful Shutdown
+<a id="graceful-shutdown"></a>
+## 优雅关闭 {#graceful-shutdown}
 
-Graceful shutdown configures how much time a Worker has to complete its current task before shutting down.
-An Activity is able to determine that the Worker it’s running on is being shut down, through the Activity context.
+正常关闭配置 Worker 在关闭之前必须完成当前任务的时间。
+Activity 能够通过 Activity 上下文确定其运行的 Worker 正在关闭。
 
-> Core SDKs - `graceful_shutdown_period`
+> 核心 SDK - `graceful_shutdown_period`
 
-> Go - `WorkerStopTimeout`
+> 去 - `WorkerStopTimeout`
 
-> Java - `shutdown()` followed by `awaitTermination(timeout, unit)`
+> Java - `shutdown()` 后跟 `awaitTermination(timeout, unit)`
 
-### Workflow tasks
+<a id="workflow-tasks"></a>
+### Workflow 任务 {#workflow-tasks}
 
-Any in-flight Workflow Tasks are (attempted to be) completed.
-The only reason they may not immediately, is if Workflow code is (incorrectly) blocking, or because of Local Activities (see below).
+任何飞行中的 Workflow 任务均已（尝试）完成。
+它们可能不会立即发生的唯一原因是 Workflow 代码是否（错误地）阻塞，或者由于本地活动（见下文）。
 
-### Activities
+＃＃＃ 活动
 
-Activities are allowed to complete during the graceful shutdown period.
+允许在正常关闭期间完成活动。
 
-### Local Activities
+<a id="activities"></a>
+### 当地活动 {#activities}
 
-Because Local Activities run within a Workflow Task, current and future Local Activities within the same Workflow Task will be allowed to run and complete, assuming there is no additional command to yield to.
+由于本地活动在 Workflow 任务内运行，因此假设没有其他命令需要屈服，则将允许同一 Workflow 任务内的当前和未来本地活动运行并完成。
 
-If the Local Activity is unable to complete by the graceful shutdown period, the Local Activity attempt is sent a cancel signal.
-In this case, no new Local Activities will be retried or started, and the Worker is shut down.
-The Worker still waits for the current Workflow Task to complete, meaning you can eventually hit your Workflow Task or execution timeout, unless another Worker is spun up.
+如果本地 Activity 无法在正常关闭期限内完成，则会向本地 Activity 尝试发送取消 Signal。
+在这种情况下，不会重试或启动任何新的本地活动，并且 Worker 将关闭。
+Worker 仍然等待当前的 Workflow 任务完成，这意味着您最终可以达到 Workflow 任务或执行超时，除非另一个 Worker 启动。
 
-## Non-Graceful Period Shutdown
+<a id="local-activities"></a>
+## 非优雅期关闭 {#local-activities}
 
-This behavior is for either no graceful period being specified, or if the shutdown has taken longer than the configured graceful period.
-In all cases, the Activity context is canceled and the Worker will finish shutdown when the current Workflow Task completes (with either success or failure).
+此行为适用于未指定宽限期，或者关闭时间超过配置的宽限期的情况。
+在所有情况下，当当前 Workflow 任务完成（成功或失败）时，Activity 上下文都会被取消，并且 Worker 将完成关闭。
 
 :::note
-Go and Core SDKs behave differently when we pass task timeout and the Activity or Local Activity is still running:
+当我们超过任务超时且 Activity 或本地 Activity 仍在运行时，Go 和 Core SDK 的行为有所不同：
 
-**Go** - The shutdown completes, but the Activity will continue to run and use a slot.
+**开始** - 关闭完成，但 Activity 将继续运行并使用插槽。
 
-**Core** - The Worker shutdown will not complete while the Activity completes.
+**核心** - 当 Activity 完成时，Worker 关闭不会完成。
 :::
 
-### Local Activities
+<a id="non-graceful-period-shutdown"></a>
+### 当地活动 {#non-graceful-period-shutdown}
 
-The Local Activity is sent a cancel signal, then the Workflow Task heartbeats stop, and no new Local Activities will be retried or started.
-The Worker still waits for the current Workflow Task to complete, meaning you can eventually hit your Workflow Task or execution timeout, unless another Worker is spun up.
+向本地 Activity 发送取消 Signal，然后 Workflow 任务心跳停止，并且不会重试或启动任何新的本地活动。
+Worker 仍然等待当前的 Workflow 任务完成，这意味着您最终可以达到 Workflow 任务或执行超时，除非另一个 Worker 启动。
 
-## General Developer Guidance
+<a id="local-activities"></a>
+## 一般开发者指南 {#local-activities}
 
-- Ensure Activities and Local Activities **honor context cancellation** or other shutdown signals.
-- Expect that **long or hung Local Activities may block shutdown** unless you fail early.
-  It is recommended that Local Activities should already generally be used for short Activities.
+- 确保活动和本地活动**荣誉上下文取消**或其他关闭 Signal。
+- 预计**长时间或挂起的本地活动可能会阻止关闭**，除非您提前失败。
+  建议本地活动通常已用于短期活动。

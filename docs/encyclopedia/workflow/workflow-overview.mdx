@@ -1,8 +1,8 @@
 ---
 id: workflow-overview
-title: Temporal Workflow
-sidebar_label: Workflow
-description:
+title: "Temporal Workflow"
+sidebar_label: "ZXQ0Token"
+description: This comprehensive guide provides insights into Temporal Workflows, covering Workflow Definitions in various
   This comprehensive guide provides insights into Temporal Workflows, covering Workflow Definitions in various
   programming languages, deterministic constraints, handling code changes, and ensuring reliability, durability, and
   scalability in a Temporal Application, with examples and best practices for Workflow Versioning and development.
@@ -15,39 +15,40 @@ tags:
   - Workflows
 ---
 
-This guide provides a comprehensive overview of Temporal Workflows and covers the following:
+本指南提供了 Temporal Workflow 的全面概述，并涵盖以下内容：
 
 - [Workflow Definition](/workflow-definition)
 - [Workflow Execution](/workflow-execution)
 - [Schedules](/schedule)
-- [Dynamic Handler](/dynamic-handler)
-- [Cron Job](/cron-job)
+- [动态处理程序](/dynamic-handler)
+- [计划任务](/cron-job)
 
-## Intro to Workflows
+<a id="intro-to-workflows"></a>
+## Workflow 简介 {#intro-to-workflows}
 
-Conceptually, a workflow defines a sequence of steps. With Temporal, those steps are defined by writing code, known as a
-Workflow Definition, and are carried out by running that code, which results in a Workflow Execution.
+从概念上讲，Workflow 定义了一系列步骤。对于 Temporal，这些步骤是通过编写代码来定义的，称为
+Workflow Definition，并通过运行该代码来执行，从而生成 Workflow Execution。
 
-In day-to-day conversations, the term Workflow might refer to Workflow Type, a Workflow Definition, or a Workflow
-Execution.
+在日常对话中，术语 Workflow 可能指 Workflow 类型、Workflow Definition 或 Workflow
+执行。
 
-1. A **Workflow Definition** is the code that defines your Workflow.
-2. The **Workflow Type** is the name that maps to a Workflow Definition. It's an identifier that makes it possible to
-   distinguish one type of Workflow (such as order processing) from another (such as customer onboarding).
-3. A **Workflow Execution** is a running Workflow, which is created by combining a Workflow Definition with a request to
-   execute it. You can execute a Workflow Definition any number of times, potentially providing different input each
-   time (i.e., a Workflow Definition for order processing might process order #123 in one execution and order #567 in
-   another execution). It is the actual instance of the Workflow Definition running in the Temporal Platform.
+1. **Workflow Definition** 是定义 Workflow 的代码。
+2. **Workflow 类型** 是映射到 Workflow Definition 的名称。它是一个标识符，可以
+   将 Workflow 的一种类型（例如订单处理）与另一种类型（例如客户引导）区分开来。
+3. **Workflow Execution** 是一个正在运行的 Workflow，它是通过将 Workflow Definition 与请求组合而创建的
+   执行它。您可以执行 Workflow Definition 任意多次，每次可能提供不同的输入
+   时间（即，用于订单处理的 Workflow Definition 可能会在一次执行中处理订单 #123，并在一次执行中处理订单 #567）
+   另一次处决）。它是在 Temporal 平台中运行的 Workflow Definition 的实际实例。
 
-You'll develop those Workflows by writing code in a general-purpose programming language such as Go, Java, TypeScript,
-or Python. The code you write is the same code that will be executed at runtime, so you can use your favorite tools and
-libraries to develop Temporal Workflows.
+您将通过使用通用编程语言（例如 Go、Java、TypeScript、
+或Python。您编写的代码与将在运行时执行的代码相同，因此您可以使用您喜欢的工具和
+用于开发 Temporal Workflow 的库。
 
-Temporal Workflows are resilient.
-They can run—and keep running—for years, even if the underlying infrastructure fails.
-If the application itself crashes, Temporal will automatically recreate its pre-failure state so it can continue right where it left off.
+Temporal Workflow 具有弹性。
+即使底层基础设施出现故障，它们也可以运行并持续运行多年。
+如果应用程序本身崩溃，Temporal 将自动重新创建其失败前的状态，以便它可以从中断处继续。
 
-Each Workflow Execution progresses through a series of **Commands** and **Events**, which are recorded in an **Event
-History**.
+每个 Workflow Execution 都会执行一系列 **命令** 和 **事件**，这些命令记录在 **事件中
+历史**。
 
-Workflows must follow deterministic constraints to ensure consistent replay behavior.
+Workflow 必须遵循确定性约束以确保一致的重播行为。

@@ -1,8 +1,8 @@
 ---
 id: payload-codec
-title: Payload Codec
-sidebar_label: Payload Codec
-description: A Payload Codec performs bytes-to-bytes transformations on Temporal Payloads, often for compression and encryption.
+title: "有效负载编解码器"
+sidebar_label: "有效负载编解码器"
+description: "有效负载编解码器对 Temporal 有效负载执行字节到字节的转换，通常用于压缩和加密。"
 slug: /payload-codec
 toc_max_heading_level: 4
 keywords:
@@ -20,29 +20,30 @@ tags:
   - Security
 ---
 
-This page discusses [Payload Codec](#payload-codec).
+本页讨论 [有效负载编解码器](#payload-codec)。
 
-## What is a Payload Codec? {#payload-codec}
+<a id="payload-codec"></a>
+## 什么是有效负载编解码器？ {#payload-codec}
 
-A Payload Codec transforms an array of [Payloads](/dataconversion#payload) (for example, a list of Workflow arguments) into another array of Payloads.
+有效负载编解码器将 [有效载荷](/dataconversion#payload) 数组（例如，Workflow 参数列表）转换为另一个有效负载数组。
 
-When serializing to Payloads, the Payload Converter is applied first to convert your objects to bytes, followed by codecs that convert bytes to bytes.
-When deserializing from Payloads, codecs are applied first to last to reverse the effect, followed by the Payload Converter.
+序列化为有效负载时，首先应用有效负载转换器将对象转换为字节，然后应用编解码器将字节转换为字节。
+从有效负载反序列化时，首先应用编解码器以反转效果，然后应用有效负载转换器。
 
-Use a custom Payload Codec to transform your Payloads; for example, implementing compression and/or encryption on your Workflow Execution data.
+使用自定义有效负载编解码器来转换您的有效负载；例如，对 Workflow Execution 数据实施压缩和/或加密。
 
-### Encryption {#encryption}
+### 加密 {#encryption}
 
-Using end-to-end encryption in your custom Data Converter ensures that sensitive application data is secure when handled by the Temporal Server.
+在自定义 Data Converter 中使用端到端加密可确保 Temporal Server 处理敏感应用程序数据时的安全。
 
-Apply your encryption logic in a custom Payload Codec and use it locally to encrypt data.
-You maintain all the encryption keys, and the Temporal Server sees only encrypted data. Refer to [What is Key Management?](/key-management) for more guidance.
+在自定义负载编解码器中应用您的加密逻辑，并在本地使用它来加密数据。
+您维护所有加密密钥，并且 Temporal Server 只能看到加密数据。请参阅 [什么是密钥管理？](/key-management) 了解更多指导。
 
-Your data exists unencrypted only on the Client and the Worker process that is executing the Workflows and Activities, on hosts that you control. For details, see [Securing your data](/production-deployment/data-encryption).
+您的数据仅以未加密的方式存在于客户端以及您控制的主机上执行 Workflow 和活动的 Worker 进程上。有关详细信息，请参见 [保护您的数据](/production-deployment/data-encryption)。
 
-The following samples use encryption (AES GCM with 256-bit key) in a custom Data Converter:
+以下示例在自定义 Data Converter 中使用加密（具有 256 位密钥的 AES GCM）：
 
-- [Go sample](https://github.com/temporalio/samples-go/tree/main/encryption)
-- [Java sample](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/encryptedpayloads)
-- [Python sample](https://github.com/temporalio/samples-python/tree/main/encryption)
-- [TypeScript sample](https://github.com/temporalio/samples-typescript/tree/main/encryption)
+- [去样品](https://github.com/temporalio/samples-go/tree/main/encryption)
+- [Java样本](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/encryptedpayloads)
+- [Python示例](https://github.com/temporalio/samples-python/tree/main/encryption)
+- [TypeScript 示例](https://github.com/temporalio/samples-typescript/tree/main/encryption)

@@ -1,0 +1,447 @@
+---
+id: feature-guide
+title: 功能指南 - TypeScript SDK 功能指南
+sidebar_label: 功能指南
+description: 使用 TypeScript SDK 中的 Temporal Nexus，使用 Nexus 端点、Nexus Service 合约和 Nexus Operation 连接 Namespace 内部和 Namespace 之间的持久执行。
+toc_max_heading_level: 4
+keywords:
+  - temporal
+  - nexus
+  - typescript
+  - sdk
+tags:
+  - Nexus
+  - TypeScript SDK
+---
+
+import { CaptionedImage } from "@site/src/components";
+
+:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+
+Temporal TypeScript SDK 对 Nexus 的支持处于 [公共预览](/evaluate/development-product-features/release-stages#public-preview) 中。
+
+:::
+
+使用 [Temporal Nexus](/evaluate/Nexus) 使用 Nexus 端点、Nexus Service 合约和 Nexus Operation 连接 Namespace 内部和 Namespace 之间的 Temporal 应用程序。
+
+此页面显示如何执行以下操作：
+
+- [运行启用 Nexus 的开发 Temporal 服务](#run-the-Temporal-Nexus-development-server)
+- [创建调用者和处理程序 Namespaces](#create-caller-handler-Namespaces)
+- [创建 Nexus 端点以将请求从调用者路由到处理程序](#create-Nexus-endpoint)
+- [定义 Nexus Service 合约](#define-Nexus-service-contract)
+- [开发 Nexus Service 和操作处理程序](#develop-Nexus-service-operation-handlers)
+- [开发使用 Nexus Service 的调用方 Workflow](#develop-caller-Workflow-Nexus-service)
+- [了解 Nexus Operation 中的异常](#exceptions-in-Nexus-operations)
+- [取消 Nexus Operation](#canceling-a-Nexus-操作)
+- [在 Temporal Cloud 中跨 Namespace 进行 Nexus 调用](#Nexus-calls-across-Namespaces-Temporal-cloud)
+
+<br />
+
+:::note
+
+本文档使用源自 [TypeScript Nexus 示例](https://github.com/Temporalio/samples-typescript/tree/main/Nexus-hello) 的源代码。
+
+:::
+
+## 在启用 Nexus 的情况下运行 Temporal 开发服务器 {#run-the-Temporal-Nexus-development-server}
+
+先决条件：
+
+- [安装最新的 Temporal CLI](https://learn.Temporal.io/getting_started/typescript/dev_environment/#set-up-a-local-Temporal-service-for-development-with-Temporal-cli) (推荐`v1.3.0`或更高版本)
+- [安装最新的 Temporal TypeScript SDK](https://learn.Temporal.io/getting_started/typescript/dev_environment/#add-Temporal-typescript-sdk-dependencies) (`v1.12.3` 或更高版本)
+
+使用 Temporal Nexus 的第一步涉及启动启用 Nexus 的 Temporal Server。
+
+```
+temporal server start-dev
+```
+
+此命令自动使用 Web UI 启动 Temporal 开发服务器，并创建“默认”Namespace。它使用内存数据库，因此不要将其用于实际用例。
+
+现在应该可以通过 [http://localhost:8233](http://localhost:8233) 访问 Temporal Web UI，并且 Temporal Server 现在应该可以在 `localhost:7233` 上用于客户端连接。
+
+## 创建调用者和处理程序 Namespaces {#create-caller-handler-Namespaces}
+
+在设置 Nexus 端点之前，请为调用方和处理程序创建单独的 Namespace。
+
+```
+temporal operator namespace create --namespace my-target-namespace
+temporal operator namespace create --namespace my-caller-namespace
+```
+
+对于此示例，“my-target-Namespace”将包含 Nexus Operation 处理程序，您将在“my-caller-Namespace”中使用 Workflow 来调用该操作处理程序。
+我们使用不同的 Namespace 来演示跨 Namespace Nexus 调用。
+
+## 创建一个 Nexus 端点以将请求从调用者路由到处理程序 {#create-Nexus-endpoint}
+
+建立调用方和处理程序 Namespace 后，下一步是创建 Nexus 端点来路由请求。
+
+```
+temporal operator nexus endpoint create \
+  --name my-nexus-endpoint-name \
+  --target-namespace my-target-namespace \
+  --target-task-queue my-handler-task-queue
+```
+
+您还可以使用 Web UI 创建 Namespaces 和 Nexus 端点。
+
+## 定义 Nexus Service 合约 {#define-Nexus-service-contract}
+
+为 Nexus Service 定义明确的合同对于顺利沟通至关重要。
+
+在此示例中，有一个服务包描述了服务和操作名称以及调用者 Workflow 使用 Nexus 端点的输入/输出类型。
+
+每个 [Temporal SDK 都包含并使用默认的 Data Converter](https://docs.Temporal.io/dataconversion)。
+默认 Data Converter 按以下顺序对有效负载进行编码：Null、字节数组和 JSON。
+在多语言环境中，即使用多种语言和 SDK 来开发 Temporal 解决方案时，JSON 是常见选择。
+此示例使用序列化为 JSON 的普通 TypeScript 对象。
+
+注意：默认情况下，TypeScript SDK [不支持 Protobuf JSON 编码](https://typescript.Temporal.io/api/interfaces/common.PayloadConverter)。如果传递 Protobuf 有效负载，请改用 [ProtobufJsonPayloadConverter](https://typescript.Temporal.io/api/classes/Protobufs.ProtobufJsonPayloadConverter)。
+
+<!--SNIPSTART typescript-Nexus-hello-service-->
+[Nexus-hello/src/api.ts](https://github.com/Temporalio/samples-typescript/blob/main/Nexus-hello/src/api.ts)
+```ts
+import * as nexus from 'nexus-rpc';
+
+export const helloService = nexus.service('hello', {
+  /**
+   * Return the input message, unmodified. In the present sample, this Operation
+   * will be implemented using the Synchronous Nexus Operation handler syntax.
+   */
+  echo: nexus.operation<EchoInput, EchoOutput>(),
+
+  /**
+   * Return a salutation message, in the requested language. In the present sample,
+   * this Operation will be implemented by starting the `helloWorkflow` Workflow.
+   */
+  hello: nexus.operation<HelloInput, HelloOutput>(),
+});
+
+export interface EchoInput {
+  message: string;
+}
+
+export interface EchoOutput {
+  message: string;
+}
+
+export interface HelloInput {
+  name: string;
+  language: LanguageCode;
+}
+
+export interface HelloOutput {
+  message: string;
+}
+
+export type LanguageCode = 'en' | 'fr' | 'de' | 'es' | 'tr';
+```
+<!--SNIPEND-->
+
+## 开发 Nexus Service 处理程序和操作处理程序 {#develop-Nexus-service-operation-handlers}
+
+Nexus Service 处理程序是使用 `Nexus-rpc` 的 [`serviceHandler`](https://Nexus-rpc.github.io/sdk-typescript/functions/serviceHandler.html) 函数定义的。 {/* 添加 */}
+Nexus Service 处理程序通常在与它们抽象的底层 Temporal 原语相同的 Worker 中定义。
+服务处理程序必须为服务声明的每个操作提供操作处理程序。 {/* 添加 */}
+操作处理程序可以决定给定的 Nexus Operation 是同步还是异步。
+他们可以使用 Temporal SDK 客户端调用底层 Temporal 原语，例如 Query、Signal 或 Update，或运行其他可靠的代码。
+处理程序应该是可靠的，因为 [断路器](/Nexus/operations#circum-writing) 在连续 5 个可重试错误后跳闸，阻止从调用者到该端点的所有操作。
+
+`@Temporalio/Nexus` 软件包提供了实用程序来帮助创建与 Temporal Namespace 交互的 Nexus Operation：{/* 扩展 */}
+
+- `WorkflowRunOperationHandler` - 创建启动 Workflow 的异步操作处理程序。
+- `getClient()` - 使用与当前 Temporal Worker 相同的 `NativeConnection` 连接 Temporal CLIent。
+  它可用于实现由 Temporal 原语（例如 Signal 和查询）支持的同步处理程序。
+
+### 开发同步 Nexus Operation 处理程序
+
+简单的 RPC 处理程序可以实现为同步 Nexus Operation 处理程序，它在 TypeScript 中定义为简单的异步函数。 {/* 同步操作与异步函数在这种情况下非常令人困惑 */}
+使用“@Temporalio/Nexus”中的“getClient()”获取 Signaling、Querying 和列出 Workflow 的 Temporal CLIent。
+实现还可以进行其他调用，但处理程序应该可靠，以避免触发[断路器](/Nexus/操作#电路中断)。
+
+<!--SNIPSTART typescript-Nexus-hello-service-handler {"selectedLines": ["2","4","6-17","37"]}-->
+[Nexus-hello/src/service/handler.ts](https://github.com/Temporalio/samples-typescript/blob/main/Nexus-hello/src/service/handler.ts)
+```ts
+// ...
+import * as nexus from 'nexus-rpc';
+// ...
+import { helloService, EchoInput, EchoOutput, HelloInput, HelloOutput } from '../api';
+// ...
+
+export const helloServiceHandler = nexus.serviceHandler(helloService, {
+  echo: async (ctx, input: EchoInput): Promise<EchoOutput> => {
+    // A simple async function can be used to defined a Synchronous Nexus Operation.
+    // This is often sufficient for Operations that simply make arbitrary short calls to
+    // other services or databases, or that perform simple computations such as this one.
+    //
+    // You may also access a Temporal Client by calling `temporalNexus.getClient()`.
+    // That Client can be used to make arbitrary calls, such as signaling, querying,
+    // or listing workflows.
+    return input;
+  },
+// ...
+});
+```
+<!--SNIPEND-->
+
+### 将 Temporal CLIent 用于 Signal、查询和 Update
+
+常见模式是在 Signal、Query 或 Update 和 Workflow 的同步处理程序中使用 Temporal CLIent。
+您还可以使用 Signal-With-Start 或 Update-With-Start 确保 Workflow 启动并向其发送 Signal 或 Update。
+所有调用必须在 [Nexus 请求超时](/cloud/limits#Nexus-operation-request-timeout) 内完成。
+处理程序通过 options.Signal 接收 AbortSignal，该消息在超过截止日期时触发 
+— 将其传递给 Temporal CLIent 调用，以确保在达到超时时取消它们。
+Update 的寿命应该很短，才能在这个期限内完成。
+
+### 开发异步 Nexus Operation 处理程序来启动 Workflow
+
+使用“@Temporalio/Nexus”的“WorkflowRunOperationHandler”帮助程序类可以轻松地将 Temporal Workflow 公开为 Nexus Operation。
+请注意，即使 Nexus Operation 只能采用一个输入参数，如果您需要传递
+到 Workflow 的多个参数，您可以通过使用输入对象的多个属性并将它们放在
+调用“startWorkflow”时提供给“args”选项的数组。
+
+<!--SNIPSTART typescript-Nexus-hello-service-handler {"selectedLines": ["1-7","18-37"]}-->
+[Nexus-hello/src/service/handler.ts](https://github.com/Temporalio/samples-typescript/blob/main/Nexus-hello/src/service/handler.ts)
+```ts
+import { randomUUID } from 'crypto';
+import * as nexus from 'nexus-rpc';
+import * as temporalNexus from '@temporalio/nexus';
+import { helloService, EchoInput, EchoOutput, HelloInput, HelloOutput } from '../api';
+import { helloWorkflow } from './workflows';
+
+export const helloServiceHandler = nexus.serviceHandler(helloService, {
+// ...
+  hello: new temporalNexus.WorkflowRunOperationHandler<HelloInput, HelloOutput>(
+    // WorkflowRunOperationHandler takes a function that receives the Operation's context and input.
+    // That function can be used to validate and/or transform the input before passing it to
+    // the Workflow, as well as to customize various Workflow start options as appropriate.
+    // Call temporalNexus.startWorkflow() to actually start the Workflow from inside the
+    // WorkflowRunOperationHandler's delegate function.
+    async (ctx, input: HelloInput) => {
+      return await temporalNexus.startWorkflow(ctx, helloWorkflow, {
+        args: [input],
+
+        // Workflow IDs should typically be business-meaningful IDs and are used to dedupe workflow starts.
+        // For this example, we're using the request ID allocated by Temporal when the caller workflow schedules
+        // the operation, this ID is guaranteed to be stable across retries of this operation.
+        workflowId: ctx.requestId ?? randomUUID(),
+
+        // Task queue defaults to the task queue this Operation is handled on.
+      });
+    },
+  ),
+});
+```
+<!--SNIPEND-->
+
+Workflow Id 通常应该是具有业务意义的 ID，用于对 Workflow 启动进行重复数据删除。
+一般来说，ID 应作为 Nexus Service 合约的一部分在操作输入中传递。
+
+:::tip RESOURCES
+
+[将多个 Nexus 调用者附加到处理程序 Workflow](/Nexus/operations#attaching-multiple-Nexus-callers)，冲突策略为 Use-Existing。
+
+:::
+
+### 在 Worker 中注册您的 Nexus Service 处理程序
+
+开发异步 Nexus Operation 处理程序来启动 Workflow 后，下一步是在 Worker 中注册 Nexus Service 处理程序。
+
+<!--SNIPSTART typescript-Nexus-hello-service-Worker {"selectedLines": ["1-3","9-17"]}-->
+[Nexus-hello/src/service/Worker.ts](https://github.com/Temporalio/samples-typescript/blob/main/Nexus-hello/src/service/Worker.ts)
+```ts
+import { Worker, NativeConnection } from '@temporalio/worker';
+import { helloServiceHandler } from './handler';
+
+// ...
+    const namespace = 'my-target-namespace';
+    const serviceTaskQueue = 'my-handler-task-queue';
+    const worker = await Worker.create({
+      connection,
+      namespace,
+      taskQueue: serviceTaskQueue,
+      workflowsPath: require.resolve('./workflows'),
+      nexusServices: [helloServiceHandler],
+    });
+```
+<!--SNIPEND-->
+
+## 开发使用 Nexus Service 的调用方 Workflow {#develop-caller-Workflow-Nexus-service}
+
+要从 Workflow 执行 Nexus Operation，请导入必要的服务定义类型，然后使用“@Temporalio/Workflow”的“createNexusClient”为该服务创建 Nexus 客户端。
+您需要提供 Nexus 端点名称，该名称是您之前在[创建 Nexus 端点以将请求从调用者路由到处理程序](#create-Nexus-endpoint) 中注册的。
+
+<!--SNIPSTART typescript-Nexus-hello-service-caller-Workflow {"selectedLines": ["1-5","21-34"]}-->
+
+[Nexus-hello/src/caller/Workflows.ts](https://github.com/Temporalio/samples-typescript/blob/main/Nexus-hello/src/caller/Workflows.ts)
+
+```ts
+import * as wf from "@temporalio/workflow";
+import { helloService, LanguageCode } from "../service/api";
+
+const HELLO_SERVICE_ENDPOINT = "hello-service-endpoint-name";
+
+export async function helloCallerWorkflow(name: string, language: LanguageCode): Promise<string> {
+  const nexusClient = wf.createNexusClient({
+    service: helloService,
+    endpoint: HELLO_SERVICE_ENDPOINT,
+  });
+
+  const helloResult = await nexusClient.executeOperation(
+    "hello",
+    { name, language },
+    { scheduleToCloseTimeout: "10s" }
+  );
+
+  return helloResult.message;
+}
+```
+
+<!--SNIPEND-->
+
+### 在 Worker 中注册调用者 Workflow 并启动调用者 Workflow
+
+该 Workflow 可以向 Worker 注册，并像往常一样使用“client.startWorkflow()”或“client.executeWorkflow()”启动。
+请参阅[完整的 TypeScript 示例](https://github.com/Temporalio/samples-typescript/blob/main/Nexus-hello) 以供参考。
+
+- [Nexus-hello/src/caller/Worker.ts](https://github.com/Temporalio/samples-typescript/blob/main/Nexus-hello/src/caller/Worker.ts)展示了如何在Worker中注册调用者Workflow并运行Worker。
+- [Nexus-hello/src/starter.ts](https://github.com/Temporalio/samples-typescript/blob/main/Nexus-hello/src/starter.ts) 展示如何使用 Temporal CLIent 执行示例调用程序 Workflow。
+
+## Nexus Operation 中的异常 {#exceptions-in-Nexus-operations}
+
+Temporal 提供有关 [Nexus Operation 中的错误](https://docs.Temporal.io/references/failures#errors-in-Nexus-operations) 的一般指导。
+在 TypeScript 中，存在三个 Nexus 特定的异常类：
+
+- `Nexus-rpc` 的 [`OperationError`](https://Nexus-rpc.github.io/sdk-typescript/classes/OperationError.html)：这是您应该在 Nexus Operation 中抛出的异常类型，以表明它根据自己的应用程序逻辑失败了，不应该重试。
+- `Nexus-rpc` 的 [`HandlerError`](https://Nexus-rpc.github.io/sdk-typescript/classes/HandlerError.html)：您可以在具有特定 [HandlerErrorType](https://Nexus-rpc.github.io/sdk-typescript/types/HandlerErrorType.html) 的 Nexus Operation 中抛出此异常类型。错误将根据类型标记为可重试或不可重试，遵循 [Nexus 规范](https://github.com/Nexus-rpc/api/blob/main/SPEC.md#predefined-handler-errors)。不可重试的处理程序错误类型为“BAD_REQUEST”、“UNAUTHENTICATED”、“UNAUTHORIZED”、“NOT_FOUND”、“NOT_IMPLMENTED”；可重试的类型有“RESOURCE_EXHAUSTED”、“INTERNAL”、“UNAVAILABLE”、“UPSTREAM_TIMEOUT”。
+- `@Temporalio/Nexus` 的 [`NexusOperationFailure`](https://typescript.Temporal.io/api/classes/common.NexusOperationFailure)：这是当 Nexus Operation 因任何原因失败时 Workflow 内部抛出的错误。使用异常上的“cause”属性来访问原因链。
+
+## 取消 Nexus Operation {#canceling-a-Nexus-操作}
+
+Nexus Operation 与“@Temporalio/Workflow”包提供的其他可取消 API 一样，在取消范围内执行。
+请求取消取消范围会导致请求取消该范围拥有的所有可取消操作。
+Workflow 本身定义了根取消范围。
+因此，请求取消 Workflow 会将取消请求传播到由该 Workflow 启动的所有可取消操作，包括 Nexus Operation。
+
+为了对特定 Nexus Operation 的取消提供更精细的控制，您可以显式创建新的取消范围，并从该范围内启动 Nexus Operation。
+可以在我们的 [Nexus 取消示例](https://github.com/Temporalio/samples-typescript/tree/main/Nexus-cancellation) 中找到演示这一点的示例。
+
+在 Nexus 中只能取消异步操作，因为取消是使用操作令牌发送的。
+Workflow 或支持操作的其他资源可以选择忽略取消请求。
+
+一旦调用者 Workflow 完成，调用者的 Nexus 机器将不会再尝试取消仍在运行的操作。
+在某些用例中让操作保持运行是可以的。
+为确保取消已交付，请等待所有待处理操作完成，然后再退出 Workflow。
+
+## 在 Temporal Cloud 中跨 Namespace 进行 Nexus 调用 {#Nexus-calls-across-Namespaces-Temporal-cloud}
+
+本节假设您已经熟悉如何将 Worker 连接到 Temporal Cloud。
+“tcld”CLI 用于创建 Namespace 和 Nexus 端点，mTLS 客户端证书将用于将调用方和处理程序 Worker 安全连接到其各自的 Temporal Cloud Namespace。
+
+### 安装最新的 `tcld` CLI 并生成证书
+
+要安装最新版本的“tcld”CLI，请运行以下命令（在 macOS 上）：
+
+```
+brew install temporalio/brew/tcld
+```
+
+如果您还没有证书，可以使用以下命令生成用于 mTLS Worker 身份验证的证书：
+
+```
+tcld gen ca --org $YOUR_ORG_NAME --validity-period 1y --ca-cert ca.pem --ca-key ca.key
+```
+
+这些证书的有效期为一年。
+
+### 创建调用者和处理程序 Namespaces
+
+在部署到 Temporal Cloud 之前，请确保为调用方和处理程序创建适当的 Namespace。
+如果您已经拥有这些 Namespace，则无需执行此操作。
+
+```
+tcld login
+
+tcld namespace create \
+	--namespace <your-caller-namespace> \
+	--cloud-provider aws \
+	--region us-west-2 \
+	--ca-certificate-file 'path/to/your/ca.pem' \
+	--retention-days 1
+
+tcld namespace create \
+	--namespace <your-target-namespace> \
+	--cloud-provider aws \
+	--region us-west-2 \
+	--ca-certificate-file 'path/to/your/ca.pem' \
+	--retention-days 1
+```
+
+或者，您可以通过 UI 创建 Namespace：[https://cloud.Temporal.io/Namespaces](https://cloud.Temporal.io/Namespaces)。
+
+### 创建一个 Nexus 端点以将请求从调用者路由到处理程序
+
+要创建 Nexus 端点，您必须具有开发人员帐户角色或更高级别，并且对“--target-Namespace”具有 NamespaceAdmin 权限。
+
+```
+tcld nexus endpoint create \
+  --name <my-nexus-endpoint-name> \
+  --target-task-queue my-handler-task-queue \
+  --target-namespace <my-target-namespace.account> \
+  --allow-namespace <my-caller-namespace.account> \
+  --description-file description.md
+```
+
+`--allow-Namespace` 用于构建可以使用 Nexus 端点的调用者 Namespace 的端点白名单，如运行时访问控制中所述。
+
+或者，您可以通过 UI 创建 Nexus 端点：[https://cloud.Temporal.io/Nexus](https://cloud.Temporal.io/Nexus)。
+
+## 可观察性
+
+### 网页用户界面
+
+同步 Nexus Operation 将在调用者 Workflow 中出现，如下所示，调用者的 Workflow 历史记录中仅包含“NexusOperationScheduled”和“NexusOperationCompleted”事件：
+
+<CaptionedImage src="/img/cloud/nexus/go-sdk-observability-sync.png" title="Observability Sync" />
+
+异步 Nexus Operation 将在调用方 Workflow 中出现，如下所示，在调用方的 Workflow 历史记录中包含“NexusOperationScheduled”、“NexusOperationStarted”和“NexusOperationCompleted”：
+
+<CaptionedImage src="/img/cloud/nexus/go-sdk-observability-async.png" title="Observability Async" />
+
+### Temporal CLI
+
+使用“Workflow描述”命令显示调用者Workflow中待处理的Nexus Operation以及处理程序Workflow上的任何附加回调：
+
+```
+temporal workflow describe -w <ID>
+```
+
+Nexus 事件包含在调用者的 Workflow 历史记录中：
+
+```
+temporal workflow show -w <ID>
+```
+
+对于**异步 Nexus Operation**，调用者历史记录中会报告以下内容：
+
+- `Nexus操作Scheduled`
+- `Nexus操作开始`
+- `Nexus操作已完成`
+
+对于**同步 Nexus Operation**，调用者历史记录中会报告以下内容：
+
+- `Nexus操作Scheduled`
+- `Nexus操作已完成`
+
+:::note
+
+同步操作的调用者历史记录中不会报告“NexusOperationStarted”。
+
+:::
+
+## XPROT026X 计划任务 {#XPROT026X-cron-jobs}
+
+- 阅读 [Temporal Nexus 功能](/evaluate/Nexus) 的高级说明并观看 [Nexus 主题演讲和演示](https://youtu.be/qqc2vsv1mrU?feature=shared&t=2082)。
+- 通过 [Nexus 深入探讨](https://www.youtube.com/watch?v=izR9dQ_eIe4) 和 [百科全书](/Nexus) 了解 Nexus 的工作原理。
+- 使用 [Temporal Cloud](/cloud/Nexus) 在生产中部署 Nexus 端点。

@@ -1,0 +1,458 @@
+---
+id: api-keys
+title: 管理 API 密钥
+sidebar_label: 管理 API 密钥
+description: Temporal Cloud supports secure programmatic access through API key authentication, ensuring user-level and RBAC-based
+  Temporal Cloud supports secure programmatic access through API key authentication, ensuring user-level and RBAC-based
+  authorization.
+slug: /cloud/api-keys
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - feedback
+  - get started
+  - getting started
+  - how to
+tags:
+  - Temporal Cloud
+  - API Keys
+  - API
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+Temporal Cloud API 密钥为 Temporal 用户提供行业标准的基于身份的身份验证
+[服务帐户](/cloud/service-accounts)。本文档介绍了Temporal Cloud的API关键特性：
+
+- [API 密钥概述](#overview)
+- [API 密钥最佳实践](#best-practices)
+- [全局管理员和帐户所有者 API 密钥管理](#manage-api-keys)
+- [用户API密钥管理](#user-api-keys)
+- [管理服务帐户的 API 密钥](#serviceaccount-api-keys)
+- [Namespace 身份验证的 API 密钥](#Namespace-身份验证)
+- [使用 API 密钥进行身份验证](#using-apikeys)
+- [API 密钥使用问题排查](#troubleshooting)
+- [API 密钥：常见问题](#faqs)
+
+## API 密钥概述 {#overview}
+
+每个 Temporal Cloud API 密钥都是链接到基于角色的访问控制 (RBAC) 设置的唯一身份，以确保安全
+和适当的访问。
+
+身份验证过程遵循以下路径：
+
+<CaptionedImage
+src =“/img/cloud/apikeys/apikeyrbac.png”
+  title="API 密钥（身份验证）→ 身份（用户或服务帐户）→ RBAC（授权）"
+/>
+
+## API 密钥最佳实践 {#best-practices}
+
+- **保密；确保安全**：将您的 API 密钥视为密码。不要在客户端代码中公开它，公共
+  存储库或其他易于访问的位置。
+- **定期轮换密钥**：定期更改您的 API 密钥以降低潜在泄漏的风险。
+- **为密钥 Updates 设计代码**：使用密钥管理实践无需硬编码即可检索 API 密钥
+  将它们添加到您的应用程序中。这使您可以重新启动 Worker 来刷新旋转密钥，而无需重新编译代码。
+- **监控 API 密钥使用情况**：定期检查使用指标和日志。如果发现任何情况，请立即撤销密钥
+  意外或未经授权的 Activity。
+- **使用密钥管理系统 (KMS)**：采用密钥管理系统最大限度地降低密钥泄漏的风险。
+
+### API 密钥用例
+
+API密钥用于以下场景：
+
+- _**云操作自动化**_：API 密钥可与 Temporal Cloud 操作工具配合使用，包括
+  [`tcld`](/cloud/tcld)、[云操作 API](/ops) 和
+  [Terraform 提供程序](/cloud/terraform-provider)。使用它们来管理您的 Temporal Cloud
+  帐户、Namespace、证书和用户身份。
+- _**Namespace 身份验证**_：API 密钥充当身份验证机制，用于通过以下方式执行和管理 Workflow：
+  SDK 和 Temporal CLI，提供基于 mTLS 的身份验证的替代方案。
+
+### API 密钥支持的工具
+
+使用 API 密钥进行身份验证：
+
+- [Temporal CLI](/cli)
+- [Temporal SDK](/develop)
+- [`tcld`](/cloud/tcld/index.mdx)
+- [云操作 API](/cloud/operation-api.mdx)
+- [Temporal 的 Terraform 提供商](/cloud/terraform-provider)
+
+### API 密钥权限
+
+API 密钥支持用户和服务帐户。以下是他们的权限差异：
+
+- 任何用户都可以使用云 UI 或“tcld”创建、删除和 Update 自己的 API 密钥。
+- 只有全局管理员和帐户所有者才能创建、删除所有类型的 API 密钥以及 Update 访问权限
+  服务帐户。
+- Namespace 管理员可以创建、删除和 Update 访问其 Namespace 范围服务帐户的 API 密钥
+  管理。
+
+### API 密钥先决条件
+
+在使用 API 密钥之前检查这些设置详细信息：
+
+您可以通过导航到 Temporal Cloud UI 中的 XPROT025X 页面 (`https://cloud.Temporal.io/XPROT025Xs/<XPROT025X ID>`) 来设置单个 XPROT025X 的容量模式。 
+要查看当前容量配置并更改容量模式，请导航至容量磁贴并单击*管理容量*。
+
+## 全局管理员和帐户所有者 API 密钥管理 {#manage-api-keys}
+
+在“管理容量”下，您可以在“按需”和“预配置容量”模式之间进行选择。 
+*按需*部分将显示您可用的按需容量。 
+*已配置*部分将显示所选 TRU 的可用限制以及每小时所需的包含操作。 [查看有关预配置容量定价的详细信息](/cloud/pricing#capacity-modes-pricing)。
+
+1. [登录](https://cloud.Temporal.io/) Temporal Cloud UI。
+1.进入【设置→API密钥】(https://cloud.Temporal.io/settings/api-keys)
+
+管理员可以使用 **API 密钥** 上的 **禁用创建 API 密钥** 按钮来禁用新 API 密钥的创建
+设置页面。现有的 API 密钥仍可用于正常验证 Temporal Cloud，直到它们
+已禁用、已删除或已过期。
+
+要禁用或删除单个 API 密钥，请使用 API 密钥表行中的垂直省略号菜单。
+
+要查找 API 密钥，您可以按 API 密钥状态和身份类型进行筛选（仅限全局管理员和帐户所有者）。
+
+:::caution DISABLED API KEYS
+
+删除或禁用密钥将消除其在 Temporal Cloud 中进行身份验证的能力。如果您删除或禁用 API 密钥
+由 Worker 用于运行 Workflow，这些 Worker 将无法连接到 Temporal，直到新的 API 密钥密钥
+已创建并配置。
+
+:::
+
+## 用户 API 密钥管理 {#user-api-keys}
+
+使用 Temporal Cloud UI 或“tcld”管理您的个人 API 密钥。这些部分向您展示如何生成、管理和
+删除用户的 API 密钥。
+
+### 生成 API 密钥
+
+帐户所有者和全局管理员 [角色](/cloud/manage-access/roles-and-permissions#account-level-roles) 还能够管理服务帐户的 API 密钥。
+
+:::caution
+
+- 生成后，复制并安全保存 API 密钥。出于安全目的，它只会显示一次。
+
+:::
+
+#### 使用 Temporal Cloud UI 生成 API 密钥
+
+[登录](https://cloud.Temporal.io/) 到 Temporal Cloud UI 并导航到您的
+[个人资料页面 → API 密钥](https://cloud.Temporal.io/profile/api-keys)。然后选择 **创建 API 密钥** 并提供
+以下信息：
+
+- **API 密钥名称**：密钥的简短可识别名称
+- **API 密钥描述**：密钥使用的详细描述
+- **到期日期**：API 密钥的结束日期
+
+选择“**生成 API 密钥**”完成。
+
+您还可以使用[服务帐户](/cloud/service-accounts)来表示机器身份。
+
+要生成 API 密钥，请登录您的帐户并发出以下命令：
+
+```command
+tcld login
+tcld apikey create \
+    --name <api-key-name> \
+    --description "<api-key-description>" \
+    --duration <api-key-duration>
+```
+
+Duration 指定 API 密钥过期的时间，例如：“30d”、“4d12h”等。
+
+### 启用或禁用 API 密钥
+
+您可以启用或禁用 API 密钥。禁用后，API 密钥无法通过 Temporal Cloud 进行身份验证。
+
+#### 使用 Temporal Cloud UI 管理 API 密钥状态
+
+请按照下列步骤操作：
+
+1. [登录](https://cloud.Temporal.io/) Temporal Cloud UI。
+1. 转到您的[个人资料页面 → API 密钥](https://cloud.Temporal.io/profile/api-keys)。
+1. 选择 API 密钥表行中的垂直省略号菜单。
+1. 选择**启用**或**禁用**。
+
+#### 使用 tcld 管理 API 密钥状态
+
+要管理 API 密钥，请登录您的帐户并使用以下命令之一来启用或禁用它：
+
+```command
+tcld login
+tcld apikey disable --id <api-key-id>
+tcld apikey enable --id <api-key-id>
+```
+
+### 删除 API 密钥
+
+删除 API 密钥会阻止其通过 Temporal Cloud 进行身份验证。
+
+:::caution
+
+## 高可用性功能 {#high-availability-features}
+
+:::
+
+创建 XPROT025X 后可以添加副本。
+
+1. 在 Web 浏览器中访问 XPROT009X XPROT025Xs。
+1. 导航至XPROT025X详细信息页面。
+1. 选择“添加副本”按钮。
+1. 选择副本的[区域](/cloud/regions)。
+
+1. [登录](https://cloud.Temporal.io/) Temporal Cloud UI。
+1. 导航至您的[个人资料页面 → API 密钥](https://cloud.Temporal.io/profile/api-keys)。
+1. 选择 API 密钥表行中的垂直省略号菜单。
+1. 选择**删除**。
+
+#### 使用 tcld 删除 API 密钥
+
+要删除 API 密钥，请登录您的帐户并发出以下命令：
+
+```command
+tcld login
+tcld apikey delete --id <api-key-id>
+```
+
+### 轮换 API 密钥
+
+Temporal API 密钥根据指定的过期时间自动过期。请按照以下步骤轮换 API 密钥：
+
+1. 创建一个新密钥。如果有帮助，您可以重复使用键名称。
+1. 在进行下一步之前，确保原始钥匙和新钥匙均能正常工作。
+1. 切换客户端加载新密钥并开始使用。
+1. 旧密钥不再使用后将其删除。
+
+## 管理服务帐户的 API 密钥 {#serviceaccount-api-keys}
+
+全局管理员和帐户所有者可以为其帐户中的_所有_服务帐户管理和生成 API 密钥。
+Namespace 管理员可以为其管理的 Namespace 范围的服务帐户管理和生成 API 密钥。
+
+这对于非管理员用户来说是不同的，他们管理和生成自己的 API 密钥。
+
+### 为服务帐户生成 API 密钥
+
+使用以下方法之一为服务帐户创建 API 密钥：
+
+:::caution
+
+- 生成后，复制并安全保存 API 密钥。出于安全目的，它只会显示一次。
+
+:::
+
+#### 使用 Temporal Cloud UI 生成 API 密钥
+
+[登录](https://cloud.Temporal.io/)到Temporal Cloud UI。全局管理员或帐户所有者可以访问
+[设置 → API 密钥](https://cloud.Temporal.io/settings/api-keys)。 Namespace 管理员可以访问
+[个人资料页面 → API 密钥](https://cloud.Temporal.io/profile/api-keys)。选择 **创建 API 密钥**，然后选择 **服务
+“为其创建 API 密钥”下拉列表中的帐户**。在“映射到身份”输入框中，选择一个服务帐户并
+提供以下信息：
+
+- **API 密钥名称**：密钥的简短可识别名称
+- **API 密钥描述**：密钥使用的详细描述
+- **到期日期**：API 密钥的结束日期
+
+选择“**生成 API 密钥**”完成。
+
+#### 使用 tcld 生成 API 密钥
+
+要为服务帐户创建 API 密钥，请使用带有“--service-account-id”标志的“tcld apikey create”：
+
+```
+tcld apikey create \
+    --name <api-key-name> \
+    --description "<api-key-description>" \
+    --duration <api-key-duration> \
+    --service-account-id <service-account-id>
+```
+
+### 启用或禁用 API 密钥
+
+全局管理员和帐户所有者可以使用 Temporal 管理其帐户中任何用户的 API 密钥访问
+云 UI 或“tcld”。
+
+#### 使用 Temporal Cloud UI 管理密钥
+
+请按照下列步骤操作：
+
+1. [登录](https://cloud.Temporal.io/) Temporal Cloud UI。
+1. 全局管理员或帐户所有者可以进入[设置→API密钥](https://cloud.Temporal.io/settings/api-keys)。
+   Namespace 管理员可以前往[个人资料页面 → API 密钥](https://cloud.Temporal.io/profile/api-keys)。
+1. 找到API密钥。使用表行中的垂直省略号菜单并选择禁用/启用选项来执行
+   行动。更改状态后可能会有延迟。成功后，Updated API 密钥状态将显示在
+   行。
+
+#### 使用 tcld 管理密钥
+
+使用“tcld apikey禁用”或“tcld apikey启用”命令禁用或启用API密钥：
+
+```
+tcld login
+tcld apikey disable --id <api-key-id>
+tcld apikey enable --id <api-key-id>
+```
+
+此命令对于用户和服务帐户是相同的。
+
+### 删除服务帐户的 API 密钥
+
+全局管理员和帐户所有者可以使用以下命令删除其帐户中任何用户或服务帐户的 API 密钥
+Temporal Cloud UI 或“tcld”。删除密钥将删除其使用 Temporal Cloud 进行身份验证的能力。如果您删除一个
+Worker 使用 API 密钥来运行 Workflow，否则 Worker 将无法连接到 Temporal Server，除非您旋转
+使用新的 API 密钥。
+
+#### 使用 Temporal Cloud UI 删除服务帐户 API 密钥
+
+请按照下列步骤操作：
+
+1. 前往[设置 → API 密钥](https://cloud.Temporal.io/settings/api-keys)。
+1. 找到 API 密钥。使用表行中的垂直省略号菜单并选择删除选项。可能有一个
+   删除 API 密钥后的延迟。
+1. 成功后，Updated API 密钥状态将反映在该行中。
+
+#### 使用 tcld 删除服务帐户 API 密钥
+
+使用“tcld apikey delete”命令删除 API 密钥。对于用户或用户来说，删除 API 密钥的过程是相同的
+服务帐户。
+
+```
+tcld login
+tcld apikey delete --id <api-key-id>
+```
+
+### 轮换服务帐户 API 密钥
+
+Temporal API 密钥根据指定的过期时间自动过期。请按照以下步骤轮换 API 密钥：
+
+1. 创建一个新密钥。如果有帮助，您可以重复使用键名称。
+1. 在进行下一步之前，确保原始钥匙和新钥匙均能正常工作。
+1. 切换客户端加载新密钥并开始使用。
+1. 旧密钥不再使用后将其删除。
+
+:::tip
+
+服务帐户可以轮换自己的 API 密钥，无论其配置的权限如何。要使用此功能，必须
+您的服务帐户在当前密钥之前使用 [Cloud Ops API](/ops) 或 [`tcld`](/cloud/tcld) 创建新的 API 密钥
+一个过期了。如果没有必要的权限，服务帐户无法删除自己的 API 密钥，这有助于保持
+Workflow 访问安全。
+
+:::
+
+## Namespace 身份验证的 API 密钥 {#Namespace-authentication}
+
+通过选择“允许 API”，创建具有 API 密钥身份验证的 Namespace，作为基于 mTLS 的身份验证的替代方案
+设置期间“密钥验证”。
+
+{/* 如何在 XPROT009X 中访问 Namespace */}
+
+有关端点选项的更多信息，请参阅[访问 Namespaces](/cloud/Namespaces#access-Namespaces)。
+
+## 使用 API 密钥进行身份验证 {#using-apikeys}
+
+使用 API 密钥对以下客户端进行 Temporal Cloud 身份验证：
+
+- [Temporal CLI](/cli)
+- [SDK](/开发)
+- [Temporal Cloud CLI`tcld`](/cloud/tcld/index.mdx)
+- [云操作 API](/cloud/operation-api.mdx)
+- [Temporal 的 Terraform Provider](/cloud/terraform-provider)
+
+### Temporal CLI
+
+要将 API 密钥与 Temporal CLI 一起使用，请使用“--api-key”标志传递它，或者在中设置环境变量
+你的外壳（推荐）。 CLI 会自动从 shell 中获取“Temporal_API_KEY”环境变量。
+
+除了 API 密钥之外，还需要以下客户端选项：
+
+- `--address`：从 Namespace UI 的 gRPC 端点框中提供 Namespace 的 gRPC 端点。
+  - 对于 API 密钥连接，请使用格式“<region>.<cloud_provider>.api.Temporal.io:7233”。
+  - 您可以使用环境变量设置地址。
+- `--Namespace`：提供 UI 中 Namespace 页面顶部的“Namespace.accountId”。
+  - 使用格式“<Namespace_id>.<account_id>”。
+  - 这可以使用环境变量进行设置。
+
+例如，要使用 API 密钥的环境变量从 CLI 连接到 Temporal Cloud：
+
+```bash
+export TEMPORAL_API_KEY=<key-secret>
+temporal workflow list \
+    --address <endpoint> \
+    --namespace <namespace_id>.<account_id>
+```
+
+:::tip ENVIRONMENT VARIABLES
+
+不要将使用 shell 设置的环境变量与 Temporal env 选项混淆。
+
+:::
+
+### SDK
+
+要将 API 密钥与 Temporal SDK 结合使用，请参阅每个 SDK 部分中的说明。
+
+[如何使用 API 密钥与 Go SDK 连接到 Temporal Cloud](/develop/go/client/Temporal-client#connect-to-Temporal-cloud)
+
+[如何使用 API 密钥与 Java SDK 连接到 Temporal Cloud](/develop/java/client/Temporal-client#connect-to-Temporal-cloud)
+
+[如何使用 API 密钥与 Python SDK 连接到 Temporal Cloud](/develop/python/client/Temporal-client#connect-to-Temporal-cloud)
+
+[如何使用 API 密钥与 TypeScript SDK 连接到 Temporal Cloud](/develop/typescript/client/Temporal-client#connect-to-Temporal-cloud)
+
+[如何使用 API 密钥与 .NET SDK 连接到 Temporal Cloud](/develop/dotnet/client/Temporal-client#connect-to-Temporal-cloud)
+
+### tcld
+
+要将 API 密钥与“tcld”一起使用，请选择以下方法之一：
+
+- 使用 `--api-key` 标志。
+- 在 shell 中设置“Temporal_API_KEY”环境变量。
+
+:::tip ENVIRONMENT VARIABLES
+
+不要将使用 shell 设置的环境变量与 Temporal env 选项混淆。
+
+:::
+
+### 云运营 API
+
+要将 API 密钥与 [Cloud Ops API](/ops) 结合使用，请在 API 客户端中安全地传递 API 密钥。对于一个完整的例子，
+看到
+[Go 中的云示例](https://github.com/Temporalio/cloud-samples-go/blob/1dd4254b6ed1937e361005c0144410e72b8a5542/client/api/apikey.go)。
+
+### Terraform 提供者
+
+要将 API 密钥与 [Temporal Terraform Provider](/cloud/terraform-provider) 一起使用，请传递 API
+key 作为提供者参数。
+
+## 排查 API 密钥使用问题 {#troubleshooting}
+
+**无效的 API 密钥错误**：检查您是否正确复制了密钥，并且该密钥尚未被撤销或过期。
+
+## API 密钥：常见问题 {#faqs}
+
+**问：我可以为同一帐户颁发和使用多个 API 密钥吗？**
+
+答：是的，您可以为不同的服务或团队成员生成多个 API 密钥。
+
+**问：一次可以发出多少个 API 密钥？**
+
+答：每个用户最多 10 个未过期密钥，每个服务帐户最多 20 个未过期密钥。
+
+**问：API 密钥会过期吗？**
+
+答：是的，API 密钥会根据指定的到期日期到期。 Temporal 建议定期轮换 API 密钥。
+
+**问：API 密钥允许的最长过期时间是多少？**
+
+答：API 密钥的最长过期时间为 2 年。
+
+**问：如果我放错位置或丢失 API 不记名令牌/密钥会怎样？**
+
+答：出于安全原因，完整密钥在创建时仅显示一次。如果丢失，请生成一个新的。
+
+**问：Namespace 页面上的“生成 API 密钥”按钮是什么？**
+
+答：Namespace 页面上的“生成 API 密钥”按钮会生成具有给定权限的“管理员”权限的 API 密钥
+Namespace 的最大有效期为 2 年。有关更多详细信息，请参阅
+[Namespace 范围的服务帐户](/cloud/service-accounts#scoped)。

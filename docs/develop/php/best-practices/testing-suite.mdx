@@ -1,8 +1,8 @@
 ---
 id: testing-suite
-title: Testing - PHP SDK
-sidebar_label: Testing
-description: The Temporal Application Testing section explains frameworks for Workflow and integration testing, including end-to-end, integration, unit tests, and how to mock Activities in a PHP environment.
+title: "测试 - PHP SDK"
+sidebar_label: "测试"
+description: "Temporal 应用程序测试部分介绍了 Workflow 和集成测试的框架，包括端到端、集成、单元测试以及如何在 PHP 环境中模拟活动。"
 toc_max_heading_level: 4
 keywords:
   - php
@@ -13,37 +13,38 @@ tags:
   - Temporal SDKs
 ---
 
-The Testing section of the Temporal Application development guide describes the frameworks that facilitate Workflow and integration testing.
+Temporal 应用程序开发指南的测试部分描述了促进 Workflow 和集成测试的框架。
 
-In the context of Temporal, you can create these types of automated tests:
+在 Temporal 的上下文中，您可以创建以下类型的自动化测试：
 
-- **End-to-end:** Running a Temporal Server and Worker with all its Workflows and Activities; starting and interacting with Workflows from a Client.
-- **Integration:** Anything between end-to-end and unit testing.
-  - Running Activities with mocked Context and other SDK imports (and usually network requests).
-  - Running Workers with mock Activities, and using a Client to start Workflows.
-  - Running Workflows with mocked SDK imports.
-- **Unit:** Running a piece of Workflow or Activity code (a function or method) and mocking any code it calls.
+- **端到端：** 运行 Temporal Server 和 Worker 及其所有 Workflow 和活动；从客户端启动 Workflow 并与之交互。
+- **集成：** 端到端和单元测试之间的任何内容。
+  - 使用模拟上下文和其他 SDK 导入（通常是网络请求）运行活动。
+  - 使用模拟活动运行 Worker，并使用客户端启动 Workflow。
+  - 使用模拟 SDK 导入运行 Workflow。
+- **单元：** 运行一段 Workflow 或 Activity 代码（函数或方法）并模拟它调用的任何代码。
 
-We generally recommend writing the majority of your tests as integration tests.
+我们通常建议将大部分测试编写为集成测试。
 
-Because the test server supports skipping time, use the test server for both end-to-end and integration tests with Workers.
+由于测试服务器支持跳过时间，因此请使用测试服务器与 Worker 进行端到端测试和集成测试。
 
-## Testing Activities {#test-activities}
+## 测试活动 {#test-activities}
 
-An Activity can be tested with a mock Activity environment, which provides a way to mock the Activity context, listen to Heartbeats, and cancel the Activity.
-This behavior allows you to test the Activity in isolation by calling it directly, without needing to create a Worker to run the Activity.
+Activity 可以使用模拟 Activity 环境进行测试，该环境提供了一种模拟 Activity 上下文、监听心跳和取消 Activity 的方法。
+此行为允许您通过直接调用 Activity 来单独测试 Activity，而无需创建 Worker 来运行 Activity。
 
-## Testing Workflows {#test-workflows}
+<a id="test-workflows"></a>
+## 测试 Workflows {#test-workflows}
 
-### How to mock Activities {#mock-activities}
+### 如何模拟活动 {#mock-activities}
 
-Mock the Activity invocation when unit testing your Workflows.
+在对 Workflow 进行单元测试时模拟 Activity 调用。
 
-When integration testing Workflows with a Worker, you can mock Activities by providing mock Activity implementations to the Worker.
+当使用 Worker 集成测试 Workflow 时，您可以通过向 Worker 提供模拟 Activity 实现来模拟活动。
 
-**RoadRunner config**
+**RoadRunner 配置**
 
-To mock an Activity in PHP, use [RoadRunner Key-Value storage](https://github.com/spiral/roadrunner-kv) and add the following lines to your `tests/.rr.test.yaml` file.
+要在 PHP 中模拟 Activity，请使用 [RoadRunner 键值存储](https://github.com/spiral/roadrunner-kv) 并将以下行添加到 `tests/.rr.test.yaml` 文件中。
 
 ```yaml
 # tests/.rr.test.yaml
@@ -54,8 +55,8 @@ kv:
       interval: 10
 ```
 
-If you want to be able to mock Activities, use `WorkerFactory` from the `Temporal\Testing` Namespace
-in your PHP Worker:
+如果您希望能够模拟活动，请使用 `Temporal\Testing` Namespace 中的 `WorkerFactory`
+在你的 PHP Worker 中：
 
 ```php
 // worker.test.php
@@ -69,9 +70,9 @@ $worker->registerActivity(MyActivity::class);
 $factory->run();
 ```
 
-Then, in your tests to mock an Activity, use the`ActivityMocker` class.
+然后，在模拟 Activity 的测试中，使用 `ActivityMocker` 类。
 
-Assume we have the following Activity:
+假设我们有以下 Activity：
 
 ```php
 #[ActivityInterface(prefix: "SimpleActivity.")]
@@ -81,7 +82,7 @@ interface SimpleActivityInterface
     public function doSomething(string $input): string;
 ```
 
-To mock it in the test, you can do this:
+要在测试中模拟它，您可以这样做：
 
 ```php
 final class SimpleWorkflowTestCase extends TestCase
@@ -113,36 +114,36 @@ final class SimpleWorkflowTestCase extends TestCase
 }
 ```
 
-In the preceding test case, we do the following:
+在前面的测试用例中，我们执行以下操作：
 
-1. Instantiate `ActivityMocker` in the `setUp()` method of the test.
-2. Clear the cache after each test in `tearDown()`.
-3. Mock an Activity call to return a string `world`.
+1. 在测试的`setUp()`方法中实例化`ActivityMocker`。
+2. 在`tearDown()`中每次测试后清除缓存。
+3. 模拟 Activity 调用以返回字符串 `world`。
 
-To mock a failure, use the `expectFailure()` method:
+要模拟失败，请使用 `expectFailure()` 方法：
 
 ```php
 $this->activityMocks->expectFailure('SimpleActivity.echo', new \LogicException('something went wrong'));
 ```
 
-### How to skip time {#skip-time}
+### 如何跳过时间 {#skip-time}
 
-Some long-running Workflows can persist for months or even years.
-Implementing the test framework allows your Workflow code to skip time and complete your tests in seconds rather than the Workflow's specified amount.
+一些长期运行的 Workflow 可以持续数月甚至数年。
+实施测试框架允许您的 Workflow 代码跳过时间并在几秒钟内完成测试，而不是 Workflow 指定的数量。
 
-For example, if you have a Workflow sleep for a day, or have an Activity failure with a long retry interval, you don't need to wait the entire length of the sleep period to test whether the sleep function works.
-Instead, test the logic that happens after the sleep by skipping forward in time and complete your tests in a timely manner.
+例如，如果您的 Workflow 睡眠了一天，或者 Activity 发生了重试间隔较长的故障，则无需等待整个睡眠周期的长度来测试睡眠功能是否起作用。
+相反，通过及时向前跳跃并及时完成测试来测试睡眠后发生的逻辑。
 
-The test framework included in most SDKs is an in-memory implementation of Temporal Server that supports skipping time.
-Time is a global property of an instance of `TestWorkflowEnvironment`: skipping time (either automatically or manually) applies to all currently running tests.
-If you need different time behaviors for different tests, run your tests in a series or with separate instances of the test server.
-For example, you could run all tests with automatic time skipping in parallel, and then all tests with manual time skipping in series, and then all tests without time skipping in parallel.
+大多数 SDK 中包含的测试框架是 Temporal Server 的内存中实现，支持跳过时间。
+时间是 `TestWorkflowEnvironment` 实例的全局属性：跳过时间（自动或手动）适用于所有当前正在运行的测试。
+如果不同的测试需要不同的时间行为，请按系列运行测试或使用测试服务器的单独实例运行测试。
+例如，您可以并行运行所有具有自动时间跳过功能的测试，然后串行运行所有具有手动时间跳过功能的测试，然后并行运行所有不带时间跳过功能的测试。
 
-#### Set up time skipping {#setting-up}
+#### 设置时间跳过 {#setting-up}
 
-Set up the time-skipping test framework in the SDK of your choice.
+在您选择的 SDK 中设置跳时测试框架。
 
-1. In the `tests` folder, create `bootstrap.php` with the following contents:
+1. 在 `tests` 文件夹中，创建包含以下内容的 `bootstrap.php`：
 
 ```php
 declare(strict_types=1);
@@ -156,7 +157,7 @@ $environment->start();
 register_shutdown_function(fn () => $environment->stop());
 ```
 
-If you don't want to run the test server with all of your tests, you can add a condition to start a test only if the `RUN_TEMPORAL_TEST_SERVER` environment variable is present:
+如果您不想在所有测试中运行测试服务器，则可以添加一个条件以仅在 `RUN_Temporal_TEST_SERVER` 环境变量存在时启动测试：
 
 ```php
 if (getenv('RUN_TEMPORAL_TEST_SERVER') !== false) {
@@ -166,7 +167,7 @@ if (getenv('RUN_TEMPORAL_TEST_SERVER') !== false) {
 }
 ```
 
-2. Add `bootstrap.php` and the `TEMPORAL_ADDRESS` environment variable to `phpunit.xml`:
+2. 将 `bootstrap.php` 和 `Temporal_ADDRESS` 环境变量添加到 `phpunit.xml`：
 
 ```xml
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -179,33 +180,33 @@ if (getenv('RUN_TEMPORAL_TEST_SERVER') !== false) {
 </phpunit>
 ```
 
-3. Add the test server executable to `.gitignore`:
+3. 将测试服务器可执行文件添加到 `.gitignore`：
 
 ```gitignore
 temporal-test-server
 ```
 
-## How to Replay a Workflow Execution {#replay}
+## 如何重播 Workflow Execution {#replay}
 
-Replay recreates the exact state of a Workflow Execution.
-You can replay a Workflow from the beginning of its Event History.
+重播重新创建了 Workflow Execution 的确切状态。
+您可以从 Event History 的开头重播 Workflow。
 
-Replay succeeds only if the [Workflow Definition](/workflow-definition) is compatible with the provided history from a deterministic point of view.
+仅当 [Workflow Definition](/workflow-definition) 从确定性的角度来看与提供的历史记录兼容时，重播才会成功。
 
-When you test changes to your Workflow Definitions, we recommend doing the following as part of your CI checks:
+当您测试对 Workflow Definition 的更改时，我们建议执行以下操作作为 CI 检查的一部分：
 
-1. Determine which Workflow Types or Task Queues (or both) will be targeted by the Worker code under test.
-2. Download the Event Histories of a representative set of recent open and closed Workflows from each Task Queue, either programmatically using the SDK client or via the Temporal CLI.
-3. Run the Event Histories through replay.
-4. Fail CI if any error is encountered during replay.
+1. 确定被测 Worker 代码将针对哪些 Workflow 类型或 Task Queue（或两者）。
+2. 使用 SDK 客户端以编程方式或通过 Temporal CLI 从每个 Task Queue 下载一组代表性的最近打开和关闭的 Workflow 的事件历史记录。
+3. 通过重播运行事件历史记录。
+4. 如果重播期间遇到任何错误，则 CI 失败。
 
-The following are examples of fetching and replaying Event Histories:
+以下是获取和重播事件历史记录的示例：
 
-To replay Workflow Executions, use the `\Temporal\Testing\Replay\WorkflowReplayer` class.
+要重播 Workflow Execution，请使用 `\Temporal\Testing\Replay\WorkflowReplayer` 类。
 
-In the following example, Event Histories are fetching from the Temporal, and then replayed.
-If the Workflow is non-deterministic, a `NonDeterministicWorkflowException` will be thrown.
-Note that this requires [Advanced Visibility](/visibility#advanced-visibility) to be enabled.
+在以下示例中，事件历史记录从 Temporal 获取，然后重播。
+如果 Workflow 是不确定的，则将抛出 `NonDeterministicWorkflowException`。
+请注意，这需要启用 [高级Visibility](/visibility#advanced-visibility)。
 
 ```php
 /**
@@ -232,7 +233,7 @@ foreach ($executions as $executionInfo) {
 }
 ```
 
-In the next example, an Event History is loaded from a JSON file, and the maximum number of replayed Events is limited to 42.
+在下一个示例中，从 JSON 文件加载 Event History，重播事件的最大数量限制为 42。
 
 ```php
 $replayer->replayFromJSON(
@@ -242,7 +243,7 @@ $replayer->replayFromJSON(
 );
 ```
 
-You can download a Workflow History using PHP, and then replay it from a memorized History object:
+您可以使用 PHP 下载 Workflow 历史记录，然后从记忆的历史对象中重播它：
 
 ```php
 $history = $this->workflowClient->getWorkflowHistory(

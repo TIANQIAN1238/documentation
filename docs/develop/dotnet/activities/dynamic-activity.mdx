@@ -1,8 +1,8 @@
 ---
 id: dynamic-activity
-title: Dynamic Activity - .NET SDK
-sidebar_label: Dynamic Activity
-description: This section explains Dynamic Activities with the .NET SDK
+title: "动态 Activity - .NET SDK"
+sidebar_label: "动态Activity"
+description: "本节介绍 .NET SDK 的动态活动"
 toc_max_heading_level: 4
 keywords:
   - .NET SDK
@@ -11,17 +11,18 @@ tags:
   - Temporal SDKs
 ---
 
-## Set a Dynamic Activity {#set-a-dynamic-activity}
+<a id="set-a-dynamic-activity"></a>
+## 设置动态 Activity {#set-a-dynamic-activity}
 
-**How to set a Dynamic Activity using the Temporal .NET SDK**
+**如何使用 Temporal .NET SDK 设置动态 Activity**
 
-A Dynamic Activity in Temporal is an Activity that is invoked dynamically at runtime if no other Activity with the same name is registered.
-An Activity can be made dynamic by setting `Dynamic` as `true` on the `[Activity]` attribute.
-You must register the Activity with the Worker before it can be invoked.
-Only one Dynamic Activity can be present on a Worker.
+Temporal 中的动态 Activity 是在没有注册其他同名 Activity 的情况下在运行时动态调用的 Activity。
+通过在 `[Activity]` 属性上将 `Dynamic` 设置为 `true` 可以使 Activity 成为动态的。
+您必须先向 Worker 注册 Activity，然后才能调用它。
+Worker 上只能存在一个 Dynamic Activity。
 
-The Activity Definition must then accept a single argument of type `Temporalio.Converters.IRawValue[]`.
-The [PayloadConverter](https://dotnet.temporal.io/api/Temporalio.Activities.ActivityExecutionContext.html#Temporalio_Activities_ActivityExecutionContext_PayloadConverter) property on the `ActivityExecutionContext` is used to convert an `IRawValue` object to the desired type using extension methods in the `Temporalio.Converters` namespace.
+然后，Activity Definition 必须接受 `Temporalio.Converters.IRawValue[]` 类型的单个参数。
+`ActivityExecutionContext` 上的 [负载转换器](https://dotnet.temporal.io/api/temporalio.Activities.ActivityExecutionContext.html#Temporalio_Activities_ActivityExecutionContext_PayloadConverter) 属性用于使用 `Temporalio.Converters` Namespace 中的扩展方法将 `IRawValue` 对象转换为所需类型。
 
 ```csharp
 public class MyActivities

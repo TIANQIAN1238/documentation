@@ -1,8 +1,8 @@
 ---
 id: billing-api
-title: Cloud Billing API
-sidebar_label: Cloud Billing API
-description: The Temporal Cloud Billing API provides namespace-level cost attribution through on-demand billing reports.
+title: "云计费API"
+sidebar_label: "云计费API"
+description: "Temporal Cloud 计费 API 通过按需计费报告提供 Namespace 级别的成本归因。"
 slug: /cloud/billing-api
 toc_max_heading_level: 4
 keywords:
@@ -13,118 +13,127 @@ tags:
   - Temporal Cloud
 ---
 
-The Temporal Cloud Billing API provides Namespace-level cost attribution through on-demand billing reports. 
-Reports are delivered in CSV format and can be accessed via API or downloaded directly for use in FinOps tooling and cost management platforms.  
+Temporal Cloud 计费 API 通过按需计费报告提供 Namespace 级别的成本归因。 
+报告以 CSV 格式提供，可以通过 API 访问或直接下载以在 FinOps 工具和成本管理平台中使用。
 
-This API is part of the [Cloud Operations API](/ops).
+该 API 是 [云操作API](/ops) 的一部分。
 
 :::tip Support, stability, and dependency info
 
-The Temporal Cloud Billing API is in [Pre-release](/evaluate/development-production-features/release-stages#pre-release).
+Temporal Cloud 计费 API 位于 [预发布](/evaluate/development-production-features/release-stages#pre-release) 中。
 
 :::
 
-The Billing API allows you to:
+计费 API 允许您：
 
-- Generate billing reports for specified invoice months  
-- Retrieve report status and metadata  
-- Download CSV reports that can be fed into internal analytics tooling or cloud cost management platforms
+- 生成指定发票月份的账单报告  
+- 检索报告状态和元数据  
+- 下载可输入内部分析工具或云成本管理平台的 CSV 报告
 
-The Billing Report contains:
+帐单报告包含：
 
-- Accurate Namespace-level cost attribution  
-- Hourly granularity  
-- A [FOCUS](https://focus.finops.org/)-friendly data format
+- 准确的Namespace级成本归属  
+- 每小时粒度  
+- [重点](https://focus.finops.org/) 友好的数据格式
 
-For complete request and response schemas, refer to the Schema below.
+有关完整的请求和响应架构，请参阅下面的架构。
 
-Billing report generation is **asynchronous**. You initiate report creation, then poll for completion.
+计费报告生成是**异步**。您启动报告创建，然后轮询是否完成。
 
-## Report data limitations
+<a id="report-data-limitations"></a>
+## 报告数据限制 {#report-data-limitations}
 
-For pre-release, reports can be generated with hourly granularity only, for the current billing month, and the previous billing month.
+对于预发布，只能为当前帐单月份和上一个帐单月份生成每小时粒度的报告。
 
-## Allowed date ranges
+<a id="allowed-date-ranges"></a>
+## 允许的日期范围 {#allowed-date-ranges}
 
-Date ranges must use billing-month boundaries (MM/YYYY). 
-Requests may include the current billing month. 
-The data in finalized reports includes usage up to `current_time` \- 24 hours (rounded up to nearest hour).
+日期范围必须使用帐单月份边界 (MM/YYYY)。 
+请求可能包括当前的帐单月份。 
+最终报告中的数据包括最多 `current_time` \- 24 小时的使用情况（四舍五入到最近的小时）。
 
-## Rate limits and concurrency
+<a id="rate-limits-and-concurrency"></a>
+## 速率限制和并发数 {#rate-limits-and-concurrency}
 
-Rate limits apply to API usage. 
+速率限制适用于 API 使用。
 
-### Per-account concurrency
+<a id="per-account-concurrency"></a>
+### 每账户并发数 {#per-account-concurrency}
 
-Within a single account:
+在单个帐户内：
 
-- Only one billing report per account is generated at a time  
-- Additional requests are accepted but queued  
+- 每个帐户一次仅生成一份账单报告  
+- 其他请求已接受但已排队
 
-### Report Generation Latency
+<a id="report-generation-latency"></a>
+### 报告生成延迟 {#report-generation-latency}
 
-Report generation time varies and is not guaranteed. Factors that affect it include the size of the requested date range and overall platform load.
+报告生成时间各不相同，并且无法保证。影响它的因素包括请求的日期范围的大小和整体平台负载。
 
-## Best practices
+<a id="best-practices"></a>
+## 最佳实践 {#best-practices}
 
-Provide an idempotency key (`async_operation_id`) when retrying requests.  
+重试请求时提供幂等密钥 (`async_operation_id`)。
 
-Poll `GetBillingReport` using exponential backoff.
+使用指数退避轮询 `GetBillingReport`。
 
-Download reports immediately after generation (URLs expire).
+生成后立即下载报告（URL 过期）。
 
-Avoid frequent generation of large overlapping ranges in the current billing period.
+避免在当前计费周期内频繁生成大的重叠范围。
 
-## Billing report schema
+<a id="billing-report-schema"></a>
+## 计费报告架构 {#billing-report-schema}
 
-Billing reports are delivered in CSV format.
+账单报告以 CSV 格式提供。
 
-Each row represents a charge record.
+每行代表一条收费记录。
 
-| Column Name | Description | Example |
+| 列名 | 描述 | 例子 |
 | ----- | ----- | ----- |
-| BillingAccountID | Temporal Cloud account ID | a2dd6 |
-| BillingAccountName | Temporal Cloud account name | temporal |
-| BillingCurrency | The currency an account is billed in | USD (cents) |
-| BillingPeriodEnd | The exclusive end bound of a billing period | 2024-02-01T00:00:00Z |
-| BillingPeriodStart | The inclusive start bound of a billing period | 2024-01-01T00:00:00Z |
-| ChargeCategory | The highest level classification of a charge based on how it is billed | Usage |
-| ChargeDescription | A self contained summary of the charge’s purpose | Actions \- Tier 1 |
-| ChargeFrequency | Indicates how often a charge will occur | Usage-Based |
-| ChargePeriodEnd | Time period end from when this charge took place, correlates to data granularity | 2025-10-01T01:00:00.000Z |
-| ChargePeriodStart | Time period start from when this charge took place, correlates to data granularity | 2025-10-01T00:00:00.000Z |
-| ContractedCost | Cost calculated by multiplying ContractedUnitPrice and PricingQuantity | 100.00 |
-| ContractedUnitPrice | The agreed-upon unit price for a single pricing unit of the associated SKU. Inclusive of negotiated discounts | 10.00 |
-| InvoiceID | The ID of the invoice for this billing period | in\_XXXXXXXXXXXXXXXXXXXX |
-| InvoiceIssuer | The entity responsible for issuing payable invoices | stripe |
-| PricingQuantity | The volume of a given SKU used or purchased | 10.00 |
-| PricingUnit | The measurement unit used for PricingQuantity | 1 Million Actions |
-| Provider | The provider of purchased resources or services | Temporal Technologies |
-| Publisher | The publisher of purchased resources or services | Temporal Technologies |
-| ResourceID | Namespace name \+ Temporal Cloud account ID | production.a2dd6 |
-| ResourceName | Namespace name \+ Temporal Cloud account ID | production.a2dd6 |
-| ResourceType | The type of resource the charge applies to | Namespace |
-| ServiceCategory | The highest level classification of a service based on the core function of the service | Temporal Cloud |
-| ServiceName | An offering that can be purchased from a provider | Temporal Cloud |
-| ServiceSubcategory | A secondary classification of the service category for a service based on its core function | Actions |
-| SKUID | A unique identifier that represents a specific SKU | essentials-actions |
-| SKUMeter | The functionality being metered or measured by a particular SKU in a charge | Actions |
-| Tags | Provider and customer defined tags associated with resources | `{"$tmprl_project":["project-id"],"namespace-tag-key":["namespace-tag-value"]}` |
+| 计费帐户ID | Temporal Cloud 帐户 ID | a2dd6 |
+| 帐单帐户名称 | Temporal Cloud 账户名 | Temporal |
+| 帐单货币 | 帐户计费所用的货币 | 美元（分） |
+| 计费周期结束 | 计费周期的唯一结束界限 | 2024-02-01T00:00:00Z |
+| 计费周期开始 | 计费周期的包含起始界限 | 2024-01-01T00:00:00Z |
+| 收费类别 | 根据计费方式对费用进行最高级别的分类 | 用法 |
+| 收费说明 | 费用目的的独立摘要 | 行动 \- 第 1 层 |
+| 充电频率 | 指示收费的频率 | 基于使用情况 |
+| 收费期结束 | 从该收费发生时起的时间段结束，与数据粒度相关 | 2025-10-01T01:00:00.000Z |
+| 收费期开始 | 时间段从发生该费用时开始，与数据粒度相关 | 2025-10-01T00:00:00.000Z |
+| 合同成本 | 通过将 ContractedUnitPrice 和 PricingQuantity 相乘计算得出的成本 | 100.00 |
+| 合同单价 | 相关 SKU 的单个定价单位的商定单价。包括协商折扣 | 10:00 |
+| 发票编号 | 此计费周期的发票 ID | 在\_XXXXXXXXXXXXXXXXXXXX |
+| 发票开具人 | 负责开具应付发票的实体 | 条纹 |
+| 定价数量 | 使用或购买的给定 SKU 的数量 | 10:00 |
+| 定价单位 | 用于 PricingQuantity 的计量单位 | 100 万次操作 |
+| 提供者 | 购买资源或服务的提供者 | Temporal 技术 |
+| 出版商 | 购买资源或服务的发布者 | Temporal 技术 |
+| 资源ID | Namespace 姓名 \+ Temporal Cloud 账户 ID | 生产.a2dd6 |
+| 资源名称 | Namespace 姓名 \+ Temporal Cloud 账户 ID | 生产.a2dd6 |
+| 资源类型 | 收费适用的资源类型 | Namespace |
+| 服务类别 | 根据服务的核心功能对服务进行最高级别的分类 | Temporal Cloud |
+| 服务名称 | 可以从提供商处购买的产品 | Temporal Cloud |
+| 服务子类别 | 根据服务的核心功能对服务类别进行二次分类 | 行动 |
+| SKUID | 代表特定 SKU 的唯一标识符 | 要点-行动 |
+| SKU计 | 由特定 SKU 在收费中计量或测量的功能 | 行动 |
+| 标签 | 提供商和客户定义的与资源关联的标签 | `{"$tmprl_project":["project-id"],"Namespace-tag-key":["Namespace-tag-value"]}` |
 
-## Generate a report
+<a id="generate-a-report"></a>
+## 生成报告 {#generate-a-report}
 
-To generate a report, follow these steps:
+要生成报告，请执行以下步骤：
 
-1. Create a billing report using `CreateBillingReport`. The response includes a `billing_report_id` and `async_operation_id`.
-1. Poll `GetBillingReport` using the `billing_report_id`  
-1. When the report state becomes `BILLING_REPORT_STATE_GENERATED`, retrieve the download URL  
-1. Download the report before the URL expires
+1. 使用 `CreateBillingReport` 创建账单报告。响应包括 `billing_report_id` 和 `async_operation_id`。
+1. 使用 `billing_report_id` 轮询 `GetBillingReport`  
+1、当报表状态变为`BILLING_REPORT_STATE_GENERATED`时，获取下载地址  
+1. 在URL过期之前下载报告
 
-### Key identifiers
+<a id="key-identifiers"></a>
+### 关键标识符 {#key-identifiers}
 
-| Identifier | Purpose |
+| 标识符 | 目的 |
 | ----- | ----- |
-| `billing_report_id` | Identifies the billing report and is used to retrieve metadata and download URLs |
-| `async_operation_id` | Identifies the background operation responsible for generating the report |
+| `billing_report_id` | 标识计费报告并用于检索元数据和下载 URL |
+| `async_operation_id` | 标识负责生成报告的后台操作 |
 
-The async operation follows the standard Cloud Operations async model (see [Async Operations](/ops#per-identity-rate-limits)).
+异步操作遵循标准云操作异步模型（请参阅 [异步操作](/ops#per-identity-rate-limits)）。

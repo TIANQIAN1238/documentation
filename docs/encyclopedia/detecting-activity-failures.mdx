@@ -1,8 +1,8 @@
 ---
 id: detecting-activity-failures
-title: Detecting Activity failures
-sidebar_label: Activities
-description: Understand Activity Execution timeouts in Temporal; Schedule-To-Start, Start-To-Close, Schedule-To-Close, and Activity Heartbeats, for effective Workflow management.
+title: "检测 Activity 故障"
+sidebar_label: "Activity 故障检测"
+description: "了解 Temporal 中 Activity Execution 的超时机制，包括 Schedule-To-Start、Start-To-Close、Schedule-To-Close 和 Activity Heartbeat，以便更好地管理 Workflow。"
 toc_max_heading_level: 4
 keywords:
   - explanation
@@ -17,19 +17,19 @@ tags:
 
 import { RelatedReadContainer, RelatedReadItem, CaptionedImage } from '@site/src/components';
 
-A Workflow can detect different kinds of Activity Execution failures through the following timeouts:
+Workflow 可以通过以下超时检测不同类型的 Activity 执行失败：
 
-- [Schedule-To-Start Timeout](#schedule-to-start-timeout)
-- [Start-To-Close Timeout](#start-to-close-timeout)
-- [Schedule-To-Close Timeout](#schedule-to-close-timeout)
-- [Activity Heartbeats](#activity-heartbeat)
+- [Schedule-启动超时](#schedule-to-start-timeout)
+- [开始到关闭超时](#start-to-close-timeout)
+- [Schedule-关闭超时](#schedule-to-close-timeout)
+- [Activity 心跳](#activity-heartbeat)
 
-## Schedule-To-Start Timeout {#schedule-to-start-timeout}
+## Schedule-启动超时 {#schedule-to-start-timeout}
 
-**What is a Schedule-To-Start Timeout in Temporal?**
+**Temporal 中的 Schedule 启动超时是什么？**
 
-A Schedule-To-Start Timeout is the maximum amount of time that is allowed from when an [Activity Task](/tasks#activity-task) is scheduled (that is, placed in a Task Queue) to when a [Worker](/workers#worker) starts (that is, picks up from the Task Queue) that Activity Task.
-In other words, it's a limit for how long an Activity Task can be enqueued.
+Schedule 启动超时是从 [Activity 任务](/tasks#activity-task) 被调度（即，放置在 Task Queue 中）到 [Worker](/workers#worker) 启动（即从 Task Queue 中获取）该 Activity 任务所允许的最大时间量。
+换句话说，它是 Activity 任务排队时间的限制。
 
 <RelatedReadContainer>
   <RelatedReadItem path="/develop/go/activities/timeouts" text="Set a Schedule-To-Start Timeout using the Go SDK" archetype="feature-guide" />
@@ -40,43 +40,43 @@ In other words, it's a limit for how long an Activity Task can be enqueued.
   <RelatedReadItem path="/develop/dotnet/activities/timeouts" text="Set a Schedule-To-Start Timeout using the .NET SDK" archetype="feature-guide" />
 </RelatedReadContainer>
 
-The moment that the Task is picked by the Worker, from the Task Queue, is considered to be the start of the Activity Task Execution for the purposes of the Schedule-To-Start Timeout and associated metrics.
-This definition of "Start" avoids issues that a clock difference between the Temporal Service and a Worker might create.
+出于 Schedule 启动超时和相关指标的目的，Worker 从 Task Queue 中选择任务的那一刻被视为 Activity 任务执行的开始。
+“开始”的这种定义避免了 Temporal 服务和 Worker 之间的时钟差异可能产生的问题。
 
 <CaptionedImage
-    src="/diagrams/schedule-to-start-timeout.svg"
-    title="Schedule-To-Start Timeout period" />
+src="/diagrams/schedule-to-start-timeout.svg"
+title="Schedule-启动超时时间" />
 
-"Schedule" in Schedule-To-Start and Schedule-To-Close have different frequency guarantees.
+Schedule-To-Start 和 Schedule-To-Close 中的“Schedule”具有不同的频率保证。
 
-The Schedule-To-Start Timeout is enforced for each Activity Task, whereas the Schedule-To-Close Timeout is enforced once per Activity Execution.
-Thus, "Schedule" in Schedule-To-Start refers to the scheduling moment of _every_ Activity Task in the sequence of Activity Tasks that make up the Activity Execution, while
-"Schedule" in Schedule-To-Close refers to the _first_ Activity Task in that sequence.
+每个 Activity 任务都会强制执行 Schedule-To-Start 超时，而每个 Activity 执行都会强制执行一次 Schedule-To-Close 超时。
+因此，Schedule-To-Start中的“Schedule”指的是组成Activity执行的Activity任务序列中的_every_ Activity任务的调度时刻，而
+Schedule-To-Close 中的“Schedule”指的是该序列中的第一个 Activity 任务。
 
-A [Retry Policy](/encyclopedia/retry-policies) attached to an Activity Execution retries an Activity Task.
+附加到 Activity 执行的 [Retry Policy](/encyclopedia/retry-policies) 会重试 Activity 任务。
 
 <CaptionedImage
-    src="/diagrams/schedule-to-start-timeout-with-retry.svg"
-    title="Start-To-Close Timeout period with retries" />
+src="/diagrams/schedule-to-start-timeout-with-retry.svg"
+title="开始到关闭重试超时时间" />
 
-This timeout has two primary use cases:
+此超时有两个主要用例：
 
-1. Detect whether an individual Worker has crashed.
-2. Detect whether the fleet of Workers polling the Task Queue is not able to keep up with the rate of Activity Tasks.
+1. 检测单个Worker是否崩溃。
+2. 检测轮询 Task Queue 的 Worker 队列是否无法跟上 Activity 任务的速率。
 
-**The default Schedule-To-Start Timeout is ∞ (infinity).**
+**默认的 Schedule-To-Start 超时为 ∞（无穷大）。**
 
-If this timeout is used, we recommend setting this timeout to the maximum time a Workflow Execution is willing to wait for an Activity Execution in the presence of all possible Worker outages, and have a concrete plan in place to reroute Activity Tasks to a different Task Queue.
-This timeout **does not** trigger any retries regardless of the Retry Policy, as a retry would place the Activity Task back into the same Task Queue.
-We do not recommend using this timeout unless you know what you are doing.
+如果使用此超时，我们建议将此超时设置为 Workflow Execution 在所有可能的 Worker 中断的情况下愿意等待 Activity 执行的最长时间，并制定具体计划将 Activity 任务重新路由到不同的 Task Queue。
+无论 Retry Policy 为何，此超时 **不会** 触发任何重试，因为重试会将 Activity 任务放回到相同的 Task Queue 中。
+我们不建议使用此超时，除非您知道自己在做什么。
 
-In most cases, we recommend monitoring the `temporal_activity_schedule_to_start_latency` metric to know when Workers slow down picking up Activity Tasks, instead of setting this timeout.
+在大多数情况下，我们建议监控 `temporal_activity_schedule_to_start_latency` 指标以了解 Worker 何时减慢拾取 Activity 任务的速度，而不是设置此超时。
 
-## Start-To-Close Timeout {#start-to-close-timeout}
+## 开始到关闭超时 {#start-to-close-timeout}
 
-**What is a Start-To-Close Timeout in Temporal?**
+**Temporal 中的开始到关闭超时是什么？**
 
-A Start-To-Close Timeout is the maximum time allowed for a single [Activity Task Execution](/tasks#activity-task-execution).
+开始到关闭超时是单个 [Activity 任务执行](/tasks#activity-task-execution) 允许的最长时间。
 
 <RelatedReadContainer>
   <RelatedReadItem path="/develop/go/activities/timeouts" text="Set a Start-To-Close Timeout using the Go SDK" archetype="feature-guide" />
@@ -87,48 +87,48 @@ A Start-To-Close Timeout is the maximum time allowed for a single [Activity Task
   <RelatedReadItem path="/develop/dotnet/activities/timeouts" text="Set a Start-To-Close Timeout using the .NET SDK" archetype="feature-guide" />
 </RelatedReadContainer>
 
-**The default Start-To-Close Timeout is the same as the default [Schedule-To-Close Timeout](#schedule-to-close-timeout).**
+**默认的开始到关闭超时与默认的[Schedule-To-Close Timeout](#schedule-to-close-timeout)相同。**
 
-An Activity Execution must have either this timeout (Start-To-Close) or the [Schedule-To-Close Timeout](#schedule-to-close-timeout) set.
-We recommend always setting this timeout; however, make sure that Start-To-Close Timeout is always set to be longer than the maximum possible time for the Activity Execution to complete.
-For long running Activity Executions, we recommend also using [Activity Heartbeats](#activity-heartbeat) and [Heartbeat Timeouts](#heartbeat-timeout).
+Activity 执行必须设置此超时（开始到关闭）或 [Schedule 到关闭超时](#schedule-to-close-timeout)。
+我们建议始终设置此超时；但是，请确保启动到关闭超时始终设置为长于完成 Activity 执行的最大可能时间。
+对于长时间运行的 Activity 执行，我们建议还使用 [Activity 心跳](#activity-heartbeat) 和 [心跳超时](#heartbeat-timeout)。
 
 :::tip
 
-We strongly recommend setting a Start-To-Close Timeout.
+我们强烈建议设置开始到关闭超时。
 
-The Temporal Server doesn't detect failures when a Worker loses communication with the Server or crashes.
-Therefore, the Temporal Server relies on the Start-To-Close Timeout to force Activity retries.
+当 Worker 与服务器失去通信或崩溃时，Temporal Server 不会检测到故障。
+因此，Temporal Server 依靠启动到关闭超时来强制 Activity 重试。
 
 :::
 
-The main use case for the Start-To-Close timeout is to detect when a Worker crashes after it has started executing an Activity Task.
+开始到关闭超时的主要用例是检测 Worker 在开始执行 Activity 任务后何时崩溃。
 
 <CaptionedImage
-    src="/diagrams/start-to-close-timeout.svg"
-    title="Start-To-Close Timeout period" />
+src="/diagrams/start-to-close-timeout.svg"
+title="开始到关闭超时时间" />
 
-A [Retry Policy](/encyclopedia/retry-policies) attached to an Activity Execution retries an Activity Task Execution.
-Thus, the Start-To-Close Timeout is applied to each Activity Task Execution within an Activity Execution.
+附加到 Activity 执行的 [Retry Policy](/encyclopedia/retry-policies) 会重试 Activity 任务执行。
+因此，开始到关闭超时适用于 Activity 执行中的每个 Activity 任务执行。
 
-If the first Activity Task Execution returns an error the first time, then the full Activity Execution might look like this:
+如果第一个 Activity 任务执行第一次返回错误，则完整的 Activity 执行可能如下所示：
 
 <CaptionedImage
-    src="/diagrams/start-to-close-timeout-with-retry.svg"
-    title="Start-To-Close Timeout period with retries" />
+src="/diagrams/start-to-close-timeout-with-retry.svg"
+title="开始到关闭重试超时时间" />
 
-If this timeout is reached, the following actions occur:
+如果达到此超时，则会发生以下操作：
 
-- An [ActivityTaskTimedOut](/references/events#activitytasktimedout) Event is written to the Workflow Execution's mutable state.
-- If a Retry Policy dictates a retry, the Temporal Service schedules another Activity Task.
-  - The attempt count increments by 1 in the Workflow Execution's mutable state.
-  - The Start-To-Close Timeout timer is reset.
+- [ActivityTaskTimedOut](/references/events#activitytasktimedout) 事件被写入 Workflow Execution 的可变状态。
+- 如果 Retry Policy 指示重试，则 Temporal 服务会安排另一个 Activity 任务。
+  - 在 Workflow Execution 的可变状态下，尝试计数加 1。
+  - 启动-关闭超时计时器被重置。
 
-## Schedule-To-Close Timeout {#schedule-to-close-timeout}
+## Schedule-关闭超时 {#schedule-to-close-timeout}
 
-**What is a Schedule-To-Close Timeout in Temporal?**
+**Temporal 中的 Schedule 关闭超时是什么？**
 
-A Schedule-To-Close Timeout is the maximum amount of time allowed for the overall [Activity Execution](/activity-execution), from when the first [Activity Task](/tasks#activity-task) is scheduled to when the last Activity Task, in the chain of Activity Tasks that make up the Activity Execution, reaches a Closed status.
+Schedule 关闭超时是整个 [Activity 执行](/activity-execution) 允许的最长时间，从安排第一个 [Activity 任务](/tasks#activity-task) 到组成 Activity 执行的 Activity 任务链中的最后一个 Activity 任务达到关闭状态。
 
 <RelatedReadContainer>
   <RelatedReadItem path="/develop/go/activities/timeouts" text="Set a Schedule-To-Close Timeout using the Go SDK" archetype="feature-guide" />
@@ -140,35 +140,35 @@ A Schedule-To-Close Timeout is the maximum amount of time allowed for the overal
 </RelatedReadContainer>
 
 <CaptionedImage
-    src="/diagrams/schedule-to-close-timeout.svg"
-    title="Schedule-To-Close Timeout period" />
+src="/diagrams/schedule-to-close-timeout.svg"
+title="Schedule-关闭超时时间" />
 
-Example Schedule-To-Close Timeout period for an Activity Execution that has a chain Activity Task Executions:
+具有 Activity 任务执行链的 Activity 执行的 Schedule-To-Close 超时期限示例：
 
 <CaptionedImage
-    src="/diagrams/schedule-to-close-timeout-with-retry.svg"
-    title="Schedule-To-Close Timeout period with a retry" />
+src="/diagrams/schedule-to-close-timeout-with-retry.svg"
+title="Schedule-关闭超时重试" />
 
-**The default Schedule-To-Close Timeout is ∞ (infinity).**
+**默认的 Schedule 关闭超时为 Infinity。**
 
-An Activity Execution must have either this timeout (Schedule-To-Close) or [Start-To-Close](#start-to-close-timeout) set.
-This timeout can be used to control the overall duration of an Activity Execution in the face of failures (repeated Activity Task Executions), without altering the Maximum Attempts field of the Retry Policy.
+Activity 执行必须设置此超时 (Schedule-To-Close) 或 [Start-To-Close](#start-to-close-timeout)。
+该超时可用于控制 Activity 执行在失败（重复 Activity 任务执行）时的总持续时间，而无需更改 Retry Policy 的最大尝试次数字段。
 
 :::tip
 
-We strongly recommend setting a Start-To-Close Timeout.
+我们强烈建议设置开始到关闭超时。
 
-The Temporal Server doesn't detect failures when a Worker loses communication with the Server or crashes.
-Therefore, the Temporal Server relies on the Start-To-Close Timeout to force Activity retries.
+当 Worker 与服务器失去通信或崩溃时，Temporal Server 不会检测到故障。
+因此，Temporal Server 依靠启动到关闭超时来强制 Activity 重试。
 
 :::
 
-## Activity Heartbeat {#activity-heartbeat}
+## Activity 心跳 {#activity-heartbeat}
 
-**What is an Activity Heartbeat in Temporal?**
+**Temporal中的Activity心跳是什么？**
 
-An Activity Heartbeat is a ping from the Worker that is executing the Activity to the Temporal Service.
-Each ping informs the Temporal Service that the Activity Execution is making progress and the Worker has not crashed.
+Activity 心跳是从正在执行 Activity 的 Worker 到 Temporal 服务的 ping。
+每个 ping 都会通知 Temporal 服务 Activity 执行正在取得进展，并且 Worker 尚未崩溃。
 
 <RelatedReadContainer>
   <RelatedReadItem path="/develop/go/activities/timeouts#activity-heartbeats" text="Heartbeat an Activity using the Go SDK" archetype="feature-guide" />
@@ -179,78 +179,78 @@ Each ping informs the Temporal Service that the Activity Execution is making pro
   <RelatedReadItem path="/develop/dotnet/activities/timeouts#activity-heartbeats" text="Heartbeat an Activity using the .NET SDK" archetype="feature-guide" />
 </RelatedReadContainer>
 
-Activity Heartbeats work in conjunction with a [Heartbeat Timeout](#heartbeat-timeout).
+Activity 心跳与[心跳超时](#heartbeat-timeout) 结合使用。
 
-Activity Heartbeats are implemented within the Activity Definition.
-Custom progress information can be included in the Heartbeat which can then be used by the Activity Execution should a retry occur.
+Activity 心跳在 Activity Definition 内实现。
+自定义进度信息可以包含在心跳中，然后在重试发生时可以由 Activity 执行使用。
 
-An Activity Heartbeat can be recorded as often as needed (e.g. once a minute or every loop iteration).
-It is often a good practice to Heartbeat on anything but the shortest Activity Execution.
-Temporal SDKs control the rate at which Heartbeats are sent to the Temporal Service.
+可以根据需要多次记录 Activity 心跳（例如，每分钟一次或每次循环迭代一次）。
+除了最短的 Activity 执行之外，对任何东西进行心跳检测通常是一个很好的做法。
+Temporal SDK 控制向 Temporal 服务发送心跳的速率。
 
-Heartbeating is not required from [Local Activities](/local-activity), and does nothing.
+[本地活动](/local-activity)不需要心跳，并且不执行任何操作。
 
-For _long-running_ Activities, we recommend using a relatively short Heartbeat Timeout and a frequent Heartbeat.
-That way if a Worker fails it can be handled in a timely manner.
+对于_长时间运行_的活动，我们建议使用相对较短的心跳超时和频繁的心跳。
+这样，如果 Worker 失败，可以及时处理。
 
-A Heartbeat can include an application layer payload that can be used to _save_ Activity Execution progress.
-If an [Activity Task Execution](/tasks#activity-task-execution) times out due to a missed Heartbeat, the next Activity Task can access and continue with that payload.
+心跳可以包含可用于保存 Activity 执行进度的应用程序层有效负载。
+如果 [Activity 任务执行](/tasks#activity-task-execution) 由于错过心跳而超时，下一个 Activity 任务可以访问并继续该有效负载。
 
-Activity Cancellations are delivered to Activities from the Temporal Service when they Heartbeat. Activities that don't Heartbeat can't receive a Cancellation.
-Heartbeat throttling may lead to Cancellation getting delivered later than expected.
+当活动心跳时，Activity 取消会从 Temporal 服务传递到活动。没有心跳的活动无法收到取消。
+心跳限制可能会导致取消的发送时间晚于预期。
 
 ### Throttling
 
-Heartbeats may not always be sent to the Temporal Service—they may be throttled by the Worker.
-The throttle interval is the smaller of the following:
+心跳可能并不总是发送到 Temporal 服务 - 它们可能会受到 Worker 的限制。
+节流间隔是以下较小者：
 
-- If `heartbeatTimeout` is provided, `heartbeatTimeout * 0.8`; otherwise, `defaultHeartbeatThrottleInterval`
+- 如果提供`heartbeatTimeout`，则`heartbeatTimeout * 0.8`；否则，`defaultHeartbeatThrottleInterval`
 - `maxHeartbeatThrottleInterval`
 
-`defaultHeartbeatThrottleInterval` is 30 seconds by default, and `maxHeartbeatThrottleInterval` is 60 seconds by default.
-Each can be set in Worker options.
+`defaultHeartbeatThrottleInterval`默认为30秒，`maxHeartbeatThrottleInterval`默认为60秒。
+每个都可以在 Worker 选项中设置。
 
-Throttling is implemented as follows:
+节流的实现方式如下：
 
-- After sending a Heartbeat, the Worker sets a timer for the throttle interval.
-- The Worker stops sending Heartbeats, but continues receiving Heartbeats from the Activity and remembers the most recent one.
-- When the timer fires, the Worker:
-  - Sends the most recent Heartbeat.
-  - Sets the timer again.
+- 发送心跳后，Worker 会设置一个计时器来控制节流间隔。
+- Worker 停止发送心跳，但继续从 Activity 接收心跳并记住最近的心跳。
+- 当定时器触发时，Worker：
+  - 发送最近的心跳。
+  - 再次设置定时器。
 
-Throttling allows the Worker to reduce network traffic and load on the Temporal Service by suppressing Heartbeats that aren’t necessary to prevent a Heartbeat Timeout.
-Throttling does not apply to the final Heartbeat message in the case of Activity Failure.
-If an Activity fails just after recording progress information in a Heartbeat message, that progress information will be available during the next retry attempt, provided that the Worker itself did not crash before delivering it to the Temporal Service.
+限制允许 Worker 通过抑制不必要的心跳来减少 Temporal 服务上的网络流量和负载，以防止心跳超时。
+在 Activity 失败的情况下，限制不适用于最终的心跳消息。
+如果 Activity 在心跳消息中记录进度信息后立即失败，则该进度信息将在下一次重试尝试期间可用，前提是 Worker 本身在将其传递到 Temporal 服务之前没有崩溃。
 
-### Which Activities should Heartbeat?
+### 哪些活动应该心跳？
 
-Heartbeating is best thought about not in terms of time, but in terms of "How do you know you are making progress?"
-For short-term operations, progress updates are not a requirement.
-However, checking the progress and status of Activity Executions that run over long periods is almost always useful.
+最好不要从时间的角度来考虑心跳，而是从“你怎么知道你正在取得进展？”的角度来考虑。
+对于短期操作，不需要进度更新。
+然而，检查长时间运行的 Activity 执行的进度和状态几乎总是有用的。
 
-Consider the following when setting Activity Heartbeats:
+设置 Activity 心跳时请考虑以下事项：
 
-- Your underlying task must be able to report definite progress.
-  Note that your Workflow cannot read this progress information while the Activity is still executing (or it would have to store it in Event History).
-  You can report progress to external sources if you need it exposed to the user.
+- 您的基本任务必须能够报告明确的进度。
+请注意，当 Activity 仍在执行时，您的 Workflow 无法读取此进度信息（或者必须将其存储在 Event History 中）。
+如果需要向用户公开，您可以向外部源报告进度。
 
-- Your Activity Execution is long-running, and you need to verify whether the Worker that is processing your Activity is still alive and has not run out of memory or silently crashed.
+- 您的 Activity 执行是长时间运行的，您需要验证正在处理您的 Activity 的 Worker 是否仍然存在，并且没有耗尽内存或无提示崩溃。
 
-For example, the following scenarios are suitable for Heartbeating:
+例如，以下场景适合使用Heartbeating：
 
-- Reading a large file from Amazon S3.
-- Running a ML training job on some local GPUs.
+- 从 Amazon S3 读取大文件。
+- 在一些本地 GPU 上运行 ML 训练作业。
 
-And the following scenarios are not suitable for Heartbeating:
+并且以下场景不适合Heartbeating：
 
-- Making a quick API call.
-- Reading a small file from disk.
+- 进行快速 API 调用。
+- 从磁盘读取一个小文件。
 
-### Heartbeat Timeout {#heartbeat-timeout}
+### 心跳超时 {#heartbeat-timeout}
 
-**What is a Heartbeat Timeout in Temporal?**
+**Temporal中什么是心跳超时？**
 
-A Heartbeat Timeout is the maximum time between [Activity Heartbeats](#activity-heartbeat).
+心跳超时是 [Activity 心跳](#activity-heartbeat) 之间的最长时间。
 
 <RelatedReadContainer>
   <RelatedReadItem path="/develop/go/activities/timeouts#activity-heartbeats" text="Set a Heartbeat Timeout using the Go SDK" archetype="feature-guide" />
@@ -262,7 +262,7 @@ A Heartbeat Timeout is the maximum time between [Activity Heartbeats](#activity-
 </RelatedReadContainer>
 
 <CaptionedImage
-    src="/diagrams/heartbeat-timeout.svg"
-    title="Heartbeat Timeout periods" />
+src="/diagrams/heartbeat-timeout.svg"
+title="心跳超时时间" />
 
-If this timeout is reached, the Activity Task fails and a retry occurs if a [Retry Policy](/encyclopedia/retry-policies) dictates it.
+如果达到此超时，Activity 任务将失败，并且在 [Retry Policy](/encyclopedia/retry-policies) 指示的情况下会重试。

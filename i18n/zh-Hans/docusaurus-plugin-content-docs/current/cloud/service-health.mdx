@@ -1,0 +1,185 @@
+---
+id: service-health
+title: 显示器Temporal Cloud
+sidebar_label: 显示器Temporal Cloud
+description: 使用 Temporal Cloud 指标来监控您的生产部署 Temporal Cloud。
+toc_max_heading_level: 4
+keywords:
+  - temporal-cloud
+  - metrics
+  - observability
+  - health
+tags:
+  - Temporal Cloud
+  - Observability
+---
+
+Temporal Cloud 指标有助于监控生产部署。
+本文档涵盖了监控 Temporal Cloud 的最佳实践。
+
+## 监控可用性问题
+
+当您发现 Worker 资源利用率突然下降时，请验证 Temporal Cloud 的 API 是否显示延迟和错误率增加。
+
+### 参考指标
+
+- [Temporal\_cloud\_v1\_service\_latency\_p99](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_service_latency_p99)
+
+该指标测量“SignalWithStartWorkflowExecution”、“SignalWorkflowExecution”、“StartWorkflowExecution”操作的延迟。
+这些操作是关键任务，并且永远不会[受到限制](/cloud/service-availability#throughput)。
+该指标可以很好地指示第 99 个百分位数的请求的最低延迟。
+
+### Workflow Execution 延迟
+
+要监控端到端 Workflow Execution 时间（不仅仅是上面的服务 API 延迟），请使用 Workflow Schedule 关闭延迟指标：
+
+- [Temporal\_cloud\_v1\_Workflow\_Schedule\_to\_close\_latency\_p50](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_Workflow_Schedule_to_close_latency_p50)
+- [Temporal\_cloud\_v1\_Workflow\_Schedule\_to\_close\_latency\_p95](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_Workflow_Schedule_to_close_latency_p95)
+- [Temporal\_cloud\_v1\_Workflow\_Schedule\_to\_close\_latency\_p99](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_Workflow_Schedule_to_close_latency_p99)
+
+这些测量从 Workflow 为 Scheduled 直至其关闭的时间，包括所有 Activity 执行时间。突然增加可能表明 Worker 容量问题、下游服务降级或重试风暴。
+
+## 监控 Temporal 服务错误
+
+2、导入并使用SDK：
+
+### 参考指标
+
+- [Temporal\_cloud\_v1\_service\_error\_count](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_service_error_count)
+- [Temporal\_cloud\_v1\_service\_request\_count](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_service_request_count)
+
+### Prometheus Query 对于此指标
+
+衡量 10 分钟窗口内的每日平均成功率。
+
+OpenMetrics v1 指标是预先计算的速率。使用“sum()”跨维度聚合，而不是“increase()”或“rate()”。
+
+```
+avg_over_time((
+    (
+        (
+            sum(temporal_cloud_v1_service_request_count{temporal_namespace=~"$namespace", operation=~"StartWorkflowExecution|SignalWorkflowExecution|SignalWithStartWorkflowExecution|RequestCancelWorkflowExecution|TerminateWorkflowExecution"})
+            -
+            sum(temporal_cloud_v1_service_error_count{temporal_namespace=~"$namespace", operation=~"StartWorkflowExecution|SignalWorkflowExecution|SignalWithStartWorkflowExecution|RequestCancelWorkflowExecution|TerminateWorkflowExecution"})
+        )
+        /
+        sum(temporal_cloud_v1_service_request_count{temporal_namespace=~"$namespace", operation=~"StartWorkflowExecution|SignalWorkflowExecution|SignalWithStartWorkflowExecution|RequestCancelWorkflowExecution|TerminateWorkflowExecution"})
+    )
+
+    or vector(1)
+
+    )[1d:1m])
+```
+
+## 检测 Activity 和 Workflow 故障
+
+指标“Temporal_cloud_v1_Activity_fail_count”和“Temporal_cloud_v1_Workflow_failed_count”共同为 Temporal 应用程序提供故障检测。这些指标协同工作，为您提供精细的组件级 Visibility 和高级 Workflow 运行状况洞察。
+
+### Activity 级联故障
+
+如果不使用无限重试策略，Activity 故障可能会导致 Workflow 故障：
+
+```
+Activity Failure --> Retry Logic --> More Activity Failures --> Workflow Decision --> Potential Workflow Failure
+```
+
+Activity 故障通常是可恢复的并且是预期的。 Workflow 故障代表需要立即关注的最终状态。
+Activity 故障的峰值可能先于 Workflow 故障。
+一般来说，Temporal 建议 Workflow 的设计应始终成功。如果 Activity 的故障超出其 Retry Policy 允许的范围，我们建议让 Workflow 处理 Activity 故障并采取措施通知人员采取纠正措施或注意错误。
+
+### 基于比率的监控
+
+#### 失败转化率
+
+监控 Workflow 故障与 Activity 故障的比率：
+
+```
+workflow_failure_rate = temporal_cloud_v1_workflow_failed_count / temporal_cloud_v1_activity_fail_count
+```
+
+需要注意什么：
+- 高比率（大于 0.1）：差错处理 - 活动失败导致 Workflow 故障
+- 低比率（小于 0.01）：良好的恢复能力 - 活动失败但 Workflow 恢复
+- 突然出现峰值：可能表明存在系统问题
+
+#### Activity成功率
+
+```
+activity_success_rate = temporal_cloud_v1_activity_success_count / (temporal_cloud_v1_activity_success_count + temporal_cloud_v1_activity_fail_count)
+```
+
+目标：对于大多数应用，>95%。较低的成功率可能是系统出现问题的迹象。
+另请参阅：
+- [制定错误处理策略](https://learn.Temporal.io/courses/errstrat/)
+- [Temporal 故障参考](/references/failures)
+- [检测 Workflow 故障](/encyclopedia/Detecting-Workflow-failures)
+
+## 监控具有高可用性功能的 Namespace 的复制延迟
+
+复制延迟是指 Workflow Update 和历史事件从主 Namespace 到副本的传输延迟。
+在启动故障转移之前，请务必检查[指标复制滞后](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_replication_lag_p99)。
+当复制滞后较大时，强制故障转移更有可能回滚 Workflow 进度。
+
+**谁拥有复制滞后？**
+Temporal 拥有复制滞后。
+
+**有什么保证？**
+没有针对复制滞后的 SLA。
+Temporal 建议客户除测试或紧急情况外不要触发故障转移。
+高可用性功能的 4-9 保证 SLA 意味着 Temporal 将处理故障转移并确保高可用性。
+Temporal 还监控复制滞后。
+决定触发故障转移的客户应在继续操作之前查看此指标。
+
+**如果延迟很高，你应该做什么？**
+我们不希望用户进行故障转移。
+如果您觉得有迫切需要，请联系 Temporal 支持人员。
+
+**哪里可以阅读更多内容？**
+请参阅[操作和指标](/cloud/high-availability) 了解具有高可用性功能的 Namespace。
+
+### 参考指标
+
+- [Temporal\_cloud\_v1\_replication\_lag\_p99](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_replication_lag_p99)
+- [Temporal\_cloud\_v1\_replication\_lag\_p95](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_replication_lag_p95)
+- [Temporal\_cloud\_v1\_replication\_lag\_p50](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_replication_lag_p50)
+
+## 检测资源耗尽
+
+云指标“Temporal_cloud_v1_resource_exhausted_error_count”是云端节流、Signaling系统限制的主要指标
+超出并且发生“ResourceExhausted”gRPC 错误。由于资源的优先级排列方式，这通常不会破坏 Workflow 处理。
+
+该指标持续存在非零值是意外的。
+
+## 监控趋势与限制 {#rps-aps-rate-limits}
+
+一组[限制指标](/cloud/metrics/openmetrics/metrics-reference#limit-metrics) 提供限制值的时间序列。使用这些
+指标及其相应的计数指标，以根据限制监控总体趋势，并在超出限制时设置警报。使用相应的节流指标
+确定任何主动速率限制的严重程度。
+|限制指标|计数指标 |油门公制|
+| ------------ | ------------ | ---------------- |
+| `Temporal_cloud_v1_action_limit` | `Temporal_cloud_v1_total_action_count` | `Temporal_cloud_v1_total_action_throttled_count` |
+| `Temporal_cloud_v1_service_request_limit` | `Temporal_cloud_v1_service_request_count` | `Temporal_cloud_v1_service_request_throttled_count` |
+| `Temporal_cloud_v1_operations_limit` | `Temporal_cloud_v1_operations_count` | `Temporal_cloud_v1_operations_throttled_count` |
+
+### 按需信封限制
+
+对于使用预配置容量的 Namespace，以下指标显示了按需模式下的限制。
+将这些与您当前配置的限制进行比较，以评估容量模式选择：
+
+|按需信封公制|等效极限指标|
+| ---------------------------------- | ----------------------- |
+| `Temporal_cloud_v1_action_on_demand_envelope_limit` | `Temporal_cloud_v1_action_limit` |
+| `Temporal_cloud_v1_operations_on_demand_envelope_limit` | `Temporal_cloud_v1_operations_limit` |
+| `Temporal_cloud_v1_service_request_on_demand_envelope_limit` | `Temporal_cloud_v1_service_request_limit` |
+
+对于已处于按需模式的 Namespace，这些指标跟踪与其等效限制指标相同的值。
+
+[Grafana 仪表板示例](https://github.com/grafana/jsonnet-libs/blob/master/Temporal-mixin/dashboards/Temporal-overview.json) 包含“使用情况和配额”部分
+分别为这些限制和计数指标创建演示图表。
+
+限制指标、节流指标和计数指标已经可以直接与每秒速率进行比较。请记住，每个“计数”指标都表示为平均每秒速率
+每分钟。例如，要获取操作总数，您必须将此指标乘以 60。
+针对限制设置警报时，请考虑您的工作负载是否尖峰或对限制敏感（例如，延迟重要吗？）。如果您的工作负载很敏感，请考虑发出警报
+对于“Temporal_cloud_v1_total_action_count”，阈值为“Temporal_cloud_v1_action_limit”的 50%。如果您的工作负载不敏感，请考虑在此阈值的 90% 处发出警报
+或者当检测到“Temporal_cloud_v1_total_action_throttled_count”的值大于零时直接进行限制。该逻辑还可用于自动缩放 [Temporal
+资源单位](/cloud/capacity-modes#provisioned-capacity) 根据需要增加或减少。某些工作负载选择超出限制并接受限制，因为它们对延迟不敏感。

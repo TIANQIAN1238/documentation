@@ -1,8 +1,8 @@
 ---
 id: plugins
-title: Plugins
-sidebar_label: Plugins
-description: Bundle interceptors, context propagators, data converters, and built-in definitions into reusable packages.
+title: "插件"
+sidebar_label: "插件"
+description: "将拦截器、上下文传播器、Data Converter 和内置定义捆绑到可重用包中。"
 toc_max_heading_level: 4
 keywords:
   - plugins
@@ -12,15 +12,16 @@ tags:
   - Concepts
 ---
 
-A Plugin bundles multiple extensibility primitives - interceptors, context propagators, data converters, and built-in Workflow/Activity/Nexus definitions - into a single reusable package. Plugins let platform teams and library authors ship ready-made functionality that application developers can adopt with a single registration call.
+插件将多个可扩展性原语（拦截器、上下文传播器、Data Converter 和内置 Workflow/Activity/nexus 定义）捆绑到单个可重用包中。插件让平台团队和库作者可以提供现成的功能，应用程序开发人员只需一次注册调用即可采用这些功能。
 
-Common use cases:
+常见用例：
 
-- AI Agent SDKs (e.g., OpenAI Agents, Pydantic AI)
-- Observability packages (tracing, logging, metrics)
-- Encryption or compliance middleware
-- Shared infrastructure integrations (messaging, payments, LLM calls)
+- AI Agent SDK（例如 OpenAI Agents、Pydantic AI）
+- 可观测性包（跟踪、日志记录、指标）
+- 加密或合规中间件
+- 共享基础设施集成（消息、支付、LLM 通话）
 
-## Implementing Plugins
+<a id="implementing-plugins"></a>
+## 实现插件 {#implementing-plugins}
 
-See the [Plugins guide](/develop/plugins-guide) for how to build and use plugins across all supported SDKs.
+请参阅 [插件指南](/develop/plugins-guide)，了解如何在所有受支持的 SDK 中构建和使用插件。

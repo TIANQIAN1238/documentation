@@ -1,0 +1,118 @@
+---
+id: child-workflows
+title: Child Workflows - Python SDK
+sidebar_label: Child Workflows
+description: 启动子 Workflow Execution 并使用 Temporal Python SDK 设置父关闭策略。确保正确的进度日志记录并指定关闭时的父级 Workflow 行为。
+toc_max_heading_level: 2
+keywords:
+  - child workflow execution
+  - spawn child workflow
+  - child workflow events
+  - parent close policy
+  - child workflow options
+  - execute child workflow
+  - start child workflow
+tags:
+  - Workflows
+  - Child Workflows
+  - Python SDK
+  - Temporal SDKs
+---
+
+此页面显示如何执行以下操作：
+
+- [启动子 Workflow Execution](#child-Workflows)
+- [设置父关闭策略](#parent-close-policy)
+
+## 启动子 Workflow Execution {#child-Workflows}
+
+**如何使用 Temporal Python SDK 启动子 Workflow Execution。**
+
+[Child Workflow Execution](/child-Workflows) 是使用 Child Workflow API 从另一个 Workflow 内部生成 Scheduled 的 Workflow Execution。
+
+使用 Child Workflow API 时，Child Workflow 相关事件 ([StartChildWorkflowExecutionInitiated](/references/events#startchildWorkflowexecutionstarted)、[ChildWorkflowExecutionStarted](/references/events#childWorkflowexecutionstarted)、 [ChildWorkflowExecutionCompleted](/references/events#childWorkflowexecutioncompleted) 等...）记录在 Workflow Execution Event History 中。
+
+始终阻止进度，直到 [ChildWorkflowExecutionStarted](/references/events#childWorkflowexecutionstarted) 事件记录到 Event History，以确保子 Workflow Execution 已启动。
+此后，可以使用 Child Workflow 选项中设置的_Abandon_ [Parent Close Policy](/parent-close-policy) 放弃子 Workflow Execution。
+
+要确保 Child Workflow Execution 已启动，请首先在 Child Workflow future 实例上调用 Child Workflow Execution 方法，该方法将返回不同的 future。
+
+然后获取一个对象的值，该对象充当最初未知的结果的代理，这就是等待子 Workflow Execution 生成的结果。
+
+要在 Python 中生成子 Workflow Execution，请使用 [`execute_child_Workflow()`](https://python.Temporal.io/Temporalio.Workflow.html#execute_child_Workflow) 函数启动 Child Workflow 并等待完成或
+使用 [`start_child_Workflow()`](https://python.Temporal.io/Temporalio.Workflow.html#start_child_Workflow) 函数启动 Child Workflow 并返回其句柄。
+如果您想在启动后执行某些操作，或者获取 Workflow/运行 ID，或者能够在运行时对其进行 Signal，则此功能非常有用。
+
+:::note
+
+`execute_child_Workflow()` 是 `start_child_Workflow()` 和 `await handle` 的辅助函数。
+
+:::
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/your_child_Workflow/your_child_Workflow_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+# ...
+@workflow.defn
+class ComposeGreetingWorkflow:
+    @workflow.run
+    async def run(self, input: ComposeGreetingInput) -> str:
+        return f"{input.greeting}, {input.name}!"
+
+
+@workflow.defn
+class GreetingWorkflow:
+    @workflow.run
+    async def run(self, name: str) -> str:
+        return await workflow.execute_child_workflow(
+            ComposeGreetingWorkflow.run,
+            ComposeGreetingInput("Hello", name),
+            id="hello-child-workflow-workflow-child-id",
+# ...
+        )
+```
+
+### 设置父关闭策略 {#parent-close-policy}
+
+**如何设置家长关闭政策**
+
+[父关闭策略](/parent-close-policy) 确定如果子 Workflow Execution 的父更改为关闭状态（已完成、失败或超时），子 Workflow Execution 会发生什么情况。
+
+默认“父关闭策略”选项设置为终止子 Workflow Execution。
+
+在 [`start_child_Workflow`](https://python.Temporal.io/Temporalio.Workflow.html#start_child_Workflow) 函数或[`execute_child_Workflow()`](https://python.Temporal.io/Temporalio.Workflow.html#execute_child_Workflow) 函数指定父 Workflow 关闭时 Child Workflow 的行为。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/your_child_Workflow/your_child_Workflow_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+from temporalio.workflow import ParentClosePolicy
+# ...
+# ...
+@workflow.defn
+class ComposeGreetingWorkflow:
+    @workflow.run
+    async def run(self, input: ComposeGreetingInput) -> str:
+        return f"{input.greeting}, {input.name}!"
+
+
+@workflow.defn
+class GreetingWorkflow:
+    @workflow.run
+    async def run(self, name: str) -> str:
+        return await workflow.execute_child_workflow(
+            ComposeGreetingWorkflow.run,
+            ComposeGreetingInput("Hello", name),
+            id="hello-child-workflow-workflow-child-id",
+            parent_close_policy=ParentClosePolicy.ABANDON,
+        )
+```

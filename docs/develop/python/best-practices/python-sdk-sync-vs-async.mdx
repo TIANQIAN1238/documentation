@@ -1,8 +1,8 @@
 ---
 id: python-sdk-sync-vs-async
-title: Temporal Python SDK synchronous vs. asynchronous Activity implementations
-sidebar_label: Python SDK sync vs async
-description: The Temporal Python SDK supports implementing Activities asynchronously with asyncio, synchronously with ThreadPoolExecutor or ProcessPoolExecutor. Choose the correct method to avoid application errors.
+title: "Temporal Python SDK 同步与异步 Activity 实现"
+sidebar_label: "Python SDK 同步与异步"
+description: "Temporal Python SDK 支持使用 asyncio 异步实现 Activity，使用 ThreadPoolExecutor 或 ProcessPoolExecutor 同步实现 Activity。选择正确的方法以避免应用错误。"
 toc_max_heading_level: 4
 keywords:
   - temporal python sdk
@@ -25,123 +25,130 @@ tags:
   - Concepts
 ---
 
-The Temporal Python SDK supports multiple ways of implementing an Activity:
+Temporal Python SDK 支持多种实现 Activity 的方法：
 
-- Asynchronously using [`asyncio`](https://docs.python.org/3/library/asyncio.html)
-- Synchronously multithreaded using [`concurrent.futures.ThreadPoolExecutor`](https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor)
-- Synchronously multiprocess using [`concurrent.futures.ProcessPoolExecutor`](https://docs.python.org/3/library/concurrent.futures.html#processpoolexecutor) and [`multiprocessing.managers.SyncManager`](https://docs.python.org/3/library/multiprocessing.html#multiprocessing.managers.SyncManager)
+- 异步使用[`asyncio`](https://docs.python.org/3/library/asyncio.html)
+- 使用 [`concurrent.futures.ThreadPoolExecutor`](https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor) 同步多线程
+- 使用 [`concurrent.futures.ProcessPoolExecutor`](https://docs.python.org/3/library/concurrent.futures.html#processpoolexecutor) 和 [`multiprocessing.managers.SyncManager`](https://docs.python.org/3/library/multiprocessing.html#multiprocessing.managers.SyncManager) 同步多进程
 
-It is important to implement your Activities using the correct method, otherwise
-your application may fail in sporadic and unexpected ways. Which one you should
-use depends on your use case. This section provides guidance to help you choose
-the best approach.
+使用正确的方法实施您的活动非常重要，否则
+您的应用程序可能会以零星和意外的方式失败。你应该选择哪一个
+使用取决于您的用例。本节提供帮助您选择的指导
+最好的方法。
 
-## The Python Asynchronous Event Loop and Blocking Calls
+<a id="the-python-asynchronous-event-loop-and-blocking-calls"></a>
+## Python 异步事件循环和阻塞调用 {#the-python-asynchronous-event-loop-and-blocking-calls}
 
-First, let's look at how async event loops work in Python. The Python async
-event loop runs in a thread and executes all tasks in its thread. When any
-task is running in the event loop, the loop is blocked and no other tasks can be
-running at the same time within that event loop. Whenever a task executes an
-`await` expression, the task is suspended, and the event loop begins or resumes
-execution of another task.
+首先，让我们看看异步事件循环在 Python 中如何工作。 Python 异步
+事件循环在一个线程中运行并执行其线程中的所有任务。当有任何
+任务正在事件循环中运行，循环被阻塞，无法执行其他任务
+在该事件循环内同时运行。每当一个任务执行
+`await`表达式，任务被挂起，事件循环开始或恢复
+执行另一个任务。
 
-This means that the event loop can only pass the flow of control when the `await`
-keyword is executed. If a program makes a blocking call, such as one that reads
-from a file, makes a synchronous request to a network service, waits for user input,
-or anything else that blocks the execution, the entire event loop must wait until
-that execution has completed.
+这意味着事件循环只能在 `await` 时传递控制流
+关键字被执行。如果程序进行阻塞调用，例如读取
+从文件中，向网络服务发出同步请求，等待用户输入，
+或者任何其他阻塞执行的事情，整个事件循环必须等待，直到
+该执行已经完成。
 
-Blocking the async event loop in Python would turn your asynchronous program
-into a synchronous program that executes serially, defeating the entire purpose
-of using `asyncio`. This can also lead to potential deadlock, and unpredictable behavior
-that causes tasks to be unable to execute. Debugging these issues can be difficult
-and time consuming, as locating the source of the blocking call might not always
-be immediately evident.
+在 Python 中阻止异步事件循环将会改变你的异步程序
+变成串行执行的同步程序，破坏了整个目的
+使用`asyncio`。这也可能导致潜在的死锁和不可预测的行为
+导致任务无法执行。调试这些问题可能很困难
+并且耗时，因为可能并不总是能找到阻塞调用的来源
+立即显而易见。
 
-Due to this, Python developers must be extra careful to not make blocking calls
-from within an asynchronous Activity, or use an async safe library to perform
-these actions.
+因此，Python 开发人员必须格外小心，不要进行阻塞调用
+从异步 Activity 中，或使用异步安全库来执行
+这些行动。
 
-For example, making an HTTP call with the popular `requests` library within an
-asynchronous Activity would lead to blocking your event loop. If you want to make
-an HTTP call from within an asynchronous Activity, you should use an async-safe HTTP library
-such as `aiohttp` or `httpx`. Otherwise, use a synchronous Activity.
+例如，使用流行的 `requests` 库进行 HTTP 调用
+异步 Activity 会导致事件循环阻塞。如果你想做
+来自异步 Activity 内的 HTTP 调用，您应该使用异步安全 HTTP 库
+例如 `aiohttp` 或 `httpx`。否则，请使用同步 Activity。
 
-## Python SDK Worker Execution Architecture
+<a id="python-sdk-worker-execution-architecture"></a>
+## Python SDK Worker 执行架构 {#python-sdk-worker-execution-architecture}
 
-Python workers have the following components for executing code:
+Python Worker 具有以下用于执行代码的组件：
 
-- Your event loop, which runs Tasks from async Activities **plus the rest of the Temporal Worker, such as communicating with the server**.
-- An executor for executing Activity Tasks from synchronous Activities. A thread pool executor is recommended.
-- A thread pool executor for executing Workflow Tasks.
+- 您的事件循环，运行来自异步活动的任务**加上 Temporal Worker 的其余部分，例如与服务器通信**。
+- 用于从同步活动执行 Activity 任务的执行器。推荐使用线程池执行器。
+- 用于执行 Workflow 任务的线程池执行器。
 
-> See Also: [docs for](https://python.temporal.io/temporalio.worker.Worker.html#__init__) `worker.__init__()`
+> 另请参阅：[文档用于](https://python.temporal.io/temporalio.worker.Worker.html#__init__) `Worker.__init__()`
 
-### Activities
+＃＃＃ 活动
 
-- Async Activities and the temporal worker SDK code both run the default asyncio event loop or whatever event loop you give the Worker.
-- Synchronous Activities run in the `activity_executor`.
+- 异步活动和 Temporal Worker SDK 代码都运行默认的 asyncio 事件循环或您为 Worker 提供的任何事件循环。
+- 同步活动在 `Activity_executor` 中运行。
 
-### Workflows
+<a id="activities"></a>
+### Workflows {#activities}
 
-Since Workflow Tasks have the following three properties, they're run in threads.
+由于 Workflow 任务具有以下三个属性，因此它们在线程中运行。
 
-- are CPU bound
-- need to be timed out for deadlock detection
-- need to not block other Workflow Tasks
+- 受 CPU 限制
+- 需要超时以进行死锁检测
+- 不需要阻止其他 Workflow 任务
 
-The `workflow_task_executor` is the thread pool these Tasks are run on.
-The fact that Workflow Tasks run in a thread pool can be confusing at first because Workflow Definitions are `async`.
-The key differentiator is that the `async` in Workflow Definitions isn't referring to the standard event loop -- it's referring to the Workflow's own event loop.
-Each Workflow gets its own “Workflow event loop,” which is deterministic, and described in [the Python SDK blog](https://temporal.io/blog/durable-distributed-asyncio-event-loop#temporal-workflows-are-asyncio-event-loops).
-The Workflow event loop doesn't constantly loop -- it just gets cycled through during a Workflow Task to make as much progress as possible on all of its futures.
-When it can no longer make progress on any of its futures, then the Workflow Task is complete.
+`Workflow_task_executor` 是运行这些任务的线程池。
+Workflow 任务在线程池中运行这一事实一开始可能会令人困惑，因为 Workflow Definition 是 `async`。
+关键的区别在于 Workflow Definition 中的 `async` 不是指标准事件循环 - 它指的是 Workflow 自己的事件循环。
+每个 Workflow 都有自己的“Workflow 事件循环”，该循环是确定性的，并在 [Python SDK 博客](https://temporal.io/blog/durable-distributed-asyncio-event-loop#temporal-workflows-are-asyncio-event-loops) 中进行了描述。
+Workflow 事件循环不会不断循环——它只是在 Workflow 任务期间循环，以在其所有未来上取得尽可能多的进展。
+当它无法再在其任何未来上取得进展时，Workflow 任务就完成了。
 
-### Number of CPU cores
+<a id="workflows"></a>
+### CPU 核心数 {#workflows}
 
-The only ways to use more than one core in a python Worker (considering Python's GIL) are:
+在 python Worker 中使用多个内核的唯一方法（考虑 Python 的 GIL）是：
 
-- Run more than one Worker Process.
-- Run the synchronous Activities in a process pool executor, but a thread pool executor is recommended.
+- 运行多个 Worker 进程。
+- 在进程池执行器中运行同步活动，但建议使用线程池执行器。
 
-### A Worker infrastructure option: Separate Activity and Workflow Workers
+<a id="number-of-cpu-cores"></a>
+### Worker 基础设施选项：单独的 Activity 和 Workflow Worker {#number-of-cpu-cores}
 
-To reduce the risk of event loops or executors getting blocked,
-some users choose to deploy separate Workers for Workflow Tasks and Activity Tasks.
+为了降低事件循环或执行器被阻塞的风险，
+一些用户选择为 Workflow 任务和 Activity 任务部署单独的 Worker。
 
-## Activity Definition
+<a id="a-worker-infrastructure-option-separate-activity-and-workflow-workers"></a>
+## Activity Definition {#a-worker-infrastructure-option-separate-activity-and-workflow-workers}
 
-**By default, Activities should be synchronous rather than asynchronous**.
-You should only make an Activity asynchronous if you are
-certain that it doesn't block the event loop.
+**默认情况下，活动应该是同步的而不是异步的**。
+如果您是，则只应使 Activity 异步
+确保它不会阻止事件循环。
 
-This is because if you have blocking code in an `async def` function,
-it blocks your event loop and the rest of Temporal, which can cause bugs that are
-hard to diagnose, including freezing your worker and blocking Workflow progress
-(because Temporal can't tell the server that Workflow Tasks are completing).
-The reason synchronous Activities help is because they
-run in the `activity_executor` ([docs for](https://python.temporal.io/temporalio.worker.Worker.html#__init__) `worker.__init__()`)
-rather than in the global event loop,
-which helps because:
+这是因为如果 `async def` 函数中有阻塞代码，
+它会阻止您的事件循环和 Temporal 的其余部分，这可能会导致以下错误
+难以诊断，包括冻结您的 Worker 并阻止 Workflow 进度
+（因为 Temporal 无法告诉服务器 Workflow 任务正在完成）。
+同步活动有帮助的原因是因为它们
+在 `Activity_executor` ([文档用于](https://python.temporal.io/temporalio.worker.Worker.html#__init__) `Worker.__init__()`) 中运行
+而不是在全局事件循环中，
+这有帮助，因为：
 
-- There's no risk of accidentally blocking the global event loop.
-- If you have multiple
-  Activity Tasks running in a thread pool rather than an event loop, one bad
-  Activity Task can't slow down the others; this is because the OS scheduler preemptively
-  switches between threads, which the event loop coordinator doesn't do.
+- 不存在意外阻塞全局事件循环的风险。
+- 如果您有多个
+  Activity 任务在线程池而不是事件循环中运行，这是一个不好的问题
+  Activity 任务不能减慢其他任务的速度；这是因为操作系统 Scheduler 抢先
+  在线程之间切换，这是事件循环协调器不执行的操作。
 
-> See Also:
-> ["Types of Activities" section of Python SDK README](https://github.com/temporalio/sdk-python#types-of-activities)
+> 另请参阅：
+> [Python SDK 自述文件的“活动类型”部分](https://github.com/temporalio/sdk-python#types-of-activities)
 
-## How to implement Synchronous Activities
+<a id="activity-definition"></a>
+## 如何实现同步活动 {#activity-definition}
 
-The following code is a synchronous Activity Definition.
-It takes a name (`str`) as input and returns a
-customized greeting (`str`) as output.
+以下代码是同步Activity Definition。
+它以名称 (`str`) 作为输入并返回
+自定义问候语 (`str`) 作为输出。
 
-It makes a call to a microservice, and when making this call,
-you'll notice that it uses the `requests` library. This is safe to do in
-synchronous Activities.
+它调用微服务，并且在进行此调用时，
+您会注意到它使用 `requests` 库。这样做是安全的
+同步活动。
 
 ```python
 import urllib.parse
@@ -164,11 +171,11 @@ class TranslateActivities:
         return response.text
 ```
 
-The preceding example doesn't share a session across the Activity, so
-`__init__` was removed. While `requests` does have the ability to create sessions,
-it's currently unknown if they're thread safe. Due to no longer having or needing
-`__init__`, the case could be made here to not implement the Activities as a class,
-but just as decorated functions as shown here:
+前面的示例不跨 Activity 共享会话，因此
+`__init__` 已被删除。虽然 `requests` 确实有能力创建会话，
+目前尚不清楚它们是否是线程安全的。由于不再拥有或需要
+`__init__`，这里可以提出不将活动作为班级实施的情况，
+但就像装饰函数一样，如下所示：
 
 ```python
 @activity.defn
@@ -185,15 +192,16 @@ def call_service(stem: str, name: str) -> str:
     return response.text
 ```
 
-Whether to implement Activities as class methods or functions is a design
-choice left up to the developer when cross-activity state isn't needed. Both are
-equally valid implementations.
+是否将 Activity 实现为类方法或函数是一种设计
+当不需要跨 Activity 状态时，由开发人员进行选择。两者都是
+同样有效的实现。
 
-### How to run Synchronous Activities on a Worker
+<a id="how-to-implement-synchronous-activities"></a>
+### 如何在 Worker 上运行同步活动 {#how-to-implement-synchronous-activities}
 
-When running synchronous Activities, the Worker
-needs to have an `activity_executor`. Temporal
-recommends using a `ThreadPoolExecutor` as shown here:
+运行同步活动时，Worker
+需要有 `Activity_executor`。 Temporal
+建议使用 `ThreadPoolExecutor`，如下所示：
 
 ```python
 with ThreadPoolExecutor(max_workers=42) as executor:
@@ -204,28 +212,29 @@ with ThreadPoolExecutor(max_workers=42) as executor:
     )
 ```
 
-## How to Implement Asynchronous Activities
+<a id="how-to-run-synchronous-activities-on-a-worker"></a>
+## 如何实现异步活动 {#how-to-run-synchronous-activities-on-a-worker}
 
-The following code is an implementation of the preceding Activity, but as an
-asynchronous Activity Definition.
+以下代码是前面的 Activity 的实现，但作为
+异步 Activity Definition。
 
-It makes
-a call to a microservice, accessed through HTTP, to request this
-greeting in Spanish. This Activity uses the `aiohttp` library to make an async
-safe HTTP request. Using the `requests` library here would have resulted in
-blocking code within the async event loop, which will block the entire async
-event loop. For more in-depth information about this issue, refer to the
-[Python asyncio documentation](https://docs.python.org/3/library/asyncio-dev.html#running-blocking-code).
+它使
+调用微服务（通过 HTTP 访问）来请求此信息
+用西班牙语打招呼。此 Activity 使用 `aiohttp` 库来制作异步
+安全的 HTTP 请求。在这里使用 `requests` 库会导致
+异步事件循环中的阻塞代码，这将阻塞整个异步
+事件循环。有关此问题的更深入信息，请参阅
+[Python 异步文档](https://docs.python.org/3/library/asyncio-dev.html#running-blocking-code)。
 
-The following code also implements the Activity Definition as a class, rather than a
-function. The `aiohttp` library requires an established `Session` to perform the
-HTTP request. It would be inefficient to establish a `Session` every time an
-Activity is invoked, so instead this code accepts a `Session` object as an instance
-parameter and makes it available to the methods. This approach will also be
-beneficial when the execution is over and the `Session` needs to be closed.
+以下代码还将 Activity Definition 实现为类，而不是
+功能。 `aiohttp` 库需要已建立的 `Session` 来执行
+HTTP 请求。每次都建立一个 `Session` 效率很低。
+Activity 被调用，因此此代码接受 `Session` 对象作为实例
+参数并使其可供方法使用。这一做法也将
+当执行结束并且 `Session` 需要关闭时很有用。
 
-In this example, the Activity supplies the name in the URL and retrieves
-the greeting from the body of the response.
+在此示例中，Activity 在 URL 中提供名称并检索
+来自响应正文的问候语。
 
 ```python
 import aiohttp
@@ -259,22 +268,24 @@ class TranslateActivities:
             return translation
 ```
 
-### How to run synchronous code from an asynchronous activity
+<a id="how-to-implement-asynchronous-activities"></a>
+### 如何从异步 Activity 运行同步代码 {#how-to-implement-asynchronous-activities}
 
-If your Activity is asynchronous and you don't want to change it to synchronous,
-but you need to run blocking code inside it,
-then you can use python utility functions to run synchronous code
-in an asynchronous function:
+如果您的 Activity 是异步的并且您不想将其更改为同步，
+但你需要在其中运行阻塞代码，
+然后你可以使用 python 实用函数来运行同步代码
+在异步函数中：
 
-- [`loop.run_in_executor()`](https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor), which is also mentioned in the ["running blocking code" section of the "developing with asyncio" guide](https://docs.python.org/3/library/asyncio-dev.html#running-blocking-code)
+- [`loop.run_in_executor()`](https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor)，[“使用 asyncio 进行开发”指南的“运行阻塞代码”部分](https://docs.python.org/3/library/asyncio-dev.html#running-blocking-code)中也提到了
 - [`asyncio.to_thread()`](https://docs.python.org/3/library/asyncio-task.html#running-in-threads)
 
-## When Should You Use Async Activities
+<a id="how-to-run-synchronous-code-from-an-asynchronous-activity"></a>
+## 什么时候应该使用异步活动 {#how-to-run-synchronous-code-from-an-asynchronous-activity}
 
-Asynchronous Activities have many advantages, such as potential speed up of execution.
-However, as discussed above, making unsafe calls within the async event loop
-can cause sporadic and difficult to diagnose bugs. For this reason, we recommend
-using asynchronous Activities _only_ when you are certain that your Activities
-are async safe and don't make blocking calls.
+异步活动有许多优点，例如潜在的执行速度。
+但是，如上所述，在异步事件循环中进行不安全的调用
+可能会导致零星且难以诊断的错误。为此，我们建议
+仅当您确定您的活动时才使用异步活动
+是异步安全的并且不会进行阻塞调用。
 
-If you experience bugs that you think may be a result of an unsafe call being made in an asynchronous Activity, convert it to a synchronous Activity and see if the issue resolves.
+如果您遇到错误，并且认为可能是在异步 Activity 中进行不安全调用导致的，请将其转换为同步 Activity 并查看问题是否解决。

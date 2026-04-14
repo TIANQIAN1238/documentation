@@ -1,8 +1,8 @@
 ---
 id: cluster-metrics
-title: OSS Temporal Service metrics reference
-sidebar_label: Temporal Service metrics
-description: A Temporal Service emits metrics helping operators monitor performance and set alerts. Metrics like service requests, latencies, and errors are tracked. Use metric_defs.go for more.
+title: "OSS Temporal 服务指标参考"
+sidebar_label: "Temporal 服务指标"
+description: "Temporal 服务发出指标，帮助操作员监控性能并设置警报。跟踪服务请求、延迟和错误等指标。使用 metric_defs.go 了解更多信息。"
 toc_max_heading_level: 4
 keywords:
   - reference
@@ -13,336 +13,350 @@ tags:
 
 :::info OSS Temporal Service metrics
 
-The information on this page is relevant to open source [Temporal Service deployments](/temporal-service).
+此页面上的信息与开源 [Temporal 服务部署](/temporal-service) 相关。
 
-See [Cloud metrics](/cloud/metrics/) for metrics emitted by [Temporal Cloud](/cloud/overview).
+有关 [Temporal Cloud](/cloud/metrics/) 发出的指标，请参阅 [云指标](/cloud/overview)。
 
-See [SDK metrics](/references/sdk-metrics) for metrics emitted by the [SDKs](/encyclopedia/temporal-sdks).
+有关 [软件开发工具包](/references/sdk-metrics) 发出的指标，请参阅 [SDK指标](/encyclopedia/temporal-sdks)。
 
 :::
 
-A Temporal Service emits a range of metrics to help operators get visibility into the Temporal Service's performance and to set up alerts.
+Temporal 服务会发出一系列指标，以帮助操作员了解 Visibility 的 Temporal 服务性能并设置警报。
 
-All metrics emitted by the Temporal Service are listed in [metric_defs.go](https://github.com/temporalio/temporal/blob/main/common/metrics/metric_defs.go).
+Temporal 服务发出的所有指标均在 [metric_defs.go](https://github.com/temporalio/temporal/blob/main/common/metrics/metric_defs.go) 中列出。
 
-For details on setting up metrics in your Temporal Service configuration, see the [Temporal Service configuration reference](/references/configuration#global).
+有关在 Temporal 服务配置中设置指标的详细信息，请参阅 [Temporal 服务配置参考](/references/configuration#global)。
 
-The [dashboards repository](https://github.com/temporalio/dashboards) contains community-driven Grafana dashboard templates that can be used as a starting point for monitoring the Temporal Service and SDK metrics.
-You can use these templates as references to build your own dashboards.
-For any metrics that are missing in the dashboards, use [metric_defs.go](https://github.com/temporalio/temporal/blob/main/common/metrics/metric_defs.go) as a reference.
+[仪表板存储库](https://github.com/temporalio/dashboards) 包含社区驱动的 Grafana 仪表板模板，可用作监控 Temporal 服务和 SDK 指标的起点。
+您可以使用这些模板作为参考来构建您自己的仪表板。
+对于仪表板中缺少的任何指标，请使用 [metric_defs.go](https://github.com/temporalio/temporal/blob/main/common/metrics/metric_defs.go) 作为参考。
 
-Note that, apart from these metrics emitted by the Temporal Service, you should also monitor infrastructure-specific metrics like CPU, memory, and network for all hosts that are running Temporal Service services.
+请注意，除了 Temporal 服务发出的这些指标之外，您还应该监控运行 Temporal 服务的所有主机的基础设施特定指标，例如 CPU、内存和网络。
 
-## Common metrics
+<a id="common-metrics"></a>
+## 常用指标 {#common-metrics}
 
-Temporal emits metrics for each gRPC service request.
-These metrics are emitted with `type`, `operation`, and `namespace` tags, which provide visibility into Service usage and show the request rates across Services, Namespaces, and Operations.
+Temporal 为每个 gRPC 服务请求发出指标。
+这些指标通过 `type`、`operation` 和 `Namespace` 标签发出，这些标签将 Visibility 提供给服务使用情况，并显示跨服务、Namespace 和操作的请求率。
 
-- Use the `operation` tag in your query to get request rates, error rates, or latencies per operation.
-- Use the `service_name` tag with the [service role tag values](https://github.com/temporalio/temporal/blob/bba148cf1e1642fd39fa0174423b183d5fc62d95/common/metrics/defs.go#L108) to get details for the specific service.
+- 使用 Query 中的 `operation` 标签来获取每个操作的请求率、错误率或延迟。
+- 使用 `service_name` 标签和 [服务角色标签值](https://github.com/temporalio/temporal/blob/bba148cf1e1642fd39fa0174423b183d5fc62d95/common/metrics/defs.go#L108) 来获取特定服务的详细信息。
 
-All common tags that you can add in your query are defined in the [metric_defs.go](https://github.com/temporalio/temporal/blob/main/common/metrics/metric_defs.go) file.
+您可以在 Query 中添加的所有常见标签均在 [metric_defs.go](https://github.com/temporalio/temporal/blob/main/common/metrics/metric_defs.go) 文件中定义。
 
-For example, to see service requests by operation on the Frontend Service, use the following:
+例如，要按前端服务上的操作查看服务请求，请使用以下命令：
 
 `sum by (operation) (rate(service_requests{service_name="frontend"}[2m]))`
 
-Note: All metrics queries in this topic are [Prometheus queries](https://prometheus.io/docs/prometheus/latest/querying/basics/).
+注意：本主题中的所有指标查询都是 [普罗米修斯查询](https://prometheus.io/docs/prometheus/latest/querying/basics/)。
 
-The following list describes some metrics you can get started with.
+以下列表描述了您可以开始使用的一些指标。
 
 ### `service_requests`
 
-Shows service requests received per Task Queue.
-Example: Service requests by operation
+显示根据 Task Queue 收到的服务请求。
+示例：按操作划分的服务请求
 `sum(rate(service_requests{operation=\"AddWorkflowTask\"}[2m]))`
 
 ### `service_latency`
 
-Shows latencies for all Client request operations.
-Usually these are the starting point to investigate which operation is experiencing high-latency issues.
-Example: P95 service latency by operation for the Frontend Service
+显示所有客户端请求操作的延迟。
+通常，这些是调查哪个操作遇到高延迟问题的起点。
+示例：按前端服务操作划分的 P95 服务延迟
 `histogram_quantile(0.95, sum(rate(service_latency_bucket{service_name="frontend"}[5m])) by (operation, le))`
 
 ### `service_error_with_type`
 
-(Available only in v1.17.0+) Identifies errors encountered by the service.
-Example: Service errors by type for the Frontend Service
+（仅在 v1.17.0+ 中可用）标识服务遇到的错误。
+示例：前端服务的服务错误类型
 `sum(rate(service_error_with_type{service_name="frontend"}[5m])) by (error_type)`
 
 ### `client_errors`
 
-An indicator for connection issues between different Server roles.
-Example: Client errors
+不同服务器角色之间的连接问题的指示器。
+示例：客户端错误
 `sum(rate(client_errors{service_name="frontend",service_role="history"}[5m]))`
 
-In addition to these, you can define some service-specific metrics to get performance details for each service.
-Start with the following list, and use [metric_defs.go](https://github.com/temporalio/temporal/blob/main/common/metrics/metric_defs.go) to define additional metrics as required.
+除此之外，您还可以定义一些特定于服务的指标来获取每个服务的性能详细信息。
+从以下列表开始，并使用 [metric_defs.go](https://github.com/temporalio/temporal/blob/main/common/metrics/metric_defs.go) 根据需要定义其他指标。
 
-## Matching Service metrics
+<a id="matching-service-metrics"></a>
+## 匹配服务指标 {#matching-service-metrics}
 
 ### `poll_success`
 
-Shows for Tasks that are successfully matched to a poller.
-Example: `sum(rate(poll_success{}[5m]))`
+显示与轮询器成功匹配的任务。
+示例：`sum(rate(poll_success{}[5m]))`
 
 ### `poll_timeouts`
 
-Shows when no Tasks are available for the poller within the poll timeout.
-Example: `sum(rate(poll_timeouts{}[5m]))`
+当轮询超时内没有可供轮询器使用的任务时显示。
+示例：`sum(rate(poll_timeouts{}[5m]))`
 
 ### `asyncmatch_latency`
 
-Measures the time from creation to delivery for async matched Tasks.
-The larger this latency, the longer Tasks are sitting in the queue waiting for your Workers to pick them up.
-Example: `histogram_quantile(0.95, sum(rate(asyncmatch_latency_bucket{service_name="matching"}[5m])) by (operation, le))`
+测量异步匹配任务从创建到交付的时间。
+此延迟越大，任务在队列中等待 Worker 接收的时间就越长。
+示例：`histogram_quantile(0.95, sum(rate(asyncmatch_latency_bucket{service_name="matching"}[5m])) by (operation, le))`
 
 ### `no_poller_tasks`
 
-Emitted whenever a task is added to a task queue that has no poller, and is a counter metric.
-This is usually an indicator that either the Worker or the starter programs are using the wrong Task Queue.
+每当将任务添加到没有轮询器并且是计数器指标的 Task Queue 时发出。
+这通常表明 Worker 或启动程序使用了错误的 Task Queue。
 
-## History Service metrics
+<a id="history-service-metrics"></a>
+## 历史服务指标 {#history-service-metrics}
 
-A History Task is an internal Task in Temporal that is created as part of a transaction to update Workflow state and is processed by the Temporal History service.
-It is critical to ensure that the History Task processing system is healthy.
-The following key metrics can be used to monitor the History Service health:
+历史任务是 Temporal 中的内部任务，作为 Update Workflow 状态事务的一部分创建，并由 Temporal 历史服务处理。
+确保历史任务处理系统的健康至关重要。
+以下关键指标可用于监控历史服务运行状况：
 
 ### `task_requests`
 
-Emitted on every Task process request.
-Example: `sum(rate(task_requests{operation=~"TransferActive.*"}[1m]))`
+根据每个任务流程请求发出。
+示例：`sum(rate(task_requests{operation=~"TransferActive.*"}[1m]))`
 
 ### `task_errors`
 
-Emitted on every Task process error.
-Example: `sum(rate(task_errors{operation=~"TransferActive.*"}[1m]))`
+在每个任务进程错误时发出。
+示例：`sum(rate(task_errors{operation=~"TransferActive.*"}[1m]))`
 
 ### `task_attempt`
 
-Number of attempts on each Task Execution.
-A Task is retried forever, and each retry increases the attempt count.
-Example: `histogram_quantile(0.95, sum(rate(task_attempt_bucket{operation=~"TransferActive.*"}[1m])) by (operation, le))`
+每个任务执行的尝试次数。
+任务会永远重试，每次重试都会增加尝试计数。
+示例：`histogram_quantile(0.95, sum(rate(task_attempt_bucket{operation=~"TransferActive.*"}[1m])) by (operation, le))`
 
 ### `task_latency_processing`
 
-Shows the processing latency per attempt.
-Example: `histogram_quantile(0.95, sum(rate(task_latency_processing_bucket{operation=~"TransferActive.*",service_name="history"}[1m])) by (operation, le))`
+显示每次尝试的处理延迟。
+示例：`histogram_quantile(0.95, sum(rate(task_latency_processing_bucket{operation=~"TransferActive.*",service_name="history"}[1m])) by (operation, le))`
 
 ### `task_latency`
 
-Measures the in-memory latency across multiple attempts.
+测量多次尝试的内存延迟。
 
 ### `task_latency_queue`
 
-Measures the duration, end-to-end, from when the Task should be executed (from the time it was fired) to when the Task is done.
+测量从应执行任务（从触发时间）到任务完成的端到端持续时间。
 
 ### `task_latency_load`
 
-(Available only in v1.18.0+) Measures the duration from Task generation to Task loading (Task schedule to start latency for persistence queue).
+（仅在 v1.18.0+ 中可用）测量从任务生成到任务加载的持续时间（任务 Schedule 启动持久性队列的延迟）。
 
-### `task_latency_schedule`
+### `task_latency_Schedule`
 
-(Available only in v1.18.0+) Measures the duration from Task submission (to the Task scheduler) to processing (Task schedule to start latency for in-memory queue).
+（仅在 v1.18.0+ 中可用）测量从任务提交（到任务 Scheduler）到处理（任务 Schedule 启动内存队列延迟）的持续时间。
 
-### `queue_latency_schedule`
+### `queue_latency_Schedule`
 
-(Available only in v1.18.0+) Measures the time to schedule 100 Tasks in one Task channel in the host-level Task scheduler.
-If fewer than 100 Tasks are in the Task channel for 30 seconds, the latency is scaled to 100 Tasks upon emission.
-Note: This is still an experimental metric and is subject to change.
+（仅在 v1.18.0+ 中可用）测量主机级任务 Scheduler 中一个任务通道中 Schedule 100 个任务的时间。
+如果任务通道中持续 30 秒的任务少于 100 个，则延迟会在发射时缩放至 100 个任务。
+注意：这仍然是一个实验性指标，可能会发生变化。
 
 ### `service_latency_userlatency`
 
-Shows the latency introduced because of Workflow logic.
-For example, if you have one Workflow scheduling many Activities or Child Workflows at the same time, it can cause a per-Workflow lock contention.
-The wait period for the per-Workflow lock is counted as `userlatency`.
+显示由于 Workflow 逻辑而引入的延迟。
+例如，如果您有一个 Workflow 同时调度多个活动或 Child Workflow，则可能会导致每个 Workflow 的锁争用。
+每个 Workflow 锁的等待时间计为 `userlatency`。
 
-The `operation` tag contains details about Task type and Active versus Standby statuses, and can be used to get request rates, error rates, or latencies per operation, which can help identify issues caused by database problems.
+`operation` 标签包含有关任务类型以及活动与备用状态的详细信息，可用于获取请求率、错误率或每个操作的延迟，这有助于识别由数据库问题引起的问题。
 
-## Persistence metrics
+<a id="persistence-metrics"></a>
+## 持久性指标 {#persistence-metrics}
 
-Temporal Server emits metrics for every persistence database read and write.
-Some of the most important ones are the following:
+Temporal Server 为每次持久性数据库读取和写入发出指标。
+其中一些最重要的如下：
 
 ### `persistence_requests`
 
-Emitted on every persistence request.
-Examples:
+根据每个持久性请求发出。
+示例：
 
-- Prometheus query for getting the total number of persistence requests by operation for the History Service:
+- Prometheus Query 用于获取历史服务操作的持久化请求总数：
   `sum by (operation) (rate(persistence_requests{service_name="history"}[1m]))`
-- Prometheus query for getting the total number of persistence requests by operation for the Matching Service:
+- Prometheus Query 用于获取匹配服务操作的持久性请求总数：
   `sum by (operation) (rate(persistence_requests{service_name="matching"}[1m]))`
 
 ### `persistence_errors`
 
-Shows all persistence errors.
-This metric is a good indicator for connection issues between the Temporal Service and the persistence store.
-Example:
+显示所有持久性错误。
+该指标可以很好地指示 Temporal 服务和持久性存储之间的连接问题。
+例子：
 
-- Prometheus query for getting all persistence errors by service (history)
+- Prometheus Query 用于按服务获取所有持久性错误（历史记录）
   `sum (rate(persistence_errors{service_name="history"}[1m]))`
 
 ### `persistence_error_with_type`
 
-Shows all errors related to the persistence store with type, and contain an `error_type` tag.
+显示与持久性存储相关的所有错误类型，并包含 `error_type` 标记。
 
-- Prometheus query for getting persistence errors with type by (history) and by error type:
+- Prometheus Query 用于获取类型为（历史）和错误类型的持久性错误：
   `sum(rate(persistence_error_with_type{service_name="history"}[1m])) by (error_type)`
 
 ### `persistence_latency`
 
-Shows the latency on persistence operations.
-Example:
+显示持久性操作的延迟。
+例子：
 
-- Prometheus query for getting latency by percentile:
+- Prometheus Query 用于按百分位数获取延迟：
   `histogram_quantile(0.95, sum(rate(persistence_latency_bucket{service_name="history"}[1m])) by (operation, le))`
 
-## Schedule metrics
+<a id="schedule-metrics"></a>
+## Schedule 指标 {#schedule-metrics}
 
-Temporal emits metrics that track the performance and outcomes of these Scheduled Executions.
+Temporal 发出跟踪这些 Scheduled 执行的性能和结果的指标。
 
-Below are additional metrics that can help you monitor and optimize your Scheduled Workflow Executions.
+以下是可帮助您监控和优化 Scheduled Workflow Execution 的其他指标。
 
-### `schedule_buffer_overruns`
+### `Schedule_buffer_overruns`
 
-Indicates instances where the buffer for holding Scheduled Workflows exceeds its maximum capacity.
-This scenario typically occurs when schedules with a `buffer_all` overlap policy have their average run length exceeding the average schedule interval.
+指示用于保存 Scheduled Workflows 的缓冲区超出其最大容量的实例。
+当具有 `buffer_all` 重叠策略的 Schedule 的平均运行长度超过平均 Schedule 间隔时，通常会发生这种情况。
 
-Example: To monitor buffer overruns.
+示例：监视缓冲区溢出。
 
-`sum(rate(schedule_buffer_overruns{namespace="$namespace"}[5m]))`
+`sum(rate(Schedule_buffer_overruns{Namespace="$Namespace"}[5m]))`
 
-### `schedule_missed_catchup_window`
+### `Schedule_missed_catchup_window`
 
-Tracks occurrences when the system fails to execute a Scheduled Action within the defined catchup window.
-Missed catchup windows can result from extended outages beyond the configured catchup period.
+跟踪系统无法在定义的追赶窗口内执行 Scheduled 操作时发生的情况。
+错过追赶窗口可能是由于超出配置的追赶时段而导致长时间中断造成的。
 
-Example: To identify missed catchup opportunities.
+示例：识别错过的追赶机会。
 
-`sum(rate(schedule_missed_catchup_window{namespace="$namespace"}[5m]))`
+`sum(rate(Schedule_missed_catchup_window{Namespace="$Namespace"}[5m]))`
 
-### `schedule_rate_limited`
+### `Schedule_rate_limited`
 
-Reflects instances where the creation of Workflows by a Schedule is throttled due to rate limiting policies within a Namespace.
-This metric is crucial for identifying scheduling patterns that frequently hit rate limits, potentially causing missed catchup windows.
+反映由于 Namespace 内的速率限制策略，Schedule 创建 Workflow 受到限制的实例。
+该指标对于识别经常达到速率限制（可能导致错过追赶窗口）的调度模式至关重要。
 
-Example: To assess the impact of rate limiting on Scheduled Executions.
+示例：评估速率限制对 Scheduled 执行的影响。
 
-`sum(rate(schedule_rate_limited{namespace="$namespace"}[5m]))`
+`sum(rate(Schedule_rate_limited{Namespace="$Namespace"}[5m]))`
 
-### `schedule_action_success`
+### `Schedule_action_success`
 
-Measures the successful execution of Workflows as per their schedules or through manual triggers.
-This metric confirms that Workflows are running as expected without delays or errors.
+根据 Schedule 或通过手动触发器测量 Workflow 的成功执行。
+该指标确认 Workflow 正在按预期运行，没有延迟或错误。
 
-Example: To track the success rate of Scheduled Workflow Executions.
+示例：跟踪 Scheduled Workflow Executions 的成功率。
 
-`sum(rate(schedule_action_success{namespace="$namespace"}[5m]))`
+`sum(rate(Schedule_action_success{Namespace="$Namespace"}[5m]))`
 
-## Workflow metrics
+<a id="workflow-metrics"></a>
+## Workflow 指标 {#workflow-metrics}
 
-These metrics pertain to Workflow statistics.
+这些指标与 Workflow 统计数据相关。
 
-### `workflow_cancel`
+### `Workflow_cancel`
 
-Number of Workflows canceled before completing execution.
+在完成执行之前取消的 Workflow 数量。
 
-### `workflow_continued_as_new`
+### `Workflow_continued_as_new`
 
-Number of Workflow Executions that were Continued-As-New from a past execution.
+从过去的执行中继续为新的 Workflow Execution 的数量。
 
-### `workflow_failed`
+### `Workflow_failed`
 
-Number of Workflows that failed before completion.
+在完成之前失败的 Workflow 数量。
 
-### `workflow_success`
+### `Workflow_success`
 
-Number of Workflows that successfully completed.
+成功完成的 Workflow 数量。
 
-### `workflow_timeout`
+### `Workflow_timeout`
 
-Number of Workflows that timed out before completing execution.
+在完成执行之前超时的 Workflow 数量。
 
-## Nexus metrics
+<a id="nexus-metrics"></a>
+## Nexus 指标 {#nexus-metrics}
 
-These metrics pertain to Nexus Operations.
+这些指标与 Nexus 操作相关。
 
-### Nexus Machinery in the History Service
+<a id="nexus-machinery-in-the-history-service"></a>
+### Nexus 历史服务中的机械 {#nexus-machinery-in-the-history-service}
 
-See [architecture document](https://github.com/temporalio/temporal/blob/5d55d6c707bd68d8f3274c57ae702331adf05e6e/docs/architecture/nexus.md#scheduler)
-for more info.
+参见 [架构文档](https://github.com/temporalio/temporal/blob/5d55d6c707bd68d8f3274c57ae702331adf05e6e/docs/architecture/nexus.md#scheduler)
+了解更多信息。
 
-#### In-Memory Buffer
+<a id="in-memory-buffer"></a>
+#### 内存缓冲区 {#in-memory-buffer}
 
-`dynamic_worker_pool_scheduler_enqueued_tasks`: A counter that is incremented when a task is enqueued to the buffer.
+`dynamic_Worker_pool_Scheduler_enqueued_tasks`：当任务排队到缓冲区时递增的计数器。
 
-`dynamic_worker_pool_scheduler_dequeued_tasks`: A counter that is incremented when a task is dequeued from the buffer.
+`dynamic_Worker_pool_Scheduler_dequeued_tasks`：当任务从缓冲区出列时递增的计数器。
 
-`dynamic_worker_pool_scheduler_rejected_tasks`: A counter that is incremented when the buffer is full and adding the
-task is rejected.
+`dynamic_Worker_pool_Scheduler_rejected_tasks`：当缓冲区已满时递增的计数器，并添加
+任务被拒绝。
 
-`dynamic_worker_pool_scheduler_buffer_size`: A gauge that periodically samples the size of the buffer.
+`dynamic_Worker_pool_Scheduler_buffer_size`：定期对缓冲区大小进行采样的仪表。
 
-### Concurrency Limiter
+<a id="concurrency-limiter"></a>
+### 并发限制器 {#concurrency-limiter}
 
-`dynamic_worker_pool_scheduler_active_workers`: A gauge that periodically samples the number of running goroutines.
+`dynamic_Worker_pool_Scheduler_active_Workers`：定期对运行的 goroutine 数量进行采样的量规。
 
-#### Rate Limiter
+<a id="rate-limiter"></a>
+#### 速率限制器 {#rate-limiter}
 
-`rate_limited_task_runnable_wait_time`: A histogram representing the time a task spends waiting for the rate limiter.
+`rate_limited_task_runnable_wait_time`：表示任务等待速率限制器所花费的时间的直方图。
 
-#### Circuit Breaker
+<a id="circuit-breaker"></a>
+#### 断路器 {#circuit-breaker}
 
-`circuit_breaker_executable_blocked`: A counter that is incremented every time a task execution is blocked by the
-circuit breaker.
+`circuit_breaker_executable_blocked`：每次任务执行被阻塞时都会递增的计数器
+断路器。
 
-#### Task Executors
+<a id="task-executors"></a>
+#### 任务执行者 {#task-executors}
 
-`nexus_outbound_requests`: A counter representing the number of Nexus outbound requests made by the history service.
+`Nexus_outbound_requests`：表示历史服务发出的 Nexus 出站请求数的计数器。
 
-`nexus_outbound_latency`: A histogram representing the latency of outbound Nexus requests made by the history service.
+`Nexus_outbound_latency`：表示历史服务发出的出站 Nexus 请求的延迟的直方图。
 
-`callback_outbound_requests`: A counter representing the number of callback outbound requests made by the history
-service.
+`callback_outbound_requests`：代表历史发出的回调出站请求数量的计数器
+服务。
 
-`callback_outbound_latency`: A histogram representing the latency histogram of outbound callback requests made by the
-history service.
+`callback_outbound_latency`：表示出站回调请求的延迟直方图
+历史服务。
 
-### Nexus Machinery on the Frontend Service
+<a id="nexus-machinery-on-the-frontend-service"></a>
+### Nexus 前端服务机械 {#nexus-machinery-on-the-frontend-service}
 
-#### `nexus_requests`
+#### `Nexus_requests`
 
-The number of Nexus requests received by the service.
+服务收到的 Nexus 请求数。
 
-Type: Counter
+类型：柜台
 
-#### `nexus_latency`
+#### `Nexus_latency`
 
-Latency of Nexus requests.
+Nexus 请求的延迟。
 
-Type: Histogram
+类型：直方图
 
-#### `nexus_request_preprocess_errors`
+#### `Nexus_request_preprocess_errors`
 
-The number of Nexus requests for which pre-processing failed.
+预处理失败的 Nexus 请求数。
 
-Type: Counter
+类型：柜台
 
-#### `nexus_completion_requests`
+#### `Nexus_completion_requests`
 
-The number of Nexus completion (callback) requests received by the service.
+服务收到的 Nexus 完成（回调）请求的数量。
 
-Type: Counter
+类型：柜台
 
-#### `nexus_completion_latency`
+#### `Nexus_completion_latency`
 
-Latency histogram of Nexus completion (callback) requests.
+Nexus 完成（回调）请求的延迟直方图。
 
-Type: Histogram
+类型：直方图
 
-#### `nexus_completion_request_preprocess_errors`
+#### `Nexus_completion_request_preprocess_errors`
 
-The number of Nexus completion requests for which pre-processing failed.
+预处理失败的 Nexus 完成请求的数量。
 
-Type: Counter
+类型：柜台

@@ -1,8 +1,8 @@
 ---
 id: message-passing
-title: Workflow message passing - Python SDK
-sidebar_label: Messages
-description: Develop with Queries, Signals, and Updates with the Temporal Python SDK.
+title: "Workflow 消息传递 - Python SDK"
+sidebar_label: "留言"
+description: "使用 Temporal Python SDK 进行查询、Signal 和 Update 的开发。"
 toc_max_heading_level: 3
 keywords:
   - temporal python signals
@@ -26,27 +26,27 @@ tags:
   - Temporal SDKs
 ---
 
-A Workflow can act like a stateful web service that receives messages: Queries, Signals, and Updates.
-The Workflow implementation defines these endpoints via handler methods that can react to incoming messages and return values.
-Temporal Clients use messages to read Workflow state and control its execution.
-See [Workflow message passing](/encyclopedia/workflow-message-passing) for a general overview of this topic.
-This page introduces these features for the Temporal Python SDK.
+Workflow 可以像有状态 Web 服务一样接收消息：查询、Signal 和 Update。
+Workflow 实现通过可以对传入消息和返回值做出反应的处理程序方法定义这些端点。
+Temporal CLIents 使用消息来读取 Workflow 状态并控制其执行。
+有关此主题的一般概述，请参阅 [Workflow消息传递](/encyclopedia/workflow-message-passing)。
+本页介绍 Temporal Python SDK 的这些功能。
 
-## Write message handlers {#writing-message-handlers}
-
+<a id="writing-message-handlers"></a>
+## 编写消息处理程序 {#writing-message-handlers}
 :::info
-The code that follows is part of a working message passing [sample](https://github.com/temporalio/samples-python/tree/main/message_passing/introduction).
+下面的代码是传递 [样本](https://github.com/temporalio/samples-python/tree/main/message_passing/introduction) 的工作消息的一部分。
 :::
 
-Follow these guidelines when writing your message handlers:
+编写消息处理程序时请遵循以下准则：
 
-- Message handlers are defined as methods on the Workflow class, using one of the three decorators: [`@workflow.query`](https://python.temporal.io/temporalio.workflow.html#query), [`@workflow.signal`](https://python.temporal.io/temporalio.workflow.html#signal), and [`@workflow.update`](https://python.temporal.io/temporalio.workflow.html#update).
-- The parameters and return values of handlers and the main Workflow function must be [serializable](/dataconversion).
-- Prefer [data classes](https://docs.python.org/3/library/dataclasses.html) to multiple input parameters. Data class parameters allow you to add fields without changing the calling signature. Keep in mind that serialization and deserialization can fail with the default data converter if the new field does not have a default value.
+- 消息处理程序被定义为 Workflow 类上的方法，使用以下三个装饰器之一：[`@Workflow.Query`](https://python.temporal.io/temporalio.workflow.html#query)、[`@Workflow.Signal`](https://python.temporal.io/temporalio.workflow.html#signal) 和 [`@Workflow.Update`](https://python.temporal.io/temporalio.workflow.html#update)。
+- 处理程序和主 Workflow 函数的参数和返回值必须是 [可序列化](/dataconversion)。
+- 优先选择 [数据类](https://docs.python.org/3/library/dataclasses.html) 而非多个输入参数。数据类参数允许您在不更改调用签名的情况下添加字段。请记住，如果新字段没有默认值，则序列化和反序列化可能会失败并显示默认的 Data Converter。
 
-### Query handlers {#queries}
-
-A [Query](/sending-messages#sending-queries) is a synchronous operation that retrieves state from a Workflow Execution:
+<a id="queries"></a>
+### Query 处理程序 {#queries}
+[Query](/sending-messages#sending-queries) 是从 Workflow Execution 检索状态的同步操作：
 
 ```python
 class Language(IntEnum):
@@ -75,15 +75,15 @@ class GreetingWorkflow:
             return list(self.greetings)
 ```
 
-- The Query decorator can accept arguments.
-  Refer to the API docs: [`@workflow.query`](https://python.temporal.io/temporalio.workflow.html#query).
+- Query 装饰器可以接受参数。
+  请参阅 API 文档：[`@Workflow.Query`](https://python.temporal.io/temporalio.workflow.html#query)。
 
-- A Query handler uses `def`, not `async def`.
-  You can't perform async operations like executing an Activity in a Query handler.
+- Query 处理程序使用 `def`，而不是 `async def`。
+  您无法执行异步操作，例如在 Query 处理程序中执行 Activity。
 
-### Signal handlers {#signals}
-
-A [Signal](/sending-messages#sending-signals) is an asynchronous message sent to a running Workflow Execution to change its state and control its flow:
+<a id="signals"></a>
+### Signal 处理程序 {#signals}
+[Signal](/sending-messages#sending-signals) 是发送到正在运行的 Workflow Execution 的异步消息，用于更改其状态并控制其流程：
 
 ```python
 @dataclass
@@ -100,22 +100,22 @@ class GreetingWorkflow:
         self.approver_name = input.name
 ```
 
-- The Signal decorator can accept arguments.
-  Refer to the API docs: [`@workflow.signal`](https://python.temporal.io/temporalio.workflow.html#signal).
+- Signal 装饰器可以接受参数。
+  请参阅 API 文档：[`@Workflow.Signal`](https://python.temporal.io/temporalio.workflow.html#signal)。
 
-- The handler should not return a value.
-  The response is sent immediately from the server, without waiting for the Workflow to process the Signal.
+- 处理程序不应返回值。
+  服务器立即发送响应，无需等待 Workflow 处理 Signal。
 
-- Signal (and Update) handlers can be `async def`.
-  This allows you to use Activities, Child Workflows, durable [`asyncio.sleep`](https://docs.python.org/3/library/asyncio-task.html#asyncio.sleep) Timers, [`workflow.wait_condition`](https://python.temporal.io/temporalio.workflow.html#wait_condition) conditions, and more.
-  See [Async handlers](#async-handlers) and [Workflow message passing](/encyclopedia/workflow-message-passing) for guidelines on safely using async Signal and Update handlers.
+- Signal（和 Update）处理程序可以是 `async def`。
+  这允许您使用活动、Child Workflow、持久 [`asyncio.sleep`](https://docs.python.org/3/library/asyncio-task.html#asyncio.sleep)、Timer、[`Workflow.wait_condition`](https://python.temporal.io/temporalio.workflow.html#wait_condition) 条件等。
+  有关安全使用异步 Signal 和 Update 处理程序的指南，请参阅 [异步处理程序](#async-handlers) 和 [Workflow消息传递](/encyclopedia/workflow-message-passing)。
 
-### Update handlers and validators {#updates}
-
-An [Update](/sending-messages#sending-updates) is a trackable synchronous request sent to a running Workflow Execution.
-It can change the Workflow state, control its flow, and return a result.
-The sender must wait until the Worker accepts or rejects the Update.
-The sender may wait further to receive a returned value or an exception if something goes wrong:
+<a id="updates"></a>
+### Update 处理程序和验证器 {#updates}
+[Update](/sending-messages#sending-updates) 是发送到正在运行的 Workflow Execution 的可跟踪同步请求。
+它可以更改 Workflow 状态、控制其流程并返回结果。
+发送方必须等待，直到 Worker 接受或拒绝 Update。
+如果出现问题，发送者可能会进一步等待接收返回值或异常：
 
 ```python
 class Language(IntEnum):
@@ -139,37 +139,37 @@ class GreetingWorkflow:
             raise ValueError(f"{language.name} is not supported")
 ```
 
-- The Update decorator can take arguments (like, `name`, `dynamic` and `unfinished_policy`) as described in the API reference docs for [`workflow.update`](https://python.temporal.io/temporalio.workflow.html#update).
+- Update 装饰器可以采用参数（例如 `name`、`dynamic` 和 `unfinished_policy`），如 [`Workflow.Update`](https://python.temporal.io/temporalio.workflow.html#update) 的 API 参考文档中所述。
 
-- About validators:
-  - Use validators to reject an Update before it is written to History.
-    Validators are always optional.
-    If you don't need to reject Updates, you can skip them.
-  - The SDK automatically provides a validator decorator named `@<update-handler-name>.validator`.
-    The validator must accept the same argument types as the handler and return `None`.
+- 关于验证器：
+  - 在将 Update 写入历史记录之前，使用验证器拒绝该 Update。
+    验证器始终是可选的。
+    如果您不需要拒绝 Update，则可以跳过它们。
+  - SDK 自动提供一个名为 `@<Update-handler-name>.validator` 的验证器装饰器。
+    验证器必须接受与处理程序相同的参数类型并返回 `None`。
 
-- Accepting and rejecting Updates with validators:
-  - To reject an Update, raise an exception of any type in the validator.
-  - Without a validator, Updates are always accepted.
-- Validators and Event History:
-  - The `WorkflowExecutionUpdateAccepted` event is written into the History whether the acceptance was automatic or programmatic.
-  - When a Validator raises an error, the Update is rejected and `WorkflowExecutionUpdateAccepted` _won't_ be added to the Event History.
-    The caller receives an "Update failed" error.
+- 使用验证器接受和拒绝 Update：
+  - 要拒绝 Update，请在验证器中引发任何类型的异常。
+  - 如果没有验证器，则始终接受 Update。
+- 验证器和 Event History：
+  - 无论是自动接受还是编程接受，`WorkflowExecutionUpdateAccepted` 事件都会写入历史记录。
+  - 当验证器引发错误时，Update 会被拒绝，并且 `WorkflowExecutionUpdateAccepted` _不会_ 添加到 Event History 中。
+    调用者收到“Update 失败”错误。
 
-- Use [`workflow.current_update_info`](https://python.temporal.io/temporalio.workflow.html#current_update_info) to obtain information about the current Update.
-  This includes the Update ID, which can be useful for deduplication when using Continue-As-New: see [Ensuring your messages are processed exactly once](/handling-messages#exactly-once-message-processing).
-- Update (and Signal) handlers can be `async def`, letting them use Activities, Child Workflows, durable [`asyncio.sleep`](https://docs.python.org/3/library/asyncio-task.html#asyncio.sleep) Timers, [`workflow.wait_condition`](https://python.temporal.io/temporalio.workflow.html#wait_condition) conditions, and more.
-  See [Async handlers](#async-handlers) and [Workflow message passing](/encyclopedia/workflow-message-passing) for safe usage guidelines.
+- 使用 [`Workflow.current_Update_info`](https://python.temporal.io/temporalio.workflow.html#current_update_info) 获取有关当前 Update 的信息。
+  这包括 Update ID，它在使用 Continue-As-New 时可用于重复数据删除：请参阅 [确保您的消息仅被处理一次](/handling-messages#exactly-once-message-processing)。
+- Update（和 Signal）处理程序可以是 `async def`，让它们使用活动、Child Workflow、持久 [`asyncio.sleep`](https://docs.python.org/3/library/asyncio-task.html#asyncio.sleep) Timer、[`Workflow.wait_condition`](https://python.temporal.io/temporalio.workflow.html#wait_condition) 条件等。
+  请参阅 [异步处理程序](#async-handlers) 和 [Workflow消息传递](/encyclopedia/workflow-message-passing) 了解安全使用指南。
 
-## Send messages {#send-messages}
+<a id="send-messages"></a>
+## 发送消息 {#send-messages}
+要发送查询、Signal 或 Update，您可以调用 [Workflow手柄](https://python.temporal.io/temporalio.client.WorkflowHandle.html) 对象上的方法：
 
-To send Queries, Signals, or Updates, you call methods on a [WorkflowHandle](https://python.temporal.io/temporalio.client.WorkflowHandle.html) object:
+- 使用 [开始_Workflow](https://python.temporal.io/temporalio.client.Client.html#start_workflow) 启动 Workflow 并返回其句柄。
 
-- Use [start_workflow](https://python.temporal.io/temporalio.client.Client.html#start_workflow) to start a Workflow and return its handle.
+- 使用 [get_Workflow_handle_for](https://python.temporal.io/temporalio.client.Client.html#get_workflow_handle_for) 通过 Workflow Id 检索类型化的 Workflow 句柄。
 
-- Use [get_workflow_handle_for](https://python.temporal.io/temporalio.client.Client.html#get_workflow_handle_for) to retrieve a typed Workflow handle by its Workflow Id.
-
-For example:
+例如：
 
 ```python
 client = await Client.connect("localhost:7233")
@@ -178,19 +178,19 @@ workflow_handle = await client.start_workflow(
 )
 ```
 
-To check the argument types required when sending messages -- and the return type for Queries and Updates -- refer to the corresponding handler method in the Workflow Definition.
+要检查发送消息时所需的参数类型以及查询和 Update 的返回类型，请参阅 Workflow Definition 中相应的处理程序方法。
 
 :::warning Using Continue-as-New and Updates
 
-- Temporal _does not_ support Continue-as-New functionality within Update handlers.
-- Complete all handlers _before_ using Continue-as-New.
-- Use Continue-as-New from your main Workflow Definition method, just as you would complete or fail a Workflow Execution.
+- Temporal_不_支持 Update 处理程序中的 Continue-As-New 功能。
+- 使用 Continue-As-New_之前_完成所有处理程序。
+- 从您的主要 Workflow Definition 方法中使用 Continue-As-New，就像完成或失败 Workflow Execution 一样。
 
 :::
 
-### Send a Query {#send-query}
-
-Use [`WorkflowHandle.query`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#query) to send a Query to a Workflow Execution:
+<a id="send-query"></a>
+### 发送 Query {#send-query}
+使用 [`WorkflowHandle.Query`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#query) 将 Query 发送到 Workflow Execution：
 
 ```python
 supported_languages = await workflow_handle.query(
@@ -198,36 +198,36 @@ supported_languages = await workflow_handle.query(
 )
 ```
 
-- Sending a Query doesn’t add events to a Workflow's Event History.
+- 发送 Query 不会将事件添加到 Workflow 的 Event History。
 
-- You can send Queries to closed Workflow Executions within a Namespace's Workflow retention period.
-  This includes Workflows that have completed, failed, or timed out.
-  Querying terminated Workflows is not safe and, therefore, not supported.
+- 您可以在 Namespace 的 Workflow 保留期内向已关闭的 Workflow Execution 发送查询。
+  这包括已完成、失败或超时的 Workflow。
+  Querying 终止的 Workflow 不安全，因此不受支持。
 
-- A Worker must be online and polling the Task Queue to process a Query.
+- Worker 必须在线并轮询 Task Queue 才能处理 Query。
 
-### Send a Signal {#send-signal}
+<a id="send-signal"></a>
+### 发送 Signal {#send-signal}
+您可以从 Temporal CLIent 或另一个 Workflow Execution 向 Workflow Execution 发送 Signal。
+但是，您只能将 Signal 发送到尚未关闭的 Workflow Execution。
 
-You can send a Signal to a Workflow Execution from a Temporal Client or from another Workflow Execution.
-However, you can only send Signals to Workflow Executions that haven’t closed.
-
-#### Send a Signal from a Client {#send-signal-from-client}
-
-Use [`WorkflowHandle.signal`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#signal) to send a Signal:
+<a id="send-signal-from-client"></a>
+#### 从客户端发送 Signal {#send-signal-from-client}
+使用 [`WorkflowHandle.Signal`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#signal) 发送 Signal：
 
 ```python
 await workflow_handle.signal(GreetingWorkflow.approve, ApproveInput(name="me"))
 ```
 
-- The call returns when the server accepts the Signal; it does _not_ wait for the Signal to be delivered to the Workflow Execution.
+- 当服务器接受 Signal 时调用返回；它并不等待 Signal 被传送到 Workflow Execution。
 
-- The [WorkflowExecutionSignaled](/references/events#workflowexecutionsignaled) Event appears in the Workflow's Event History.
+- [Workflow执行Signaled](/references/events#workflowexecutionsignaled) 事件出现在 Workflow 的 Event History 中。
 
-#### Send a Signal from a Workflow {#send-signal-from-workflow}
-
-A Workflow can send a Signal to another Workflow, known as an _External Signal_.
-You'll need a Workflow handle for the external Workflow.
-Use [`get_external_workflow_handle_for`](https://python.temporal.io/temporalio.workflow.html#get_external_workflow_handle_for):
+<a id="send-signal-from-workflow"></a>
+#### 从 Workflow 发送 Signal {#send-signal-from-workflow}
+Workflow 可以将 Signal 发送到另一个 Workflow，称为_外部 Signal_。
+您需要一个用于外部 Workflow 的 Workflow 手柄。
+使用 [`get_external_Workflow_handle_for`](https://python.temporal.io/temporalio.workflow.html#get_external_workflow_handle_for)：
 
 <div style={{backgroundColor: '#e0e0e0',padding: '0px 15px',borderRadius: '5px',border: '1px solid #cccccc',display: 'inline-block'}}><a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/signal_your_workflow/signal_external_wf_dacx.py"><tt>See full sample</tt></a></div>
 
@@ -241,15 +241,15 @@ class WorkflowB:
         await handle.signal(WorkflowA.your_signal, "signal argument")
 ```
 
-When an External Signal is sent:
+当发送外部 Signal 时：
 
-- A [SignalExternalWorkflowExecutionInitiated](/references/events#signalexternalworkflowexecutioninitiated) Event appears in the sender's Event History.
-- A [WorkflowExecutionSignaled](/references/events#workflowexecutionsignaled) Event appears in the recipient's Event History.
+- [Signal外部Workflow执行已启动](/references/events#signalexternalworkflowexecutioninitiated) 事件出现在发件人的 Event History 中。
+- [Workflow执行Signaled](/references/events#workflowexecutionsignaled) 事件出现在收件人的 Event History 中。
 
-#### Signal-With-Start {#signal-with-start}
-
-Signal-With-Start allows a Client to send a Signal to a Workflow Execution, starting the Execution if it is not already running.
-To use Signal-With-Start, call the [`start_workflow`](https://python.temporal.io/temporalio.client.Client.html#start_workflow) method and pass the `start_signal` argument with the name of your Signal:
+<a id="signal-with-start"></a>
+#### Signal-带启动 {#signal-with-start}
+Signal-With-Start 允许客户端将 Signal 发送到 Workflow Execution，如果尚未运行则启动执行。
+要使用 Signal-With-Start，请调用 [`start_Workflow`](https://python.temporal.io/temporalio.client.Client.html#start_workflow) 方法并传递带有 Signal 名称的 `start_Signal` 参数：
 
 <div style={{backgroundColor: '#e0e0e0',padding: '0px 15px',borderRadius: '5px',border: '1px solid #cccccc',display: 'inline-block'}}><a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/signal_your_workflow/signal_with_start_dacx.py"><tt>See full sample</tt></a></div>
 
@@ -267,22 +267,22 @@ async def main():
     )
 ```
 
-### Send an Update {#send-update-from-client}
+<a id="send-update-from-client"></a>
+### 发送 Update {#send-update-from-client}
+Update 是同步、阻塞调用，可以更改 Workflow 状态、控制其流程并返回结果。
 
-An Update is a synchronous, blocking call that can change Workflow state, control its flow, and return a result.
+发送 Update 的客户端必须等待，直到服务器将 Update 传递给 Worker。
+Worker 必须可用且响应迅速。
+如果服务器收到请求后需要立即响应，请改用 Signal。
+另请注意，您无法将 Update 发送到其他 Workflow Execution。
 
-A client sending an Update must wait until the Server delivers the Update to a Worker.
-Workers must be available and responsive.
-If you need a response as soon as the Server receives the request, use a Signal instead.
-Also note that you can't send Updates to other Workflow Executions.
+- 当Worker确认Update通过验证时，`WorkflowExecutionUpdateAccepted`被添加到Event History。
+- 当Worker确认Update已完成时，`WorkflowExecutionUpdateCompleted`被添加到Event History。
 
-- `WorkflowExecutionUpdateAccepted` is added to the Event History when the Worker confirms that the Update passed validation.
-- `WorkflowExecutionUpdateCompleted` is added to the Event History when the Worker confirms that the Update has finished.
+要将 Update 发送到 Workflow Execution，您可以：
 
-To send an Update to a Workflow Execution, you can:
-
-- Call [`execute_update`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#execute_update) and wait for the Update to complete.
-  This code fetches an Update result:
+- 呼叫 [`execute_Update`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#execute_update) 并等待 Update 完成。
+  此代码获取 Update 结果：
 
   ```python
   previous_language = await workflow_handle.execute_update(
@@ -290,13 +290,13 @@ To send an Update to a Workflow Execution, you can:
   )
   ```
 
-- Send [`start_update`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#start_update) to receive an [`UpdateHandle`](https://python.temporal.io/temporalio.client.WorkflowUpdateHandle.html) as soon as the Update is accepted.
+- 一旦 Update 被接受，请发送 [`start_Update`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#start_update) 以收到 [`UpdateHandle`](https://python.temporal.io/temporalio.client.WorkflowUpdateHandle.html)。
 
-  - Use this `UpdateHandle` later to fetch your results.
-  - `async def` Update handlers normally perform long-running asynchronous operations, such as executing an Activity.
-  - `start_update` only waits until the Worker has accepted or rejected the Update, not until all asynchronous operations are complete.
+- 稍后使用此 `UpdateHandle` 获取结果。
+  - `async def` Update 处理程序通常执行长时间运行的异步操作，例如执行 Activity。
+  - `start_Update` 仅等待直到 Worker 接受或拒绝 Update，而不等待所有异步操作完成。
 
-  For example:
+例如：
 
   ```python
   # Wait until the update is accepted
@@ -309,38 +309,38 @@ To send an Update to a Workflow Execution, you can:
   update_result = await update_handle.result()
   ```
 
-  For more details, see the "Async handlers" section.
+有关更多详细信息，请参阅“异步处理程序”部分。
 
-To obtain an Update handle, you can:
+要获取 Update 句柄，您可以：
 
-- Use [`start_update`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#start_update) to start an Update and return the handle, as shown in the preceding example.
-- Use [`get_update_handle_for`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#get_update_handle_for) to fetch a handle for an in-progress Update using the Update ID.
+- 使用 [`start_Update`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#start_update) 启动 Update 并返回句柄，如前面的示例所示。
+- 使用 [`get_Update_handle_for`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#get_update_handle_for) 使用 Update ID 获取正在进行的 Update 的句柄。
 
-#### Update-With-Start {#update-with-start}
-
+<a id="update-with-start"></a>
+#### Update-带启动 {#update-with-start}
 :::tip
 
-For open source server users, Temporal Server version [Temporal Server version 1.28](https://github.com/temporalio/temporal/releases/tag/v1.28.0) is recommended.
+对于开源服务器用户，建议使用Temporal Server版本[Temporal Server 版本 1.28](https://github.com/temporalio/temporal/releases/tag/v1.28.0)。
 
 :::
 
-[Update-with-Start](/sending-messages#update-with-start) lets you
-[send an Update](/develop/python/workflows/message-passing#send-update-from-client) that checks whether an already-running Workflow with that ID exists:
+[Update-带启动](/sending-messages#update-with-start) 让您
+[发送 Update](/develop/python/workflows/message-passing#send-update-from-client) 检查是否存在具有该 ID 的已运行的 Workflow：
 
-- If the Workflow exists, the Update is processed.
-- If the Workflow does not exist, a new Workflow Execution is started with the given ID, and the Update is processed before the main Workflow method starts to execute.
+- 如果 Workflow 存在，则处理 Update。
+- 如果 Workflow 不存在，则使用给定 ID 启动新的 Workflow Execution，并在主 Workflow 方法开始执行之前处理 Update。
 
-Use [`execute_update_with_start_workflow`](https://python.temporal.io/temporalio.client.Client.html#start_update_with_start_workflow) to start the Update and wait for the result in one go.
+使用[`execute_Update_with_start_Workflow`](https://python.temporal.io/temporalio.client.Client.html#start_update_with_start_workflow)启动Update，一次性等待结果。
 
-Alternatively, use [`start_update_with_start_workflow`](https://python.temporal.io/temporalio.client.Client.html#start_update_with_start_workflow) to start the Update and receive a [`WorkflowUpdateHandle`](https://python.temporal.io/temporalio.client.WorkflowUpdateHandle.html), and then use `await update_handle.result()` to retrieve the result from the Update.
+或者，使用 [`start_Update_with_start_Workflow`](https://python.temporal.io/temporalio.client.Client.html#start_update_with_start_workflow) 启动 Update 并接收 [`WorkflowUpdateHandle`](https://python.temporal.io/temporalio.client.WorkflowUpdateHandle.html)，然后使用 `await Update_handle.result()` 从 Update 检索结果。
 
-These calls return once the requested Update wait stage has been reached, or when the request times out.
+一旦到达所请求的 Update 等待阶段或请求超时，这些调用就会返回。
 
-You will need to provide a [`WithStartWorkflowOperation`](https://python.temporal.io/temporalio.client.WithStartWorkflowOperation.html) to define the Workflow that will be started if necessary, and its arguments.
-You must specify a [WorkflowIdConflictPolicy](/workflow-execution/workflowid-runid#workflow-id-conflict-policy) when creating the `WithStartWorkflowOperation`.
-Note that a `WithStartWorkflowOperation` can only be used once.
+您需要提供 [`WithStartWorkflowOperation`](https://python.temporal.io/temporalio.client.WithStartWorkflowOperation.html) 来定义必要时启动的 Workflow 及其参数。
+创建 `WithStartWorkflowOperation` 时必须指定 [WorkflowId冲突政策](/workflow-execution/workflowid-runid#workflow-id-conflict-policy)。
+请注意，`WithStartWorkflowOperation` 只能使用一次。
 
-Here's an example taken from the [lazy_initialization](https://github.com/temporalio/samples-python/blob/main/message_passing/update_with_start/lazy_initialization/starter.py) sample:
+以下是取自 [惰性初始化](https://github.com/temporalio/samples-python/blob/main/message_passing/update_with_start/lazy_initialization/starter.py) 样本的示例：
 
 ```python
 start_op = WithStartWorkflowOperation(
@@ -367,44 +367,44 @@ return price, workflow_handle
 
 :::info SEND MESSAGES WITHOUT TYPE SAFETY
 
-In real-world development, sometimes you may be unable to import Workflow Definition method signatures.
-When you don't have access to the Workflow Definition or it isn't written in Python, you can still use APIs that aren't type-safe, and dynamic method invocation.
-Pass method names instead of method objects to:
+在实际开发中，有时您可能无法导入 Workflow Definition 方法签名。
+当您无权访问 Workflow Definition 或者它不是用 Python 编写时，您仍然可以使用非类型安全的 API 和动态方法调用。
+将方法名称而不是方法对象传递给：
 
-- [`Client.start_workflow`](https://python.temporal.io/temporalio.client.Client.html#start_workflow)
-- [`WorkflowHandle.query`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#query)
-- [`WorkflowHandle.signal`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#signal)
-- [`WorkflowHandle.execute_update`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#execute_update)
-- [`WorkflowHandle.start_update`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#start_update)
+- [`Client.start_Workflow`](https://python.temporal.io/temporalio.client.Client.html#start_workflow)
+- [`WorkflowHandle.Query`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#query)
+- [`WorkflowHandle.Signal`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#signal)
+- [`WorkflowHandle.execute_Update`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#execute_update)
+- [`WorkflowHandle.start_Update`](https://python.temporal.io/temporalio.client.WorkflowHandle.html#start_update)
 
-Use these non-type safe APIs:
+使用这些非类型安全 API：
 
-- [`get_workflow_handle`](https://python.temporal.io/temporalio.client.Client.html#get_workflow_handle)
-- [`get_external_workflow_handle`](https://python.temporal.io/temporalio.workflow.html#get_external_workflow_handle).
+- [`get_Workflow_handle`](https://python.temporal.io/temporalio.client.Client.html#get_workflow_handle)
+- [`get_external_Workflow_handle`](https://python.temporal.io/temporalio.workflow.html#get_external_workflow_handle)。
 
 :::
 
-## Message handler patterns {#message-handler-patterns}
-
-This section covers common write operations, such as Signal and Update handlers.
-It doesn't apply to pure read operations, like Queries or Update Validators.
+<a id="message-handler-patterns"></a>
+## 消息处理程序模式 {#message-handler-patterns}
+本节介绍常见的写入操作，例如 Signal 和 Update 处理程序。
+它不适用于纯读取操作，例如查询或 Update 验证器。
 
 :::tip
 
-For additional information, see [Inject work into the main Workflow](/handling-messages#injecting-work-into-main-workflow), [Ensuring your messages are processed exactly once](/handling-messages#exactly-once-message-processing), and [this sample](https://github.com/temporalio/samples-python/blob/message-passing/message_passing/safe_message_handlers/README.md) demonstrating safe `async` message handling.
+有关其他信息，请参阅演示安全 `async` 消息处理的 [将工作注入主 Workflow](/handling-messages#injecting-work-into-main-workflow)、[确保您的消息仅被处理一次](/handling-messages#exactly-once-message-processing) 和 [这个样本](https://github.com/temporalio/samples-python/blob/message-passing/message_passing/safe_message_handlers/README.md)。
 
 :::
 
-### Use async handlers {#async-handlers}
+<a id="async-handlers"></a>
+### 使用异步处理程序 {#async-handlers}
+Signal 和 Update 处理程序可以是 `async def` 以及 `def`。
+使用 `async def` 允许您将 `await` 与活动、Child Workflow、[`asyncio.sleep`](https://docs.python.org/3/library/asyncio-task.html#asyncio.sleep) Timer、[`Workflow.wait_condition`](https://python.temporal.io/temporalio.workflow.html#wait_condition) 条件等一起使用。
+这扩展了处理程序可以完成的操作的可能性，但这也意味着处理程序执行和主 Workflow 方法都是同时运行的，并在 `await` 调用时在它们之间进行切换。
+为了安全使用 `async def` 处理程序，了解可能出现问题的情况至关重要。
+有关异步 Signal 和 Update 处理程序、[安全消息处理程序](/encyclopedia/workflow-message-passing) 示例以及下面的 [控制处理程序并发](https://github.com/temporalio/samples-python/tree/main/message_passing/safe_message_handlers) 和 [等待消息处理程序完成](#control-handler-concurrency) 部分的安全使用指南，请参阅 [Workflow消息传递](#wait-for-message-handlers)。
 
-Signal and Update handlers can be `async def` as well as `def`.
-Using `async def` allows you to use `await` with Activities, Child Workflows, [`asyncio.sleep`](https://docs.python.org/3/library/asyncio-task.html#asyncio.sleep) Timers, [`workflow.wait_condition`](https://python.temporal.io/temporalio.workflow.html#wait_condition) conditions, etc.
-This expands the possibilities for what can be done by a handler but it also means that handler executions and your main Workflow method are all running concurrently, with switching occurring between them at `await` calls.
-It's essential to understand the things that could go wrong in order to use `async def` handlers safely.
-See [Workflow message passing](/encyclopedia/workflow-message-passing) for guidance on safe usage of async Signal and Update handlers, the [Safe message handlers](https://github.com/temporalio/samples-python/tree/main/message_passing/safe_message_handlers) sample, and the [Controlling handler concurrency](#control-handler-concurrency) and [Waiting for message handlers to finish](#wait-for-message-handlers) sections below.
-
-The following code executes an Activity that makes a network call to a remote service.
-It modifies the Update handler from earlier on this page, turning it into an `async def`:
+以下代码执行 Activity 对远程服务进行网络调用。
+它修改了本页前面的 Update 处理程序，将其转换为 `async def`：
 
 ```python
 @activity.defn
@@ -450,26 +450,28 @@ class GreetingWorkflow:
         return previous_language
 ```
 
-After updating the code to use a `async def`, your Update handler can schedule an Activity and await the result.
-Although an `async def` Signal handler can also execute an Activity, using an Update handler allows the Client to receive a result or error once the Activity completes.
-This lets your client track the progress of asynchronous work performed by the Update's Activities, Child Workflows, etc.
+更新代码以使用 `async def` 后，您的 Update 处理程序可以使用 Schedule 和 Activity 并等待结果。
+尽管 `async def` Signal 处理程序也可以执行 Activity，但使用 Update 处理程序允许客户端在 Activity 完成后接收结果或错误。
+这使您的客户端可以跟踪 Update 的活动、Child Workflow 等执行的异步工作的进度。
 
-### Add wait conditions to block
+<a id="add-wait-conditions-to-block"></a>
+### 添加阻塞等待条件 {#add-wait-conditions-to-block}
 
-Sometimes, `async def` Signal or Update handlers need to meet certain conditions before they should continue.
-You can use [`workflow.wait_condition`](https://python.temporal.io/temporalio.workflow.html#wait_condition) to prevent the code from proceeding until a condition is true.
-You specify the condition by passing a function that returns `True` or `False`, and you can optionally set a timeout.
-This is an important feature that helps you control your handler logic.
+有时，`async def` Signal 或 Update 处理程序需要满足某些条件才能继续。
+您可以使用 [`Workflow.wait_condition`](https://python.temporal.io/temporalio.workflow.html#wait_condition) 来阻止代码继续执行，直到条件成立为止。
+您可以通过传递返回 `True` 或 `False` 的函数来指定条件，并且可以选择设置超时。
+这是一个重要的功能，可以帮助您控制处理程序逻辑。
 
-Here are three important use cases for `workflow.wait_condition`:
+以下是 `Workflow.wait_condition` 的三个重要用例：
 
-- Wait for a Signal or Update to arrive.
-- Wait in a handler until it's appropriate to continue.
-- Wait in the main Workflow until all active handlers have finished.
+- 等待 Signal 或 Update 到达。
+- 在处理程序中等待，直到适合继续。
+- 在主 Workflow 中等待，直到所有活动处理程序完成。
 
-#### Wait for a Signal or Update to arrive
+<a id="wait-for-a-signal-or-update-to-arrive"></a>
+#### 等待 Signal 或 Update 到达 {#wait-for-a-signal-or-update-to-arrive}
 
-It's common to use `workflow.condition` to wait for a particular Signal or Update to be sent by a Client:
+通常使用 `Workflow.condition` 来等待客户端发送特定的 Signal 或 Update：
 
 ```python
 @workflow.defn
@@ -490,14 +492,14 @@ class GreetingWorkflow:
         return self.greetings[self.language]
 ```
 
-#### Use wait conditions in handlers {#wait-in-message-handler}
+<a id="wait-in-message-handler"></a>
+#### 在处理程序中使用等待条件 {#wait-in-message-handler}
+通常使用 Workflow 等待条件来等待处理程序启动。
+您还可以在处理程序中的其他任何位置使用等待条件来等待特定条件变为 `True`。
+这允许您编写在多个点暂停的处理程序，每次都等待所需的条件变为 `True`。
 
-It's common to use a Workflow wait condition to wait until a handler should start.
-You can also use wait conditions anywhere else in the handler to wait for a specific condition to become `True`.
-This allows you to write handlers that pause at multiple points, each time waiting for a required condition to become `True`.
-
-Consider a `ready_for_update_to_execute` method that runs before your Update handler executes.
-The `workflow.wait_condition` method waits until your condition is met:
+考虑在 Update 处理程序执行之前运行的 `ready_for_Update_to_execute` 方法。
+`Workflow.wait_condition` 方法会等待，直到满足您的条件：
 
 ```python
 @workflow.update
@@ -507,15 +509,15 @@ async def my_update(self, update_input: UpdateInput) -> str:
     )
 ```
 
-You can also use wait conditions anywhere else in the handler to wait for a specific condition to become true.
-This allows you to write handlers that pause at multiple points, each time waiting for a required condition to become true.
+您还可以在处理程序中的任何其他位置使用等待条件来等待特定条件变为真。
+这允许您编写在多个点暂停的处理程序，每次都等待所需的条件变为真。
 
-#### Ensure your handlers finish before the Workflow completes {#wait-for-message-handlers}
-
-Workflow wait conditions can ensure your handler completes before a Workflow finishes.
-When your Workflow uses `async def` Signal or Update handlers, your main Workflow method can return or continue-as-new while a handler is still waiting on an async task, such as an Activity result.
-The Workflow completing may interrupt the handler before it finishes crucial work and cause client errors when trying retrieve Update results.
-Use [`workflow.wait_condition`](https://python.temporal.io/temporalio.workflow.html#wait_condition) and [`all_handlers_finished`](https://python.temporal.io/temporalio.workflow.html#all_handlers_finished) to address this problem and allow your Workflow to end smoothly:
+<a id="wait-for-message-handlers"></a>
+#### 确保您的处理程序在 Workflow 完成 {#wait-for-message-handlers} 之前完成
+Workflow 等待条件可以确保您的处理程序在 Workflow 完成之前完成。
+当您的 Workflow 使用 `async def` Signal 或 Update 处理程序时，您的主 Workflow 方法可以在处理程序仍在等待异步任务（例如 Activity 结果）时返回 或 Continue-As-New 。
+Workflow 完成可能会在处理程序完成关键工作之前中断处理程序，并在尝试检索 Update 结果时导致客户端错误。
+使用[`Workflow.wait_condition`](https://python.temporal.io/temporalio.workflow.html#wait_condition)和[`all_handlers_finished`](https://python.temporal.io/temporalio.workflow.html#all_handlers_finished)来解决这个问题，让你的Workflow顺利结束：
 
 ```python
 @workflow.defn
@@ -527,8 +529,8 @@ class MyWorkflow:
         return "workflow-result"
 ```
 
-By default, your Worker will log a warning when you allow a Workflow Execution to finish with unfinished handler executions.
-You can silence these warnings on a per-handler basis by passing the `unfinished_policy` argument to the [`@workflow.signal`](https://python.temporal.io/temporalio.workflow.html#signal) / [`workflow.update`](https://python.temporal.io/temporalio.workflow.html#update) decorator:
+默认情况下，当您允许 Workflow Execution 完成未完成的处理程序执行时，您的 Worker 将记录一条警告。
+您可以通过将 `unfinished_policy` 参数传递给 [`@Workflow.Signal`](https://python.temporal.io/temporalio.workflow.html#signal) / [`Workflow.Update`](https://python.temporal.io/temporalio.workflow.html#update) 装饰器来在每个处理程序的基础上消除这些警告：
 
 ```python
 @workflow.update(unfinished_policy=workflow.HandlerUnfinishedPolicy.ABANDON)
@@ -536,18 +538,19 @@ async def my_update(self) -> None:
     ...
 ```
 
-See [Finishing handlers before the Workflow completes](/handling-messages#finishing-message-handlers) for more information.
+请参阅 [在 Workflow 完成之前完成处理程序](/handling-messages#finishing-message-handlers) 了解更多信息。
 
-### Use `@workflow.init` to operate on Workflow input before any handler executes
+<a id="use-workflowinit-to-operate-on-workflow-input-before-any-handler-executes"></a>
+### 在执行任何处理程序之前，使用 `@Workflow.init` 对 Workflow 输入进行操作 {#use-workflowinit-to-operate-on-workflow-input-before-any-handler-executes}
 
-Normally, your Workflow `__init__` method won't have any parameters.
-However, if you use the `@workflow.init` decorator on your `__init__` method, you can give it the same [Workflow parameters](/develop/python/workflows/basics#workflow-parameters) as your `@workflow.run` method.
-The SDK will then ensure that your `__init__` method receives the Workflow input arguments that the [Client sent](/develop/python/client/temporal-client#start-workflow-execution).
-(The Workflow input arguments are also passed to your `@workflow.run` method -- that always happens, whether or not you use the `@workflow.init` decorator.)
-This is useful if you have message handlers that need access to workflow input: see [Initializing the Workflow first](/handling-messages#workflow-initializers).
+通常，您的 Workflow `__init__` 方法不会有任何参数。
+但是，如果您在 `__init__` 方法上使用 `@Workflow.init` 装饰器，则可以为其指定与 `@Workflow.run` 方法相同的 [Workflow参数](/develop/python/workflows/basics#workflow-parameters)。
+然后，SDK 将确保您的 `__init__` 方法接收 [客户发送](/develop/python/client/temporal-client#start-workflow-execution) 的 Workflow 输入参数。
+（Workflow 输入参数也会传递给您的 `@Workflow.run` 方法——无论您是否使用 `@Workflow.init` 装饰器，这种情况总是会发生。）
+如果您有需要访问 Workflow 输入的消息处理程序，这非常有用：请参阅 [首先初始化Workflow](/handling-messages#workflow-initializers)。
 
-Here's an example.
-Notice that `__init__` and `get_greeting` must have the same parameters, with the same type annotations:
+这是一个例子。
+请注意，`__init__` 和 `get_greeting` 必须具有相同的参数和相同的类型注释：
 
 ```python
 @dataclass
@@ -580,11 +583,11 @@ class WorkflowRunSeesWorkflowInitWorkflow:
         return is_valid
 ```
 
-### Use `asyncio.Lock` to prevent concurrent handler execution {#control-handler-concurrency}
-
-Concurrent processes can interact in unpredictable ways.
-Incorrectly written [concurrent message-passing](/handling-messages#message-handler-concurrency) code may not work correctly when multiple handler instances run simultaneously.
-Here's an example of a pathological case:
+<a id="control-handler-concurrency"></a>
+### 使用 `asyncio.Lock` 阻止并发处理程序执行 {#control-handler-concurrency}
+并发进程可以以不可预测的方式交互。
+当多个处理程序实例同时运行时，编写不正确的 [并发消息传递](/handling-messages#message-handler-concurrency) 代码可能无法正常工作。
+这是一个病态病例的例子：
 
 ```python
 @workflow.defn
@@ -602,8 +605,8 @@ class MyWorkflow:
         self.y = data.y
 ```
 
-Coordinating access using `asyncio.Lock` corrects this code.
-Locking makes sure that only one handler instance can execute a specific section of code at any given time:
+使用 `asyncio.Lock` 协调访问可更正此代码。
+锁定可确保在任何给定时间只有一个处理程序实例可以执行特定的代码部分：
 
 ```python
 @workflow.defn
@@ -626,118 +629,118 @@ class MyWorkflow:
             self.y = data.y
 ```
 
-## Message handler troubleshooting {#message-handler-troubleshooting}
+<a id="message-handler-troubleshooting"></a>
+## 消息处理程序故障排除 {#message-handler-troubleshooting}
+将 Signal、Update 或 Query 发送到 Workflow 时，您的客户端可能会遇到以下错误：
 
-When sending a Signal, Update, or Query to a Workflow, your Client might encounter the following errors:
+- **客户端无法联系服务器**：
+  您将收到一个 [`Temporalio.service.RPCError`](https://python.temporal.io/temporalio.service.RPCError.html)，其 `status` 属性为 [`RPCStatusCode`](https://python.temporal.io/temporalio.service.RPCStatusCode.html) `UNAVAILABLE`（重试几次后；请参阅 [`Client.connect`](https://python.temporal.io/temporalio.client.Client.html#connect) 的 `retry_config` 参数）。
 
-- **The client can't contact the server**:
-  You'll receive a [`temporalio.service.RPCError`](https://python.temporal.io/temporalio.service.RPCError.html) on which the `status` attribute is [`RPCStatusCode`](https://python.temporal.io/temporalio.service.RPCStatusCode.html) `UNAVAILABLE` (after some retries; see the `retry_config` argument to [`Client.connect`](https://python.temporal.io/temporalio.client.Client.html#connect)).
+- **Workflow 不存在**：
+  您将收到 [`Temporalio.service.RPCError`](https://python.temporal.io/temporalio.service.RPCError.html) 异常，其中 `status` 属性为 [`RPCStatusCode`](https://python.temporal.io/temporalio.service.RPCStatusCode.html) `NOT_FOUND`。
 
-- **The workflow does not exist**:
-  You'll receive an [`temporalio.service.RPCError`](https://python.temporal.io/temporalio.service.RPCError.html) exception on which the `status` attribute is [`RPCStatusCode`](https://python.temporal.io/temporalio.service.RPCStatusCode.html) `NOT_FOUND`.
+有关此主题的非特定于 Python 的讨论，请参阅 [消息处理程序中的异常](/handling-messages#exceptions)。
 
-See [Exceptions in message handlers](/handling-messages#exceptions) for a non–Python-specific discussion of this topic.
+<a id="signal-problems"></a>
+### 发送 Signal 时出现问题 {#signal-problems}
+使用 Signal 时，您的请求在执行期间唯一会导致的异常是上述 `RPCError`。
 
-### Problems when sending a Signal {#signal-problems}
+对于查询和 Update，客户端等待来自 Worker 的响应，因此在 Worker 执行处理程序期间可能会出现其他错误。
 
-When using Signal, the only exceptions that will result from your requests during its execution are the `RPCError`s described above.
+<a id="update-problems"></a>
+### 发送 Update 时出现问题 {#update-problems}
+使用 Update 时，除了上述 `RPCError` 之外，您还可能会遇到以下错误：
 
-For Queries and Updates, the Client waits for a response from the Worker, and therefore additional errors may occur during the handler Execution by the Worker.
+- **没有 Workflow Worker 正在轮询 Task Queue**：
+  SDK 客户端将无限期地重试您的请求。
+  您可以使用 [`asyncio.timeout`](https://docs.python.org/3/library/asyncio-task.html#timeouts) 强制超时。
+  这会引发 [`Temporalio.client.WorkflowUpdateRPCTimeoutOrCancelledError`](https://python.temporal.io/temporalio.client.WorkflowUpdateRPCTimeoutOrCancelledError.html) 异常。
 
-### Problems when sending an Update {#update-problems}
+- **Update 失败**：您将收到 [`Temporalio.client.WorkflowUpdateFailedError`](https://python.temporal.io/temporalio.client.WorkflowUpdateFailedError.html) 异常。
+  有两种方式可以发生这种情况：
 
-When working with Updates, in addition to the `RPCError`s described above, you may encounter these errors:
+- Update 被 Workflow 中与 Update 处理程序一起定义的 Update 验证器拒绝。
 
-- **No Workflow Workers are polling the Task Queue**:
-  Your request will be retried by the SDK Client indefinitely.
-  You can use [`asyncio.timeout`](https://docs.python.org/3/library/asyncio-task.html#timeouts) to impose a timeout.
-  This raises a [`temporalio.client.WorkflowUpdateRPCTimeoutOrCancelledError`](https://python.temporal.io/temporalio.client.WorkflowUpdateRPCTimeoutOrCancelledError.html) exception.
+- Update 被接受后失败。
 
-- **Update failed**: You'll receive a [`temporalio.client.WorkflowUpdateFailedError`](https://python.temporal.io/temporalio.client.WorkflowUpdateFailedError.html) exception.
-  There are two ways this can happen:
+Update 故障类似于 [Workflow 故障](/references/failures#errors-in-workflows)。
+  导致 main 方法中的 Workflow 失败的问题也会导致 Update 处理程序中的 Update 失败。
+  这些可能包括：
 
-  - The Update was rejected by an Update validator defined in the Workflow alongside the Update handler.
+- 失败的Child Workflow
+      - 失败的 Activity（如果 Activity 重试已设置为有限次数）
+      - Workflow 作者筹集了 [`ApplicationError`](/references/failures#application-failure)
+      - [Workflow_failure_exception_types](https://python.temporal.io/temporalio.worker.Worker.html) 中列出的任何错误（默认为空）
 
-  - The Update failed after having been accepted.
+- **处理程序导致 Workflow 任务失败**：
+  [Workflow 任务失败](/references/failures#errors-in-workflows) 导致服务器无限期地重试 Workflow 任务。您的 Update 请求会发生什么情况取决于其阶段：
+  - 如果服务器未接受请求，您将收到 `FAILED_PRECONDITION` [`Temporalio.service.RPCError`](https://python.temporal.io/temporalio.service.RPCError.html) 异常。
+  - 如果请求已被接受，则该请求是持久的。
+    代码部署后，一旦 Workflow 再次正常运行，请使用 [`UpdateHandle`](https://python.temporal.io/temporalio.client.WorkflowUpdateHandle.html) 获取 Update 结果。
 
-  Update failures are like [Workflow failures](/references/failures#errors-in-workflows).
-  Issues that cause a Workflow failure in the main method also cause Update failures in the Update handler.
-  These might include:
+- **Workflow 已完成，而 Update 处理程序执行正在进行中**：
+  您将收到 [`Temporalio.service.RPCError`](https://python.temporal.io/temporalio.service.RPCError.html) 异常，其 `status` 属性为 [`RPCStatusCode`](https://python.temporal.io/temporalio.service.RPCStatusCode.html) `NOT_FOUND`。
+  如果 Workflow 完成而 Update 处理程序执行正在进行中，则会发生这种情况，例如因为
 
-      - A failed Child Workflow
-      - A failed Activity (if the Activity retries have been set to a finite number)
-      - The Workflow author raising [`ApplicationError`](/references/failures#application-failure)
-      - Any error listed in [workflow_failure_exception_types](https://python.temporal.io/temporalio.worker.Worker.html) (empty by default)
+- Workflow 已取消或失败。
 
-- **The handler caused the Workflow Task to fail**:
-  A [Workflow Task Failure](/references/failures#errors-in-workflows) causes the server to retry Workflow Tasks indefinitely. What happens to your Update request depends on its stage:
-  - If the request hasn't been accepted by the server, you receive a `FAILED_PRECONDITION` [`temporalio.service.RPCError`](https://python.temporal.io/temporalio.service.RPCError.html) exception.
-  - If the request has been accepted, it is durable.
-    Once the Workflow is healthy again after a code deploy, use an [`UpdateHandle`](https://python.temporal.io/temporalio.client.WorkflowUpdateHandle.html) to fetch the Update result.
+- Workflow 正常完成或继续如新，而 Workflow 作者没有 [等待处理程序完成](/handling-messages#finishing-message-handlers)。
 
-- **The Workflow finished while the Update handler execution was in progress**:
-  You'll receive a [`temporalio.service.RPCError`](https://python.temporal.io/temporalio.service.RPCError.html) exception with a `status` attribute of [`RPCStatusCode`](https://python.temporal.io/temporalio.service.RPCStatusCode.html) `NOT_FOUND`.
-  This happens if the Workflow finished while the Update handler execution was in progress, for example because
+<a id="query-problems"></a>
+### 发送 Query 时出现问题 {#query-problems}
+使用查询时，除了上述 `RPCError` 之外，您还可能会遇到以下错误：
 
-  - The Workflow was canceled or failed.
+- **没有 Workflow Worker 轮询 Task Queue**：
+  您将收到 [`Temporalio.service.RPCError`](https://python.temporal.io/temporalio.service.RPCError.html) 异常，其中 `status` 属性为 [`RPCStatusCode`](https://python.temporal.io/temporalio.service.RPCStatusCode.html) `FAILED_PRECONDITION`。
 
-  - The Workflow completed normally or continued-as-new and the Workflow author did not [wait for handlers to be finished](/handling-messages#finishing-message-handlers).
+- **Query 失败**：
+  如果 Query 期间出现问题，您将收到 [`Temporalio.client.WorkflowQueryFailedError`](https://python.temporal.io/temporalio.client.WorkflowQueryFailedError.html) 异常。
+  Query 处理程序中的任何异常都会触发此错误。
+  这与 Signal 和 Update 请求不同，其中异常可能会导致 Workflow 任务失败。
 
-### Problems when sending a Query {#query-problems}
+- **处理程序导致 Workflow 任务失败。**
+  例如，如果 Query 处理程序阻塞线程太长时间而没有屈服，就会发生这种情况。
 
-When working with Queries, in addition to the `RPCError`s described above, you may encounter these errors:
+<a id="dynamic-handler"></a>
+## 动态组件 {#dynamic-handler}
+动态 Workflow、Activity、Signal、Update 或 Query 是一种未命名项目。
+通常，这些项目按名称注册到 Worker 并在运行时调用。
+当未注册或无法识别的 Workflow、Activity 或带有已识别方法签名的消息请求到达时，Worker 可以使用预先注册的动态替代。
 
-- **There is no Workflow Worker polling the Task Queue**:
-  You'll receive a [`temporalio.service.RPCError`](https://python.temporal.io/temporalio.service.RPCError.html) exception on which the `status` attribute is [`RPCStatusCode`](https://python.temporal.io/temporalio.service.RPCStatusCode.html) `FAILED_PRECONDITION`.
+例如，您可以发送请求来启动名为​​“MyUnknownWorkflow”的 Workflow。
+收到 Workflow 任务后，Worker 可能会发现没有已注册的该类型的 Workflow Definition。
+然后，它检查是否存在已注册的动态 Workflow。
+如果动态 Workflow 签名与传入的 Workflow 签名匹配，则 Worker 会调用该签名，就像调用非动态静态命名版本一样。
 
-- **Query failed**:
-  You'll receive a [`temporalio.client.WorkflowQueryFailedError`](https://python.temporal.io/temporalio.client.WorkflowQueryFailedError.html) exception if something goes wrong during a Query.
-  Any exception in a Query handler will trigger this error.
-  This differs from Signal and Update requests, where exceptions can lead to Workflow Task Failure instead.
-
-- **The handler caused the Workflow Task to fail.**
-  This would happen, for example, if the Query handler blocks the thread for too long without yielding.
-
-## Dynamic components {#dynamic-handler}
-
-A dynamic Workflow, Activity, Signal, Update, or Query is a kind of unnamed item.
-Normally, these items are registered by name with the Worker and invoked at runtime.
-When an unregistered or unrecognized Workflow, Activity, or message request arrives with a recognized method signature, the Worker can use a pre-registered dynamic stand-in.
-
-For example, you might send a request to start a Workflow named "MyUnknownWorkflow".
-After receiving a Workflow Task, the Worker may find that there's no registered Workflow Definitions of that type.
-It then checks to see if there's a registered dynamic Workflow.
-If the dynamic Workflow signature matches the incoming Workflow signature, the Worker invokes that just as it would invoke a non-dynamic statically named version.
-
-By registering dynamic versions of your Temporal components, the Worker can fall back to these alternate implementations for name mismatches.
+通过注册 Temporal 组件的动态版本，Worker 可以回退到这些名称不匹配的替代实现。
 
 :::caution
 
-Use dynamic elements judiciously and as a fallback mechanism, not a primary design.
-They can introduce long-term maintainability and debugging issues.
-Reserve dynamic invocation use for cases where a name is not or can't be known at compile time.
+明智地使用动态元素并将其作为后备机制，而不是主要设计。
+它们可能会带来长期的可维护性和调试问题。
+保留动态调用用于在编译时不知道或无法知道名称的情况。
 
 :::
 
-### Set a dynamic Signal, Query, or Update handler {#set-a-dynamic-signal}
+<a id="set-a-dynamic-signal"></a>
+### 设置动态 Signal、Query 或 Update 处理程序 {#set-a-dynamic-signal}
+动态 Signal、Query 或 Update 是指特殊的替代处理程序。
+当未注册的处理程序请求到达时使用它。
 
-A dynamic Signal, Query, or Update refers to a special stand-in handler.
-It's used when an unregistered handler request arrives.
+考虑 Signal，您可以在其中发送类似 `Workflow.Signal(MyWorkflow.my_Signal_method, my_arg)` 的内容。
+这是一种类型安全的编译器检查方法，可保证方法存在。
+还有一种基于非类型安全字符串的形式：`Workflow.Signal('some-name', my_arg)`。
+当发送到服务器时，仅在到达 Worker 后才检查名称。
+这就是“动态处理程序”的用武之地。
 
-Consider a Signal, where you might send something like `workflow.signal(MyWorkflow.my_signal_method, my_arg)`.
-This is a type-safe compiler-checked approach that guarantees a method exists.
-There's also a non-type-safe string-based form: `workflow.signal('some-name', my_arg)`.
-When sent to the server, the name is checked only after arriving at the Worker.
-This is where "dynamic handlers" come in.
+在找不到名称和类型匹配的处理程序后，Worker 将检查已注册的动态替代处理程序。
+如果找到，Worker 将使用它。
 
-After failing to find a handler with a matching name and type, the Worker checks for a registered dynamic stand-in handler.
-If found, the Worker uses that instead.
-
-You must opt handlers into dynamic access.
-Add `dynamic=True` to the handler decorator (for example, `@workflow.signal(dynamic=True)`) to make a handler dynamic.
-The handler's signature must accept `(self, name: str, args: Sequence[RawValue])`.
-Use a [payload_converter](https://python.temporal.io/temporalio.workflow.html#payload_converter) function to convert `RawValue` objects to your required type.
-For example:
+您必须选择处理程序进行动态访问。
+将 `dynamic=True` 添加到处理程序装饰器（例如，`@Workflow.Signal(dynamic=True)`）以使处理程序动态化。
+处理程序的签名必须接受 `(self, name: str, args: Sequence[RawValue])`。
+使用 [负载转换器](https://python.temporal.io/temporalio.workflow.html#payload_converter) 函数将 `RawValue` 对象转换为您所需的类型。
+例如：
 
 ```python
 from typing import Sequence
@@ -750,27 +753,27 @@ from temporalio.common import RawValue
         ...
 ```
 
-This sample creates a `dynamic_signal` Signal.
-When an unregistered or unrecognized Signal arrives with a matching signature, dynamic assignment uses this handler to manage the Signal.
-It is responsible for transforming the sequence contents into usable data in a form that the method's logic can process and act on.
+此示例创建 `dynamic_Signal` Signal。
+当未注册或无法识别的 Signal 到达时带有匹配的签名，动态分配使用此处理程序来管理 Signal。
+它负责将序列内容转换为方法逻辑可以处理和操作的可用数据。
 
-### Set a dynamic Workflow {#set-a-dynamic-workflow}
+<a id="set-a-dynamic-workflow"></a>
+### 设置动态 Workflow {#set-a-dynamic-workflow}
+动态Workflow是指特殊的替身Workflow Definition。
+当未知的 Workflow Execution 请求到达时使用它。
 
-A dynamic Workflow refers to a special stand-in Workflow Definition.
-It's used when an unknown Workflow Execution request arrives.
+考虑前面描述的“MyUnknownWorkflow”示例。
+Worker 可能会发现没有该名称或类型的已注册 Workflow Definition。
+在找不到具有匹配类型的 Workflow Definition 后，Worker 会寻找动态替身。
+如果找到，它会调用它。
 
-Consider the "MyUnknownWorkflow" example described earlier.
-The Worker may find there's no registered Workflow Definitions of that name or type.
-After failing to find a Workflow Definition with a matching type, the Worker looks for a dynamic stand-in.
-If found, it invokes that instead.
+要参与，您的 Workflow 必须选择动态访问。
+将 `dynamic=True` 添加到 `@Workflow.defn` 装饰器使得 Workflow Definition 有资格参与动态调用。
+您必须先向 [Worker](https://python.temporal.io/temporalio.worker.html) 注册 Workflow，然后才能调用它。
 
-To participate, your Workflow must opt into dynamic access.
-Adding `dynamic=True` to the `@workflow.defn` decorator makes the Workflow Definition eligible to participate in dynamic invocation.
-You must register the Workflow with the [Worker](https://python.temporal.io/temporalio.worker.html) before it can be invoked.
-
-The Workflow Definition's primary Workflow method must accept a single argument of type `Sequence[temporalio.common.RawValue]`.
-Use a [payload_converter](https://python.temporal.io/temporalio.workflow.html#payload_converter) function to convert `RawValue` objects to your required type.
-For example:
+Workflow Definition 的主要 Workflow 方法必须接受 `Sequence[Temporalio.common.RawValue]` 类型的单个参数。
+使用 [负载转换器](https://python.temporal.io/temporalio.workflow.html#payload_converter) 函数将 `RawValue` 对象转换为您所需的类型。
+例如：
 
 <div style={{backgroundColor: '#e0e0e0',padding: '0px 15px',borderRadius: '5px',border: '1px solid #cccccc',display: 'inline-block'}}><a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/dynamic_handlers/your_dynamic_workflow_dacx.py"><tt>See full sample</tt></a></div>
 
@@ -788,20 +791,20 @@ class DynamicWorkflow:
         )
 ```
 
-This Workflow converts the first `Sequence` element to a string, and uses that to execute an Activity.
+此 Workflow 将第一个 `Sequence` 元素转换为字符串，并使用它来执行 Activity。
 
-### Set a dynamic Activity {#set-a-dynamic-activity}
+<a id="set-a-dynamic-activity"></a>
+### 设置动态 Activity {#set-a-dynamic-activity}
+动态 Activity 是一个替代实现。
+当 Worker 接收到未知 Activity 类型的 Activity 任务时，将使用它。
 
-A dynamic Activity is a stand-in implementation.
-It's used when an Activity Task with an unknown Activity type is received by the Worker.
+要参与，您的 Activity 必须选择动态访问。
+将 `dynamic=True` 添加到 `@Activity.defn` 装饰器使得 Activity Definition 有资格参与动态调用。
+您必须先向 [Worker](https://python.temporal.io/temporalio.worker.html) 注册 Activity，然后才能调用它。
 
-To participate, your Activity must opt into dynamic access.
-Adding `dynamic=True` to the `@activity.defn` decorator makes the Activity Definition eligible to participate in dynamic invocation.
-You must register the Activity with the [Worker](https://python.temporal.io/temporalio.worker.html) before it can be invoked.
-
-The Activity Definition must then accept a single argument of type `Sequence[temporalio.common.RawValue]`.
-Use a [payload_converter](https://python.temporal.io/temporalio.activity.html#payload_converter) function to convert `RawValue` objects to your required types.
-For example:
+然后，Activity Definition 必须接受 `Sequence[Temporalio.common.RawValue]` 类型的单个参数。
+使用 [负载转换器](https://python.temporal.io/temporalio.activity.html#payload_converter) 函数将 `RawValue` 对象转换为您所需的类型。
+例如：
 
 <div style={{backgroundColor: '#e0e0e0',padding: '0px 15px',borderRadius: '5px',border: '1px solid #cccccc',display: 'inline-block'}}><a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/dynamic_handlers/your_dynamic_activity_dacx.py"><tt>See full sample</tt></a></div>
 
@@ -825,6 +828,6 @@ class GreetingWorkflow:
         )
 ```
 
-This example invokes an unregistered Activity by name.
-The Worker resolves it using the registered dynamic Activity instead.
-When possible, prefer to use compiler-checked type-safe arguments rather than Activity name strings.
+此示例通过名称调用未注册的 Activity。
+Worker 使用注册的动态 Activity 来解决它。
+如果可能，优先使用编译器检查的类型安全参数而不是 Activity 名称字符串。

@@ -1,0 +1,427 @@
+---
+id: standalone-activities
+title: 独立活动 - Python SDK
+sidebar_label: 独立活动
+toc_max_heading_level: 4
+keywords:
+  - standalone activity
+  - activity execution
+  - execute activity
+  - activity handle
+  - list activities
+  - count activities
+  - python sdk
+tags:
+  - Activities
+  - Temporal Client
+  - Python SDK
+  - Temporal SDKs
+description: 使用 Temporal Python SDK 独立执行活动，无需 Workflow。
+---
+
+:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+
+Temporal Python SDK 对[独立活动](/standalone-Activity) 的支持位于
+[预发布](/evaluate/development-product-features/release-stages#pre-release)。
+
+所有 API 都是实验性的，可能会发生向后不兼容的更改。
+
+:::
+
+独立活动是独立运行的活动，无需由
+Workflow。您无需从 Workflow Definition 内启动 Activity，而是启动独立的 Activity。
+Activity 直接来自 Temporal CLIent。
+
+编写 Activity 并将其注册到 Worker 的方式与 [Workflow
+活动](/develop/python/activities/basics)。唯一的区别是您执行
+直接来自 Temporal CLIent 的独立 Activity。
+
+此页面涵盖以下内容：
+
+- [开始使用独立活动](#get-started)
+- [运行注册了 Activity 的 Worker](#run-Worker)
+- [执行独立的 Activity](#execute-Activity)
+- [启动独立的 Activity，无需等待结果](#start-Activity)
+- [获取现有独立 Activity 的句柄](#get-Activity-handle)
+- [等待独立 Activity 的结果](#get-Activity-result)
+- [列出独立活动](#list-activities)
+- [计算独立活动](#count-activities)
+- [使用 Temporal Cloud 运行独立活动](#run-standalone-activities-Temporal-cloud)
+
+:::note
+
+本文档使用 [hello_standalone_Activity](https://github.com/Temporalio/samples-python/tree/main/hello_standalone_Activity) 示例中的源代码。
+
+:::
+
+## 开始独立活动 {#get-started}
+
+先决条件：
+
+- 安装 [Temporal CLI](https://github.com/Temporalio/cli/releases/tag/v1.6.2-standalone-Activity)（独立 Activity 预发行版本）
+
+- Temporal Python SDK（v1.23.0 或更高版本）
+
+`uv add Temporalio` 或参阅 [Python 快速入门](https://docs.Temporal.io/develop/python/set-up-your-local-python#install-the-Temporal-python-sdk) 了解完整说明。
+
+运行独立 Activity 的第一步涉及启动 Temporal Server：
+
+```bash
+temporal server start-dev
+```
+
+此命令自动使用 Web UI 启动 Temporal 开发服务器，并创建“默认”Namespace。
+它使用内存数据库，因此不要将其用于实际用例。
+
+:::info Temporal Cloud
+
+此页面上的所有代码示例都使用
+[`ClientConfig.load_client_connect_config()`](https://python.Temporal.io/Temporalio.envconfig.ClientConfig.html)
+配置 Temporal CLIent 连接。它响应[环境
+变量](/references/client-environment-configuration) 和 [TOML 配置
+文件](/references/client-environment-configuration)，因此相同的代码适用于本地开发
+服务器和 Temporal Cloud 没有变化。请参阅[使用 Temporal 运行独立活动
+云](#run-standalone-activities-Temporal-cloud)如下。
+
+:::
+
+Temporal Server 现在可用于“localhost:7233”上的客户端连接，并且
+现在可以通过 [http://localhost:8233](http://localhost:8233) 访问 Temporal Web UI。独立式
+可以通过页面左上角的导航栏项目进行活动：
+
+<img src="/img/standalone-activities-ui-nav.png" alt="Standalone Activities Web UI nav bar item" height="336" />
+
+克隆 [samples-python](https://github.com/Temporalio/samples-python) 存储库以继续操作：
+
+```
+git clone https://github.com/temporalio/samples-python.git
+cd samples-python
+```
+
+示例项目的结构如下：
+
+```
+hello_standalone_activity/
+├── my_activity.py
+├── worker.py
+├── execute_activity.py
+├── start_activity.py
+├── list_activities.py
+└── count_activities.py
+```
+
+## 编写 Activity 函数 {#write-Activity}
+
+Temporal Python SDK 中的 Activity 只是带有“@Activity.defn”的普通函数
+装饰师。它可以选择是一个“async def”。编写独立 Activity 的方式是相同的
+以及如何编写由 Workflow 编排的 Activity。事实上，Activity可以执行
+既可作为独立的 Activity 又可作为 Workflow Activity。
+
+[hello_standalone_Activity/my_Activity.py](https://github.com/Temporalio/samples-python/blob/main/hello_standalone_Activity/my_Activity.py)
+
+```python
+# my_activity.py
+from dataclasses import dataclass
+
+from temporalio import activity
+
+
+@dataclass
+class ComposeGreetingInput:
+    greeting: str
+    name: str
+
+
+@activity.defn
+def compose_greeting(input: ComposeGreetingInput) -> str:
+    activity.logger.info("Running activity with parameter %s" % input)
+    return f"{input.greeting}, {input.name}!"
+```
+
+## 运行注册了 Activity 的 Worker {#run-Worker}
+
+为独立活动运行 Worker 与为 Workflow 活动运行 Worker 相同 —
+您创建 Worker，注册 Activity，然后运行 Worker。 Worker 不需要知道
+Activity 是从 Workflow 调用还是作为独立 Activity 调用。请参阅[如何运行
+Worker](/develop/python/Workers/run-Worker-process#run-a-dev-Worker) 有关 Worker 设置和的更多详细信息
+配置选项。
+
+[hello_standalone_Activity/Worker.py](https://github.com/Temporalio/samples-python/blob/main/hello_standalone_Activity/Worker.py)
+
+```python
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
+from temporalio.worker import Worker
+
+from hello_standalone_activity.my_activity import compose_greeting
+
+
+async def main():
+    connect_config = ClientConfig.load_client_connect_config()
+    connect_config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**connect_config)
+    worker = Worker(
+        client,
+        task_queue="my-standalone-activity-task-queue",
+        activities=[compose_greeting],
+        activity_executor=ThreadPoolExecutor(5),
+    )
+    print("worker running...", end="", flush=True)
+    await worker.run()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+在其自己的终端中运行 Worker：
+
+```bash
+uv run hello_standalone_activity/worker.py
+```
+
+## 执行独立的 Activity {#execute-Activity}
+
+使用
+[`client.execute_Activity()`](https://python.Temporal.io/Temporalio.client.Client.html#execute_Activity)
+执行独立的 Activity。从您的应用程序代码中调用此函数，而不是从 Workflow 内部调用
+定义。这会将您的独立 Activity 持久地排入 Temporal Server 中，等待它
+在您的 Worker 上执行，然后获取结果。
+
+[hello_standalone_Activity/execute_Activity.py](https://github.com/Temporalio/samples-python/blob/main/hello_standalone_Activity/execute_Activity.py)
+
+```python
+import asyncio
+from datetime import timedelta
+
+from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
+
+from hello_standalone_activity.my_activity import ComposeGreetingInput, compose_greeting
+
+
+async def my_application():
+    connect_config = ClientConfig.load_client_connect_config()
+    connect_config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**connect_config)
+
+    activity_result = await client.execute_activity(
+        compose_greeting,
+        args=[ComposeGreetingInput("Hello", "World")],
+        id="my-standalone-activity-id",
+        task_queue="my-standalone-activity-task-queue",
+        start_to_close_timeout=timedelta(seconds=10),
+    )
+    print(f"Activity result: {activity_result}")
+
+
+if __name__ == "__main__":
+    asyncio.run(my_application())
+```
+
+运行它（Worker 在另一个终端中运行）：
+
+```bash
+uv run hello_standalone_activity/execute_activity.py
+```
+
+或者使用 Temporal CLI：
+
+```bash
+temporal activity execute \
+  --type compose_greeting \
+  --activity-id my-standalone-activity-id \
+  --task-queue my-standalone-activity-task-queue \
+  --start-to-close-timeout 10s \
+  --input '{"greeting": "Hello", "name": "World"}'
+```
+
+
+## 启动独立的 Activity，无需等待结果 {#start-Activity}
+
+启动独立 Activity 意味着向 Temporal Server 发送请求以持久排队
+您的 Activity 作业，无需等待 Worker 执行它。
+
+使用
+[`client.start_Activity()`](https://python.Temporal.io/Temporalio.client.Client.html#start_Activity)
+启动独立版 Activity 并获取句柄：
+
+```python
+activity_handle = await client.start_activity(
+    compose_greeting,
+    args=[ComposeGreetingInput("Hello", "World")],
+    id="my-standalone-activity-id",
+    task_queue="my-standalone-activity-task-queue",
+    start_to_close_timeout=timedelta(seconds=10),
+)
+```
+
+运行完整示例（Worker 在另一个终端中运行）：
+
+```bash
+uv run hello_standalone_activity/start_activity.py
+```
+
+或者使用 Temporal CLI：
+
+```bash
+temporal activity start \
+  --type compose_greeting \
+  --activity-id my-standalone-activity-id \
+  --task-queue my-standalone-activity-task-queue \
+  --start-to-close-timeout 10s \
+  --input '{"greeting": "Hello", "name": "World"}'
+```
+
+## 获取现有独立 Activity 的句柄 {#get-Activity-handle}
+
+您还可以使用 client.get_Activity_handle() 创建先前启动的独立 Activity 的句柄：
+
+```python
+activity_handle = client.get_activity_handle(
+    activity_id="my-standalone-activity-id",
+    run_id="the-run-id",
+)
+```
+
+您现在可以使用句柄等待结果、描述、取消或终止 Activity。
+
+## 等待独立 Activity 的结果 {#get-Activity-result}
+
+在幕后，调用“client.execute_Activity()”与调用相同
+[`client.start_Activity()`](https://python.Temporal.io/Temporalio.client.Client.html#start_Activity)
+持久地将独立 Activity 排入队列，然后调用“await Activity_handle.result()”
+等待Activity执行并获取结果：
+
+```python
+activity_result = await activity_handle.result()
+```
+
+
+## 列出独立活动 {#list-activities}
+
+使用
+[`client.list_activities()`](https://python.Temporal.io/Temporalio.client.Client.html#list_activities)
+列出与 [列表过滤器](/list-filter) Query 匹配的独立 Activity 执行。结果是
+产生 ActivityExecution 条目的异步迭代器。
+
+[hello_standalone_Activity/list_activities.py](https://github.com/Temporalio/samples-python/blob/main/hello_standalone_Activity/list_activities.py)
+
+```python
+import asyncio
+
+from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
+
+
+async def my_application():
+    connect_config = ClientConfig.load_client_connect_config()
+    connect_config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**connect_config)
+
+    activities = client.list_activities(
+        query="TaskQueue = 'my-standalone-activity-task-queue'",
+    )
+
+    async for info in activities:
+        print(
+            f"ActivityID: {info.activity_id}, Type: {info.activity_type}, Status: {info.status}"
+        )
+
+
+if __name__ == "__main__":
+    asyncio.run(my_application())
+```
+
+运行它：
+
+```bash
+uv run hello_standalone_activity/list_activities.py
+```
+
+或者使用 Temporal CLI：
+
+```bash
+temporal activity list
+```
+
+Query 参数接受与 [Workflow 相同的 [List Filter](/list-filter) 语法
+Visibility](/Visibility)。例如，“ActivityType = 'MyActivity' AND St​​atus = '正在运行'”。
+
+
+## 计算独立活动 {#count-activities}
+
+使用 [`client.count_activities()`](https://python.Temporal.io/Temporalio.client.Client.html#count_activities) 进行计数
+与 [列表过滤器](/list-filter) Query 匹配的独立 Activity 执行。
+
+[hello_standalone_Activity/count_activities.py](https://github.com/Temporalio/samples-python/blob/main/hello_standalone_Activity/count_activities.py)
+
+```python
+import asyncio
+
+from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
+
+
+async def my_application():
+    connect_config = ClientConfig.load_client_connect_config()
+    connect_config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**connect_config)
+
+    resp = await client.count_activities(
+        query="TaskQueue = 'my-standalone-activity-task-queue'",
+    )
+
+    print("Total activities:", resp.count)
+
+    for group in resp.groups:
+        print(f"Group {group.group_values}: {group.count}")
+
+
+if __name__ == "__main__":
+    asyncio.run(my_application())
+```
+
+运行它：
+
+```bash
+uv run hello_standalone_activity/count_activities.py
+```
+
+或者使用 Temporal CLI：
+
+```bash
+temporal activity count
+```
+
+## 使用 Temporal Cloud 运行独立活动 {#run-standalone-activities-Temporal-cloud}
+
+此页面上的代码示例使用“ClientConfig.load_client_connect_config()”，因此相同的代码
+适用于 Temporal Cloud - 只需通过环境变量或 TOML 配置连接
+简介。无需更改代码。
+
+有关连接 Temporal Cloud 的完整详细信息，包括 Namespace 创建、证书
+生成和身份验证选项，请参阅
+[连接到 Temporal Cloud](/develop/python/client/Temporal-client#connect-to-Temporal-cloud)。
+
+### 连接 mTLS
+
+```
+export TEMPORAL_ADDRESS=<your-namespace>.<your-account-id>.tmprl.cloud:7233
+export TEMPORAL_NAMESPACE=<your-namespace>.<your-account-id>
+export TEMPORAL_TLS_CLIENT_CERT_PATH='path/to/your/client.pem'
+export TEMPORAL_TLS_CLIENT_KEY_PATH='path/to/your/client.key'
+```
+
+### 使用 API 密钥连接
+
+```
+export TEMPORAL_ADDRESS=<region>.<cloud_provider>.api.temporal.io:7233
+export TEMPORAL_NAMESPACE=<your-namespace>.<your-account-id>
+export TEMPORAL_API_KEY=<your-api-key>
+```
+
+然后运行 ​​Worker 和起始代码，如前面部分所示。

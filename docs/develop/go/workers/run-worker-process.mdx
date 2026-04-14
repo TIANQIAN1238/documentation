@@ -1,8 +1,8 @@
 ---
 id: run-worker-process
-title: Run Worker processes - Go SDK
-description: Shows how to run Worker processes with the Go SDK
-sidebar_label: Worker processes
+title: "运行 Worker 进程 - Go SDK"
+description: "演示如何使用 Go SDK 运行 Worker 进程"
+sidebar_label: "Worker 流程"
 slug: /develop/go/workers/run-worker-process
 toc_max_heading_level: 3
 tags:
@@ -11,23 +11,24 @@ tags:
   - Worker
 ---
 
-## How to develop a Worker in Go {#develop-worker}
+<a id="develop-worker"></a>
+## 如何在 Go 中开发 Worker {#develop-worker}
 
-Create an instance of [`Worker`](https://pkg.go.dev/go.temporal.io/sdk/worker#Worker) by calling [`worker.New()`](https://pkg.go.dev/go.temporal.io/sdk/worker#New), available through the `go.temporal.io/sdk/worker` package, and pass it the following parameters:
+通过调用 [`Worker.New()`](https://pkg.go.dev/go.temporal.io/sdk/worker#Worker)（可通过 `go.Temporal.io/sdk/Worker` 包获取）创建 [`Worker`](https://pkg.go.dev/go.temporal.io/sdk/worker#New) 的实例，并向其传递以下参数：
 
-1. An instance of the Temporal Go SDK `Client`.
-1. The name of the Task Queue that it will poll.
-1. An instance of `worker.Options`, which can be empty.
+1. Temporal Go SDK `Client` 的实例。
+1. 它将轮询的 Task Queue 的名称。
+1. `Worker.Options` 的实例，可以为空。
 
-Then, register the Workflow Types and the Activity Types that the Worker will be capable of executing.
+然后，注册 Worker 将能够执行的 Workflow 类型和 Activity 类型。
 
-Lastly, call either the `Start()` or the `Run()` method on the instance of the Worker.
-Run accepts an interrupt channel as a parameter, so that the Worker can be stopped in the terminal.
-Otherwise, the `Stop()` method must be called to stop the Worker.
+最后，在 Worker 实例上调用 `Start()` 或 `Run()` 方法。
+Run 接受中断通道作为参数，以便可以在终端中停止 Worker。
+否则，必须调用 `Stop()` 方法来停止 Worker。
 
 :::tip
 
-If you have [`gow`](https://github.com/mitranim/gow) installed, the Worker Process automatically "reloads" when you update the Worker file:
+如果您安装了 [`gow`](https://github.com/mitranim/gow)，则当您 Update Worker 文件时，Worker 进程会自动“重新加载”：
 
 ```bash
 go install github.com/mitranim/gow@latest
@@ -38,9 +39,9 @@ gow run worker/main.go # automatically reloads when file changes
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/yourapp/worker/main_dacx.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -91,41 +92,43 @@ func main() {
 // ...
 ```
 
-### How to set WorkerOptions in Go {#workeroptions}
+<a id="workeroptions"></a>
+### 如何在 Go 中设置 WorkerOptions {#workeroptions}
 
-Create an instance of [`Options`](https://pkg.go.dev/go.temporal.io/sdk/worker#Options) from the `go.temporal.io/sdk/worker` package, set any of the optional fields, and pass the instance to the [`New`](https://pkg.go.dev/go.temporal.io/sdk/worker#New) call.
+从 `go.Temporal.io/sdk/Worker` 包创建 [`Options`](https://pkg.go.dev/go.temporal.io/sdk/worker#Options) 的实例，设置任何可选字段，并将该实例传递给 [`New`](https://pkg.go.dev/go.temporal.io/sdk/worker#New) 调用。
 
-| Field                                                                                 | Required | Type                                                                                          |
+| 场地                                                                                 | 必需的 | 类型                                                                                          |
 | ------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------- |
-| [`MaxConcurrentActivityExecutionSize`](#maxconcurrentactivityexecutionsize)           | No       | `int`                                                                                         |
-| [`WorkerActivitiesPerSecond`](#workeractivitiespersecond)                             | No       | `float64`                                                                                     |
-| [`MaxConcurrentLocalActivityExecutionSize`](#maxconcurrentlocalactivityexecutionsize) | No       | `int`                                                                                         |
-| [`WorkerLocalActivitiesPerSecond`](#workerlocalactivitiespersecond)                   | No       | `float64`                                                                                     |
-| [`TaskQueueActivitiesPerSecond`](#taskqueueactivitiespersecond)                       | No       | `float64`                                                                                     |
-| [`MaxConcurrentActivityTaskPollers`](#maxconcurrentactivitytaskpollers)               | No       | `int`                                                                                         |
-| [`MaxConcurrentWorkflowTaskExecutionSize`](#maxconcurrentworkflowtaskexecutionsize)   | No       | `int`                                                                                         |
-| [`MaxConcurrentWorkflowTaskPollers`](#maxconcurrentworkflowtaskpollers)               | No       | `int`                                                                                         |
-| [`EnableLoggingInReplay`](#enablelogginginreplay)                                     | No       | `bool`                                                                                        |
-| [`DisableStickyExecution`](#disablestickyexecution)                                   | No       | `bool`                                                                                        |
-| [`StickyScheduleToStartTimeout`](#stickyscheduletostarttimeout)                       | No       | [`time.Duration`](https://pkg.go.dev/time#Duration)                                           |
-| [`BackgroundActivityContext`](#backgroundactivitycontext)                             | No       | [`context.Context`](https://pkg.go.dev/context#Context)                                       |
-| [`WorkflowPanicPolicy`](#workflowpanicpolicy)                                         | No       | [`WorkflowPanicPolicy`](https://pkg.go.dev/go.temporal.io/sdk/internal#WorkflowPanicPolicy)   |
-| [`WorkerStopTimeout`](#workerstoptimeout)                                             | No       | [`time.Duration`](https://pkg.go.dev/time#Duration)                                           |
-| [`EnableSessionWorker`](#enablesessionworker)                                         | No       | `bool`                                                                                        |
-| [`MaxConcurrentSessionExecutionSize`](#maxconcurrentsessionexecutionsize)             | No       | `int`                                                                                         |
-| [`WorkflowInterceptorChainFactories`](#workflowinterceptorchainfactories)             | No       | [`[]WorkflowInterceptor`](https://pkg.go.dev/go.temporal.io/sdk/internal#WorkflowInterceptor) |
-| [`LocalActivityWorkerOnly`](#localactivityworkeronly)                                 | No       | `bool`                                                                                        |
-| [`Identity`](#identity)                                                               | No       | `string`                                                                                      |
-| [`DeadlockDetectionTimeout`](#deadlockdetectiontimeout)                               | No       | [`time.Duration`](https://pkg.go.dev/time#Duration)                                           |
+| [`MaxConcurrentActivityExecutionSize`](#maxconcurrentactivityexecutionsize)           | 不       | `int`                                                                                         |
+| [`WorkerActivitiesPerSecond`](#workeractivitiespersecond)                             | 不       | `float64`                                                                                     |
+| [`MaxConcurrentLocalActivityExecutionSize`](#maxconcurrentlocalactivityexecutionsize) | 不       | `int`                                                                                         |
+| [`WorkerLocalActivitiesPerSecond`](#workerlocalactivitiespersecond)                   | 不       | `float64`                                                                                     |
+| [`TaskQueueActivitiesPerSecond`](#taskqueueactivitiespersecond)                       | 不       | `float64`                                                                                     |
+| [`MaxConcurrentActivityTaskPollers`](#maxconcurrentactivitytaskpollers)               | 不       | `int`                                                                                         |
+| [`MaxConcurrentWorkflowTaskExecutionSize`](#maxconcurrentworkflowtaskexecutionsize)   | 不       | `int`                                                                                         |
+| [`MaxConcurrentWorkflowTaskPollers`](#maxconcurrentworkflowtaskpollers)               | 不       | `int`                                                                                         |
+| [`EnableLoggingInReplay`](#enablelogginginreplay)                                     | 不       | `bool`                                                                                        |
+| [`DisableStickyExecution`](#disablestickyexecution)                                   | 不       | `bool`                                                                                        |
+| [`StickyScheduleToStartTimeout`](#stickyscheduletostarttimeout)                       | 不       | [`time.Duration`](https://pkg.go.dev/time#Duration)                                           |
+| [`BackgroundActivityContext`](#backgroundactivitycontext)                             | 不       | [`context.Context`](https://pkg.go.dev/context#Context)                                       |
+| [`WorkflowPanicPolicy`](#workflowpanicpolicy)                                         | 不       | [`WorkflowPanicPolicy`](https://pkg.go.dev/go.temporal.io/sdk/internal#WorkflowPanicPolicy)   |
+| [`WorkerStopTimeout`](#workerstoptimeout)                                             | 不       | [`time.Duration`](https://pkg.go.dev/time#Duration)                                           |
+| [`EnableSessionWorker`](#enablesessionworker)                                         | 不       | `bool`                                                                                        |
+| [`MaxConcurrentSessionExecutionSize`](#maxconcurrentsessionexecutionsize)             | 不       | `int`                                                                                         |
+| [`WorkflowInterceptorChainFactories`](#workflowinterceptorchainfactories)             | 不       | [`[]WorkflowInterceptor`](https://pkg.go.dev/go.temporal.io/sdk/internal#WorkflowInterceptor) |
+| [`LocalActivityWorkerOnly`](#localactivityworkeronly)                                 | 不       | `bool`                                                                                        |
+| [`Identity`](#identity)                                                               | 不       | `string`                                                                                      |
+| [`DeadlockDetectionTimeout`](#deadlockdetectiontimeout)                               | 不       | [`time.Duration`](https://pkg.go.dev/time#Duration)                                           |
 
-#### MaxConcurrentActivityExecutionSize
+<a id="maxconcurrentactivityexecutionsize"></a>
+#### 最大并发ActivityExecutionSize {#maxconcurrentactivityexecutionsize}
 
-Sets the maximum concurrent Activity Executions for the Worker.
+设置 Worker 的最大并发 Activity 执行。
 
-- Type: `int`
-- Default: `1000`
+- 型号：`int`
+- 默认：`1000`
 
-A value of `0` sets to the default.
+`0` 值设置为默认值。
 
 ```go
 // ...
@@ -139,18 +142,18 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 
 #### WorkerActivitiesPerSecond
 
-Rate limits the number of Activity Task Executions started per second for the Worker.
+速率限制 Worker 每秒启动的 Activity 任务执行的数量。
 
-- Type: `float64`
-- Default: `100000`
+- 型号：`float64`
+- 默认：`100000`
 
-A value of `0` sets to the default.
+`0` 值设置为默认值。
 
-Intended use case is to limit resources used by the Worker.
+预期用例是限制 Worker 使用的资源。
 
-Notice that the value type is a float so that the value can be less than 1 if needed.
-For example, if set to 0.1, Activity Task Executions will happen once every ten seconds.
-This can be used to protect downstream services from flooding with requests.
+请注意，值类型是浮点数，因此如果需要，该值可以小于 1。
+例如，如果设置为 0.1，Activity 任务执行将每十秒发生一次。
+这可用于保护下游服务免受请求泛滥。
 
 ```go
 // ...
@@ -164,12 +167,12 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 
 #### MaxConcurrentLocalActivityExecutionSize
 
-Set the maximum concurrent [Local Activity Executions](/local-activity) for the Worker.
+设置 Worker 的最大并发数 [本地 Activity 执行](/local-activity)。
 
-- Type: `int`
-- Default: `1000`
+- 型号：`int`
+- 默认：`1000`
 
-A value of `0` sets to the default value.
+`0` 值设置为默认值。
 
 ```go
 // ...
@@ -183,18 +186,18 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 
 #### WorkerLocalActivitiesPerSecond
 
-Rate limits the number of Local Activity Executions per second executed for the Worker.
+速率限制 Worker 每秒执行的本地 Activity 执行数量。
 
-- Type: `float64`
-- Default: `100000`
+- 型号：`float64`
+- 默认：`100000`
 
-A value of `0` sets to the default value.
+`0` 值设置为默认值。
 
-Intended use case is to limit resources used by the Worker.
+预期用例是限制 Worker 使用的资源。
 
-Notice that the value type is a float so that the value can be less than 1 if needed.
-For example, if set to 0.1, Local Activity Task Executions will happen once every ten seconds.
-This can be used to protect downstream services from flooding with requests.
+请注意，值类型是浮点数，因此如果需要，该值可以小于 1。
+例如，如果设置为 0.1，本地 Activity 任务执行将每十秒发生一次。
+这可用于保护下游服务免受请求泛滥。
 
 ```go
 // ...
@@ -206,20 +209,21 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 // ...
 ```
 
-#### TaskQueueActivitiesPerSecond
+<a id="taskqueueactivitiespersecond"></a>
+#### 任务队列活动每秒 {#taskqueueactivitiespersecond}
 
-Rate limits the number of Activity Executions that can be started per second.
+速率限制每秒可以启动的 Activity 执行数量。
 
-- Type: `float64`
-- Default: `100000`
+- 型号：`float64`
+- 默认：`100000`
 
-A value of `0` sets to the default value.
+`0` 值设置为默认值。
 
-This rate is managed by the Temporal Service and limits the Activity Tasks per second for the entire Task Queue. This is in contrast to [`WorkerActivityTasksPerSecond`](#workeractivitiespersecond) controls Activities only per Worker.
+此速率由 Temporal 服务管理，并限制整个 Task Queue 每秒的 Activity 任务数。这与 [`WorkerActivityTasksPerSecond`](#workeractivitiespersecond) 仅根据 Worker 控制活动形成对比。
 
-Notice that the number is represented in float, so that you can set it to less than 1 if needed.
-For example, set the number to 0.1 means you want your Activity to be executed once for every 10 seconds.
-This can be used to protect down stream services from flooding.
+请注意，该数字以浮点形式表示，因此您可以根据需要将其设置为小于 1。
+例如，将数字设置为 0.1 表示您希望 Activity 每 10 秒执行一次。
+这可用于保护下游服务免受洪水影响。
 
 ```go
 // ...
@@ -233,12 +237,12 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 
 #### MaxConcurrentActivityTaskPollers
 
-Sets the maximum number of goroutines to concurrently poll the Task Queue for Activity Tasks.
+设置同时轮询 Task Queue 中 Activity 任务的 Goroutine 的最大数量。
 
-- Type: `int`
-- Default: `2`
+- 型号：`int`
+- 默认：`2`
 
-Changing this value will affect the rate at which the Worker is able to consume Activity Tasks from the Task Queue.
+更改此值将影响 Worker 能够从 Task Queue 消耗 Activity 任务的速率。
 
 ```go
 // ...
@@ -250,14 +254,15 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 // ...
 ```
 
-#### MaxConcurrentWorkflowTaskExecutionSize
+<a id="maxconcurrentworkflowtaskexecutionsize"></a>
+#### 最大并发WorkflowTaskExecutionSize {#maxconcurrentworkflowtaskexecutionsize}
 
-Sets the maximum number of concurrent Workflow Task Executions the Worker can have.
+设置 Worker 可以具有的并发 Workflow 任务执行的最大数量。
 
-- Type: `int`
-- Default: `1000`
+- 型号：`int`
+- 默认：`1000`
 
-A value of `0` sets to the default value.
+`0` 值设置为默认值。
 
 ```go
 // ...
@@ -271,12 +276,12 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 
 #### MaxConcurrentWorkflowTaskPollers
 
-Sets the maximum number of goroutines that will concurrently poll the Task Queue for Workflow Tasks.
+设置同时轮询 Task Queue 中 Workflow 任务的 Goroutine 的最大数量。
 
-- Type: `int`
-- Default: `2`
+- 型号：`int`
+- 默认：`2`
 
-Changing this value will affect the rate at which the Worker is able to consume Workflow Tasks from the Task Queue.
+更改此值将影响 Worker 能够从 Task Queue 消耗 Workflow 任务的速率。
 
 ```go
 // ...
@@ -288,17 +293,18 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 // ...
 ```
 
-#### EnableLoggingInReplay
+<a id="enablelogginginreplay"></a>
+#### 启用LoggingInReplay {#enablelogginginreplay}
 
-Set to enable logging in Workflow Execution replays.
+设置为在 Workflow Execution 重放中启用日志记录。
 
-- type: `bool`
-- Default: `false`
+- 型号：`bool`
+- 默认：`false`
 
-In Workflow Definitions you can use [`workflow.GetLogger(ctx)`](https://pkg.go.dev/go.temporal.io/sdk/workflow#GetLogger) to write logs.
+在Workflow Definitions中，您可以使用[`Workflow.GetLogger(ctx)`](https://pkg.go.dev/go.temporal.io/sdk/workflow#GetLogger)写入日志。
 By default, the logger will skip logging during replays, so you do not see duplicate logs.
 
-This is only really useful for debugging purposes.
+这仅对于调试目的真正有用。
 
 ```go
 // ...
@@ -310,26 +316,27 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 // ...
 ```
 
-#### DisableStickyExecution
+<a id="disablestickyexecution"></a>
+#### 禁用StickyExecution {#disablestickyexecution}
 
 :::caution Deprecated
 
-When DisableStickyExecution is `true` it can harm performance.
-It will be removed soon.
-See [`SetStickyWorkflowCacheSize`](https://pkg.go.dev/go.temporal.io/sdk/worker#SetStickyWorkflowCacheSize) instead.
+当DisableStickyExecution 为`true` 时，可能会损害性能。
+它将很快被删除。
+请参阅 [`SetStickyWorkflowCacheSize`](https://pkg.go.dev/go.temporal.io/sdk/worker#SetStickyWorkflowCacheSize)。
 
 :::
 
-Set to disable Sticky Executions
+设置为禁用粘性执行
 
-- Type: `bool`
-- Default: `false`
+- 型号：`bool`
+- 默认：`false`
 
-Sticky Execution runs Workflow Tasks of a Workflow Execution on same host (could be a different Worker, as long as it is on the same host).
-This is an optimization for Workflow Executions.
-When sticky execution is enabled, Worker keeps the Workflow state in memory.
-New Workflow Task contains the new history events will be dispatched to the same Worker.
-If this Worker crashes, the sticky Workflow Task will timeout after `StickyScheduleToStartTimeout`, and Temporal Service will clear the stickiness for that Workflow Execution and automatically reschedule a new Workflow Task that is available for any Worker to pick up and resume the progress.
+粘性执行在同一主机上运行 Workflow Execution 的 Workflow 任务（可以是不同的 Worker，只要它位于同一主机上）。
+这是针对 Workflow Execution 的优化。
+当启用粘性执行时，Worker 将 Workflow 状态保留在内存中。
+新的 Workflow 任务包含新的历史事件，将被调度到同一个 Worker。
+如果此 Worker 崩溃，粘性 Workflow 任务将在 `StickyScheduleToStartTimeout` 之后超时，并且 Temporal 服务将清除该 Workflow Execution 的粘性，并自动重新为 Schedule 重新创建一个新的 Workflow 任务，该任务可供任何 Worker 拾取并恢复进度。
 
 ```go
 // ...
@@ -343,12 +350,12 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 
 #### StickyScheduleToStartTimeout
 
-Sets the Sticky Execution Schedule-To-Start Timeout for Workflow Tasks.
+设置 Workflow 任务的粘性执行 Schedule 启动超时。
 
-- Type: [`time.Duration`](https://pkg.go.dev/time#Duration)
-- Default value is `5`
+- 型号：[`time.Duration`](https://pkg.go.dev/time#Duration)
+- 默认值为 `5`
 
-The resolution is in seconds.
+分辨率以秒为单位。
 
 ```go
 // ...
@@ -360,23 +367,24 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 // ...
 ```
 
-#### BackgroundActivityContext
+<a id="backgroundactivitycontext"></a>
+#### 背景ActivityContext {#backgroundactivitycontext}
 
 :::caution Not recommended
 
-This method of passing dependencies between Activity Task Executions is not recommended anymore.
+不再推荐这种在 Activity 任务执行之间传递依赖关系的方法。
 
-Instead, we recommend using a struct with fields that contain dependencies and develop Activity Definitions as struct methods and then pass all the dependencies on the structure initialization.
+相反，我们建议使用带有包含依赖项的字段的结构体，并将 Activity Definition 开发为结构体方法，然后在结构初始化时传递所有依赖项。
 
-- [How to develop an Activity Definition using the Go SDK](/develop/go/activities/basics#activity-definition)
+- [如何使用 Go SDK 开发 Activity Definition](/develop/go/activities/basics#activity-definition)
 
 :::
 
-- Type: [`context.Context`](https://pkg.go.dev/context#Context)
+- 型号：[`context.Context`](https://pkg.go.dev/context#Context)
 
-Sets the background `context.Context` for all Activity Types registered with the Worker.
+为使用 Worker 注册的所有 Activity 类型设置背景 `context.Context`。
 
-The context can be used to pass external dependencies such as database connections to Activity Task Executions.
+该上下文可用于传递外部依赖项，例如到 Activity 任务执行的数据库连接。
 
 ```go
 // ...
@@ -391,10 +399,10 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 
 #### WorkflowPanicPolicy
 
-Sets how the Workflow Worker handles a non-deterministic Workflow Execution History Event and other panics from Workflow Definition code.
+设置 Workflow Worker 如何处理非确定性 Workflow Execution 历史事件和来自 Workflow Definition 代码的其他恐慌。
 
-- Type: [`WorkflowPanicPolicy`](https://pkg.go.dev/go.temporal.io/sdk/internal#WorkflowPanicPolicy)
-- Default: `BlockWorkflow`
+- 型号：[`WorkflowPanicPolicy`](https://pkg.go.dev/go.temporal.io/sdk/internal#WorkflowPanicPolicy)
+- 默认：`BlockWorkflow`
 
 ```go
 // ...
@@ -408,12 +416,12 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 
 #### WorkerStopTimeout
 
-Sets the Worker's graceful stop timeout
+设置 Worker 的优雅停止超时
 
-- Type: [`time.Duration`](https://pkg.go.dev/time#Duration)
-- Default: `0`
+- 型号：[`time.Duration`](https://pkg.go.dev/time#Duration)
+- 默认：`0`
 
-Value resolution is in seconds.
+值分辨率以秒为单位。
 
 ```go
 // ...
@@ -425,14 +433,15 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 // ...
 ```
 
-#### EnableSessionWorker
+<a id="enablesessionworker"></a>
+#### 启用SessionWorker {#enablesessionworker}
 
-Enables Sessions for Activity Workers.
+启用 Activity Worker 的会话。
 
-- Type: `bool`
-- Default: `false`
+- 型号：`bool`
+- 默认：`false`
 
-When `true` the Activity Worker creates a Session to sequentially process Activity Tasks for the given Task Queue.
+当 `true` 时，Activity Worker 创建一个会话来顺序处理给定 Task Queue 的 Activity 任务。
 
 ```go
 // ...
@@ -444,12 +453,13 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 // ...
 ```
 
-#### MaxConcurrentSessionExecutionSize
+<a id="maxconcurrentsessionexecutionsize"></a>
+#### 最大并发会话执行大小 {#maxconcurrentsessionexecutionsize}
 
-Sets the maximum number of concurrent Sessions that the Worker can support.
+设置 Worker 可以支持的最大并发会话数。
 
-- Type: `int`
-- Default: 1000
+- 型号：`int`
+- 默认：1000
 
 ```go
 // ...
@@ -463,18 +473,18 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 
 #### WorkflowInterceptorChainFactories
 
-Specifies the factories used to instantiate the Workflow interceptor chain.
+指定用于实例化 Workflow 拦截器链的工厂。
 
-- Type: [`[]WorkflowInterceptor`](https://pkg.go.dev/go.temporal.io/sdk/internal#WorkflowInterceptor)
+- 类型：[`[]WorkflowInterceptor`](https://pkg.go.dev/go.temporal.io/sdk/internal#WorkflowInterceptor)
 
-The chain is instantiated for each replay of a Workflow Execution.
+每次重播 Workflow Execution 时都会实例化该链。
 
 #### LocalActivityWorkerOnly
 
-Sets the Worker to only handle Workflow Tasks and local Activity Tasks.
+将 Worker 设置为仅处理 Workflow 任务和本地 Activity 任务。
 
-- Type: `bool`
-- Default: `false`
+- 型号：`bool`
+- 默认：`false`
 
 ```go
 // ...
@@ -486,12 +496,12 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 // ...
 ```
 
-#### Identity
+＃＃＃＃ 身份
 
-Sets the Temporal Client-level Identity value, overwriting the existing one.
+设置 Temporal CLIent 级别的 Identity 值，覆盖现有的值。
 
-- Type: string
-- Default: client identity
+- 类型：字符串
+- 默认：客户端身份
 
 ```go
 // ...
@@ -503,14 +513,15 @@ w := worker.New(c, "your_task_queue_name", workerOptions)
 // ...
 ```
 
-#### DeadlockDetectionTimeout
+<a id="identity"></a>
+#### 死锁检测超时 {#identity}
 
-Sets the maximum time that a Workflow Task can execute for.
+设置 Workflow 任务可以执行的最长时间。
 
-- Type: [`time.Duration`](https://pkg.go.dev/time#Duration)
-- Default: 1
+- 型号：[`time.Duration`](https://pkg.go.dev/time#Duration)
+- 默认：1
 
-Resolution is in seconds.
+分辨率以秒为单位。
 
 ```go
 // ...

@@ -1,0 +1,368 @@
+---
+id: api-reference
+title: OpenMetrics API 参考
+sidebar_label: API参考
+description: Temporal Cloud OpenMetrics 端点的详细 API 文档。
+keywords:
+  - temporal cloud metrics configuration
+  - configure metrics endpoint
+  - temporal cloud observability
+  - tcld CLI guide
+  - temporal cloud UI setup
+  - grafana temporal integration
+  - prometheus metrics endpoint
+  - openmetrics endpoint
+  - observability tools integration
+  - openmetrics api
+tags:
+  - Metrics
+  - OpenMetrics
+  - Observability
+  - Temporal Cloud
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+Temporal Cloud OpenMetrics API 提供有关 Temporal Cloud 部署的可操作操作指标。这是一个可抓取的 HTTP API，它返回 OpenMetrics 格式的指标，适合由 Prometheus 兼容的监控系统摄取。
+
+
+## 可用指标参考
+
+指标描述也可以通过“/v1/descriptors”端点以编程方式获得。您可以查看指标参考以获取可用指标的列表。
+
+＃＃ 验证
+
+Temporal 使用 API 密钥与 OpenMetrics 端点集成。应用程序必须经过授权和身份验证才能访问 Temporal Cloud 的指标。
+
+API 密钥由服务帐户拥有，并继承授予所有者的权限。
+
+### 创建 API 密钥
+
+可以使用 [Temporal Cloud UI](https://cloud.Temporal.io) 创建 API 密钥：
+
+1. 导航至设置 → 服务帐户  
+2. 创建具有**“Metrics Read-Only”**帐户级别角色的服务帐户
+3. 在服务帐户内生成 API 密钥
+
+:::info
+
+有关生成 API 密钥的更多详细信息，请参阅[文档](https://docs.Temporal.io/cloud/api-keys#serviceaccount-api-keys)。
+
+:::
+
+### 使用 API 密钥
+
+所有 API 请求都必须通过 HTTPS 发出。通过纯 HTTP 进行的调用将会失败。未经身份验证的 API 请求也会失败。
+
+```shell
+curl -H "Authorization: Bearer <API_KEY>" https://metrics.temporal.io/v1/metrics
+```
+
+## 对象模型
+
+Metrics API 的对象模型遵循 [OpenMetrics](https://openmetrics.io/) 标准。
+
+### 指标
+
+指标是在特定时间点测量的数字属性，标有在检测点收集的上下文元数据。
+
+### 指标类型
+
+所有 Temporal Cloud 指标均以 OpenMetrics 格式公开为*规格*，但代表不同的测量类型：
+
+* **速率指标**：预先计算的每秒速率与增量 Temporality（例如，`Temporal_cloud_v1_Workflow_success_count` \- 每秒完成的 Workflow 数）  
+* **值指标**：当前或瞬时值（例如，`Temporal_cloud_v1_approximate_backlog_count` \- 队列中的当前任务数）
+
+指标列表及其标签可通过 [列表描述符](/cloud/metrics/openmetrics/api-reference#list-metric-descriptors) 端点或在 [指标参考](/cloud/metrics/openmetrics/metrics-reference) 中获取。
+
+### 标签
+
+标签是与指标数据点关联的键值属性。标签可用于过滤或聚合指标。
+
+常见的标签包括：
+
+* `Temporal_Namespace`: Temporal Namespace  
+* `Temporal_account`: Temporal 帐户  
+* `region`：指标来源的云区域  
+* `Temporal_Workflow_type`：Workflow Type（如果适用）  
+* `Temporal_task_queue`：Task Queue 名称（如果适用）
+
+每个指标都有自己的一组适用标签。有关完整详细信息，请参阅指标参考。
+
+### 公制系列
+
+[指标系列](https://github.com/prometheus/OpenMetrics/blob/main/specification/OpenMetrics.md#metricfamily) 可能有零个或多个指标。  返回的指标集将根据实际系统 Activity 的不同而有所不同。  仅当在聚合窗口期间报告指标时，指标才会出现在指标系列中。
+
+## 客户考虑因素
+
+### 速率限制
+
+为了保护 API 的稳定性并使其可供所有用户使用，Temporal 采用了多种保护措施。
+
+当违反速率限制时，会返回 HTTP“429 Too Many Requests”错误，并带有以下标头：
+
+|标题|描述 |
+| -----| -----|
+| `之后重试` |速率限制窗口重置之前的时间（以秒为单位）|
+
+#### 速率限制范围
+:::note
+速率限制范围可能会发生变化。
+
+:::
+
+|范围 |限制|
+| -----| -----|
+|账户 |每小时 180 个请求 |
+
+### 响应完整性
+
+“X-Completeness”标头指示响应是否包含所有可用数据：
+
+* `complete`：响应包含请求的所有指标  
+*“有限”：由于大小限制（最多 30k 指标数据点），响应被截断。使用 Namespace 或度量过滤来减小响应大小。
+*“未知”：无法确定完整性（可能是由于区域问题或超时）。鼓励客户重试。
+
+### 重试逻辑
+
+在客户端中实现重试逻辑，以优雅地处理暂时性 API 故障。使用带有抖动的指数退避来避免重试风暴，并通过合理的重试间隔来避免达到速率限制。
+
+### 数据延迟
+
+Query 在生成后 3 分钟内即可获得度量数据点。这与[可从任何主要服务提供商处获得](https://docs.datadoghq.com/integrations/guide/cloud-metric-delay/)的最新指标一致。设置监控警报时应考虑到此延迟。
+
+## 端点
+
+:::info
+
+所有端点均由“metrics.Temporal.io”提供服务
+
+:::
+
+### 获取指标
+
+`获取/v1/指标`
+
+返回适合 Prometheus 兼容系统抓取的 OpenMetrics 格式的指标。
+
+#### 时间戳偏移量
+
+为了考虑指标数据延迟，此端点返回当前时间戳减去固定偏移量的指标。  当前偏移量为 3 分钟，向下舍入到分钟的开始位置。为了适应此偏移量，在导入指标时应遵守响应中的时间戳。例如，在 Prometheus 中，可以使用“honor\_timestamps”标志来控制。
+
+#### Query 参数
+
+|参数|类型 |描述 |
+| -----| -----| -----|
+| `Namespaces` |字符串数组 |过滤到特定的 Namespace。支持通配符（例如“生产-*”）|
+| `指标` |字符串数组 |筛选特定指标 |
+
+#### 响应标头
+
+|标题|描述 |
+| -----| -----|
+| `X-完整性` |指示响应状态：“完整”、“有限”或“未知” |
+| `内容类型` | `应用程序/openmetrics-文本` |
+
+:::info Example
+
+要求：
+
+```shell
+curl -H "Authorization: Bearer <API_KEY>" \
+  "https://metrics.temporal.io/v1/metrics?namespaces=production-*"
+```
+
+回复：
+```
+# TYPE temporal_cloud_v1_workflow_success_count gauge
+# HELP temporal_cloud_v1_workflow_success_count The number of successful workflows per second
+temporal_cloud_v1_workflow_success_count{temporal_namespace="production",temporal_workflow_type="payment-processing",region="aws-us-west-2"} 42.0 1609459200000
+temporal_cloud_v1_workflow_success_count{temporal_namespace="production",temporal_workflow_type="order-fulfillment",region="aws-us-west-2"} 128.0 1609459200000
+
+# TYPE temporal_cloud_v1_approximate_backlog_count gauge  
+# HELP temporal_cloud_v1_approximate_backlog_count Approximate number of tasks in a task queue
+temporal_cloud_v1_approximate_backlog_count{temporal_namespace="production",temporal_task_queue="critical-queue",task_type="workflow", region="aws-us-west-2"} 15.0 1609459200000
+```
+
+:::
+
+#### 最佳实践总结
+
+* *荣誉时间戳*: 在 Prometheus 中设置 `honor_timestamps: true`  
+* *刮擦间隔*：使用 30 或 60 秒间隔  
+* *超时*：对于较大的响应，将抓取超时设置为 10 秒  
+* *过滤*：使用 Query 参数来减少响应大小
+
+### 列出指标描述符
+
+`获取/v1/描述符`
+
+列出所有指标描述符，包括元数据、数据类型和可用维度（也称为标签）。
+
+#### Query 参数
+
+|参数|类型 |描述 |
+| -----| -----| -----|
+| `限制` |整数 |页面大小（1-100，默认：100\）|
+| `偏移` |整数 |页面偏移|
+
+:::info Example
+
+要求：
+
+```shell
+curl -H "Authorization: Bearer <API_KEY>" \
+  "https://metrics.temporal.io/v1/descriptors"
+```
+
+回复：
+
+```json
+{
+  "meta": {
+    "pagination": {
+      "total": 35,
+      "limit": 100,
+      "offset": 0
+    }
+  },
+  "descriptors": [
+    {
+      "name": "temporal_cloud_v1_workflow_success_count",
+      "help": "The number of successful workflows per second",
+      "dimensions": [
+        "temporal_namespace",
+        "temporal_workflow_type", 
+        "temporal_task_queue",
+        "region"
+      ]
+    }
+  ]
+}
+```
+
+:::
+
+## 管理高基数
+
+:::caution
+
+“Temporal_task_queue”和“Temporal_Workflow_type”等高基数标签可以显着增加指标量并影响监控系统的性能。
+
+:::
+
+### 基数估计
+
+要估计您的指标基数并查看这是否是一个问题：
+
+```
+Total series = Base metrics × Namespaces × Task queues × Workflow types
+```
+
+例子：
+
+* 6 个带有两个标签的 Workflow 指标  
+* 10 个 Namespace  
+* 50 个 Task Queue  
+* 20 个 Workflow Type  
+* \= 6 × 10 × 50 × 20 \= 60,000 个时间序列
+
+:::note
+
+上述示例中的 60,000 个时间序列会导致每次抓取超过 30,000 个数据点限制。
+
+:::
+
+如果基数太高或者您达到 API 限制，请考虑以下策略。
+
+### 在抓取时进行过滤
+
+您可以仅隔离您需要的指标/Namespace。  例如，下面显示了通过修改“metrics_path”进行过滤的示例。
+
+```shell
+# Only specific namespaces matching the wildcard pattern
+/v1/metrics?namespaces=production-*
+
+# Only specific metrics
+/v1/metrics?metrics=temporal_cloud_v1_workflow_success_count
+
+# Combined filtering
+/v1/metrics?namespaces=prod-*&metrics=temporal_cloud_v1_approximate_backlog_count
+```
+
+:::info
+
+在 Prometheus 中，可以设置“params”配置以匹配与上述相同的行为。
+
+```yaml
+scrape_configs:
+- job_name: 'temporal-cloud'
+  ...
+  static_configs:
+    - targets: ['metrics.temporal.io']
+  metrics_path: '/v1/metrics'
+  params:
+    namespaces: ['prod-*']
+    metrics: ['temporal_cloud_v1_approximate_backlog_count']
+
+```
+
+:::
+
+
+### 标签管理
+
+#### 普罗米修斯
+
+如果使用 Prometheus，您可以将其配置为删除具有特定标签的指标，甚至重命名特定标签值以减少基数。
+
+```yaml
+metric_relabel_configs:
+# Consolidate non-critical task queues
+- source_labels: [temporal_task_queue]
+  regex: '(critical-queue|payment-queue)'
+  target_label: __tmp_keep_original
+  replacement: 'true'
+  
+- source_labels: [__tmp_keep_original]
+  regex: ''
+  target_label: temporal_task_queue
+  replacement: 'other'
+  
+- regex: '__tmp_keep_original'
+  action: labeldrop
+```
+
+#### 打开遥测收集器
+
+为了实现与 Prometheus 相同的功能，可以在收集器中与任何其他处理器一起使用过滤器。
+
+```
+processors:
+  filter:
+    metrics:
+      include:
+        match_type: regexp
+        expressions:
+          # Only keep metrics with critical-queue or payment-queue
+          - Label("temporal_task_queue") == nil or IsMatch(Label("temporal_task_queue"), "^(critical-queue|payment-queue)$")
+```
+
+### 监控基数
+
+可以使用 PromQL Query 监控基数。
+
+```shell
+# Count the total number of series
+count({__name__=~"temporal_cloud_v1_.*"})
+
+# Count the total number of series by metric
+count({__name__=~"temporal_cloud_v1_.*"}) by (__name__)
+```
+
+## API 限制
+
+|限制|影响 |缓解措施 |
+| -----| -----| -----|
+|每次抓取总共 30k 个数据点 |响应可能会被截断 |使用Namespace/公制过滤|
+|每个帐户每小时 180 个请求（每分钟约 3 个请求）|返回 HTTP 429 |设置适当的刮擦间隔30-60s |

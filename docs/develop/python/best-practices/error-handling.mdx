@@ -1,8 +1,8 @@
 ---
 id: error-handling
-title: Error handling - Python SDK
-sidebar_label: Error handling
-description: Learn how to handle errors in Temporal Python applications with retry policies, idempotent Activities, and recovery patterns.
+title: "错误处理 - Python SDK"
+sidebar_label: "错误处理"
+description: "了解如何使用重试策略、幂等活动和恢复模式处理 Temporal Python 应用程序中的错误。"
 slug: /develop/python/best-practices/error-handling
 toc_max_heading_level: 2
 keywords:
@@ -19,49 +19,51 @@ tags:
   - Python SDK
 ---
 
-Temporal automatically handles many types of failures through retries and Durable Execution.
-This page shows you how to build on these capabilities to create robust error handling for your applications.
+Temporal 通过重试和持久执行自动处理多种类型的故障。
+本页向您展示如何基于这些功能为您的应用程序创建强大的错误处理。
 
-**Key concepts:**
+**关键概念：**
 
-Not all failures should be handled the same way.
-**Transient failures** (like brief network hiccups) resolve on their own and should be retried immediately.
-**Intermittent failures** (like rate limiting) need increasing delays between retries.
-**Permanent failures** (like invalid input) won't resolve through retries and need different data or code changes.
+并非所有故障都应该以相同的方式处理。
+**暂时性故障**（例如短暂的网络中断）会自行解决，应立即重试。
+**间歇性失败**（如速率限制）需要增加重试之间的延迟。
+**永久性故障**（例如无效输入）无法通过重试解决，并且需要更改不同的数据或代码。
 
-Temporal distinguishes between **Workflow Task failures** (bugs that can be fixed with redeployment) and **Workflow Execution failures** (business logic failures that should stop the Workflow).
-Task failures retry automatically so you can fix and redeploy without losing state.
-Execution failures require you to explicitly raise an `ApplicationError`.
+Temporal 区分 **Workflow 任务故障**（可以通过重新部署修复的错误）和 **Workflow Execution 故障**（应停止 Workflow 的业务逻辑故障）。
+任务失败会自动重试，以便您可以修复和重新部署而不会丢失状态。
+执行失败需要您显式引发 `ApplicationError`。
 
-This page shows how to:
+此页面显示如何：
 
-- [Make Activities idempotent](#make-activities-idempotent)
-- [Raise exceptions from Activities](#raise-exceptions-from-activities)
-- [Raise exceptions from Workflows](#raise-exceptions-from-workflows)
-- [Handle exceptions in Workflows](#handle-exceptions-in-workflows)
-- [Configure custom Retry Policies](#configure-custom-retry-policies)
-- [Mark specific errors as non-retryable](#mark-errors-as-non-retryable)
-- [Specify non-retryable error types in Retry Policies](#specify-non-retryable-error-types)
-- [Implement rollback logic with the Saga pattern](#implement-saga-pattern)
-- [Understand Temporal's failure types](#understand-failure-types)
+- [使 Activity 幂等](#make-activities-idempotent)
+- [引发活动异常](#raise-exceptions-from-activities)
+- [从 Workflow 引发异常](#raise-exceptions-from-workflows)
+- [处理 Workflow 中的异常](#handle-exceptions-in-workflows)
+- [配置自定义重试策略](#configure-custom-retry-policies)
+- [将特定错误标记为不可重试](#mark-errors-as-non-retryable)
+- [在重试策略中指定不可重试的错误类型](#specify-non-retryable-error-types)
+- [使用Saga模式实现回滚逻辑](#implement-saga-pattern)
+- [了解Temporal的故障类型](#understand-failure-types)
 
-## Make Activities idempotent {#make-activities-idempotent}
+<a id="make-activities-idempotent"></a>
+## 使活动幂等 {#make-activities-idempotent}
 
-**How to make Activities idempotent using the Temporal Python SDK**
+**如何使用 Temporal Python SDK 使活动幂等**
 
-Because Activities may be retried due to failures, it's strongly recommended to make them idempotent.
-An idempotent operation produces the same result whether executed once or multiple times.
+由于 Activity 可能会因失败而重试，因此强烈建议将其设为幂等。
+幂等操作无论执行一次还是多次都会产生相同的结果。
 
-Activities follow an at-least-once execution model.
-If a Worker executes an Activity successfully but crashes before notifying the Temporal Service, the Activity will be retried.
-Without idempotence, this could cause duplicate charges in payment processing or create duplicate resources in infrastructure provisioning.
+活动遵循至少一次执行模型。
+如果 Worker 成功执行 Activity 但在通知 Temporal 服务之前崩溃，则将重试 Activity。
+如果没有幂等性，这可能会导致支付处理中重复收费或在基础设施配置中创建重复资源。
 
-### Use idempotency keys
+<a id="use-idempotency-keys"></a>
+### 使用幂等键 {#use-idempotency-keys}
 
-Most external services support idempotency keys—unique identifiers that prevent duplicate operations.
-When the service receives a request with a key it has already processed, it returns the original result instead of performing the operation again.
+大多数外部服务都支持幂等键——防止重复操作的唯一标识符。
+当服务收到带有已处理过的密钥的请求时，它会返回原始结果，而不是再次执行操作。
 
-Create an idempotency key by combining the Workflow Run ID and Activity ID:
+通过组合 Workflow 运行 ID 和 Activity ID 创建幂等密钥：
 
 ```python
 from temporalio import activity
@@ -80,30 +82,31 @@ async def process_payment(amount: float, account: str):
     return result
 ```
 
-This value remains constant across Activity retries but is unique among all Workflow Executions.
+该值在 Activity 重试中保持不变，但在所有 Workflow Execution 中是唯一的。
 
-### Design Activities to be atomic
+<a id="design-activities-to-be-atomic"></a>
+### 将活动设计为原子的 {#design-activities-to-be-atomic}
 
-Activities are atomic—they either complete successfully or not.
-If an Activity performs multiple steps and the last step fails, the entire Activity is retried.
+活动是原子的——它们要么成功完成，要么失败。
+如果 Activity 执行多个步骤并且最后一步失败，则会重试整个 Activity。
 
-Consider this Activity:
-1. Look up data in database
-2. Call microservice with the data
-3. Write result to filesystem
+考虑这个 Activity：
+1.在数据库中查找数据
+2. 使用数据调用微服务
+3. 将结果写入文件系统
 
-If step 3 fails, all three steps execute again on retry.
-You might split this into three separate Activities so only the failed step retries, but balance this against having a larger Event History with more Activity Executions.
+如果步骤 3 失败，则重试时将再次执行所有三个步骤。
+您可以将其拆分为三个单独的活动，以便仅重试失败的步骤，但要平衡此与更大的 Event History 和更多 Activity 执行。
 
-## Raise exceptions from Activities {#raise-exceptions-from-activities}
+## 从活动中引发异常 {#raise-exceptions-from-activities}
 
-**How to raise exceptions from Activities using the Temporal Python SDK**
+**如何使用 Temporal Python SDK 引发活动异常**
 
-Use `ApplicationError` to communicate application-specific failures from Activities. Raising it explicitly gives you more control.
+使用 `ApplicationError` 从活动中传达特定于应用程序的故障。显式提高它可以让您获得更多控制权。
 
 :::note
 
-*Any* other exceptions that are raised from your Python code in a Temporal Activity will be converted to an `ApplicationError` internally. This way, an error's type, severity, and any additional details can be sent to the Temporal Service, indexed by the Web UI, and even serialized across language boundaries.
+Temporal Activity 中的 Python 代码引发的*任何*其他异常都将在内部转换为 `ApplicationError`。这样，错误的类型、严重性和任何其他详细信息都可以发送到 Temporal 服务，由 Web UI 进行索引，甚至可以跨语言边界进行序列化。
 
 :::
 
@@ -128,26 +131,28 @@ async def validate_charge(credit_card_number: str, amount: float):
     return True
 ```
 
-When raising an `ApplicationError`:
-- Provide a descriptive `message`
-- Optionally provide a `type` string to categorize the failure
-- The error appears in the Event History as an `ActivityTaskFailed` event
+当筹集 `ApplicationError` 时：
+- 提供描述性的 `message`
+- 可以选择提供 `type` 字符串来对故障进行分类
+- 该错误作为 `ActivityTaskFailed` 事件出现在 Event History 中
 
-When an Activity fails, Temporal wraps the exception in an `ActivityError` before surfacing it to the Workflow.
-The `ActivityError` provides context including:
-- Activity type that failed
-- Number of retry attempts
-- Original cause (the [`ApplicationError`](https://python.temporal.io/temporalio.exceptions.ApplicationError.html) you raised, or `TimeoutError`, [`CancelledError`](https://python.temporal.io/temporalio.exceptions.CancelledError.html), etc.)
+当 Activity 失败时，Temporal 会将异常包装在 `ActivityError` 中，然后再将其呈现给 Workflow。
+`ActivityError` 提供的上下文包括：
+- Activity 类型失败
+- 重试次数
+- 原始原因（您提出的[`ApplicationError`](https://python.temporal.io/temporalio.exceptions.ApplicationError.html)，或`TimeoutError`、[`CancelledError`](https://python.temporal.io/temporalio.exceptions.CancelledError.html)等）
 
-## Raise exceptions from Workflows {#raise-exceptions-from-workflows}
+<a id="raise-exceptions-from-workflows"></a>
+## 从 Workflows 引发异常 {#raise-exceptions-from-workflows}
 
-**How to raise exceptions from Workflows using the Temporal Python SDK**
+**如何使用 Temporal Python SDK 从 Workflow 引发异常**
 
-The behavior depends on what exception you raise:
+该行为取决于您引发的异常：
 
-### Fail a Workflow Execution
+<a id="fail-a-workflow-execution"></a>
+### Workflow Execution 失败 {#fail-a-workflow-execution}
 
-To deliberately fail a Workflow Execution, raise an `ApplicationError`:
+要故意使 Workflow Execution 失败，请引发 `ApplicationError`：
 
 ```python
 from temporalio import workflow
@@ -173,31 +178,33 @@ class PizzaDeliveryWorkflow:
         # Continue with order...
 ```
 
-One reason to use the Temporal `ApplicationError` class is because it allows you to set an additional `non_retryable` parameter.
-This way, you can decide whether an error should not be retried automatically by Temporal.
-This can be useful for deliberately failing a Workflow due to bad input data, rather than waiting for a timeout to elapse. You can alternately specify a list of errors that are non-retryable in your Activity [Retry Policy](/develop/python/activities/timeouts#activity-retries).
+使用 Temporal `ApplicationError` 类的原因之一是它允许您设置附加的 `non_retryable` 参数。
+这样，您可以决定 Temporal 是否不应自动重试错误。
+这对于由于输入数据错误而故意使 Workflow 失败而不是等待超时结束非常有用。您也可以在 Activity [Retry Policy](/develop/python/activities/timeouts#activity-retries) 中指定不可重试的错误列表。
 
-This puts the Workflow Execution in "Failed" state with no automatic retries.
-Use this for permanent failures where retrying won't help—like the customer being too far away.
+这会将 Workflow Execution 置于“失败”状态，并且不会自动重试。
+将此用于重试无济于事的永久性故障，例如客户距离太远。
 
-### Trigger a Workflow Task retry
+<a id="trigger-a-workflow-task-retry"></a>
+### 触发 Workflow 任务重试 {#trigger-a-workflow-task-retry}
 
-Raising any other Python exception (like `ValueError` or `TypeError`) causes a Workflow Task failure, which retries automatically:
+引发任何其他 Python 异常（如 `ValueError` 或 `TypeError`）会导致 Workflow 任务失败，该失败会自动重试：
 
 ```python
 # This causes a Workflow Task failure (retries automatically)
 raise ValueError("Unexpected condition")
 ```
 
-This is intentional.
-Regular Python exceptions are treated as bugs that can be fixed with a code deployment, not business logic failures.
-The Workflow Task retries indefinitely, letting you fix the bug and redeploy without losing Workflow state.
+这是故意的。
+常规 Python 异常被视为可以通过代码部署修复的错误，而不是业务逻辑故障。
+Workflow 任务无限期地重试，让您可以修复错误并重新部署，而不会丢失 Workflow 状态。
 
-## Handle exceptions in Workflows {#handle-exceptions-in-workflows}
+<a id="handle-exceptions-in-workflows"></a>
+## 处理 Workflows 中的异常 {#handle-exceptions-in-workflows}
 
-**How to handle exceptions in Workflows using the Temporal Python SDK**
+**如何使用 Temporal Python SDK 处理 Workflow 中的异常**
 
-Use Python's `try/except` blocks to handle Activity failures in your Workflow:
+使用 Python 的 `try/except` 块来处理 Workflow 中的 Activity 故障：
 
 ```python
 from temporalio import workflow
@@ -249,20 +256,20 @@ class MoneyTransferWorkflow:
         return f"Transfer complete: {withdraw_result}, {deposit_result}"
 ```
 
-Common Temporal exceptions you can catch in Workflows:
-- `ActivityError` - Activity failed after exhausting retries
-- `ChildWorkflowError` - Child Workflow failed
-- `CancelledError` - Workflow, Activity, or Timer was canceled
-- `TimeoutError` - Operation exceeded timeout
+您可以在 Workflow 中捕获常见的 Temporal 异常：
+- `ActivityError` - Activity 在用尽重试后失败
+- `ChildWorkflowError` - Child Workflow 失败
+- `CancelledError` - Workflow、Activity 或 Timer 已取消
+- `TimeoutError` - 操作超出超时
 
-If these exceptions propagate unhandled, the Workflow Execution fails (or enters "Canceled" state for `CancelledError`).
+如果这些异常未经处理地传播，则 Workflow Execution 将失败（或 `CancelledError` 进入“已取消”状态）。
 
-## Configure custom Retry Policies {#configure-custom-retry-policies}
+## 配置自定义重试策略 {#configure-custom-retry-policies}
 
-**How to configure custom Retry Policies using the Temporal Python SDK**
+**如何使用 Temporal Python SDK 配置自定义重试策略**
 
-Activities have a default Retry Policy with unlimited attempts and exponential backoff.
-Customize this to match your expected failure patterns.
+活动具有默认的 Retry Policy，具有无限尝试和指数退避。
+对此进行自定义以匹配您预期的故障模式。
 
 ```python
 from temporalio import workflow
@@ -290,24 +297,26 @@ class OrderWorkflow:
         return result
 ```
 
-Retry Policy attributes:
-- **`initial_interval`**: Delay before first retry (default: 1 second)
-- **`backoff_coefficient`**: Multiplier for subsequent delays (default: 2.0)
-- **`maximum_interval`**: Cap on retry delay (default: 100× initial interval)
-- **`maximum_attempts`**: Maximum retry attempts (default: unlimited)
-- **`non_retryable_error_types`**: Error types that shouldn't retry (default: empty)
+Retry Policy 属性：
+- **`initial_interval`**：第一次重试之前的延迟（默认值：1 秒）
+- **`backoff_coefficient`**：后续延迟的乘数（默认值：2.0）
+- **`maximum_interval`**：重试延迟上限（默认值：100×初始间隔）
+- **`maximum_attempts`**：最大重试次数（默认值：无限制）
+- **`non_retryable_error_types`**：不应重试的错误类型（默认值：空）
 
-### Match your Retry Policy to failure types
+<a id="match-your-retry-policy-to-failure-types"></a>
+### 将您的 Retry Policy 与故障类型匹配 {#match-your-retry-policy-to-failure-types}
 
-**For transient failures** (brief network issues): Use the defaults or a low `initial_interval` and `backoff_coefficient`.
+**对于暂时性故障**（短暂的网络问题）：使用默认值或较低的 `initial_interval` 和 `backoff_coefficient`。
 
-**For intermittent failures** (rate limiting): Increase `initial_interval` and `backoff_coefficient` to space out retries and let the condition resolve.
+**对于间歇性故障**（速率限制）：增加 `initial_interval` 和 `backoff_coefficient` 以间隔重试并解决问题。
 
-**For cost-sensitive APIs**: Set `maximum_attempts` to limit retries (rare—usually prefer timeouts).
+**对于成本敏感的 API**：设置 `maximum_attempts` 以限制重试（罕见 - 通常更喜欢超时）。
 
-### Use different policies for different Activities
+<a id="use-different-policies-for-different-activities"></a>
+### 针对不同的活动使用不同的策略 {#use-different-policies-for-different-activities}
 
-You can use different Retry Policies for different Activities, or even multiple policies for the same Activity:
+您可以对不同的活动使用不同的重试策略，甚至可以对同一 Activity 使用多个策略：
 
 ```python
 fast_retry = RetryPolicy(
@@ -337,22 +346,23 @@ await workflow.execute_activity(
 )
 ```
 
-### Don't use Workflow Retry Policies
+<a id="dont-use-workflow-retry-policies"></a>
+### 不要使用 Workflow 重试策略 {#dont-use-workflow-retry-policies}
 
-Unlike Activities, Workflows don't retry by default, and you usually shouldn't add a Retry Policy.
-Workflows are deterministic and not designed for failure-prone operations.
-A Workflow failure typically indicates a code bug or bad input data—retrying the entire Workflow repeats the same logic without fixing the underlying issue.
+与活动不同，Workflow 默认情况下不会重试，并且您通常不应添加 Retry Policy。
+Workflow 是确定性的，不适用于容易发生故障的操作。
+Workflow 故障通常表示代码错误或输入数据错误 - 重试整个 Workflow 会重复相同的逻辑，而不会解决根本问题。
 
-If you need retry logic for specific Workflow operations, implement it in your Workflow code rather than using a Workflow Retry Policy.
+如果您需要特定 Workflow 操作的重试逻辑，请在 Workflow 代码中实现它，而不是使用 Workflow Retry Policy。
 
-## Mark specific errors as non-retryable {#mark-errors-as-non-retryable}
+## 将特定错误标记为不可重试 {#mark-errors-as-non-retryable}
 
-**How to mark specific errors as non-retryable using the Temporal Python SDK**
+**如何使用 Temporal Python SDK 将特定错误标记为不可重试**
 
-Some failures are permanent and won't resolve through retries.
-Mark these as non-retryable to fail fast instead of waiting for timeouts.
+有些故障是永久性的，无法通过重试解决。
+将它们标记为不可重试以快速失败，而不是等待超时。
 
-Set the `non_retryable` flag when raising an `ApplicationError`:
+在引发 `ApplicationError` 时设置 `non_retryable` 标志：
 
 ```python
 from temporalio import activity
@@ -379,23 +389,23 @@ async def process_payment(card_number: str, amount: float):
     # Process payment...
 ```
 
-An `ApplicationError` with `non_retryable=True` will never retry, regardless of the Retry Policy.
+无论 Retry Policy 如何，带有 `non_retryable=True` 的 `ApplicationError` 都不会重试。
 
-Use non-retryable errors for:
-- Invalid input data that prevents the Activity from proceeding
-- Business rule violations
-- Authorization failures
+使用不可重试的错误：
+- 无效的输入数据阻止 Activity 继续进行
+- 违反业务规则
+- 授权失败
 
-**Use this sparingly.**
-In most cases, it's better to let the Retry Policy handle when to stop retrying based on time or attempts.
+**谨慎使用这个。**
+在大多数情况下，最好让 Retry Policy 根据时间或尝试来处理何时停止重试。
 
-## Specify non-retryable error types {#specify-non-retryable-error-types}
+## 指定不可重试的错误类型 {#specify-non-retryable-error-types}
 
-**How to specify non-retryable error types in Retry Policies using the Temporal Python SDK**
+**如何使用 Temporal Python SDK 在重试策略中指定不可重试的错误类型**
 
-Sometimes you want the Workflow (caller) to decide which error types shouldn't retry, rather than the Activity (implementer).
+有时您希望 Workflow（调用者）而不是 Activity（实现者）决定哪些错误类型不应重试。
 
-List error types that shouldn't retry in your Retry Policy:
+列出不应在 Retry Policy 中重试的错误类型：
 
 ```python
 from temporalio import workflow
@@ -427,28 +437,29 @@ class CheckoutWorkflow:
             # Handle the non-retryable error...
 ```
 
-When an Activity raises an `ApplicationError`, Temporal checks if its `type` is in `non_retryable_error_types`.
-If it matches, the Activity fails immediately without retries.
+当 Activity 引发 `ApplicationError` 时，Temporal 检查其 `type` 是否在 `non_retryable_error_types` 中。
+如果匹配，则 Activity 立即失败，无需重试。
 
-### When to use each approach
+<a id="when-to-use-each-approach"></a>
+### 何时使用每种方法 {#when-to-use-each-approach}
 
-**`non_retryable=True` in the Activity**: Use when the Activity implementer knows the error is permanently unrecoverable.
-This enforces the constraint for all callers.
+**Activity 中的 `non_retryable=True`**：当 Activity 实施者知道错误永久不可恢复时使用。
+这对所有调用者强制执行约束。
 
-**`non_retryable_error_types` in the Retry Policy**: Use when the caller wants to decide which errors are unrecoverable based on their business logic.
-This lets different Workflows make different decisions about the same Activity.
+**Retry Policy 中的 `non_retryable_error_types`**：当调用者想要根据其业务逻辑决定哪些错误不可恢复时使用。
+这使得不同的 Workflow 对同一 Activity 做出不同的决定。
 
-## Implement rollback logic with the Saga pattern {#implement-saga-pattern}
+## 使用 Saga 模式实现回滚逻辑 {#implement-saga-pattern}
 
-**How to implement the Saga pattern using the Temporal Python SDK**
+**如何使用 Temporal Python SDK 实现 Saga 模式**
 
-The Saga pattern coordinates a sequence of operations where each operation has a compensating action to undo its effects.
-If any operation fails, execute compensating actions in reverse order to roll back previous operations.
+Saga 模式协调一系列操作，其中每个操作都有一个补偿操作来撤消其影响。
+如果任何操作失败，则按照相反的顺序执行补偿操作，回滚之前的操作。
 
-Use this for multi-step processes like:
-- E-commerce checkout (payment, inventory, shipping)
-- Distributed transactions across services
-- Multi-stage data updates
+将其用于多步骤过程，例如：
+- 电子商务结帐（付款、库存、运输）
+- 跨服务的分布式事务
+- 多级数据Updates
 
 ```python
 from temporalio import workflow
@@ -519,55 +530,57 @@ class OrderWorkflow:
             )
 ```
 
-Key points:
-- Add compensating actions to a list **before** executing each Activity
-- Use `reversed(compensations)` to undo operations in the correct order
-- Handle compensation failures gracefully (they might fail too)
-- Temporal manages all state and retry logic, making Saga implementation straightforward
+要点：
+- 在执行每个 Activity 之前**将补偿操作添加到列表中
+- 使用`reversed(compensations)`以正确的顺序撤消操作
+- 优雅地处理补偿失败（它们也可能失败）
+- Temporal 管理所有状态和重试逻辑，使 Saga 实现简单明了
 
-## Understand Temporal's failure types {#understand-failure-types}
+## 了解 Temporal 的故障类型 {#understand-failure-types}
 
-Temporal uses specialized exception types to represent different failure scenarios.
-All exceptions inherit from [`TemporalError`](https://python.temporal.io/temporalio.exceptions.TemporalError.html).
+Temporal 使用专门的异常类型来表示不同的故障场景。
+所有异常都继承自 [`TemporalError`](https://python.temporal.io/temporalio.exceptions.TemporalError.html)。
 
-**Do not extend `TemporalError` or its children.**
-Use the provided exception types to ensure:
-- Consistent behavior across process and language boundaries
-- Compatibility with the Temporal Service
-- Proper serialization via Protocol Buffers
+**不要扩展 `TemporalError` 或其子项。**
+使用提供的异常类型来确保：
+- 跨进程和语言边界的一致行为
+- 与 Temporal 服务的兼容性
+- 通过协议缓冲区进行正确的序列化
 
-### Common failure types
+<a id="common-failure-types"></a>
+### 常见故障类型 {#common-failure-types}
 
-**`ApplicationError`**: Raised by your code to indicate application-specific failures.
-This is the only Temporal exception you should raise manually.
-When you raise an `ApplicationError`, you can optionally provide a `type` string and mark it as `non_retryable`.
+**`ApplicationError`**：由您的代码引发以指示特定于应用程序的故障。
+这是您应该手动引发的唯一 Temporal 异常。
+当您提出 `ApplicationError` 时，您可以选择提供 `type` 字符串并将其标记为 `non_retryable`。
 
-**`ActivityError`**: Wraps exceptions raised from Activities.
-The `cause` field contains the original error (`ApplicationError`, `TimeoutError`, `CancelledError`, etc.).
-Catch this in Workflows to handle Activity failures.
+**`ActivityError`**：包装从活动引发的异常。
+`cause` 字段包含原始错误（`ApplicationError`、`TimeoutError`、`CancelledError` 等）。
+在 Workflow 中捕获此内容以处理 Activity 故障。
 
-**`TimeoutError`**: Occurs when an Activity or Workflow exceeds its configured timeout.
+**`TimeoutError`**：当 Activity 或 Workflow 超过其配置的超时时发生。
 
-**`CancelledError`**: Results from cancellation of a Workflow, Activity, or Timer.
-You can catch and ignore this to continue execution despite cancellation.
+**`CancelledError`**：取消 Workflow、Activity 或 Timer 的结果。
+您可以捕获并忽略它，以便在取消的情况下继续执行。
 
-**`TerminatedError`**: Occurs when a Workflow Execution is forcefully terminated.
+**`TerminatedError`**：当 Workflow Execution 被强制终止时发生。
 
-**`ChildWorkflowError`**: Raised when a Child Workflow Execution fails.
+**`ChildWorkflowError`**：当子 Workflow Execution 失败时引发。
 
-**`WorkflowAlreadyStartedError`**: Raised when attempting to start a Workflow with an ID that's already running.
+**`WorkflowAlreadyStartedError`**：尝试使用已在运行的 ID 启动 Workflow 时引发。
 
-**`ServerError`**: Used for exceptions from the Temporal Service itself (like database failures).
+**`ServerError`**：用于 Temporal 服务本身的异常（例如数据库故障）。
 
-### Workflow Task vs Workflow Execution failures
+<a id="workflow-task-vs-workflow-execution-failures"></a>
+### Workflow 任务与 Workflow Execution 失败 {#workflow-task-vs-workflow-execution-failures}
 
-**Workflow Task failures** occur when Workflow code raises a non-Temporal exception (like `ValueError`, `TypeError`, or non-determinism errors).
-These retry automatically, letting you fix bugs and redeploy without losing Workflow state.
+**Workflow 任务失败** 当 Workflow 代码引发非 Temporal 异常（如 `ValueError`、`TypeError` 或非确定性错误）时发生。
+这些会自动重试，让您修复错误并重新部署，而不会丢失 Workflow 状态。
 
-**Workflow Execution failures** occur when Workflow code raises a Temporal exception like `ApplicationError`.
-These put the Workflow in "Failed" state with no automatic retries.
+当 Workflow 代码引发 Temporal 异常（如 `ApplicationError`）时，**Workflow Execution 失败**发生。
+这会将 Workflow 置于“失败”状态，并且不会自动重试。
 
-Example of a permanent failure that should fail the Workflow:
+Workflow 应该失败的永久性故障示例：
 
 ```python
 if distance.kilometers > MAX_DELIVERY_DISTANCE:
@@ -578,8 +591,9 @@ if distance.kilometers > MAX_DELIVERY_DISTANCE:
     )
 ```
 
-### Protecting sensitive information
+<a id="protecting-sensitive-information"></a>
+### 保护敏感信息 {#protecting-sensitive-information}
 
-The default Failure Converter copies exception messages and stack traces as plain text visible in the Web UI.
-If your exceptions might contain sensitive information, configure a custom Failure Converter to encrypt this data.
-See the [Securing Application Data course](https://learn.temporal.io/courses/appdatasec/) for details.
+默认的故障转换器将异常消息和堆栈跟踪复制为 Web UI 中可见的纯文本。
+如果您的异常可能包含敏感信息，请配置自定义故障转换器来加密此数据。
+有关详细信息，请参阅 [保护应用程序数据课程](https://learn.temporal.io/courses/appdatasec/)。

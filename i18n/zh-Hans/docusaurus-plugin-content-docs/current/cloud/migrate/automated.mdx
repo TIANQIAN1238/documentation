@@ -1,0 +1,508 @@
+---
+id: automated
+title: 自动迁移
+sidebar_label: 自动迁移
+description: Automated migration is designed to provide a zero-downtime, secure means of migrating to Temporal Cloud. This guide
+  Automated migration is designed to provide a zero-downtime, secure means of migrating to Temporal Cloud. This guide
+  outlines the current process for transitioning workflows from a self-hosted setup to one hosted within Temporal Cloud.
+slug: /cloud/migrate/automated
+toc_max_heading_level: 4
+keywords:
+  - migration
+  - multi-cluster replication
+  - temporal cloud
+tags:
+  - Temporal Service
+  - Temporal Cloud
+  - Self-hosting
+  - Production
+---
+
+:::tip Support, stability, and dependency info
+
+自动迁移目前处于[预发布](/evaluate/development-product-features/release-stages#pre-release)。
+在规划您的迁移项目之前，请联系您的 Temporal 客户经理。
+
+:::
+
+## 流程概述
+
+## 使用 API 密钥进行身份验证 {#using-apikeys}
+
+### Namespace 迁移 Schedule
+
+规划迁移时，强烈建议按照从最不重要到最重要的顺序进行迁移 Namespace。
+理想情况下，该项目将从指定为“测试”的 Namespace 开始，其中停机是可接受的结果
+测试过程。在此基础上，根据潜在影响最小的顺序确定迁移的优先级。
+
+![Temporal自动迁移组件](/img/cloud/migration/ns_migration_Schedule.png)
+
+### 项目阶段
+
+迁移过程分为几个阶段，其中一部分涉及与 Temporal 协调以创建
+必要的云端资源。
+
+迁移涉及以下阶段：
+
+1. 准备 - 初始准备涉及从自托管集群收集和评估关键数据点。
+   收集的数据将由 Temporal 进行评估，以确保迁移的资格。
+2. 设置 - 验证资格后，将修改自托管集群的配置以支持
+   迁移。所有云端组件都将被配置并且自托管
+   将部署[S2S代理](https://hub.docker.com/r/Temporalio/s2s-proxy/tags)。
+3. 测试 - 一旦所有必需的组件就位，将使用测试 Namespace 验证迁移过程。
+4. 启动 - 成功测试过程结束后，将开始生产 Namespace 的迁移。
+5. 完成 - 将 Namespace 转移到 Temporal Cloud 并进行验证后，迁移将完成。
+
+请在规划迁移之前查看[附加说明](#additional-notes) 部分。
+
+## 第一阶段：准备
+
+在准备迁移到 Temporal Cloud 时，必须收集以下数据点并通过以下方式提供给 Temporal：
+支持票。
+
+- Temporal Cloud 帐户列表。如果您是 Temporal Cloud 的新手，那么最常见的建议是创建一个
+  包含您的 Namespace 的单个帐户。
+- 每个集群的目标 Temporal Cloud 提供商/区域。请参阅[当前区域](/cloud/regions) 列表。
+- 每个集群的服务器配置。
+- 对于每个 Namespace：
+  - Namespace名称及其翻译的云端名称。由于 Temporal Cloud 中的 Namespace 遵循
+    [具体格式](/cloud/Namespaces#Temporal-cloud-Namespace-name)，现有的Namespaces必须转换为新的
+    格式。
+  - Namespace 尺寸指标。这些用于为迁移正确调整云端资源的大小。
+  - 定制 Search Attribute（如果有）。 Temporal 必须确保您的定制 Search Attribute，特别是在使用时
+    基于SQL的Visibility存储，与Temporal Cloud兼容。
+
+### 捕获集群配置
+
+Temporal 必须检查您的自托管服务器配置以确保兼容性。适用于现代版本的 Temporal
+OSS，对每个集群运行以下命令：
+
+```
+temporal operator cluster describe --address <frontend:7233> --output json
+```
+
+对于服务器版本 1.28.1 及更早版本，请使用以下替代方法之一：
+
+```
+tctl --address <frontend:7233> admin cluster describe
+```
+
+或者
+
+```
+grpcurl -v -plaintext <your temporal address and port> temporal.server.api.adminservice.v1.AdminService.DescribeCluster
+```
+
+### 捕获 Namespace 指标
+
+充分了解生产 Namespace 的当前使用模式至关重要，因为此数据用于
+云侧资源规划。对于每个 Namespace，收集以下指标：
+
+- 打开/关闭 Workflow 的总数
+- 使用的总存储空间
+- 当前的保留政策。请注意，这可能与
+  Temporal Cloud 中的[默认保留策略](/cloud/limits#default-retention-period)。
+- 峰值[每秒操作数](/glossary#actions-per-second-aps) (APS)。参见 参考资料 部分
+  [下文](#how-to-gather-self-hosted-metrics) 有关收集这些指标的说明。
+- 如果您使用定制 Search Attribute：
+  - 提供 Namespace 的_CustomSearchAttributeAliases_（请参阅下面的命令）。
+  - 提供使用的 VisibilityStore（例如 Elasticsearch 或 SQL）
+
+如果需要，请使用以下命令捕获 _CustomSearchAttributeAliases_：
+
+```
+temporal operator namespace describe -n <namespace>
+```
+
+### 准备mTLS证书
+
+mTLS 用于保护 [S2S 代理](#s2s-proxy-configuration) 通信通道的安全。按照概述的流程生成新证书
+[此处](/cloud/certificates#issue-certificates)。您需要提供这些证书作为支持请求的一部分。
+
+
+### 报告收集的数据
+通过[支持票证](/cloud/support#ticketing) 将所有收集到的数据和 mTLS 证书提供给 Temporal。
+
+使用以下模板来收集数据。
+
+```
+Temporal Cloud Account:
+
+<for each cluster>
+Cluster Name:
+Target Cloud/Region:
+Type of Visibility Store:
+Cluster Configuration:
+
+Namespaces:
+   <for each Namespace>
+   Namespace Name:
+   Translated Name:
+   Metrics:
+   Custom Search Attributes:
+   <end>
+<end>
+```
+
+## 第 2 阶段：设置
+
+迁移获得批准后，下一步是准备自托管集群和 Temporal Cloud
+迁移的资源。
+
+:::warning
+
+仅当您的请求已被 Temporal 批准后才能继续。
+
+:::
+
+### 准备 Temporal Cloud Namespace
+
+对于每个要迁移的Namespace，在Temporal Cloud中创建一个空的Namespace作为迁移目标。自从
+迁移无法继续到已在使用的 Namespace，Namespace 应保持为空（无 Workflow）。申请
+任何所需的定制 Search Attribute。
+
+请务必根据需要调整 Namespace 的[速率限制](/cloud/capacity-modes) 并创建任何自定义搜索
+所需的属性。
+
+如果您是 Temporal Cloud 的新手，请考虑您所需的 Namespace 连接路径。您可以通过以下方式连接
+公共互联网或通过[私人连接](/cloud/connectivity)。
+
+### S2S代理配置
+
+[S2S代理](https://github.com/Temporalio/s2s-proxy)需要云侧入站端点。继续部署
+仅在从 Temporal 接收到端点后。
+
+该代理通过安全的 2 路隧道提供 API 转发至 Temporal Cloud。自托管代理将启动
+与其云端对应方的出站连接 (TCP 8233) 并建立 2 向隧道。如果有防火墙
+在路径内，确保它们允许此出站连接。
+
+![Temporal 自动迁移组件](/img/cloud/migration/auto-migration-components.png)
+
+使用以下过程来部署代理：
+
+1. 从以下位置获取最新的Docker镜像
+   [Temporalio/s2s-proxy 存储库](https://hub.docker.com/r/Temporalio/s2s-proxy/tags)。
+2. 收集上一步中生成的 mTLS 证书。
+3. 部署 3 个 s2s-proxy 副本（至少 4 个 CPU 和 512mb 内存）。对于 Kubernetes 用户，请使用此
+   [helm 图表示例](https://github.com/Temporalio/s2s-proxy/blob/main/charts/s2s-proxy/README.md) 作为参考。
+   请参阅[示例](https://github.com/Temporalio/s2s-proxy/blob/main/charts/s2s-proxy/example.yaml)配置文件
+   作为参考。请注意，可以部署超过 1 个副本。如果部署了 1 个以上的副本，您必须
+   Update Temporal 具有所使用的副本数量，以便可以在云端配置相同的数量。
+4. 使用以下命令测试访问。它应该显示迁移服务器的信息。
+
+```
+temporal operator cluster describe --address {the-outbound-external-address-of-your-proxy}
+```
+
+验证连接后，通知 Temporal，以便可以从云端代理验证连接。
+
+S2S 代理上有多个可用指标（prometheus 端点：_proxy-pod-ip_:9090/metrics）。这些是
+有助于监控代理的整体健康状况。特别是，度量
+
+`Temporal_s2s_proxy_mux_connection_active`
+
+将监视与云端代理的连接。
+
+
+### 修改集群配置
+
+1. 找到您的 [XPROT009X 帐户 ID](/cloud/XPROT025Xs#XPROT026X-cloud-account-id)。可以查看您的帐户 ID
+   并从右上角的 XPROT009X 用户配置文件下拉菜单复制。或者，找到您的
+   [XPROT025X ID](/cloud/XPROT025Xs#XPROT026X-cloud-XPROT025X-id)。帐户 ID 是以下五或六个字符
+   句点 (.)，例如“f45a2”。您将需要帐户 ID 来构建您的回调 URL 和您的实体
+   标识符。
+1. 按照以下一组说明为您的 IdP 配置 SAML：
+   - [Microsoft Entra ID](#configure-saml-with-azure-ad)
+   - [Okta](#configure-saml-with-okta)
+1. [与我们分享您的连接信息并测试您的连接。](#finish-saml-configuration)
+
+:::warning
+
+与 Temporal 密切协调以完成该过程的这一步。
+
+:::
+
+调整最大连接保持活动时间以匹配云中的设置。
+
+```yaml
+frontend.keepAliveMaxConnectionAge:
+  - value: '2h'
+```
+
+如果您之前已启用 [Global Namespace](/global-Namespace)，则故障转移版本增量必须获得
+Temporal。这是**关键**，因为该值只能设置一次并且不能更改。
+
+如果您从未启用 Global Namespace，那么您可以启用它并将初始故障转移版本设置为唯一值
+（1 到 100 之间）。通过更新 _clusterMetadata_ 和 _dcRedirectionPolicy_ 来启用。完成后，重新启动所有
+Temporal 服务（前端、历史、匹配、Worker），从前端开始。
+
+```yaml
+dcRedirectionPolicy:
+  policy: 'all-apis-forwarding'
+
+clusterMetadata:
+enableGlobalNamespace: true # add this
+failoverVersionIncrement: CHANGEME # usually 1000000, but coordinate with Temporal. must match cloud-side migration server
+masterClusterName: _NO_CHANGE_
+currentClusterName: _NO_CHANGE_
+clusterInformation:
+  _NO_CHANGE_:
+    enabled: true
+    initialFailoverVersion: CHANGEME # use unique number between 1 and 100 for each server
+    rpcName: _NO_CHANGE_
+    rpcAddress: _NO_CHANGE_
+```
+
+所有服务重新启动后，使用以下命令验证配置：
+
+```
+temporal operator cluster describe
+```
+
+预期输出示例如下：
+
+```yaml
+"failoverVersionIncrement": "1000000",
+"initialFailoverVersion": "the number you picked"
+"isGlobalNamespaceEnabled": true
+```
+
+## 第三阶段：测试
+
+应使用新创建的 Namespace 或被视为非生产的 Namespace 继续进行测试。在
+无论哪种情况，都应使用 Workflow 进行测试。混合使用已完成的、现用的和新的 Workflow 是理想的选择
+测试期间。
+
+测试使用以下过程：
+
+1. 创建或确定在出现问题时可以容忍数据丢失的非生产 Namespace。
+2. 创建目标云端Namespace，并将Namespace定义添加到S2S代理配置中。
+3. 针对 Namespace 运行测试 Workflow。
+4. 对 Namespace 执行完整的端到端迁移（请参阅完整过程的剩余阶段）。
+
+如果自托管部署中的所有数据都迁移到云端，则认为测试成功。
+
+## 第 4 阶段：启动
+
+以下部分概述了启动迁移的过程。
+
+### 迁移开始
+
+Temporal 将启动迁移。在此过程中，自托管 Namespace 保持活动状态，而云
+Namespace 变为被动。 Workflow 从自托管 Namespace 复制到云 Namespace。曾经云
+Namespace已与自托管Namespace完全同步，迁移已准备好移交。
+
+以下命令用于启动
+迁移：
+
+```
+tcld migration start --endpoint-id <endpoint-id> --source-namespace <source-namespace> --target-namespace <target-namespace>
+```
+
+＃＃＃ 监视器
+
+在初始同步期间，监控整个过程以确保取得进展非常重要。而Temporal
+将从云端进行监控，也可以使用以下方式从自托管端监控进度
+_replication_stream_stuck_ 指标。
+
+以下命令也可用于
+监控迁移进度：
+
+```
+tcld migration get --id <migration-id>
+```
+
+### 切换到云端
+
+同步过程完成后，Temporal 将翻转自托管和云 Namespace 的角色。此时，
+云变为主动，自托管 Namespace 变为被动。然后，Workflow 从云端复制到
+自托管服务器。
+
+以下[命令](https://pkg.go.dev/github.com/Temporalio/tcld#readme-perform-handover-during-a-migration)是
+用于触发切换：
+
+```
+tcld migration handover --id <migration-id> --to-replica-id <to-replica-id>
+```
+
+使用此命令时，在移交给 Temporal Cloud 时将“<to-replica-id>”替换为“cloud”。更换
+当返回到自托管设置时，将“<to-replica-id>”与“on-prem”一起使用。
+
+## 第 5 阶段：最终确定
+
+### 最终验证
+
+在完成迁移之前使用以下清单：
+
+- 确认 Worker 可以访问 Namespace。通过公共互联网或[私人连接](/cloud/connectivity)。
+- 了解如何在 Temporal Cloud 上访问 Namespace 的指标。
+- 监控一般 Workflow 指标（Schedule 的启动延迟、启动与完成率、同步匹配率等）。
+- 了解[容量管理](/cloud/capacity-modes) 在 Temporal Cloud 中的工作原理。
+- 计划 Worker 调整会话 - Temporal Cloud 与 Temporal Cloud 之间的性能变化自托管集群，可以
+  导致意想不到的症状和优化。
+- 了解如何联系 Temporal 解决方案架构师 (SA) 和客户主管 (AE) 寻求帮助。
+
+### 确认完成
+
+＃＃＃＃  - 期间
+
+以下命令用于确认
+迁移：
+
+```
+tcld migration confirm --id <migration-id>
+```
+
+或 [abort](https://pkg.go.dev/github.com/Temporalio/tcld#readme-abort-a-migration) 并回滚更改，无需
+如果需要，影响您的 Workflow：
+
+```
+tcld migration abort --id <migration-id>
+```
+
+### 将客户端转移到云端
+
+有两种将 Temporal CLIents 切换到云的选项。
+
+#### 选项 1（推荐）
+
+部署两组 Temporal CLIents：一组指向 Temporal Server，一组指向云 Namespace 端点。这个
+是推荐的选项，因为您的 Workflow 在移交过程中将继续取得进展，即使您的云
+Temporal CLIent 无法访问云（例如由于配置错误）。流程如下：
+
+1. 将基于云的 Temporal CLIents 定向到云 Namespace 端点。最初，这些客户端将连接并
+   发送 Poll 请求但不会接收任何任务。
+2. 开始迁移。您的自托管 Namespace 处于活动状态，而云 Namespace 处于被动（或备用）状态。你的云
+   Temporal CLIents 可以开始接收任务，但从云客户端到云 Namespace 的所有请求将
+   自动从云端转发到您的自托管服务器。
+3.将Namespace交给云端。您的云 Namespace 变为主动，而您的自托管 Namespace 变为被动。
+   来自自托管 Temporal CLIents 的所有请求都会自动从您的服务器转发到云端。
+4. 完成迁移。您的自托管 Temporal CLIents 将不再从您的服务器接收任何任务，从而允许您
+   来阻止这些客户。
+
+#### 选项 2
+
+部署一组 Temporal CLIents 并在迁移期间切换 Namespace 端点。使用此选项，如果您的 Worker
+如果在切换过程中配置错误，则 Workflows 可能会停止前进。重要的是
+确保所有 Worker 保持与云的连接以避免这种情况。流程如下：
+
+1. 开始迁移。
+2. 将 Temporal CLIents 切换为指向云 Namespace 端点。来自 Temporal CLIents 的请求将
+   自动从云端转发到您的服务器。或者，您可以将 Temporal CLIents 切换到云端
+   切换后的 Namespace 端点。
+3.将Namespace交给云端。来自 Temporal CLIents 的请求现在将由云提供服务，并且不会被
+   转发到您的服务器。
+4. 确认迁移完成。
+
+## 附加说明
+
+### 限制
+
+以下是已知的限制。
+
+- 需要 OSS 服务器版本 1.22 或更高版本。请参阅
+  根据需要进行[升级](/self-hosted-guide/upgrade-server#upgrade-server) 过程。
+- 历史分片计数必须是 2 的倍数。
+- 如果您有多个自托管服务器，并且它们都配置有相同的集群名称（默认情况下 Temporal
+  使用“active”作为集群名称），由于集群的原因，它们无法同时连接到单个迁移服务器
+  名称冲突。有 2 个可用选项：
+  1. 使用单个迁移服务器一次迁移一台服务器。
+  2. 如果需要迁移所有服务器，请创建多个迁移服务器（每个自托管服务器一个）
+     同时。
+- 如果您在自托管设置中使用多集群复制并且之前曾对 Namespace 进行过故障转移，则
+  这可能会影响您自动迁移的资格。具体来说，每当 Global Namespace 之前已
+  启用以下限制适用：
+  1.初始故障转移版本必须小于或等于1,000,000
+  2. 故障转移版本增量必须是 1,000,000 的除数
+- OSS通过以下方式支持跨Namespace命令（例如，父子、SignalExternal、CancelExternal）
+  `system.enableCrossNamespaceCommands` 配置。此配置在 Temporal Cloud 上被禁用。的
+  必须禁用“system.enableCrossNamespaceCommands”配置，并且必须禁用使用跨 Namespace 调用的代码
+  Updated 或在迁移之前删除。
+
+###版本1.22.x-1.23.x的特殊动态配置
+
+Temporal 版本 1.22.x 和 1.23.x 支持基于流的复制，但默认情况下处于禁用状态。自从
+在这些版本中，基于流的复制已被验证为比基于轮询的复制更可靠。
+1.22 和 1.23 中仍保留默认值。
+
+当准备在这些版本上进行 S2C 迁移时，请配置以下动态设置以启用基于流的
+复制：
+
+```yaml
+history.enableReplicationStream:
+  - value: true
+```
+
+启用此配置将需要重新启动历史记录 Pod。
+
+## 常见问题
+
+**使用定制 Search Attribute 为什么很重要？**
+
+自定义 Search Attribute 必须映射到 Temporal Cloud 中的 Namespace。此过程因类型而异
+用于 Visibility 的数据存储。
+
+**默认迁移哪些 Workflow？**
+
+始终会迁移开放式 Workflow。您可以指定关闭 Workflow 的日期范围。限制时间范围
+封闭的 Workflow 将大大减少迁移 Namespace 所需的时间。您的云端Namespace必须
+在开始迁移之前配置您所需的保留期。
+
+**我的 Workflow 的保留期很长。这与 Temporal Cloud 兼容吗？**
+
+有时，自托管[保留期](/Temporal-service/Temporal-server#retention-period) 会超过
+Temporal Cloud 中[支持](/cloud/limits#default-retention-period)。在这些情况下，建议使用
+[archival](/Temporal-service/archival) 用于存储无法迁移的已关闭 Workflow。一般来说，归档是
+建议在较长的保留期内使用，因为额外的数据会给系统的持久层带来压力。
+
+**我在自托管 Temporal 集群中使用有效负载加密。云支持吗？**
+
+是的。如果有效负载已经通过 Data Converter 在您的自托管服务器中[加密](/payload-codec#encryption)，那么 
+它们在迁移期间和之后将保持加密状态。
+
+
+**我想在迁移过程中启用有效负载加密。支持吗？**
+
+目前不支持在迁移过程中启用负载加密。如果需要加密的话最好
+方法是在迁移之前启用它。
+
+## 如何收集自托管指标
+
+Temporal Server（版本 > 1.17）提供了一个 [action](/cloud/pricing#action) 指标。您可以使用 Grafana 来捕获和
+显示该指标。使用此[示例](https://github.com/Temporalio/dashboards/blob/master/server/server-general.json)
+仪表板作为参考。要确定每秒操作数 (APS)，您可以使用以下 promql 查询。
+
+`总和（速率（操作{service_name =“frontend”} [1m]））`
+
+`sum (rate(action{service_name="frontend"}[1m])) by (exported_Namespace)`
+
+第一个 Query 将计算总 APS。第二个将隔离每个 Namespace 的指标。
+
+对于 Datadog，以下小部件将计算每秒的操作：
+
+```
+{
+    "title": "Average Actions per Second",
+    "type": "query_value",
+    "requests": [
+        {
+            "formulas": [
+                {
+                    "formula": "query1"
+                }
+            ],
+            "queries": [
+                {
+                    "name": "query1",
+                    "data_source": "metrics",
+                    "query": "sum:io.temporal.server.action.count{$server-name}.as_rate()",
+                    "aggregator": "avg"
+                }
+            ],
+            "response_format": "scalar"
+        }
+    ],
+    "autoscale": true,
+    "precision": 2
+}
+```

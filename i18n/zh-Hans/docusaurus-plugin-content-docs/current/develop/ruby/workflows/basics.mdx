@@ -1,0 +1,77 @@
+---
+id: basics
+title: Workflow 基础知识 - Ruby SDK
+sidebar_label: Workflow 基础知识
+description: 本节介绍 Workflow 与 Ruby SDK 的基础知识
+toc_max_heading_level: 4
+keywords:
+  - Ruby SDK
+tags:
+  - Ruby SDK
+  - Temporal SDKs
+---
+
+## 开发 Workflow {#develop-Workflow}
+
+Workflow 是 Temporal 应用程序的基本单元，这一切都始于 [Workflow Definition](/Workflow-定义) 的开发。
+
+在 Temporal Ruby SDK 编程模型中，Workflow 被定义为类。
+
+让 Workflow 类扩展 `Temporalio::Workflow::Definition` 来定义 Workflow。
+
+入口点是“execute”方法。
+
+```ruby
+class MyWorkflow < Temporalio::Workflow::Definition
+  def execute(name)
+    Temporalio::Workflow.execute_activity(
+      MyActivity,
+      { greeting: 'Hello', name: },
+      start_to_close_timeout: 100
+    )
+  end
+end
+```
+
+Temporal Workflows 可以具有任意数量的自定义参数。
+但是，我们强烈建议使用哈希值或对象作为参数，以便可以在不破坏 Workflow 签名的情况下更改对象的各个字段。
+
+### Workflow 逻辑要求 {#Workflow-logic-requirements}
+
+Temporal Workflows [必须是确定性的](https://docs.Temporal.io/Workflows#definistic-constraints)，其中包括
+红宝石 Workflows。这意味着 Workflows 无法执行多项操作，例如：
+
+- 执行 IO（网络、磁盘、stdio 等）
+- 访问/改变外部可变状态
+- 进行任何线程处理
+- 使用系统时钟执行任何操作（例如“Time.Now”）
+- 随机拨打电话
+- 进行任何非保证确定性调用
+
+为了防止非法 Workflow 调用，Workflow 线程上放置了一个调用跟踪器，如果有任何非法调用，该调用跟踪器将引发异常
+拨打电话。
+哪些调用是非法的可以在 Worker 选项中进行配置。
+
+### 定制Workflow Type {#Workflow-type}
+
+Workflow 具有称为 Workflow 名称的类型。
+
+以下示例演示如何为 Workflow Type 设置自定义名称。
+
+您可以在类的“Workflow_name”类方法调用中使用自定义名称来自定义 Workflow 名称。
+Workflow 名称默认为非限定类名称。
+
+```ruby
+class MyWorkflow < Temporalio::Workflow::Definition
+  # Customize the name
+  workflow_name :MyDifferentWorkflowName
+
+  def execute(name)
+    Temporalio::Workflow.execute_activity(
+      MyActivity,
+      { greeting: 'Hello', name: },
+      start_to_close_timeout: 100
+    )
+  end
+end
+```

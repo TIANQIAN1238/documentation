@@ -1,0 +1,135 @@
+---
+id: asynchronous-activity
+title: 异步 Activity 完成 - PHP SDK
+sidebar_label: 异步 Activity 完成
+slug: /develop/php/activities/asynchronous-activity
+toc_max_heading_level: 2
+keywords:
+  - asynchronous-activity-completion
+tags:
+  - Activities
+  - PHP SDK
+  - Temporal SDKs
+description: Perform Asynchronous Activity Completion in Temporal, enabling Activities to return without execution completion and
+  Perform Asynchronous Activity Completion in Temporal, enabling Activities to return without execution completion and
+  facilitating parallel operations in Workflows.
+---
+
+## 如何异步完成 Activity {#asynchronous-Activity-completion}
+
+[异步 Activity 完成](/Activity-execution#asynchronous-Activity-completion) 启用 Activity 功能
+Activity 执行未完成就返回。
+
+需要遵循三个步骤：
+
+1. Activity 向外部系统提供完成 Activity 执行所需的识别信息。
+   识别信息可以是[任务令牌](/Activity-execution#task-token)，也可以是Namespace的组合，
+   Workflow Id 和 Activity ID。
+2. Activity 函数以将其标识为等待外部系统完成的方式完成。
+3. Temporal CLIent用于Heartbeat并完成Activity。
+
+有时，Workflow 需要并行执行某些操作。
+
+不使用“yield”调用 Activity 存根将返回 Activity 结果承诺，稍后可以解决
+时刻。在 Promise 上调用“yield”会阻塞，直到结果可用。
+
+> Activity Promise 还公开了 `then` 方法来构造 Promise 链。阅读有关 Promise 的更多信息
+> [此处](https://github.com/reactphp/promise)。
+
+或者，您可以使用“Workflow::async”显式包装代码（包括“yield”构造），这将
+与主 Workflow 代码并行执行嵌套代码。对“Workflow::async”返回的 Promise 调用“yield”进行合并
+执行结果返回到主Workflow方法。
+
+```php
+public function greet(string $name): \Generator
+{
+    // Workflow::async runs it's activities and child workflows in a separate coroutine. Use keyword yield to merge
+    // it back to parent process.
+
+    $first = Workflow::async(
+        function () use ($name) {
+            $hello = yield $this->greetingActivity->composeGreeting('Hello', $name);
+            $bye = yield $this->greetingActivity->composeGreeting('Bye', $name);
+
+            return $hello . '; ' . $bye;
+        }
+    );
+
+    $second = Workflow::async(
+        function () use ($name) {
+            $hello = yield $this->greetingActivity->composeGreeting('Hola', $name);
+            $bye = yield $this->greetingActivity->composeGreeting('Chao', $name);
+
+            return $hello . '; ' . $bye;
+        }
+    );
+
+    // blocks until $first and $second complete
+    return (yield $first) . "\n" . (yield $second);
+}
+```
+
+**异步完成**
+
+在某些情况下，当 Activity 的功能完成后无法继续使用，或者
+理想的。例如，您可能有一个应用程序需要用户输入才能完成 Activity。你可以
+使用轮询机制实现 Activity，但更简单且占用资源较少的实现是
+异步完成 Temporal Activity。
+
+实现异步完成的 Activity 有两个部分：
+
+1. Activity 从外部系统提供完成所需的信息并通知 Temporal
+   服务正在等待外部回调。
+2、外部服务调用Temporal服务完成Activity。
+
+以下示例演示了第一部分：
+
+## 测试活动 {#test-activities}
+```php
+class GreetingActivity implements GreetingActivityInterface
+{
+    private LoggerInterface $logger;
+
+    public function __construct()
+    {
+        $this->logger = new Logger();
+    }
+    /**
+     * Demonstrates how to implement an Activity asynchronously.
+     * When {@link Activity::doNotCompleteOnReturn()} is called,
+     * the Activity implementation function that returns doesn't complete the Activity.
+     */
+    public function composeGreeting(string $greeting, string $name): string
+    {
+        // In real life this request can be executed anywhere. By a separate service for example.
+        $this->logger->info(sprintf('GreetingActivity token: %s', base64_encode(Activity::getInfo()->taskToken)));
+        // Send the taskToken to the external service that will complete the Activity.
+        // Return from the Activity a function indicating that Temporal should wait
+        // for an async completion message.
+        Activity::doNotCompleteOnReturn();
+        // When doNotCompleteOnReturn() is invoked the return value is ignored.
+        return 'ignored';
+    }
+}
+```
+<!--SNIPEND-->
+
+以下代码演示了如何使用“WorkflowClient”成功完成Activity：
+
+#### 启用自动更新插入 (XPROT030X v1.30.0+)
+```php
+$client = $this->workflowClient->newActivityCompletionClient();
+// Complete the Activity.
+$client->completeByToken(
+    base64_decode($input->getArgument('token')),
+    $input->getArgument('message')
+);
+```
+<!--SNIPEND-->
+
+要使 Activity 出现故障，您需要执行以下操作：
+
+```php
+// Fail the Activity.
+$activityClient->completeExceptionallyByToken($taskToken, new \Error("activity failed"));
+```

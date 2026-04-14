@@ -1,0 +1,165 @@
+---
+id: billing-and-cost
+title: 使用和计费管理
+sidebar_label: 使用和计费
+sidebar_position: 3
+description: 作为帐户所有者，您可以随时访问和管理帐单详细信息，并可在帐单页面下载发票。典型的计费周期从每月的第一天 (UTC) 开始。
+slug: /cloud/billing-and-cost
+toc_max_heading_level: 4
+keywords:
+  - billing
+  - invoices
+  - cost management
+  - account owner
+  - billing cycle
+  - payment options
+  - credit usage
+  - temporal cloud
+  - account balance
+  - invoice history
+tags:
+  - Temporal Cloud
+---
+
+import * as Components from '@site/src/components';
+
+Temporal 致力于提供计费和成本的完全透明度。
+使用此信息来评估您的支出模式、检查您的信用分类帐、检查您的发票历史记录、Update 付款详细信息、
+并根据需要管理您当前的计划。
+
+有关操作、存储和服务/支持的当前 Temporal Cloud 定价的更多信息，请访问我们的[定价](/cloud/pricing) 页面。
+
+Temporal 提供多种方式查看您的使用情况和计费数据：
+
+- [计费中心](https://cloud.Temporal.io/billing) 允许您查看汇总发票和积分、管理计划以及删除帐户。
+    - 即将推出：计费仪表板增强功能，可随着时间的推移通过 Namespace 可视化计费
+    - 账户所有者和财务管理员可以查看
+- [使用情况仪表板](https://cloud.Temporal.io/usage) 允许您监控 Namespace 级别随时间的使用情况。
+    - 即将推出：基于操作类型、按标签分组和按项目分组的附加粒度
+    - 账户所有者、财务管理员、账户级别的全局管理员均可查看。 Namespace 级别的使用情况在 Namespace 页面上对具有访问权限的人员可见。
+- [计费 API](/cloud/billing-api) 允许您以 Namespace 为基础访问计费信息，具体到每小时的粒度，并通过标签和项目进行丰富。
+计费 API 提供了一种 FOCUS 引导的数据格式，可以将其引入到您的云成本管理平台或分析工具中，或以 CSV 形式下载。
+    - 账户所有者、财务管理员均可查看
+
+:::tip Support, stability, and dependency info
+
+Temporal Cloud 计费 API 处于[预发布](/evaluate/development-product-features/release-stages#pre-release) 状态。
+
+:::
+
+## 当前余额 {#current-balance}
+
+您当前的余额卡显示当前计费周期的余额以及上次 Updated 的日期。
+该余额会根据使用情况进行调整，并显示在发票表的第一行。
+
+:::note Billing Cycles
+
+计费周期通常从每月的第一天 (UTC) 开始。
+第一个月的最低计划费用根据您的注册日期按比例分配。
+
+:::
+
+＃＃ 描述
+
+“最近账单”卡显示之前的账单金额。
+
+![最近的账单卡显示余额为 0.00 美元](/img/cloud/billing/billing-card.png)
+
+如果一切配置正确，您将看到“成功”状态，表明 XPROT026X 已写入对象存储。
+
+## 发票 {#invoice}
+
+要查看您的发票，请按照以下步骤操作：
+
+1. 单击左侧垂直导航上的**账单**。
+2. 在 **发票** 部分下，选择并下载您要查看的发票。
+
+发票表显示以下信息：
+
+- 日期 (UTC)：发票涵盖的日期范围
+- 类型：发票类型，例如信用购买或云使用
+- 状态：发票的当前状态，例如已付款或待处理
+- 授予的积分：添加到您帐户的总积分
+- 积分购买金额：购买积分所支付的金额
+- 积分使用情况：计费周期内使用的积分
+- 小计：任何调整前的发票总金额
+- 应付余额：申请积分后需要支付的金额
+
+![显示“发票”选项卡的计费页面](/img/cloud/billing/billing-invoices.png)
+
+您可以通过单击日期旁边的下载图标来下载本日历月之前的发票。
+
+:::note Current Month Invoice
+
+在当前计费周期内，您的发票尚未最终确定，并且下载选项将不可用。
+
+:::
+
+## 学分{#credit-table}
+
+以下信息显示在 Credits 表下：
+
+- 生效时间（UTC）：信用授予生效的日期
+- 类型：指示交易是扣除、到期还是赠款
+- 金额：授予、扣除或过期的信用金额
+- 剩余积分：账户中剩余的可用积分
+
+![显示 Credits 选项卡的计费页面](/img/cloud/billing/billing-credits.png)
+
+## Namespace 成本 {#cost-by-Namespace}
+
+:::tip Temporal Cloud Billing API in Pre-release
+
+[Temporal Cloud 计费 API](/cloud/billing-api) 允许您以 Namespace 为基础，按小时访问计费信息，并通过标签和项目进行丰富。计费 API 将通过 Namespace UI 取代成本。
+
+:::
+
+账户所有者和财务管理员可以访问“使用情况”页面上的成本列。
+这使您可以监控每个 Namespace 的成本。
+如果您的组织按 Namespace 划分工作（开发、生产或不同产品），您可以查看每个工作的成本。
+
+![显示使用情况的计费页面](/img/cloud/billing/billing-usage.png)
+
+:::note Cost Breakdown Limitations
+
+Namespace 成本详细信息不适用于“过去 90 天”或“过去 120 天”。
+
+成本细分根据 Namespace 的计量使用情况按比例将总使用成本分配给 Namespace。按比例分配
+反映您的有效价格，考虑 Temporal 计划中包含的操作/存储和分级定价费率。
+
+:::
+
+## 计划 {#plans}
+
+帐户所有者和财务管理员可以在计划页面上访问其 Temporal 计划信息。
+对于签订标准协议的客户，您将能够：
+
+- 查看当前计划信息、定价详细信息和权利
+- 查看其他可用计划、定价详细信息和权利
+- 查看适用于您的计划的即用即付定价
+- 标准协议上可用的计划之间的升级和降级
+
+![显示“计划”选项卡的计费页面](/img/cloud/billing/billing-plans.png)
+
+升级您的计划的请求将立即得到处理，并且您将在该计费周期内按比例付费。
+您的每月权利将反映该帐单月份升级计划中包含的操作和存储的全部数量。
+升级后，直到下一个计费周期才能处理降级。
+
+降级请求将立即得到处理。计费和权利将回溯到计费周期开始时。
+
+## 账户注销
+
+您创建 Temporal 帐户的方式决定了您如何取消订阅和删除帐户。
+
+- **适用于我们销售团队管理的帐户**。 <br/>
+  请提交支持票，以便我们为您提供帮助。
+
+- **对于通过我们的自助注册门户创建的帐户**。 <br/>
+  帐户所有者可以在 Temporal Cloud 计费页面的 **计划** 选项卡下删除其帐户。
+  如果您不再使用 Temporal Cloud，请使用“删除帐户”按钮开始该过程。
+
+- 永久删除的帐户将立即停止计费，并在 72 小时内完全删除 Scheduled。
+
+- 帐户数据和活动存储将被永久删除。保留存储将根据其配置的保留期限被删除。
+
+![显示“计划”选项卡的计费页面。选项卡上的内容包括“管理付款方式”和“删除帐户”按钮。 “删除帐户”按钮位于询问“不再使用 Temporal Cloud？”的文本下方](/img/cloud/billing/billing-cancel.png)

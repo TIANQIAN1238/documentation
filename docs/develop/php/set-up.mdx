@@ -1,7 +1,7 @@
 ---
 id: set-up-your-local-php
-title: Set up your local development with the PHP SDK
-sidebar_label: Quickstart
+title: "使用 PHP SDK 设置您的本地开发"
+sidebar_label: "快速入门"
 slug: /develop/php/set-up-your-local-php
 keywords:
   - set up
@@ -12,7 +12,7 @@ tags:
   - setup
   - getting started
 hide_table_of_contents: true
-description: Configure your local development environment to get started developing with Temporal
+description: "配置本地开发环境以开始使用 Temporal 进行开发"
 ---
 
 import { SetupSteps, SetupStep, CodeSnippet } from '@site/src/components/elements/SetupSteps';
@@ -20,9 +20,10 @@ import { CallToAction } from '@site/src/components/elements/CallToAction';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Quickstart
+<a id="quickstart"></a>
+# 快速入门 {#quickstart}
 
-Configure your local development environment to get started developing with Temporal.
+配置本地开发环境以开始使用 Temporal 进行开发。
 
 <SetupSteps>
 <SetupStep code={
@@ -33,29 +34,31 @@ Configure your local development environment to get started developing with Temp
   </>
 }>
 
-## Install PHP
+<a id="install-php"></a>
+## 安装 PHP {#install-php}
 
-Make sure you have PHP installed.
+确保您已安装 PHP。
 
-**If you don't have PHP:** Visit the official website to [download and install](https://www.php.net/downloads.php) it.
+**如果你没有PHP：**访问官方网站[下载并安装](https://www.php.net/downloads.php)即可。
 
-### GRPC extension
+<a id="grpc-extension"></a>
+### gRPC 扩展 {#grpc-extension}
 
-GRPC extension is required to work with RoadRunner application server.
+需要 gRPC 扩展才能与 RoadRunner 应用程序服务器配合使用。
 
-**If you don't have `ext-grpc` installed:** Visit the official website to
-[download and install](https://docs.cloud.google.com/php/docs/reference/help/grpc) it.
+**如果您没有安装`ext-gRPC`：**访问官方网站
+[下载并安装](https://docs.cloud.google.com/php/docs/reference/help/grpc) 吧。
 
 :::tip GRPC Installation Tip
 
-On macOS with Apple Silicon (M1/M2/M3/M4) and PHP 8.3, `pecl install grpc` may appear to hang or install indefinitely.
-If this happens, try installing a specific version:
+在配备 Apple Silicon (M1/M2/M3/M4) 和 PHP 8.3 的 macOS 上，`pecl install gRPC` 可能会出现无限期挂起或安装的情况。
+如果发生这种情况，请尝试安装特定版本：
 
 ```bash
 pecl install channel://pecl.php.net/grpc-1.78.0RC2
 ```
 
-Note: You can find the latest versions at [pecl.php.net/package/grpc](https://pecl.php.net/package/grpc).
+注意：您可以在 [pecl.php.net/package/gRPC](https://pecl.php.net/package/grpc) 找到最新版本。
 
 :::
 
@@ -75,9 +78,10 @@ composer init --name="myproject/quickstart" -n
 </>
 }>
 
-## Create a Project
+<a id="create-a-project"></a>
+## 创建一个项目 {#create-a-project}
 
-Now that you have PHP installed, create a project to manage your dependencies and build your Temporal application.
+现在您已经安装了 PHP，创建一个项目来管理您的依赖项并构建您的 Temporal 应用程序。
 
 </SetupStep>
 
@@ -105,13 +109,14 @@ composer dump-autoload
 </>
 }>
 
-## Add Temporal PHP SDK and Configure Autoloading
+<a id="add-temporal-php-sdk-and-configure-autoloading"></a>
+## 添加 Temporal PHP SDK 并配置自动加载 {#add-temporal-php-sdk-and-configure-autoloading}
 
-Install the Temporal SDK, then add PSR-4 autoloading to your `composer.json` so PHP can find your Workflow and Activity
-classes.
+安装 Temporal SDK，然后将 PSR-4 自动加载添加到 `composer.json`，以便 PHP 可以找到您的 Workflow 和 Activity
+类。
 
-Your final `composer.json` should look like this. After updating, run `composer dump-autoload` to regenerate the
-autoloader.
+您的最终 `composer.json` 应该如下所示。更新后，运行`composer dump-autoload`重新生成
+自动装载机。
 
 </SetupStep>
 
@@ -152,13 +157,14 @@ autoloader.
 </>
 }>
 
-## Install RoadRunner application server
+<a id="install-roadrunner-application-server"></a>
+## 安装 RoadRunner 应用服务器 {#install-roadrunner-application-server}
 
-Install [RoadRunner application server](https://github.com/roadrunner-server/roadrunner). It starts and manages your PHP
-processes that run Temporal Workers, and connects them to the Temporal Service over gRPC.
+安装 [RoadRunner 应用服务器](https://github.com/roadrunner-server/roadrunner)。它启动并管理您的 PHP
+运行 Temporal Worker 的进程，并通过 gRPC 将它们连接到 Temporal 服务。
 
-See [RoadRunner installation instructions](https://docs.roadrunner.dev/docs/general/install) to learn about other
-installation methods.
+请参阅 [RoadRunner 安装说明](https://docs.roadrunner.dev/docs/general/install) 了解其他信息
+安装方法。
 
 </SetupStep>
 
@@ -179,7 +185,7 @@ logs: level: info `}
 </>
 }>
 
-Create a simple configuration file named `.rr.yaml` with the following content:
+创建一个名为 `.rr.yaml` 的简单配置文件，其中包含以下内容：
 
 </SetupStep>
 
@@ -219,12 +225,13 @@ Create a simple configuration file named `.rr.yaml` with the following content:
 </>
 }>
 
-## Install Temporal CLI and start the development server
+<a id="install-temporal-cli-and-start-the-development-server"></a>
+## 安装Temporal CLI并启动开发服务器 {#install-temporal-cli-and-start-the-development-server}
 
-The fastest way to get a development version of the Temporal Service running on your local machine is to use
-[Temporal CLI](https://docs.temporal.io/cli).
+在本地计算机上运行 Temporal 服务的开发版本的最快方法是使用
+[Temporal CLI](https://docs.temporal.io/cli)。
 
-Choose your operating system to install Temporal CLI:
+选择您的操作系统来安装 Temporal CLI：
 
 </SetupStep>
 
@@ -251,9 +258,10 @@ Choose your operating system to install Temporal CLI:
 </>
 }>
 
-### DLoad package manager
+<a id="dload-package-manager"></a>
+### DLoad 包管理器 {#dload-package-manager}
 
-Consider using DLoad to delegate all installation and updating processes to the package manager.
+考虑使用 DLoad 将所有安装和更新过程委托给包管理器。
 
 </SetupStep>
 
@@ -274,38 +282,41 @@ temporal server start-dev --ui-port 8080
 </>
 }>
 
-## Start the development server
+<a id="start-the-development-server"></a>
+## 启动开发服务器 {#start-the-development-server}
 
-Once you've installed Temporal CLI and added it to your PATH, open a new Terminal window and run the following command.
+安装 Temporal CLI 并将其添加到 PATH 后，打开一个新的终端窗口并运行以下命令。
 
-This command starts a local Temporal Service. It starts the Web UI, creates the default Namespace, and uses an in-memory
-database.
+此命令启动本地 Temporal 服务。它启动 Web UI，创建默认的 Namespace，并使用内存中的
+数据库。
 
-The Temporal Service will be available on localhost:7233. The Temporal Web UI will be available at
+Temporal 服务将在 localhost:7233 上可用。 Temporal Web UI 将在以下网址提供：
 http://localhost:8233.
 
-Leave the local Temporal Service running as you work through tutorials and other projects. You can stop the Temporal
-Service at any time by pressing CTRL+C.
+当您完成教程和其他项目时，让本地 Temporal 服务保持运行。您可以停止 Temporal
+按 CTRL+C 可随时提供服务。
 
-Once you have everything installed, you're ready to build apps with Temporal on your local machine.
+安装完所有内容后，您就可以在本地计算机上使用 Temporal 构建应用程序了。
 
 </SetupStep>
 </SetupSteps>
-## Run Hello World: Test Your Installation
+<a id="run-hello-world-test-your-installation"></a>
+## 运行 Hello World：测试您的安装 {#run-hello-world-test-your-installation}
 
-Now let's verify your setup is working by creating and running a complete Temporal application with both a Workflow and
-Activity.
+现在，让我们通过创建并运行一个完整的 Temporal 应用程序来验证您的设置是否正常工作，其中包含 Workflow 和
+Activity。
 
-This test will confirm that:
+该测试将确认：
 
-- The Temporal PHP SDK is properly installed
-- Your local Temporal Service is running
-- You can successfully create and execute Workflows and Activities
-- The communication between components is functioning correctly
+- Temporal PHP SDK 已正确安装
+- 您本地的 Temporal 服务正在运行
+- 您可以成功创建并执行 Workflow 和活动
+- 组件之间的通信功能正常
 
-### 1. Create the Activity
+<a id="1-create-the-activity"></a>
+### 1.创建Activity {#1-create-the-activity}
 
-Create an Activity file (`src/GreetingActivity.php`):
+创建 Activity 文件 (`src/GreetingActivity.php`)：
 
 ```php
 <?php
@@ -327,17 +338,18 @@ class GreetingActivity
 }
 ```
 
-An Activity is a method that executes a single, well-defined action (either short or long-running), which often involves
-interacting with the outside world, such as sending emails, making network requests, writing to a database, or calling
-an API, which is prone to failure. If an Activity fails, Temporal automatically retries it based on your configuration.
+Activity 是一种执行单个明确定义的操作（短期或长期运行）的方法，通常涉及
+与外界交互，例如发送电子邮件、发出网络请求、写入数据库或调用
+API，很容易出现故障。如果 Activity 失败，Temporal 会根据您的配置自动重试。
 
-You define Activities in PHP as classes annotated with the `Temporal\Activity\ActivityInterface` attribute.
+您可以将 PHP 中的活动定义为用 `Temporal\Activity\ActivityInterface` 属性注释的类。
 
-Each method used in workflow classes should be annotated with `Temporal\Activity\ActivityMethod`.
+Workflow 类中使用的每个方法都应使用 `Temporal\Activity\ActivityMethod` 进行注释。
 
-### 2. Create the Workflow
+<a id="2-create-the-workflow"></a>
+### 2.创建Workflow {#2-create-the-workflow}
 
-Create a Workflow file (`src/SayHelloWorkflow.php`):
+创建 Workflow 文件 (`src/SayHelloWorkflow.php`)：
 
 ```php
 <?php
@@ -367,9 +379,10 @@ class SayHelloWorkflow
 }
 ```
 
-### 3. Create a Worker file
+<a id="3-create-a-worker-file"></a>
+### 3.创建Worker文件 {#3-create-a-worker-file}
 
-Create a Worker file (`worker.php`, under project root directory):
+创建Worker文件（`Worker.php`，在项目根目录下）：
 
 ```php
 <?php
@@ -392,31 +405,33 @@ $worker->registerActivity(\App\GreetingActivity::class);
 $factory->run();
 ```
 
-#### Run the Worker
+<a id="run-the-worker"></a>
+#### 运行 Worker {#run-the-worker}
 
-Previously, we created a Worker that executes Workflow and Activity tasks.
+之前，我们创建了一个执行 Workflow 和 Activity 任务的 Worker。
 
-Now, start the RoadRunner application server to run the Worker by opening up a new terminal window and running this
-command:
+现在，通过打开一个新的终端窗口并运行以下命令来启动 RoadRunner 应用程序服务器来运行 Worker
+命令：
 
 ```bash
 ./rr serve
 ```
 
-A Worker polls a Task Queue, that you configure it to poll, looking for work to do. Once the Worker dequeues a Workflow
-or Activity task from the Task Queue, it then executes the task.
+Worker 轮询 Task Queue，您将其配置为轮询，寻找要做的工作。一旦 Worker 将 Workflow 出列
+或来自 Task Queue 的 Activity 任务，然后执行该任务。
 
-Workers are a crucial part of your Temporal application as they're what actually execute the tasks defined in your
-Workflows and Activities. For more information on Workers, see
-[Understanding Temporal](/evaluate/understanding-temporal#workers) and a [deep dive into Workers](/workers).
+Worker 是 Temporal 应用程序的重要组成部分，因为它们实际执行您的 Temporal 应用程序中定义的任务。
+Workflow 和活动。有关 Worker 的更多信息，请参阅
+[了解 Temporal](/evaluate/understanding-temporal#workers) 和 [深入研究 Worker](/workers)。
 
-### 5. Execute the Workflow
+<a id="5-execute-the-workflow"></a>
+### 5.执行Workflow {#5-execute-the-workflow}
 
-Now that your Worker is running, it's time to start a Workflow Execution.
+现在您的 Worker 正在运行，是时候启动 Workflow Execution 了。
 
-This final step will validate that everything is working correctly with your file labeled `client.php`.
+最后一步将验证标记为 `client.php` 的文件是否一切正常。
 
-Create a separate file called `client.php`:
+创建一个名为 `client.php` 的单独文件：
 
 ```php
 <?php
@@ -438,19 +453,20 @@ $result = $workflowStub->sayHello('Temporal');
 echo "Result: {$result}\n";
 ```
 
-While your Worker is still running, open a new terminal and run:
+当您的 Worker 仍在运行时，打开一个新终端并运行：
 
 ```bash
 php client.php
 ```
 
-### Verify Success
+<a id="verify-success"></a>
+### 验证成功 {#verify-success}
 
-If everything is working correctly, you should see:
+如果一切正常，您应该看到：
 
-- Worker processing the workflow and activity
-- Output: `Result: Hello, Temporal!`
-- Workflow Execution details in the [Temporal Web UI](http://localhost:8233)
+- Worker 处理 Workflow 和 Activity
+- 输出：`Result: Hello, Temporal!`
+- [Temporal 网页用户界面](http://localhost:8233) 中的 Workflow Execution 详细信息
 
 <CallToAction href="https://learn.temporal.io/getting_started/php/hello_world_in_php/">
   <h3>Next: Run your first Temporal Application</h3>

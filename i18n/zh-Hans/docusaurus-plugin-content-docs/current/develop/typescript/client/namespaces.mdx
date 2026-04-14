@@ -1,0 +1,55 @@
+---
+id: namespaces
+title: 管理 Namespace - TypeScript SDK
+sidebar_label: Namespaces
+slug: /develop/typescript/client/namespaces
+toc_max_heading_level: 2
+keywords:
+  - namespaces
+tags:
+  - Namespaces
+  - TypeScript SDK
+  - Temporal SDKs
+description: 使用 CLI 或 SDK API 在 Temporal 上高效创建和管理 Namespace。隔离 Workflow Execution，使用自定义授权者控制访问，并通过 Temporal Cloud UI 或 CLI 进行管理。
+---
+
+## 如何创建和管理 Namespaces {#Namespaces}
+
+您可以使用 Temporal CLI 或 SDK API 创建 Update、弃用或删除 [Namespaces](/Namespaces)。
+
+根据您的需要，使用 Namespace 隔离您的 Workflow Execution。
+例如，您可以使用 Namespace 通过单独的“dev”和“prod”Namespace 来匹配开发生命周期。
+您还可以使用它们来确保不同团队之间的 Workflow Execution 永远不会进行通信 - 例如确保“teamA”Namespace 永远不会影响“teamB”Namespace。
+
+在 Temporal Cloud 上，使用 [Temporal Cloud UI](/cloud/Namespaces#create-a-Namespace) 从 UI 创建和管理 Namespace，或使用 [tcld 命令](https://docs.Temporal.io/cloud/tcld/Namespace/) 来管理 Namespace从命令行界面。
+
+在自托管 Temporal 服务上，您可以使用 Temporal CLI（推荐）或以编程方式使用 API 注册和管理您的 Namespace。
+请注意，这些 API 和 Temporal CLI 命令不适用于 Temporal Cloud。
+
+在 Temporal 服务中的前端服务上使用自定义 [Authorizer](/self-hosted-guide/security#authorizer-plugin) 来设置对谁可以创建、Update 或弃用 Namespace 的限制。
+
+在将 Namespace 设置到 Temporal CLIent 中之前，您必须向 Temporal 服务注册 Namespace。
+
+### 如何注册 Namespace {#register-Namespace}
+
+注册 Namespace 会在 Temporal 服务或 Temporal Cloud 上创建 Namespace。
+
+在 Temporal Cloud 上，使用 [Temporal Cloud UI](/cloud/Namespaces#create-a-Namespace) 或 [tcld 命令](https://docs.Temporal.io/cloud/tcld/Namespace/) 创建 Namespace。
+
+在自托管 Temporal 服务上，您可以使用 Temporal CLI（推荐）或以编程方式使用 API 注册 Namespace。
+请注意，这些 API 和 Temporal CLI 命令不适用于 Temporal Cloud。
+
+在 Temporal 服务中的前端服务上使用自定义 [Authorizer](/self-hosted-guide/security#authorizer-plugin) 来设置对谁可以创建、Update 或弃用 Namespace 的限制。
+
+### 如何管理 Namespaces {#manage-Namespaces}
+
+您可以获取 Namespace、Update、Namespace 配置的详细信息，并弃用或删除 Namespace。
+
+在 Temporal Cloud 上，使用 [Temporal Cloud UI](/cloud/Namespaces#create-a-Namespace) 或 [tcld 命令](https://docs.Temporal.io/cloud/tcld/Namespace/) 管理 Namespace。
+
+在自托管 Temporal 服务上，您可以使用 Temporal CLI（推荐）或以编程方式使用 API 来管理注册的 Namespace。
+请注意，这些 API 和 Temporal CLI 命令不适用于 Temporal Cloud。
+
+在 Temporal 服务中的前端服务上使用自定义 [Authorizer](/self-hosted-guide/security#authorizer-plugin) 来设置对谁可以创建、Update 或弃用 Namespace 的限制。
+
+在将 Namespace 设置到 Temporal CLIent 中之前，您必须向 Temporal 服务注册 Namespace。

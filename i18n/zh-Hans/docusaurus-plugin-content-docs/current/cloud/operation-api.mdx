@@ -1,0 +1,192 @@
+---
+id: operation-api
+title: 云运营 API
+sidebar_label: 云运营 API
+description: Temporal Cloud 操作 API（云操作）允许对 Temporal Cloud 控制平面资源进行编程管理。
+slug: /ops
+toc_max_heading_level: 4
+keywords:
+  - explanation
+tags:
+  - API
+  - Temporal Cloud
+---
+
+:::tip Support, stability, and dependency info
+
+Temporal Cloud 操作 API 处于 [公共预览](/evaluate/development-product-features/release-stages#public-preview) 中。
+
+:::
+
+Temporal Cloud Operations API 或 Cloud Ops API 是开源、公共 [HTTP API](https://saas-api.tmprl.cloud/docs/httpapi.html#description/introduction) 和 [gRPC API](https://github.com/Temporalio/cloud-api/tree/main)，用于以编程方式管理 Temporal Cloud 控制平面资源，包括[Namespaces](/cloud/Namespaces)、[用户](/cloud/users)、[服务帐户](/cloud/service-accounts)、[API 密钥](/cloud/api-keys) 等。 Temporal Cloud [Terraform Provider](/cloud/terraform-provider)、[tcld CLI](/cloud/tcld) 和 Web UI 均使用 Cloud Ops API。
+
+## 使用 Cloud Ops API 开发应用程序
+
+您可以使用 HTTP API 或 gRPC API，具体取决于您需要如何与平台集成。访问 HTTP 和 gRPC Cloud Ops API 的 URL 是“saas-api.tmprl.cloud”。
+
+### 先决条件
+
+使用 HTTP 或 gRPC 需要满足这些先决条件。
+
+- [Temporal Cloud 用户帐户](/cloud/get-started)
+- [API 密钥](/cloud/tcld/apikey#create) 用于身份验证
+
+### 用例
+
+您可能使用 API 的一些常见原因是：
+
+- 通过管道为每个环境或租户配置 Namespace。
+- 通过创建用户、分配角色以及通过自定义脚本创建 Namespace 来引导新项目。
+- 通过作业轮换 Schedule 上的服务帐户密钥。
+- 使用 Scheduled HTTP 请求审核和报告跨组织的访问。
+
+### 使用 HTTP
+
+[HTTP API](https://saas-api.tmprl.cloud/docs/httpapi.html#description/introduction) 支持与 [gRPC API](#using-gRPC) 相同的操作，但它可以通过标准 HTTP 方法和身份验证使用。如果您正在为 CI/CD 编写自动化脚本，或者由于网络策略、代理、工具差距或语言/运行时限制而无法使用 gRPC，这可能是一个更方便的选择。由于它是标准 HTTP，因此与语言无关，使您能够一致地运行云操作。
+
+:::note
+这“不允许”通过 HTTP 与各个 Workflow 或活动进行交互。
+:::
+
+### 使用 gRPC
+
+*对于 Go 开发者来说：*
+- 使用 [Go SDK](https://github.com/Temporalio/cloud-sdk-go) 获得最简单的设置体验
+
+*对于其他编程语言：*
+- 基本熟悉 gRPC 和 Protocol Buffers (Protobuf)
+- [协议缓冲区](https://github.com/protocolbuffers/Protobuf/releases)
+- [gRPC](https://gRPC.io/docs/languages/) 使用您首选的编程语言
+
+您可以使用提供的原型文件以所需的编程语言生成客户端库，然后使用该客户端访问 gRPC API。您还可以在 [Buf 上找到完整的 gRPC 文档](https://buf.build/Temporalio/cloud-api/docs/main:Temporal.api.cloud.cloudservice.v1#Temporal.api.cloud.cloudservice.v1.CloudService)。
+
+#### 使用 Go SDK
+
+如果您使用 Go 进行开发，我们建议使用 [Go SDK](https://github.com/Temporalio/cloud-sdk-go)，它提供预编译的 Go 绑定和更惯用的界面。 Go SDK 处理所有 Protobuf 编译并提供即用型 Go 类型和客户端接口。您还可以使用 [Go 示例](https://github.com/Temporalio/cloud-samples-go) 来帮助您开始使用 Go SDK 的 Cloud Ops API。
+
+要开始将 Go SDK 与 Cloud Ops API 结合使用，请执行以下步骤：
+
+1. 安装Go SDK：
+   ```go
+   go get github.com/temporalio/cloud-sdk-go
+   ```
+
+2、导入并使用SDK：
+   ```go
+   import (
+       "github.com/temporalio/cloud-sdk-go/client"
+   )
+   ```
+
+3. Go SDK 提供预构建的客户端接口，用于处理身份验证和连接设置。详细使用示例请参考[Go示例](https://github.com/Temporalio/cloud-samples-go)。
+
+Go SDK 无需直接处理生成的 Protobuf 文件，并提供更惯用的 Go 体验。
+
+#### 编译API并使用生成的代码（对于其他语言）
+
+对于 Go 以外的编程语言，请从 [Cloud Ops API 存储库](https://github.com/Temporalio/cloud-api/tree/main/Temporal/api/cloud) 下载 gRPC Protobufs 并手动编译它们。
+
+使用 [gRPC](https://gRPC.io/docs/) 以您首选的[编程语言](https://gRPC.io/docs/#official-support) 编译和生成代码。以下步骤以 Python 为例，需要安装 [Python 的 gRPC 工具](https://gRPC.io/docs/languages/python/quickstart/#gRPC-tools)，但该方法可以适用于其他支持的编程语言。
+
+1. 克隆 Temporal Cloud API 存储库：
+
+   ```command
+   git clone https://github.com/temporalio/cloud-api.git
+   cd cloud-api
+   ```
+
+2.复制Protobuf文件：
+
+- 导航到“Temporal”目录。
+   - 将 Protobuf 文件复制到您的项目目录。
+
+3.编译Protobuf文件：
+
+   ```python
+   python -m grpc_tools.protoc -I./ --python_out=./ --grpc_python_out=./ *.proto
+   ```
+- `-I` 指定 `.proto` 文件的目录。
+   - `--python_out=` 设置生成的 Python 类的输出目录。
+   - `--gRPC_python_out=` 设置生成的 gRPC 服务类的输出目录。
+   - `*.proto` 处理所有 `.proto` 文件。
+
+编译 Protobuf 文件后，您将在项目目录中生成代码文件。
+   这些文件支持使用您选择的编程语言与 Temporal Cloud API 进行交互。
+
+4.导入生成的文件：
+
+- 找到在项目目录中生成的 Python 文件 (.py)。
+   - 将这些文件导入到您打算与 Temporal Cloud API 交互的 Python 应用程序中。
+
+2.使用API：
+   - 使用导入文件中定义的类和方法与 Temporal Cloud 服务进行通信。
+   - 确保根据 Temporal Cloud 的需要处理任何所需的身份验证或配置。
+
+通过遵循生成的代码文件各自的导入和使用约定，可以将该方法适用于其他编程语言。
+
+## 使用指南
+
+与 Temporal Cloud Ops API 交互时，请遵循以下准则：
+
+- API 版本标头：
+   - 始终在请求中包含“Temporal-cloud-api-version”标头，指定 API 版本标识符。
+   - 当前的 API 版本可以在[此处](https://github.com/Temporalio/cloud-api/blob/main/VERSION#L1C1-L1C14)找到。
+- 连接网址：
+   - 使用 gRPC URL 连接到 Temporal Cloud：`saas-api.tmprl.cloud:443`。
+- 参与步骤：
+   - 生成API密钥：
+     - 获取[用于身份验证的API密钥](/cloud/api-keys#manage-api-keys)。请注意，许多操作可能需要管理员权限。
+   - 设置客户端：
+     - 建立与 Temporal Cloud 的安全连接。请参阅示例 [Go 中的客户端设置](https://github.com/Temporalio/cloud-samples-go/blob/main/client/Temporal/client.go) 获取指导。
+   - 执行操作：
+     - 有关操作细节，请参阅 gRPC 消息的“cloudservice/v1/request_response.proto”和 gRPC 服务的“cloudservice/v1/service.proto”。
+
+这些步骤提供了有效使用 Temporal Cloud Ops API 的结构化方法，确保正确的身份验证和连接设置。
+
+## 速率限制
+
+Temporal Cloud 操作 API 实施速率限制，以确保系统稳定性和所有用户的公平使用。速率限制根据身份类型应用，对用户和服务帐户有不同的限制。
+
+### 账户级别速率限制
+
+**总速率限制：每秒 160 个请求 (RPS)**
+
+此限制适用于您帐户内的任何客户端（tcld、UI、Cloud Ops API）或身份类型（用户、服务帐户）向 Temporal Cloud 控制平面发出的所有请求。无论发出请求的用户或服务帐户数量有多少，总帐户吞吐量都不能超过限制。
+
+### 每个身份的速率限制
+
+别名：`-e`
+
+此限制适用于每个用户通过任何客户端（tcld、UI、Cloud Ops API）发出的所有请求，无论使用何种身份验证方法（SSO 或 API 密钥）。
+
+**服务帐户速率限制：每个服务帐户 80 RPS**
+
+此限制适用于每个服务帐户通过任何客户端（tcld、Cloud Ops API）发出的所有请求。
+
+**异步操作：一次10个并发操作**
+
+这限制了在任何给定时间可以进行的并发异步操作的数量。
+
+### 重要考虑因素
+
+- 所有 Temporal Cloud 控制平面操作均实施速率限制
+- 同一身份（用户或服务帐户）使用的多个客户端共享相同的速率限制
+- 身份验证方法（SSO、API 密钥）不影响速率限制
+- 这些限制有助于确保系统稳定性并防止任何单一帐户或身份淹没服务
+
+### 请求限制增加
+
+如果您的使用案例需要更高的速率限制，您可以通过[提交支持票证](/cloud/support#support-ticket) 来请求提高速率限制。当请求提高限额时，请提供：
+
+- 您当前的使用模式和要求
+- 您需要的具体限制增加
+- 描述您的用例以及为什么需要更高的限制
+
+### 提供反馈
+
+您的意见很有价值！
+
+您可以通过以下渠道提供反馈：
+
+- 通过[支持票证](/cloud/support#support-ticket)提交请求或反馈
+- 在 [GitHub Repo](https://github.com/Temporalio/cloud-api) 中提出问题

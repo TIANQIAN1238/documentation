@@ -1,0 +1,1928 @@
+---
+id: namespace
+title: tcld Namespace 命令参考
+sidebar_label: Namespace
+description: Unlock the full potential of Temporal Cloud with tcld namespace commands. Efficiently manage Namespace operations,
+  Unlock the full potential of Temporal Cloud with tcld namespace commands. Efficiently manage Namespace operations,
+  including add-region, create, delete, failover, get, list, and export.
+slug: /cloud/tcld/namespace/
+toc_max_heading_level: 3
+keywords:
+  - cli reference
+  - tcld
+tags:
+  - Temporal Cloud
+  - tcld
+  - Namespaces
+---
+
+import { ToolTipTerm } from '@site/src/components';
+
+`tcld Namespace` 命令启用 Temporal Cloud 中的 [Namespace](/Namespaces) 操作。
+
+别名：`n`
+
+:::info Namespace ID Format
+
+`--Namespace` 标志接受格式为 `<Namespace_name>.<account_suffix>` 的 **Namespace ID**（例如，“your-Namespace.a1b2c”）。这是 Temporal Cloud 中显示的完整标识符，而不仅仅是 [Namespace 名称](/cloud/Namespaces#Temporal-cloud-Namespace-name)。您可以在 Temporal Cloud UI 中找到您的帐户后缀。
+
+:::
+
+- [tcld Namespace 添加区域](#add-region)
+- [tcld Namespace 创建](#create)
+- [tcld Namespace 删除](#delete)
+- [tcld Namespace 故障转移](#故障转移)
+- [tcld Namespace 获取](#get)
+- [tcld Namespace 列表](#list)
+- [tcld Namespace 导出](#export)
+- [tcld Namespace 接受客户端 ca](#接受客户端 ca)
+- [tcld Namespace 证书过滤器](#证书过滤器)
+- [tcld Namespace 搜索属性](#搜索属性)
+- [tcld Namespace 保留](#retention)
+- [tcld Namespace Update-编解码器-服务器](#Update-编解码器-服务器)
+- [tcld Namespace Update-高可用性](#Update-高可用性)
+- [tcld Namespace 标签](#tags)
+- [tcld Namespace 设置连接规则](#set-connectivity-rules)
+
+## 添加区域
+
+使用 `tcld Namespace add-region` 将 <ToolTipTerm term="replica" /> 区域添加到现有 Temporal Cloud [Namespace](/Namespaces)，将其升级以支持 [高可用性](/cloud/high-availability)。
+
+请参阅[区域](/cloud/regions) 了解可用区域及其支持的复制选项。
+
+以下修饰符控制命令的行为。
+
+#### --请求 ID
+
+用于异步操作的请求标识符。如果未设置，服务器会分配一个标识符。
+
+别名：`-r`
+
+#### --Namespace
+
+**必需。** 指定 Temporal Cloud 上托管的 Namespace。如果未指定，则使用环境变量“$Temporal_CLOUD_Namespace”的值。
+
+别名：`-n`
+
+＃＃＃＃  - 地区
+
+**必需。** 要添加到现有 Namespace 的区域。有关受支持区域的列表，请参阅[区域](/cloud/regions)。
+
+:::tip Choosing Replica Regions
+
+[Grafana 仪表板示例](https://github.com/grafana/jsonnet-libs/blob/master/XPROT026X-mixin/dashboards/XPROT026X-overview.json) 包含“使用情况和配额”部分
+分别为这些限制和计数指标创建演示图表。
+
+:::
+
+别名：`--re`
+
+**例子**
+
+```bash
+tcld namespace add-region \
+    --namespace <namespace_id> \
+    --region <replica_region_name>
+```
+
+指定要在其中创建副本的区域的区域名称（例如“us-east-1”）作为“--region”标志的参数。
+有关同区域、多区域和多云复制选项的详细信息，请参阅[高可用性](/cloud/high-availability)。
+
+一旦您的 Namespace 可供使用，Temporal Cloud 就会发送电子邮件警报。
+
+#### --云提供商
+
+该地区的云提供商。 [`aws`、`gcp`] 之一。
+
+默认值：`aws`
+
+＃＃ 创造
+
+`tcld Namespace create` 命令在 Temporal Cloud 中创建 Temporal [Namespace](/Namespaces)。
+
+别名：`c`
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+**必填。** 新 Namespace 的名称。这将成为 Namespace ID 的一部分 (`<Namespace_name>.<account_suffix>`)。
+
+别名：`-n`
+
+＃＃＃＃  - 地区
+
+**必需。** 用于创建 Namespace 的云提供商区域。为标准 Namespace 提供一个“--region”，或为具有 [高可用性](/cloud/high-availability) 的 Namespace 提供两个。
+
+请参阅[区域](/cloud/regions) 了解可用区域及其支持的复制选项。
+
+别名：`--re`
+
+#### --auth-方法
+
+Namespace 的身份验证方法。 [`mTLS`、`api_key`] 之一。
+
+- `mTLS`（默认）：需要 `--ca-certificate` 或 `--ca-certificate-file`
+- `api_key`：没有其他修饰符
+
+**例子**
+
+```bash
+tcld namespace create \
+    --namespace test-namespace.a1b2c \
+    --region us-east-1 \
+    --auth-method api_key
+```
+
+#### --ca 证书
+
+Base64 编码的 [CA 证书](/cloud/certificates)。如果同时指定了“--ca-certificate”和“--ca-certificate-file”，则仅使用“--ca-certificate”。
+
+别名：`-c`
+
+#### --ca 证书文件
+
+[CA 证书](/cloud/certificates) PEM 文件的路径。如果指定了两个选项，则仅使用“--ca-certificate”。
+
+别名：`--cf`
+
+#### --证书过滤器文件
+
+定义要应用于 Namespace 的[证书过滤器](/cloud/certificates#manage-certificate-filters) 的 JSON 文件的路径。
+
+示例 JSON: `{ "filters": [ { "commonName": "test1" } ] }`
+
+如果同时指定了“--certificate-filter-file”和“--certificate-filter-input”，则该命令将返回错误。
+
+别名：`--cff`
+
+#### --证书过滤器输入
+
+定义要应用于 Namespace 的[证书过滤器](/cloud/certificates#manage-certificate-filters) 的 JSON 字符串。
+
+示例 JSON: `{ "filters": [ { "commonName": "test1" } ] }`
+
+如果同时指定了“--certificate-filter-input”和“--certificate-filter-file”，该命令将返回错误。
+
+别名：`--cfi`
+
+#### --云提供商
+
+该地区的云提供商。 [`aws`、`gcp`] 之一。
+
+默认值：`aws`
+
+别名：`--cp`
+
+#### --连接规则 ID
+
+应用到 Namespace 的 [连接规则](/cloud/connectivity#connectivity-rules) ID 列表。可以指定多次。
+
+别名：`--ids`
+
+**例子**
+
+```bash
+tcld namespace create \
+    --namespace test-namespace.a1b2c \
+    --region us-east-1 \
+    --auth-method api_key \
+    --connectivity-rule-ids <rule_id1> \
+    --connectivity-rule-ids <rule_id2>
+```
+
+#### --启用删除保护
+
+在 Namespace 上启用[删除保护](/cloud/Namespaces#delete-protection)。
+
+默认值：“假”
+
+别名：`--edp`
+
+#### --端点
+
+[Codec Server](/生产部署/数据加密)端点用于解码与此 Namespace 交互的所有用户的有效负载。必须是 HTTPS。
+
+别名：`-e`
+
+#### --包含凭证
+
+调用 [Codec Server](/生产部署/数据加密) 时包含跨域凭据。
+
+默认值：“假”
+
+别名：`--ic`
+
+#### --pass-access-token
+
+将用户访问令牌传递到 [Codec Server](/生产部署/数据加密)端点。
+
+默认值：“假”
+
+别名：`--pat`
+
+- 您的身份验证凭据。
+  - 如果您使用 API 密钥，请提供 API 密钥值。
+  - 如果您使用 XPROT043X，请提供 XPROT043X CA 证书和 XPROT043X 私钥。
+- 您的 _XPROT025X 和帐户 ID_ 组合，遵循格式“<XPROT025X_id>.<account_id>”。
+- 建议的端点是 XPROT042X XPROT025X 端点：`<XPROT025X>.<account>.tmprl.cloud:7233`。
+  该端点适用于所有 XPROT025X，并自动将流量定向到具有 [高可用性](/cloud/high-availability) 的 XPROT025X 的活动区域。
+  有关端点选项的更多信息，请参阅[访问 XPROT025Xs](/cloud/XPROT025Xs#access-XPROT025Xs)。
+
+用于异步操作的请求标识符。如果未设置，服务器会分配一个标识符。
+
+别名：`-r`
+
+#### --保留天数
+
+关闭的 Workflow Execution 的[保留期](/Temporal-service/Temporal-server#retention-period)（以天为单位）。
+
+默认值：`30`
+
+别名：`--rd`
+
+#### --搜索属性
+
+格式为“_name_=_type_”的自定义 [Search Attribute](/search-attribute)。可以指定多次。
+
+_type_ 的有效值：`Bool` | `日期时间` | “双”| `Int` | `关键字` | `文本`
+
+别名：`--sa`
+
+**例子**
+
+```bash
+tcld namespace create \
+    --namespace test-namespace.a1b2c \
+    --region us-east-1 \
+    --auth-method api_key \
+    --search-attribute "customer_id=Int" \
+    --search-attribute "customer_name=Text"
+```
+
+＃＃＃＃  - 标签
+
+格式为“_key_=_value_”的[标签](/cloud/Namespaces#tag-a-Namespace)。可以指定多次。
+
+请参阅[标签结构和限制](/cloud/Namespaces#tag-struct-and-limits)。
+
+别名：`--t`
+
+**例子**
+
+```bash
+tcld namespace create \
+    --namespace test-namespace.a1b2c \
+    --region us-east-1 \
+    --auth-method api_key \
+    --tag "key=value" \
+    --tag "key2=value2"
+```
+
+#### --用户-Namespace-权限
+
+用户的 [Namespace 级别权限](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions)，格式为“_email_=_permission_”。可以指定多次。
+
+_permission_ 的有效值：`Admin` | `写` | `阅读`
+
+别名：`-p`
+
+**例子**
+
+```bash
+tcld namespace create \
+    --namespace test-namespace.a1b2c \
+    --region us-east-1 \
+    --auth-method api_key \
+    --user-namespace-permission "user@example.com=Admin" \
+    --user-namespace-permission "user2@example.com=Write"
+```
+
+＃＃ 删除
+
+`tcld Namespace delete` 命令删除 Temporal Cloud 中指定的 [Namespace](/Namespaces)。
+
+别名：`d`
+
+`tcld Namespace 删除`
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+**必需。** 指定要删除的 Temporal Cloud 上托管的 Namespace。
+
+别名：`-n`
+
+#### --请求 ID
+
+用于异步操作的请求标识符。如果未设置，服务器会分配一个标识符。
+
+别名：`-r`
+
+#### --资源版本
+
+从 Update 到资源版本 (ETag)。如果未设置，CLI 将使用最新版本。
+
+别名：`-v`
+
+**例子**
+
+```bash
+tcld namespace delete \
+    --namespace <namespace_id>
+```
+
+## 删除区域
+
+使用 `tcld Namespace delete-region` 删除现有 Temporal Cloud 的 <ToolTipTerm term="replica" />
+[Namespace](/Namespaces)。删除副本会禁用[高可用性功能](/cloud/high-availability) 和结果
+您必须经过 7 天的等待期，然后才能在同一位置重新启用高可用性功能。参考
+[启用高可用性](/cloud/high-availability/enable) 了解更多信息。
+
+以下修饰符控制命令的行为。
+
+#### --请求 ID
+
+用于异步操作的请求标识符。如果未设置，服务器会分配一个标识符。
+
+别名：`-r`
+
+#### --Namespace
+
+**必需。** 指定 Temporal Cloud 上托管的 Namespace。如果未指定，则使用环境变量“$Temporal_CLOUD_Namespace”的值。
+
+别名：`-n`
+
+＃＃＃＃  - 地区
+
+**必需。** 要从 Namespace 中删除的区域。指定区域名称，例如“us-east-1”。移除后，Temporal 停止复制，Namespace 成为标准 Namespace。删除 Namespace 区域后 7 天内无法重新添加区域或添加新区域。
+
+别名：`--re`
+
+**例子**
+
+```bash
+tcld namespace delete-region \
+    --namespace <namespace_id> \
+    --region <region_name>
+```
+
+使用 API 密钥身份验证时，请在按 Enter 之前添加您的 API 凭据：
+
+```bash
+tcld --api-key <your_api_key> \
+    delete-region \
+    --namespace <namespace_id> \
+    --region <region_name>
+```
+
+#### --云提供商
+
+要故障转移到的区域的云提供商。 [aws、gcp] 之一。
+
+默认值：aws（默认值：“aws”）
+
+## 故障转移
+
+使用[高可用性功能](/cloud/high-availability) 对 Temporal Namespace 进行故障转移。故障转移切换
+从主 Namespace 到其副本的 Namespace 区域。
+
+**例子**
+
+```bash
+tcld namespace failover \
+    --namespace <namespace_id> \
+    --region <target_region>
+```
+
+使用 API 密钥身份验证时，请在按 Enter 之前添加您的 API 凭据：
+
+```bash
+tcld --api-key <your_api_key> \
+    namespace failover \
+    --namespace <namespace_id> \
+    --region <target_region>
+```
+
+#### --请求 ID
+
+指定用于异步操作的请求标识符。如果没有指定，服务器会分配一个请求
+标识符。
+
+别名：`-r`
+
+#### --Namespace
+
+**必需。** 指定 Temporal Cloud 上托管的 Namespace。如果未指定，则使用环境变量“$Temporal_CLOUD_Namespace”的值。
+
+别名：`-n`
+
+＃＃＃＃  - 地区
+
+**必需。** 故障转移_to_的区域。指定区域名称，例如“us-east-1”。
+
+有关受支持区域的列表，请参阅[区域](/cloud/regions)。
+
+别名：`--re`
+
+**例子**
+
+```bash
+tcld namespace failover \
+    --namespace <namespace_id> \
+    --region <region_name>
+```
+
+#### --ca 证书
+
+_必需的修饰符，除非指定了“--ca-certificate-file”_。
+
+A base64-encoded CA certificate.
+
+If both `--ca-certificate` and `--ca-certificate-file` are specified, only `--ca-certificate` is used.
+
+Alias: `-c`
+
+#### --cloud-provider
+
+The cloud provider of the region to failover to. One of [aws, gcp].
+
+Default: aws (default: "aws")
+
+## get
+
+The `tcld Namespace get` command gets information about the specified [Namespace](/Namespaces) in Temporal Cloud.
+
+Alias: `g`
+
+`tcld Namespace get`
+
+The following modifier controls the behavior of the command.
+
+#### --Namespace
+
+Specify a Namespace hosted on Temporal Cloud. If not specified, the value of the environment variable
+$Temporal_CLOUD_Namespace is used.
+
+Alias: `-n`
+
+**Example**
+
+```bash
+tcld namespace get \
+    --namespace <namespace_id>
+```
+
+## list
+
+The `tcld Namespace list` command lists all [Namespaces](/Namespaces) in Temporal Cloud.
+
+Alias: `l`
+
+`tcld Namespace list`
+
+The command has no modifiers.
+
+## export
+
+The `tcld Namespace export s3` commands manage Workflow History Exports.
+
+Valid options: `s3`
+
+Alias: `es`
+
+- [tcld Namespace export s3 create](#create)
+- [tcld Namespace export s3 get](#get)
+- [tcld Namespace export s3 delete](#delete)
+- [tcld Namespace export s3 list](#list)
+- [tcld Namespace export s3 Update](#Update)
+- [tcld Namespace export s3 validate](#validate)
+
+### create
+
+The `tcld Namespace export s3 create` command allows users to create an export sink for the Namespace of a Temporal
+Cloud account.
+
+**Example**
+
+```bash
+tcld namespace export s3 create \
+    --namespace <namespace_id> \
+    --sink-name <sink_name> \
+    --s3-bucket-name <bucket_name> \
+    --role-arn <role_arn>
+```
+
+The following modifiers control the behavior of the command.
+
+#### --Namespace
+
+Specify a Namespace hosted on Temporal Cloud. If not specified, the value of the environment variable
+$Temporal_CLOUD_Namespace is used.
+
+Alias: `-n`
+
+#### --sink-name
+
+Provide a name for the export sink.
+
+_Required modifier_
+
+#### --role-arn
+
+Provide role arn for the IAM Role.
+
+_Required modifier_
+
+#### --s3-bucket-name
+
+Provide the name of an AWS S3 bucket that Temporal will send closed Workflow histories to.
+
+_Required modifier_
+
+#### --request-id
+
+Specify a request identifier to use for the asynchronous operation. If not specified, the server assigns a request
+identifier.
+
+Alias: `-r`
+
+#### --kms-arn
+
+Provide the ARN of the KMS key to use for encryption. Note: If the KMS ARN needs to be added or Updated, users should
+create the IAM Role with KMS or modify the created IAM Role accordingly. Providing it as part of the input won't help.
+
+### get
+
+The `tcld Namespace export s3 get` command allows users to retrieve details about an existing export sink from the
+Namespace of a Temporal Cloud account.
+
+**Example**
+
+```bash
+tcld namespace export s3 get \
+    --namespace <namespace_id> \
+    --sink-name <sink_name>
+```
+
+The following modifiers control the behavior of the command.
+
+#### --Namespace
+
+Specify a Namespace hosted on Temporal Cloud. If not specified, the value of the environment variable
+$Temporal_CLOUD_Namespace is used.
+
+Alias: `-n`
+
+#### --sink-name
+
+Provide the name of the export sink you wish to retrieve details for.
+
+_Required modifier_
+
+### delete
+
+The `tcld Namespace export s3 delete` command allows users to delete an existing export sink from the Namespace of a
+Temporal Cloud account.
+
+**Example**
+
+```bash
+tcld namespace export s3 delete \
+    --namespace <namespace_id> \
+    --sink-name <sink_name>
+```
+
+The following modifiers control the behavior of the command.
+
+#### --Namespace
+
+Specify a Namespace hosted on Temporal Cloud. If not specified, the value of the environment variable
+$Temporal_CLOUD_Namespace is used.
+
+Alias: `-n`
+
+#### --sink-name
+
+Provide the name of the export sink you wish to delete.
+
+_Required modifier_
+
+#### --resource-version
+
+Specify a resource version (ETag) to delete from. If not specified, the CLI will use the latest version.
+
+Alias: `-v`
+
+#### --request-id
+
+Specify a request identifier to use for the asynchronous operation. If not specified, the server assigns a request
+identifier.
+
+Alias: `-r`
+
+### list
+
+The `tcld Namespace export s3 list` command allows users to list all existing export sinks within the Namespace of a
+Temporal Cloud account.
+
+**Example**
+
+```bash
+tcld namespace export s3 list \
+    --namespace <namespace_id>
+```
+
+The following modifiers control the behavior of the command.
+
+#### --Namespace
+
+Specify a Namespace hosted on Temporal Cloud. If not specified, the value of the environment variable
+$Temporal_CLOUD_Namespace is used.
+
+Alias: `-n`
+
+#### --page-size
+
+Determine the number of results to return per page for list operations. If not specified, the default value is 100.
+
+#### --page-token
+
+Provide the page token to continue listing results from where the previous list operation left off.
+
+### Update
+
+The `tcld Namespace export s3 Update` command allows users to modify the details of an existing export sink within the
+Namespace of a Temporal Cloud account.
+
+**Example**
+
+```bash
+tcld namespace export s3 update \
+    --namespace <namespace_id> \
+    --sink-name <sink_name> \
+    --enabled true
+```
+
+The following modifiers control the behavior of the command.
+
+#### --Namespace
+
+Specify a Namespace hosted on Temporal Cloud. If not specified, the value of the environment variable
+$Temporal_CLOUD_Namespace is used.
+
+Alias: `-n`
+
+#### --sink-name
+
+Provide the name of the export sink you wish to Update.
+
+_Required modifier_
+
+#### --enabled
+
+Specify whether the export is enabled or not.
+
+#### --role-arn
+
+Update the role ARN for the IAM Role.
+
+#### --s3-bucket-name
+
+Update the name of the AWS S3 bucket that Temporal will send closed Workflow histories to.
+
+#### --resource-version
+
+Specify a resource version (ETag) to Update from. If not specified, the CLI will use the latest version.
+
+Alias: `-v`
+
+#### --kms-arn
+
+Update the ARN of the KMS key used for encryption. Note: If the KMS ARN needs to be added or Updated, users should
+create the IAM Role with KMS or modify the created IAM Role accordingly. Providing it as part of the input won't help.
+
+#### --request-id
+
+Specify a request identifier to use for the asynchronous operation. If not specified, the server assigns a request
+identifier.
+
+Alias: `-r`
+
+### validate
+
+The `tcld Namespace export s3 validate` command allows users to validate an export sink from the Namespace of a Temporal
+Cloud account.
+
+**Example**
+
+```bash
+tcld namespace export s3 validate \
+    --namespace <namespace_id> \
+    --sink-name <sink_name> \
+    --s3-bucket-name <bucket_name> \
+    --role-arn <role_arn>
+```
+
+The following modifiers control the behavior of the command.
+
+#### --Namespace
+
+Specify a Namespace hosted on Temporal Cloud. If not specified, the value of the environment variable
+$Temporal_CLOUD_Namespace is used.
+
+Alias: `-n`
+
+#### --sink-name
+
+Provide the name of the export sink you wish to retrieve details for.
+
+_Required modifier_
+
+#### --role-arn
+
+Provide role arn for the IAM Role.
+
+_Required modifier_
+
+#### --s3-bucket-name
+
+Update the name of the AWS S3 bucket that Temporal will send closed Workflow histories to.
+
+#### --kms-arn
+
+Update the ARN of the KMS key used for encryption. Note: If the KMS ARN needs to be added or Updated, users should
+create the IAM Role with KMS or modify the created IAM Role accordingly. Providing it as part of the input won't help.
+
+## accepted-client-ca
+
+The `tcld Namespace accepted-client-ca` commands manage the client CA certificates of the specified
+[Namespace](/Namespaces) in Temporal Cloud. The certificates are used to verify client connections.
+
+:::note
+
+Base64 versions of the CA certificate files are accepted by these commands.
+
+:::
+
+Alias: `ca`
+
+- [tcld Namespace accepted-client-ca add](#add)
+- [tcld Namespace accepted-client-ca list](#list)
+- [tcld Namespace accepted-client-ca set](#set)
+- [tcld Namespace accepted-client-ca remove](#remove)
+
+:::important
+
+Do not use a CA certificate that is signed with an insecure signature algorithm, such as SHA-1. Such signatures will be
+rejected. Existing CA certificates that use SHA-1 can stop working without warning.
+
+For more information about the vulnerabilities of SHA-1, see [SHAttered](https://shattered.io/).
+
+:::
+
+### add
+
+The `tcld Namespace accepted-client-ca add` command adds client CA certificates to a [Namespace](/Namespaces) in
+Temporal Cloud.
+
+`tcld Namespace accepted-client-ca add --ca-certificate <value>`
+
+Alias: `a`
+
+The following modifiers control the behavior of the command.
+
+#### --Namespace
+
+Specify a Namespace hosted on Temporal Cloud. If not specified, the value of the environment variable
+$Temporal_CLOUD_Namespace is used.
+
+Alias: `-n`
+
+**Example**
+
+```bash
+tcld namespace accepted-client-ca add \
+    --namespace <namespace_id> \
+    --ca-certificate <encoded_certificate>
+```
+
+#### --request-id
+
+Specify a request identifier to use for the asynchronous operation. If not specified, the server assigns a request
+identifier.
+
+Alias: `-r`
+
+**Example**
+
+```bash
+tcld namespace accepted-client-ca add \
+    --request-id <request_id> \
+    --ca-certificate <encoded_certificate>
+```
+
+#### --resource-version
+
+Specify a resource version (ETag) to Update from. If not specified, the latest version is used.
+
+Alias: `-v`
+
+**Example**
+
+```bash
+tcld namespace accepted-client-ca add \
+    --resource-version <etag> \
+    --ca-certificate <encoded_certificate>
+```
+
+#### --ca-certificate
+
+_Required modifier unless `--ca-certificate-file` is specified_
+
+Specify a base64-encoded string of a CA certificate PEM file.
+
+If both `--ca-certificate` and `--ca-certificate-file` are specified, only `--ca-certificate` is used.
+
+Alias: `-c`
+
+**Example**
+
+```bash
+tcld namespace accepted-client-ca add \
+    --ca-certificate <encoded_certificate>
+```
+
+#### --ca-certificate-file
+
+_Required modifier unless `--ca-certificate` is specified_
+
+Specify a path to a CA certificate PEM file.
+
+If both `--ca-certificate` and `--ca-certificate-file` are specified, only `--ca-certificate` is used.
+
+Alias: `-f`
+
+**Example**
+
+```bash
+tcld namespace accepted-client-ca add \
+    --ca-certificate-file <path>
+```
+
+### list
+
+The `tcld Namespace accepted-client-ca list` command lists the client CA certificates that are currently configured for
+a [Namespace](/Namespaces) in Temporal Cloud.
+
+`tcld Namespace accepted-client-ca list`
+
+Alias: `l`
+
+The following modifier controls the behavior of the command.
+
+#### --Namespace
+
+Specify a Namespace hosted on Temporal Cloud. If not specified, the value of the environment variable
+$Temporal_CLOUD_Namespace is used.
+
+Alias: `-n`
+
+**Example**
+
+```bash
+tcld namespace accepted-client-ca list \
+    --namespace <namespace_id>
+```
+
+### remove
+
+The `tcld Namespace accepted-client-ca remove` command removes client CA certificates from a [Namespace](/Namespaces) in
+Temporal Cloud.
+
+`tcld Namespace accepted-client-ca remove --ca-certificate <value>`
+
+Alias: `r`
+
+The following modifiers control the behavior of the command.
+
+#### --Namespace
+
+Specify a Namespace hosted on Temporal Cloud. If not specified, the value of the environment variable
+$Temporal_CLOUD_Namespace is used.
+
+Alias: `-n`
+
+**Example**
+
+```bash
+tcld namespace accepted-client-ca remove \
+    --namespace <namespace_id> \
+    --ca-certificate <encoded_certificate>
+```
+
+#### --request-id
+
+Specify a request identifier to use for the asynchronous operation. If not specified, the server assigns a request
+identifier.
+
+Alias: `-r`
+
+**Example**
+
+```bash
+tcld namespace accepted-client-ca remove \
+    --request-id <request_id> \
+    --ca-certificate <encoded_certificate>
+```
+
+#### --resource-version
+
+Specify a resource version (ETag) to Update from. If not specified, the latest version is used.
+
+Alias: `-v`
+
+**Example**
+
+```bash
+tcld namespace accepted-client-ca remove \
+    --resource-version <etag> \
+    --ca-certificate <encoded_certificate>
+```
+
+#### --ca-certificate
+
+_Required modifier unless `--ca-certificate-fingerprint` or `--ca-certificate-file` is specified_
+
+Specify the base64-encoded string of a CA certificate PEM file.
+
+If `--ca-certificate-fingerprint` is also specified, both `--ca-certificate` and `--ca-certificate-file` are ignored.
+
+If `--ca-certificate-file` is also specified but `--ca-certificate-fingerprint` is not, only `--ca-certificate` is used.
+
+Alias: `-c`
+
+**Example**
+
+```bash
+tcld namespace accepted-client-ca remove \
+    --ca-certificate <encoded_certificate>
+```
+
+#### --ca-certificate-file
+
+_Required modifier unless `--ca-certificate-fingerprint` or `--ca-certificate` is specified_
+
+Specify a path to a CA certificate PEM file.
+
+If `--ca-certificate-fingerprint` is also specified, both `--ca-certificate-file` and `--ca-certificate` are ignored.
+
+If `--ca-certificate` is also specified but `--ca-certificate-fingerprint` is not, only `--ca-certificate` is used.
+
+Alias: `-f`
+
+**Example**
+
+```bash
+tcld namespace accepted-client-ca remove \
+    --ca-certificate-file <path>
+```
+
+#### --ca-certificate-fingerprint
+
+_Required modifier unless `--ca-certificate` or `--ca-certificate-file` is specified_
+
+Specify the fingerprint of a CA certificate.
+
+If `--ca-certificate`, `--ca-certificate-file`, or both are also specified, they are ignored.
+
+Alias: `--fp`
+
+**Example**
+
+```bash
+tcld namespace accepted-client-ca remove \
+    --ca-certificate-fingerprint <fingerprint>
+```
+
+### set
+
+The `tcld Namespace accepted-client-ca set` command sets the client CA certificates for a [Namespace](/Namespaces) in
+Temporal Cloud.
+
+`tcld Namespace 接受客户端 ca 设置 --ca-证书 <值>`
+
+别名：`s`
+
+{/* 如何使用 tcld 在 Temporal Cloud 中滚动接受的客户端 CA 证书 */}
+
+更新 CA 证书时，遵循滚动更新过程非常重要。这样做可以使您的 Namespace 能够服务
+两个 CA 证书都会保留一段时间，直到旧 CA 证书的流量停止。
+
+1. 创建一个包含新旧 CA 证书 PEM 块的单个文件。只需连接 PEM 块即可
+   在相邻的线上。
+
+   ```
+   -----BEGIN CERTIFICATE-----
+   ... old CA cert ...
+   -----END CERTIFICATE-----
+   -----BEGIN CERTIFICATE-----
+   ... new CA cert ...
+   -----END CERTIFICATE-----
+   ```
+
+1. 使用 CA 证书捆绑文件运行“tcld Namespace Accepted-client-ca set”命令。
+
+   ```bash
+   tcld namespace accepted-client-ca set \
+       --ca-certificate-file <path>
+   ```
+
+1. 监控旧证书的流量直至其停止。
+
+1. 创建另一个仅包含新 CA 证书的文件。
+
+1. 使用 Updated CA 证书捆绑文件再次运行“tcld Namespace Accepted-client-ca set”命令。
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+**例子**
+
+```bash
+tcld namespace accepted-client-ca set \
+    --namespace <namespace_id>
+    --ca-certificate <encoded_certificate>
+```
+
+#### --请求 ID
+
+指定用于异步操作的请求标识符。如果没有指定，服务器会分配一个请求
+标识符。
+
+别名：`-r`
+
+**例子**
+
+```bash
+tcld namespace accepted-client-ca set \
+    --request-id <request_id> \
+    --ca-certificate <encoded_certificate>
+```
+
+#### --资源版本
+
+指定 Update 的资源版本 (ETag)。如果未指定，则使用最新版本。
+
+别名：`-v`
+
+**例子**
+
+```bash
+tcld namespace accepted-client-ca set \
+    --resource-version <etag> \
+    --ca-certificate <encoded_certificate>
+```
+
+#### --ca 证书
+
+_必需的修饰符，除非指定了 `--ca-certificate-file` _
+
+指定 CA 证书 PEM 文件的 Base64 编码字符串。
+
+如果同时指定了“--ca-certificate”和“--ca-certificate-file”，则仅使用“--ca-certificate”。
+
+别名：`-c`
+
+**例子**
+
+```bash
+tcld namespace accepted-client-ca set \
+    --ca-certificate <encoded_certificate>
+```
+
+#### --ca 证书文件
+
+_必需的修饰符，除非指定了 `--ca-certificate` _
+
+指定 CA 证书 PEM 文件的路径。
+
+如果同时指定了“--ca-certificate”和“--ca-certificate-file”，则仅使用“--ca-certificate”。
+
+别名：`-f`
+
+**例子**
+
+```bash
+tcld namespace accepted-client-ca set \
+    --ca-certificate-file <path>
+```
+
+## 证书过滤器
+
+“tcld Namespace 证书过滤器”命令管理指定的可选证书过滤器
+Temporal Cloud 中的 [Namespace](/Namespaces)。 Namespace可以使用证书过滤器来授权客户端证书
+基于专有名称 (DN) 字段。
+
+别名：`cf`
+
+当取消 XPROT028X 时，XPROT028X 会在下一个可用机会时引发错误。如果清理逻辑
+需要执行，可以在“finally”子句中或在捕获的取消错误中完成。然而，对于 XPROT028X
+要显示已取消，需要重新引发异常。
+
+＃＃＃ 添加
+
+“tcld Namespacecertificates-filter add”命令将其他证书过滤器添加到 Temporal 的 Namespace
+云账号。
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters add \
+    --namespace <namespace_id> \
+    --certificate-filter-file <file>
+```
+
+#### --请求 ID
+
+指定用于异步操作的请求标识符。如果没有指定，服务器会分配一个请求
+标识符。
+
+别名：`-r`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters add \
+    --request-id <request_id> \
+    --certificate-filter-file <file>
+```
+
+#### --资源版本
+
+指定 Update 的资源版本 (ETag)。如果未指定，则使用最新版本。
+
+别名：`-v`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters add \
+    --resource-version <etag> \
+    --certificate-filter-file <file>
+```
+
+#### --证书过滤器文件
+
+_必需的修饰符，除非指定了“--certificate-filter-value”。_
+
+指定定义 Namespace 证书过滤器的 JSON 文件的路径。
+
+别名：`-f`、`--file`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters add \
+    --certificate-filter-file <file>
+```
+
+#### --证书过滤器输入
+
+_必需的修饰符，除非指定了“--certificate-filter-file”。_
+
+JSON 格式的证书过滤器将添加到 Namespace。
+
+别名：`-i`、`--input`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters add \
+    --certificate-filter-input <JSON>
+```
+
+＃＃＃ 清除
+
+“tcld Namespace 证书过滤器清除”命令清除 [Namespace](/Namespaces) 中的所有证书过滤器
+Temporal Cloud。
+
+:::caution
+
+使用此命令允许链接到配置的 CA 证书的任何客户端证书连接到
+Namespace。
+
+:::
+
+`tcld Namespace 证书-过滤器清除`
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters clear \
+    --namespace <namespace_id>
+```
+
+#### --请求 ID
+
+指定用于异步操作的请求标识符。如果没有指定，服务器会分配一个请求
+标识符。
+
+别名：`-r`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters clear
+    --request-id <request_id>
+```
+
+#### --资源版本
+
+指定 Update 的资源版本 (ETag)。如果未指定，则使用最新版本。
+
+别名：`-v`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters clear \
+    --resource-version <etag>
+```
+
+＃＃＃ 出口
+
+“tcld Namespace 证书过滤器导出”命令从证书导出现有证书过滤器
+Temporal Cloud 中的 [Namespace](/Namespaces)。
+
+`tcld Namespace 证书过滤器导出 --证书过滤器文件 <路径>`
+
+别名：`exp`
+
+以下修饰符控制命令的行为。
+
+#### --证书过滤器文件
+
+指定 tcld 可以导出证书过滤器的 JSON 文件的路径。
+
+别名：`--file`、`-f`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters export \
+    --certificate-filter-file <path>
+```
+
+#### --Namespace
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters import \
+    --namespace <namespace_id> \
+    --certificate-filter-input <json>
+```
+
+#### --请求 ID
+
+指定用于异步操作的请求标识符。如果没有指定，服务器会分配一个请求
+标识符。
+
+别名：`-r`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters import \
+    --request-id <request_id> \
+    --certificate-filter-input <json>
+```
+
+#### --资源版本
+
+指定 Update 的资源版本 (ETag)。如果未指定，则使用最新版本。
+
+别名：`-v`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters import \
+    --resource-version <etag> \
+    --certificate-filter-input <json>
+```
+
+＃＃＃ 进口
+
+“tcld Namespace 证书过滤器导入”命令为 [Namespace](/Namespaces) 设置证书过滤器
+Temporal Cloud。
+
+`tcld Namespace 证书过滤器导入 --证书过滤器文件 <路径>`
+
+别名：`imp`
+
+证书过滤器可以包含以下内容的任意组合（且至少其中之一）：
+
+- `通用名称`
+-`组织`
+- `组织单位`
+- `subjectAlternativeName`
+
+以下修饰符控制命令的行为。
+
+#### --证书过滤器文件
+
+_必需的修饰符，除非指定了 `--certificate-filter-input` _
+
+指定 JSON 文件的路径，该文件定义要应用于 Namespace 的证书过滤器，例如
+`{ "filters": [ { "commonName": "test1" } ] }`.指定的过滤器将替换任何现有的过滤器。
+
+如果同时指定了“--certificate-filter-file”和“--certificate-filter-input”，则该命令将返回错误。
+
+别名：`--file`、`-f`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters import \
+    --certificate-filter-file <path>
+```
+
+#### --证书过滤器输入
+
+_必需的修饰符，除非指定了 `--certificate-filter-file` _
+
+指定一个 JSON 字符串，定义要应用于 Namespace 的证书过滤器，例如
+`{ "filters": [ { "commonName": "test1" } ] }`.指定的过滤器将替换任何现有的过滤器。
+
+如果同时指定了“--certificate-filter-input”和“--certificate-filter-file”，该命令将返回错误。
+
+别名：`--input`、`-i`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters import \
+    --certificate-filter-input <json>
+```
+
+#### --Namespace
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters import \
+    --namespace <namespace_id> \
+    --certificate-filter-input <json>
+```
+
+#### --请求 ID
+
+指定用于异步操作的请求标识符。如果没有指定，服务器会分配一个请求
+标识符。
+
+别名：`-r`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters import \
+    --request-id <request_id> \
+    --certificate-filter-input <json>
+```
+
+#### --资源版本
+
+指定 Update 的资源版本 (ETag)。如果未指定，则使用最新版本。
+
+别名：`-v`
+
+**例子**
+
+```bash
+tcld namespace certificate-filters import \
+    --resource-version <etag> \
+    --certificate-filter-input <json>
+```
+
+## 搜索属性
+
+`tcld Namespace search-attributes` 命令管理指定的 [Search Attributes](/search-attribute)
+Temporal Cloud 中的 [Namespace](/Namespaces)。
+
+别名：`萨`
+
+- [tcld Namespace 搜索属性添加](#add)
+- [tcld Namespace 搜索属性重命名](#rename)
+
+如果您想删除 Search Attribute，请联系[支持](/cloud/support)：
+[support.Temporal.io](https://support.Temporal.io)。
+
+＃＃＃ 添加
+
+`tcld Namespace search-attributes add` 命令将自定义 [Search Attributes](/search-attribute) 添加到 Namespace
+Temporal Cloud。
+
+`tcld Namespace 搜索属性添加 --search-attribute <值>`
+
+别名：`a`
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+**例子**
+
+```bash
+tcld namespace search-attributes add \
+    --namespace <namespace_id> \
+    --search-attribute <value>
+```
+
+#### --请求 ID
+
+指定用于异步操作的请求标识符。如果没有指定，服务器会分配一个请求
+标识符。
+
+别名：`-r`
+
+**例子**
+
+```bash
+tcld namespace search-attributes add \
+    --request-id <request_id> \
+    --search-attribute <value>
+```
+
+#### --资源版本
+
+指定 Update 的资源版本 (ETag)。如果未指定，则使用最新版本。
+
+别名：`-v`
+
+**例子**
+
+```bash
+tcld namespace search-attributes add \
+    --resource-version <etag> \
+    --search-attribute <value>
+```
+
+#### --搜索属性
+
+_必需的修饰符；可以指定多次_
+
+以“_name_=_type_”形式指定自定义 Search Attribute。 _type_ 的有效值如下：
+
+- 布尔
+- 日期时间
+- 双人间
+- 智力
+- 关键字
+- 文字
+
+别名：`--sa`
+
+**例子**
+
+```bash
+tcld namespace search-attributes add \
+    --search-attribute "YourSearchAttribute1=Text" \
+    --search-attribute "YourSearchAttribute2=Double"
+```
+
+### 重命名
+
+`tcld Namespace search-attributes rename` 命令重命名 Temporal 中的自定义 [Search Attribute](/search-attribute)
+云。
+
+`tcld Namespace 搜索属性重命名 --existing-name <值> --new-name <值>`
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+**例子**
+
+```bash
+tcld namespace search-attributes rename \
+    --namespace <namespace_id> \
+    --existing-name <value> \
+    --new-name <value>
+```
+
+#### --请求 ID
+
+指定用于异步操作的请求标识符。如果没有指定，服务器会分配一个请求
+标识符。
+
+要在 Python 中设置 XPROT020X，请在执行 XPROT027X 时指定“id”参数
+[`start_XPROT027X()`](https://python.XPROT026X.io/XPROT026Xio.client.Client.html#start_XPROT027X) 或
+[`execute_XPROT027X()`](https://python.XPROT026X.io/XPROT026Xio.client.Client.html#execute_XPROT027X) 方法。
+
+**例子**
+
+```bash
+tcld namespace search-attributes rename \
+    --request-id <request_id> \
+    --existing-name <value> \
+    --new-name <value>
+```
+
+#### --资源版本
+
+指定 Update 的资源版本 (ETag)。如果未指定，则使用最新版本。
+
+别名：`-v`
+
+**例子**
+
+```bash
+tcld namespace search-attributes rename \
+    --resource-version <etag> \
+    --existing-name <value> \
+    --new-name <value>
+```
+
+#### --现有名称
+
+_所需修饰符_
+
+指定现有 Search Attribute 的名称。
+
+别名：`--en`
+
+使用 [`start_XPROT027X()`](https://python.XPROT026X.io/XPROT026Xio.client.Client.html#start_XPROT027X) 或
+[`get_XPROT027X_handle()`](https://python.XPROT026X.io/XPROT026Xio.client.Client.html#get_XPROT027X_handle) 返回一个
+XPROT027X 手柄。然后使用 [`result`](https://python.XPROT026X.io/XPROT026Xio.client.XPROT027XHandle.html#result) 方法
+等待 XPROT027X 的结果。
+
+```bash
+tcld namespace search-attributes rename \
+    --existing-name <value> \
+    --new-name <value>
+```
+
+#### --新名称
+
+_所需修饰符_
+
+为 Search Attribute 指定一个新名称。
+
+别名：`--nn`
+
+**例子**
+
+```bash
+tcld namespace search-attributes rename \
+    --existing-name <value> \
+    --new-name <value>
+```
+
+＃＃ 保留
+
+“tcld Namespace 保留”命令管理关闭的 Workflow 之前保留的时间长度（以天为单位）
+删除 Temporal Cloud 中给定的 Namespace。
+
+别名：`r`
+
+- [tcld Namespace 保留获取](#get)
+- [tcld Namespace 固定装置](#set)
+
+＃＃＃ 得到
+
+检索指定 Namespace 删除之前关闭的 Workflow 将保留的时间长度（以天为单位）。
+
+别名：`g`
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+_所需修饰符_
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+**例子**
+
+```bash
+tcld namespace retention get \
+    --namespace <namespace_id>
+```
+
+＃＃＃ 放
+
+设置在删除指定 Namespace 之前关闭的 Workflow 的保留时间长度（以天为单位）。
+
+别名：`s`
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+_所需修饰符_
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+#### --保留天数
+
+_所需修饰符_
+
+指定删除前关闭的 Workflow 的保留天数。
+
+别名：`--rd`
+
+**例子**
+
+```bash
+tcld namespace retention set \
+    --namespace <namespace_id> \
+    --retention-days <retention_days>
+```
+
+## Update-编解码器-服务器
+
+“tcld Namespace Update-codec-server”命令 Update 是 Temporal Cloud 的 Codec Server 的配置，其中
+允许通过远程端点解码有效负载。
+
+别名：`ucs`
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+_所需修饰符._
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+**例子**
+
+```bash
+tcld namespace update-codec-server \
+    --namespace <namespace_id> \
+    --endpoint <http_url>
+```
+
+#### --端点
+
+_所需修饰符._
+
+指定一个端点来解码与此 Namespace 交互的所有用户的有效负载。端点必须是有效的 https
+网址。
+
+别名：`-e`
+
+**例子**
+
+```bash
+tcld namespace update-codec-server \
+    --namespace <namespace_id> \
+    --endpoint <https_url>
+```
+
+#### --pass-access-token
+
+允许通过远程端点传递用户访问令牌。默认情况下设置为“false”。
+
+别名：`--pat`
+
+**例子**
+
+```bash
+tcld namespace update-codec-server \
+    --namespace <namespace_id> \
+    --endpoint <https_url> \
+    --pass-access-token <bool>
+```
+
+#### --包含凭证
+
+允许包含跨域凭据。默认情况下设置为“false”。
+
+别名：`--ic`
+
+**例子**
+
+```bash
+tcld namespace update-codec-server \
+    --namespace <namespace_id> \
+    --endpoint <https_url> \
+    --include-credentials true
+```
+
+## Update-高可用性 {#Update-高可用性}
+
+“tcld Namespace Update-high-availability”命令使您能够调整 [Namespace](/Namespaces) 的设置
+具有[高可用性功能](/cloud/high-availability)。默认情况下设置为“false”。
+
+别名： 「呃哈」
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+_所需修饰符._
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+#### --禁用自动故障转移
+
+指定 Temporal Cloud 是否应执行 <ToolTipTerm term="health check" src="health check" /> 并触发
+自动故障转移。
+
+传递“true”或“false”（默认）。
+
+**例子**
+
+```
+tcld namespace update-high-availability \
+    --namespace <namespace_id> \
+    --disable-auto-failover=true
+```
+
+使用 API 密钥身份验证时，请在按 Enter 之前添加您的 API 凭据：
+
+```
+tcld --api-key <your_api_key> \
+    namespace update-high-availability \
+    --namespace <namespace_id> \
+    --disable-auto-failover=true
+```
+
+别名：`-daf`
+
+## 标签
+
+“tcld Namespace 标签”命令管理指定的 [标签](/cloud/Namespaces#tag-a-Namespace)
+Temporal Cloud 中的 [Namespace](/Namespaces)。
+
+别名：`t`
+
+- [tcld Namespace 标签更新插入](#upsert)
+- [tcld Namespace 标签删除](#remove)
+
+### 更新插入
+
+为指定的 Namespace 添加新标签或 Update 现有标签值。
+
+别名：`u`
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+_所需修饰符_
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+#### --请求 ID
+
+用于异步操作的请求标识符。如果未设置，服务器会分配一个标识符。
+
+别名：`-r`
+
+＃＃＃＃  - 标签
+
+_必需的修饰符；可以指定多次_
+
+格式为“_key_=_value_”的标签。
+
+[标签结构和限制](/cloud/Namespaces#tag-struct-and-limits)。
+
+别名：`--t`
+
+**例子**
+
+```bash
+tcld namespace tags upsert \
+    --namespace <namespace_id> \
+    --tag "key1=value1" \
+    --tag "key2=updated"
+```
+
+＃＃＃ 消除
+
+使用密钥删除指定 Namespace 的现有标签。
+
+别名：`rm`
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+_所需修饰符_
+
+指定 Temporal Cloud 上托管的 Namespace。如果没有指定，则为环境变量的值
+使用 $Temporal_CLOUD_Namespace。
+
+别名：`-n`
+
+#### --请求 ID
+
+用于异步操作的请求标识符。如果未设置，服务器会分配一个标识符。
+
+别名：`-r`
+
+#### --标签键
+
+_必需的修饰符；可以指定多次_
+
+标签键字符串。
+
+[标签密钥结构和限制](/cloud/Namespaces#tag-struct-and-limits)。
+
+别名：`--tk`
+
+**例子**
+
+```bash
+tcld namespace tags remove \
+    --namespace <namespace_id> \
+    --tag-key "key1" \
+    --tag-key "key2"
+```
+
+## 设置连接规则
+
+“tcld Namespace set-connectivity-rules”命令使您能够在您的设备上设置连接规则。
+[Namespace](/Namespaces)。
+
+别名：`scrs`
+
+#### --连接规则 ID
+
+连接规则 ID 列表可用于创建 Namespace 和 Update Namespace。示例：--ids id1 --ids id2
+--ids id3。
+
+别名：`id`
+
+#### --Namespace
+
+Namespace 托管在 Temporal Cloud 上。
+
+别名：`n`
+
+#### --全部删除
+
+确认所有连接规则都将被删除，从而启用来自任何源的连接。

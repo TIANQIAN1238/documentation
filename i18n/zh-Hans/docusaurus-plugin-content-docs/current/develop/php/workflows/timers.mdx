@@ -1,0 +1,35 @@
+---
+id: timers
+title: Timers - PHP SDK
+sidebar_label: Timers
+slug: /develop/php/workflows/timers
+toc_max_heading_level: 2
+keywords:
+  - timers
+tags:
+  - Workflows
+  - Durable Timers
+  - PHP SDK
+  - Temporal SDKs
+description: Workflow 中的 Timer 设置固定时间的持久暂停。即使在停机后，您的 Workflow 也能恢复执行。重量轻且可扩展，数百万个 Timer 可以在单个 Worker 上运行。
+---
+
+## 什么是 Timer？ {#Timers}
+
+Workflow 可以将 Timer 设置为固定时间段的耐用性。
+在某些 SDK 中，该函数称为“sleep()”，而在其他 SDK 中，该函数称为“Timer()”。
+
+Workflow 可以休眠数月。
+Timer 是持久的，因此即使您的 Worker 或 Temporal 服务在时间段结束时关闭，只要您的 Worker 和 Temporal 服务备份，“sleep()”调用就会解析，您的代码将继续执行。
+
+睡眠是一种轻资源操作：它不会占用进程，并且您可以在单个 Worker 上运行数百万个 Timer。
+
+要在 PHP 中设置 Timer，请使用“Workflow::Timer()”并传递继续之前要等待的秒数。
+
+以下示例生成一个持续 5 分钟的 sleep 方法。
+
+```php
+yield Workflow::timer(300); // sleep for 5 minutes
+```
+
+您无法在“await”或“awaitWithTimeout”方法中设置 Timer 调用。

@@ -1,0 +1,558 @@
+---
+id: sdk-metrics
+title: Temporal SDK指标参考
+sidebar_label: SDK指标
+description: Temporal SDK 发出涵盖客户端使用情况和 Worker 进程的指标。可以调整指标以提高 Worker 性能，并在导出前以 Temporal_ 为前缀。
+toc_max_heading_level: 4
+keywords:
+  - reference
+tags:
+  - Reference
+  - Metrics
+---
+
+:::info SDK metrics
+
+此页面上的信息与 [Temporal SDKs](/encyclopedia/Temporal-sdks) 相关。
+
+请参阅 [Cloud 指标](/cloud/metrics/) 了解 [Temporal Cloud](/cloud/overview) 发出的指标。
+
+有关 [OSS 集群](/Temporal-service) 发出的指标，请参阅[集群指标](/references/cluster-metrics)。
+
+某些 SDK 发出的指标可能超出此 SDK 指标参考中列出的范围。
+只有此指标参考中包含的指标才具有保证的、定义的行为。
+其他指标被认为是已弃用、不一致或实验性的。
+
+:::
+
+Temporal SDK 发出一组来自 Temporal CLIent 使用情况和 Worker 进程的指标。
+
+- [如何使用 Go SDK 发出指标](/develop/go/platform/observability#metrics)
+- [如何使用 Java SDK 发出指标](/develop/java/platform/observability#metrics)
+- [如何使用 Python SDK 发出指标](/develop/python/platform/observability#metrics)
+- [如何使用 TypeScript SDK 发出指标](/develop/typescript/platform/observability#metrics)
+- [如何使用 .NET SDK 发出指标](/develop/dotnet/platform/observability#metrics)
+- [如何使用 Ruby SDK 发出指标](/develop/ruby/platform/observability#metrics)
+- [如何根据指标调整 Worker 性能](/develop/Worker-performance)
+
+所有指标在导出到其配置的目的地之前都以“Temporal_”为前缀。
+（此参考文献的部分内容已删除该前缀。）
+目前，某些指标特定于某些 SDK。
+
+TypeScript、Python、.NET 和 Ruby SDK 指标在 Core SDK 中定义。
+
+PHP 和 Go 指标在 Go SDK 中定义。
+
+Java 指标在 Java SDK 中定义。
+指标在以下位置定义。
+
+- [核心 SDK Worker 指标](https://github.com/Temporalio/sdk-core/blob/master/crates/sdk-core/src/telemetry/metrics.rs)
+- [核心 SDK 客户端指标](https://github.com/Temporalio/sdk-core/blob/master/crates/client/src/metrics.rs)
+- [Java SDK Worker 指标](https://github.com/Temporalio/sdk-java/blob/master/Temporal-sdk/src/main/java/io/Temporal/Worker/MetricsType.java)
+- [Java SDK 客户端指标](https://github.com/Temporalio/sdk-java/blob/master/Temporal-serviceclient/src/main/java/io/Temporal/serviceclient/MetricsType.java)
+- [Go SDK Worker 和客户端指标](https://github.com/Temporalio/sdk-go/blob/c32b04729cc7691f80c16f80eed7f323ee5ce24f/internal/common/metrics/constants.go)
+
+:::note Metric units across SDKs
+
+指标的测量单位可能会根据报告的 SDK 的不同而有所不同：
+
+**基于核心的 SDK：** 直方图类型的指标默认以_毫秒_为单位进行测量。
+可以将其自定义为使用 [Core SDK](/glossary#core-sdk) 的 SDK 使用秒数。
+Core SDK 是多个 Temporal SDK 使用的共享通用核心库，包括 TypeScript、Python 和 .NET。
+
+**Java 和 Go SDKs：** 直方图类型的指标以_秒_为单位测量。
+
+:::
+
+每个指标可能附加有以下键的某种组合：
+
+- `任务队列`：Worker 实体正在轮询的 Task Queue
+- `Namespace`：Namespace 与 Worker 绑定
+- `poller_type`：以下之一：
+  - `Workflow_task`
+  - `Activity_task`
+  - `Nexus_task`（仅限 Go 和 Java）
+  - `sticky_Workflow_task`
+- `Worker_type`：以下之一：
+  - `ActivityWorker`
+  - `WorkflowWorker`
+  - `LocalActivityWorker`（仅限 Go 和 Java）
+  - `NexusWorker`（仅限 Go 和 Java）
+- `Activity_type`：与指标关联的 Activity 函数的名称
+- `Workflow_type`：与指标关联的 Workflow 函数的名称
+- `操作`：RPC方法名称；可用于与 Temporal CLIent gRPC 请求相关的指标
+
+某些键可能并非在每个 SDK 中都可用，并且直方图指标在每个 SDK 中可能具有不同的存储桶。
+
+|指标名称 |发射者 |公制类型 |可用性 |
+| ------------------------------------------------------------------------------------------------ | -------------- | ----------- | -------------- |
+| [Temporal_Activity_execution_cancelled](#Activity_execution_cancelled) | Worker |专柜|爪哇 |
+| [Temporal_Activity_execution_failed](#Activity_execution_failed) | Worker |专柜|核心、Go、Java |
+| [Temporal_Activity_execution_latency](#Activity_execution_latency) | Worker |直方图|核心、Go、Java |
+| [Temporal_Activity_poll_no_task](#Activity_poll_no_task) | Worker |专柜|核心、Go、Java |
+| [Temporal_Activity_Schedule_to_start_latency](#Activity_Schedule_to_start_latency) | Worker |直方图|核心、Go、Java |
+| [Temporal_Activity_succeed_endtoend_latency](#Activity_succeed_endtoend_latency) | Worker |直方图|核心、Go、Java |
+| [Temporal_Activity_task_error](#Activity_task_error) | Worker |专柜|去 |
+| [Temporal_corrupted_Signals](#corrupted_Signals) | Worker |专柜|去爪哇 |
+| [Temporal_local_Activity_execution_cancelled](#local_Activity_execution_cancelled) | Worker |专柜|核心、Go、Java |
+| [Temporal_local_Activity_execution_failed](#local_Activity_execution_failed) | Worker |专柜|核心、Go、Java |
+| [Temporal_local_Activity_execution_latency](#local_Activity_execution_latency) | Worker |直方图|核心、Go、Java |
+| [Temporal_local_Activity_succeeded_endtoend_latency](#local_Activity_succeeded_endtoend_latency) | Worker |直方图|核心、Go、Java |
+| [Temporal_local_Activity_total](#local_Activity_total) | Worker |专柜|核心、Go、Java |
+| [Temporal_long_request](#long_request) |服务客户 |专柜|核心、Go、Java |
+| [Temporal_long_request_failure](#long_request_failure) |服务客户 |专柜|核心、Go、Java |
+| [Temporal_long_request_latency](#long_request_latency) |服务客户 |直方图|核心、Go、Java |
+| [Temporal_Nexus_poll_no_task](#Nexus_poll_no_task) | Worker |专柜|核心、Go、Java |
+| [Temporal_Nexus_task_Schedule_to_start_latency](#Nexus_task_Schedule_to_start_latency) | Worker |直方图|核心、Go、Java |
+| [Temporal_Nexus_task_execution_failed](#Nexus_task_execution_failed) | Worker |专柜|核心、Go、Java |
+| [Temporal_Nexus_task_execution_latency](#Nexus_task_execution_latency) | Worker |直方图|核心、Go、Java |
+| [Temporal_Nexus_task_endtoend_latency](#Nexus_task_endtoend_latency) | Worker |直方图|核心、Go、Java |
+| [Temporal_num_pollers](#num_pollers) | Worker |仪表|核心，开始 |
+| [Temporal_poller_start](#poller_start) | Worker |专柜|去爪哇 |
+| [Temporal_请求]（#请求）|服务客户 |专柜|核心、Go、Java |
+| [Temporal_request_failure]（#request_failure）|服务客户 |专柜|核心、Go、Java |
+| [Temporal_request_latency](#request_latency) |服务客户 |直方图|核心、Go、Java |
+| [Temporal_resource_slots_mem_usage](#resource_slots_cpu_usage) | Worker |仪表|核心，Java |
+| [Temporal_resource_slots_cpu_usage](#resource_slots_mem_usage) | Worker |仪表|核心，Java |
+| [Temporal_sticky_cache_hit](#sticky_cache_hit) | Worker |专柜|核心、Go、Java |
+| [Temporal_sticky_cache_miss](#sticky_cache_miss) | Worker |专柜|核心、Go、Java |
+| [Temporal_sticky_cache_size]（#sticky_cache_size）| Worker |仪表|核心、Go、Java |
+| [Temporal_sticky_cache_total_forced_eviction](#sticky_cache_total_forced_eviction) | Worker |专柜|去爪哇 |
+| [Temporal_未注册_Activity_调用](#unregistered_Activity_调用) | Worker |专柜|去 |
+| [Temporal_Worker_start](#Worker_start) | Worker |专柜|核心、Go、Java |
+| [Temporal_Worker_task_slots_available](#Worker_task_slots_available) | Worker |仪表|核心、Go、Java |
+| [Temporal_Worker_task_slots_used](#Worker_task_slots_used) | Worker |仪表|核心、Go、Java |
+| [Temporal_Workflow_active_thread_count](#Workflow_active_thread_count) | Worker |仪表|爪哇 |
+| [Temporal_Workflow_cancelled](#Workflow_cancelled) | Worker |专柜|核心、Go、Java |
+| [Temporal_Workflow_completed](#Workflow_completed) | Worker |专柜|核心、Go、Java |
+| [Temporal_Workflow_continue_as_new](#Workflow_continue_as_new) | Worker |专柜|核心、Go、Java |
+| [Temporal_Workflow_endtoend_latency](#Workflow_endtoend_latency) | Worker |直方图|核心、Go、Java |
+| [Temporal_Workflow_failed](#Workflow_failed) | Worker |专柜|核心、Go、Java |
+| [Temporal_Workflow_task_execution_failed](#Workflow_task_execution_failed) | Worker |专柜|核心、Go、Java |
+| [Temporal_Workflow_task_execution_latency](#Workflow_task_execution_latency) | Worker |直方图|核心、Go、Java |
+| [Temporal_Workflow_task_queue_poll_empty](#Workflow_task_queue_poll_empty) | Worker |专柜|核心、Go、Java |
+| [Temporal_Workflow_task_queue_poll_succeed](#Workflow_task_queue_poll_succeed) | Worker |专柜|核心、Go、Java |
+| [Temporal_Workflow_task_replay_latency](#Workflow_task_replay_latency) | Worker |直方图|核心、Go、Java |
+| [Temporal_Workflow_task_Schedule_to_start_latency](#Workflow_task_Schedule_to_start_latency) | Worker |直方图|核心、Go、Java |
+
+### Activity_execution_cancelled
+
+Activity 执行被取消。
+
+- 类型：柜台
+- 适用于：Java
+- 标签：`Activity_type`、`Namespace`、`task_queue`
+
+### Activity_execution_failed
+
+Activity 执行失败。
+这不包括 Go 和 Java SDK 中的本地 Activity 故障（请参阅 [local_Activity_execution_failed](#local_Activity_execution_failed)）。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Activity_type`、`Namespace`、`task_queue`
+
+### Activity_execution_latency
+
+完成 Activity 执行的时间，从生成 Activity 任务的时间到语言 SDK 响应完成（失败或成功）的时间。
+
+- 类型：直方图
+- 适用于：Core、Go、Java
+- 标签：`Activity_type`、`Namespace`、`task_queue`
+
+### Activity_poll_no_task
+
+Activity Worker 对 Activity 任务的轮询超时，并且没有可从 Task Queue 中选择的 Activity 任务。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`
+
+### Activity_Schedule_to_start_latency
+
+Activity 任务的 Schedule-To-Start 时间（以秒为单位）。
+当生成 Activity 执行时，可以设置 [Schedule-To-Start Timeout](/encyclopedia/Detecting-Activity-failures#Schedule-to-start-timeout)。
+此指标对于确保及时从队列中处理 Activity 任务非常有用。一些 SDK 可能包括
+“Activity_type”标签，但指标不应因类型而异，因为它不会影响任务拉取的速率
+从队列中。
+
+- 类型：直方图
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`
+
+### Activity_succeed_endtoend_latency
+
+成功完成 Activity 执行（从执行 Scheduled 到完成）的总延迟。
+异步 Activity 完成情况不会记录此指标。
+
+- 类型：直方图
+- 适用于：Core、Go、Java
+- 标签：`Activity_type`、`Namespace`、`task_queue`
+
+### Activity_task_error
+
+Activity 任务处理或执行期间发生内部错误或紧急情况。
+
+- 类型：柜台
+- 适用于：去，
+- 标签：`Activity_type`、`Namespace`、`task_queue`、`Workflow_type`
+
+### 损坏_Signals
+
+无法反序列化负载的 Signal 数量。
+
+- 类型：柜台
+- 适用于：Go、Java
+- 标签：`Namespace`、`task_queue`、`Workflow_type`
+
+### local_Activity_execution_cancelled
+
+本地 Activity 执行被取消。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Activity_type`、`Namespace`、`task_queue`
+
+### local_Activity_execution_failed
+
+本地 Activity 执行失败。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Activity_type`、`Namespace`、`task_queue`
+
+### local_Activity_execution_latency
+
+完成本地 Activity 执行的时间，从生成第一个 Activity 任务到 SDK 响应执行完成的时间。
+
+- 类型：直方图
+- 适用于：Core、Go、Java
+- 标签：`Activity_type`、`Namespace`、`task_queue`
+
+### local_Activity_succeeded_endtoend_latency
+
+成功完成本地 Activity 执行的总延迟（从 Schedule 到完成）。
+
+- 类型：直方图
+- 适用于：Core、Go、Java
+- 标签：`Activity_type`、`Namespace`、`task_queue`
+
+### local_Activity_total
+
+[本地 Activity 执行](/local-Activity) 总数。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Activity_type`、`Namespace`、`task_queue`
+
+### 长请求
+
+Temporal CLIent 发出了 RPC 长轮询请求。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`操作`
+
+### 长请求失败
+
+Temporal CLIent 发出失败的 RPC 长轮询请求。
+此数字包含在长轮询 RPC 请求的“long_request”总数计数器中。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`操作`
+
+### 长请求延迟
+
+Temporal CLIent gRPC 长轮询请求的延迟。
+
+- 类型：直方图
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`操作`
+
+### Nexus_poll_no_task
+
+Nexus Worker 对 Nexus 任务的轮询超时，并且没有可从 Task Queue 中选择的 Nexus 任务。
+
+- 类型：柜台
+- 适用于：Go、Java
+- 标签：`Namespace`、`task_queue`
+
+### Nexus_task_Schedule_to_start_latency
+
+Nexus 任务的 Schedule-To-Start 时间（以秒为单位）。 Schedule时间取自相应请求的时间
+当 SDK 开始处理任务时，点击前端服务。
+
+该时间受到处理此请求时提供给前端的“Request-Timeout”标头的限制。
+
+- 类型：直方图
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`
+
+### Nexus_task_execution_failed
+
+处理 Nexus 任务导致错误。这包括从用户处理程序返回的任何错误和意外的错误
+SDK 中的内部错误。
+
+- 类型：柜台
+- 适用于：Go、Java
+- 标签：“Namespace”、“任务队列”、“Nexus_服务”、“Nexus_操作”、“失败原因”
+
+`failure_reason` 标签的有效值：
+
+- `internal_sdk_error`：处理 Nexus 任务时 SDK 中出现意外内部错误。表示一个
+  SDK 中的错误。
+- `handler_error_{TYPE}`：用户处理程序代码返回预定义错误，如 [Nexus 规范](https://github.com/Nexus-rpc/api/blob/main/SPEC.md#predefined-handler-errors) 中指定。
+  如果处理程序返回意外错误，则 TYPE 将设置为“INTERNAL”。
+- `timeout`：用户处理程序代码在请求超时内未返回。
+- `operation_failed`：用户处理程序代码指示操作失败。在 Go 中，这映射到
+  具有“失败”状态的“UnsuccessfulOperationError”。
+- `operation_canceled`：用户处理程序代码已指示操作已完成并已取消。在 Go 中，这个映射
+  到具有“已取消”状态的“UnsuccessfulOperationError”。
+
+### Nexus_task_execution_latency
+
+完成 Nexus 任务的时间，从 SDK 中开始 Nexus 任务处理的时间到用户处理程序的时间
+完成。
+
+- 类型：直方图
+- 适用于：Go、Java
+- 标签：“Namespace”、“任务队列”、“Nexus_服务”、“Nexus_操作”
+
+### Nexus_task_endtoend_latency
+
+Nexus 任务从相应请求到达前端到 SDK 获取后的总延迟
+服务器确认任务完成。
+
+- 类型：直方图
+- 适用于：Go、Java
+- 标签：“Namespace”、“任务队列”、“Nexus_服务”、“Nexus_操作”
+
+### num_pollers
+
+当前正在轮询的 Worker 实体数量。
+
+类型：仪表
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`poller_type`、`task_queue`
+
+### poller_start
+
+Worker 实体轮询器已启动。
+
+- 类型：柜台
+- 适用于：Go、Java
+- 标签：`Namespace`、`task_queue`
+
+＃＃＃ 要求
+
+Temporal CLIent 发出了 RPC 请求。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`操作`
+
+### 请求失败
+
+Temporal CLIent 发出失败的 RPC 请求。
+此数字包含在 RPC 请求的总“请求”计数器中。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`操作`
+
+### 请求延迟
+
+Temporal CLIent gRPC 请求的延迟。
+
+- 类型：直方图
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`操作`
+
+### 资源槽位CPU使用情况
+
+CPU 使用率是 0 到 100 之间的值。根据基于资源的插槽调整器的感知，如果
+已启用。
+
+类型：仪表
+- 适用于：核心、Java
+
+### 资源槽内存使用情况
+
+内存使用量为 0 到 100 之间的值。根据基于资源的插槽调整器的感知，如果
+已启用。
+
+类型：仪表
+- 适用于：核心、Java
+
+### Sticky_cache_hit
+
+Workflow Task 找到了要运行的缓存 Workflow Execution。
+
+您可以使用多种策略来避免此错误：
+
+### Sticky_cache_miss
+
+Workflow Task 找不到可运行的缓存 Workflow Execution。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`
+
+### 粘性缓存大小
+
+当前缓存大小，以 Workflow Execution 的数量表示。
+
+类型：仪表
+- 适用于：Core、Go、Java
+- 标签：“Namespace”（TypeScript、Java）、“task_queue”（TypeScript）
+
+### Sticky_cache_total_forced_eviction
+
+Workflow Execution 已被故意从缓存中强制取出。
+
+- 类型：柜台
+- 适用于：Go、Java
+- 标签：`Namespace`、`task_queue`
+
+### 未注册_Activity_调用
+
+生成 Activity 执行的请求未在 Worker 中注册。
+
+- 类型：柜台
+- 适用于：去，
+- 标签：`Activity_type`、`Namespace`、`task_queue`、`Workflow_type`
+
+### Worker_start
+
+Worker 实体已注册、创建或启动。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`任务队列`、`Worker_type`
+
+### Worker_task_slots_available
+
+当前可用的 Workflow、Activity、本地 Activity 或 Nexus 任务执行槽的总数。
+使用“Worker_type”键来区分执行槽。
+Worker 类型指定执行某些任务的能力。
+例如，Workflow Worker 执行 Workflow Task，Activity Worker 执行 Activity 任务，等等。
+
+类型：仪表
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`任务队列`、`Worker_type`
+
+### Worker_task_slots_used
+
+当前使用的 Workflow、Activity、本地 Activity 或 Nexus 任务执行槽的总数。
+使用“Worker_type”键来区分执行槽。
+Worker 类型指定执行某些任务的能力。
+例如，Workflow Worker 执行 Workflow Task，Activity Worker 执行 Activity 任务，等等。
+
+类型：仪表
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`任务队列`、`Worker_type`
+
+### Workflow_active_thread_count
+
+Worker 进程中的 Workflow 线程总数。
+
+类型：仪表
+- 适用于：Java
+
+### Workflow_cancelled
+
+Workflow Execution 由于取消请求而结束。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`、`Workflow_type`
+
+### Workflow_completed
+
+|领域|描述 |
+| ：------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| XPROT029Xd_event_id | XPROT029Xd_event_id |此任务对应的 [XPROT039XOperationXPROT029Xd](#XPROT039XoperationXPROT029Xd) 事件的 ID。                                                 |
+|操作令牌 | XPROT039X 处理程序在响应 StartOperation 请求时返回的操作令牌。该令牌在取消操作时使用。 |
+|请求 ID |在 XPROT029X 时间分配的请求 ID。                                                                                                        |
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`、`Workflow_type`
+
+### Workflow_continue_as_new
+
+Workflow 以 Continue-As-New 结束。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`、`Workflow_type`
+
+### Workflow_endtoend_latency
+
+单次 Workflow 运行从 Schedule 到完成的 Workflow Execution 总时间。 （重试的 Workflow Execution 是单独的运行。）
+
+- 类型：直方图
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`、`Workflow_type`
+
+### Workflow_失败
+
+Workflow Execution 失败。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`、`Workflow_type`
+
+### Workflow_task_execution_failed
+
+Workflow Task 执行失败。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`、`Workflow_type`、`failure_reason`
+
+`failure_reason` 标签的有效值：
+
+- `NonDeterminismError`：Workflow Task 由于非确定性错误而失败。
+- `WorkflowError`：Workflow Task 由于任何其他原因而失败。
+
+### Workflow_task_execution_latency
+
+Workflow Task 执行时间。
+
+- 类型：直方图
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`、`Workflow_type`
+
+### Workflow_task_queue_poll_empty
+
+Workflow Worker 轮询 Task Queue 并超时，未获取 Workflow Task。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`
+
+### Workflow_task_queue_poll_succeed
+
+Workflow Worker 轮询 Task Queue 并成功拾取 Workflow Task。
+
+- 类型：柜台
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`
+
+### Workflow_task_replay_latency
+
+是时候重播 Workflow Task 了。
+
+- 类型：直方图
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`、`Workflow_type`
+
+### Workflow_task_Schedule_to_start_latency
+
+Workflow Task 的 Schedule 启动时间。
+
+- 类型：直方图
+- 适用于：Core、Go、Java
+- 标签：`Namespace`、`task_queue`

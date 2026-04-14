@@ -1,8 +1,8 @@
 ---
 id: basics
-title: Workflow basics - .NET SDK
-sidebar_label: Workflow basics
-description: This section explains Workflow basics with the .NET SDK
+title: "Workflow 基础知识 - .NET SDK"
+sidebar_label: "Workflow 基础知识"
+description: "本节介绍 Workflow 的基础知识和 .NET SDK"
 toc_max_heading_level: 4
 keywords:
   - .NET SDK
@@ -11,15 +11,16 @@ tags:
   - Temporal SDKs
 ---
 
-## Develop a Workflow {#develop-workflow}
+<a id="develop-workflow"></a>
+## 开发 Workflow {#develop-workflow}
 
-Workflows are the fundamental unit of a Temporal Application, and it all starts with the development of a [Workflow Definition](/workflow-definition).
+Workflow 是 Temporal 应用程序的基本单元，这一切都始于 [Workflow Definition](/workflow-definition) 的开发。
 
-In the Temporal .NET SDK programming model, Workflows are defined as classes.
+在 Temporal .NET SDK 编程模型中，Workflow 被定义为类。
 
-Specify the `[Workflow]` attribute from the `Temporalio.Workflows` namespace on the Workflow class to identify a Workflow.
+指定 Workflow 类上的 `Temporalio.Workflows` Namespace 中的 `[Workflow]` 属性来标识 Workflow。
 
-Use the `[WorkflowRun]` attribute to mark the entry point method to be invoked. This must be set on one asynchronous method defined on the same class as `[Workflow]`.
+使用 `[WorkflowRun]` 属性来标记要调用的入口点方法。必须在与 `[Workflow]` 相同的类上定义的一个异步方法上设置此项。
 
 ```csharp
 using Temporalio.Workflows;
@@ -38,90 +39,92 @@ public class MyWorkflow
 }
 ```
 
-Temporal Workflows may have any number of custom parameters.
-However, we strongly recommend that objects are used as parameters, so that the object's individual fields may be altered without breaking the signature of the Workflow.
-All Workflow Definition parameters must be serializable.
+Temporal Workflow 可以具有任意数量的自定义参数。
+但是，我们强烈建议将对象用作参数，以便可以在不破坏 Workflow 签名的情况下更改对象的各个字段。
+所有 Workflow Definition 参数都必须可序列化。
 
-## Workflow logic requirements {#workflow-logic-requirements}
+<a id="workflow-logic-requirements"></a>
+## Workflow 逻辑要求 {#workflow-logic-requirements}
 
-Workflow logic is constrained by [deterministic execution requirements](/workflow-definition#deterministic-constraints).
-Therefore, each language is limited to the use of certain idiomatic techniques.
-However, each Temporal SDK provides a set of APIs that can be used inside your Workflow to interact with external (to the Workflow) application code.
+Workflow 逻辑受 [确定性执行要求](/workflow-definition#deterministic-constraints) 约束。
+因此，每种语言都仅限于使用某些惯用技术。
+但是，每个 Temporal SDK 都提供了一组 API，可在 Workflow 内部使用这些 API 来与外部（对于 Workflow）应用程序代码进行交互。
 
-This means there are several things Workflows cannot do such as:
+这意味着 Workflows 无法执行多项操作，例如：
 
-- Perform IO (network, disk, stdio, etc)
-- Access/alter external mutable state
-- Do any threading
-- Do anything using the system clock (e.g. `DateTime.Now`)
-  - This includes .NET timers (e.g. `Task.Delay` or `Thread.Sleep`)
-- Make any random calls
-- Make any not-guaranteed-deterministic calls (e.g. iterating over a dictionary)
+- 执行 IO（网络、磁盘、stdio 等）
+- 访问/改变外部可变状态
+- 进行任何线程处理
+- 使用系统时钟执行任何操作（例如 `DateTime.Now`）
+  - 这包括 .NET Timer（例如 `Task.Delay` 或 `Thread.Sleep`）
+- 随机拨打电话
+- 进行任何非保证确定性调用（例如迭代字典）
 
-### .NET Task Determinism
+<a id="net-task-determinism"></a>
+### .NET 任务确定性 {#net-task-determinism}
 
-Some calls in .NET do unsuspecting non-deterministic things and are easy to accidentally use.
-This is especially true with `Task`s.
-Temporal requires that the deterministic `TaskScheduler.Current` is used, but many .NET async calls will use `TaskScheduler.Default` implicitly (and some analyzers even encourage this).
-Here are some known gotchas to avoid with .NET tasks inside of Workflows:
+.NET 中的某些调用会毫无防备地执行不确定性的操作，并且很容易被意外使用。
+对于 `Task` 来说尤其如此。
+Temporal 要求使用确定性 `TaskScheduler.Current`，但许多 .NET 异步调用将隐式使用 `TaskScheduler.Default`（某些分析器甚至鼓励这样做）。
+以下是 Workflow 内的 .NET 任务需要避免的一些已知问题：
 
-- Do not use `Task.Run` - this uses the default scheduler and puts work on the thread pool.
-  - Use `Workflow.RunTaskAsync` instead.
-  - Can also use `Task.Factory.StartNew` with current scheduler or instantiate the `Task` and run `Task.Start` on it.
-- Do not use `Task.ConfigureAwait(false)` - this will not use the current context.
-  - If you must use `Task.ConfigureAwait`, use `Task.ConfigureAwait(true)`.
-  - There is no significant performance benefit to `Task.ConfigureAwait` in workflows anyways due to how the scheduler works.
-- Do not use anything that defaults to the default task scheduler.
-- Do not use `Task.Delay`, `Task.Wait`, timeout-based `CancellationTokenSource`, or anything that uses .NET built-in timers.
-  - `Workflow.DelayAsync`, `Workflow.WaitConditionAsync`, or non-timeout-based cancellation token source is suggested.
-- Do not use `Task.WhenAny`.
-  - Use `Workflow.WhenAnyAsync` instead.
-  - Technically this only applies to an enumerable set of tasks with results or more than 2 tasks with results. Other
-    uses are safe. See [this issue](https://github.com/dotnet/runtime/issues/87481).
-- Do not use `Task.WhenAll`
-  - Use `Workflow.WhenAllAsync` instead.
-  - Technically `Task.WhenAll` is currently deterministic in .NET and safe, but it is better to use the wrapper to be
-    sure.
-- Do not use `CancellationTokenSource.CancelAsync`.
-  - Use `CancellationTokenSource.Cancel` instead.
-- Do not use `System.Threading.Semaphore` or `System.Threading.SemaphoreSlim` or `System.Threading.Mutex`.
-  - Use `Temporalio.Workflows.Semaphore` or `Temporalio.Workflows.Mutex` instead.
-  - _Technically_ `SemaphoreSlim` does work if only the async form of `WaitAsync` is used without no timeouts and
-    `Release` is used. But anything else can deadlock the workflow and its use is cumbersome since it must be disposed.
-- Be wary of additional libraries' implicit use of the default scheduler.
-  - For example, while there are articles for `Dataflow` about [using a specific scheduler](https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/how-to-specify-a-task-scheduler-in-a-dataflow-block), there are hidden implicit uses of `TaskScheduler.Default`. For example, see [this bug](https://github.com/dotnet/runtime/issues/83159).
+- 不要使用 `Task.Run` - 这使用默认的 Scheduler 并将工作放在线程池上。
+  - 使用 `Workflow.RunTaskAsync` 代替。
+  - 还可以将 `Task.Factory.StartNew` 与当前的 Scheduler 一起使用，或实例化 `Task` 并在其上运行 `Task.Start`。
+- 不要使用 `Task.ConfigureAwait(false)` - 这不会使用当前上下文。
+  - 如果必须使用 `Task.ConfigureAwait`，请使用 `Task.ConfigureAwait(true)`。
+  - 无论如何，由于 Scheduler 的工作原理，Workflow 中的 `Task.ConfigureAwait` 没有显着的性能优势。
+- 不要使用默认任务 Scheduler 的任何内容。
+- 请勿使用 `Task.Delay`、`Task.Wait`、基于超时的 `CancellationTokenSource` 或任何使用 .NET 内置 Timer 的内容。
+  - 建议使用 `Workflow.DelayAsync`、`Workflow.WaitConditionAsync` 或非基于超时的取消令牌源。
+- 请勿使用 `Task.WhenAny`。
+  - 使用 `Workflow.WhenAnyAsync` 代替。
+  - 从技术上讲，这仅适用于具有结果的可枚举任务集或具有结果的 2 个以上任务。其他
+    使用是安全的。参见 [本期](https://github.com/dotnet/runtime/issues/87481)。
+- 请勿使用 `Task.WhenAll`
+  - 请改用 `Workflow.WhenAllAsync`。
+  - 从技术上讲，`Task.WhenAll` 目前在 .NET 中是确定性的并且是安全的，但最好使用包装器
+    当然。
+- 请勿使用 `CancellationTokenSource.CancelAsync`。
+  - 使用 `CancellationTokenSource.Cancel` 代替。
+- 请勿使用 `System.Threading.Semaphore` 或 `System.Threading.SemaphoreSlim` 或 `System.Threading.Mutex`。
+  - 请改用 `Temporalio.Workflows.Semaphore` 或 `Temporalio.Workflows.Mutex`。
+  - _技术上_如果仅使用 `WaitAsync` 的异步形式而没有超时，则 `SemaphoreSlim` 确实可以工作，并且
+    使用`Release`。但任何其他东西都可能使 Workflow 陷入僵局，而且它的使用很麻烦，因为它必须被丢弃。
+- 警惕其他库对默认 Scheduler 的隐式使用。
+  - 例如，虽然有关于 [使用特定的 Scheduler](https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/how-to-specify-a-task-scheduler-in-a-dataflow-block) 的 `Dataflow` 文章，但 `TaskScheduler.Default` 存在隐藏的隐含用途。例如，请参见 [这个错误](https://github.com/dotnet/runtime/issues/83159)。
 
-In order to help catch wrong scheduler use, by default the Temporal .NET SDK adds an event source listener for info-level task events.
-While this technically receives events from all uses of tasks in the process, we make sure to ignore anything that is not running in a Workflow in a high performant way (basically one thread local check).
-For code that does run in a Workflow and accidentally starts a task in another scheduler, an `InvalidWorkflowOperationException` will be thrown which "pauses" the Workflow (fails the Workflow Task which continually retries until the code is fixed).
-This is unfortunately a runtime-only check, but can help catch mistakes early. If this needs to be turned off for any reason, set `DisableWorkflowTracingEventListener` to `true` in Worker options.
+为了帮助捕获错误的 Scheduler 使用，默认情况下，Temporal .NET SDK 为信息级任务事件添加事件源侦听器。
+虽然从技术上讲，这从进程中所有任务的使用中接收事件，但我们确保以高性能方式忽略未在 Workflow 中运行的任何内容（基本上是一个线程本地检查）。
+对于在 Workflow 中运行并意外在另一个 Scheduler 中启动任务的代码，将抛出一个 `InvalidWorkflowOperationException`，它“暂停”Workflow（使 Workflow 任务失败，该任务会不断重试，直到代码修复）。
+不幸的是，这只是运行时检查，但可以帮助及早发现错误。如果出于任何原因需要关闭此功能，请在 Worker 选项中将 `DisableWorkflowTracingEventListener` 设置为 `true`。
 
-In the near future for modern .NET versions we hope to use the
-[new `TimeProvider` API](https://github.com/dotnet/runtime/issues/36617) which will allow us to control current time and
-timers.
+在不久的将来，对于现代 .NET 版本，我们希望使用
+[新的 `TimeProvider` API](https://github.com/dotnet/runtime/issues/36617) 这将允许我们控制当前时间和
+Timer。
 
 ### Workflow .editorconfig
 
-Since Workflow code follows some different logic rules than regular C# code, there are some common analyzer rules that developers may want to disable.
-To ensure these are only disabled for Workflows, current recommendation is to use the `.workflow.cs` extension for files containing Workflows.
+由于 Workflow 代码遵循一些与常规 C# 代码不同的逻辑规则，因此开发人员可能希望禁用一些常见的分析器规则。
+为了确保仅对 Workflow 禁用这些功能，当前建议对包含 Workflow 的文件使用 `.Workflow.cs` 扩展名。
 
-Here are the rules to disable:
+以下是禁用规则：
 
-- [CA1024](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1024) - This encourages properties instead of methods that look like getters. However for reflection reasons we cannot use property getters for queries, so it is very normal to have
+- [CA1024](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1024) - 这鼓励属性而不是看起来像吸气剂的方法。然而，由于反射的原因，我们不能使用属性 getter 进行查询，因此使用属性 getter 是很正常的
 
   ```csharp
   [WorkflowQuery]
   public string GetSomeThing() => someThing;
   ```
 
-- [CA1822](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1822) - This encourages static methods when methods don't access instance state. Workflows however use instance methods for run, Signals, Queries, or Updates even if they could be static.
-- [CA2007](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2007) - This encourages users to use `ConfigureAwait` instead of directly waiting on a task. But in Workflows, there is no benefit to this and it just adds noise (and if used, needs to be `ConfigureAwait(true)` not `ConfigureAwait(false)`).
-- [CA2008](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2008) - This encourages users to always apply an explicit task scheduler because the default of `TaskScheduler.Current` is bad. But for Workflows, the default of `TaskScheduler.Current` is good/required.
-- [CA5394](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca5394) - This discourages use of non-crypto random. But deterministic Workflows, via `Workflow.Random` intentionally provide a deterministic non-crypto random instance.
-- `CS1998` - This discourages use of `async` on async methods that don't `await`. But Workflows handlers like Signals are often easier to write in one-line form this way, e.g. `public async Task SignalSomethingAsync(string value) => this.value = value;`.
-- [VSTHRD105](https://github.com/microsoft/vs-threading/blob/main/doc/analyzers/VSTHRD105.md) - This is similar to `CA2008` above in that use of implicit current scheduler is discouraged. That does not apply to Workflows where it is encouraged/required.
+- [CA1822](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1822) - 当方法不访问实例状态时，这鼓励静态方法。然而，Workflow 使用运行、Signal、查询或 Update 的实例方法，即使它们可以是静态的。
+- [CA2007](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2007) - 这鼓励用户使用 `ConfigureAwait` 而不是直接等待任务。但在 Workflow 中，这样做没有任何好处，只会增加噪音（如果使用，需要是 `ConfigureAwait(true)` 而不是 `ConfigureAwait(false)`）。
+- [CA2008](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2008) - 这鼓励用户始终应用显式任务 Scheduler，因为 `TaskScheduler.Current` 的默认值很糟糕。但对于 Workflow，默认的 `TaskScheduler.Current` 是好的/必需的。
+- [CA5394](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca5394) - 这不鼓励使用非加密随机数。但是确定性的 Workflows 通过 `Workflow.Random` 有意提供确定性的非加密随机实例。
+- `CS1998` - 这会阻止在不使用 `await` 的异步方法上使用 `async`。但是像 Signals 这样的 Workflows 处理程序通常更容易以这种方式以一行形式编写，例如`public async Task SignalSomethingAsync(string value) => this.value = value;`。
+- [VSTHRD105](https://github.com/microsoft/vs-threading/blob/main/doc/analyzers/VSTHRD105.md) - 这与上面的 `CA2008` 类似，不鼓励使用隐式电流 Scheduler。这不适用于鼓励/要求的 Workflow。
 
-Here is the `.editorconfig` snippet for the above which may frequently change as more analyzers need to be adjusted:
+以下是上述内容的 `.editorconfig` 片段，随着需要调整更多分析器，该片段可能会经常更改：
 
 ```ini
 ##### Configuration specific for Temporal workflows #####
@@ -149,13 +152,14 @@ dotnet_diagnostic.CS1998.severity = none
 dotnet_diagnostic.VSTHRD105.severity = none
 ```
 
-### Customize Workflow Type {#workflow-type}
+<a id="workflow-type"></a>
+### 自定义 Workflow 类型 {#workflow-type}
 
-Workflows have a Type that are referred to as the Workflow name.
+Workflow 具有称为 Workflow 名称的类型。
 
-The following examples demonstrate how to set a custom name for your Workflow Type.
+以下示例演示如何为 Workflow 类型设置自定义名称。
 
-You can customize the Workflow name with a custom name in the attribute. For example, `[Workflow("my-workflow-name")]`. If the name parameter is not specified, the Workflow name defaults to the unqualified class name.
+您可以使用属性中的自定义名称来自定义 Workflow 名称。例如，`[Workflow("my-Workflow-name")]`。如果未指定 name 参数，则 Workflow 名称默认为非限定类名称。
 
 ```csharp
 using Temporalio.Workflows;

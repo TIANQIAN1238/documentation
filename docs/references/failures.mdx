@@ -1,8 +1,8 @@
 ---
 id: failures
-title: Temporal Failures reference
-sidebar_label: Failures
-description: A Failure in Temporal represents different types of errors in the system, categorized and managed uniquely within SDKs and protobuf messages, impacting Workflow and Activity operations.
+title: "Temporal 故障参考"
+sidebar_label: "失败"
+description: "Temporal 中的故障代表系统中不同类型的错误，在 SDK 和 Protobuf 消息中进行唯一分类和管理，影响 Workflow 和 Activity 操作。"
 toc_max_heading_level: 4
 keywords:
   - explanation
@@ -14,135 +14,147 @@ tags:
   - Timeouts
 ---
 
-A Failure is Temporal's representation of various types of errors that occur in the system.
+故障是 Temporal 系统中发生的各种类型错误的表示。
 
-There are different types of Failures, and each has a different type in the SDKs and different information in the protobuf messages (which are used to communicate with the Temporal Service and appear in [Event History](/workflow-execution/event#event-history)).
+故障有不同类型，每种故障在 SDK 中都有不同的类型，在 Protobuf 消息（用于与 Temporal 服务通信并出现在 [Event History](/workflow-execution/event#event-history) 中）中具有不同的信息。
 
-## Temporal Failure
+<a id="temporal-failure"></a>
+## Temporal 失败 {#temporal-failure}
 
-Most SDKs have a base class that the other Failures extend:
+大多数 SDK 都有一个其他 Failures 扩展的基类：
 
-- TypeScript: [TemporalFailure](https://typescript.temporal.io/api/classes/common.TemporalFailure)
-- Java: [TemporalFailure](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/TemporalFailure.html)
-- Python: [FailureError](https://python.temporal.io/temporalio.exceptions.FailureError.html)
-- PHP: [TemporalFailure](https://php.temporal.io/classes/Temporal-Exception-Failure-TemporalFailure.html)
+- 打字稿：[Temporal失败](https://typescript.temporal.io/api/classes/common.TemporalFailure)
+- 爪哇：[Temporal失败](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/temporalFailure.html)
+- Python：[失败错误](https://python.temporal.io/temporalio.exceptions.FailureError.html)
+- PHP：[Temporal失败](https://php.temporal.io/classes/temporal-Exception-Failure-TemporalFailure.html)
 
-The base [Failure proto message](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure) has these fields:
+基础 [失败原消息](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure) 具有以下字段：
 
 - `string message`
 - `string stack_trace`
-- `string source`: The SDK this Failure originated in (for example, `"TypeScriptSDK"`). In some SDKs, this field is used to rehydrate the call stack into an exception object.
-- `Failure cause`: The `Failure` message of the cause of this Failure (if applicable).
-- `Payload encoded_attributes`: Contains the encoded `message` and `stack_trace` fields when using a [Failure Converter](/failure-converter).
+- `string source`：此故障源自的 SDK（例如，`"TypeScriptSDK"`）。在某些 SDK 中，此字段用于将调用堆栈重新水化为异常对象。
+- `Failure cause`：此故障原因的 `Failure` 消息（如果适用）。
+- `Payload encoded_attributes`：使用 [故障转换器](/failure-converter) 时包含编码的 `message` 和 `stack_trace` 字段。
 
-## Application Failure
+<a id="application-failure"></a>
+## 应用程序失败 {#application-failure}
 
-Workflow, and Activity, and Nexus Operation code use Application Failures to communicate application-specific failures that happen.
-This is the only type of Temporal Failure created and thrown by user code.
+Workflow、Activity 和 Nexus 操作代码使用应用程序故障来传达发生的特定于应用程序的故障。
+这是由用户代码创建和抛出的唯一类型的 Temporal 故障。
 
-- TypeScript: [ApplicationFailure](https://typescript.temporal.io/api/classes/common.ApplicationFailure)
-- Java: [ApplicationFailure](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/ApplicationFailure.html)
-- Go: [ApplicationError](https://pkg.go.dev/go.temporal.io/sdk/temporal#ApplicationError)
-- Python: [ApplicationError](https://python.temporal.io/temporalio.exceptions.ApplicationError.html)
-- PHP: [ApplicationFailure](https://php.temporal.io/classes/Temporal-Exception-Failure-ApplicationFailure.html)
-- Proto: [ApplicationFailureInfo](https://api-docs.temporal.io/#temporal.api.failure.v1.ApplicationFailureInfo) and [Failure](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
+- 打字稿：[应用失败](https://typescript.temporal.io/api/classes/common.ApplicationFailure)
+- 爪哇：[应用失败](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/ApplicationFailure.html)
+- 转到：[应用程序错误](https://pkg.go.dev/go.temporal.io/sdk/temporal#ApplicationError)
+- 蟒蛇：[应用程序错误](https://python.temporal.io/temporalio.exceptions.ApplicationError.html)
+- PHP：[应用失败](https://php.temporal.io/classes/temporal-Exception-Failure-ApplicationFailure.html)
+- 原型：[应用程序失败信息](https://api-docs.temporal.io/#temporal.api.failure.v1.ApplicationFailureInfo) 和 [失败](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
 
-### Errors in Workflows
+<a id="errors-in-workflows"></a>
+### Workflow 中的错误 {#errors-in-workflows}
 
-An error in a Workflow can cause either a **Workflow Task Failure** (the Task will be retried) or a **Workflow Execution Failure** (the Workflow is marked as failed).
+Workflow 中的错误可能导致 **Workflow 任务失败**（将重试该任务）或 **Workflow Execution 失败**（Workflow 被标记为失败）。
 
-Only Workflow exceptions that are Temporal Failures cause the Workflow Execution to fail; all other exceptions cause the Workflow Task to fail and be retried (in Go, any error returned from the Workflow fails the Workflow Execution, and a panic fails the Workflow Task).
-Most types of Temporal Failures are raised by the Temporal Service, like a [Cancelled Failure](#cancelled-failure) when the Workflow is Cancelled or an [Activity Failure](#activity-failure) when an Activity fails.
-In contrast, you can explicitly fail the Workflow Execution by throwing an Application Failure (returning any error in Go) in Workflow Definition code.
+只有 Workflow 异常即 Temporal Failures 才会导致 Workflow Execution 失败；所有其他异常都会导致 Workflow 任务失败并重试（在 Go 中，从 Workflow 返回的任何错误都会导致 Workflow Execution 失败，并且恐慌会导致 Workflow 任务失败）。
+大多数类型的 Temporal 故障都是由 Temporal 服务引发的，例如取消 Workflow 时的 [取消失败](#cancelled-failure) 或 Activity 失败时的 [Activity 故障](#activity-failure)。
+相反，您可以通过在 Workflow Definition 代码中抛出应用程序失败（返回 Go 中的任何错误）来显式使 Workflow Execution 失败。
 
-#### Workflow Task Failures
+<a id="workflow-task-failures"></a>
+#### Workflow 任务失败 {#workflow-task-failures}
 
-A **Workflow Task Failure** is an unexpected situation failing to process a Workflow Task.
-This could be triggered by a non-Temporal exception being raised (panicking in Go) in your Workflow code.
-Any exception that does not extend Temporal's `FailureError` exception is considered a Workflow Task Failure.
-These types of failures will cause the Workflow Task to be retried until the
-Workflow Execution Timeout, which is unlimited by default.
+**Workflow 任务失败** 是无法处理 Workflow 任务的意外情况。
+这可能是由 Workflow 代码中引发的非 Temporal 异常（Go 中的恐慌）触发的。
+任何不扩展 Temporal 的 `FailureError` 异常的异常都被视为 Workflow 任务失败。
+这些类型的失败将导致 Workflow 任务重试，直到
+Workflow Execution 超时，默认无限制。
 
-#### Workflow Execution Failures
+<a id="workflow-execution-failures"></a>
+#### Workflow Execution 失败 {#workflow-execution-failures}
 
-An `ApplicationError`, an extension of `FailureError`, can be raised in a Workflow to fail the Workflow Execution.
-Workflow Execution Failures put the Workflow Execution into the "Failed" state and no more attempts will be made in progressing this execution.
-If you are creating custom exceptions you would need to extend the [`ApplicationError`](https://docs.temporal.io/references/failures#application-failure) class—a child class of [`FailureError`](https://docs.temporal.io/references/failures#temporal-failure).
+`ApplicationError`（`FailureError` 的扩展）可以在 Workflow 中引发，以使 Workflow Execution 失败。
+Workflow Execution 失败会将 Workflow Execution 置于“失败”状态，并且不会再尝试执行此执行。
+如果您要创建自定义异常，则需要扩展 [`ApplicationError`](https://docs.temporal.io/references/failures#application-failure) 类（[`FailureError`](https://docs.temporal.io/references/failures#temporal-failure) 的子类）。
 
-### Errors in Activities
+<a id="errors-in-activities"></a>
+### 活动中的错误 {#errors-in-activities}
 
-In Activities, you can either throw an Application Failure or another Error to fail the Activity Task.
-In the latter case, the error is converted to an Application Failure.
-During conversion, the following Application Failure fields are set:
+在活动中，您可以抛出应用程序失败或另一个错误来使 Activity 任务失败。
+在后一种情况下，错误将转换为应用程序故障。
+转换期间，会设置以下应用程序失败字段：
 
-- `type` is set to the error's type name.
-- `message` is set to the error message.
-- `non_retryable` is set to false.
-- `details` are left unset.
-- `cause` is a Failure converted from the error's `cause` property.
-- `next_retry_delay` is left unset.
-- call stack is copied.
+- `type` 设置为错误的类型名称。
+- `message` 设置为错误消息。
+- `non_retryable` 设置为 false。
+- `details` 未设置。
+- `cause` 是从错误的 `cause` 属性转换而来的故障。
+- `next_retry_delay` 未设置。
+- 复制调用堆栈。
 
-When an [Activity Execution](/activity-execution) fails, the Application Failure from the last Activity Task is the `cause` field of the [ActivityFailure](#activity-failure).
-This ActivityFailure is thrown by the Workflow's call to the Activity, and it can be handled in the Workflow Definition.
+当 [Activity 执行](/activity-execution) 失败时，最后一个 Activity 任务的应用程序失败是 [Activity失败](#activity-failure) 的 `cause` 字段。
+这个ActivityFailure是由Workflow调用Activity抛出的，可以在Workflow Definition中处理。
 
-### Errors in Nexus Operations
+<a id="errors-in-nexus-operations"></a>
+### Nexus 操作中的错误 {#errors-in-nexus-operations}
 
-Nexus Operations can end up in completed, failed, canceled, and timed out states.
+Nexus 操作可能会处于已完成、失败、取消和超时状态。
 
-Under the hood, the Nexus Operation machinery breaks up the lifecycle of an Operation into one or more StartOperation requests and completion callbacks, and automatically retries these requests as long they fail with retryable errors.
+在底层，Nexus 操作机制将操作的生命周期分解为一个或多个 StartOperation 请求和完成回调，并在这些请求失败并出现可重试错误时自动重试这些请求。
 
-The Workflow-specified schedule-to-close timeout is enforced by the caller's machinery and is the only way for an Operation to transition to the timed out state.
+Workflow 指定的 Schedule 关闭超时由调用者的机器强制执行，并且是操作转换到超时状态的唯一方法。
 
-Operations can end up in the other three states either when the operation handler returns a synchronous response or error, or when an asynchronous Operation (for example, one backed by a workflow) eventually reaches a terminal state.
+当操作处理程序返回同步响应或错误时，或者当异步操作（例如，由 Workflow 支持的操作）最终达到最终状态时，操作可能会以其他三种状态结束。
 
-A Nexus Operation handler can return either retryable or non-retryable errors to indicate to the caller's Nexus machinery whether to retry a given request.
-Requests that time out before a response is sent to the caller are automatically retried.
+Nexus 操作处理程序可以返回可重试或不可重试的错误，以指示调用者的 Nexus 机器是否重试给定的请求。
+在将响应发送给调用者之前超时的请求将自动重试。
 
-By default, errors are considered retryable, unless specified below:
+默认情况下，错误被认为是可重试的，除非下面指定：
 
-- Non retryable Application Failures
-- Unsuccessful Operation errors that can resolve an operation as either failed or canceled
-- [Handler errors](https://github.com/nexus-rpc/api/blob/main/SPEC.md#predefined-handler-errors) with the following types: `BAD_REQUEST`, `UNAUTHENTICATED`, `UNAUTHORIZED`, `NOT_FOUND`, and `RESOURCE_EXHAUSTED`
+- 不可重试的应用程序失败
+- 不成功的操作错误，可以将操作解决为失败或取消
+- [处理程序错误](https://github.com/nexus-rpc/api/blob/main/SPEC.md#predefined-handler-errors) 具有以下类型：`BAD_REQUEST`、`UNAUTHENTICATED`、`UNAUTHORIZED`、`NOT_FOUND` 和 `RESOURCE_EXHAUSTED`
 
-#### Nexus Operation Task Failures
+<a id="nexus-operation-task-failures"></a>
+#### Nexus 操作任务失败 {#nexus-operation-task-failures}
 
-A Nexus Operation Task Failure is an unexpected situation failing to process a Nexus Operation Task in a handler.
-This could be triggered by throwing an unknown error in your Nexus handler code.
-These types of failures will cause the Nexus Operation Task to be retried.
+Nexus 操作任务失败是指无法在处理程序中处理 Nexus 操作任务的意外情况。
+这可以通过在 Nexus 处理程序代码中引发未知错误来触发。
+这些类型的故障将导致重试 Nexus 操作任务。
 
-#### Nexus Operation Execution Failures
+<a id="nexus-operation-execution-failures"></a>
+#### Nexus 操作执行失败 {#nexus-operation-execution-failures}
 
-A non-retryable Application Failure can be thrown by a Nexus Operation handler to fail the overall Nexus Operation Execution.
-Nexus Operation Execution Failures put the Nexus Operation Execution into the "Failed" state and no more attempts will be made to complete the Nexus Operation.
+Nexus 操作处理程序可能会引发不可重试的应用程序故障，从而导致整个 Nexus 操作执行失败。
+Nexus 操作执行失败会将 Nexus 操作执行置于“失败”状态，并且不会再尝试完成 Nexus 操作。
 
-#### Propagation of Workflow errors
+<a id="propagation-of-workflow-errors"></a>
+#### Workflow 错误的传播 {#propagation-of-workflow-errors}
 
-Application Errors thrown from a Workflow created by a Nexus NewWorkflowRunOperation handler will be automatically propagated to the caller as a non-retryable error and result in a Nexus Operation Execution Failure.
+从 Nexus NewWorkflowRunOperation 处理程序创建的 Workflow 引发的应用程序错误将作为不可重试的错误自动传播到调用方，并导致 Nexus 操作执行失败。
 
-#### Using Failures in a Nexus handler
+<a id="using-failures-in-a-nexus-handler"></a>
+#### 在 Nexus 处理程序中使用失败 {#using-failures-in-a-nexus-handler}
 
-In a Nexus Operation handler, you can throw an Application Failure, a Nexus Error or another Error to fail the individual Nexus Operation Task or fail the overall Nexus Operation Execution.
+在 Nexus 操作处理程序中，您可以引发应用程序故障、Nexus 错误或其他错误，以使单个 Nexus 操作任务失败或使整个 Nexus 操作执行失败。
 
-Unknown errors are converted to a retryable Application Failure. During conversion, the following fields are set on the Application Failure:
+未知错误将转换为可重试的应用程序故障。转换期间，应用程序失败时设置以下字段：
 
-- `non_retryable` is set to false.
-- `type` is set to the error's type name.
-- `message` is set to the error message.
+- `non_retryable` 设置为 false。
+- `type` 设置为错误的类型名称。
+- `message` 设置为错误消息。
 
-#### Retryable failures
+<a id="retryable-failures"></a>
+#### 可重试的失败 {#retryable-failures}
 
-Retryable Nexus Operation Task failures, such as an unknown error, are automatically retried with a built-in Retry Policy.
-When a Nexus Task fails, the caller Workflow records an event attempt failure on the pending Nexus Operation and sets the following fields:
+可重试的 Nexus 操作 任务失败（例如未知错误）可使用内置 Retry Policy 自动重试。
+当 Nexus 任务失败时，调用者 Workflow 会记录挂起的 Nexus 操作的事件尝试失败，并设置以下字段：
 
-- `state` is set to the new state, for example BackingOff.
-- `attempt` is set to an incremented count.
-- `next_attempt_schedule_time` is set when the Nexus Task will be retried.
-- `last_attempt_failure` is set with the following fields:
-  - `message` is set to the error message.
-  - `failure_info` is set to the Application Failure.
+- `state` 设置为新状态，例如 BackingOff。
+- `attempt` 设置为递增计数。
+- 当重试 Nexus 任务时设置 `next_attempt_Schedule_time`。
+- `last_attempt_failure` 设置有以下字段：
+  - `message` 设置为错误消息。
+  - `failure_info` 设置为应用程序失败。
 
-For example, an unknown error thrown in a Nexus handler will surface as:
+例如，Nexus 处理程序中抛出的未知错误将显示为：
 
 ```
 temporal workflow describe -w my-workflow-id
@@ -161,164 +173,178 @@ Pending Nexus Operations: 1
   LastAttemptFailure       {"message":"unexpected response status: "500 Internal Server Error": internal error","applicationFailureInfo":{}}
 ```
 
-### Non-retryable
+<a id="non-retryable"></a>
+### 不可重试 {#non-retryable}
 
-When an Activity or Workflow throws an Application Failure, the Failure's `type` field is matched against a Retry Policy's list of [non-retryable errors](/encyclopedia/retry-policies#non-retryable-errors) to determine whether to retry the Activity or Workflow.
-Activities and Workflow can also avoid retrying by setting an Application Failure's `non_retryable` flag to `true`.
+当 Activity 或 Workflow 引发应用程序故障时，故障的 `type` 字段将与 Retry Policy 的 [不可重试的错误](/encyclopedia/retry-policies#non-retryable-errors) 列表进行匹配，以确定是否重试 Activity 或 Workflow。
+活动和 Workflow 还可以通过将应用程序故障的 `non_retryable` 标志设置为 `true` 来避免重试。
 
-When a Nexus Operation handler throws an Application Failure, it is retried by default using a built-in Retry Policy that cannot be customized.
-Nexus Operation handlers can avoid retrying by setting an Application Failure's `non_retryable` flag to true.
-When a non-retryable error is returned from a Nexus handler, the overall Nexus Operation Execution is failed and the error is returned to the caller’s Workflow Execution as a Nexus Operation Failure.
+当 Nexus 操作处理程序引发应用程序故障时，默认情况下会使用无法自定义的内置 Retry Policy 重试。
+Nexus 操作处理程序可以通过将应用程序故障的 `non_retryable` 标志设置为 true 来避免重试。
+当从 Nexus 处理程序返回不可重试的错误时，整个 Nexus 操作执行失败，并且错误作为 Nexus 操作失败返回到调用者的 Workflow Execution。
 
-### Setting the Next Retry Delay {#activity-next-retry-delay}
+<a id="activity-next-retry-delay"></a>
+### 设置下次重试延迟 {#activity-next-retry-delay}
 
-By setting the Next Retry Delay for a given Application Failure, you can tell the server to wait that amount of time before trying the Activity or Workflow again.
-This will override whatever the Retry Policy would have computed for your specific exception.
+通过为给定的应用程序故障设置“下次重试延迟”，您可以告诉服务器在再次尝试 Activity 或 Workflow 之前等待该时间。
+这将覆盖 Retry Policy 为您的特定异常计算的任何内容。
 
-Java: [NextRetryDelay](/develop/java/activities/timeouts#activity-next-retry-delay)
-TypeScript: [nextRetryDelay](/develop/typescript/activities/timeouts#activity-next-retry-delay)
-PHP: [NextRetryDelay](/develop/php/activities/timeouts#activity-next-retry-delay)
+爪哇：[下次重试延迟](/develop/java/activities/timeouts#activity-next-retry-delay)
+打字稿：[下一次重试延迟](/develop/typescript/activities/timeouts#activity-next-retry-delay)
+PHP：[下次重试延迟](/develop/php/activities/timeouts#activity-next-retry-delay)
 
-### Nexus errors {#nexus-errors}
+<a id="nexus-errors"></a>
+### Nexus 错误 {#nexus-errors}
 
-#### Default mapping
+<a id="default-mapping"></a>
+#### 默认映射 {#default-mapping}
 
-By default, Application Failures thrown from a Nexus Operation handler will be mapped to the following underlying Nexus Failures, based on what `non_retryable` is set to:
+默认情况下，从 Nexus 操作处理程序抛出的应用程序故障将根据 `non_retryable` 的设置映射到以下基础 Nexus 故障：
 
-| `non_retryable` | Nexus error                | HTTP status code          |
+| `non_retryable` | Nexus 错误                | HTTP 状态码          |
 | :-------------- | :------------------------- | :------------------------ |
-| false (default) | HandlerErrorTypeInternal   | 500 Internal Server Error |
-| true            | UnsuccessfulOperationError | 424 Failed Dependency     |
+| 假（默认） | HandlerErrorType内部   | 500 内部服务器错误 |
+| 真的            | 操作失败错误 | 424 依赖失败     |
 
-#### Use Nexus Errors directly
+<a id="use-nexus-errors-directly"></a>
+#### 直接使用Nexus错误 {#use-nexus-errors-directly}
 
-For improved semantics and mapping to HTTP status codes for external Nexus callers (when supported), we recommend that Nexus Operation handlers throw a Nexus Error directly, which includes the list below with associated retry semantics.
+为了改进外部 Nexus 调用者的语义和映射到 HTTP 状态代码（如果支持），我们建议 Nexus 操作处理程序直接抛出 Nexus 错误，其中包括下面的列表以及相关的重试语义。
 
-For example the Nexus Go SDK provides
+例如，Nexus Go SDK 提供
 
-- `nexus.HandlerError(nexus.HandlerErrorType, msg)`
-- `nexus.UnsuccessfulOperationError{state, failure}`
+- `Nexus.HandlerError(Nexus.HandlerErrorType, msg)`
+- `Nexus.UnsuccessfulOperationError{state, failure}`
 
-#### Retryable Nexus errors
+<a id="retryable-nexus-errors"></a>
+#### 可重试的 Nexus 错误 {#retryable-nexus-errors}
 
-| Nexus error type                  | `non_retryable` |
+| Nexus 错误类型                  | `non_retryable` |
 | :-------------------------------- | :-------------- |
-| HandlerErrorTypeResourceExhausted | false           |
-| HandlerErrorTypeInternal          | false           |
-| HandlerErrorTypeNotImplemented    | false           |
-| HandlerErrorTypeUnavailable       | false           |
+| HandlerErrorTypeResourceExhausted | 错误的           |
+| HandlerErrorType内部          | 错误的           |
+| 处理程序错误类型未实现    | 错误的           |
+| 处理程序错误类型不可用       | 错误的           |
 
-#### Non-retryable Nexus errors
+<a id="non-retryable-nexus-errors"></a>
+#### 不可重试的 Nexus 错误 {#non-retryable-nexus-errors}
 
-| Nexus error type                | `non_retryable` |
+| Nexus 错误类型                | `non_retryable` |
 | :------------------------------ | :-------------- |
-| HandlerErrorTypeBadRequest      | true            |
-| HandlerErrorTypeUnauthenticated | true            |
-| HandlerErrorTypeUnauthorized    | true            |
-| HandlerErrorTypeNotFound        | true            |
-| UnsuccessfulOperationError      | true            |
+| 处理程序错误类型错误请求      | 真的            |
+| 处理程序错误类型未经身份验证 | 真的            |
+| 处理程序错误类型未经授权    | 真的            |
+| 未找到处理程序错误类型        | 真的            |
+| 操作失败错误      | 真的            |
 
-## Cancelled Failure
+<a id="cancelled-failure"></a>
+## 取消失败 {#cancelled-failure}
 
-When [Cancellation](/activity-execution#cancellation) of a Workflow, Activity or Nexus Operation is requested, SDKs represent the cancellation to the user in language-specific ways.
-For example, in TypeScript, in some cases a Cancelled Failure is thrown directly by a Workflow API function, and in other cases the Cancelled Failure is wrapped in a different Failure.
-To check both types of cases, TypeScript has the [isCancellation](https://typescript.temporal.io/api/namespaces/workflow#iscancellation) helper.
+当请求 Workflow、Activity 或 Nexus 操作的 [消除](/activity-execution#cancellation) 时，SDK 以特定于语言的方式向用户表示取消。
+例如，在 TypeScript 中，在某些情况下，Workflow API 函数直接抛出取消的故障，而在其他情况下，取消的故障包装在不同的故障中。
+为了检查这两种类型的情况，TypeScript 有 [正在取消](https://typescript.temporal.io/api/namespaces/workflow#iscancellation) 帮助器。
 
-When a Workflow, Activity or Nexus Operation is successfully Cancelled, a Cancelled Failure is the `cause` field of the Activity Failure, Nexus Operation Failure or "Workflow failed" error.
+当成功取消 Workflow、Activity 或 Nexus 操作时，取消的故障是 Activity 故障、Nexus 操作故障或“Workflow 失败”错误的 `cause` 字段。
 
-- TypeScript: [CancelledFailure](https://typescript.temporal.io/api/classes/common.CancelledFailure)
-- Java: [CanceledFailure](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/CanceledFailure.html)
-- Go: [CanceledError](https://pkg.go.dev/go.temporal.io/sdk/temporal#CanceledError)
-- Python: [CancelledError](https://python.temporal.io/temporalio.exceptions.CancelledError.html)
-- PHP: [CanceledFailure](https://php.temporal.io/classes/Temporal-Exception-Failure-CanceledFailure.html)
-- Proto: [CanceledFailureInfo](https://api-docs.temporal.io/#temporal.api.failure.v1.CanceledFailureInfo) and [Failure](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
+- 打字稿：[取消失败](https://typescript.temporal.io/api/classes/common.CancelledFailure)
+- 爪哇：[取消失败](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/CanceledFailure.html)
+- 转到：[取消错误](https://pkg.go.dev/go.temporal.io/sdk/temporal#CanceledError)
+- 蟒蛇：[取消错误](https://python.temporal.io/temporalio.exceptions.CancelledError.html)
+- PHP：[取消失败](https://php.temporal.io/classes/temporal-Exception-Failure-CanceledFailure.html)
+- 原型：[取消失败信息](https://api-docs.temporal.io/#temporal.api.failure.v1.CanceledFailureInfo) 和 [失败](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
 
-## Activity Failure
+<a id="activity-failure"></a>
+## Activity 失败 {#activity-failure}
 
-An Activity Failure is delivered to the Workflow Execution when an Activity fails.
-It contains information about the failure and the Activity Execution; for example, the Activity Type and Activity Id.
-The reason for the failure is in the `cause` field.
-For example, if an Activity Execution times out, the `cause` is a [Timeout Failure](#timeout-failure).
+当 Activity 失败时，Activity 故障将传递到 Workflow Execution。
+它包含有关失败和 Activity 执行的信息；例如，Activity 类型和 Activity ID。
+失败的原因在于 `cause` 字段。
+例如，如果 Activity 执行超时，则 `cause` 为 [超时失败](#timeout-failure)。
 
-- TypeScript: [ActivityFailure](https://typescript.temporal.io/api/classes/common.ActivityFailure)
-- Java: [ActivityFailure](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/ActivityFailure.html)
-- Go: [ActivityError](https://pkg.go.dev/go.temporal.io/sdk/temporal#ActivityError)
-- Python: [ActivityError](https://python.temporal.io/temporalio.exceptions.ActivityError.html)
-- PHP: [ActivityFailure](https://php.temporal.io/classes/Temporal-Exception-Failure-ActivityFailure.html)
-- Proto: [ActivityFailureInfo](https://api-docs.temporal.io/#temporal.api.failure.v1.ActivityFailureInfo) and [Failure](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
+- 打字稿：[Activity失败](https://typescript.temporal.io/api/classes/common.ActivityFailure)
+- 爪哇：[Activity失败](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/ActivityFailure.html)
+- 转到：[Activity错误](https://pkg.go.dev/go.temporal.io/sdk/temporal#ActivityError)
+- 蟒蛇：[Activity错误](https://python.temporal.io/temporalio.exceptions.ActivityError.html)
+- PHP：[Activity失败](https://php.temporal.io/classes/temporal-Exception-Failure-ActivityFailure.html)
+- 原型：[Activity故障信息](https://api-docs.temporal.io/#temporal.api.failure.v1.ActivityFailureInfo) 和 [失败](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
 
-## Nexus Operation Failure
+<a id="nexus-operation-failure"></a>
+## Nexus 操作失败 {#nexus-operation-failure}
 
-A Nexus Operation Failure is delivered to the Workflow Execution when a Nexus Operation fails.
-It contains information about the failure and the Nexus Operation Execution; for example, the Nexus Operation name and Nexus Operation token.
-The reason for the failure is in the message and cause (typically an Application Error or a Canceled Error).
+当 Nexus 操作失败时，Nexus 操作失败将传递到 Workflow Execution。
+它包含有关故障和 Nexus 操作执行的信息；例如，Nexus 操作名称和 Nexus 操作令牌。
+失败的原因在消息和原因中（通常是应用程序错误或取消错误）。
 
-- Go: NexusOperationError
-- Proto: NexusOperationFailureInfo
+- 执行：NexusOperationError
+- 原型：NexusOperationFailureInfo
 
-A Nexus Operation Failure includes the following fields:
+Nexus操作失败包含以下字段：
 
-- Endpoint is set to the name of the endpoint.
-- Service is set to the name of the service.
-- Operation is set to the name of the operation.
-- Operation_token is set if this is an async operation, which can be used to perform additional actions like cancelling the operation.
-- Scheduled_event_id is set to the caller’s event id that scheduled the operation.
-- Message is set to a generic unsuccessful error message.
-- Cause is set to the underlying Application Failure with the following fields:
-  - Non-retryable is set to true.
-  - Type is set to the error's type name.
-  - Message is set to the error message.
-- Nexus_error_code is set to the underlying Nexus error code.
+- 端点设置为端点的名称。
+- 服务设置为服务的名称。
+- 操作设置为操作的名称。
+- 如果这是一个异步操作，则设置Operation_token，它可用于执行其他操作，例如取消操作。
+- Scheduled_event_id 设置为 Scheduled 操作的调用者事件 ID。
+- 消息设置为通用的不成功错误消息。
+- 原因设置为具有以下字段的基础应用程序故障：
+  - 不可重试设置为 true。
+  - 类型设置为错误的类型名称。
+  - 消息设置为错误消息。
+- Nexus_error_code 设置为基础 Nexus 错误代码。
 
-## Child Workflow Failure
+<a id="child-workflow-failure"></a>
+## Child Workflow 失败 {#child-workflow-failure}
 
-A Child Workflow Failure is delivered to the Workflow Execution when a Child Workflow Execution fails.
-It contains information about the failure and the Child Workflow Execution; for example, the Workflow Type and Workflow Id.
-The reason for the failure is in the `cause` field.
+当子 Workflow Execution 失败时，Child Workflow 故障将传递到 Workflow Execution。
+它包含有关故障和子 Workflow Execution 的信息；例如，Workflow 类型和 Workflow ID。
+失败的原因在于 `cause` 字段。
 
-- TypeScript: [ChildWorkflowFailure](https://typescript.temporal.io/api/classes/common.ChildWorkflowFailure)
-- Java: [ChildWorkflowFailure](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/ChildWorkflowFailure.html)
-- Go: [ChildWorkflowExecutionError](https://pkg.go.dev/go.temporal.io/sdk/temporal#ChildWorkflowExecutionError)
-- Python: [ChildWorkflowError](https://python.temporal.io/temporalio.exceptions.ChildWorkflowError.html)
-- PHP: [ChildWorkflowFailure](https://php.temporal.io/classes/Temporal-Exception-Failure-ChildWorkflowFailure.html)
-- Proto: [ChildWorkflowExecutionFailureInfo](https://api-docs.temporal.io/#temporal.api.failure.v1.ChildWorkflowExecutionFailureInfo) and [Failure](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
+- 打字稿：[儿童Workflow失败](https://typescript.temporal.io/api/classes/common.ChildWorkflowFailure)
+- 爪哇：[儿童Workflow失败](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/ChildWorkflowFailure.html)
+- 转到：[ChildWorkflow执行错误](https://pkg.go.dev/go.temporal.io/sdk/temporal#ChildWorkflowExecutionError)
+- 蟒蛇：[子Workflow错误](https://python.temporal.io/temporalio.exceptions.ChildWorkflowError.html)
+- PHP：[儿童Workflow失败](https://php.temporal.io/classes/temporal-Exception-Failure-ChildWorkflowFailure.html)
+- 原型：[ChildWorkflowExecutionFailureInfo](https://api-docs.temporal.io/#temporal.api.failure.v1.ChildWorkflowExecutionFailureInfo) 和 [失败](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
 
-## Timeout Failure
+<a id="timeout-failure"></a>
+## 超时失败 {#timeout-failure}
 
-A Timeout Failure represents the timeout of an Activity or Workflow.
+超时失败表示 Activity 或 Workflow 超时。
 
-When an Activity times out, the last Heartbeat details it emitted is attached.
+当 Activity 超时时，会附加它发出的最后一个心跳详细信息。
 
-- TypeScript: [TimeoutFailure](https://typescript.temporal.io/api/classes/common.TimeoutFailure)
-- Java: [TimeoutFailure](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/TimeoutFailure.html)
-- Go: [TimeoutError](https://pkg.go.dev/go.temporal.io/sdk/temporal#TimeoutError)
-- Python: [TimeoutError](https://python.temporal.io/temporalio.exceptions.TimeoutError.html)
-- PHP: [TimeoutFailure](https://php.temporal.io/classes/Temporal-Exception-Failure-TimeoutFailure.html)
-- Proto: [TimeoutFailureInfo](https://api-docs.temporal.io/#temporal.api.failure.v1.TimeoutFailureInfo) and [Failure](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
+- 打字稿：[超时失败](https://typescript.temporal.io/api/classes/common.TimeoutFailure)
+- 爪哇：[超时失败](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/TimeoutFailure.html)
+- 转到：[超时错误](https://pkg.go.dev/go.temporal.io/sdk/temporal#TimeoutError)
+- 蟒蛇：[超时错误](https://python.temporal.io/temporalio.exceptions.TimeoutError.html)
+- PHP：[超时失败](https://php.temporal.io/classes/temporal-Exception-Failure-TimeoutFailure.html)
+- 原型：[超时失败信息](https://api-docs.temporal.io/#temporal.api.failure.v1.TimeoutFailureInfo) 和 [失败](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
 
-## Terminated Failure
+<a id="terminated-failure"></a>
+## 终止失败 {#terminated-failure}
 
-A Terminated Failure is used as the `cause` of an error when a Workflow is terminated, and you receive the error in one of the following locations:
+当 Workflow 终止时，终止故障用作错误的 `cause`，并且您在以下位置之一收到错误：
 
-- Inside a Workflow that's waiting for the result of a Child Workflow.
-- When waiting for the result of a Workflow on the Client.
+- 在等待 Child Workflow 结果的 Workflow 内部。
+- 在客户端等待 Workflow 结果时。
 
-In the SDKs:
+在 SDK 中：
 
-- TypeScript: [TerminatedFailure](https://typescript.temporal.io/api/classes/common.TerminatedFailure)
-- Java: [TerminatedFailure](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/TerminatedFailure.html)
-- Go: [TerminatedError](https://pkg.go.dev/go.temporal.io/sdk/temporal#TerminatedError)
-- Python: [TerminatedError](https://python.temporal.io/temporalio.exceptions.TerminatedError.html)
-- PHP: [TerminatedFailure](https://php.temporal.io/classes/Temporal-Exception-Failure-TerminatedFailure.html)
-- Proto: [TerminatedFailureInfo](https://api-docs.temporal.io/#temporal.api.failure.v1.TerminatedFailureInfo) and [Failure](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
+- 打字稿：[终止故障](https://typescript.temporal.io/api/classes/common.TerminatedFailure)
+- 爪哇：[终止故障](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/TerminatedFailure.html)
+- 转到：[终止错误](https://pkg.go.dev/go.temporal.io/sdk/temporal#TerminatedError)
+- 蟒蛇：[终止错误](https://python.temporal.io/temporalio.exceptions.TerminatedError.html)
+- PHP：[终止故障](https://php.temporal.io/classes/temporal-Exception-Failure-TerminatedFailure.html)
+- 原型：[终止故障信息](https://api-docs.temporal.io/#temporal.api.failure.v1.TerminatedFailureInfo) 和 [失败](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
 
-## Server Failure
+<a id="server-failure"></a>
+## 服务器故障 {#server-failure}
 
-A Server Failure is used for errors that originate in the Temporal Service.
+服务器故障用于源自 Temporal 服务的错​​误。
 
-- TypeScript: [ServerFailure](https://typescript.temporal.io/api/classes/common.ServerFailure)
-- Java: [ServerFailure](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/ServerFailure.html)
-- Go: [ServerError](https://pkg.go.dev/go.temporal.io/sdk/temporal#ServerError)
-- Python: [ServerError](https://python.temporal.io/temporalio.exceptions.ServerError.html)
-- PHP: [ServerFailure](https://php.temporal.io/classes/Temporal-Exception-Failure-ServerFailure.html)
-- Proto: [ServerFailureInfo](https://api-docs.temporal.io/#temporal.api.failure.v1.ServerFailureInfo) and [Failure](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)
+- 打字稿：[服务器故障](https://typescript.temporal.io/api/classes/common.ServerFailure)
+- 爪哇：[服务器故障](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/failure/ServerFailure.html)
+- 转到：[服务器错误](https://pkg.go.dev/go.temporal.io/sdk/temporal#ServerError)
+- 蟒蛇：[服务器错误](https://python.temporal.io/temporalio.exceptions.ServerError.html)
+- PHP：[服务器故障](https://php.temporal.io/classes/temporal-Exception-Failure-ServerFailure.html)
+- 原型：[服务器故障信息](https://api-docs.temporal.io/#temporal.api.failure.v1.ServerFailureInfo) 和 [失败](https://api-docs.temporal.io/#temporal.api.failure.v1.Failure)

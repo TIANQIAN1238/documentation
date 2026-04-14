@@ -1,8 +1,8 @@
 ---
 id: observability
-title: Observability - .NET SDK
-sidebar_label: Observability
-description: Explore Temporal SDK observability features for Metrics, Tracing, Logging, and Visibility. Track Workflow Executions, set up Prometheus endpoints, customize metrics, configure tracing, and more.
+title: "可观测性 - .NET SDK"
+sidebar_label: "可观察性"
+description: "探索适用于指标、跟踪、日志记录和 Visibility 的 Temporal SDK 可观察性功能。跟踪 Workflow Execution、设置 Prometheus 端点、自定义指标、配置跟踪等。"
 toc_max_heading_level: 4
 keywords:
   - client
@@ -25,30 +25,31 @@ tags:
   - Workflows
 ---
 
-This page covers features related to viewing the state of the application, including:
+此页面涵盖与查看应用程序状态相关的功能，包括：
 
-- [Metrics](#metrics)
-- [Tracing](#tracing)
-- [Logging](#logging)
+- [指标](#metrics)
+- [追踪](#tracing)
+- [记录](#logging)
 - [Visibility](#visibility)
 
-The observability feature guide covers the many ways to view the current state of your [Temporal Application](/temporal#temporal-application).
-This includes the ways to view which [Workflow Executions](/workflow-execution) are tracked by the [Temporal Platform](/temporal#temporal-platform) and the state of any specified Workflow Execution, either currently or at points of an execution.
+可观察性功能指南涵盖了查看 [Temporal 应用](/temporal#temporal-application) 当前状态的多种方法。
+这包括查看 [Temporal平台](/workflow-execution) 跟踪哪些 [Workflow Executions](/temporal#temporal-platform) 以及任何指定的 Workflow Execution 当前或执行点的状态的方法。
 
-## Emit metrics {#metrics}
+<a id="metrics"></a>
+## 发出指标 {#metrics}
+每个 Temporal SDK 都能够从客户端或 Worker 进程发出一组可选的指标。
+有关能够发出的指标的完整列表，请参阅 [SDK指标参考](/references/sdk-metrics)。
 
-Each Temporal SDK is capable of emitting an optional set of metrics from either the Client or the Worker process.
-For a complete list of metrics capable of being emitted, see the [SDK metrics reference](/references/sdk-metrics).
+- 有关 Prometheus 和 Grafana 集成的概述，请参阅 [监控](/self-hosted-guide/monitoring) 指南。
+- 有关指标列表，请参阅 [SDK指标参考](/references/sdk-metrics)。
+- 有关使用 .NET SDK 公开指标的端到端示例，请参阅 [样本 dotnet](https://github.com/temporalio/samples-dotnet/tree/main/src/OpenTelemetry) 存储库。
 
-- For an overview of Prometheus and Grafana integration, refer to the [Monitoring](/self-hosted-guide/monitoring) guide.
-- For a list of metrics, see the [SDK metrics reference](/references/sdk-metrics).
-- For an end-to-end example that exposes metrics with the .NET SDK, refer to the [samples-dotnet](https://github.com/temporalio/samples-dotnet/tree/main/src/OpenTelemetry) repo.
+.NET 中的指标是在 `TemporalRuntime` 上的 `Telemetry` 属性的 `Metrics` 属性上配置的。该对象应该是全局创建的，并且应该用于所有客户端；因此，您应该在任何其他 Temporal 代码之前配置此代码。
 
-Metrics in .NET are configured on the `Metrics` property of the `Telemetry` property on the `TemporalRuntime`. That object should be created globally and should be used for all clients; therefore, you should configure this before any other Temporal code.
+<a id="set-a-prometheus-endpoint"></a>
+### 设置 Prometheus 端点 {#set-a-prometheus-endpoint}
 
-### Set a Prometheus endpoint
-
-The following example exposes a Prometheus endpoint on port `9000`.
+以下示例在端口 `9000` 上公开 Prometheus 端点。
 
 ```csharp
 using Temporalio.Client;
@@ -61,10 +62,11 @@ var runtime = new TemporalRuntime(new()
 var client = await Temporalio.ConnectAsync(new("localhost:7233") { Runtime = runtime });
 ```
 
-### Set a custom metric meter
+<a id="set-a-custom-metric-meter"></a>
+### 设置自定义指标 {#set-a-custom-metric-meter}
 
-A custom metric meter can be set on the telemetry options to handle metrics programmatically.
-The [Temporalio.Extensions.DiagnosticSource](https://github.com/temporalio/sdk-dotnet/tree/main/src/Temporalio.Extensions.DiagnosticSource) extension provides a custom metric meter implementation that sends all metrics to a [System.Diagnostics.Metrics.Meter](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter) instance.
+可以在遥测选项上设置自定义指标，以编程方式处理指标。
+[Temporalio.Extensions.DiagnosticSource](https://github.com/temporalio/sdk-dotnet/tree/main/src/temporalio.Extensions.DiagnosticSource) 扩展提供了自定义指标仪表实现，可将所有指标发送到 [系统.诊断.指标.仪表](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter) 实例。
 
 ```csharp
 using System.Diagnostics.Metrics;
@@ -87,40 +89,40 @@ var runtime = new TemporalRuntime(new()
 var client = await Temporalio.ConnectAsync(new("localhost:7233") { Runtime = runtime });
 ```
 
-## Setup Tracing {#tracing}
+<a id="tracing"></a>
+## 设置跟踪 {#tracing}
+跟踪允许您查看 Workflow 的调用图及其活动、Nexus 操作和任何 Child Workflow。
 
-Tracing allows you to view the call graph of a Workflow along with its Activities, Nexus Operations, and any Child Workflows.
+要在 .NET 中配置 OpenTelemetry 跟踪，请使用 [Temporalio.Extensions.OpenTelemetry](https://github.com/temporalio/sdk-dotnet/tree/main/src/temporalio.Extensions.OpenTelemetry) 扩展。
 
-To configure OpenTelemetry tracing in .NET, use the [Temporalio.Extensions.OpenTelemetry](https://github.com/temporalio/sdk-dotnet/tree/main/src/Temporalio.Extensions.OpenTelemetry) extension.
+[`Temporalio.Extensions.OpenTelemetry.TracingInterceptor`](https://dotnet.temporal.io/api/temporalio.Extensions.OpenTelemetry.TracingInterceptor.html) 类可以在客户端选项中设置为拦截器，或者如果您正在构建可重用库，则可以通过 [插件](/develop/plugins-guide#interceptors) 提供。
 
-The [`Temporalio.Extensions.OpenTelemetry.TracingInterceptor`](https://dotnet.temporal.io/api/Temporalio.Extensions.OpenTelemetry.TracingInterceptor.html) class can be set as an interceptor in the client options, or provided through a [Plugin](/develop/plugins-guide#interceptors) if you're building a reusable library.
+连接客户端后，将为所有客户端调用、活动和 Worker 上的 Workflow 调用创建跨度。
+Span 是通过服务器创建和序列化的，以提供 Workflow Execution 的一个跟踪。
 
-When your Client is connected, spans are created for all Client calls, Activities, and Workflow invocations on the Worker.
-Spans are created and serialized through the server to give one trace for a Workflow Execution.
+<a id="logging"></a>
+## 从 Workflow {#logging} 记录
+日志记录使您能够在代码执行期间记录关键信息。
+记录器创建审计跟踪并捕获有关 Workflow 操作的信息。
+适当的日志记录级别取决于您的具体需求。
+在开发或故障排除期间，您可能会使用调试甚至跟踪。
+在生产中，您可以使用 info 或 warn 来避免日志量过多。
 
-## Log from a Workflow {#logging}
+记录器支持以下日志记录级别：
 
-Logging enables you to record critical information during code execution.
-Loggers create an audit trail and capture information about your Workflow's operation.
-An appropriate logging level depends on your specific needs.
-During development or troubleshooting, you might use debug or even trace.
-In production, you might use info or warn to avoid excessive log volume.
-
-The logger supports the following logging levels:
-
-| Level   | Use                                                                                                       |
+| 等级   | 使用                                                                                                       |
 | ------- | --------------------------------------------------------------------------------------------------------- |
-| `TRACE` | The most detailed level of logging, used for very fine-grained information.                               |
-| `DEBUG` | Detailed information, typically useful for debugging purposes.                                            |
-| `INFO`  | General information about the application's operation.                                                    |
-| `WARN`  | Indicates potentially harmful situations or minor issues that don't prevent the application from working. |
-| `ERROR` | Indicates error conditions that might still allow the application to continue running.                    |
+| `TRACE` | 最详细的日志记录级别，用于非常细粒度的信息。                               |
+| `DEBUG` | 详细信息，通常可用于调试目的。                                            |
+| `INFO`  | 有关应用程序操作的一般信息。                                                    |
+| `WARN`  | 指示不会阻止应用程序运行的潜在有害情况或小问题。 |
+| `ERROR` | 指示可能仍允许应用程序继续运行的错误情况。                    |
 
-The Temporal SDK core normally uses `WARN` as its default logging level.
+Temporal SDK 核心通常使用 `WARN` 作为其默认日志记录级别。
 
-Logging uses the .NET standard logging APIs.
-The `LoggerFactory` can be set in the client.
-The following example shows logging on the console and sets the level to `Information`.
+日志记录使用 .NET 标准日志记录 API。
+`LoggerFactory`可以在客户端设置。
+以下示例显示控制台上的日志记录并将级别设置为 `Information`。
 
 ```csharp
 var client = await TemporalClient.ConnectAsync(new("localhost:7233")
@@ -132,47 +134,47 @@ var client = await TemporalClient.ConnectAsync(new("localhost:7233")
 });
 ```
 
-You can log from a Workflow using `Workflow.Logger` which is an instance of .NET's `ILogger`.
+您可以使用 `Workflow.Logger` 从 Workflow 进行日志记录，`Workflow.Logger` 是 .NET `ILogger` 的实例。
 
 ```csharp
 Workflow.Logger.LogInformation("Given name: {Name}", name);
 ```
 
-## Use Visibility APIs {#visibility}
+<a id="visibility"></a>
+## 使用 Visibility API {#visibility}
+Temporal 平台中的术语 Visibility 是指使操作员能够查看当前存在于 Temporal 服务中的 Workflow Execution 的子系统和 API。
 
-The term Visibility, within the Temporal Platform, refers to the subsystems and APIs that enable an operator to view Workflow Executions that currently exist within a Temporal Service.
+<a id="search-attributes"></a>
+### 使用 Search Attributes {#search-attributes}
+检索 Workflow Execution 的典型方法是通过其 Workflow Id。
 
-### Use Search Attributes {#search-attributes}
+但是，有时您需要根据另一属性检索一个或多个 Workflow Execution。例如，假设您想要获取某个时间范围内失败的某种类型的所有 Workflow Execution，以便您可以使用相同的参数启动新的 Workflow Execution。
 
-The typical method of retrieving a Workflow Execution is by its Workflow Id.
+您可以使用 [Search Attributes](/search-attribute) 来完成此操作。
 
-However, sometimes you'll want to retrieve one or more Workflow Executions based on another property. For example, imagine you want to get all Workflow Executions of a certain type that have failed within a time range, so that you can start new ones with the same arguments.
+- [默认 Search Attribute](/search-attribute#default-search-attribute) 与 `WorkflowType`、`StartTime` 和 `ExecutionStatus` 一样，会自动添加到 Workflow Execution。
+- [定制 Search Attribute](/search-attribute#custom-search-attribute) 可以包含其自己的特定于域的数据（如 `customerId` 或 `numItems`）。
 
-You can do this with [Search Attributes](/search-attribute).
+使用自定义 Search Attribute 的步骤是：
 
-- [Default Search Attributes](/search-attribute#default-search-attribute) like `WorkflowType`, `StartTime` and `ExecutionStatus` are automatically added to Workflow Executions.
-- [Custom Search Attributes](/search-attribute#custom-search-attribute) can contain their own domain-specific data (like `customerId` or `numItems`).
+- 在 CLI 或 Web UI 中的 Temporal 服务中创建新的 Search Attribute。
+  - 例如：`Temporal operator search-attribute create --name CustomKeywordField --type Text`
+    - 将 `CustomKeywordField` 替换为您的 Search Attribute 的名称。
+    - 将 `Text` 替换为与 Search Attribute 关联的类型值：`Text` | `Keyword` | `Int` | `Double` | `Bool` | `Datetime` | `KeywordList`
+- 设置 Workflow Execution 的 Search Attribute 值：
+  - 在客户端上，在启动执行时将其作为选项包含在内。
+  - 在 Workflow 中通过调用 `UpsertTypedSearchAttributes`。
+- 读取Search Attribute的值：
+  - 在客户端上，通过在 `WorkflowHandle` 上调用 `Describe`。
+  - 在 Workflow 中查看 `WorkflowInfo`。
+- Query Workflow Execution 由 Search Attribute 使用 [列表过滤器](/list-filter) 实现：
+  - [在Temporal CLI中](/cli/operator#list-2)
+  - 在代码中调用 `ListWorkflowsAsync`。
 
-The steps to using custom Search Attributes are:
-
-- Create a new Search Attribute in your Temporal Service in the CLI or Web UI.
-  - For example: `temporal operator search-attribute create --name CustomKeywordField --type Text`
-    - Replace `CustomKeywordField` with the name of your Search Attribute.
-    - Replace `Text` with a type value associated with your Search Attribute: `Text` | `Keyword` | `Int` | `Double` | `Bool` | `Datetime` | `KeywordList`
-- Set the value of the Search Attribute for a Workflow Execution:
-  - On the Client by including it as an option when starting the Execution.
-  - In the Workflow by calling `UpsertTypedSearchAttributes`.
-- Read the value of the Search Attribute:
-  - On the Client by calling `Describe` on a `WorkflowHandle`.
-  - In the Workflow by looking at `WorkflowInfo`.
-- Query Workflow Executions by the Search Attribute using a [List Filter](/list-filter):
-  - [In the Temporal CLI](/cli/operator#list-2)
-  - In code by calling `ListWorkflowsAsync`.
-
-### List Workflow Executions {#list-workflow-executions}
-
-Use the [ListWorkflowsAsync()](https://dotnet.temporal.io/api/Temporalio.Client.ITemporalClient.html#Temporalio_Client_ITemporalClient_ListWorkflowsAsync_System_String_Temporalio_Client_WorkflowListOptions_) method on the Client and pass a [List Filter](/list-filter) as an argument to filter the listed Workflows.
-The result is an async enumerable.
+<a id="list-workflow-executions"></a>
+### 列出 Workflow Execution {#list-workflow-executions}
+在客户端上使用 [ListWorkflowsAsync()](https://dotnet.temporal.io/api/temporalio.Client.ITemporalClient.html#Temporalio_Client_ITemporalClient_ListWorkflowsAsync_System_String_Temporalio_Client_WorkflowListOptions_) 方法并传递 [列表过滤器](/list-filter) 作为参数来过滤列出的 Workflow。
+结果是一个异步可枚举。
 
 ```csharp
 await foreach (var wf in client.ListWorkflowsAsync("WorkflowType='GreetingWorkflow'"))
@@ -181,12 +183,12 @@ await foreach (var wf in client.ListWorkflowsAsync("WorkflowType='GreetingWorkfl
 }
 ```
 
-### Set Custom Search Attributes {#custom-search-attributes}
+<a id="custom-search-attributes"></a>
+### 设置自定义 Search Attributes {#custom-search-attributes}
+在 Temporal 服务（使用 `Temporal operator search-attribute create` 或云 UI）中创建自定义 Search Attribute 后，您可以在启动 Workflow 时设置自定义 Search Attribute 的值。
 
-After you've created custom Search Attributes in your Temporal Service (using `temporal operator search-attribute create`or the Cloud UI), you can set the values of the custom Search Attributes when starting a Workflow.
-
-To set custom Search Attributes, use the `TypedSearchAttributes` property on `WorkflowOptions` for `StartWorkflowAsync` or `ExecuteWorkflowAsync`.
-Typed search attributes are a `SearchAttributeCollection` created with a builder.
+要设置自定义 Search Attribute，请使用 `WorkflowOptions` 上的 `StartWorkflowAsync` 或 `ExecuteWorkflowAsync` 的 `TypedSearchAttributes` 属性。
+类型为 Search Attribute 是使用构建器创建的 `SearchAttributeCollection`。
 
 ```csharp
 // This only needs to be created once, so it is common to make it a static readonly even though we
@@ -204,12 +206,12 @@ var handle = await client.StartWorkflowAsync(
     });
 ```
 
-### Upsert Search Attributes {#upsert-search-attributes}
+<a id="upsert-search-attributes"></a>
+### 更新插入 Search Attributes {#upsert-search-attributes}
+您可以更新插入 Search Attribute 以在 Workflow 代码中添加 Update 或删除 Search Attribute。
 
-You can upsert Search Attributes to add, update, or remove Search Attributes from within Workflow code.
-
-To upsert custom Search Attributes, use the [`UpsertTypedSearchAttributes()`](https://dotnet.temporal.io/api/Temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_UpsertTypedSearchAttributes_Temporalio_Workflows_SearchAttributeUpdate___) method with a set of updates.
-Keys can be predefined for reuse.
+要更新插入自定义 Search Attribute，请将 [`UpsertTypedSearchAttributes()`](https://dotnet.temporal.io/api/temporalio.Workflows.Workflow.html#Temporalio_Workflows_Workflow_UpsertTypedSearchAttributes_Temporalio_Workflows_SearchAttributeUpdate___) 方法与一组 Update 结合使用。
+可以预定义密钥以供重复使用。
 
 ```csharp
 // These only need to be created once, so it is common to make them static readonly even though we

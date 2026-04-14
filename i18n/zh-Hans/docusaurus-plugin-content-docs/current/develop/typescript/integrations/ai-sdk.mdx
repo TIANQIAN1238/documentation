@@ -1,0 +1,275 @@
+---
+id: ai-sdk
+title: Vercel 集成的 AI SDK
+sidebar_label: Vercel 集成的 AI SDK
+toc_max_heading_level: 2
+keywords:
+  - ai
+  - agents
+  - vercel
+tags:
+  - AI SDK
+  - TypeScript SDK
+  - Temporal SDKs
+description: 使用 Temporal TypeScript SDK 和 AI SDK 在 TypeScript 中实现 AI 应用程序。
+---
+
+Temporal 与 [Vercel 的 AI SDK](https://ai-sdk.dev/) 集成，让您可以直接在 Workflow 中使用 AI SDK 的 API
+代码，而 Temporal 处理持久执行。
+
+与所有 API 调用一样，LLM API 调用是不确定的。在 [Temporal 应用程序](/glossary#Temporal-应用程序) 中，
+这意味着您无法直接从 [Workflow](/glossary#Workflow) 进行 LLM 调用；他们必须作为
+[活动](/glossary#Activity)。 AI SDK 插件会自动处理此问题：当您调用 AI SDK 中的方法时，例如
+作为“generateText()”，该插件将这些调用包装在幕后的“活动”中。这保留了 Vercel AI SDK 的
+当 Temporal 为您处理持久执行时，您已经熟悉了开发人员体验。
+
+本指南中的所有代码片段均取自 TypeScript SDK
+[ai-sdk 示例](https://github.com/Temporalio/samples-typescript/tree/main/ai-sdk)。请参阅示例
+完成代码并在本地运行它们。
+
+:::info
+
+Vercel AI SDK 集成处于公共预览版。请参阅
+[Temporal 产品发布阶段指南](/evaluate/development-product-features/release-stages) 了解更多信息。
+
+:::
+
+## 先决条件
+
+- 本指南假设您已经熟悉 Vercel AI SDK。如果不是，请参阅
+  [Vercel AI SDK 文档](https://ai-sdk.dev/) 了解更多详细信息。
+- 如果您是Temporal的新手，我们还建议您阅读[了解Temporal](/evaluate/understanding-Temporal)
+  阅读文档或参加 [Temporal 101](https://learn.Temporal.io/courses/Temporal_101/) 课程来了解基础知识
+  Temporal 的。
+- 确保您已按照以下步骤设置本地开发环境
+  [使用 TypeScript SDK 设置本地](/develop/typescript/set-up-your-local-typescript) 指南。当你是
+  完成后，如果您想在本地测试代码，请保持 Temporal 开发服务器运行。
+
+## 配置Workers以使用AI SDK
+
+Worker 是 Temporal 应用程序的计算层。他们负责执行定义您的代码
+[Workflows](/glossary#Workflow) 和 [活动](/glossary#Activity)。在执行 Workflow 或 Activity 之前
+Vercel AI SDK，您需要创建一个 Worker 并配置它以使用 AI SDK 插件。
+
+请按照以下步骤配置 Worker。
+
+1. 安装`@Temporalio/ai-sdk`包。
+
+   ```bash
+   npm install @temporalio/ai-sdk
+   ```
+
+2. 创建“Worker.ts”文件并配置Worker以使用AI SDK插件。
+
+   ```ts {9-11}
+   import { openai } from '@ai-sdk/openai';
+   import { AiSdkPlugin } from '@temporalio/ai-sdk';
+
+   //... other import statements, initializing a connection
+   //  to the Temporal Service to be used by the Worker
+
+   const worker = await Worker.create({
+     plugins: [
+       new AiSdkPlugin({
+         modelProvider: openai,
+       }),
+     ],
+     connection,
+     namespace: 'default',
+     taskQueue: 'ai-sdk',
+     workflowsPath: require.resolve('./workflows'),
+     activities,
+   });
+
+   // ... code that runs the worker
+   ```
+
+“modelProvider”指定创建模型时使用哪个 AI 提供程序。选择最适合您的提供商
+   需要。在 Worker 选项中，您还指定 Worker 轮询“ai-sdk”Task Queue 在
+   “默认”Namespace。确保将客户端应用程序配置为使用相同的 Task Queue 和 Namespace。
+
+3. 运行Worker。此 Worker 现在将轮询 Temporal 服务，以了解“默认”中“ai-sdk”Task Queue 的工作情况
+   Namespace 直到您停止它。
+
+   ```bash
+   nodemon worker.ts
+   ```
+
+您必须确保 Worker 进程有权访问您的 API 凭据。大多数提供商 SDK 从以下位置读取凭据
+   环境变量。请参阅 [Vercel AI SDK 文档](https://ai-sdk.dev/providers/ai-sdk-providers)
+   有关如何为您选择的提供商设置环境变量的说明。
+
+   :::tip
+
+您只需向 Worker 进程提供提供商凭据。客户端应用程序，即应用程序
+   向 Temporal 服务发送请求以启动 Workflow Execution，不需要了解凭据。
+
+   :::
+
+请参阅 [ai-sdk 示例](https://github.com/Temporalio/samples-typescript/tree/main/ai-sdk) 中的完整示例。
+
+## 开发一个简单的俳句代理
+
+为了帮助您入门，您可以开发一个简单的俳句代理，根据提示生成俳句。
+
+如果您没有使用 Temporal，您可以编写如下代码来生成俳句：
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+async function haikuAgent(prompt: string): Promise<string> {
+  const result = await generateText({
+    model: openai('gpt-4o-mini'),
+    prompt,
+    system: 'You only respond in haikus.',
+  });
+  return result.text;
+}
+```
+
+要将持久执行添加到您的代理，请将代理实施为 Temporal Workflow。像平常一样使用AI SDK
+会，但传递“TemporalProvider.languageModel()”作为模型。您提供的字符串（如“gpt-4o-mini”）已传递
+到您配置的“modelProvider”来创建模型。
+
+```ts {2,6}
+import { generateText } from 'ai';
+import { temporalProvider } from '@temporalio/ai-sdk';
+
+export async function haikuAgent(prompt: string): Promise<string> {
+  const result = await generateText({
+    model: temporalProvider.languageModel('gpt-4o-mini'),
+    prompt,
+    system: 'You only respond in haikus.',
+  });
+  return result.text;
+}
+```
+
+只需更改两行，您就已将持久执行添加到代理中。您的代理现在可以自动重试，
+超时，以及在进程崩溃时长时间运行而不丢失状态的能力。
+
+## 为你的持久代理提供工具
+
+Vercel AI SDK 可让您向代理提供工具，当模型调用它们时，它们会在 Workflow 中执行。
+由于工具函数在 Workflow 上下文中运行，因此它们必须遵循 Workflow 规则。这意味着他们必须调用“活动”或
+Child Workflow 用于执行 API 调用等非确定性操作。
+
+例如，如果您想调用外部 API 来获取天气，您可以将其实现为 Activity 并调用它
+从工具功能来看。以下是 Activity 获取给定位置天气的示例：
+
+<!--SNIPSTART typescript-vercel-ai-sdk-weather-Activity -->
+[ai-sdk/src/activities.ts](https://github.com/Temporalio/samples-typescript/blob/main/ai-sdk/src/activities.ts)
+```ts
+export async function getWeather(input: {
+  location: string;
+}): Promise<{ city: string; temperatureRange: string; conditions: string }> {
+  console.log('Activity execution');
+  return {
+    city: input.location,
+    temperatureRange: '14-20C',
+    conditions: 'Sunny with wind.',
+  };
+}
+```
+<!--SNIPEND-->
+
+然后在代理实现中，使用“tools”选项向模型提供工具并指示模型使用
+需要时使用该工具。
+
+```ts {15-23}
+import { proxyActivities } from '@temporalio/workflow';
+import { generateText, tool } from 'ai';
+import { temporalProvider } from '@temporalio/ai-sdk';
+import { z } from 'zod';
+
+const { getWeather } = proxyActivities<typeof activities>({
+  startToCloseTimeout: '1 minute',
+});
+
+export async function toolsAgent(question: string): Promise<string> {
+  const result = await generateText({
+    model: temporalProvider.languageModel('gpt-4o-mini'),
+    prompt: question,
+    system: 'You are a helpful agent.',
+    tools: {
+      getWeather: tool({
+        description: 'Get the weather for a given city',
+        inputSchema: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        execute: getWeather,
+      }),
+    },
+    stopWhen: stepCountIs(5),
+  });
+  return result.text;
+}
+```
+
+## 与模型上下文协议 (MCP) 服务器集成
+
+[模型上下文协议 (MCP)](https://modelcontextprotocol.io/) 是一个开放标准，可让 AI 应用程序连接
+外部工具和数据源。对 MCP 服务器的调用（即对外部 API 的调用）是不确定的，并且会
+通常需要作为活动来实现。 Temporal AI SDK 集成可以为您处理此问题并提供
+您可以在 Workflow 内部使用的无状态 MCP 客户端的内置实现。
+
+请按照以下步骤将您的代理与 MCP 服务器集成。
+
+1. 使用“@ai-sdk/mcp”中的“experimental_createMCPClient”函数创建与 MCP 服务器的连接
+   包。您可以通过在`mcpClientFactories`中提供多个工厂函数来注册多个MCP服务器。
+
+   ```ts
+   import { experimental_createMCPClient as createMCPClient } from '@ai-sdk/mcp';
+   import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+
+   const mcpClientFactories = {
+     testServer: () =>
+       createMCPClient({
+         transport: new StdioClientTransport({
+           command: 'node',
+           args: ['lib/mcp-server.js'],
+         }),
+       }),
+   };
+   ```
+
+该示例使用“StdioClientTransport”作为客户端-服务器通信的传输机制。每次
+   Worker处理一个需要与MCP服务器通信的任务，它将启动服务器进程并连接
+   根据任务的要求。
+
+2. 配置 Worker 以使用 MCP 客户端工厂。
+
+   ```ts {5}
+   const worker = await Worker.create({
+     plugins: [
+       new AiSdkPlugin({
+         modelProvider: openai,
+         mcpClientFactories
+       }),
+     ]},
+     ...
+   );
+   ```
+
+3. 在代理 Workflow 中，使用“TemporalMCPClient”通过名称引用来从 MCP 服务器获取工具：
+
+   ```ts {4-5,9}
+   import { TemporalMCPClient, temporalProvider } from '@temporalio/ai-sdk';
+
+   export async function mcpAgent(prompt: string): Promise<string> {
+     const mcpClient = new TemporalMCPClient({ name: 'testServer' });
+     const tools = await mcpClient.tools();
+     const result = await generateText({
+       model: temporalProvider.languageModel('gpt-4o-mini'),
+       prompt,
+       tools,
+       system: 'You are a helpful agent, You always use your tools when needed.',
+       stopWhen: stepCountIs(5),
+     });
+     return result.text;
+   }
+   ```
+
+列出工具和调用它们都作为幕后活动运行，为您提供自动重试、超时和
+   充分的可观测性。

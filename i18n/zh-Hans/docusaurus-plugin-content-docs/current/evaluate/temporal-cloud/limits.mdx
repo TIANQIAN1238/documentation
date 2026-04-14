@@ -1,0 +1,322 @@
+---
+id: limits
+title: System limits - Temporal Cloud
+sidebar_label: Limits
+slug: /cloud/limits
+description: Learn about Temporal Cloud limits, including accounts, Namespaces, throughput, retention, task pollers, batch jobs, gRPC, Search Attributes, and more.
+toc_max_heading_level: 3
+keywords:
+  - capacity
+  - configuration
+  - defaults
+  - limits
+  - quotas
+  - rate limits
+  - scaling
+  - settings
+  - temporal cloud
+  - throttling
+tags:
+  - Temporal Cloud
+  - Limits
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+Temporal Cloud enforces a variety of limits to keep the service reliable, including rate limits (how often something may occur in a unit of time), resource limits (how many of a given resource may exist at any one time), and configuration limits (minimum or maximum values for a setting)
+
+Every limit applies at a specific scope (level of the application):
+
+- At the Temporal Cloud [Account level](#account-level)
+- At the [Namespace level](#Namespace-level)
+- At the [Nexus endpoint level](#Nexus-endpoint-level)
+- Within the [programming model](#programming-model-level) itself
+
+## Account level
+
+The following limits apply at the Temporal Cloud Account level (per account).
+
+### Users
+
+- Scope: Account
+- Default limit: 300 users
+- How to increase: [Contact support](/cloud/support#support-ticket) 
+
+### Namespaces
+
+- Scope: Account
+- Default limit: 10 Namespaces
+- How to increase:
+  - Automatically increased as you start creating Namespaces
+  - [Contact support](/cloud/support#support-ticket) for large-scale needs
+
+## Namespace level
+
+The following limits apply at the Namespace level.
+
+### Actions per second
+
+- Scope: Namespace
+- Default limit: 500 actions per second (APS)
+- How to increase:
+  - Automatically increases (and decreases) based on the last 7 days of APS usage. Will never go below the default limit.
+  - See [Capacity Modes](/cloud/capacity-modes).
+  - [Contact support](/cloud/support#support-ticket).
+- What happens when you exceed the limit: See [Throttling behavior](#throttling-behavior) below.
+
+See the [Actions page](/cloud/actions) for the list of actions. 
+
+### Requests per second
+
+- Scope: Namespace
+- Default limit: 2000 requests per second (RPS)
+- How to increase:
+  - Automatically increases (and decreases) based on the last 7 days of RPS usage. Will never go below the default limit.
+  - See [Capacity Modes](/cloud/capacity-modes).
+  - [Contact support](/cloud/support#support-ticket).
+
+See the [glossary](/glossary#requests-per-second-rps) for more about RPS.
+
+### Operations per second
+
+- Scope: Namespace
+- Default limit: 4000 operations per second (OPS)
+- How to increase:
+  - Automatically increases (and decreases) based on the last 7 days of OPS usage. Will never go below the default limit.
+  - See [Capacity Modes](/cloud/capacity-modes).
+  - [Contact support](/cloud/support#support-ticket).
+
+See the [operations list](/references/operation-list) for the list of operations.
+
+### Throttling behavior
+
+When you exceed your APS, RPS, or OPS limits, Temporal Cloud throttles requests. Here's what happens:
+
+1. **Priority-based throttling**: Low-priority operations are throttled first. Higher-priority operations like `StartWorkflowExecution`, `SignalWorkflowExecution`, and `UpdateWorkflowExecution` continue to go through when possible. Temporal Cloud uses similar [throttling priorities as the open source server](https://github.com/Temporalio/Temporal/blob/main/service/frontend/configs/quotas.go#L66).
+2. **Throttling latency**: Rate limiting is not instantaneous, so usage may briefly exceed your limit before throttling takes effect.
+3. **ResourceExhausted errors**: When throttled, the server returns a `ResourceExhausted` gRPC error. SDK clients automatically retry these based on the default gRPC Retry Policy.
+4. **Potential failure**: If throttling persists beyond the SDK's retry limit, client calls fail. This means work _can_ be lost if you don't handle these failures.
+
+**Best practices for handling throttling:**
+- Log any failed `StartWorkflowExecution`, `SignalWorkflowExecution`, or `UpdateWorkflowExecution` calls on the client side, including the payload, so you can retry or backfill later.
+- Set up [Cloud metrics](/cloud/metrics/openmetrics/metrics-reference#limit-metrics) to alert when throttling occurs and when you approach your limits.
+- Consider [Provisioned Capacity](/cloud/capacity-modes#provisioned-capacity) if you have predictable spikes or need guaranteed throughput.
+
+### Schedules rate limit
+
+- Scope: Namespace
+- Default limit: 10 Schedule requests per second (RPS)
+- How to increase: [Contact support](/cloud/support#support-ticket)
+
+To avoid throttling, don't Schedule all your Workflow Executions to start at the same time (daily, weekly, monthly, etc.).
+Every Temporal SDK supports jittering, which adds small random delays to Schedule specifications, helping to reduce load at any specific moment.
+Set the `jitter` value to the largest delay you will permit before your Workflow Execution must begin.
+This approach uniformly distributes the Scheduled Workflow Execution launches through that period and reduces your Schedule Workflow Execution RPS load.
+
+### Visibility API Rate Limit
+
+- Scope: Namespace
+- Default limit: 30 Visibility API calls per second
+- Not configurable
+
+All read calls are subject to the Visibility API rate limit.
+
+### Nexus Rate Limit {#Nexus-rate-limits}
+
+Nexus requests (such as starting a Nexus Operation or sending a Nexus completion callback) are counted as part of the overall Namespace RPS limit.
+If too many Nexus requests are sent at once, they may be throttled, along with other requests to the Namespace.
+Throttling limits the rate at which Nexus requests are processed, ensuring the RPS limit isn't exceeded.
+
+You can request this limit be manually raised by [opening a support ticket](https://docs.Temporal.io/cloud/support#support-ticket).
+
+:::note
+
+For the target Namespace of a Nexus Endpoint, even though there are no Action results for handling a Nexus Operation itself, the Nexus requests on a target Namespace do count towards the overall RPS limit for the Namespace as a whole.
+
+:::
+
+### Certificates
+
+Temporal Cloud limits each Namespace to a total of 32 KB or 16 certificates, whichever is reached first.
+
+### 并发任务轮询器
+
+Temporal Cloud 将每个 Namespace 限制为同时运行 20,000 个 Activity 轮询器和 20,000 个 Workflow Task 轮询器。
+
+每个 SDK 都提供了一种为每个 Worker 最大 Activity 和 Workflow Task 轮询器配置 Worker 的方法。
+这些值不会影响全局 Namespace 限制。
+
+### 默认保留期
+
+[保留期](/Temporal-service/Temporal-server#retention-period) 按 Namespace 设置。
+
+Temporal Cloud 将默认保留期设置为 30 天。
+这可以在 Temporal Web UI 中进行配置。
+
+[导航到您的 Namespace 列表](https://cloud.Temporal.io/Namespaces)，选择您想要的 Namespace Update，然后选择编辑：
+
+<CaptionedImage
+src="/img/cloud/cloud-guide/edit-Namespace-option.png"
+    title="选择您的 Namespace 并选择编辑"
+/>
+
+<CaptionedImage
+src="/img/cloud/cloud-guide/edit-retention-period.png"
+    title="Update 保留期限"
+/>
+
+您可以将保留期设置在 1 到 90 天之间。
+
+### 批量作业
+
+Namespace 一次只能运行一个[批处理作业](/cli/batch)。
+
+每个批处理作业每秒最多运行 50 个 Workflow Execution。
+
+### 定制 Search Attribute 的数量
+
+每个 Namespace 的每个属性类型的自定义 Search Attribute 数量有限制：
+
+| Search Attribute型|限制|
+| -------------------- | -----|
+|布尔 | 20 |
+|日期时间 | 20 |
+|双 | 20 |
+|国际 | 20 |
+|关键词 | 40 | 40
+|关键词列表 | 5 |
+|文字| 5 |
+
+### 自定义 Search Attribute 名称
+
+在 Temporal Cloud 中创建自定义 Search Attribute 时，属性名称必须遵守以下约束：
+
+- 最大字符数：64
+- 允许的字符：`[a-zA-Z0-9.,:-_\/@]`。
+
+有关自定义 Search Attribute 的更多信息，请参阅[自定义 Search Attribute 限制](/search-attribute#custom-search-attribute)。
+
+## Nexus 端点级别
+
+### Nexus 端点限制
+
+默认情况下，每个帐户配置有 100 个 Nexus 端点。
+您可以通过[开具支持票证](/cloud/support#support-ticket) 请求进一步增加超出初始 100 个端点限制的数量。
+
+## 编程模型级别
+
+以下限制适用于编程模型级别。
+另请参阅：[自托管 Temporal 服务默认值](/self-hosted-guide/defaults)。
+
+### 标识符长度限制
+
+标识符（例如 Workflow Id、Workflow Type 和 Task Queue 名称）的最大长度限制为 1,000 字节。
+请注意，Unicode 字符可能使用多个字节。
+
+### 每条消息 gRPC 限制
+
+收到的每条 gRPC 消息的大小限制为 4 MB。
+此限制适用于 Temporal Platform 上的所有 gRPC 端点。
+
+### Event History 交易大小限制
+
+Event History 事务包含一组操作，例如启动新的 Workflow、调度 Activity、处理 Signal 或启动 Child Workflow。
+这些操作创建事件，然后记录在 Event History 中。
+事务大小限制限制了单个事务中可以容纳的事件的总大小。
+
+任何给定的 [Event History](/Workflow-execution/event#event-history) 事务的大小限制为 4 MB。
+对于 Temporal Cloud，此限制是不可配置的。
+
+### 交易负载大小限制
+
+有效负载的 Blob 大小限制，包括 Workflow 上下文以及每个 Workflow 和 Activity 参数和返回值：
+  - 单个请求的最大有效负载为 2 MB。
+  - 任何给定 [Event History](/Workflow-execution/event#event-history) 事务的最大大小限制为 4 MB。
+
+对于 Temporal Cloud，此限制是不可配置的。
+
+[BlobSizeLimitError 指南](/troubleshooting/blob-size-limit-error) 提供了处理大型负载的解决方案。
+
+### 每个 Workflow Execution 并发限制
+
+如果 Workflow Execution 有 2,000 个未完成的活动、Signal、Child Workflow 或外部 Workflow 取消请求，则该类型的附加 [命令](/Workflow-execution#command) 将无法应用于该 Workflow Execution：
+
+**XPROT035X 容量：**
+- 每个XPROT035X理论上可以同时处理200个[Workflow](/Workflow)和200个[活动](/活动)
+- 保守估计：**每个 XPROT035X 250 个租户**（考虑到管理费用）
+- 对于 1,000 个客户：**至少 4 个 XPROT035X**（加上用于 HA 的副本）
+- 对于 5,000 个客户：**至少 20 个 XPROT035X**（加上用于 HA 的副本）
+
+为了获得最佳性能，请将并发操作限制为 500 或更少。
+这减少了 Workflow 的 Event History 大小并减少了 Web UI 中的加载时间。
+
+### 根据 Workflow Execution Signal 限制
+
+单个 Workflow Execution 最多可接收 10,000 个 Signal。
+达到该限制后，将不再为该 Workflow Execution 处理任何 Signal。
+
+### 根据 Workflow Execution Update 限制
+
+单个 Workflow Execution 最多可容纳 10 个飞行中的 Update，历史上总共 2000 个 Update。
+
+### Workflow Execution Event History 限制
+
+作为预防措施，Workflow Execution 的 Event History 限制为 51,200 个事件或 50 MB。
+它会在 10,240 个事件或 10 MB 后向您发出警告。
+此限制适用于所有 Temporal Workflow Execution，无论是 Temporal Cloud 还是其他部署。
+
+对于 Temporal Cloud，此限制是不可配置的。
+
+在 [Temporal Workflow](/Workflows) 文档页面上了解有关 [Temporal Workflow Execution 限制](/Workflow-execution/limits) 的更多信息。
+
+### 每个 Workflow 回调限制 {#per-Workflow-callback-limits}
+
+单个 Workflow Execution 最多可以有 2000 个总回调。
+
+当[多个 Nexus 调用者附加到同一处理程序 Workflow](/Nexus/operations#attaching-multiple-Nexus-callers) 时，可能会超出这些限制。
+
+有关 [其他详细信息](/Workflow-execution/limits#Workflow-execution-callback-limits)，请参阅 Nexus 百科全书条目。
+
+### 根据 Workflow Nexus Operation 限制 {#per-Workflow-Nexus-操作限制}
+
+单个 Workflow Execution 最多可拥有 30 个飞行中的 Nexus Operation。
+
+有关 [其他详细信息](/Workflow-execution/limits#Workflow-execution-Nexus-operation-limits)，请参阅 Nexus 百科全书条目。
+
+### Nexus Operation 请求超时 {#Nexus-操作-请求-超时}
+
+Nexus 处理程序处理单个 Nexus 启动或取消请求的最大持续时间少于 10 秒。
+
+超时是根据调用历史记录服务测量的，并且请求必须经过匹配，因此处理程序响应的可用时间通常远小于 10 秒。
+处理程序应遵守上下文截止日期并确保不超过该截止日期。
+这包括完全处理同步 Nexus Operation 并启动异步 Nexus Operation，例如启动 Workflow。
+
+如果 Nexus 处理程序在 10 秒内未处理启动或取消请求，它将收到上下文截止时间超出错误，并且调用者将在整个 Nexus Operation 的 ScheduleToClose 持续时间内以指数退避重试。
+它具有默认值和最大值，如下面的 [Nexus Operation 持续时间限制](/cloud/limits#Nexus-operation-duration-limits) 中所定义。
+
+### Nexus Operation 持续时间限制 {#Nexus-操作-持续时间-限制}
+
+每个 Nexus Operation 的 ScheduleToClose 最长持续时间为 60 天。
+这最适用于通过异步回调完成的异步 Nexus Operation，该异步回调使用从处理程序返回到调用者 Namespace 的单独 Nexus 请求。
+
+为了增强安全性，您将来可以使用一次性令牌签署完成回调，并且最长 60 天允许您轮换用于完成回调请求签名的非对称加密密钥。
+
+虽然 Nexus Operation 的调用者可以将 ScheduleToClose 持续时间配置为短于 60 天，但最大持续时间不能超过 60 天，并且由服务器限制为 60 天。
+
+### Timer 持续时间限制
+
+Timer 在 Temporal Cloud 中的最长使用寿命为 100 年。
+
+## Worker 版本控制级别
+
+### 最大 Worker 部署限制 {#max-Worker-deployments-limits}
+
+服务器允许在单个 Namespace 中注册的 Worker 部署的最大数量。默认为 100。
+
+### 部署限制中的最大版本 {#max-versions-in-deployment-limits}
+
+服务器允许在给定时间在单个 Worker 部署中注册的最大版本数。请注意，当达到此限制时，未使用的版本将被系统自动删除。默认为 100。
+
+### 部署版本中的最大 Task Queue 限制 {#max-task-queues-in-deployment-version-limits}
+
+服务器允许在单个 Worker 部署版本中注册的 Task Queue 的最大数量。默认为 100。

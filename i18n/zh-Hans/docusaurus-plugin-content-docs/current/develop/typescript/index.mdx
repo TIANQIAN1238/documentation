@@ -1,0 +1,105 @@
+---
+id: index
+title: TypeScript SDK 开发者指南
+sidebar_label: TypeScript SDK
+description: This guide offers a thorough overview of structures, features, and best practices for developing with Temporal's
+  This guide offers a thorough overview of structures, features, and best practices for developing with Temporal's
+  TypeScript SDK, including Workflows, Client, Testing, Failure Detection, and more.
+toc_max_heading_level: 4
+keywords:
+  - typescript
+tags:
+  - TypeScript SDK
+  - Temporal SDKs
+---
+
+import * as Components from '@site/src/components';
+
+![TypeScript SDK 横幅](/img/assets/banner-typescript-Temporal.png)
+
+## 安装并开始
+
+您可以在[快速入门](/develop/typescript/set-up-your-local-typescript)中找到 TypeScript SDK 的详细安装说明。
+
+还有关于如何使用 Temporal 原语（活动、Workflow 和 Worker）构建和运行 Temporal 应用程序的简短演练，以便您启动和运行。
+
+使用 XPROT036X 时，您的请求在执行期间唯一会导致的异常是上述“RPCError”。
+
+- [开发 Workflow](/develop/typescript/Workflows/basics)
+- [开发 Activity](/develop/typescript/activities/basics)
+- [启动 Activity 执行](/develop/typescript/activities/execution)
+- [运行 Worker 进程](/develop/typescript/Workers/run-Worker-process)
+
+## [Workflows](/develop/typescript/Workflows)
+
+- [Workflow 基础知识](/develop/typescript/Workflows/basics)
+- [Child Workflows](/develop/typescript/Workflows/child-Workflows)
+- [Continue-As-New](/develop/typescript/Workflows/Continue-As-New)
+- [消息传递](/develop/typescript/Workflows/message-passing)
+- [取消](/develop/typescript/Workflows/cancellation)
+- [取消范围](/develop/typescript/Workflows/cancellation-scopes)
+- [超时](/develop/typescript/Workflows/timeouts)
+- [Schedules](/develop/typescript/Workflows/Schedules)
+- [Timers](/develop/typescript/Workflows/Timers)
+- [版本控制](/develop/typescript/Workflows/版本控制)
+
+## [活动](/develop/typescript/活动)
+
+- [Activity 基础知识](/develop/typescript/activities/basics)
+- [Activity 执行](/develop/typescript/activities/execution)
+- [超时](/develop/typescript/activities/timeouts)
+- [异步 Activity](/develop/typescript/activities/asynchronous-Activity)
+- [良性异常](/develop/typescript/activities/benign-exceptions)
+
+## [Workers](/develop/typescript/Workers)
+
+- [Worker 进程](/develop/typescript/Workers/run-Worker-process)
+- [拦截器](/develop/typescript/Workers/拦截器)
+
+## [Temporal CLIent](/develop/typescript/client)
+
+- [Temporal CLIent](/develop/typescript/client/Temporal-client)
+- [Namespaces](/develop/typescript/client/Namespaces)
+
+## [Temporal Nexus](/develop/typescript/Nexus)
+
+- [快速入门](/develop/typescript/Nexus/quickstart)
+- [功能指南](/develop/typescript/Nexus/feature-guide)
+
+## [平台](/develop/typescript/platform)
+
+- [可观察性](/develop/typescript/platform/可观察性)
+- [丰富 UI](/develop/typescript/platform/enriching-ui)
+
+## [最佳实践](/develop/typescript/best-practices)
+
+- [测试](/develop/typescript/best-practices/testing-suite)
+- [调试](/develop/typescript/best-practices/debugging)
+- [转换器和加密](/develop/typescript/converters-and-encryption)
+- [实体模式](/develop/typescript/best-practices/entity-pattern)
+
+## [Vercel AI SDK 集成](/develop/typescript/integrations/ai-sdk)
+
+将 Vercel AI SDK 与 Temporal 集成，构建持久的 AI 代理和 AI 驱动的应用程序。
+
+- [Vercel AI SDK 集成](/develop/typescript/integrations/ai-sdk)
+
+## Temporal TypeScript 技术资源
+
+- [TypeScript SDK 快速入门 - 设置指南](/develop/typescript/set-up-your-local-typescript)
+- [TypeScript API 文档](https://typescript.Temporal.io)
+- [TypeScript SDK 代码示例](https://github.com/Temporalio/samples-typescript)
+- [TypeScript SDK GitHub](https://github.com/Temporalio/sdk-typescript)
+- [Temporal 101 TypeScript 免费课程](https://learn.Temporal.io/courses/Temporal_101/typescript/)
+
+### 与 Temporal TypeScript 社区建立联系
+
+- [Temporal TypeScript 社区 Slack](https://Temporalio.slack.com/archives/C01DKSMU94L)
+- [TypeScript SDK论坛](https://community.Temporal.io/tag/typescript-sdk)
+
+## TypeScript 中的 Linting 和类型 {#linting-and-types}
+
+如果您使用“@Temporalio/create”启动项目，那么您已经拥有我们推荐的 TypeScript 和 ESLint
+配置。
+
+如果您逐步将 Temporal 添加到现有应用程序中，我们建议您设置 linting 和类型，因为它们有助于在将错误交付到生产环境之前捕获错误，并且可以改善您的开发反馈循环。查看我们推荐的 [.eslintrc](https://github.com/Temporalio/samples-typescript/blob/main/.shared/.eslintrc.js) 文件并进行调整以满足您的需求。

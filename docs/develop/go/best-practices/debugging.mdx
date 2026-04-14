@@ -1,9 +1,9 @@
 ---
 id: debugging
-title: Debugging - Go SDK
-sidebar_label: Debugging
+title: "调试-Go SDK"
+sidebar_label: "调试"
 slug: /develop/go/best-practices/debugging
-description: Use debugger tools and set TEMPORAL_DEBUG to true for debugging Workflow Definitions with the Temporal Go SDK, and debug production Workflows via Web UI, CLI, or tracing.
+description: "使用调试器工具并将 Temporal_DEBUG 设置为 true，以便使用 Temporal Go SDK 调试 Workflow Definition，并通过 Web UI、CLI 或跟踪调试生产 Workflow。"
 toc_max_heading_level: 4
 keywords:
   - debugging
@@ -23,45 +23,46 @@ tags:
   - Temporal SDKs
 ---
 
-You can use a debugger tool provided by your favorite IDE to debug your Workflow Definitions prior to testing or executing them.
+在测试或执行 Workflow Definition 之前，您可以使用您最喜欢的 IDE 提供的调试器工具来调试它们。
 
-The Temporal Go SDK includes deadlock detection which fails a Workflow Task in case the code blocks over a second without relinquishing execution control.
-Because of this you can often encounter a `PanicError: Potential deadlock detected` while stepping through Workflow Definitions during debugging.
+Temporal Go SDK 包括死锁检测，如果代码阻塞超过一秒而不放弃执行控制，则该死锁检测会使 Workflow 任务失败。
+因此，在调试期间单步执行 Workflow Definition 时，您经常会遇到 `PanicError: Potential deadlock detected`。
 
-To alleviate this issue, you can set the `TEMPORAL_DEBUG` environment variable to `true` before debugging your Workflow Definition.
+为了缓解此问题，您可以在调试 Workflow Definition 之前将 `Temporal_DEBUG` 环境变量设置为 `true`。
 
 :::note
 
-Make sure to set `TEMPORAL_DEBUG` to true only during debugging.
+确保仅在调试期间将 `Temporal_DEBUG` 设置为 true。
 
 :::
 
-## How to debug in a development environment {#debug-in-a-development-environment}
+## 如何在开发环境中调试 {#debug-in-a-development-environment}
 
-In addition to the normal development tools of logging and a debugger, you can also see what's happening in your Workflow by using the [Web UI](/web-ui) or [Temporal CLI](/cli).
+除了日志记录和调试器等常规开发工具之外，您还可以使用 [网页用户界面](/web-ui) 或 [Temporal CLI](/cli) 查看 Workflow 中发生的情况。
 
-## How to debug in a production environment {#debug-in-a-production-environment}
+<a id="debug-in-a-production-environment"></a>
+## 如何在生产环境中调试 {#debug-in-a-production-environment}
 
-You can debug production Workflows using:
+您可以使用以下方法调试生产 Workflow：
 
-- [Web UI](/web-ui)
+- [网页用户界面](/web-ui)
 - [Temporal CLI](/cli)
-- [Replay](/develop/go/best-practices/testing-suite#replay)
-- [Tracing](/develop/go/platform/observability#tracing)
-- [Logging](/develop/go/platform/observability#logging)
+- [重播](/develop/go/best-practices/testing-suite#replay)
+- [追踪](/develop/go/platform/observability#tracing)
+- [记录](/develop/go/platform/observability#logging)
 
-You can debug and tune Worker performance with metrics and the [Worker performance guide](/develop/worker-performance).
-For more information, see [Metrics](/develop/go/platform/observability#metrics) for setting up SDK metrics.
+您可以使用指标和 [Worker 性能指南](/develop/worker-performance) 来调试和调整 Worker 性能。
+有关更多信息，请参阅 [指标](/develop/go/platform/observability#metrics) 设置 SDK 指标。
 
-Debug Server performance with [Cloud metrics](/cloud/metrics/) or [self-hosted Server metrics](/self-hosted-guide/production-checklist#scaling-and-metrics).
+使用 [云指标](/cloud/metrics/) 或 [自托管服务器指标](/self-hosted-guide/production-checklist#scaling-and-metrics) 调试服务器性能。
 
-## How to test Workflow Definitions in Go {#testing-and-debugging}
+## 如何在 Go 中测试 Workflow Definition {#testing-and-debugging}
 
-The Temporal Go SDK provides a test framework to facilitate testing Workflow implementations.
+Temporal Go SDK 提供了一个测试框架来促进测试 Workflow 实现。
 
-This framework is suited for implementing unit tests as well as functional tests of the Workflow logic.
+该框架适合于实现 Workflow 逻辑的单元测试和功能测试。
 
-The following code implements unit tests for the `SimpleWorkflow` sample:
+以下代码实现 `SimpleWorkflow` 示例的单元测试：
 
 ```go
 package sample
@@ -131,27 +132,28 @@ func TestUnitTestSuite(t *testing.T) {
 }
 ```
 
-#### Setup
+＃＃＃＃ 设置
 
-To run unit tests, we first define a test suite struct that absorbs both the
-basic suite functionality from [testify](https://pkg.go.dev/github.com/stretchr/testify/suite)
-via `suite.Suite` and the suite functionality from the Temporal test framework via
-`testsuite.WorkflowTestSuite`. Because every test in this test suite will test our Workflow, we
-add a property to our struct to hold an instance of the test environment. This allows us to initialize
-the test environment in a setup method. For testing Workflows, we use a `testsuite.TestWorkflowEnvironment`.
+为了运行单元测试，我们首先定义一个测试套件结构，它吸收了
+[作证](https://pkg.go.dev/github.com/stretchr/testify/suite) 的基本套件功能
+通过 `suite.Suite` 和 Temporal 测试框架的套件功能
+`testsuite.WorkflowTestSuite`。因为这个测试套件中的每个测试都会测试我们的 Workflow，所以我们
+向我们的结构添加一个属性来保存测试环境的实例。这允许我们初始化
+设置方法中的测试环境。为了测试 Workflow，我们使用 `testsuite.TestWorkflowEnvironment`。
 
-Next, we implement a `SetupTest` method to set up a new test environment before each test. Doing so
-ensures that each test runs in its own isolated sandbox. We also implement an `AfterTest` function
-where we assert that all the mocks we set up were indeed called by invoking `s.env.AssertExpectations(s.T())`.
+接下来，我们实现一个 `SetupTest` 方法来在每次测试之前设置一个新的测试环境。这样做
+确保每个测试在其自己的隔离沙箱中运行。我们还实现了 `AfterTest` 函数
+我们断言我们设置的所有模拟确实是通过调用 `s.env.AssertExpectations(s.T())` 来调用的。
 
-Timeout for the entire test can be set using `SetTestTimeout` in the Workflow or Activity environment.
+整个测试的超时可以在 Workflow 或 Activity 环境中使用 `SetTestTimeout` 设置。
 
-Finally, we create a regular test function recognized by the `go test` command, and pass the struct to `suite.Run`.
+最后，我们创建一个由 `go test` 命令识别的常规测试函数，并将结构传递给 `suite.Run`。
 
-#### A Simple Test
+<a id="setup"></a>
+#### 一个简单的测试 {#setup}
 
-The simplest test case we can write is to have the test environment execute the Workflow and then
-evaluate the results.
+我们可以编写的最简单的测试用例是让测试环境执行 Workflow，然后
+评估结果。
 
 ```go
 func (s *UnitTestSuite) Test_SimpleWorkflow_Success() {
@@ -162,30 +164,31 @@ func (s *UnitTestSuite) Test_SimpleWorkflow_Success() {
 }
 ```
 
-Calling `s.env.ExecuteWorkflow(...)` executes the Workflow logic and any invoked Activities inside the
-test process. The first parameter of `s.env.ExecuteWorkflow(...)` contains the Workflow functions,
-and any subsequent parameters contain values for custom input parameters declared by the Workflow
-function.
+调用 `s.env.ExecuteWorkflow(...)` 会执行 Workflow 逻辑以及
+测试过程。 `s.env.ExecuteWorkflow(...)` 的第一个参数包含 Workflow 函数，
+并且任何后续参数都包含 Workflow 声明的自定义输入参数的值
+功能。
 
-> Note that unless the Activity invocations are mocked or Activity implementation
-> replaced (see [Activity mocking and overriding](#activity-mocking-and-overriding)), the test environment
-> will execute the actual Activity code including any calls to outside services.
+> 请注意，除非 Activity 调用被模拟或 Activity 实现
+> 更换（见[Activity 模拟和重写](#activity-mocking-and-overriding)），测试环境
+> 将执行实际的 Activity 代码，包括对外部服务的任何调用。
 
-After executing the Workflow in the above example, we assert that the Workflow ran through completion
-via the call to `s.env.IsWorkflowComplete()`. We also assert that no errors were returned by asserting
-on the return value of `s.env.GetWorkflowError()`. If our Workflow returned a value, we could have
-retrieved that value via a call to `s.env.GetWorkflowResult(&value)` and had additional asserts on that
-value.
+执行上例中的 Workflow 后，我们断言 Workflow 运行完成
+通过调用 `s.env.IsWorkflowComplete()`。我们还断言断言没有返回任何错误
+关于`s.env.GetWorkflowError()`的返回值。如果我们的 Workflow 返回一个值，我们可以有
+通过调用 `s.env.GetWorkflowResult(&value)` 检索该值并对此进行附加断言
+值。
 
-#### Activity mocking and overriding
+<a id="a-simple-test"></a>
+#### Activity 模拟和重写 {#a-simple-test}
 
-When running unit tests on Workflows, we want to test the Workflow logic in isolation. Additionally,
-we want to inject Activity errors during our test runs. The test framework provides two mechanisms
-that support these scenarios: Activity mocking and Activity overriding. Both of these mechanisms allow
-you to change the behavior of Activities invoked by your Workflow without the need to modify the actual
-Workflow code.
+在 Workflow 上运行单元测试时，我们希望单独测试 Workflow 逻辑。另外，
+我们想在测试运行期间注入 Activity 错误。测试框架提供了两种机制
+支持这些场景：Activity 模拟和 Activity 覆盖。这两种机制都允许
+您可以更改 Workflow 调用的活动的行为，而无需修改实际的
+Workflow 代码。
 
-Let's take a look at a test that simulates a test that fails via the "Activity mocking" mechanism.
+让我们看一下模拟通过“Activity 模拟”机制失败的测试的测试。
 
 ```go
 func (s *UnitTestSuite) Test_SimpleWorkflow_ActivityFails() {
@@ -203,22 +206,22 @@ func (s *UnitTestSuite) Test_SimpleWorkflow_ActivityFails() {
 }
 ```
 
-This test simulates the execution of the Activity `SimpleActivity` that is invoked by our Workflow
-`SimpleWorkflow` returning an error. We accomplish this by setting up a mock on the test environment
-for the `SimpleActivity` that returns an error.
+此测试模拟由我们的 Workflow 调用的 Activity `SimpleActivity` 的执行
+`SimpleWorkflow` 返回错误。我们通过在测试环境上设置模拟来实现这一点
+对于返回错误的 `SimpleActivity`。
 
 ```go
 s.env.OnActivity(SimpleActivity, mock.Anything, mock.Anything).Return(
   "", errors.New("SimpleActivityFailure"))
 ```
 
-With the mock set up we can now execute the Workflow via the `s.env.ExecuteWorkflow(...)` method and
-assert that the Workflow completed successfully and returned the expected error.
+设置模拟后，我们现在可以通过 `s.env.ExecuteWorkflow(...)` 方法执行 Workflow 并
+断言 Workflow 成功完成并返回预期错误。
 
-Simply mocking the execution to return a desired value or error is a pretty powerful mechanism to
-isolate Workflow logic. However, sometimes we want to replace the Activity with an alternate implementation
-to support a more complex test scenario. Let's assume we want to validate that the Activity gets called
-with the correct parameters.
+简单地模拟执行以返回所需的值或错误是一种非常强大的机制
+隔离 Workflow 逻辑。然而，有时我们想用替代实现替换 Activity
+以支持更复杂的测试场景。假设我们要验证 Activity 是否被调用
+使用正确的参数。
 
 ```go
 func (s *UnitTestSuite) Test_SimpleWorkflow_ActivityParamCorrect() {
@@ -234,19 +237,20 @@ func (s *UnitTestSuite) Test_SimpleWorkflow_ActivityParamCorrect() {
 }
 ```
 
-In this example, we provide a function implementation as the parameter to `Return`. This allows us to
-provide an alternate implementation for the Activity `SimpleActivity`. The framework will execute this
-function whenever the Activity is invoked and pass on the return value from the function as the result
-of the Activity invocation. Additionally, the framework will validate that the signature of the "mock"
-function matches the signature of the original Activity function.
+在此示例中，我们提供函数实现作为 `Return` 的参数。这使我们能够
+为 Activity `SimpleActivity` 提供替代实现。框架将执行此操作
+每当调用 Activity 时都会调用函数，并将函数的返回值作为结果传递
+Activity 调用的。此外，该框架将验证“模拟”的签名
+函数与原始 Activity 函数的签名匹配。
 
-Since this can be an entire function, there is no limitation as to what we can do here. In this
-example, we assert that the `value` param has the same content as the value param we passed to the Workflow.
+由于这可以是一个完整的函数，因此我们在这里可以做什么没有限制。在这个
+例如，我们断言 `value` 参数与我们传递给 Workflow 的值参数具有相同的内容。
 
-#### Queries
+<a id="activity-mocking-and-overriding"></a>
+#### 查询 {#activity-mocking-and-overriding}
 
-`TestWorkflowEnvironment` instances have a [`QueryWorkflow()` method](https://pkg.go.dev/go.temporal.io/temporal/internal#TestWorkflowEnvironment.QueryWorkflow) that lets you query the state of the currently running Workflow.
-For example, suppose you have a Workflow that lets you query the progress of a long running task as shown below.
+`TestWorkflowEnvironment` 实例具有 [`QueryWorkflow()`方法](https://pkg.go.dev/go.temporal.io/temporal/internal#TestWorkflowEnvironment.QueryWorkflow)，可让您获得 Query 当前运行的 Workflow 的状态。
+例如，假设您有一个 Workflow，它允许您 Query 长时间运行的任务的进度，如下所示。
 
 ```go
 func ProgressWorkflow(ctx workflow.Context, percent int) error {
@@ -270,9 +274,9 @@ func ProgressWorkflow(ctx workflow.Context, percent int) error {
 }
 ```
 
-This Workflow tracks the current progress of a task in percentage terms, and increments the percentage by 1 every second.
-Below is how you would write a test case that queries this Workflow.
-Note that you should always query the Workflow either after `ExecuteWorkflow()` is done or in a `RegisterDelayedCallback()` callback, otherwise you'll get a `runtime error` panic.
+Workflow 以百分比形式跟踪任务的当前进度，并每秒将百分比增加 1。
+下面是如何编写查询此 Workflow 的测试用例。
+请注意，在 `ExecuteWorkflow()` 完成后或在 `RegisterDelayedCallback()` 回调中，您应该始终使用 Query 和 Workflow，否则您会遇到 `runtime error` 恐慌。
 
 ```go
 func (s *UnitTestSuite) Test_ProgressWorkflow() {
@@ -304,21 +308,22 @@ func (s *UnitTestSuite) Test_ProgressWorkflow() {
 
 :::note
 
-`RegisterDelayedCallback` can also be used to send [Signals](/sending-messages#sending-signals).
-When using "Signal-With-Start", set the delay to `0`.
+`RegisterDelayedCallback` 也可用于发送 [Signals](/sending-messages#sending-signals)。
+使用“Signal-With-Start”时，将延迟设置为`0`。
 :::
 
-#### Debugging
+<a id="queries"></a>
+#### 调试 {#queries}
 
-You can use a debugger tool provided by your favorite IDE to debug your Workflow Definitions prior to testing or executing them.
+在测试或执行 Workflow Definition 之前，您可以使用您最喜欢的 IDE 提供的调试器工具来调试它们。
 
-The Temporal Go SDK includes deadlock detection which fails a Workflow Task in case the code blocks over a second without relinquishing execution control.
-Because of this you can often encounter a `PanicError: Potential deadlock detected` while stepping through Workflow Definitions during debugging.
+Temporal Go SDK 包括死锁检测，如果代码阻塞超过一秒而不放弃执行控制，则该死锁检测会使 Workflow 任务失败。
+因此，在调试期间单步执行 Workflow Definition 时，您经常会遇到 `PanicError: Potential deadlock detected`。
 
-To alleviate this issue, you can set the `TEMPORAL_DEBUG` environment variable to `true` before debugging your Workflow Definition.
+为了缓解此问题，您可以在调试 Workflow Definition 之前将 `Temporal_DEBUG` 环境变量设置为 `true`。
 
 :::note
 
-Make sure to set `TEMPORAL_DEBUG` to true only during debugging.
+确保仅在调试期间将 `Temporal_DEBUG` 设置为 true。
 
 :::

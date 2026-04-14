@@ -1,0 +1,317 @@
+---
+id: debugging
+title: 调试-TypeScript SDK
+sidebar_label: 调试
+slug: /develop/typescript/best-practices/debugging
+description: Temporal TypeScript SDK 调试指南提供了在开发和生产环境中调试 Workflow 和 Worker 的工具和技巧。使用 Web UI、Temporal CLI 等解决常见问题。
+toc_max_heading_level: 4
+keywords:
+  - debugging
+tags:
+  - Debugging
+  - TypeScript SDK
+  - Temporal SDKs
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+Temporal TypeScript SDK 开发人员指南的调试部分介绍了用于调试的工具以及如何解决常见问题。
+
+## 如何在开发环境中调试 {#debug-in-a-development-environment}
+
+除了日志记录和调试器等常规开发工具之外，您还可以使用 [Web UI](/web-ui) 或 [Temporal CLI](/cli) 查看 Workflow 中发生的情况。
+
+## 如何在生产环境中调试 {#debug-in-a-product-environment}
+
+您可以使用以下方法调试生产版 Workflow：
+
+- [网页用户界面](/web-ui)
+- [Temporal CLI](/cli)
+- [重播](/develop/typescript/best-practices/testing-suite#replay)
+- [追踪](/develop/typescript/platform/observability#tracing)
+- [日志记录](/develop/typescript/platform/observability#logging)
+
+您可以使用指标和 [Worker 性能指南](/develop/Worker-performance) 来调试和调整 Worker 性能。
+有关设置 SDK 指标的信息，请参阅 TypeScript SDK 开发人员指南的可观察性部分中的[指标](/develop/typescript/platform/observability#metrics)。
+
+使用[云指标](/cloud/metrics/) 或[自托管服务器指标](/self-hosted-guide/product-checklist#scaling-and-metrics) 调试服务器性能。
+
+## 如何解决 TypeScript SDK 中的常见问题 {#troubleshoot-common-issues}
+
+{/* 以下内容移植自 \docs-src\typescript\troubleshooting.md */}
+
+### 两个观看地点
+
+- Workflow 错误反映在 Temporal Web 中。
+- Worker 错误和日志反映在终端中。
+
+如果某些内容的行为不符合您的预期，请务必检查这两个位置是否有有用的错误消息。
+
+### 陈旧的 Workflows
+
+如果您正在开发 Workflow 并发现代码未按预期执行，则首先要查看旧的 Workflow 是否仍在运行。
+
+如果那些旧的 Workflow 有相同的名称并且位于相同的 Task Queue 上，Temporal 将尝试按照设计继续在新代码上执行它们。
+您可能会收到对您来说毫无意义的错误，因为
+
+- Temporal 正在尝试执行代码库中不再存在的旧 Workflow 代码，或者
+- 您的新客户端代码期望 Temporal 执行它还不知道的旧 Workflow/Activity 代码。
+
+发生这种情况的最大迹象是，如果您注意到 Temporal 的行为具有不确定性：运行相同的 Workflow 两次会得到不同的结果。
+
+陈旧的 Workflow 通常不是问题，因为生成的错误只是您不再希望运行的代码中的噪音。
+如果您需要终止旧的过时的 Workflow，您可以使用 Temporal Web 或 Temporal CLI 来完成此操作。
+
+### Workflow/Activity 注册错误
+
+**如果您的 Workflow 或活动未导入或拼写不正确**，以下是我们发现的一些错误：
+
+- `ApplicationFailure：'MyFunction' 不是一个函数`
+-“Workflow 没有为 MyQuery 注册处理程序”
+
+仔细检查您的 Worker 是否在右侧 Task Queue 上注册了正确的 Workflow 和 Activity Definition（函数名称）。
+
+**如果您在 monorepo 中运行 Temporal**，那么您的 `node_modules` 可能位于与 Temporal 默认情况下期望找到它的位置不同的位置，这会导致如下错误：
+
+```bash
+[ERROR] Module not found: Error: Can't resolve '@temporalio/workflow/lib/worker-interface.js' in '/src'
+```
+
+我们的 [Next.js 教程](https://learn.Temporal.io/tutorials/typescript/nextjs) 是为人们在现有的 monorepo** 中设置 Temporal 编写的，这可能在这里有用。
+
+当您传递“WorkflowsPath”时，我们的 Webpack 配置期望在同一目录或父/祖先目录中找到“node_modules”。
+
+**如果您自定义捆绑自己的 Workflow**，您可能会收到如下错误：
+
+```bash
+[ERROR] Failed to activate workflow {
+  runId: 'aaf84a83-51ce-462a-9ab7-6a641a703bff',
+  error: ReferenceError: exports is not defined,
+  workflowExists: false
+}
+```
+
+Temporal Workflow 捆绑包需要[导出一组适合已编译的“Worker-interface.ts”的方法`@Temporalio/Workflow`](https://github.com/Temporalio/sdk-typescript/blob/eaa2d205c9bc5ff4a3b17c0b34f2dcf6b1e0264a/packages/Worker/src/Workflow/bundler.ts#L81) 作为入口点。
+我们确实提供了一个“bundleWorkflowCode”方法来帮助您完成此操作，尽管它使用我们的 Webpack 设置。
+有关更多信息，请参阅[寄存器类型](/develop/typescript/Workers/run-Worker-process#register-types)部分。
+
+### Webpack 错误
+
+TypeScript SDK 的 Worker 将基于“WorkflowsPath”的 Workflow 与 [Webpack](https://webpack.js.org/) 捆绑在一起，并在 v8 隔离中运行它们。
+
+如果 Webpack 无法创建捆绑包，SDK 将抛出错误并使用 SDK 的 [logger](/develop/typescript/platform/observability#logging) 发出 webpack 日志。
+
+如果您在终端中没有看到 Webpack 输出，请确保您没有禁用 SDK 日志记录（请参阅上面链接中的“Runtime.install()”参考）。
+
+**TypeScript SDK 新手的一个常见错误是尝试在 Workflow 代码中使用 Node.js 内置程序和模块。**通常，最好的办法是将代码移至 Activity。
+
+一些在 Workflow 隔离中**不**工作的常见示例：
+
+<详情>
+    <摘要>
+    导入节点内置模块
+    </summary>
+
+:::danger Antipattern
+
+```ts
+import fs from 'fs';
+
+const config = fs.readFileSync('config.json', 'utf8');
+```
+
+:::
+
+这是无效的，因为从文件系统读取是一个不确定的操作：文件可能从原始 Workflow Execution 的时间到重播 Workflow 的时间发生变化。
+
+您通常会在 Webpack 输出中看到以下形式的错误：
+
+```
+2021-10-14T19:22:00.606Z [INFO] Module not found: Error: Can't resolve 'fs' in '/Users/you/your-project/src'
+2021-10-14T19:22:00.606Z [INFO] resolve 'fs' in '/Users/you/your-project/src'
+2021-10-14T19:22:00.606Z [INFO]   Parsed request is a module
+2021-10-14T19:22:00.606Z [INFO]   using description file: /Users/you/your-project/package.json (relative path: ./src)
+2021-10-14T19:22:00.606Z [INFO]     Field 'browser' doesn't contain a valid alias configuration
+```
+
+</details>
+
+<详情>
+    <摘要>
+    直接从 Workflow 代码导入和调用活动
+    </summary>
+
+:::danger Antipattern
+
+```ts
+import { makeHTTPRequest } from './activities';
+
+export async function yourWorkflow(): Promise<string> {
+  return await makeHTTPRequest('https://temporal.io');
+}
+```
+
+:::
+
+这是无效的，因为 Activity 实现不应由 Workflow 代码直接引用。
+Workflow 使用活动来进行网络调用并从文件系统读取，这些操作本质上是不确定的，因为它们依赖于外部状态。
+Temporal 将 Activity 结果记录在 Workflow 历史记录中，如果您的 Workflow 重播，已完成的活动将不会重新运行，而是将其记录的结果传送到 Workflow。
+
+您通常会在 Webpack 输出中看到以下形式的错误：
+
+```
+2021-10-14T19:46:52.731Z [INFO] ERROR in ./src/activities.ts 8:31-46
+2021-10-14T19:46:52.731Z [INFO] Module not found: Error: Can't resolve 'http' in '/Users/you/your-project/src'
+2021-10-14T19:46:52.731Z [INFO]
+2021-10-14T19:46:52.731Z [INFO] BREAKING CHANGE: webpack < 5 used to include polyfills for node.js core modules by default.
+2021-10-14T19:46:52.731Z [INFO] This is no longer the case. Verify if you need this module and configure a polyfill for it.
+2021-10-14T19:46:52.731Z [INFO]
+2021-10-14T19:46:52.731Z [INFO] If you want to include a polyfill, you need to:
+2021-10-14T19:46:52.731Z [INFO]         - add a fallback 'resolve.fallback: { "http": require.resolve("stream-http") }'
+2021-10-14T19:46:52.731Z [INFO]         - install 'stream-http'
+2021-10-14T19:46:52.731Z [INFO] If you don't want to include a polyfill, you can use an empty module like this:
+2021-10-14T19:46:52.731Z [INFO]         resolve.fallback: { "http": false }
+```
+
+要从 Workflow 代码正确调用您的活动，请使用“proxyActivities”并确保仅导入 Activity 类型。
+
+```ts
+import { proxyActivities } from '@temporalio/workflow';
+
+import type * as activities from './activities';
+const { makeHTTPRequest } = proxyActivities<typeof activities>();
+
+export async function yourWorkflow(): Promise<string> {
+  return await makeHTTPRequest('https://temporal.io');
+}
+```
+
+</details>
+
+### 在开发中有效，但在产品中无效
+
+开发与产品差异的两个主要来源是捆绑和连接。
+
+#### 生产捆绑
+
+在安排 Workflow 时，您可能会遇到客户将剥离的名称作为 Workflow“类型”发送的情况。
+Webpack 可以将 Workflow 的函数名称更改为更短的名称。
+Temporal 不知道如何处理较短名称和预期的 Workflow Type 之间的不匹配。
+
+您可能会遇到这样的错误：
+
+```
+Error: 3 INVALID_ARGUMENT: WorkflowType is not set on request.
+```
+
+或者，当 Webpack 将 Workflow 的函数名称更改为更短的名称时，您可能会在 Temporal 服务的 Web UI 中看到更短的名称，在本例中为单个字母“s”：
+
+<CaptionedImage
+src =“/img/webui/stripped_Workflow_types_in_webui.png”
+    title="Temporal Web UI 显示已删除的“Workflow Type”条目，在本例中为单个字母“s””
+/>
+
+当您的捆绑程序删除 Workflow 函数名称时，可能会发生此问题。
+Temporal 依赖这些名称在服务 Web UI 中设置“Workflow Type”。
+为了防止构建过程缩短 Workflow 函数名称，请修改 webpack 配置文件 (`webpack.config.js`) 以在 `TerserPlugin` 配置部分设置保留原始名称的布尔值。
+将选项（`keep_fnames`）设置为“true”可以防止名称剥离。
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs
+默认值=“webpackterser”
+值={[
+{label: 'Webpack with Terser', value: 'webpackterser'},
+{标签：'ESbuild'，值：'esbuild'}，
+]
+}>
+
+<TabItem value="webpackterser">
+
+```js
+// webpack.config.js
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          keep_fnames: true, // don't strip function names in production
+        },
+      }),
+    ],
+  },
+};
+```
+
+</TabItem>
+<TabItem value="esbuild">
+
+```js
+require('esbuild').buildSync({
+  entryPoints: ['app.js'],
+  minify: true,
+  keepNames: true,
+  outfile: 'out.js',
+});
+```
+
+有关更多信息，请参阅 [esbuild 文档](https://esbuild.github.io/api/#keep-names)。
+</TabItem>
+</Tabs>
+
+#### 连接到 Temporal Server
+
+如果您尝试在生产中连接并得到以下信息：
+
+```bash
+[TransportError: transport error]
+```
+
+这表明您的证书/密钥对有问题。
+将其注销并确保它与预期完全匹配（通常，从生产机密管理环境注入时，问题可能是空格）。
+
+### 重置 Workflows 以处理逻辑错误
+
+您可以使用 Temporal CLI“倒回时间”，将 Workflow 历史记录重置到之前的某个时间点。您可以阅读 Temporal CLI 文档：
+
+- [通过 ID 重新启动和重置 Workflows](/cli)
+- [通过二进制校验和标识符重置所有 Workflow](/cli)
+
+如果您需要以编程方式重置，TS SDK 没有任何高级 API，但您可以进行原始 gRPC 调用[重置WorkflowExecution]（https://typescript.Temporal.io/api/classes/proto.Temporal.api.Workflowservice.v1.WorkflowService-1/#resetWorkflowexecution）。
+
+重置只能用于处理代码中的严重逻辑错误：它不能用于处理暂时性故障，例如无法访问下游服务。不应在正常应用程序流程中使用它。
+
+### gRPC 调用超时（超出上下文截止时间）
+
+不透明的“超出上下文截止日期”错误来自“gRPC”：
+
+```
+Error: 4 DEADLINE_EXCEEDED: context deadline exceeded
+    at Object.callErrorFromStatus (/Users/swyx/Work/Temporal/samples-typescript/nextjs-oneclick/node_modules/@grpc/grpc-js/build/src/call.js:31:26)
+    at Object.onReceiveStatus (/Users/swyx/Work/Temporal/samples-typescript/nextjs-oneclick/node_modules/@grpc/grpc-js/build/src/client.js:179:52)
+    at Object.onReceiveStatus (/Users/swyx/Work/Temporal/samples-typescript/nextjs-oneclick/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:336:141)
+    at Object.onReceiveStatus (/Users/swyx/Work/Temporal/samples-typescript/nextjs-oneclick/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:299:181)
+    at /Users/swyx/Work/Temporal/samples-typescript/nextjs-oneclick/node_modules/@grpc/grpc-js/build/src/call-stream.js:145:78
+    at processTicksAndRejections (node:internal/process/task_queues:78:11) {
+  code: 4,
+  details: 'context deadline exceeded',
+  metadata: Metadata {
+    internalRepr: Map(1) { 'content-type' => [Array] },
+    options: {}
+  },
+  page: '/api/getBuyState'
+}
+```
+
+有多种情况可能会导致此错误，包括网络中断、超时太短以及服务器过载。
+Querying 其 Query 处理程序导致错误的 Workflow Execution 可能会导致 Query 调用超时。
+
+您可以采取的一些故障排除操作：
+
+- 验证从 Worker 到 Temporal Server 的连接是否正常工作并且没有异常高的延迟。
+- 如果您自己运行 Temporal Server，请检查您的[服务器指标](/self-hosted-guide/product-checklist#scaling-and-metrics) 以确保其没有过载。
+- 如果超时的是 Query，请检查 Worker 的日志，看看它们在处理 Query 时是否存在问题。
+
+如果上述操作均无法帮助您发现超时发生的原因，请尝试生成最小的重现，我们将很乐意为您提供帮助。

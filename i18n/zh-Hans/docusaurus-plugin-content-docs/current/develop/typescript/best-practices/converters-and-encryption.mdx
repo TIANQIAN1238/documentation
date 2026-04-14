@@ -1,0 +1,608 @@
+---
+id: converters-and-encryption
+title: 转换器和加密 - TypeScript SDK
+sidebar_label: 转换器和加密
+slug: /develop/typescript/converters-and-encryption
+toc_max_heading_level: 2
+keywords:
+  - data-encryption
+tags:
+  - Security
+  - Codec Server
+  - Data Converters
+  - Encryption
+  - TypeScript SDK
+  - Temporal SDKs
+description: 使用 Temporal SDK 在 TypeScript 中创建自定义有效负载转换器，以处理非 JSON 可序列化值、配置 Data Converter，并在 Workflow 和活动中无缝使用 Protobuf 和加密。
+---
+
+## 有效负载转换器和有效负载编解码器摘要
+
+本节总结了有效负载转换器和有效负载编解码器之间的区别。
+
+### 有效负载转换器
+
+有效负载转换器负责将应用程序对象序列化为有效负载并将它们反序列化回应用程序对象。在这种情况下，有效负载是适合网络传输的二进制形式，可能包括一些元数据。此序列化过程将对象（例如 JSON 或 Protobuf 格式的对象）转换为二进制格式，反之亦然。例如，对象可以使用 UTF-8 字节编码序列化为 JSON，或者使用一组特定的 Protobuf 消息定义序列化为 Protobuf 二进制文件。
+
+由于有效负载转换器在 Workflow 上下文中运行，因此它们在 Workflow 沙箱内运行。因此，有效负载转换器无法访问外部服务或使用非确定性模块，这由于其非确定性性质而排除了大多数类型的加密。
+
+### 有效负载编解码器
+
+有效负载编解码器将一个有效负载转换为另一个有效负载，将二进制数据转换为不同的二进制格式。与有效负载转换器不同，有效负载编解码器不在 Workflow 沙箱内运行。这使它们能够执行包括调用远程服务和使用非确定性模块的操作，这对于加密有效负载、压缩数据或将大型有效负载卸载到对象存储等任务至关重要。有效负载编解码器也可以实现为 Codec Server（稍后将进行描述）。
+
+### 运营链
+
+实际上，这两个组件在链中运行以安全地处理数据。传入数据首先通过“toPayload”方法通过有效负载转换器，将应用程序对象转换为有效负载。然后，这些 Payload 由 Payload Codec 通过“encode”方法进行处理，该方法根据所需的安全性或效率需求调整 Payload，然后再将其发送到 Temporal 集群。
+
+该过程对于传出数据是对称的。从 Temporal 集群检索的有效负载首先通过“解码”方法通过有效负载编解码器，该方法会反转编码期间应用的任何转换。最后，有效负载转换器通过“fromPayload”方法将生成的有效负载转换回应用程序对象，使其可以在应用程序中使用。
+
+## 负载编解码器
+
+> API文档：[PayloadCodec](https://typescript.Temporal.io/api/interfaces/common.PayloadCodec)
+
+默认的“PayloadCodec”不执行任何操作。要创建自定义接口，您可以实现以下接口：
+
+```ts
+interface PayloadCodec {
+  /**
+   * Encode an array of {@link Payload}s for sending over the wire.
+   * @param payloads May have length 0.
+   */
+  encode(payloads: Payload[]): Promise<Payload[]>;
+
+  /**
+   * Decode an array of {@link Payload}s received from the wire.
+   */
+  decode(payloads: Payload[]): Promise<Payload[]>;
+}
+```
+
+## 使用自定义负载转换
+
+Temporal SDK 提供了一个 [Payload Converter](/payload-converter)，可进行自定义以将自定义数据类型转换为 [Payload](/dataconversion#payload) 并返回。
+
+编码有效负载转换器的应用顺序取决于为 Data Converter 指定的顺序。
+您可以设置多个编码有效负载转换器来运行转换。
+当 Data Converter 接收到要转换的值时，该值将按顺序传递通过每个有效负载转换器，直到处理该数据类型的转换器进行转换。
+
+## 复合 Data Converters
+
+使用 [Composite Data Converter](https://typescript.Temporal.io/api/classes/common.CompositePayloadConverter) 按指定顺序应用自定义、特定于类型的有效负载转换器。实现自定义数据处理并不总是需要定义新的 Composite Data Converter。您可以使用自定义编解码器覆盖默认转换器，但复杂的 Workflow 逻辑可能需要复合 Data Converter。
+
+复合 Data Converter 可以包含创建的自定义规则，它还可以
+利用 Temporal 内置的默认 Data Converter。事实上，默认
+Data Converter 逻辑在 Temporal 源内部实现为
+复合Data Converter。它按以下顺序定义这些规则：
+
+```typescript
+export class DefaultPayloadConverter extends CompositePayloadConverter {
+  constructor() {
+    super(
+      new UndefinedPayloadConverter(),
+      new BinaryPayloadConverter(),
+      new JsonPayloadConverter(),
+    );
+  }
+}
+```
+
+应用有效负载转换器的顺序很重要。期间
+序列化时，Data Converter 尝试该特定中的有效负载转换器
+顺序直到有效负载转换器返回非空有效负载。
+
+要将默认的 Data Converter 替换为自定义“CompositeDataConverter”，请使用以下命令：
+
+```typescript
+export const payloadConverter = new CompositePayloadConverter(
+  new UndefinedPayloadConverter(),
+  new EjsonPayloadConverter(),
+);
+```
+
+例如，您可以在其自己的“payload-converter.ts”文件中执行此操作。
+
+在上面的代码片段中，创建了一个转换器，它首先尝试处理“null”和“undefined”值。如果该值不是“null”或“undefined”，则使用“EjsonPayloadConverter”中编写的EJSON序列化逻辑。然后将有效负载转换器提供给 Worker 和客户端。
+
+这是 Worker 代码：
+
+```typescript
+const worker = await Worker.create({
+  workflowsPath: require.resolve('./workflows'),
+  taskQueue: 'ejson',
+  dataConverter: {
+    payloadConverterPath: require.resolve('./payload-converter'),
+  },
+});
+```
+
+通过此代码，您现在可以确保 Worker 使用基于 EJSON 的逻辑对 Workflow 和 Activity 输入和输出进行序列化和反序列化，并适当处理未定义的值。
+
+这是客户端：
+
+```typescript
+const client = new Client({
+  dataConverter: {
+    payloadConverterPath: require.resolve('./payload-converter'),
+  },
+});
+```
+
+如果您使用不带优先级的公平性，则具有不同公平性键的任务将使用基于
+在 XPROT022X 中分配资源的公平权重。例如，假设您有三个公平键来描述
+客户等级：_免费等级_、_基本等级_和_高级等级_。您给 _premium-tier_ 的公平权重为 5.0，
+_basic-tier_ 公平权重为 3.0，_free-tier_ 公平权重为 2.0。公平地说，这意味着 50%
+时间 _premium-tier_ 任务调度，30% 时间 _basic-tier_ 任务调度，20% 时间 _free-tier_ 任务
+从 XPROT022X 积压中调度。
+
+## 如何在 TypeScript 中使用自定义负载转换器 {#custom-payload-conversion}
+
+要支持自定义有效负载转换，请创建一个[自定义有效负载转换器](/payload-converter#composite-data-converters) 并配置 Data Converter 以在客户端选项中使用它。
+您可以使用自定义有效负载转换器来更改应用程序对象序列化为二进制有效负载的方式。要处理本机不可序列化的自定义数据类型（例如“BigInt”、“Date”或二进制数据），您可以创建自定义有效负载转换器。自定义有效负载转换器负责将您的自定义数据类型转换为 Temporal 可以管理的有效负载格式。
+
+要在 TypeScript 中实现自定义负载转换器，您需要执行以下步骤：
+
+1. **实现 `PayloadConverter` 接口**：首先创建一个实现 Temporal 的 [`PayloadConverter`](https://typescript.Temporal.io/api/interfaces/common.PayloadConverter) 接口的类。
+
+```typescript
+interface PayloadConverter {
+  /**
+   * Converts a value to a {@link Payload}.
+   * @param value The value to convert. Example values include the Workflow args sent by the client and the values returned by a Workflow or Activity.
+   */
+  toPayload<T>(value: T): Payload;
+
+  /**
+   * Converts a {@link Payload} back to a value.
+   */
+  fromPayload<T>(payload: Payload): T;
+}
+```
+
+此自定义转换器应包含序列化（“toPayload”）和反序列化（“fromPayload”）的逻辑，处理您的特定数据类型或序列化格式。 toPayload 方法返回一个 Payload 对象，用于管理和传输序列化数据。 “fromPayload”方法返回反序列化的数据。这可以确保返回的数据与序列化之前的格式相同，从而可以直接在应用程序中使用。
+
+2. 配置Data Converter。要发送不可 JSON 序列化的值（如“BigInt”或“Date”），请向客户端和 Worker 提供自定义 Data Converter，如 [Composite Data Converters](#composite-data-converters) 部分中所述。
+
+#### 自定义实现
+
+SDK 本身包含一些示例实现：
+
+- [common/src/converter/payload-converter.ts](https://github.com/Temporalio/sdk-typescript/blob/main/packages/common/src/converter/payload-converter.ts)
+- [common/src/converter/Protobuf-payload-converters.ts](https://github.com/Temporalio/sdk-typescript/blob/main/packages/common/src/converter/Protobuf-payload-converters.ts)
+
+示例项目 [samples-typescript/ejson](https://github.com/Temporalio/samples-typescript/tree/main/ejson) 创建一个 EJSON 自定义“PayloadConverter”。
+它实现了 `PayloadConverterWithEncoding` 而不是 `PayloadConverter`，以便它可以与 [CompositePayloadConverter](https://typescript.Temporal.io/api/classes/common.CompositePayloadConverter/) 一起使用：
+
+<!--SNIPSTART typescript-ejson-converter-impl -->
+[ejson/src/ejson-payload-converter.ts](https://github.com/Temporalio/samples-typescript/blob/main/ejson/src/ejson-payload-converter.ts)
+```ts
+import {
+  EncodingType,
+  METADATA_ENCODING_KEY,
+  Payload,
+  PayloadConverterWithEncoding,
+  PayloadConverterError,
+} from '@temporalio/common';
+import EJSON from 'ejson';
+import { decode, encode } from '@temporalio/common/lib/encoding';
+
+/**
+ * Converts between values and [EJSON](https://docs.meteor.com/api/ejson.html) Payloads.
+ */
+export class EjsonPayloadConverter implements PayloadConverterWithEncoding {
+  // Use 'json/plain' so that Payloads are displayed in the UI
+  public encodingType = 'json/plain' as EncodingType;
+
+  public toPayload(value: unknown): Payload | undefined {
+    if (value === undefined) return undefined;
+    let ejson;
+    try {
+      ejson = EJSON.stringify(value);
+    } catch (e) {
+      throw new UnsupportedEjsonTypeError(
+        `Can't run EJSON.stringify on this value: ${value}. Either convert it (or its properties) to EJSON-serializable values (see https://docs.meteor.com/api/ejson.html ), or create a custom data converter. EJSON.stringify error message: ${errorMessage(
+          e,
+        )}`,
+        e as Error,
+      );
+    }
+
+    return {
+      metadata: {
+        [METADATA_ENCODING_KEY]: encode('json/plain'),
+        // Include an additional metadata field to indicate that this is an EJSON payload
+        format: encode('extended'),
+      },
+      data: encode(ejson),
+    };
+  }
+
+  public fromPayload<T>(content: Payload): T {
+    return content.data ? EJSON.parse(decode(content.data)) : content.data;
+  }
+}
+
+export class UnsupportedEjsonTypeError extends PayloadConverterError {
+  public readonly name: string = 'UnsupportedJsonTypeError';
+
+  constructor(
+    message: string | undefined,
+    public readonly cause?: Error,
+  ) {
+    super(message ?? undefined);
+  }
+}
+```
+<!--SNIPEND-->
+
+然后我们实例化一个并导出它：
+
+<!--SNIPSTART typescript-ejson-converter -->
+[ejson/src/payload-converter.ts](https://github.com/Temporalio/samples-typescript/blob/main/ejson/src/payload-converter.ts)
+```ts
+import { CompositePayloadConverter, UndefinedPayloadConverter } from '@temporalio/common';
+import { EjsonPayloadConverter } from './ejson-payload-converter';
+
+export const payloadConverter = new CompositePayloadConverter(
+  new UndefinedPayloadConverter(),
+  new EjsonPayloadConverter(),
+);
+```
+<!--SNIPEND-->
+
+我们将其提供给 Worker 和客户：
+
+<!--SNIPSTART typescript-ejson-Worker -->
+[ejson/src/Worker.ts](https://github.com/Temporalio/samples-typescript/blob/main/ejson/src/Worker.ts)
+```ts
+const worker = await Worker.create({
+  workflowsPath: require.resolve('./workflows'),
+  taskQueue: 'ejson',
+  dataConverter: { payloadConverterPath: require.resolve('./payload-converter') },
+});
+```
+<!--SNIPEND-->
+
+<!--SNIPSTART typescript-ejson-client-setup -->
+[ejson/src/client.ts](https://github.com/Temporalio/samples-typescript/blob/main/ejson/src/client.ts)
+```ts
+const client = new Client({
+  connection,
+  dataConverter: { payloadConverterPath: require.resolve('./payload-converter') },
+});
+```
+<!--SNIPEND-->
+
+然后我们可以在参数中使用支持的数据类型：
+
+<!--SNIPSTART typescript-ejson-client -->
+[ejson/src/client.ts](https://github.com/Temporalio/samples-typescript/blob/main/ejson/src/client.ts)
+```ts
+const user: User = {
+  id: uuid(),
+  // age: 1000n, BigInt isn't supported
+  hp: Infinity,
+  matcher: /.*Stormblessed/,
+  token: Uint8Array.from([1, 2, 3]),
+  createdAt: new Date(),
+};
+
+const handle = await client.workflow.start(example, {
+  args: [user],
+  taskQueue: 'ejson',
+  workflowId: `example-user-${user.id}`,
+});
+```
+<!--SNIPEND-->
+
+Workflow 可以正确解析它们：
+
+<!--SNIPSTART typescript-ejson-Workflow -->
+[ejson/src/Workflows.ts](https://github.com/Temporalio/samples-typescript/blob/main/ejson/src/Workflows.ts)
+```ts
+import type { Result, User } from './types';
+
+export async function example(user: User): Promise<Result> {
+  const success =
+    user.createdAt.getTime() < Date.now() &&
+    user.hp > 50 &&
+    user.matcher.test('Kaladin Stormblessed') &&
+    user.token instanceof Uint8Array;
+  return { success, at: new Date() };
+}
+```
+<!--SNIPEND-->
+
+#### Protobufs
+
+将值序列化为[协议缓冲区](https://Protobuf.dev/) (Protobufs)：
+
+- 使用 [Protobufjs](https://Protobufjs.github.io/Protobuf.js/)。
+- 使用运行时加载的消息（不是生成的类）和“MessageClass.create”（不是“new MessageClass()”）。
+- 使用如下命令生成“json-module.js”：
+
+  ```sh
+  pbjs -t json-module --workflow-id commonjs -o protos/json-module.js protos/*.proto
+  ```
+
+- 补丁“json-module.js”：
+
+<!--SNIPSTART typescript-Protobuf-root -->
+[Protobufs/protos/root.js](https://github.com/Temporalio/samples-typescript/blob/main/Protobufs/protos/root.js)
+```js
+const { patchProtobufRoot } = require('@temporalio/common/lib/protobufs');
+const unpatchedRoot = require('./json-module');
+module.exports = patchProtobufRoot(unpatchedRoot);
+```
+<!--SNIPEND-->
+
+- 使用以下命令生成 `root.d.ts`：
+
+  ```sh
+  pbjs -t static-module protos/*.proto | pbts -o protos/root.d.ts -
+  ```
+
+- 创建一个 [`DefaultPayloadConverterWithProtobufs`](https://typescript.Temporal.io/api/classes/Protobufs.DefaultPayloadConverterWithProtobufs/)：
+
+<!--SNIPSTART typescript-Protobuf-converter -->
+[Protobufs/src/payload-converter.ts](https://github.com/Temporalio/samples-typescript/blob/main/Protobufs/src/payload-converter.ts)
+```ts
+import { DefaultPayloadConverterWithProtobufs } from '@temporalio/common/lib/protobufs';
+import root from '../protos/root';
+
+export const payloadConverter = new DefaultPayloadConverterWithProtobufs({ protobufRoot: root });
+```
+<!--SNIPEND-->
+
+或者，我们可以直接使用 Protobuf 有效负载转换器，或与其他转换器一起使用。
+如果我们知道我们只使用 Protobuf 对象，并且希望它们进行二进制编码（这比 proto3 JSON 节省空间，但无法在 Web UI 中查看），我们可以执行以下操作：
+
+```ts
+import { ProtobufBinaryPayloadConverter } from '@temporalio/common/lib/protobufs';
+import root from '../protos/root';
+
+export const payloadConverter = new ProtobufBinaryPayloadConverter(root);
+```
+
+同样，如果除了其他默认类型之外我们还想要二进制编码的 Protobuf，我们可以执行以下操作：
+
+```ts
+import {
+  BinaryPayloadConverter,
+  CompositePayloadConverter,
+  JsonPayloadConverter,
+  UndefinedPayloadConverter,
+} from '@temporalio/common';
+import { ProtobufBinaryPayloadConverter } from '@temporalio/common/lib/protobufs';
+import root from '../protos/root';
+
+export const payloadConverter = new CompositePayloadConverter(
+  new UndefinedPayloadConverter(),
+  new BinaryPayloadConverter(),
+  new ProtobufBinaryPayloadConverter(root),
+  new JsonPayloadConverter(),
+);
+```
+
+- 将其提供给 Worker：
+
+<!--SNIPSTART 打字稿-Protobuf-Worker -->
+[Protobufs/src/Worker.ts](https://github.com/Temporalio/samples-typescript/blob/main/Protobufs/src/Worker.ts)
+```ts
+const worker = await Worker.create({
+  workflowsPath: require.resolve('./workflows'),
+  activities,
+  taskQueue: 'protobufs',
+  dataConverter: { payloadConverterPath: require.resolve('./payload-converter') },
+});
+```
+<!--SNIPEND-->
+
+[WorkerOptions.dataConverter](https://typescript.Temporal.io/api/interfaces/Worker.WorkerOptions#dataconverter)
+
+- 提供给客户：
+
+<!--SNIPSTART typescript-Protobuf-client -->
+[Protobufs/src/client.ts](https://github.com/Temporalio/samples-typescript/blob/main/Protobufs/src/client.ts)
+```ts
+import { Client, Connection } from '@temporalio/client';
+import { loadClientConnectConfig } from '@temporalio/envconfig';
+import { v4 as uuid } from 'uuid';
+import { foo, ProtoResult } from '../protos/root';
+import { example } from './workflows';
+
+async function run() {
+  const config = loadClientConnectConfig();
+  const connection = await Connection.connect(config.connectionOptions);
+  const client = new Client({
+    connection,
+    dataConverter: { payloadConverterPath: require.resolve('./payload-converter') },
+  });
+
+  const handle = await client.workflow.start(example, {
+    args: [foo.bar.ProtoInput.create({ name: 'Proto', age: 2 })],
+    // can't do:
+    // args: [new foo.bar.ProtoInput({ name: 'Proto', age: 2 })],
+    taskQueue: 'protobufs',
+    workflowId: 'my-business-id-' + uuid(),
+  });
+
+  console.log(`Started workflow ${handle.workflowId}`);
+
+  const result: ProtoResult = await handle.result();
+  console.log(result.toJSON());
+}
+```
+<!--SNIPEND-->
+
+- 在 Workflow 和活动中使用 Protobuf：
+
+<!--SNIPSTART 打字稿-Protobuf-Workflow -->
+[Protobufs/src/Workflows.ts](https://github.com/Temporalio/samples-typescript/blob/main/Protobufs/src/Workflows.ts)
+```ts
+import { proxyActivities } from '@temporalio/workflow';
+import { foo, ProtoResult } from '../protos/root';
+import type * as activities from './activities';
+
+const { protoActivity } = proxyActivities<typeof activities>({
+  startToCloseTimeout: '1 minute',
+});
+
+export async function example(input: foo.bar.ProtoInput): Promise<ProtoResult> {
+  const result = await protoActivity(input);
+  return result;
+}
+```
+<!--SNIPEND-->
+
+<!--SNIPSTART 打字稿-Protobuf-Activity -->
+[Protobufs/src/activities.ts](https://github.com/Temporalio/samples-typescript/blob/main/Protobufs/src/activities.ts)
+```ts
+import { foo, ProtoResult } from '../protos/root';
+
+export async function protoActivity(input: foo.bar.ProtoInput): Promise<ProtoResult> {
+  return ProtoResult.create({ sentence: `${input.name} is ${input.age} years old.` });
+}
+```
+<!--SNIPEND-->
+
+#### 加密
+
+> 背景：[加密](/payload-codec#encryption)
+
+以下是实现“PayloadCodec”接口的示例类：
+
+<!--SNIPSTART 打字稿加密编解码器 -->
+[加密/src/加密-codec.ts](https://github.com/Temporalio/samples-typescript/blob/main/加密/src/加密-codec.ts)
+```ts
+import { webcrypto as crypto } from 'node:crypto';
+import { METADATA_ENCODING_KEY, Payload, PayloadCodec, ValueError } from '@temporalio/common';
+import { temporal } from '@temporalio/proto';
+import { decode, encode } from '@temporalio/common/lib/encoding';
+import { decrypt, encrypt } from './crypto';
+
+const ENCODING = 'binary/encrypted';
+const METADATA_ENCRYPTION_KEY_ID = 'encryption-key-id';
+
+export class EncryptionCodec implements PayloadCodec {
+  constructor(
+    protected readonly keys: Map<string, crypto.CryptoKey>,
+    protected readonly defaultKeyId: string,
+  ) {}
+
+  static async create(keyId: string): Promise<EncryptionCodec> {
+    const keys = new Map<string, crypto.CryptoKey>();
+    keys.set(keyId, await fetchKey(keyId));
+    return new this(keys, keyId);
+  }
+
+  async encode(payloads: Payload[]): Promise<Payload[]> {
+    return Promise.all(
+      payloads.map(async (payload) => ({
+        metadata: {
+          [METADATA_ENCODING_KEY]: encode(ENCODING),
+          [METADATA_ENCRYPTION_KEY_ID]: encode(this.defaultKeyId),
+        },
+        // Encrypt entire payload, preserving metadata
+        data: await encrypt(
+          temporal.api.common.v1.Payload.encode(payload).finish(),
+          this.keys.get(this.defaultKeyId)!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        ),
+      })),
+    );
+  }
+
+  async decode(payloads: Payload[]): Promise<Payload[]> {
+    return Promise.all(
+      payloads.map(async (payload) => {
+        if (!payload.metadata || decode(payload.metadata[METADATA_ENCODING_KEY]) !== ENCODING) {
+          return payload;
+        }
+        if (!payload.data) {
+          throw new ValueError('Payload data is missing');
+        }
+
+        const keyIdBytes = payload.metadata[METADATA_ENCRYPTION_KEY_ID];
+        if (!keyIdBytes) {
+          throw new ValueError('Unable to decrypt Payload without encryption key id');
+        }
+
+        const keyId = decode(keyIdBytes);
+        let key = this.keys.get(keyId);
+        if (!key) {
+          key = await fetchKey(keyId);
+          this.keys.set(keyId, key);
+        }
+        const decryptedPayloadBytes = await decrypt(payload.data, key);
+        console.log('Decrypting payload.data:', payload.data);
+        return temporal.api.common.v1.Payload.decode(decryptedPayloadBytes);
+      }),
+    );
+  }
+}
+
+async function fetchKey(_keyId: string): Promise<crypto.CryptoKey> {
+  // In production, fetch key from a key management system (KMS). You may want to memoize requests if you'll be decoding
+  // Payloads that were encrypted using keys other than defaultKeyId.
+  const key = Buffer.from('test-key-test-key-test-key-test!');
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    key,
+    {
+      name: 'AES-GCM',
+    },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  return cryptoKey;
+}
+```
+<!--SNIPEND-->
+
+加解密代码位于[src/crypto.ts](https://github.com/Temporalio/samples-typescript/tree/main/encryption/src/crypto.ts)。
+由于加密是 CPU 密集型的，并且使用 Node.js 内置的加密模块执行 AES 会阻塞主线程，因此我们使用“@ronomon/crypto-async”，它使用 Node.js 线程池。
+
+和以前一样，我们向客户端提供定制的 Data Converter 和 Worker：
+
+<!--SNIPSTART 打字稿加密客户端 -->
+[加密/src/client.ts](https://github.com/Temporalio/samples-typescript/blob/main/encryption/src/client.ts)
+```ts
+const client = new Client({
+  connection,
+  dataConverter: await getDataConverter(),
+});
+
+const handle = await client.workflow.start(example, {
+  args: ['Alice: Private message for Bob.'],
+  taskQueue: 'encryption',
+  workflowId: `my-business-id-${uuid()}`,
+});
+
+console.log(`Started workflow ${handle.workflowId}`);
+console.log(await handle.result());
+```
+<!--SNIPEND-->
+
+<!--SNIPSTART 打字稿加密-Worker -->
+[加密/src/Worker.ts](https://github.com/Temporalio/samples-typescript/blob/main/encryption/src/Worker.ts)
+```ts
+const worker = await Worker.create({
+  workflowsPath: require.resolve('./workflows'),
+  taskQueue: 'encryption',
+  dataConverter: await getDataConverter(),
+});
+```
+<!--SNIPEND-->
+
+当客户端向 Workflow 发送“Alice：Bob 的私人消息”时，它会在客户端上加密并在 Worker 中解密。
+Workflow 接收解密的消息并附加另一条消息。
+当它返回较长的字符串时，该字符串将由 Worker 加密并由客户端解密。
+
+<!--SNIPSTART 打字稿加密-Workflow -->
+[加密/src/Workflows.ts](https://github.com/Temporalio/samples-typescript/blob/main/encryption/src/Workflows.ts)
+```ts
+export async function example(message: string): Promise<string> {
+  return `${message}\nBob: Hi Alice, I'm Workflow Bob.`;
+}
+```
+<!--SNIPEND-->

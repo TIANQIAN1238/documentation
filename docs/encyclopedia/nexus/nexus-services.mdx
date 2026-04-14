@@ -1,8 +1,8 @@
 ---
 id: nexus-services
-title: Nexus services
-sidebar_label: Nexus Services
-description: Nexus Services are named collections of arbitrary-duration Nexus Operations that provide a microservice contract suitable for sharing across team boundaries.
+title: "Nexus 服务"
+sidebar_label: "Nexus 服务"
+description: "Nexus 服务被命名为任意持续时间的 Nexus 操作的集合，它们提供适合跨团队边界共享的微服务契约。"
 toc_max_heading_level: 4
 slug: /nexus/services
 keywords:
@@ -21,15 +21,15 @@ import { CaptionedImage } from '@site/src/components';
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal Nexus is now [Generally Available](/evaluate/development-production-features/release-stages#general-availability) for [Temporal Cloud](/cloud/nexus) and [self-hosted deployments](/production-deployment/self-hosted-guide/nexus).
+[Temporal Cloud](/evaluate/development-production-features/release-stages#general-availability) 和 [自托管部署](/cloud/nexus) 的 Temporal Nexus 现在为 [一般可用](/production-deployment/self-hosted-guide/nexus)。
 
 :::
 
-[Nexus Services](/glossary#nexus-service) are named collections of [Nexus Operations](/nexus/operations) that provide a contract for sharing across team boundaries.
-A [Nexus Endpoint](/nexus/endpoints) exposes Services for callers to use.
+[Nexus 服务](/glossary#nexus-service) 被命名为 [Nexus 操作](/nexus/operations) 的集合，提供跨团队边界共享的合同。
+[Nexus 端点](/nexus/endpoints) 公开服务供调用者使用。
 
-Services are registered in a Worker that polls the Endpoint's target Task Queue.
-Multiple Services can run in the same Worker.
-Services typically run alongside the Workflows they abstract, or in a dedicated router Worker using the [router-queue pattern](/nexus/patterns#router-queue-pattern).
+服务在轮询端点的目标 Task Queue 的 Worker 中注册。
+多个服务可以在同一个 Worker 中运行。
+服务通常与它们抽象的 Workflow 一起运行，或者使用 [路由器队列模式](/nexus/patterns#router-queue-pattern) 在专用路由器 Worker 中运行。
 
-Callers reference a Service by name when executing a Nexus Operation.
+调用者在执行 Nexus 操作时通过名称引用服务。

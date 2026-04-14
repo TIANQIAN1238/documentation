@@ -1,0 +1,228 @@
+---
+id: audit-logs
+title: 审核日志
+sidebar_label: 审核日志
+description: Temporal Cloud 中的审核日志提供取证信息，与数据流服务集成以实现安全数据处理并支持关键管理和 API 密钥操作。这简化了审计和合规流程。
+slug: /cloud/audit-logs
+toc_max_heading_level: 4
+keywords:
+  - audit logs
+  - explanation
+  - how-to
+  - operations
+  - temporal cloud
+  - term
+  - troubleshooting
+tags:
+  - Logs
+  - Security
+  - Temporal Cloud
+---
+
+审核日志是 [Temporal Cloud](/cloud/overview) 的一项功能，可为 Temporal Cloud 控制平面中的各种操作提供取证访问信息。
+
+审核日志回答有关 Temporal Cloud 资源的“人物、时间和内容”问题。
+这些答案可以帮助您评估组织的安全性，并且可以提供满足审核和合规性要求所需的信息。
+
+您需要账户所有者或全局管理员角色才能通过 UI 查看审核日志、使用 API 或配置与 [AWS Kinesis](/cloud/audit-logs-aws) 或 [GCP Pub/Sub](/cloud/audit-logs-gcp) 的审核日志集成。
+
+:::info
+
+审核日志不捕获数据平面事件，例如 Workflow 启动、Workflow 终止、Schedule 创建等。
+相反，请探索[导出](/cloud/export) 功能，该功能允许您将关闭的 Workflow 历史记录发送到外部存储。
+
+:::
+
+## 审核日志支持哪些事件？ {#支持的事件}
+
+- 账户
+  - `ChangeAccountPlanType`：更改帐户计划类型
+  - `UpdateAccountAPI`：配置审核日志，配置可观察性端点
+- API 密钥
+  - `CreateAPIKey`：创建 API 密钥
+  - `DeleteAPIKey`：删除 API 密钥
+  - `UpdateAPIKey`：Update API 密钥
+- 连接规则
+  - `CreateConnectivityRule`：创建连接规则
+  - `DeleteConnectivityRule`：删除连接规则
+- Namespace
+  - `CreateNamespaceAPI`：创建Namespace
+  - `删除NamespaceAPI`：删除Namespace
+  - `FailoverNamespacesAPI`：故障转移（针对高可用性 Namespaces）
+  - `RenameCustomSearchAttributeAPI`：重命名自定义 Search Attribute
+  - `UpdateNamespaceAPI`：包括保留期更改、副本编辑、身份验证方法 Update、自定义 Search Attribute Update 和连接规则绑定
+- Namespace 导出
+  - `CreateNamespaceExportSink`：创建 Namespace 导出接收器
+  - `DeleteNamespaceExportSink`：删除 Namespace 导出接收器
+  - `UpdateNamespaceExportSink`：Update Namespace 导出接收器
+  - `ValidateNamespaceExportSink`：验证 Namespace 导出接收器
+- Nexus 端点
+  - `CreateNexusEndpoint`：创建 Nexus 端点
+  - `DeleteNexusEndpoint`：删除 Nexus 端点
+  - `UpdateNexusEndpoint`：Update Nexus 端点
+- 服务帐户
+  - `CreateServiceAccount`：创建服务帐户
+  - `CreateServiceAccountAPIKey`：创建服务帐户 API 密钥
+  - `DeleteServiceAccount`：删除服务帐户
+  - `UpdateServiceAccount`：Update 服务帐户
+- 用户
+  - `CreateUserAPI`：创建用户
+  - `DeleteUserAPI`：删除用户
+  - `InviteUsersAPI`：邀请用户
+  - `SetUserNamespaceAccessAPI`：设置用户 Namespace 访问权限
+  - `UpdateIdentityNamespacePermissionsAPI`：Update 身份 Namespace 权限
+  - `UpdateUserAPI`：Update 用户帐户级角色
+  - `UpdateUserNamespacePermissionsAPI`：Update 用户 Namespace 权限
+- 用户组
+  - `CreateUserGroup`：创建用户组
+  - `DeleteUserGroup`: 删除用户组
+  - `SetUserGroupNamespaceAccess`：设置用户组 Namespace 访问权限
+  - `UpdateUserGroup`：Update 用户组
+
+### 审核日志格式
+
+:::info DEPRECATION NOTICE
+
+以下字段已弃用，并计划在 2026 年 4 月 1 日或之后删除。
+
+- `用户电子邮件`。  对于“user”类型的主体，此字段由“principal.name”重复。其他主体类型没有关联的电子邮件。
+- `级别`。  该字段与“status”重复。
+- `来电者 IP 地址`。  该字段被“x_forwarded_for”替换。
+-“细节”。  该字段被包含请求详细信息的“raw_details”替换。
+- `类别`。  该字段不再使用。
+
+:::
+
+审核日志使用以下 JSON 格式：
+
+```json
+{
+  "operation":  // Operation that was performed
+  "principal": // Information about who initiated the operation
+  "details":  // DEPRECATED, see raw_details
+  "raw_details": // details about the request
+  "user_email":  // DEPRECATED, use principal.user where applicable
+  "x_forwarded_for": // the IP address making the call
+  "caller_ip_address": // DEPRECATED, use x_forwarded_for
+  "category":  // DEPRECATED, no longer used
+  "emit_time": // Time the operation was recorded
+  "level": // DEPRECATED, use status
+  "log_id": // Unique ID of the log entry
+  "request_id": // Optional async request id set by the user when sending a request
+  "status": // Status, such as OK or ERROR
+  "version": // Version of the log entry
+}
+```
+
+:::note
+
+出于安全目的，XPROT009X 为导出操作创建多个中间 IAM 角色。 
+当写入存储接收器时，系统会随机选择这些角色，这提供了几个好处：
+
+Temporal 以该格式提供呼叫者 IP 地址，以便客户能够识别呼叫者 IP 地址，即使网络路径中有一个（或多个代理）到达 Temporal Cloud。
+
+:::
+
+### 审核日志示例
+
+```json
+[
+  {
+    "operation": "UserLogin",
+    "status": "OK",
+    "version": 2,
+    "logId": "edb3aa3e-78c4-48fc-9c7e-2078c6989775",
+    "xForwardedFor": "10.1.2.3",
+    "asyncOperationId": "",
+    "emitTime": {
+      "$typeName": "google.protobuf.Timestamp",
+      "seconds": 1759436617,
+      "nanos": 48000000
+    },
+    "principal": {
+      "type": "user",
+      "id": "",
+      "name": "user@email.com",
+      "apiKeyId": ""
+    }
+  },
+  {
+    "operation": "UserLogin",
+    "status": "OK",
+    "version": 2,
+    "logId": "5fe6a81e-8d3c-4f4d-88a5-52db864c9ea5",
+    "xForwardedFor": "10.1.2.3",
+    "asyncOperationId": "",
+    "emitTime": {
+      "seconds": 1759178573,
+      "nanos": 671000000
+    },
+    "principal": {
+      "type": "user",
+      "id": "",
+      "name": "user@email.com",
+      "apiKeyId": ""
+    }
+  }
+]
+```
+
+## 如何配置审核日志集成 {#configure-audit-logs}
+
+审核日志可以在 AWS Kinesis 或 GCP Pub/Sub 中配置。
+
+- [AWS Kinesis 指令](/cloud/audit-logs-aws)
+- [GCP Pub/Sub 说明](/cloud/audit-logs-gcp)
+
+## 如何对审核日志接收器进行故障排除 {#troubleshoot-audit-logs}
+
+Temporal Cloud UI 的审核日志页面提供审核日志集成的当前状态。
+
+- 如果检测到错误，页面标题下方会显示错误摘要。
+- 如果审核日志集成正常运行，页面标题旁边会出现 **开启** 标记。
+
+执行管理操作后，用户可以看到审核日志消息在流中流动。
+
+成功配置审核日志接收器并设置流后，您将在设置的一小时内收到事件。
+Temporal 能够保留审核日志信息长达 30 天。
+要检索过去 30 天的日志，您需要提交请求。
+
+如果您遇到审核日志接收器问题，我们可以提供缺少的审核信息。
+打开支持票以请​​求帮助。
+
+## 如何删除审核日志接收器 {#delete-an-audit-log-sink}
+
+要删除审核日志接收器，请执行以下步骤：
+
+1. 在 Temporal Cloud UI 中，选择 **设置**。
+1. 在**设置**页面上，选择**审核日志**。
+1. 在 **审核日志集成** 卡中，选择 **编辑**。
+1. 在**审核日志集成**页面底部，选择**删除**。
+
+确认删除后，审核日志接收器将从您的帐户中删除，并且日志停止流向您的流。
+
+
+## 查看审核日志 {#view-an-audit-log}
+
+可以在 Temporal Cloud UI 中查看审核日志。
+1. 在 Temporal Cloud UI 中，选择 **设置**。
+1. 在**设置**页面上，选择**审核日志**。
+
+最多可以从审核日志 UI 将 1000 个事件下载到本地文件。
+
+## 通过 API {#audit-log-api} 访问审核日志
+
+可以使用 [Temporal Cloud Ops API](/ops) 访问审核日志。使用API访问
+如果您希望制作用于在 Temporal Cloud 之外查看审核日志的仪表板，请使用审核日志。
+如果您的目标是导出审核日志，最好使用审核日志接收器并捕获每个审核日志 
+条目生成时的样子。
+
+可使用 API 访问过去 30 天的审核日志。
+
+该 API 允许：
+- StartTimeInclusive：筛选 UTC 时间 >=（默认为 30 天前）- 可选
+- EndTimeExclusive：过滤 UTC 时间 <（默认为当前时间）- 可选
+- PageSize：不能超过 1000。默认为 100。 - 可选
+- PageToken：页面令牌（如果这是从另一个响应继续的） - 可选
+
+

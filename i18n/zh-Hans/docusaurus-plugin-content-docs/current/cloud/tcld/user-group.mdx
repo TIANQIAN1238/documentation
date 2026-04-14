@@ -1,0 +1,165 @@
+---
+id: user-group
+title: tcld user group command reference
+sidebar_label: user-group
+slug: /cloud/tcld/user-group/
+toc_max_heading_level: 4
+keywords:
+  - cli reference
+  - tcld
+tags:
+  - Temporal Cloud
+  - tcld
+  - User groups
+---
+
+`tcld user-group` 命令管理 Temporal Cloud 中的用户组。
+
+别名：`ug`
+
+- [tcld 用户组添加用户](#add-users)
+- [tcld 用户组创建](#create)
+- [tcld 用户组删除](#delete)
+- [tcld 用户组获取](#get)
+- [tcld 用户组列表](#list)
+- [tcld 用户组列表成员](#list-members)
+- [tcld 用户组删除用户](#remove-users)
+- [tcld 用户组设置访问](#set-access)
+
+## 添加用户
+
+`tcld user-group add-users` 命令将用户添加到 Temporal Cloud 中指定的用户组。
+您必须设置 `--group-id` 来指定要添加用户的组。
+
+别名：`au`
+
+以下标志控制命令的行为。
+
+#### --组 ID (-id)
+
+别名：`n`
+
+#### --用户电子邮件 (-e)
+
+指定要添加的用户的电子邮件。该标志可以多次指定以添加
+一个命令中有多个用户
+
+
+＃＃ 创造
+
+创建用户组。
+
+别名：`c`
+
+以下标志控制命令的行为。
+
+#### --显示名称
+
+组的显示名称。
+
+#### --账户角色
+
+该组应具有的帐户角色。 “admin”、“read”、“developer”、“owner”、“financeadmin”、“none”之一。
+
+#### --Namespace-角色 (-nr)
+
+[XPROT001X](/XPROT028X-definition) 可以支持的参数总数没有明确的限制。
+但是，最终编码到 XPROT042X 消息有效负载中的数据的总大小是有限制的。
+
+单个参数的最大大小限制为 2 MB。
+XPROT042X 消息的总大小（包括所有参数）限制为最大 4 MB。
+
+删除用户组。
+
+别名：`d`
+
+以下标志控制命令的行为。
+
+#### --组 ID (-id)
+
+指定要删除的组的 ID。
+
+＃＃ 得到
+
+获取用户组详细信息。
+
+别名：`g`
+
+以下标志控制命令的行为。
+
+#### --组 ID (-id)
+
+指定要列出的组的 ID。
+
+＃＃ 列表
+
+列出您的 Temporal Cloud 帐户中的用户组。
+
+别名：`l`
+
+以下标志控制命令的行为。
+
+#### --页面大小 (-s)
+
+每页列出的组数。默认为 10。
+
+#### --页面标记 (-p)
+
+对结果页面进行分页时使用的页面标记。
+
+## 列表成员
+
+列出组的所有成员。
+
+别名：`lm`
+
+以下标志控制命令的行为。
+
+#### --组 ID (-id)
+
+指定要列出的组的 ID。
+
+## 删除用户
+
+删除作为组成员的一名或多名用户。
+
+别名：`ru`
+
+以下标志控制命令的行为。
+
+#### --组 ID (-id)
+
+指定要从中删除用户的组的 ID。
+
+#### --用户电子邮件 (-e)
+
+要从组中删除的用户的电子邮件地址。可以多次指定此标志，以便使用一个命令删除多个用户。
+
+## 设置访问
+
+此命令设置组的访问角色。它遵循与 [create](#create) 命令相同的约定，指定一个可选帐户角色和 0 个或多个 Namespace 角色。
+
+别名：`萨`
+
+#### --组 ID (-id)
+
+指定要设置访问权限的组 ID。
+
+#### --账户角色
+
+该组应具有的帐户角色。 “admin”、“read”、“developer”、“owner”、“financeadmin”、“none”之一。
+
+#### --Namespace-角色 (-nr)
+
+指定该组应具有的 Namespace 角色。可以重复多次添加
+组中的多个 Namespace 角色。值的形式为“<Namespaceid>-<role>”，其中 Namespace ID 是 Namespace 的完整 ID，角色是“admin”、“read”或“write”之一。示例：“myNamespace.abc123-read”为“myNamespace.abc123”Namespace 添加读取角色。
+
+#### --追加 (-a)
+
+将追加 Namespace 角色，而不是替换已分配的所有现有角色。这允许在不知道已分配给组的角色的情况下添加 Namespace 角色。
+
+#### --删除 (-r)
+
+将删除给定的 Namespace 角色，而不是替换已分配的所有现有角色。这允许在不知道已分配给组的角色的情况下删除 Namespace 角色。
+
+

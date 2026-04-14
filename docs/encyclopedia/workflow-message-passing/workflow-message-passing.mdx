@@ -1,8 +1,8 @@
 ---
 id: workflow-message-passing
-title: Temporal Workflow message passing - Signals, Queries, & Updates
-sidebar_label: Workflow message passing
-description: Signals, Queries, and Updates facilitate interactions with Workflow Executions.
+title: "Temporal Workflow 消息传递 - Signal、查询和 Update"
+sidebar_label: "Workflow 消息传递"
+description: "Signal、查询和 Update 有助于与 Workflow Execution 的交互。"
 tags:
   - Concepts
   - Signals
@@ -31,51 +31,55 @@ keywords:
 
 import * as Components from '@site/src/components';
 
-Workflows can be thought of as stateful web services that can receive messages. The Workflow can have powerful message
-handlers akin to endpoints that react to the incoming messages in combination with the current state of the Workflow.
-Temporal supports three types of messages: Signals, Queries, and Updates:
+Workflow 可以被视为可以接收消息的有状态 Web 服务。 Workflow可以有强大的信息
+类似于端点的处理程序，结合 Workflow 的当前状态对传入消息做出反应。
+Temporal 支持三种类型的消息：Signal、查询和 Update：
 
-- Queries are read requests. They can read the current state of the Workflow but cannot block in doing so.
-- Signals are asynchronous write requests. They cause changes in the running Workflow, but you cannot await any response
-  or error.
-- Updates are synchronous, tracked write requests. The sender of the Update can wait for a response on completion or an
-  error on failure.
+- 查询是读取请求。他们可以读取 Workflow 的当前状态，但不能阻止这样做。
+- Signal 是异步写入请求。它们会导致正在运行的 Workflow 发生变化，但您无法等待任何响应
+  或错误。
+- Update 是同步、跟踪的写入请求。 Update 的发送者可以等待完成响应或
+  失败时出错。
 
-## How to choose between Signals, Updates, and Queries as a Workflow author? {#choosing-messages}
+<a id="choosing-messages"></a>
+## 作为 Workflow 作者，如何在 Signal、Update 和查询之间进行选择？ {#choosing-messages}
 
-This section will help you write Workflows that receive messages.
+本节将帮助您编写接收消息的 Workflow。
 
-### For write requests
+<a id="for-write-requests"></a>
+### 对于写请求 {#for-write-requests}
 
-Unlike Signals, Updates must be synchronous and must wait for the Worker running the Workflow to acknowledge the
-request.
+与 Signal 不同，Update 必须同步，并且必须等待运行 Workflow 的 Worker 确认
+请求。
 
-The following table compares when to use **Signals** versus **Updates**.
+下表比较了何时使用 **Signals** 与 **Updates**。
 
-| **Requirement type**           | **Use Signals when...**                                                                     | **Use Updates when...**                                                                                                                                                                    |
+| **需求类型**           | **当...时使用 Signal**                                                                     | **当...时使用 Update**                                                                                                                                                                    |
 | ------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Asynchronous communication** | Clients want to quickly move on after sending an asynchronous message.                      | Clients want to track the completion of the message.                                                                                                                                       |
-| **Result handling**            | Clients are okay with “fire and forget” — no result or exception needed.                    | Clients need a result or exception without performing a query.                                                                                                                             |
-| **Worker availability**        | Clients don't depend on the Worker being available.                                         | You want to validate the Update before accepting it into the Workflow and its history.                                                                                                     |
-| **Concurrency and throughput** | You don’t want to limit the number of messages processed concurrently by a single Workflow. | You don’t need more concurrent Updates per Workflow than the allowed limits for [Cloud](/cloud/limits#per-workflow-execution-update-limits) or [Self-Hosted](/self-hosted-guide/defaults). |
-| **Latency sensitivity**        | Since clients don’t expect a result, latency is often not relevant when using Signals.      | Clients want a low-latency end-to-end operation and are willing to wait for completion or validation.                                                                                      |
+| **异步通信** | 客户端希望在发送异步消息后快速继续。                      | 客户希望跟踪消息的完成情况。                                                                                                                                       |
+| **结果处理**            | 客户可以接受“一劳永逸”的方式——不需要结果或例外。                    | 客户端需要结果或异常而不执行 Query。                                                                                                                             |
+| **Worker 可用性**        | 客户端不依赖于 Worker 是否可用。                                         | 您希望在将 Update 接受到 Workflow 及其历史记录之前对其进行验证。                                                                                                     |
+| **并发和吞吐量** | 您不想限制单个 Workflow 同时处理的消息数量。 | 每个 Workflow 不需要比 [云](/cloud/limits#per-workflow-execution-update-limits) 或 [自托管](/self-hosted-guide/defaults) 允许的限制更多的并发 Update。 |
+| **延迟灵敏度**        | 由于客户并不期望得到结果，因此在使用 Signal 时，延迟通常并不重要。      | 客户需要低延迟的端到端操作，并愿意等待完成或验证。                                                                                      |
 
-### For read requests
+<a id="for-read-requests"></a>
+### 对于读取请求 {#for-read-requests}
 
-You normally want to do a Query, because:
+您通常想要执行 Query，因为：
 
-- Queries are efficient–they never add entries to the [Workflow Event History](/workflow-execution/event#event-history),
-  whereas an Update would (if accepted).
-- Queries can operate on completed Workflows.
+- 查询是高效的——它们从不向 [Workflow Event History](/workflow-execution/event#event-history) 添加条目，
+  而 Update 会（如果接受）。
+- 查询可以对已完成的 Workflow 进行操作。
 
-However, because Queries cannot block, sometimes Updates are best. When your goal is to do a read once the Workflow
-achieves a certain desired state, you have two options:
+但是，由于查询无法阻塞，有时 Update 是最好的。当您的目标是阅读一次 Workflow 时
+达到某种期望的状态，你有两种选择：
 
-- You could poll periodically with Queries until the Workflow is ready.
-- You could write your read operation as an Update, which will give you better efficiency and latency, though it will
-  write an entry to the [Workflow Event History](/workflow-execution/event#event-history).
+- 您可以使用查询定期轮询，直到 Workflow 准备就绪。
+- 您可以将读取操作编写为 Update，这将为您提供更好的效率和延迟，尽管它会
+  将条目写入 [Workflow Event History](/workflow-execution/event#event-history)。
 
-### For read/write requests
+<a id="for-readwrite-requests"></a>
+### 用于读/写请求 {#for-readwrite-requests}
 
-Use an Update for synchronous read/write requests. If your request must be asynchronous, consider sending a Signal
-followed by polling with a Query.
+使用 Update 进行同步读/写请求。如果您的请求必须是异步的，请考虑发送 Signal
+然后使用 Query 进行轮询。

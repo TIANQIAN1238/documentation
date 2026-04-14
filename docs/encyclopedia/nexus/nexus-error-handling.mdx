@@ -1,9 +1,9 @@
 ---
 id: nexus-error-handling
 slug: /nexus/error-handling
-title: Error Handling - Temporal Nexus
-description: Learn about error handling for Temporal Nexus.
-sidebar_label: Nexus Error Handling
+title: "错误处理 - Temporal Nexus"
+description: "了解 Temporal Nexus 的错误处理。"
+sidebar_label: "Nexus 错误处理"
 keywords:
   - temporal nexus
   - nexus
@@ -17,43 +17,45 @@ tags:
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal Nexus is now [Generally Available](/evaluate/development-production-features/release-stages#general-availability) for [Temporal Cloud](/cloud/nexus) and [self-hosted deployments](/production-deployment/self-hosted-guide/nexus).
+[Temporal Cloud](/evaluate/development-production-features/release-stages#general-availability) 和 [自托管部署](/cloud/nexus) 的 Temporal Nexus 现在为 [一般可用](/production-deployment/self-hosted-guide/nexus)。
 
 :::
 
-Nexus Operations can return errors for a caller Workflow to handle.
-Errors from an asynchronous Operation's underlying Workflow propagate back to the caller.
+Nexus 操作可以返回错误以供调用者 Workflow 处理。
+来自异步操作的底层 Workflow 的错误会传播回调用方。
 
-## Errors in Nexus handlers
+<a id="errors-in-nexus-handlers"></a>
+## Nexus 处理程序中的错误 {#errors-in-nexus-handlers}
 
-Nexus handlers may return [different error types](/references/failures#nexus-errors).
-By default, handler errors are retryable unless they are:
+Nexus 处理程序可能返回 [不同的错误类型](/references/failures#nexus-errors)。
+默认情况下，处理程序错误是可重试的，除非它们是：
 
-- [Application Failures](/references/failures#nexus-errors) explicitly marked as non-retryable.
-- [Nexus Operation errors](/references/failures#nexus-errors) that resolve an Operation as failed or canceled.
-- [Non-retryable Nexus errors](/references/failures#non-retryable-nexus-errors).
+- [应用程序失败](/references/failures#nexus-errors) 明确标记为不可重试。
+- [Nexus 操作错误](/references/failures#nexus-errors) 将操作解决为失败或取消。
+- [不可重试的 Nexus 错误](/references/failures#non-retryable-nexus-errors)。
 
-When the caller's Nexus Machinery receives an error:
+当调用者的Nexus机械收到错误时：
 
-- **Non-retryable** - A [NexusOperationFailed](/references/events#nexusoperationfailed) event is added to the caller's Workflow History.
-- **Retryable** - The Nexus Machinery [automatically retries](/nexus/operations#automatic-retries). These errors surface in [Pending Operations](/nexus/execution-debugging/#pending-operations).
+- **不可重试** - [Nexus操作失败](/references/events#nexusoperationfailed) 事件被添加到调用者的 Workflow 历史记录中。
+- **可重试** - Nexus 机械 [自动重试](/nexus/operations#automatic-retries)。这些错误出现在 [待处理操作](/nexus/execution-debugging/#pending-operations) 中。
 
 :::tip
 
-Return a [specific Nexus error type](/references/failures#nexus-errors) to avoid infinite retries.
-See [errors in Nexus Operations](/references/failures#errors-in-nexus-operations) for additional details.
+返回 [特定的 Nexus 错误类型](/references/failures#nexus-errors) 以避免无限重试。
+有关更多详细信息，请参阅 [Nexus 操作中的错误](/references/failures#errors-in-nexus-operations)。
 
 :::
 
-## Nexus error handling in caller Workflows
+<a id="nexus-error-handling-in-caller-workflows"></a>
+## Nexus 调用者 Workflow 中的错误处理 {#nexus-error-handling-in-caller-workflows}
 
-When a Nexus Operation fails, the caller receives a Nexus Operation Failure containing the operation name, token, and failure reason.
-The cause field indicates the type of error (for example, Application Error or Canceled Error).
+当 Nexus 操作失败时，调用者会收到包含操作名称、令牌和失败原因的 Nexus 操作失败。
+原因字段指示错误的类型（例如，应用程序错误或取消错误）。
 
 :::tip RESOURCES
 
-- [Errors in Nexus Operations](/references/failures#errors-in-nexus-operations)
-- [Nexus Errors](/references/failures#nexus-errors)
-- [Nexus Operation Failures](/references/failures#nexus-operation-failure)
+- [Nexus 操作错误](/references/failures#errors-in-nexus-operations)
+- [Nexus 错误](/references/failures#nexus-errors)
+- [Nexus 操作失败](/references/failures#nexus-operation-failure)
 
 :::

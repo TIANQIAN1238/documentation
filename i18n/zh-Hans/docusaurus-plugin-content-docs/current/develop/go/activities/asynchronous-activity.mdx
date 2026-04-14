@@ -1,0 +1,67 @@
+---
+id: asynchronous-activity
+title: 异步 Activity 完成 - Go SDK
+sidebar_label: 异步 Activity 完成
+toc_max_heading_level: 4
+keywords:
+  - asynchronous activity completion
+tags:
+  - Activities
+  - Go SDK
+  - Temporal SDKs
+description: 异步 Activity 完成让 Activity 函数返回而不完成 Activity 执行。使用任务令牌和 Temporal CLIent 在外部完成 Activity。
+---
+
+[异步 Activity 完成](/Activity-execution#asynchronous-Activity-completion) 使 Activity 函数能够在 Activity 执行完成的情况下返回。
+
+需要遵循三个步骤：
+
+1. Activity 向外部系统提供完成 Activity 执行所需的识别信息。
+   标识信息可以是[任务令牌](/Activity-execution#task-token)，也可以是 Namespace、Workflow Id 和 Activity Id 的组合。
+2. Activity 函数以将其标识为等待外部系统完成的方式完成。
+3. Temporal CLIent用于Heartbeat并完成Activity。
+
+**步骤 1：向外部系统提供任务令牌以完成 Activity 执行。**
+   为此，请使用“go.Temporal.io/sdk/Activity”包中的“GetInfo()” API。
+
+```go
+// Retrieve the Activity information needed to asynchronously complete the Activity.
+activityInfo := activity.GetInfo(ctx)
+taskToken := activityInfo.TaskToken
+// Send the taskToken to the external service that will complete the Activity.
+```
+
+**步骤 2：返回 `Activity.ErrResultPending` 错误以指示 Activity 正在异步完成。**
+
+```go
+return "", activity.ErrResultPending
+```
+
+**步骤 3：使用 Temporal CLIent 使用任务令牌完成 Activity。**
+
+```go
+// Instantiate a Temporal service client.
+// The same client can be used to complete or fail any number of Activities.
+// The client is a heavyweight object that should be created once per process.
+temporalClient, err := client.Dial(client.Options{})
+
+// Complete the Activity.
+temporalClient.CompleteActivity(context.Background(), taskToken, result, nil)
+```
+
+以下是`CompleteActivity`函数的参数：
+
+- `taskToken`：在内部检索到的`ActivityInfo`结构的二进制`TaskToken`字段的值
+  Activity。
+- `result`：Activity 记录的返回值。该值的类型必须与类型匹配
+  由 Activity 函数声明的返回值。
+- `err`：如果 Activity 因错误而终止，则返回错误代码。
+
+如果“err”不为空，则忽略“result”字段的值。
+
+要使 Activity 出现故障，您需要执行以下操作：
+
+```go
+// Fail the Activity.
+client.CompleteActivity(context.Background(), taskToken, nil, err)
+```

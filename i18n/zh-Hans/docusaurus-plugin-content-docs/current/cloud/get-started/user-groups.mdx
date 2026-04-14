@@ -1,0 +1,175 @@
+---
+id: user-groups
+title: 管理用户组
+sidebar_label: 管理用户组
+description: 了解如何管理用户组、成员和角色
+slug: /cloud/user-groups
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - how-to
+  - temporal cloud
+  - temporal cloud account
+  - user groups
+tags:
+  - Users
+  - User groups
+  - Security
+  - Temporal Cloud
+---
+
+## 什么是用户组？
+
+用户组可用于帮助管理应具有相同权限的用户组
+访问。用户组可以不是单独为各个用户分配相同的角色
+创建，分配所需的角色，然后将用户添加到用户组。这个
+减轻了管理个人用户权限的麻烦，并可以简化访问管理。当
+需要一个新角色，可以将其添加到组中一次，所有用户的访问权限都会反映该角色
+新角色。
+
+可以为用户组分配[帐户级别角色](/cloud/manage-access/roles-and-permissions#account-level-roles) 和[Namespace 级别权限](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions)。
+
+一个用户可以分配到多个组。如果用户的组成员身份对同一资源具有多个角色，则该用户将拥有最许可的有效角色。例如，如果“A 组”向 Namespace 授予只读角色，但“B 组”向 Namespace 授予写入角色，则同时属于“A 组”和“B 组”的用户将具有 Namespace 的写入角色。
+
+[服务帐户](/cloud/service-accounts) 无法分配给用户组。
+
+只有具有帐户所有者或全局管理员帐户级别[角色](/cloud/manage-access/roles-and-permissions#account-level-roles) 的用户才能管理用户组。
+
+## SCIM 组如何与用户组一起使用 {#scim-groups}
+
+[SCIM 组](/cloud/scim) 在角色分配方面与用户组类似。与用户组不同，SCIM 组的生命周期完全由 SCIM 集成管理，这意味着：
+
+1. SCIM 组只能通过 SCIM 集成创建
+1. SCIM 组无法删除，除非通过 SCIM 集成
+1. SCIM 组成员资格通过 SCIM 集成进行管理
+
+用户组和 SCIM 组可以在单个 Temporal Cloud 帐户中同时使用。一个用户可以属于多个 SCIM 组和多个用户组。
+
+当身份提供程序 (IDP) 中定义的组未明确映射到您需要在 Temporal Cloud 中授予的访问权限时，同时使用用户组和 SCIM 组会很有用。您可以使用 Temporal Cloud 用户组来管理访问，而不必使用 Update IDP（这通常是敏感且耗时的）。
+
+:::info
+
+所有用户组管理都需要帐户所有者或全局管理员帐户级别[角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。
+
+:::
+
+## 如何在您的 Temporal Cloud 帐户中创建用户组 {#create-group}
+
+用户组名称的长度必须为 3-64 个字符，并且只能包含小写字母、数字、连字符和下划线。
+
+<Tabs>
+
+<TabItem value="create-group-webui" label="Web UI">
+
+1. 导航至[身份页面](https://cloud.Temporal.io/settings/identities)
+1. 单击创建组按钮
+1. 为组命名
+1.为群组分配账户级角色（创建群组后即可分配Namespace级权限）
+1. 单击“保存”
+
+</TabItem>
+
+<TabItem value="create-group-tcld" label="tcld">
+有关详细信息，请参阅 [`tcld` user-group create](/cloud/tcld/user-group/#create) 命令参考。
+</TabItem>
+
+<TabItem value="create-group-tf" label="Terraform">
+有关详细信息，请参阅 [Terraform 提供程序文档](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs/resources/group)。
+</TabItem>
+
+</Tabs>
+
+## 如何为用户组分配角色 {#assign-group-roles}
+
+<Tabs>
+<TabItem value="assign-roles-webui" label="Web UI">
+
+编辑组的帐户角色：
+  1. 导航至[身份页面](https://cloud.Temporal.io/settings/identities)
+  1. 找到要编辑的组（您可以通过单击表格上的“组”选项卡过滤身份列表以仅显示组以查找相关组）
+  1. 单击编辑组
+  1. 单击帐户角色下拉列表
+  1. 选择新账户角色
+  1. 单击“保存”
+
+要将 Namespace 权限添加到组：
+  1. 导航至[身份页面](https://cloud.Temporal.io/settings/identities)
+  1. 找到要编辑的组（您可以通过单击表格上的“组”选项卡过滤身份列表以仅显示组以查找相关组）
+  1. 单击编辑组
+  1. 单击添加 Namespace
+  1. 在授予 Namespace 的访问权限下，搜索您要为其添加权限的 Namespace
+  1. 选择Namespace
+  1. 单击铅笔编辑所选 Namespace 的权限
+  1. 单击“保存”
+
+要编辑或删除组中的 Namespace 权限：
+  1. 单击编辑组
+  1. 单击权限上的铅笔进行编辑，或单击垃圾桶进行删除
+  1. 单击“保存”
+
+</TabItem>
+
+<TabItem value="assign-roles-tcld" label="tcld">
+有关详细信息，请参阅 [`tcld` 用户组 set-access](/cloud/tcld/user-group/#set-access) 命令参考。
+</TabItem>
+
+<TabItem value="assign-roles-tf" label="Terraform">
+有关详细信息，请参阅 [Terraform 提供程序文档](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs/resources/group)。
+</TabItem>
+
+</Tabs>
+
+## 如何管理群组中的用户{#assign-group-members}
+
+<Tabs>
+<TabItem value="assign-group-members-webui" label="Web UI">
+
+要将用户添加到组中：
+  1. 导航至[身份页面](https://cloud.Temporal.io/settings/identities)
+  1. 找到要编辑的组（您可以通过单击表格上的“组”选项卡过滤身份列表以仅显示组以查找相关组）
+  1. 单击编辑组
+  1. 在“成员”下，搜索您要添加的用户 
+  1. 选择用户
+  1. 单击“保存”
+要从组中删除用户：
+  1. 单击编辑组
+  1. 在“成员”下，单击您要删除的用户旁边的 X
+  1. 单击“保存”
+
+</TabItem>
+
+<TabItem value="assign-group-members-tcld" label="tcld">
+有关详细信息，请参阅 [`tcld` 用户组 add-users](/cloud/tcld/user-group/#add-users) 和 [`tcld` 用户组删除用户](/cloud/tcld/user-group/#remove-users) 命令参考。
+</TabItem>
+
+<TabItem value="assign-group-members-tf" label="Terraform">
+有关详细信息，请参阅 [Terraform 提供程序文档](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs/resources/group)。
+</TabItem>
+
+</Tabs>
+
+## 删除用户组
+
+<Tabs>
+<TabItem value="delete-group-webui" label="Web UI">
+
+1. 导航至[身份页面](https://cloud.Temporal.io/settings/identities)
+  1. 找到要编辑的组（您可以通过单击表格上的“组”选项卡过滤身份列表以仅显示组以查找相关组）
+  1. 单击编辑按钮旁边的下拉菜单
+  1. 单击“删除”
+  1. 单击“删除”确认
+
+</TabItem>
+
+<TabItem value="delete-group-tcld" label="tcld">
+有关详细信息，请参阅 [`tcld` 用户组删除](/cloud/tcld/user-group/#delete) 命令参考。
+</TabItem>
+
+<TabItem value="delete-group-tf" label="Terraform">
+有关详细信息，请参阅 [Terraform 提供程序文档](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs/resources/group)。
+</TabItem>
+
+</Tabs>
+
+
+

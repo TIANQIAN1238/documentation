@@ -1,8 +1,8 @@
 ---
 id: workflow
-title: Temporal CLI workflow command reference
-sidebar_label: workflow
-description: Temporal Workflow commands enable operations on Workflow Executions, such as cancel, count, delete, describe, execute, list, update-options, query, reset, reset-batch, show, signal, stack, start, terminate, trace, and update, enhancing efficiency and control.
+title: "Temporal CLI Workflow 命令参考"
+sidebar_label: "Workflow"
+description: "Temporal Workflow 命令启用对 Workflow Execution 的操作，例如取消、计数、删除、描述、执行、列表、Update-选项、Query、重置、重置批处理、显示、Signal、堆栈、启动、终止、跟踪和 Update，从而提高效率和控制。"
 toc_max_heading_level: 4
 keywords:
   - call stack
@@ -43,103 +43,103 @@ tags:
 ---
 
 {/* NOTE: This is an auto-generated file. Any edit to this file will be overwritten.
-This file is generated from https://github.com/temporalio/cli/blob/main/internal/commandsgen/commands.yml via internal/cmd/gen-docs */}
+该文件是通过内部/cmd/gen-docs 从 https://github.com/temporalio/cli/blob/main/internal/commandsgen/commands.yml 生成的 */}
 
-This page provides a reference for the `temporal` CLI `workflow` command. The flags applicable to each subcommand are presented in a table within the heading for the subcommand. Refer to [Global Flags](#global-flags) for flags that you can use with every subcommand.
+本页提供 `Temporal` CLI `Workflow` 命令的参考。适用于每个子命令的标志显示在子命令标题内的表格中。请参阅 [全球旗帜](#global-flags) 了解可与每个子命令一起使用的标志。
 
-## cancel
+## 取消 {#cancel}
 
-Canceling a running Workflow Execution records a
-`WorkflowExecutionCancelRequested` event in the Event History. The Service
-schedules a new Command Task, and the Workflow Execution performs any cleanup
-work supported by its implementation.
+取消正在运行的 Workflow Execution 记录
+Event History 中的 `WorkflowExecutionCancelRequested` 事件。服务
+Schedule 是一个新的命令任务，Workflow Execution 执行任何清理
+其实施所支持的工作。
 
-Use the Workflow ID to cancel an Execution:
+使用 Workflow ID 取消执行：
 
 ```
 temporal workflow cancel \
     --workflow-id YourWorkflowId
 ```
 
-A visibility Query lets you send bulk cancellations to Workflow Executions
-matching the results:
+Visibility Query 可让您向 Workflow Execution 发送批量取消订单
+匹配结果：
 
 ```
 temporal workflow cancel \
     --query YourQuery
 ```
 
-Visit https://docs.temporal.io/visibility to read more about Search Attributes
-and Query creation. See `temporal batch --help` for a quick reference.
+访问 https://docs.Temporal.io/visibility 了解有关 Search Attribute 的更多信息
+和 Query 创作。请参阅 `Temporal batch --help` 以获得快速参考。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--query`, `-q` | No | **string** Content for an SQL-like `QUERY` List Filter. You must set either --workflow-id or --query. |
-| `--reason` | No | **string** Reason for batch operation. Only use with --query. Defaults to user name. |
-| `--rps` | No | **float** Limit batch's requests per second. Only allowed if query is present. |
-| `--run-id`, `-r` | No | **string** Run ID. Only use with --workflow-id. Cannot use with --query. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. You must set either --workflow-id or --query. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm signaling. Only allowed when --query is present. |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--Query`、`-q` | 不 | **字符串** 类似 SQL `Query` 列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。 |
+| `--reason` | 不 | **字符串** 批量操作的原因。仅与--Query 一起使用。默认为用户名。 |
+| `--rps` | 不 | **float** 限制每秒的批次请求数。仅当存在 Query 时才允许。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。仅与 --Workflow-id 一起使用。不能与 --Query 一起使用。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。您必须设置 --Workflow-id 或 --Query。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认 Signaling。仅当存在 --Query 时才允许。 |
 
-## count
+## 数数 {#count}
 
-Show a count of Workflow Executions, regardless of execution state (running,
-terminated, etc). Use `--query` to select a subset of Workflow Executions:
+显示 Workflow Execution 的计数，无论执行状态如何（正在运行、
+终止等）。使用 `--Query` 选择 Workflow Execution 的子集：
 
 ```
 temporal workflow count \
     --query YourQuery
 ```
 
-Visit https://docs.temporal.io/visibility to read more about Search Attributes
-and Query creation. See `temporal batch --help` for a quick reference.
+访问 https://docs.Temporal.io/visibility 了解有关 Search Attribute 的更多信息
+和 Query 创作。请参阅 `Temporal batch --help` 以获得快速参考。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--query`, `-q` | No | **string** Content for an SQL-like `QUERY` List Filter. |
+| `--Query`、`-q` | 不 | **字符串** 类似 SQL `Query` 列表过滤器的内容。 |
 
-## delete
+## 删除 {#delete}
 
-Delete a Workflow Executions and its Event History:
+删除 Workflow Executions 及其 Event History：
 
 ```
 temporal workflow delete \
     --workflow-id YourWorkflowId
 ```
 
-The removal executes asynchronously. If the Execution is Running, the Service
-terminates it before deletion.
+删除操作异步执行。如果执行正在运行，则服务
+在删除之前终止它。
 
-Visit https://docs.temporal.io/visibility to read more about Search Attributes
-and Query creation. See `temporal batch --help` for a quick reference.
+访问 https://docs.Temporal.io/visibility 了解有关 Search Attribute 的更多信息
+和 Query 创作。请参阅 `Temporal batch --help` 以获得快速参考。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--query`, `-q` | No | **string** Content for an SQL-like `QUERY` List Filter. You must set either --workflow-id or --query. |
-| `--reason` | No | **string** Reason for batch operation. Only use with --query. Defaults to user name. |
-| `--rps` | No | **float** Limit batch's requests per second. Only allowed if query is present. |
-| `--run-id`, `-r` | No | **string** Run ID. Only use with --workflow-id. Cannot use with --query. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. You must set either --workflow-id or --query. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm signaling. Only allowed when --query is present. |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--Query`、`-q` | 不 | **字符串** 类似 SQL `Query` 列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。 |
+| `--reason` | 不 | **字符串** 批量操作的原因。仅与--Query 一起使用。默认为用户名。 |
+| `--rps` | 不 | **float** 限制每秒的批次请求数。仅当存在 Query 时才允许。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。仅与 --Workflow-id 一起使用。不能与 --Query 一起使用。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。您必须设置 --Workflow-id 或 --Query。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认 Signaling。仅当存在 --Query 时才允许。 |
 
-## describe
+## 描述 {#describe}
 
-Display information about a specific Workflow Execution:
+显示有关特定 Workflow Execution 的信息：
 
 ```
 temporal workflow describe \
     --workflow-id YourWorkflowId
 ```
 
-Show the Workflow Execution's auto-reset points:
+显示 Workflow Execution 的自动重置点：
 
 ```
 temporal workflow describe \
@@ -147,20 +147,20 @@ temporal workflow describe \
     --reset-points true
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--raw` | No | **bool** Print properties without changing their format. |
-| `--reset-points` | No | **bool** Show auto-reset points only. |
-| `--run-id`, `-r` | No | **string** Run ID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--raw` | 不 | **bool** 打印属性而不更改其格式。 |
+| `--reset-points` | 不 | **布尔** 仅显示自动重置点。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## execute
+## 执行 {#execute}
 
-Establish a new Workflow Execution and direct its progress to stdout. The
-command blocks and returns when the Workflow Execution completes. If your
-Workflow requires input, pass valid JSON:
+建立一个新的 Workflow Execution 并将其进度定向到标准输出。的
+命令阻塞并在 Workflow Execution 完成时返回。如果你的
+Workflow 需要输入，传递有效的 JSON：
 
 ```
 temporal workflow execute
@@ -170,46 +170,47 @@ temporal workflow execute
     --input '{"some-key": "some-value"}'
 ```
 
-Use `--event-details` to relay updates to the command-line output in JSON
-format. When using JSON output (`--output json`), this includes the entire
-"history" JSON key for the run.
+使用 `--event-details` 将 Update 中继到 JSON 中的命令行输出
+格式。当使用 JSON 输出 (`--output json`) 时，这包括整个
+运行的“历史记录”JSON 密钥。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--cron` | No | **string** Cron schedule for the Workflow. |
-| `--detailed` | No | **bool** Display events as sections instead of table. Does not apply to JSON output. |
-| `--execution-timeout` | No | **duration** Fail a WorkflowExecution if it lasts longer than `DURATION`. This time-out includes retries and ContinueAsNew tasks. |
-| `--fail-existing` | No | **bool** Fail if the Workflow already exists. |
-| `--fairness-key` | No | **string** Fairness key (max 64 bytes) for proportional task dispatch. Tasks with same key share capacity based on their weight. |
-| `--fairness-weight` | No | **float** Weight [0.001-1000] for this fairness key. Keys are dispatched proportionally to their weights. |
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--id-conflict-policy` | No | **string-enum** Determines how to resolve a conflict when spawning a new Workflow Execution with a particular Workflow Id used by an existing Open Workflow Execution. Accepted values: Fail, UseExisting, TerminateExisting. |
-| `--id-reuse-policy` | No | **string-enum** Re-use policy for the Workflow ID in new Workflow Executions. Accepted values: AllowDuplicate, AllowDuplicateFailedOnly, RejectDuplicate, TerminateIfRunning. |
-| `--input`, `-i` | No | **string[]** Input value. Use JSON content or set --input-meta to override. Can't be combined with --input-file. Can be passed multiple times to pass multiple arguments. |
-| `--input-base64` | No | **bool** Assume inputs are base64-encoded and attempt to decode them. |
-| `--input-file` | No | **string[]** A path or paths for input file(s). Use JSON content or set --input-meta to override. Can't be combined with --input. Can be passed multiple times to pass multiple arguments. |
-| `--input-meta` | No | **string[]** Input payload metadata as a `KEY=VALUE` pair. When the KEY is "encoding", this overrides the default ("json/plain"). Can be passed multiple times. Repeated metadata keys are applied to the corresponding inputs in the provided order. |
-| `--memo` | No | **string[]** Memo using 'KEY="VALUE"' pairs. Use JSON values. |
-| `--priority-key` | No | **int** Priority key (1-5, lower numbers = higher priority). Tasks in a queue should be processed in close-to-priority-order. Default is 3 when not specified. |
-| `--run-timeout` | No | **duration** Fail a Workflow Run if it lasts longer than `DURATION`. |
-| `--search-attribute` | No | **string[]** Search Attribute in `KEY=VALUE` format. Keys must be identifiers, and values must be JSON values. For example: `'YourKey={"your": "value"}'`. Can be passed multiple times. |
-| `--start-delay` | No | **duration** Delay before starting the Workflow Execution. Can't be used with cron schedules. If the Workflow receives a signal or update prior to this time, the Workflow Execution starts immediately. |
-| `--static-details` | No | **string** Static Workflow details for human consumption in UIs. Uses Temporal Markdown formatting, may be multiple lines. _(Experimental)_ |
-| `--static-summary` | No | **string** Static Workflow summary for human consumption in UIs. Uses Temporal Markdown formatting, should be a single line. _(Experimental)_ |
-| `--task-queue`, `-t` | Yes | **string** Workflow Task queue. |
-| `--task-timeout` | No | **duration** Fail a Workflow Task if it lasts longer than `DURATION`. This is the Start-to-close timeout for a Workflow Task. |
-| `--type` | Yes | **string** Workflow Type name. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. If not supplied, the Service generates a unique ID. |
+| `--cron` | 不 | **字符串** Workflow 的 Cron Schedule。 |
+| `--detailed` | 不 | **bool** 将事件显示为部分而不是表格。不适用于 JSON 输出。 |
+| `--execution-timeout` | 不 | **持续时间** 如果 Workflow 执行持续时间超过 `DURATION`，则该执行失败。此超时包括重试和ContinueAsNew 任务。 |
+| `--fail-existing` | 不 | **bool** 如果 Workflow 已存在，则失败。 |
+| `--fairness-key` | 不 | **字符串** 用于按比例分配任务的公平键（最大 64 字节）。具有相同密钥的任务根据其权重共享容量。 |
+| `--fairness-weight` | 不 | **float** 此公平键的权重 [0.001-1000]。密钥根据其权重按比例分配。 |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--id-conflict-policy` | 不 | **string-enum** 确定在使用现有 Open Workflow Execution 使用的特定 Workflow Id 生成新 Workflow Execution 时如何解决冲突。接受的值：失败、UseExisting、TerminateExisting。 |
+| `--id-reuse-policy` | 不 | **字符串枚举** 在新的 Workflow Execution 中重复使用 Workflow ID 的策略。接受的值：AllowDuplicate、AllowDuplicateFailedOnly、RejectDuplicate、TerminateIfRunning。 |
+| `--input`、`-i` | 不 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` | 不 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--input-file` | 不 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--input-meta` | 不 | **string[]** 以 `KEY=VALUE` 对形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--memo` | 不 | **字符串[]** 使用“KEY =“VALUE”对的备忘录。使用 JSON 值。 |
+| `--priority-key` | 不 | **int** 优先级键（1-5，数字越小=优先级越高）。队列中的任务应按接近优先级的顺序进行处理。未指定时默认为 3。 |
+| `--run-timeout` | 不 | **持续时间** 如果 Workflow 运行持续时间超过 `DURATION`，则该运行失败。 |
+| `--search-attribute` | 不 | **字符串[]** `KEY=VALUE` 格式的 Search Attribute。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--start-delay` | 不 | **持续时间** 启动 Workflow Execution 之前的延迟。不能与 cron Schedules 一起使用。如果 Workflow 在此时间之前收到 Signal 或 Update，则 Workflow Execution 立即启动。 |
+| `--static-details` | 不 | **字符串** 供用户在 UI 中使用的静态 Workflow 详细信息。使用 Temporal Markdown 格式，可以是多行。 _（实验性）_ |
+| `--static-summary` | 不 | **字符串** UI 中人类消耗的静态 Workflow 摘要。使用 Temporal Markdown 格式，应该是单行。 _（实验性）_ |
+| `--task-queue`、`-t` | 是的 | **字符串** Workflow Task Queue。 |
+| `--task-timeout` | 不 | **持续时间** 如果 Workflow 任务持续时间超过 `DURATION`，则该任务失败。这是 Workflow 任务的开始到关闭超时。 |
+| `--type` | 是的 | **字符串** Workflow 类型名称。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。如果未提供，服务将生成一个唯一的 ID。 |
 
-## execute-update-with-start
+<a id="cancel"></a>
+## 执行-Update-with-start {#execute-update-with-start}
 
-Send a message to a Workflow Execution to invoke an Update handler, and wait for
-the update to complete. If the Workflow Execution is not running, then a new workflow
-execution is started and the update is sent.
+向 Workflow Execution 发送消息以调用 Update 处理程序，并等待
+Update 来完成。如果 Workflow Execution 未运行，则新的 Workflow
+开始执行并发送 Update。
 
-Experimental.
+实验性的。
 
 ```
 temporal workflow execute-update-with-start \
@@ -222,45 +223,46 @@ temporal workflow execute-update-with-start \
   --input '{"wf-key": "wf-value"}'
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--cron` | No | **string** Cron schedule for the Workflow. |
-| `--execution-timeout` | No | **duration** Fail a WorkflowExecution if it lasts longer than `DURATION`. This time-out includes retries and ContinueAsNew tasks. |
-| `--fail-existing` | No | **bool** Fail if the Workflow already exists. |
-| `--fairness-key` | No | **string** Fairness key (max 64 bytes) for proportional task dispatch. Tasks with same key share capacity based on their weight. |
-| `--fairness-weight` | No | **float** Weight [0.001-1000] for this fairness key. Keys are dispatched proportionally to their weights. |
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--id-conflict-policy` | No | **string-enum** Determines how to resolve a conflict when spawning a new Workflow Execution with a particular Workflow Id used by an existing Open Workflow Execution. Accepted values: Fail, UseExisting, TerminateExisting. |
-| `--id-reuse-policy` | No | **string-enum** Re-use policy for the Workflow ID in new Workflow Executions. Accepted values: AllowDuplicate, AllowDuplicateFailedOnly, RejectDuplicate, TerminateIfRunning. |
-| `--input`, `-i` | No | **string[]** Input value. Use JSON content or set --input-meta to override. Can't be combined with --input-file. Can be passed multiple times to pass multiple arguments. |
-| `--input-base64` | No | **bool** Assume inputs are base64-encoded and attempt to decode them. |
-| `--input-file` | No | **string[]** A path or paths for input file(s). Use JSON content or set --input-meta to override. Can't be combined with --input. Can be passed multiple times to pass multiple arguments. |
-| `--input-meta` | No | **string[]** Input payload metadata as a `KEY=VALUE` pair. When the KEY is "encoding", this overrides the default ("json/plain"). Can be passed multiple times. Repeated metadata keys are applied to the corresponding inputs in the provided order. |
-| `--memo` | No | **string[]** Memo using 'KEY="VALUE"' pairs. Use JSON values. |
-| `--priority-key` | No | **int** Priority key (1-5, lower numbers = higher priority). Tasks in a queue should be processed in close-to-priority-order. Default is 3 when not specified. |
-| `--run-id`, `-r` | No | **string** Run ID. If unset, looks for an Update against the currently-running Workflow Execution. |
-| `--run-timeout` | No | **duration** Fail a Workflow Run if it lasts longer than `DURATION`. |
-| `--search-attribute` | No | **string[]** Search Attribute in `KEY=VALUE` format. Keys must be identifiers, and values must be JSON values. For example: `'YourKey={"your": "value"}'`. Can be passed multiple times. |
-| `--start-delay` | No | **duration** Delay before starting the Workflow Execution. Can't be used with cron schedules. If the Workflow receives a signal or update prior to this time, the Workflow Execution starts immediately. |
-| `--static-details` | No | **string** Static Workflow details for human consumption in UIs. Uses Temporal Markdown formatting, may be multiple lines. _(Experimental)_ |
-| `--static-summary` | No | **string** Static Workflow summary for human consumption in UIs. Uses Temporal Markdown formatting, should be a single line. _(Experimental)_ |
-| `--task-queue`, `-t` | Yes | **string** Workflow Task queue. |
-| `--task-timeout` | No | **duration** Fail a Workflow Task if it lasts longer than `DURATION`. This is the Start-to-close timeout for a Workflow Task. |
-| `--type` | Yes | **string** Workflow Type name. |
-| `--update-first-execution-run-id` | No | **string** Parent Run ID. The update is sent to the last Workflow Execution in the chain started with this Run ID. |
-| `--update-id` | No | **string** Update ID. If unset, defaults to a UUID. |
-| `--update-input` | No | **string[]** Update input value. Use JSON content or set --update-input-meta to override. Can't be combined with --update-input-file. Can be passed multiple times to pass multiple arguments. |
-| `--update-input-base64` | No | **bool** Assume update inputs are base64-encoded and attempt to decode them. |
-| `--update-input-file` | No | **string[]** A path or paths for input file(s). Use JSON content or set --update-input-meta to override. Can't be combined with --update-input. Can be passed multiple times to pass multiple arguments. |
-| `--update-input-meta` | No | **string[]** Input update payload metadata as a `KEY=VALUE` pair. When the KEY is "encoding", this overrides the default ("json/plain"). Can be passed multiple times. |
-| `--update-name` | Yes | **string** Update name. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. If not supplied, the Service generates a unique ID. |
+| `--cron` | 不 | **字符串** Workflow 的 Cron Schedule。 |
+| `--execution-timeout` | 不 | **持续时间** 如果 Workflow 执行持续时间超过 `DURATION`，则该执行失败。此超时包括重试和ContinueAsNew 任务。 |
+| `--fail-existing` | 不 | **bool** 如果 Workflow 已存在，则失败。 |
+| `--fairness-key` | 不 | **字符串** 用于按比例分配任务的公平键（最大 64 字节）。具有相同密钥的任务根据其权重共享容量。 |
+| `--fairness-weight` | 不 | **float** 此公平键的权重 [0.001-1000]。密钥根据其权重按比例分配。 |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--id-conflict-policy` | 不 | **string-enum** 确定在使用现有 Open Workflow Execution 使用的特定 Workflow Id 生成新 Workflow Execution 时如何解决冲突。接受的值：失败、UseExisting、TerminateExisting。 |
+| `--id-reuse-policy` | 不 | **字符串枚举** 在新的 Workflow Execution 中重复使用 Workflow ID 的策略。接受的值：AllowDuplicate、AllowDuplicateFailedOnly、RejectDuplicate、TerminateIfRunning。 |
+| `--input`、`-i` | 不 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` | 不 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--input-file` | 不 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--input-meta` | 不 | **string[]** 以 `KEY=VALUE` 对形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--memo` | 不 | **字符串[]** 使用“KEY =“VALUE”对的备忘录。使用 JSON 值。 |
+| `--priority-key` | 不 | **int** 优先级键（1-5，数字越小=优先级越高）。队列中的任务应按接近优先级的顺序进行处理。未指定时默认为 3。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。如果未设置，则根据当前运行的 Workflow Execution 查找 Update。 |
+| `--run-timeout` | 不 | **持续时间** 如果 Workflow 运行持续时间超过 `DURATION`，则该运行失败。 |
+| `--search-attribute` | 不 | **字符串[]** `KEY=VALUE` 格式的 Search Attribute。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--start-delay` | 不 | **持续时间** 启动 Workflow Execution 之前的延迟。不能与 cron Schedules 一起使用。如果 Workflow 在此时间之前收到 Signal 或 Update，则 Workflow Execution 立即启动。 |
+| `--static-details` | 不 | **字符串** 供用户在 UI 中使用的静态 Workflow 详细信息。使用 Temporal Markdown 格式，可以是多行。 _（实验性）_ |
+| `--static-summary` | 不 | **字符串** UI 中人类消耗的静态 Workflow 摘要。使用 Temporal Markdown 格式，应该是单行。 _（实验性）_ |
+| `--task-queue`、`-t` | 是的 | **字符串** Workflow Task Queue。 |
+| `--task-timeout` | 不 | **持续时间** 如果 Workflow 任务持续时间超过 `DURATION`，则该任务失败。这是 Workflow 任务的开始到关闭超时。 |
+| `--type` | 是的 | **字符串** Workflow 类型名称。 |
+| `--Update-first-execution-run-id` | 不 | **字符串** 父运行 ID。 Update 被发送到以此运行 ID 开始的链中的最后一个 Workflow Execution。 |
+| `--Update-id` | 不 | **字符串** Update ID。如果未设置，则默认为 UUID。 |
+| `--Update-input` | 不 | **字符串[]** Update 输入值。使用 JSON 内容或设置 --Update-input-meta 进行覆盖。不能与 --Update-input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--Update-input-base64` | 不 | **bool** 假设 Update 输入是 Base64 编码的并尝试对其进行解码。 |
+| `--Update-input-file` | 不 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --Update-input-meta 进行覆盖。不能与--Update-输入组合。可以多次传递以传递多个参数。 |
+| `--Update-input-meta` | 不 | **string[]** 输入 Update 有效负载元数据作为 `KEY=VALUE` 对。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。 |
+| `--Update-name` | 是的 | **字符串** Update 名称。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。如果未提供，服务将生成一个唯一的 ID。 |
 
-## fix-history-json
+<a id="count"></a>
+## 修复历史记录 json {#fix-history-json}
 
-Reserialize an Event History JSON file:
+重新序列化 Event History JSON 文件：
 
 ```
 temporal workflow fix-history-json \
@@ -268,80 +270,82 @@ temporal workflow fix-history-json \
     --target /path/to/reserialized.json
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--source`, `-s` | Yes | **string** Path to the original file. |
-| `--target`, `-t` | No | **string** Path to the results file. When omitted, output is sent to stdout. |
+| `--source`、`-s` | 是的 | **字符串** 原始文件的路径。 |
+| `--target`、`-t` | 不 | **字符串** 结果文件的路径。省略时，输出将发送到 stdout。 |
 
-## list
+## 列表 {#list}
 
-List Workflow Executions. The optional `--query` limits the output to
-Workflows matching a Query:
+列出 Workflow Execution。可选的 `--Query` 将输出限制为
+与 Query 匹配的 Workflow：
 
 ```
 temporal workflow list \
     --query YourQuery
 ```
 
-Visit https://docs.temporal.io/visibility to read more about Search Attributes
-and Query creation. See `temporal batch --help` for a quick reference.
+访问 https://docs.Temporal.io/visibility 了解有关 Search Attribute 的更多信息
+和 Query 创作。请参阅 `Temporal batch --help` 以获得快速参考。
 
-View a list of archived Workflow Executions:
+查看已存档的 Workflow Execution 列表：
 
 ```
 temporal workflow list \
     --archived
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--archived` | No | **bool** Limit output to archived Workflow Executions. _(Experimental)_ |
-| `--limit` | No | **int** Maximum number of Workflow Executions to display. |
-| `--page-size` | No | **int** Maximum number of Workflow Executions to fetch at a time from the server. |
-| `--query`, `-q` | No | **string** Content for an SQL-like `QUERY` List Filter. |
+| `--archived` | 不 | **bool** 将输出限制为存档的 Workflow Execution。 _（实验性）_ |
+| `--limit` | 不 | **int** 要显示的 Workflow Execution 的最大数量。 |
+| `--page-size` | 不 | **int** 一次从服务器获取的 Workflow Execution 的最大数量。 |
+| `--Query`、`-q` | 不 | **字符串** 类似 SQL `Query` 列表过滤器的内容。 |
 
-## metadata
+<a id="delete"></a>
+## 元数据 {#metadata}
 
-Issue a Query for and display user-set metadata like summary and
-details for a specific Workflow Execution:
+发出 Query 并显示用户设置的元数据，例如摘要和
+特定 Workflow Execution 的详细信息：
 
 ```
 temporal workflow metadata \
     --workflow-id YourWorkflowId
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--reject-condition` | No | **string-enum** Optional flag for rejecting Queries based on Workflow state. Accepted values: not_open, not_completed_cleanly. |
-| `--run-id`, `-r` | No | **string** Run ID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--reject-condition` | 不 | **字符串枚举** 用于拒绝基于 Workflow 状态的查询的可选标志。接受的值：not_open、not_completed_cleanly。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## pause
+## 暂停 {#pause}
 
-Pause a Workflow Execution.
-Note: This is an experimental feature and may change in the future.
+暂停 Workflow Execution。
+注意：这是一项实验性功能，将来可能会发生变化。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--reason` | No | **string** Reason for pausing the Workflow Execution. Defaults to message with the current user's name. |
-| `--run-id`, `-r` | No | **string** Run ID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--reason` | 不 | **字符串** 暂停 Workflow Execution 的原因。默认为带有当前用户名的消息。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## query
+<a id="describe"></a>
+## Query {#query}
 
-Send a Query to a Workflow Execution by Workflow ID to retrieve its state.
-This synchronous operation exposes the internal state of a running Workflow
-Execution, which constantly changes. You can query both running and completed
-Workflow Executions:
+通过 Workflow ID 将 Query 发送到 Workflow Execution 以检索其状态。
+此同步操作公开了正在运行的 Workflow 的内部状态
+执行，不断变化。您可以Query同时运行和完成
+Workflow Execution：
 
 ```
 temporal workflow query \
@@ -350,24 +354,24 @@ temporal workflow query \
     --input '{"YourInputKey": "YourInputValue"}'
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--input`, `-i` | No | **string[]** Input value. Use JSON content or set --input-meta to override. Can't be combined with --input-file. Can be passed multiple times to pass multiple arguments. |
-| `--input-base64` | No | **bool** Assume inputs are base64-encoded and attempt to decode them. |
-| `--input-file` | No | **string[]** A path or paths for input file(s). Use JSON content or set --input-meta to override. Can't be combined with --input. Can be passed multiple times to pass multiple arguments. |
-| `--input-meta` | No | **string[]** Input payload metadata as a `KEY=VALUE` pair. When the KEY is "encoding", this overrides the default ("json/plain"). Can be passed multiple times. Repeated metadata keys are applied to the corresponding inputs in the provided order. |
-| `--name` | Yes | **string** Query Type/Name. |
-| `--reject-condition` | No | **string-enum** Optional flag for rejecting Queries based on Workflow state. Accepted values: not_open, not_completed_cleanly. |
-| `--run-id`, `-r` | No | **string** Run ID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--input`、`-i` | 不 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` | 不 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--input-file` | 不 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--input-meta` | 不 | **string[]** 以 `KEY=VALUE` 对形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--name` | 是的 | **字符串** Query 类型/名称。 |
+| `--reject-condition` | 不 | **字符串枚举** 用于拒绝基于 Workflow 状态的查询的可选标志。接受的值：not_open、not_completed_cleanly。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## reset
+## 重置 {#reset}
 
-Reset a Workflow Execution so it can resume from a point in its Event History
-without losing its progress up to that point:
+重置 Workflow Execution，以便它可以从 Event History 中的某个点恢复
+不丢失迄今为止的进度：
 
 ```
 temporal workflow reset \
@@ -375,7 +379,7 @@ temporal workflow reset \
     --event-id YourLastEvent
 ```
 
-Start from where the Workflow Execution last continued as new:
+从 Workflow Execution 最后的位置开始继续作为新的：
 
 ```
 temporal workflow reset \
@@ -383,46 +387,47 @@ temporal workflow reset \
     --type LastContinuedAsNew
 ```
 
-For batch resets, limit your resets to FirstWorkflowTask, LastWorkflowTask, or
-BuildId. Do not use Workflow IDs, run IDs, or event IDs with this command.
+对于批量重置，请将重置限制为 FirstWorkflowTask、LastWorkflowTask 或
+构建 ID。请勿在此命令中使用 Workflow ID、运行 ID 或事件 ID。
 
-Visit https://docs.temporal.io/visibility to read more about Search
-Attributes and Query creation.
+访问 https://docs.Temporal.io/visibility 了解有关搜索的更多信息
+属性和 Query 创建。
 
-### with-workflow-update-options
+<a id="execute"></a>
+### 带有-Workflow-Update-选项 {#with-workflow-update-options}
 
-Run Workflow Update Options atomically after the Workflow is reset.
-Workflows selected by the reset command are forwarded onto the subcommand.
+重置 Workflow 后自动运行 Workflow Update 选项。
+由复位命令选择的 Workflow 被转发到子命令。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--versioning-override-behavior` | Yes | **string-enum** Override the versioning behavior of a Workflow. Accepted values: pinned, auto_upgrade. |
-| `--versioning-override-build-id` | No | **string** When overriding to a `pinned` behavior, specifies the Build ID of the version to target. |
-| `--versioning-override-deployment-name` | No | **string** When overriding to a `pinned` behavior, specifies the Deployment Name of the version to target. |
+| `--versioning-override-behavior` | 是的 | **字符串枚举** 覆盖 Workflow 的版本控制行为。接受的值：固定、自动升级。 |
+| `--versioning-override-build-id` | 不 | **字符串** 覆盖 `pinned` 行为时，指定要定位的版本的构建 ID。 |
+| `--versioning-override-deployment-name` | 不 | **字符串** 覆盖 `pinned` 行为时，指定要定位的版本的部署名称。 |
 
-## result
+## 结果 {#result}
 
-Wait for and print the result of a Workflow Execution:
+等待并打印 Workflow Execution 的结果：
 
 ```
 temporal workflow result \
     --workflow-id YourWorkflowId
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--run-id`, `-r` | No | **string** Run ID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## show
+## 展示 {#show}
 
-Show a Workflow Execution's Event History.
-When using JSON output (`--output json`), you may pass the results to an SDK
-to perform a replay:
+显示 Workflow Execution 的 Event History。
+当使用 JSON 输出 (`--output json`) 时，您可以将结果传递给 SDK
+执行重播：
 
 ```
 temporal workflow show \
@@ -430,20 +435,21 @@ temporal workflow show \
     --output json
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--detailed` | No | **bool** Display events as detailed sections instead of table. Does not apply to JSON output. |
-| `--follow`, `-f` | No | **bool** Follow the Workflow Execution progress in real time. Does not apply to JSON output. |
-| `--run-id`, `-r` | No | **string** Run ID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--detailed` | 不 | **bool** 将事件显示为详细部分而不是表格。不适用于 JSON 输出。 |
+| `--follow`、`-f` | 不 | **bool** 实时关注 Workflow Execution 进度。不适用于 JSON 输出。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## signal
+<a id="execute-update-with-start"></a>
+## Signal {#signal}
 
-Send an asynchronous notification (Signal) to a running Workflow Execution by
-its Workflow ID. The Signal is written to the History. When you include
-`--input`, that data is available for the Workflow Execution to consume:
+通过以下方式将异步通知 (Signal) 发送到正在运行的 Workflow Execution
+其 Workflow ID。 Signal 被写入历史。当你包括
+`--input`，该数据可供 Workflow Execution 使用：
 
 ```
 temporal workflow signal \
@@ -452,31 +458,32 @@ temporal workflow signal \
     --input '{"YourInputKey": "YourInputValue"}'
 ```
 
-Visit https://docs.temporal.io/visibility to read more about Search Attributes
-and Query creation. See `temporal batch --help` for a quick reference.
+访问 https://docs.Temporal.io/visibility 了解有关 Search Attribute 的更多信息
+和 Query 创作。请参阅 `Temporal batch --help` 以获得快速参考。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--input`, `-i` | No | **string[]** Input value. Use JSON content or set --input-meta to override. Can't be combined with --input-file. Can be passed multiple times to pass multiple arguments. |
-| `--input-base64` | No | **bool** Assume inputs are base64-encoded and attempt to decode them. |
-| `--input-file` | No | **string[]** A path or paths for input file(s). Use JSON content or set --input-meta to override. Can't be combined with --input. Can be passed multiple times to pass multiple arguments. |
-| `--input-meta` | No | **string[]** Input payload metadata as a `KEY=VALUE` pair. When the KEY is "encoding", this overrides the default ("json/plain"). Can be passed multiple times. Repeated metadata keys are applied to the corresponding inputs in the provided order. |
-| `--name` | Yes | **string** Signal name. |
-| `--query`, `-q` | No | **string** Content for an SQL-like `QUERY` List Filter. You must set either --workflow-id or --query. |
-| `--reason` | No | **string** Reason for batch operation. Only use with --query. Defaults to user name. |
-| `--rps` | No | **float** Limit batch's requests per second. Only allowed if query is present. |
-| `--run-id`, `-r` | No | **string** Run ID. Only use with --workflow-id. Cannot use with --query. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. You must set either --workflow-id or --query. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm signaling. Only allowed when --query is present. |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--input`、`-i` | 不 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` | 不 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--input-file` | 不 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--input-meta` | 不 | **string[]** 以 `KEY=VALUE` 对形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--name` | 是的 | **字符串** Signal 名称。 |
+| `--Query`、`-q` | 不 | **字符串** 类似 SQL `Query` 列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。 |
+| `--reason` | 不 | **字符串** 批量操作的原因。仅与--Query 一起使用。默认为用户名。 |
+| `--rps` | 不 | **float** 限制每秒的批次请求数。仅当存在 Query 时才允许。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。仅与 --Workflow-id 一起使用。不能与 --Query 一起使用。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。您必须设置 --Workflow-id 或 --Query。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认 Signaling。仅当存在 --Query 时才允许。 |
 
-## signal-with-start
+<a id="fix-history-json"></a>
+## Signal-带启动 {#signal-with-start}
 
-Send an asynchronous notification (Signal) to a Workflow Execution.
-If the Workflow Execution is not running or is not found, it starts the
-workflow then sends the signal.
+向 Workflow Execution 发送异步通知 (Signal)。
+如果 Workflow Execution 未运行或未找到，它将启动
+Workflow 然后发送 Signal。
 
 ```
 temporal workflow signal-with-start \
@@ -488,61 +495,61 @@ temporal workflow signal-with-start \
   --input '{"some-key": "some-value"}'
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--cron` | No | **string** Cron schedule for the Workflow. |
-| `--execution-timeout` | No | **duration** Fail a WorkflowExecution if it lasts longer than `DURATION`. This time-out includes retries and ContinueAsNew tasks. |
-| `--fail-existing` | No | **bool** Fail if the Workflow already exists. |
-| `--fairness-key` | No | **string** Fairness key (max 64 bytes) for proportional task dispatch. Tasks with same key share capacity based on their weight. |
-| `--fairness-weight` | No | **float** Weight [0.001-1000] for this fairness key. Keys are dispatched proportionally to their weights. |
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--id-conflict-policy` | No | **string-enum** Determines how to resolve a conflict when spawning a new Workflow Execution with a particular Workflow Id used by an existing Open Workflow Execution. Accepted values: Fail, UseExisting, TerminateExisting. |
-| `--id-reuse-policy` | No | **string-enum** Re-use policy for the Workflow ID in new Workflow Executions. Accepted values: AllowDuplicate, AllowDuplicateFailedOnly, RejectDuplicate, TerminateIfRunning. |
-| `--input`, `-i` | No | **string[]** Input value. Use JSON content or set --input-meta to override. Can't be combined with --input-file. Can be passed multiple times to pass multiple arguments. |
-| `--input-base64` | No | **bool** Assume inputs are base64-encoded and attempt to decode them. |
-| `--input-file` | No | **string[]** A path or paths for input file(s). Use JSON content or set --input-meta to override. Can't be combined with --input. Can be passed multiple times to pass multiple arguments. |
-| `--input-meta` | No | **string[]** Input payload metadata as a `KEY=VALUE` pair. When the KEY is "encoding", this overrides the default ("json/plain"). Can be passed multiple times. Repeated metadata keys are applied to the corresponding inputs in the provided order. |
-| `--memo` | No | **string[]** Memo using 'KEY="VALUE"' pairs. Use JSON values. |
-| `--priority-key` | No | **int** Priority key (1-5, lower numbers = higher priority). Tasks in a queue should be processed in close-to-priority-order. Default is 3 when not specified. |
-| `--run-timeout` | No | **duration** Fail a Workflow Run if it lasts longer than `DURATION`. |
-| `--search-attribute` | No | **string[]** Search Attribute in `KEY=VALUE` format. Keys must be identifiers, and values must be JSON values. For example: `'YourKey={"your": "value"}'`. Can be passed multiple times. |
-| `--signal-input` | No | **string[]** Signal input value. Use JSON content or set --signal-input-meta to override. Can't be combined with --signal-input-file. Can be passed multiple times to pass multiple arguments. |
-| `--signal-input-base64` | No | **bool** Assume signal inputs are base64-encoded and attempt to decode them. |
-| `--signal-input-file` | No | **string[]** A path or paths for input file(s). Use JSON content or set --signal-input-meta to override. Can't be combined with --signal-input. Can be passed multiple times to pass multiple arguments. |
-| `--signal-input-meta` | No | **string[]** Input signal payload metadata as a `KEY=VALUE` pair. When the KEY is "encoding", this overrides the default ("json/plain"). Can be passed multiple times. |
-| `--signal-name` | Yes | **string** Signal name. |
-| `--start-delay` | No | **duration** Delay before starting the Workflow Execution. Can't be used with cron schedules. If the Workflow receives a signal or update prior to this time, the Workflow Execution starts immediately. |
-| `--static-details` | No | **string** Static Workflow details for human consumption in UIs. Uses Temporal Markdown formatting, may be multiple lines. _(Experimental)_ |
-| `--static-summary` | No | **string** Static Workflow summary for human consumption in UIs. Uses Temporal Markdown formatting, should be a single line. _(Experimental)_ |
-| `--task-queue`, `-t` | Yes | **string** Workflow Task queue. |
-| `--task-timeout` | No | **duration** Fail a Workflow Task if it lasts longer than `DURATION`. This is the Start-to-close timeout for a Workflow Task. |
-| `--type` | Yes | **string** Workflow Type name. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. If not supplied, the Service generates a unique ID. |
+| `--cron` | 不 | **字符串** Workflow 的 Cron Schedule。 |
+| `--execution-timeout` | 不 | **持续时间** 如果 Workflow 执行持续时间超过 `DURATION`，则该执行失败。此超时包括重试和ContinueAsNew 任务。 |
+| `--fail-existing` | 不 | **bool** 如果 Workflow 已存在，则失败。 |
+| `--fairness-key` | 不 | **字符串** 用于按比例分配任务的公平键（最大 64 字节）。具有相同密钥的任务根据其权重共享容量。 |
+| `--fairness-weight` | 不 | **float** 此公平键的权重 [0.001-1000]。密钥根据其权重按比例分配。 |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--id-conflict-policy` | 不 | **string-enum** 确定在使用现有 Open Workflow Execution 使用的特定 Workflow Id 生成新 Workflow Execution 时如何解决冲突。接受的值：失败、UseExisting、TerminateExisting。 |
+| `--id-reuse-policy` | 不 | **字符串枚举** 在新的 Workflow Execution 中重复使用 Workflow ID 的策略。接受的值：AllowDuplicate、AllowDuplicateFailedOnly、RejectDuplicate、TerminateIfRunning。 |
+| `--input`、`-i` | 不 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` | 不 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--input-file` | 不 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--input-meta` | 不 | **string[]** 以 `KEY=VALUE` 对形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--memo` | 不 | **字符串[]** 使用“KEY =“VALUE”对的备忘录。使用 JSON 值。 |
+| `--priority-key` | 不 | **int** 优先级键（1-5，数字越小=优先级越高）。队列中的任务应按接近优先级的顺序进行处理。未指定时默认为 3。 |
+| `--run-timeout` | 不 | **持续时间** 如果 Workflow 运行持续时间超过 `DURATION`，则该运行失败。 |
+| `--search-attribute` | 不 | **字符串[]** `KEY=VALUE` 格式的 Search Attribute。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--Signal-input` | 不 | **字符串[]** Signal 输入值。使用 JSON 内容或设置 --Signal-input-meta 进行覆盖。不能与 --Signal-input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--Signal-input-base64` | 不 | **bool** 假设 Signal 输入是 Base64 编码的并尝试对其进行解码。 |
+| `--Signal-input-file` | 不 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --Signal-input-meta 进行覆盖。不能与--Signal-输入组合。可以多次传递以传递多个参数。 |
+| `--Signal-input-meta` | 不 | **string[]** 输入 Signal 有效负载元数据作为 `KEY=VALUE` 对。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。 |
+| `--Signal-name` | 是的 | **字符串** Signal 名称。 |
+| `--start-delay` | 不 | **持续时间** 启动 Workflow Execution 之前的延迟。不能与 cron Schedules 一起使用。如果 Workflow 在此时间之前收到 Signal 或 Update，则 Workflow Execution 立即启动。 |
+| `--static-details` | 不 | **字符串** 供用户在 UI 中使用的静态 Workflow 详细信息。使用 Temporal Markdown 格式，可以是多行。 _（实验性）_ |
+| `--static-summary` | 不 | **字符串** UI 中人类消耗的静态 Workflow 摘要。使用 Temporal Markdown 格式，应该是单行。 _（实验性）_ |
+| `--task-queue`、`-t` | 是的 | **字符串** Workflow Task Queue。 |
+| `--task-timeout` | 不 | **持续时间** 如果 Workflow 任务持续时间超过 `DURATION`，则该任务失败。这是 Workflow 任务的开始到关闭超时。 |
+| `--type` | 是的 | **字符串** Workflow 类型名称。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。如果未提供，服务将生成一个唯一的 ID。 |
 
-## stack
+## 堆 {#stack}
 
-Perform a Query on a Workflow Execution using a `__stack_trace`-type Query.
-Display a stack trace of the threads and routines currently in use by the
-Workflow for troubleshooting:
+使用 `__stack_trace` 类型的 Query 在 Workflow Execution 上执行 Query。
+显示当前正在使用的线程和例程的堆栈跟踪
+Workflow 用于故障排除：
 
 ```
 temporal workflow stack \
     --workflow-id YourWorkflowId
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--reject-condition` | No | **string-enum** Optional flag to reject Queries based on Workflow state. Accepted values: not_open, not_completed_cleanly. |
-| `--run-id`, `-r` | No | **string** Run ID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--reject-condition` | 不 | **字符串枚举** 用于拒绝基于 Workflow 状态的查询的可选标志。接受的值：not_open、not_completed_cleanly。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## start
+## 开始 {#start}
 
-Start a new Workflow Execution. Returns the Workflow- and Run-IDs:
+开始一个新的 Workflow Execution。返回 Workflow- 和 Run-ID：
 
 ```
 temporal workflow start \
@@ -552,41 +559,42 @@ temporal workflow start \
     --input '{"some-key": "some-value"}'
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--cron` | No | **string** Cron schedule for the Workflow. |
-| `--execution-timeout` | No | **duration** Fail a WorkflowExecution if it lasts longer than `DURATION`. This time-out includes retries and ContinueAsNew tasks. |
-| `--fail-existing` | No | **bool** Fail if the Workflow already exists. |
-| `--fairness-key` | No | **string** Fairness key (max 64 bytes) for proportional task dispatch. Tasks with same key share capacity based on their weight. |
-| `--fairness-weight` | No | **float** Weight [0.001-1000] for this fairness key. Keys are dispatched proportionally to their weights. |
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--id-conflict-policy` | No | **string-enum** Determines how to resolve a conflict when spawning a new Workflow Execution with a particular Workflow Id used by an existing Open Workflow Execution. Accepted values: Fail, UseExisting, TerminateExisting. |
-| `--id-reuse-policy` | No | **string-enum** Re-use policy for the Workflow ID in new Workflow Executions. Accepted values: AllowDuplicate, AllowDuplicateFailedOnly, RejectDuplicate, TerminateIfRunning. |
-| `--input`, `-i` | No | **string[]** Input value. Use JSON content or set --input-meta to override. Can't be combined with --input-file. Can be passed multiple times to pass multiple arguments. |
-| `--input-base64` | No | **bool** Assume inputs are base64-encoded and attempt to decode them. |
-| `--input-file` | No | **string[]** A path or paths for input file(s). Use JSON content or set --input-meta to override. Can't be combined with --input. Can be passed multiple times to pass multiple arguments. |
-| `--input-meta` | No | **string[]** Input payload metadata as a `KEY=VALUE` pair. When the KEY is "encoding", this overrides the default ("json/plain"). Can be passed multiple times. Repeated metadata keys are applied to the corresponding inputs in the provided order. |
-| `--memo` | No | **string[]** Memo using 'KEY="VALUE"' pairs. Use JSON values. |
-| `--priority-key` | No | **int** Priority key (1-5, lower numbers = higher priority). Tasks in a queue should be processed in close-to-priority-order. Default is 3 when not specified. |
-| `--run-timeout` | No | **duration** Fail a Workflow Run if it lasts longer than `DURATION`. |
-| `--search-attribute` | No | **string[]** Search Attribute in `KEY=VALUE` format. Keys must be identifiers, and values must be JSON values. For example: `'YourKey={"your": "value"}'`. Can be passed multiple times. |
-| `--start-delay` | No | **duration** Delay before starting the Workflow Execution. Can't be used with cron schedules. If the Workflow receives a signal or update prior to this time, the Workflow Execution starts immediately. |
-| `--static-details` | No | **string** Static Workflow details for human consumption in UIs. Uses Temporal Markdown formatting, may be multiple lines. _(Experimental)_ |
-| `--static-summary` | No | **string** Static Workflow summary for human consumption in UIs. Uses Temporal Markdown formatting, should be a single line. _(Experimental)_ |
-| `--task-queue`, `-t` | Yes | **string** Workflow Task queue. |
-| `--task-timeout` | No | **duration** Fail a Workflow Task if it lasts longer than `DURATION`. This is the Start-to-close timeout for a Workflow Task. |
-| `--type` | Yes | **string** Workflow Type name. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. If not supplied, the Service generates a unique ID. |
+| `--cron` | 不 | **字符串** Workflow 的 Cron Schedule。 |
+| `--execution-timeout` | 不 | **持续时间** 如果 Workflow 执行持续时间超过 `DURATION`，则该执行失败。此超时包括重试和ContinueAsNew 任务。 |
+| `--fail-existing` | 不 | **bool** 如果 Workflow 已存在，则失败。 |
+| `--fairness-key` | 不 | **字符串** 用于按比例分配任务的公平键（最大 64 字节）。具有相同密钥的任务根据其权重共享容量。 |
+| `--fairness-weight` | 不 | **float** 此公平键的权重 [0.001-1000]。密钥根据其权重按比例分配。 |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--id-conflict-policy` | 不 | **string-enum** 确定在使用现有 Open Workflow Execution 使用的特定 Workflow Id 生成新 Workflow Execution 时如何解决冲突。接受的值：失败、UseExisting、TerminateExisting。 |
+| `--id-reuse-policy` | 不 | **字符串枚举** 在新的 Workflow Execution 中重复使用 Workflow ID 的策略。接受的值：AllowDuplicate、AllowDuplicateFailedOnly、RejectDuplicate、TerminateIfRunning。 |
+| `--input`、`-i` | 不 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` | 不 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--input-file` | 不 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--input-meta` | 不 | **string[]** 以 `KEY=VALUE` 对形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--memo` | 不 | **字符串[]** 使用“KEY =“VALUE”对的备忘录。使用 JSON 值。 |
+| `--priority-key` | 不 | **int** 优先级键（1-5，数字越小=优先级越高）。队列中的任务应按接近优先级的顺序进行处理。未指定时默认为 3。 |
+| `--run-timeout` | 不 | **持续时间** 如果 Workflow 运行持续时间超过 `DURATION`，则该运行失败。 |
+| `--search-attribute` | 不 | **字符串[]** `KEY=VALUE` 格式的 Search Attribute。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--start-delay` | 不 | **持续时间** 启动 Workflow Execution 之前的延迟。不能与 cron Schedules 一起使用。如果 Workflow 在此时间之前收到 Signal 或 Update，则 Workflow Execution 立即启动。 |
+| `--static-details` | 不 | **字符串** 供用户在 UI 中使用的静态 Workflow 详细信息。使用 Temporal Markdown 格式，可以是多行。 _（实验性）_ |
+| `--static-summary` | 不 | **字符串** UI 中人类消耗的静态 Workflow 摘要。使用 Temporal Markdown 格式，应该是单行。 _（实验性）_ |
+| `--task-queue`、`-t` | 是的 | **字符串** Workflow Task Queue。 |
+| `--task-timeout` | 不 | **持续时间** 如果 Workflow 任务持续时间超过 `DURATION`，则该任务失败。这是 Workflow 任务的开始到关闭超时。 |
+| `--type` | 是的 | **字符串** Workflow 类型名称。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。如果未提供，服务将生成一个唯一的 ID。 |
 
-## start-update-with-start
+<a id="list"></a>
+## 开始-Update-with-start {#start-update-with-start}
 
-Send a message to a Workflow Execution to invoke an Update handler, and wait for
-the update to be accepted or rejected. If the Workflow Execution is not running,
-then a new workflow execution is started and the update is sent.
+向 Workflow Execution 发送消息以调用 Update 处理程序，并等待
+要接受或拒绝的 Update。如果 Workflow Execution 未运行，
+然后启动新的 Workflow Execution 并发送 Update。
 
-Experimental.
+实验性的。
 
 ```
 temporal workflow start-update-with-start \
@@ -600,46 +608,47 @@ temporal workflow start-update-with-start \
   --input '{"wf-key": "wf-value"}'
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--cron` | No | **string** Cron schedule for the Workflow. |
-| `--execution-timeout` | No | **duration** Fail a WorkflowExecution if it lasts longer than `DURATION`. This time-out includes retries and ContinueAsNew tasks. |
-| `--fail-existing` | No | **bool** Fail if the Workflow already exists. |
-| `--fairness-key` | No | **string** Fairness key (max 64 bytes) for proportional task dispatch. Tasks with same key share capacity based on their weight. |
-| `--fairness-weight` | No | **float** Weight [0.001-1000] for this fairness key. Keys are dispatched proportionally to their weights. |
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--id-conflict-policy` | No | **string-enum** Determines how to resolve a conflict when spawning a new Workflow Execution with a particular Workflow Id used by an existing Open Workflow Execution. Accepted values: Fail, UseExisting, TerminateExisting. |
-| `--id-reuse-policy` | No | **string-enum** Re-use policy for the Workflow ID in new Workflow Executions. Accepted values: AllowDuplicate, AllowDuplicateFailedOnly, RejectDuplicate, TerminateIfRunning. |
-| `--input`, `-i` | No | **string[]** Input value. Use JSON content or set --input-meta to override. Can't be combined with --input-file. Can be passed multiple times to pass multiple arguments. |
-| `--input-base64` | No | **bool** Assume inputs are base64-encoded and attempt to decode them. |
-| `--input-file` | No | **string[]** A path or paths for input file(s). Use JSON content or set --input-meta to override. Can't be combined with --input. Can be passed multiple times to pass multiple arguments. |
-| `--input-meta` | No | **string[]** Input payload metadata as a `KEY=VALUE` pair. When the KEY is "encoding", this overrides the default ("json/plain"). Can be passed multiple times. Repeated metadata keys are applied to the corresponding inputs in the provided order. |
-| `--memo` | No | **string[]** Memo using 'KEY="VALUE"' pairs. Use JSON values. |
-| `--priority-key` | No | **int** Priority key (1-5, lower numbers = higher priority). Tasks in a queue should be processed in close-to-priority-order. Default is 3 when not specified. |
-| `--run-id`, `-r` | No | **string** Run ID. If unset, looks for an Update against the currently-running Workflow Execution. |
-| `--run-timeout` | No | **duration** Fail a Workflow Run if it lasts longer than `DURATION`. |
-| `--search-attribute` | No | **string[]** Search Attribute in `KEY=VALUE` format. Keys must be identifiers, and values must be JSON values. For example: `'YourKey={"your": "value"}'`. Can be passed multiple times. |
-| `--start-delay` | No | **duration** Delay before starting the Workflow Execution. Can't be used with cron schedules. If the Workflow receives a signal or update prior to this time, the Workflow Execution starts immediately. |
-| `--static-details` | No | **string** Static Workflow details for human consumption in UIs. Uses Temporal Markdown formatting, may be multiple lines. _(Experimental)_ |
-| `--static-summary` | No | **string** Static Workflow summary for human consumption in UIs. Uses Temporal Markdown formatting, should be a single line. _(Experimental)_ |
-| `--task-queue`, `-t` | Yes | **string** Workflow Task queue. |
-| `--task-timeout` | No | **duration** Fail a Workflow Task if it lasts longer than `DURATION`. This is the Start-to-close timeout for a Workflow Task. |
-| `--type` | Yes | **string** Workflow Type name. |
-| `--update-first-execution-run-id` | No | **string** Parent Run ID. The update is sent to the last Workflow Execution in the chain started with this Run ID. |
-| `--update-id` | No | **string** Update ID. If unset, defaults to a UUID. |
-| `--update-input` | No | **string[]** Update input value. Use JSON content or set --update-input-meta to override. Can't be combined with --update-input-file. Can be passed multiple times to pass multiple arguments. |
-| `--update-input-base64` | No | **bool** Assume update inputs are base64-encoded and attempt to decode them. |
-| `--update-input-file` | No | **string[]** A path or paths for input file(s). Use JSON content or set --update-input-meta to override. Can't be combined with --update-input. Can be passed multiple times to pass multiple arguments. |
-| `--update-input-meta` | No | **string[]** Input update payload metadata as a `KEY=VALUE` pair. When the KEY is "encoding", this overrides the default ("json/plain"). Can be passed multiple times. |
-| `--update-name` | Yes | **string** Update name. |
-| `--update-wait-for-stage` | Yes | **string-enum** Update stage to wait for. The only option is `accepted`, but this option is required. This is to allow a future version of the CLI to choose a default value. Accepted values: accepted. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. If not supplied, the Service generates a unique ID. |
+| `--cron` | 不 | **字符串** Workflow 的 Cron Schedule。 |
+| `--execution-timeout` | 不 | **持续时间** 如果 Workflow 执行持续时间超过 `DURATION`，则该执行失败。此超时包括重试和ContinueAsNew 任务。 |
+| `--fail-existing` | 不 | **bool** 如果 Workflow 已存在，则失败。 |
+| `--fairness-key` | 不 | **字符串** 用于按比例分配任务的公平键（最大 64 字节）。具有相同密钥的任务根据其权重共享容量。 |
+| `--fairness-weight` | 不 | **float** 此公平键的权重 [0.001-1000]。密钥根据其权重按比例分配。 |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--id-conflict-policy` | 不 | **string-enum** 确定在使用现有 Open Workflow Execution 使用的特定 Workflow Id 生成新 Workflow Execution 时如何解决冲突。接受的值：失败、UseExisting、TerminateExisting。 |
+| `--id-reuse-policy` | 不 | **字符串枚举** 在新的 Workflow Execution 中重复使用 Workflow ID 的策略。接受的值：AllowDuplicate、AllowDuplicateFailedOnly、RejectDuplicate、TerminateIfRunning。 |
+| `--input`、`-i` | 不 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` | 不 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--input-file` | 不 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--input-meta` | 不 | **string[]** 以 `KEY=VALUE` 对形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--memo` | 不 | **字符串[]** 使用“KEY =“VALUE”对的备忘录。使用 JSON 值。 |
+| `--priority-key` | 不 | **int** 优先级键（1-5，数字越小=优先级越高）。队列中的任务应按接近优先级的顺序进行处理。未指定时默认为 3。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。如果未设置，则根据当前运行的 Workflow Execution 查找 Update。 |
+| `--run-timeout` | 不 | **持续时间** 如果 Workflow 运行持续时间超过 `DURATION`，则该运行失败。 |
+| `--search-attribute` | 不 | **字符串[]** `KEY=VALUE` 格式的 Search Attribute。键必须是标识符，值必须是 JSON 值。例如：`'YourKey={"your": "value"}'`。可以多次通过。 |
+| `--start-delay` | 不 | **持续时间** 启动 Workflow Execution 之前的延迟。不能与 cron Schedules 一起使用。如果 Workflow 在此时间之前收到 Signal 或 Update，则 Workflow Execution 立即启动。 |
+| `--static-details` | 不 | **字符串** 供用户在 UI 中使用的静态 Workflow 详细信息。使用 Temporal Markdown 格式，可以是多行。 _（实验性）_ |
+| `--static-summary` | 不 | **字符串** UI 中人类消耗的静态 Workflow 摘要。使用 Temporal Markdown 格式，应该是单行。 _（实验性）_ |
+| `--task-queue`、`-t` | 是的 | **字符串** Workflow Task Queue。 |
+| `--task-timeout` | 不 | **持续时间** 如果 Workflow 任务持续时间超过 `DURATION`，则该任务失败。这是 Workflow 任务的开始到关闭超时。 |
+| `--type` | 是的 | **字符串** Workflow 类型名称。 |
+| `--Update-first-execution-run-id` | 不 | **字符串** 父运行 ID。 Update 被发送到以此运行 ID 开始的链中的最后一个 Workflow Execution。 |
+| `--Update-id` | 不 | **字符串** Update ID。如果未设置，则默认为 UUID。 |
+| `--Update-input` | 不 | **字符串[]** Update 输入值。使用 JSON 内容或设置 --Update-input-meta 进行覆盖。不能与 --Update-input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--Update-input-base64` | 不 | **bool** 假设 Update 输入是 Base64 编码的并尝试对其进行解码。 |
+| `--Update-input-file` | 不 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --Update-input-meta 进行覆盖。不能与--Update-输入组合。可以多次传递以传递多个参数。 |
+| `--Update-input-meta` | 不 | **string[]** 输入 Update 有效负载元数据作为 `KEY=VALUE` 对。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。 |
+| `--Update-name` | 是的 | **字符串** Update 名称。 |
+| `--Update-wait-for-stage` | 是的 | **字符串枚举** Update 等待阶段。唯一的选项是 `accepted`，但此选项是必需的。这是为了允许 CLI 的未来版本选择默认值。接受值：接受。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。如果未提供，服务将生成一个唯一的 ID。 |
 
-## terminate
+<a id="metadata"></a>
+## 终止 {#terminate}
 
-Terminate a Workflow Execution:
+终止 Workflow Execution：
 
 ```
 temporal workflow terminate \
@@ -647,11 +656,11 @@ temporal workflow terminate \
     --workflow-id YourWorkflowId
 ```
 
-The reason is optional and defaults to the current user's name. The reason
-is stored in the Event History as part of the `WorkflowExecutionTerminated`
-event. This becomes the closing Event in the Workflow Execution's history.
+原因是可选的，默认为当前用户的名称。原因
+作为 `WorkflowExecutionTerminated` 的一部分存储在 Event History 中
+事件。这成为 Workflow Execution 历史上的结束事件。
 
-Executions may be terminated in bulk via a visibility Query list filter:
+可以通过 Visibility Query 列表过滤器批量终止执行：
 
 ```
 temporal workflow terminate \
@@ -659,66 +668,68 @@ temporal workflow terminate \
     --reason YourReasonForTermination
 ```
 
-Workflow code cannot see or respond to terminations. To perform clean-up work
-in your Workflow code, use `temporal workflow cancel` instead.
+Workflow 代码无法查看或响应终止。进行清理工作
+在您的 Workflow 代码中，使用 `Temporal Workflow cancel` 代替。
 
-Visit https://docs.temporal.io/visibility to read more about Search Attributes
-and Query creation. See `temporal batch --help` for a quick reference.
+访问 https://docs.Temporal.io/visibility 了解有关 Search Attribute 的更多信息
+和 Query 创作。请参阅 `Temporal batch --help` 以获得快速参考。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--query`, `-q` | No | **string** Content for an SQL-like `QUERY` List Filter. You must set either --workflow-id or --query. |
-| `--reason` | No | **string** Reason for termination. Defaults to message with the current user's name. |
-| `--rps` | No | **float** Limit batch's requests per second. Only allowed if query is present. |
-| `--run-id`, `-r` | No | **string** Run ID. Can only be set with --workflow-id. Do not use with --query. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. You must set either --workflow-id or --query. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm termination. Can only be used with --query. |
+| `--Query`、`-q` | 不 | **字符串** 类似 SQL `Query` 列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。 |
+| `--reason` | 不 | **字符串** 终止原因。默认为带有当前用户名的消息。 |
+| `--rps` | 不 | **float** 限制每秒的批次请求数。仅当存在 Query 时才允许。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。只能用 --Workflow-id 设置。请勿与 --Query 一起使用。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。您必须设置 --Workflow-id 或 --Query。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认终止。只能与 --Query 一起使用。 |
 
-## trace
+## 痕迹 {#trace}
 
-Display the progress of a Workflow Execution and its child workflows with a
-real-time trace. This view helps you understand how Workflows are proceeding:
+显示 Workflow Execution 及其 Child Workflow 的进度
+实时追踪。此视图可帮助您了解 Workflow 的进展情况：
 
 ```
 temporal workflow trace \
     --workflow-id YourWorkflowId
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--concurrency` | No | **int** Number of Workflow Histories to fetch at a time. |
-| `--depth` | No | **int** Set depth for your Child Workflow fetches. Pass -1 to fetch child workflows at any depth. |
-| `--fold` | No | **string[]** Fold away Child Workflows with the specified statuses. Case-insensitive. Ignored if --no-fold supplied. Available values: running, completed, failed, canceled, terminated, timedout, continueasnew. Can be passed multiple times. |
-| `--no-fold` | No | **bool** Disable folding. Fetch and display Child Workflows within the set depth. |
-| `--run-id`, `-r` | No | **string** Run ID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--concurrency` | 不 | **int** 一次获取的 Workflow 历史记录数。 |
+| `--depth` | 不 | **int** 设置 Child Workflow 提取的深度。传递 -1 以获取任意深度的 Child Workflow。 |
+| `--fold` | 不 | **string[]** 折叠具有指定状态的 Child Workflow。不区分大小写。如果提供 --no-fold 则忽略。可用值：正在运行、已完成、失败、已取消、已终止、超时、继续新。可以多次通过。 |
+| `--no-fold` | 不 | **布尔** 禁用折叠。获取并显示设置深度内的 Child Workflow。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## unpause
+<a id="pause"></a>
+## 取消暂停 {#unpause}
 
-Unpause a previously paused Workflow Execution.
-Note: This is an experimental feature and may change in the future.
+取消暂停之前暂停的 Workflow Execution。
+注意：这是一项实验性功能，将来可能会发生变化。
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--reason` | No | **string** Reason for unpausing the Workflow Execution. Defaults to message with the current user's name. |
-| `--run-id`, `-r` | No | **string** Run ID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--reason` | 不 | **字符串** 取消暂停 Workflow Execution 的原因。默认为带有当前用户名的消息。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## update
+<a id="query"></a>
+## Update {#update}
 
-An Update is a synchronous call to a Workflow Execution that can change its
-state, control its flow, and return a result.
+Update 是对 Workflow Execution 的同步调用，可以更改其
+状态，控制其流程，并返回结果。
 
-### describe
+### 描述 {#describe}
 
-Given a Workflow Execution and an Update ID, return information about its current status, including
-a result if it has finished.
+给定 Workflow Execution 和 Update ID，返回有关其当前状态的信息，包括
+如果已完成则结果。
 
 ```
 temporal workflow update describe \
@@ -726,19 +737,19 @@ temporal workflow update describe \
     --update-id YourUpdateId
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--run-id`, `-r` | No | **string** Run ID. If unset, updates the currently-running Workflow Execution. |
-| `--update-id` | Yes | **string** Update ID. Must be unique per Workflow Execution. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。如果未设置，Update 将成为当前运行的 Workflow Execution。 |
+| `--Update-id` | 是的 | **字符串** Update ID。每个 Workflow Execution 必须是唯一的。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-### execute
+### 执行 {#execute}
 
-Send a message to a Workflow Execution to invoke an Update handler, and wait for
-the update to complete or fail. You can also use this to wait for an existing
-update to complete, by submitting an existing update ID.
+向 Workflow Execution 发送消息以调用 Update 处理程序，并等待
+Update 完成或失败。您还可以使用它来等待现有的
+通过提交现有的 Update ID 来完成 Update。
 
 ```
 temporal workflow update execute \
@@ -747,25 +758,25 @@ temporal workflow update execute \
     --input '{"some-key": "some-value"}'
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--first-execution-run-id` | No | **string** Parent Run ID. The update is sent to the last Workflow Execution in the chain started with this Run ID. |
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--input`, `-i` | No | **string[]** Input value. Use JSON content or set --input-meta to override. Can't be combined with --input-file. Can be passed multiple times to pass multiple arguments. |
-| `--input-base64` | No | **bool** Assume inputs are base64-encoded and attempt to decode them. |
-| `--input-file` | No | **string[]** A path or paths for input file(s). Use JSON content or set --input-meta to override. Can't be combined with --input. Can be passed multiple times to pass multiple arguments. |
-| `--input-meta` | No | **string[]** Input payload metadata as a `KEY=VALUE` pair. When the KEY is "encoding", this overrides the default ("json/plain"). Can be passed multiple times. Repeated metadata keys are applied to the corresponding inputs in the provided order. |
-| `--name` | Yes | **string** Handler method name. |
-| `--run-id`, `-r` | No | **string** Run ID. If unset, looks for an Update against the currently-running Workflow Execution. |
-| `--update-id` | No | **string** Update ID. If unset, defaults to a UUID. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--first-execution-run-id` | 不 | **字符串** 父运行 ID。 Update 被发送到以此运行 ID 开始的链中的最后一个 Workflow Execution。 |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--input`、`-i` | 不 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` | 不 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--input-file` | 不 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--input-meta` | 不 | **string[]** 以 `KEY=VALUE` 对形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--name` | 是的 | **字符串** 处理程序方法名称。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。如果未设置，则根据当前运行的 Workflow Execution 查找 Update。 |
+| `--Update-id` | 不 | **字符串** Update ID。如果未设置，则默认为 UUID。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-### result
+### 结果 {#result}
 
-Given a Workflow Execution and an Update ID, wait for the Update to complete or fail and
-print the result.
+给定 Workflow Execution 和 Update ID，等待 Update 完成或失败，然后
+打印结果。
 
 ```
 temporal workflow update result \
@@ -773,19 +784,19 @@ temporal workflow update result \
     --update-id YourUpdateId
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--run-id`, `-r` | No | **string** Run ID. If unset, updates the currently-running Workflow Execution. |
-| `--update-id` | Yes | **string** Update ID. Must be unique per Workflow Execution. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。如果未设置，Update 将成为当前运行的 Workflow Execution。 |
+| `--Update-id` | 是的 | **字符串** Update ID。每个 Workflow Execution 必须是唯一的。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-### start
+### 开始 {#start}
 
-Send a message to a Workflow Execution to invoke an Update handler, and wait for
-the update to be accepted or rejected. You can subsequently wait for the update
-to complete by using `temporal workflow update execute`.
+向 Workflow Execution 发送消息以调用 Update 处理程序，并等待
+要接受或拒绝的 Update。随后您可以等待 Update
+使用 `Temporal Workflow Update execute` 来完成。
 
 ```
 temporal workflow update start \
@@ -795,35 +806,36 @@ temporal workflow update start \
     --wait-for-stage accepted
 ```
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--first-execution-run-id` | No | **string** Parent Run ID. The update is sent to the last Workflow Execution in the chain started with this Run ID. |
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--input`, `-i` | No | **string[]** Input value. Use JSON content or set --input-meta to override. Can't be combined with --input-file. Can be passed multiple times to pass multiple arguments. |
-| `--input-base64` | No | **bool** Assume inputs are base64-encoded and attempt to decode them. |
-| `--input-file` | No | **string[]** A path or paths for input file(s). Use JSON content or set --input-meta to override. Can't be combined with --input. Can be passed multiple times to pass multiple arguments. |
-| `--input-meta` | No | **string[]** Input payload metadata as a `KEY=VALUE` pair. When the KEY is "encoding", this overrides the default ("json/plain"). Can be passed multiple times. Repeated metadata keys are applied to the corresponding inputs in the provided order. |
-| `--name` | Yes | **string** Handler method name. |
-| `--run-id`, `-r` | No | **string** Run ID. If unset, looks for an Update against the currently-running Workflow Execution. |
-| `--update-id` | No | **string** Update ID. If unset, defaults to a UUID. |
-| `--wait-for-stage` | Yes | **string-enum** Update stage to wait for. The only option is `accepted`, but this option is  required. This is to allow a future version of the CLI to choose a default value. Accepted values: accepted. |
-| `--workflow-id`, `-w` | Yes | **string** Workflow ID. |
+| `--first-execution-run-id` | 不 | **字符串** 父运行 ID。 Update 被发送到以此运行 ID 开始的链中的最后一个 Workflow Execution。 |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--input`、`-i` | 不 | **字符串[]** 输入值。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input-file 结合使用。可以多次传递以传递多个参数。 |
+| `--input-base64` | 不 | **bool** 假设输入是 Base64 编码的并尝试对其进行解码。 |
+| `--input-file` | 不 | **string[]** 输入文件的一个或多个路径。使用 JSON 内容或设置 --input-meta 进行覆盖。不能与--input 结合使用。可以多次传递以传递多个参数。 |
+| `--input-meta` | 不 | **string[]** 以 `KEY=VALUE` 对形式输入有效负载元数据。当 KEY 为“encoding”时，这会覆盖默认值（“json/plain”）。可以多次通过。重复的元数据键将按提供的顺序应用于相应的输入。 |
+| `--name` | 是的 | **字符串** 处理程序方法名称。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。如果未设置，则根据当前运行的 Workflow Execution 查找 Update。 |
+| `--Update-id` | 不 | **字符串** Update ID。如果未设置，则默认为 UUID。 |
+| `--wait-for-stage` | 是的 | **字符串枚举** Update 等待阶段。唯一的选项是 `accepted`，但此选项是必需的。这是为了允许 CLI 的未来版本选择默认值。接受值：接受。 |
+| `--Workflow-id`、`-w` | 是的 | **字符串** Workflow ID。 |
 
-## update-options
+<a id="reset"></a>
+## Update-选项 {#update-options}
 
-Modify properties of Workflow Executions:
+修改Workflow Executions的属性：
 
 ```
 temporal workflow update-options [options]
 ```
 
-It can override the Worker Deployment configuration of a
-Workflow Execution, which controls Worker Versioning.
+它可以覆盖 Worker 部署配置
+Workflow Execution，控制 Worker 版本控制。
 
-For example, to force Workers in the current Deployment execute the
-next Workflow Task change behavior to `auto_upgrade`:
+例如，要强制当前 Deployment 中的 Workers 执行以下命令
+下一个 Workflow 任务将行为更改为 `auto_upgrade`：
 
 ```
 temporal workflow update-options \
@@ -831,8 +843,8 @@ temporal workflow update-options \
     --versioning-override-behavior auto_upgrade
 ```
 
-or to pin the workflow execution to a Worker Deployment, set behavior
-to `pinned`:
+或者将 Workflow Execution 固定到 Worker 部署，设置行为
+至 `pinned`：
 
 ```
 temporal workflow update-options \
@@ -842,8 +854,8 @@ temporal workflow update-options \
     --versioning-override-build-id YourDeploymentBuildId
 ```
 
-To remove any previous overrides, set the behavior to
-`unspecified`:
+要删除任何以前的覆盖，请将行为设置为
+`unspecified`：
 
 ```
 temporal workflow update-options \
@@ -851,59 +863,60 @@ temporal workflow update-options \
     --versioning-override-behavior unspecified
 ```
 
-To see the current override use `temporal workflow describe`
+要查看当前覆盖，请使用 `Temporal Workflow describe`
 
-Use the following options to change the behavior of this command. You can also use any of the [global flags](#global-flags) that apply to all subcommands.
+使用以下选项更改此命令的行为。您还可以使用适用于所有子命令的任何 [全局标志](#global-flags)。
 
-| Flag | Required | Description |
+| 旗帜 | 必需的 | 描述 |
 |------|----------|-------------|
-| `--headers` | No | **string[]** Temporal workflow headers in 'KEY=VALUE' format. Keys must be identifiers, and values must be JSON values. May be passed multiple times to set multiple Temporal headers. Note: These are workflow headers, not gRPC headers. |
-| `--query`, `-q` | No | **string** Content for an SQL-like `QUERY` List Filter. You must set either --workflow-id or --query. |
-| `--reason` | No | **string** Reason for batch operation. Only use with --query. Defaults to user name. |
-| `--rps` | No | **float** Limit batch's requests per second. Only allowed if query is present. |
-| `--run-id`, `-r` | No | **string** Run ID. Only use with --workflow-id. Cannot use with --query. |
-| `--versioning-override-behavior` | Yes | **string-enum** Override the versioning behavior of a Workflow. Accepted values: unspecified, pinned, auto_upgrade. |
-| `--versioning-override-build-id` | No | **string** When overriding to a `pinned` behavior, specifies the Build ID of the version to target. |
-| `--versioning-override-deployment-name` | No | **string** When overriding to a `pinned` behavior, specifies the Deployment Name of the version to target. |
-| `--workflow-id`, `-w` | No | **string** Workflow ID. You must set either --workflow-id or --query. |
-| `--yes`, `-y` | No | **bool** Don't prompt to confirm signaling. Only allowed when --query is present. |
+| `--headers` | 不 | **字符串[]** Temporal Workflow 标头采用“KEY=VALUE”格式。键必须是标识符，值必须是 JSON 值。可以多次传递以设置多个 Temporal 标头。注意：这些是 Workflow 标头，而不是 gRPC 标头。 |
+| `--Query`、`-q` | 不 | **字符串** 类似 SQL `Query` 列表过滤器的内容。您必须设置 --Workflow-id 或 --Query。 |
+| `--reason` | 不 | **字符串** 批量操作的原因。仅与--Query 一起使用。默认为用户名。 |
+| `--rps` | 不 | **float** 限制每秒的批次请求数。仅当存在 Query 时才允许。 |
+| `--run-id`、`-r` | 不 | **字符串** 运行 ID。仅与 --Workflow-id 一起使用。不能与 --Query 一起使用。 |
+| `--versioning-override-behavior` | 是的 | **字符串枚举** 覆盖 Workflow 的版本控制行为。接受的值：未指定、固定、自动升级。 |
+| `--versioning-override-build-id` | 不 | **字符串** 覆盖 `pinned` 行为时，指定要定位的版本的构建 ID。 |
+| `--versioning-override-deployment-name` | 不 | **字符串** 覆盖 `pinned` 行为时，指定要定位的版本的部署名称。 |
+| `--Workflow-id`、`-w` | 不 | **字符串** Workflow ID。您必须设置 --Workflow-id 或 --Query。 |
+| `--yes`、`-y` | 不 | **bool** 不提示确认 Signaling。仅当存在 --Query 时才允许。 |
 
-## Global Flags
+<a id="with-workflow-update-options"></a>
+## 全局标志 {#global-flags}
 
-The following options can be used with any command.
+以下选项可与任何命令一起使用。
 
-| Flag | Required | Description | Default |
+| 旗帜 | 必需的 | 描述 | 默认 |
 |------|----------|-------------|--------|
-| `--address` | No | **string** Temporal Service gRPC endpoint. | `localhost:7233` |
-| `--api-key` | No | **string** API key for request. |  |
-| `--client-authority` | No | **string** Temporal gRPC client :authority pseudoheader. |  |
-| `--client-connect-timeout` | No | **duration** The client connection timeout. 0s means no timeout. |  |
-| `--codec-auth` | No | **string** Authorization header for Codec Server requests. |  |
-| `--codec-endpoint` | No | **string** Remote Codec Server endpoint. |  |
-| `--codec-header` | No | **string[]** HTTP headers for requests to codec server. Format as a `KEY=VALUE` pair. May be passed multiple times to set multiple headers. |  |
-| `--color` | No | **string-enum** Output coloring. Accepted values: always, never, auto. | `auto` |
-| `--command-timeout` | No | **duration** The command execution timeout. 0s means no timeout. |  |
-| `--config-file` | No | **string** File path to read TOML config from, defaults to `$CONFIG_PATH/temporalio/temporal.toml` where `$CONFIG_PATH` is defined as `$HOME/.config` on Unix, `$HOME/Library/Application Support` on macOS, and `%AppData%` on Windows. _(Experimental)_ |  |
-| `--disable-config-env` | No | **bool** If set, disables loading environment config from environment variables. _(Experimental)_ |  |
-| `--disable-config-file` | No | **bool** If set, disables loading environment config from config file. _(Experimental)_ |  |
-| `--env` | No | **string** Active environment name (`ENV`). | `default` |
-| `--env-file` | No | **string** Path to environment settings file. Defaults to `$HOME/.config/temporalio/temporal.yaml`. |  |
-| `--grpc-meta` | No | **string[]** HTTP headers for requests. Format as a `KEY=VALUE` pair. May be passed multiple times to set multiple headers. Can also be made available via environment variable as `TEMPORAL_GRPC_META_[name]`. |  |
-| `--identity` | No | **string** The identity of the user or client submitting this request. Defaults to "temporal-cli:$USER@$HOST". |  |
-| `--log-format` | No | **string-enum** Log format. Accepted values: text, json. | `text` |
-| `--log-level` | No | **string-enum** Log level. Default is "info" for most commands and "warn" for "server start-dev". Accepted values: debug, info, warn, error, never. | `info` |
-| `--namespace`, `-n` | No | **string** Temporal Service Namespace. | `default` |
-| `--no-json-shorthand-payloads` | No | **bool** Raw payload output, even if the JSON option was used. |  |
-| `--output`, `-o` | No | **string-enum** Non-logging data output format. Accepted values: text, json, jsonl, none. | `text` |
-| `--profile` | No | **string** Profile to use for config file. _(Experimental)_ |  |
-| `--time-format` | No | **string-enum** Time format. Accepted values: relative, iso, raw. | `relative` |
-| `--tls` | No | **bool** Enable base TLS encryption. Does not have additional options like mTLS or client certs. This is defaulted to true if api-key or any other TLS options are present. Use --tls=false to explicitly disable. |  |
-| `--tls-ca-data` | No | **string** Data for server CA certificate. Can't be used with --tls-ca-path. |  |
-| `--tls-ca-path` | No | **string** Path to server CA certificate. Can't be used with --tls-ca-data. |  |
-| `--tls-cert-data` | No | **string** Data for x509 certificate. Can't be used with --tls-cert-path. |  |
-| `--tls-cert-path` | No | **string** Path to x509 certificate. Can't be used with --tls-cert-data. |  |
-| `--tls-disable-host-verification` | No | **bool** Disable TLS host-name verification. |  |
-| `--tls-key-data` | No | **string** Private certificate key data. Can't be used with --tls-key-path. |  |
-| `--tls-key-path` | No | **string** Path to x509 private key. Can't be used with --tls-key-data. |  |
-| `--tls-server-name` | No | **string** Override target TLS server name. |  |
+| `--address` | 不 | **字符串** Temporal 服务 gRPC 端点。 | `localhost:7233` |
+| `--api-key` | 不 | **字符串** 请求的 API 密钥。 |  |
+| `--client-authority` | 不 | **字符串** Temporal gRPC 客户端：权限伪标头。 |  |
+| `--client-connect-timeout` | 不 | **持续时间** 客户端连接超时。 0s表示没有超时。 |  |
+| `--codec-auth` | 不 | **字符串** Codec Server 请求的授权标头。 |  |
+| `--codec-endpoint` | 不 | **字符串** 远程 Codec Server 端点。 |  |
+| `--codec-header` | 不 | **string[]** 向 Codec Server 发出请求的 HTTP 标头。格式为 `KEY=VALUE` 对。可以多次传递以设置多个标头。 |  |
+| `--color` | 不 | **字符串枚举** 输出着色。接受的值：始终、从不、自动。 | `auto` |
+| `--command-timeout` | 不 | **持续时间** 命令执行超时。 0s表示没有超时。 |  |
+| `--config-file` | 不 | **字符串** 从中读取 TOML 配置的文件路径，默认为 `$CONFIG_PATH/temporalio/temporal.toml`，其中 `$CONFIG_PATH` 在 Unix 上定义为 `$HOME/.config`，在 macOS 上定义为 `$HOME/Library/Application Support`，在 Windows 上定义为 `%AppData%`。 _（实验性）_ |  |
+| `--disable-config-env` | 不 | **bool** 如果设置，则禁用从环境变量加载环境配置。 _（实验性）_ |  |
+| `--disable-config-file` | 不 | **bool** 如果设置，则禁用从配置文件加载环境配置。 _（实验性）_ |  |
+| `--env` | 不 | **字符串** 活动环境名称 (`ENV`)。 | `default` |
+| `--env-file` | 不 | **字符串** 环境设置文件的路径。默认为 `$HOME/.config/temporalio/temporal.yaml`。 |  |
+| `--gRPC-meta` | 不 | **string[]** 请求的 HTTP 标头。格式为 `KEY=VALUE` 对。可以多次传递以设置多个标头。也可以通过环境变量 `Temporal_gRPC_META_[name]` 提供。 |  |
+| `--identity` | 不 | **字符串** 提交此请求的用户或客户端的身份。默认为“Temporal-cli:$USER@$HOST”。 |  |
+| `--log-format` | 不 | **字符串枚举** 日志格式。接受的值：文本、json。 | `text` |
+| `--log-level` | 不 | **字符串枚举** 日志级别。大多数命令的默认值为“info”，“server start-dev”的默认值为“warn”。接受的值：调试、信息、警告、错误、从不。 | `info` |
+| `--Namespace`、`-n` | 不 | **字符串** Temporal 服务 Namespace。 | `default` |
+| `--no-json-shorthand-payloads` | 不 | **bool** 原始负载输出，即使使用了 JSON 选项。 |  |
+| `--output`、`-o` | 不 | **字符串枚举** 非日志数据输出格式。接受的值：text、json、jsonl、none。 | `text` |
+| `--profile` | 不 | **字符串** 用于配置文件的配置文件。 _（实验性）_ |  |
+| `--time-format` | 不 | **字符串枚举** 时间格式。接受的值：relative、iso、raw。 | `relative` |
+| `--tls` | 不 | **布尔** 启用基本 TLS 加密。没有 mTLS 或客户端证书等附加选项。如果存在 api-key 或任何其他 TLS 选项，则默认为 true。使用 --tls=false 显式禁用。 |  |
+| `--tls-ca-data` | 不 | **字符串** 服务器 CA 证书的数据。不能与 --tls-ca-path 一起使用。 |  |
+| `--tls-ca-path` | 不 | **字符串** 服务器 CA 证书的路径。不能与 --tls-ca-data 一起使用。 |  |
+| `--tls-cert-data` | 不 | **字符串** x509 证书的数据。不能与 --tls-cert-path 一起使用。 |  |
+| `--tls-cert-path` | 不 | **字符串** x509 证书的路径。不能与 --tls-cert-data 一起使用。 |  |
+| `--tls-disable-host-verification` | 不 | **bool** 禁用 TLS 主机名验证。 |  |
+| `--tls-key-data` | 不 | **字符串** 私有证书密钥数据。不能与 --tls-key-path 一起使用。 |  |
+| `--tls-key-path` | 不 | **字符串** x509 私钥的路径。不能与 --tls-key-data 一起使用。 |  |
+| `--tls-server-name` | 不 | **字符串** 覆盖目标 TLS 服务器名称。 |  |
 

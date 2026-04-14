@@ -1,9 +1,9 @@
 ---
 id: limits
 slug: /cloud/nexus/limits
-title: Limits - Temporal Nexus
-description: Learn about Nexus limits including rate limits, the maximum number of Endpoints, and handler request timeouts.
-sidebar_label: Limits
+title: "限制 - Temporal Nexus"
+description: "了解 Nexus 限制，包括速率限制、端点最大数量和处理程序请求超时。"
+sidebar_label: "限制"
 tags:
   - Temporal Cloud
   - Nexus
@@ -20,16 +20,16 @@ keywords:
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal Nexus is now [Generally Available](/evaluate/development-production-features/release-stages#general-availability).
-Learn why you should use Nexus in the [evaluation guide](/evaluate/nexus).
+Temporal Nexus 现在是 [一般可用](/evaluate/development-production-features/release-stages#general-availability)。
+了解为什么应在 [评估指南](/evaluate/nexus) 中使用 Nexus。
 
 :::
 
-Nexus limits are documented in [Temporal Cloud limits](/cloud/limits):
+Nexus 限制记录在 [Temporal Cloud 限制](/cloud/limits) 中：
 
-- [Nexus rate limits](/cloud/limits#nexus-rate-limits) - Nexus requests count toward the Namespace RPS limit.
-- [Nexus Endpoint limits](/cloud/limits#nexus-endpoints-limits) - 100 Endpoints per Account (default).
-- [Per-Workflow Nexus Operation limits](/cloud/limits#per-workflow-nexus-operation-limits) - 30 in-flight Operations per Workflow.
-- [Nexus Operation request timeout](/cloud/limits#nexus-operation-request-timeout) - Less than 10 seconds for a handler to process a start or cancel request.
-- [Nexus Operation duration limits](/cloud/limits#nexus-operation-duration-limits) - 60-day maximum ScheduleToClose duration.
-- [Per-Workflow callback limits](/cloud/limits#per-workflow-callback-limits) - 2000 callbacks per Workflow. Governs how many Nexus callers can attach to a handler Workflow.
+- [Nexus 速率限制](/cloud/limits#nexus-rate-limits) - Nexus 请求计入 Namespace RPS 限制。
+- [Nexus 端点限制](/cloud/limits#nexus-endpoints-limits) - 每个帐户 100 个端点（默认）。
+- [Per-Workflow Nexus 操作限制](/cloud/limits#per-workflow-nexus-operation-limits) - 每个 Workflow 30 次飞行中操作。
+- [Nexus 操作请求超时](/cloud/limits#nexus-operation-request-timeout) - 处理程序处理启动或取消请求的时间不到 10 秒。
+- [Nexus 操作持续时间限制](/cloud/limits#nexus-operation-duration-limits) - 60 天最长 ScheduleToClose 持续时间。
+- [每 Workflow 回调限制](/cloud/limits#per-workflow-callback-limits) - 每个 Workflow 2000 次回调。控制有多少 Nexus 调用者可以附加到处理程序 Workflow。

@@ -1,8 +1,8 @@
 ---
 id: quickstart
-title: Nexus Go Quickstart
-sidebar_label: Quickstart
-description: Build a Nexus Service that wraps an existing Temporal Workflow using the Go SDK
+title: "Nexus Go 快速入门"
+sidebar_label: "快速入门"
+description: "使用 Go SDK 构建一个 Nexus 服务来包装现有的 Temporal Workflow"
 keywords:
   - nexus
   - go
@@ -18,34 +18,36 @@ hide_table_of_contents: true
 
 import { SetupSteps, SetupStep, CodeSnippet } from '@site/src/components/elements/SetupSteps';
 
-# Nexus Go Quickstart
+<a id="nexus-go-quickstart"></a>
+# Nexus Go 快速入门 {#nexus-go-quickstart}
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal Go SDK support for Nexus is [Generally Available](/evaluate/development-production-features/release-stages#general-availability).
+Temporal Go SDK 对 Nexus 的支持是 [一般可用](/evaluate/development-production-features/release-stages#general-availability)。
 
 :::
 
-[Temporal Nexus](/evaluate/nexus) connects Temporal Applications within and across Namespaces using a Nexus Endpoint, a Nexus Service contract, and Nexus Operations. Build a Nexus Service that wraps an existing Temporal Workflow, then invoke it from a caller Workflow.
+[Temporal Nexus](/evaluate/nexus) 使用 Nexus 端点、Nexus 服务合同和 Nexus 操作连接 Namespace 内部和之间的 Temporal 应用程序。构建一个包装现有 Temporal Workflow 的 Nexus 服务，然后从调用者 Workflow 调用它。
 
 :::info NEW TO NEXUS?
 
-This page will help you get a working sample running in Go. 
-To evaluate whether Nexus fits your use case, see the [evaluation guide](/evaluate/nexus) and to learn more about Nexus features, click [here](/nexus).
+此页面将帮助您获得在 Go 中运行的工作示例。 
+要评估 Nexus 是否适合您的使用案例，请参阅 [评估指南](/evaluate/nexus)，要了解有关 Nexus 功能的更多信息，请单击 [这里](/nexus)。
 
 :::
 
-**Prerequisites:** Complete the [Go SDK Quickstart](/develop/go/set-up-your-local-go) first.
-You should have `activity.go`, `workflow.go`, `worker/main.go`, and `start/main.go` from that guide.
+**先决条件：** 首先完成 [Go SDK 快速入门](/develop/go/set-up-your-local-go)。
+您应该从该指南中获得 `Activity.go`、`Workflow.go`、`Worker/main.go` 和 `start/main.go`。
 
-## What you'll build
+<a id="what-youll-build"></a>
+## 你将构建什么 {#what-youll-build}
 
-You have `SayHelloWorkflow` running in the `default` Namespace.
-By the end of this guide:
+您有 `SayHelloWorkflow` 在 `default` Namespace 中运行。
+在本指南结束时：
 
-1. A Nexus Service will expose `SayHelloWorkflow` as an Operation.
-2. A second Namespace will contain a Workflow that calls that Operation.
-3. The caller Workflow will get back `"Hello Temporal"` — the same result, but across Namespaces.
+1. Nexus 服务将 `SayHelloWorkflow` 公开为操作。
+2. 第二个 Namespace 将包含调用该操作的 Workflow。
+3. 调用者 Workflow 将返回 `"Hello Temporal"` — 相同的结果，但跨越 Namespace。
 
 <SetupSteps>
 
@@ -68,16 +70,17 @@ type HelloInput struct {
 </>
 }>
 
-## 1. Define the Nexus Service
+<a id="1-define-the-nexus-service"></a>
+## 1.定义Nexus服务 {#1-define-the-nexus-service}
 
-Create a file called `service.go` that defines the Nexus Service contract.
+创建一个名为 `service.go` 的文件，用于定义 Nexus 服务合同。
 
-Creating a Nexus Service establishes the contract between your implementation and any callers.
-It provides type safety when invoking Nexus Operations and ensures that Operation Handlers fulfill the contract.
+创建 Nexus 服务会在您的实现和任何调用者之间建立契约。
+它在调用 Nexus 操作时提供类型安全，并确保操作处理程序履行合同。
 
-`HelloServiceName` and `HelloOperationName` are string constants that uniquely identify the Service and Operation.
-`HelloInput` defines the input type for the Operation.
-`SayHelloWorkflow` returns `string`, so the Operation output type is also `string`.
+`HelloServiceName` 和 `HelloOperationName` 是唯一标识服务和操作的字符串常量。
+`HelloInput` 定义操作的输入类型。
+`SayHelloWorkflow` 返回 `string`，因此操作输出类型也是 `string`。
 
 </SetupStep>
 
@@ -117,17 +120,18 @@ var HelloOperation = temporalnexus.NewWorkflowRunOperation(
 </>
 }>
 
-## 2. Define the Nexus Operation handlers
+<a id="2-define-the-nexus-operation-handlers"></a>
+## 2. 定义 Nexus 操作处理程序 {#2-define-the-nexus-operation-handlers}
 
-Create a file called `nexus_handler.go` that implements the Nexus Operation handler.
+创建一个名为 `Nexus_handler.go` 的文件，该文件实现 Nexus 操作处理程序。
 
-Operation handlers contain the logic that runs when a caller invokes a Nexus Operation.
+操作处理程序包含调用者调用 Nexus 操作时运行的逻辑。
 
-`HelloNexusWorkflow` acts as the handler Workflow.
-It bridges the Nexus `HelloInput` to `SayHelloWorkflow`'s `string` parameter by extracting `input.Name`.
+`HelloNexusWorkflow` 充当处理程序 Workflow。
+它通过提取 `input.Name` 将 Nexus `HelloInput` 桥接到 `SayHelloWorkflow` 的 `string` 参数。
 
-`temporalnexus.NewWorkflowRunOperation` creates an asynchronous Nexus Operation that starts `HelloNexusWorkflow` when invoked.
-The Options function returns `client.StartWorkflowOptions`, including a stable Workflow ID derived from `options.RequestID`.
+`TemporalNexus.NewWorkflowRunOperation` 创建一个异步 Nexus 操作，该操作在调用时启动 `HelloNexusWorkflow`。
+Options 函数返回 `client.StartWorkflowOptions`，包括从 `options.RequestID` 派生的稳定 Workflow ID。
 
 </SetupStep>
 
@@ -177,19 +181,20 @@ func main() {
 </>
 }>
 
-## 3. Register the Nexus Service handler in a Worker
+<a id="3-register-the-nexus-service-handler-in-a-worker"></a>
+## 3. 在 Worker 中注册 Nexus 服务处理程序 {#3-register-the-nexus-service-handler-in-a-worker}
 
-Update your existing `worker/main.go` to register the Nexus Service Handler.
+Update 您现有的 `Worker/main.go` 用于注册 Nexus 服务处理程序。
 
-This Worker runs in the `default` Namespace — the same Namespace where `SayHelloWorkflow` is already registered.
+此 Worker 在 `default` Namespace 中运行 — 与已注册 `SayHelloWorkflow` 的 Namespace 相同。
 
-A Worker will only poll for and process incoming Nexus requests if the Nexus Service Handlers are registered.
-This is the same Worker concept used for Workflows and Activities.
+如果注册了 Nexus 服务处理程序，Worker 将仅轮询并处理传入的 Nexus 请求。
+这与用于 Workflow 和活动的 Worker 概念相同。
 
-`nexus.NewService` creates a named Nexus Service.
-`service.Register` adds the `HelloOperation` to the Service.
-`w.RegisterNexusService` registers the Service with the Worker so it can receive Nexus Operation requests.
-`HelloNexusWorkflow` must also be registered so the Worker can execute it as the handler Workflow.
+`Nexus.NewService` 创建一个名为 Nexus 的服务。
+`service.Register` 将 `HelloOperation` 添加到服务中。
+`w.RegisterNexusService` 向 Worker 注册服务，以便它可以接收 Nexus 操作请求。
+`HelloNexusWorkflow` 还必须注册，以便 Worker 可以将其作为处理程序 Workflow 执行。
 
 </SetupStep>
 
@@ -228,17 +233,18 @@ func CallerWorkflow(ctx workflow.Context, name string) (string, error) {
 </>
 }>
 
-## 4. Develop the caller Workflow
+<a id="4-develop-the-caller-workflow"></a>
+## 4.开发调用者Workflow {#4-develop-the-caller-workflow}
 
-Create a file called `caller_workflow.go` that defines a Workflow which invokes the Nexus Operation.
+创建一个名为 `caller_Workflow.go` 的文件，该文件定义调用 Nexus 操作的 Workflow。
 
-The caller Workflow demonstrates the consumer side of Nexus.
-Instead of importing handler code directly, the caller only depends on the Service contract.
-This keeps the caller and handler decoupled so they can live in separate Namespaces, repositories, or even teams.
+调用者Workflow演示了Nexus的消费者端。
+调用者只依赖于服务合约，而不是直接导入处理程序代码。
+这使调用者和处理程序保持解耦，以便他们可以生活在单独的 Namespace、存储库甚至团队中。
 
-`workflow.NewNexusClient` creates a client bound to your Nexus Service and Endpoint.
-`ExecuteOperation` starts the Operation and returns a future.
-`fut.Get` blocks until the Operation completes and writes the result into `result`.
+`Workflow.NewNexusClient` 创建一个绑定到您的 Nexus 服务和端点的客户端。
+`ExecuteOperation` 开始操作并返回未来。
+`fut.Get` 会阻塞，直到操作完成并将结果写入 `result`。
 
 </SetupStep>
 
@@ -259,16 +265,17 @@ temporal operator namespace create --namespace my-caller-namespace
 </>
 }>
 
-## 5. Create the caller Namespace and Nexus Endpoint
+<a id="5-create-the-caller-namespace-and-nexus-endpoint"></a>
+## 5. 创建调用者 Namespace 和 Nexus 端点 {#5-create-the-caller-namespace-and-nexus-endpoint}
 
-Before running the application, create a caller Namespace and a Nexus Endpoint to route requests from the caller to the handler.
-The handler uses the `default` Namespace that was created when you started the dev server.
+在运行应用程序之前，创建一个调用者 Namespace 和一个 Nexus 端点以将请求从调用者路由到处理程序。
+该处理程序使用启动开发服务器时创建的 `default` Namespace。
 
-Namespaces provide isolation between the caller and handler sides.
-The Nexus Endpoint acts as a routing layer that connects the caller Namespace to the handler's target Namespace and Task Queue.
-The endpoint name must match the `NexusEndpoint` constant defined in `caller_workflow.go` from step 4.
+Namespace 在调用方和处理程序方之间提供隔离。
+Nexus 端点充当路由层，将调用方 Namespace 连接到处理程序的目标 Namespace 和 Task Queue。
+端点名称必须与步骤 4 中 `caller_Workflow.go` 中定义的 `NexusEndpoint` 常量匹配。
 
-Make sure your local Temporal dev server is running (`temporal server start-dev`).
+确保您的本地 Temporal 开发服务器正在运行 (`Temporal Server start-dev`)。
 
 </SetupStep>
 
@@ -324,57 +331,59 @@ func main() {
 </>
 }>
 
-## 6. Run and Verify
+<a id="6-run-and-verify"></a>
+## 6. 运行并验证 {#6-run-and-verify}
 
-Create `caller/main.go` to start the caller Worker and execute the Workflow.
+创建`caller/main.go`来启动调用者Worker并执行Workflow。
 
-This brings everything together: the caller Worker hosts `CallerWorkflow`, which uses the Nexus client to invoke `say-hello` on the handler side.
-The full request flows from the caller Workflow, through the Nexus Endpoint, to the handler Worker running `HelloNexusWorkflow` (which calls `SayHelloWorkflow`), and back to the caller.
+这将所有内容结合在一起：调用者 Worker 托管 `CallerWorkflow`，它使用 Nexus 客户端在处理程序端调用 `say-hello`。
+完整请求从调用者 Workflow 通过 Nexus 端点流向运行 `HelloNexusWorkflow` 的处理程序 Worker（调用 `SayHelloWorkflow`），然后返回调用者。
 
-**Ensure the `nexus-rpc` dependency is synchronized:**
+**确保 `Nexus-rpc` 依赖项已同步：**
 
-In a terminal, from within your project:
+在终端中，从您的项目中：
 
 ```bash
 go mod tidy
 ```
 
-**Run the application:**
+**运行应用程序：**
 
-1. Start the handler Worker in one terminal:
+1. 在一个终端中启动处理程序 Worker：
 
 ```bash
 go run worker/main.go
 ```
 
-2. Run the caller in another terminal:
+2. 在另一个终端中运行调用程序：
 
 ```bash
 go run caller/main.go
 ```
 
-You should see:
+你应该看到：
 
 ```
 Workflow result: Hello Temporal
 ```
 
-Open the [Temporal Web UI](http://localhost:8233) and switch between Namespaces to see both Workflow Executions.
-In `my-caller-namespace`, find the `CallerWorkflow` execution — you should see `NexusOperationScheduled`, `NexusOperationStarted`, and `NexusOperationCompleted` events in its history.
-In `default`, find the `HelloNexusWorkflow` execution that was started by the Nexus Operation.
+打开 [Temporal 网页用户界面](http://localhost:8233) 并在 Namespace 之间切换以查看两个 Workflow Execution。
+在 `my-caller-Namespace` 中，找到 `CallerWorkflow` 执行 — 您应该在其历史记录中看到 `NexusOperationScheduled`、`NexusOperationStarted` 和 `NexusOperationCompleted` 事件。
+在 `default` 中，找到由 Nexus 操作启动的 `HelloNexusWorkflow` 执行。
 
 </SetupStep>
 </SetupSteps>
 
-## Next Steps
+<a id="next-steps"></a>
+## 后续步骤 {#next-steps}
 
-Now that you have a working Nexus Service, here are some resources to deepen your understanding:
+现在您已经有了一个正在运行的 Nexus 服务，这里有一些资源可以加深您的理解：
 
-- **[Go Nexus Feature Guide](/develop/go/nexus/feature-guide)**: Covers synchronous and asynchronous Operations, error handling, cancellation, and cross-Namespace calls.
-- **[Nexus Operations](/nexus/operations)**: The full Operation lifecycle, including retries, timeouts, and execution semantics.
-- **[Nexus Services](/nexus/services)**: Designing Service contracts and registering multiple Services per Worker.
-- **[Nexus Patterns](/nexus/patterns)**: Comparing the collocated and router-queue deployment patterns.
-- **[Error Handling in Nexus](/nexus/error-handling)**: Handling retryable and non-retryable errors across caller and handler boundaries.
-- **[Execution Debugging](/nexus/execution-debugging)**: Bi-directional linking and OpenTelemetry tracing for debugging Nexus calls.
-- **[Nexus Endpoints](/nexus/endpoints)**: Managing Endpoints and understanding how they route requests.
-- **[Temporal Nexus on Temporal Cloud](/cloud/nexus)**: Deploying Nexus in a production Temporal Cloud environment with built-in access controls and multi-region connectivity.
+- **[转到 Nexus 功能指南](/develop/go/nexus/feature-guide)**：涵盖同步和异步操作、错误处理、取消和跨 Namespace 调用。
+- **[Nexus 操作](/nexus/operations)**：完整的操作生命周期，包括重试、超时和执行语义。
+- **[Nexus 服务](/nexus/services)**：根据 Worker 设计服务合同并注册多个服务。
+- **[Nexus 图案](/nexus/patterns)**：比较并置部署模式和路由器队列部署模式。
+- **[Nexus 中的错误处理](/nexus/error-handling)**：跨调用者和处理程序边界处理可重试和不可重试的错误。
+- **[执行调试](/nexus/execution-debugging)**：用于调试 Nexus 调用的双向链接和 OpenTelemetry 跟踪。
+- **[Nexus 端点](/nexus/endpoints)**：管理端点并了解它们如何路由请求。
+- **[Temporal Nexus 上 Temporal Cloud](/cloud/nexus)**：在具有内置访问控制和多区域连接的生产 Temporal Cloud 环境中部署 Nexus。

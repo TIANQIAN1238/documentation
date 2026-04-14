@@ -1,0 +1,460 @@
+---
+id: worker-health
+title: 监控 Worker 健康状况
+sidebar_label: 监控 Worker 健康状况
+description: 检测和配置任务积压、贪婪的 Worker 资源、错误配置的 Worker 和粘性缓存设置。优化警报系统并获得有关 Schedule 启动延迟、同步匹配率和轮询成功率等指标的可行见解，以改善应用程序运行状况。
+toc_max_heading_level: 4
+tags:
+  - Metrics
+  - Observability
+  - Temporal Cloud
+  - Workers
+keywords:
+  - temporal workflow optimization
+  - detect task backlog
+  - greedy worker resources
+  - detect misconfigured workers
+  - sticky cache configuration
+  - sync match rate
+  - workflow task latency
+  - temporal cloud metrics
+  - temporal task queue management
+  - prometheus queries for temporal
+  - worker configuration
+  - workflow performance tuning
+  - optimize temporal workflows
+  - workflow task execution size
+  - temporal worker resources
+---
+import { LANGUAGE_TAB_GROUP, getLanguageLabel } from '@site/src/constants/languageTabs';
+import SdkTabs from '@site/src/components';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+别名：`ns`
+
+- [配置最小观测值](#minimal-observations)
+- [如何检测任务积压](#detect-task-backlog)
+- [如何检测贪婪的 Worker 资源](#detect-greedy-Workers)
+- [如何检测配置错误的 Workers](#detect-misconfigured-Workers)
+- [如何配置粘性缓存](#configure-sticky-cache)
+
+## 最小观察{#minimal-observations}
+
+应首先配置和理解这些警报，以获得有关应用程序运行状况和行为的情报。
+
+1. 为 Schedule 启动延迟 SDK 指标创建监视器和警报（[Workflow Executions](/references/sdk-metrics#Workflow_task_Schedule_to_start_latency) 和 [Activity执行](/references/sdk-metrics#Activity_Schedule_to_start_latency))。
+   请参阅[检测任务积压部分](#detect-task-backlog) 以探索[示例查询](#prometheus-Query-samples) 以及伴随这些值的适当响应。
+
+- 在 >200 毫秒时针对您的 p99 值发出警报
+- 绘制 >100ms 的 p95 值
+
+2. 创建一个名为 Sync Match Rate 的 [Grafana](/cloud/metrics/prometheus-grafana) 面板。
+   请参阅[同步匹配率部分](#sync-match-rate) 以探索示例查询和伴随这些值的适当响应。
+
+- p99 值<95% 时发出警报
+- 为您的 p95 值绘制 \<99%
+
+3. 创建一个名为 Poll Success Rate 的 [Grafana](/cloud/metrics/prometheus-grafana) 面板。
+   有关这些值附带的示例查询和适当响应，请参阅[检测贪婪 Workers 部分](#detect-greedy-Workers)。
+
+- p99 值 <90% 时发出警报
+- 为您的 p95 值绘制 \<95%
+
+以下警报以上述警报为基础，深入探讨您可能遇到的 Worker 相关问题的特定潜在原因。
+
+1. 为 [Temporal_Worker_task_slots_available](/references/sdk-metrics#Worker_task_slots_available) SDK 指标创建监视器和警报。
+   请参阅[检测错误配置的 Workers 部分](#detect-misconfigured-Workers)，了解基于该值的适当响应。
+
+- 在 0 处提醒您的 p99 值
+
+2. 为 [Temporal_sticky_cache_size](/references/sdk-metrics#sticky_cache_size) SDK 指标创建监视器。
+   有关此配置的更多详细信息，请参阅[配置粘性缓存部分](#configure-sticky-cache)。
+
+- 在 \{value\} > \{WorkflowCacheSize.Value\} 处绘图
+
+3. 为 [Temporal_sticky_cache_total_forced_eviction](/references/sdk-metrics#sticky_cache_total_forced_eviction) SDK 指标创建监视器。
+   此指标仅适用于 Go SDK 和 Java SDK。
+   有关更多详细信息和适当的响应，请参阅[配置粘性缓存部分](#configure-sticky-cache)。
+
+- 在 >\{prescribed_high_number\} 处发出警报
+
+4. 为 [Temporal_cloud_v1_approximate_backlog_count](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_approximate_backlog_count) 云指标创建监视器。
+   该指标提供了 Task Queue 中正在等待的任务数量的服务器端视图，并补充了 SDK Schedule 启动延迟指标。
+
+- 当给定 Task Queue 的值随时间增长时发出警报
+
+## 检测任务积压 {#detect-task-backlog}
+
+### 任务积压过多的症状
+
+如果任务积压太高，您会发现任务正在等待寻找 Worker 来运行。这可能会导致延迟
+Workflow Execution。通过观察 Schedule 启动延迟、同步匹配率和近似积压计数，可以检测不断增长的任务积压。
+
+要监控的指标：
+
+- **SDK指标**：[Workflow_task_Schedule_to_start_latency](/references/sdk-metrics#Workflow_task_Schedule_to_start_latency)
+- **SDK指标**：[Activity_Schedule_to_start_latency](/references/sdk-metrics#Activity_Schedule_to_start_latency)
+- **Temporal Cloud 指标**：[Temporal_cloud_v1_poll_success_count](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_poll_success_count)
+- **Temporal Cloud 指标**：[Temporal_cloud_v1_poll_success_sync_count](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_poll_success_sync_count)
+- **Temporal Cloud 指标**：[Temporal_cloud_v1_approximate_backlog_count](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_approximate_backlog_count)
+
+### Schedule 启动延迟
+
+Schedule 启动指标表示任务在 Task Queue 中保持未处理状态的时间。
+它是任务入队与 Worker 启动任务之间的时间。
+这个时间太长（可能）意味着您的 Worker 无法跟上 - 要么增加 Worker 的数量（如果主机负载已经很高），要么增加每个 Worker 的轮询器数量。
+
+如果您的 Schedule 启动延迟警报触发或很高，请检查 [同步匹配率](#sync-match-rate) 以确定是否需要调整 Worker 或队列，或联系 Temporal Cloud 支持。
+如果您的同步匹配率较低，请联系 [Temporal Cloud 支持](/cloud/support#support-ticket)。
+如果您的同步匹配率较低，您可以联系 Temporal Cloud 支持。
+
+[Workflow Executions](/references/sdk-metrics#Workflow_task_Schedule_to_start_latency) 和 [Activity Executions](/references/sdk-metrics#Activity_Schedule_to_start_latency) 的 Schedule_to_start_latency SDK 指标应具有警报。
+
+#### Prometheus Query 样本
+
+**Workflow Task 延迟，第 99 个百分位数**
+
+```
+histogram_quantile(0.99, sum(rate(temporal_workflow_task_schedule_to_start_latency_seconds_bucket[5m])) by (le, namespace, task_queue))
+```
+
+**Workflow Task 平均延迟**
+
+```
+sum(increase(temporal_workflow_task_schedule_to_start_latency_seconds_sum[5m])) by (namespace, task_queue)
+/
+sum(increase(temporal_workflow_task_schedule_to_start_latency_seconds_count[5m])) by (namespace, task_queue)
+```
+
+**Activity 任务延迟，第 99 个百分位数**
+
+```
+histogram_quantile(0.99, sum(rate(temporal_activity_schedule_to_start_latency_seconds_bucket[5m])) by (le, namespace, task_queue))
+```
+
+**Activity 任务延迟，平均**
+
+```
+sum(increase(temporal_activity_schedule_to_start_latency_seconds_sum[5m])) by (namespace, task_queue)
+/
+sum(increase(temporal_activity_schedule_to_start_latency_seconds_count[5m])) by (namespace, task_queue)
+```
+
+**目标**
+
+该延迟应该非常低，接近于零。
+任何较高的值都表明存在瓶颈。
+
+### 同步匹配率 {#sync-match-rate}
+
+同步匹配率测量无需保留（Worker 已启动且可用于接收任务）而交付给 Worker 的任务的比率与所有已交付任务的比率。
+
+同步匹配是指任务通过粘性队列立即与 Worker 匹配。
+
+异步匹配是指任务无法与 Worker 的粘性队列匹配。当没有 Worker 缓存 Workflow 或任务在处理过程中超时时，可能会发生这种情况。在这种情况下，任务返回到通用Task Queue。
+
+**计算同步匹配率**
+
+```
+temporal_cloud_v1_poll_success_sync_count / temporal_cloud_v1_poll_success_count = N
+```
+
+列出拥有 XPROT025X 权限的用户。
+
+别名：`-n`
+
+```
+sum by(temporal_namespace) (
+    temporal_cloud_v1_poll_success_sync_count{temporal_namespace=~"$namespace"}
+)
+/
+sum by(temporal_namespace) (
+    temporal_cloud_v1_poll_success_count{temporal_namespace=~"$namespace"}
+)
+```
+
+**目标**
+
+同步匹配率应至少 >95%，但最好 >99%。
+
+#### --端点
+
+一旦检测到任务积压较多的情况，请考虑以下场景以采取行动。
+
+#### 高 Schedule 启动延迟和高同步匹配率
+
+造成这种情况的典型原因有以下三个：
+
+- 没有足够的 Worker 来执行工作
+- 每个 Worker 要么资源不足，要么配置错误，无法处理足够的工作
+- 托管 Worker 和 Temporal Cloud 的环境（例如网络）导致拥塞
+
+考虑
+
+- 增加可用 Worker 的数量
+- 验证您的 Worker 主机是否拥有适当的资源
+- 增加 Worker/任务执行的并发轮询器的 Worker 配置值（如果您的 Worker 资源可以容纳增加的负载）
+- 将这些结合起来
+
+#### Schedule 启动延迟高且同步匹配率低
+
+确认您尚未在 Activity 选项中设置“ScheduleToStartTimeout”的值。 This may skew your observations.
+
+对于您的用例来说，低同步匹配率可能是可以接受的。
+例如，如果您已知工作负载或有意限制任务。
+
+此命令自动使用 Web UI 启动 XPROT026X 开发服务器，并创建“默认”XPROT025X。它使用内存数据库，因此不要将其用于实际用例。
+
+成功的异步轮询
+
+```
+temporal_cloud_v1_poll_success_count - temporal_cloud_v1_poll_success_sync_count = N
+```
+
+```
+sum by(temporal_namespace, task_type) (
+    temporal_cloud_v1_poll_success_count{temporal_namespace=~"$namespace"}
+)
+-
+sum by(temporal_namespace, task_type) (
+    temporal_cloud_v1_poll_success_sync_count{temporal_namespace=~"$namespace"}
+)
+```
+
+您还可以监控[大约积压数量](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_approximate_backlog_count)来直接观察Task Queue深度：
+
+```
+temporal_cloud_v1_approximate_backlog_count{temporal_namespace=~"$namespace", temporal_task_queue=~"$task_queue"}
+```
+
+**行动**
+
+- 验证您的 Worker 设置是否针对您的实例进行了优化：
+  - 根据“task_slots”检查系统 CPU 使用情况，并根据需要调整“maxConcurrentWorkflowTaskExecutionSize”和“maxConcurrentActivityExecutionSize”设置。
+  - 根据“sticky_cache_size”检查系统内存使用情况，并根据需要调整粘性缓存大小。
+  - 有关设置的详细说明，请参阅 [Worker 性能](/develop/Worker-performance#task-queues-processing-tuning) 部分。
+- 如果您的 Worker 资源可以容纳增加的负载，则增加 Workflow 或 Activity `task_slots` 并发轮询器的 Worker 配置。
+  - 参考 [Worker 性能 > 轮询器计数](/develop/Worker-performance#poller-count)。
+- 增加可用 Worker 的数量。
+
+:::warning
+
+在 Activity 选项中设置 [Schedule 启动超时](/encyclopedia/Detecting-Activity-failures#Schedule-to-start-timeout) 可能会扭曲您的观察结果。
+在负载测试延迟时，避免设置 Schedule 启动超时。
+
+:::
+
+## 检测贪婪的 Worker 资源 {#detect-greedy-Workers}
+
+**如何检测贪婪的Worker资源。**
+
+您可能拥有太多 Worker。
+如果您看到轮询成功率显示较低数字，则可能有太多资源轮询 Temporal Cloud。
+
+要监控的指标：
+
+- **Temporal Cloud 指标**：[Temporal_cloud_v1_poll_success_count](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_poll_success_count)
+- **Temporal Cloud 指标**：[Temporal_cloud_v1_poll_success_sync_count](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_poll_success_sync_count)
+- **Temporal Cloud 指标**：[Temporal_cloud_v1_poll_timeout_count](/cloud/metrics/openmetrics/metrics-reference#Temporal_cloud_v1_poll_timeout_count)
+- **SDK指标**：[Temporal_Workflow_task_Schedule_to_start_latency](/references/sdk-metrics#Workflow_task_Schedule_to_start_latency)
+- **SDK指标**：[Temporal_Activity_Schedule_to_start_latency](/references/sdk-metrics#Activity_Schedule_to_start_latency)
+
+**计算投票成功率**
+
+```
+(temporal_cloud_v1_poll_success_count)
+/
+(temporal_cloud_v1_poll_success_count + temporal_cloud_v1_poll_timeout_count)
+```
+
+**目标**
+
+在大多数负载稳定的系统情况下，轮询成功率应 >90%。
+为了获得高容量和低延迟，请尝试将目标设置为 >95%。
+
+**解释**
+
+对于 Worker 的数量来说，轮询器可能过多。
+
+如果您同时看到以下所有内容，则您可能拥有太多 Worker：
+
+- 民意调查成功率低
+- Schedule 启动延迟低
+- Worker主机资源利用率低
+
+**行动**
+
+考虑通过以下任一方式缩小 Worker 的尺寸：
+
+- 减少轮询受影响的 Task Queue 的 Worker 数量，或者
+- 减少每个 Worker 的并发轮询器，或者
+- 以上两者
+
+## 检测配置错误的 Workers {#detect-misconfigured-Workers}
+
+**如何检测配置错误的 Worker。**
+
+Worker 配置会对任务处理效率产生负面影响。
+
+要监控的指标：
+
+- **SDK指标**：[Temporal_Worker_task_slots_available](/references/sdk-metrics#Worker_task_slots_available)
+- **SDK指标**：[sticky_cache_size](/references/sdk-metrics#sticky_cache_size)
+- **SDK指标**：[sticky_cache_total_forced_eviction](/references/sdk-metrics#sticky_cache_total_forced_eviction)
+
+**执行大小配置**
+
+`maxConcurrentWorkflowTaskExecutionSize` 和 `maxConcurrentActivityExecutionSize` 定义 Worker 的可用插槽总数。
+如果设置得太低，Worker 将无法继续处理任务。
+
+**目标**
+
+“Temporal_Worker_task_slots_available”指标应始终>0。
+
+#### Prometheus Query 样本
+
+**随着时间的推移**
+
+```
+avg_over_time(temporal_worker_task_slots_available{namespace="$namespace",worker_type="WorkflowWorker"}[10m])
+```
+
+**当前时间**
+
+```
+temporal_worker_task_slots_available{namespace="default", worker_type="WorkflowWorker", task_queue="$task_queue_name"}
+```
+
+**解释**
+
+如果您经常看到槽数不足，您可能会遇到任务积压。
+工作的处理速度没有达到应有的速度。
+
+**行动**
+
+增加“maxConcurrentWorkflowTaskExecutionSize”和“maxConcurrentActivityExecutionSize”值，并密切关注 Worker 资源指标（CPU 利用率等），以确保您没有创建新问题。
+
+### 配置粘性执行缓存 {#configure-sticky-cache}
+
+粘性执行意味着 Worker 缓存 Workflow Execution Event History 并创建专用的 Task Queue 进行监听。
+它显着提高了性能，因为 Temporal 服务仅将新事件发送到 Worker，而不是整个事件历史记录。
+
+**目标**
+
+“sticky_cache_size”应报告小于或等于您的“WorkflowCacheSize”值。
+此外，sticky_cache_total_forced_eviction 不应报告较高的数字（相对）。
+
+**行动**
+
+如果您看到驱逐计数较高，请验证 Worker 配置或资源配置（积压）中是否存在其他效率低下的情况。
+如果您发现缓存大小指标超过“WorkflowCacheSize”，请在您的 Worker 资源可以容纳该值或配置更多 Worker 的情况下增加此值。
+最后，花些时间查看 [Worker 性能指南](/develop/Worker-performance) 并查看它是否解决了其他潜在的缓存问题。
+
+#### Prometheus Query 样本
+
+**粘性缓存大小**
+
+```
+max_over_time(temporal_sticky_cache_size{namespace="$namespace"}[10m])
+```
+
+**粘性缓存驱逐**
+
+```
+rate(temporal_sticky_cache_total_forced_eviction_total{namespace="$namespace"}[5m]))
+```
+
+## 管理 Worker 心跳 {#manage-Worker-heartbeating}
+
+:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+
+此功能目前处于[公共预览](/evaluate/development-product-features/release-stages#public-preview)。
+
+:::
+
+Worker 默认每 60 秒向 Temporal Server 发送一次心跳。此心跳用于从 Worker 向服务器提供活动和配置数据。
+具体发送的数据可以参见[API](https://github.com/Temporalio/api/blob/master/Temporal/api/Worker/v1/message.proto)。通过提供一致的心跳
+Worker，服务器可以获取Worker的准确计数，了解Worker性能，并通过命令响应Worker心跳。一些示例说明其用途：
+
+- 了解停机的 Worker 和长时间处理任务的 Worker 之间的区别
+- 从服务器角度识别 CPU 使用率高的 Worker
+
+使用 Temporal CLI 查看有关连接到 Temporal Server 的所有 Worker 的信息。使用“Temporal Worker描述”查看特定Worker的详细信息。使用“Temporal Worker 列表”获取所有已连接 Worker 的完整列表。
+
+如果您希望禁用 Worker 心跳或将心跳设置为比每 60 秒更频繁（允许的范围是 1 秒到 60 秒），请设置与您的 SDK 相关的配置。服务器需要Worker心跳才能准确了解Worker状态。禁用 Worker 检测信号将导致提供活动 Worker 列表以及有关这些 Worker 的信息的功能显示丢失或不准确的信息。
+<SdkTabs hideUnsupportedLanguages>
+<SdkTabs.Go>
+
+_自 Go SDK v1.41.0 起可用_
+
+在 [`client.Options`](https://pkg.go.dev/go.Temporal.io/sdk/client#Options) 上设置 `WorkerHeartbeatInterval` 字段来调整心跳间隔。
+将其设置为负值以禁用心跳。
+
+#### 启用主机资源报告
+
+默认情况下，Go SDK 在 Worker 心跳中报告 CPU 和内存使用情况“0”。
+要启用主机资源报告，请在创建 Worker 时提供“SysInfoProvider”。
+您必须使用基于资源的调谐器来启用主机资源报告。
+
+SDK 包含通过 [sysinfo](https://pkg.go.dev/go.Temporal.io/sdk/contrib/sysinfo) 库基于 [gopsutil](https://github.com/shirou/gopsutil) 的实现，该库支持容器化 Linux 环境中的 cgroup 指标：
+
+```go
+import (
+    "log"
+    
+    "go.temporal.io/sdk/client"
+    "go.temporal.io/sdk/contrib/envconfig"
+    "go.temporal.io/sdk/contrib/sysinfo"
+    "go.temporal.io/sdk/worker"
+)
+
+c, err := client.Dial(envconfig.MustLoadDefaultClientOptions())
+if err != nil {
+	log.Fatalln("Unable to create client", err)
+}
+defer c.Close()
+tuner, err := worker.NewResourceBasedTuner(worker.ResourceBasedTunerOptions{
+	TargetMem:    0.8,
+	TargetCpu:    0.9,
+	InfoSupplier: sysinfo.SysInfoProvider(),
+})
+w := worker.New(c, "my-task-queue", worker.Options{
+	Tuner:                      tuner,
+})
+```
+
+您还可以实现“Worker.SysInfoProvider”接口来提供您自己的资源指标。
+
+</SdkTabs.Go>
+<SdkTabs.Python>
+
+_自 Python SDK v1.20.0 起可用_
+
+使用“TelemetryConfig()”调整心跳设置。有关更多详细信息，请参阅 [Python SDK 文档](https://python.Temporal.io/Temporalio.bridge.runtime.RuntimeOptions.html#Worker_heartbeat_interval_millis)。
+
+</SdkTabs.Python>
+<SdkTabs.TypeScript>
+
+_自 TypeScript SDK v1.14.0 起可用_
+
+设置 RuntimeOptions 上的 WorkerHeartbeatInterval 属性来调整心跳间隔。
+将其设置为“0”以禁用心跳。
+
+</SdkTabs.TypeScript>
+<SdkTabs.DotNet>
+
+_自 .NET SDK v1.10.0 起可用_
+
+在 [`TemporalRuntimeOptions`](https://dotnet.Temporal.io/api/Temporalio.Runtime.TemporalRuntimeOptions.html) 上设置 `WorkerHeartbeatInterval` 属性来调整心跳间隔。
+将其设置为“null”以禁用心跳。
+
+</SdkTabs.DotNet>
+<SdkTabs.Ruby>
+
+_自 Ruby SDK v1.1.0 起可用_
+
+将配置添加到“Runtime()”以调整心跳设置。有关更多详细信息，请参阅 [Ruby SDK 文档](https://ruby.Temporal.io/Temporalio/Runtime.html)。
+
+</SdkTabs.Ruby>
+</SdkTabs>

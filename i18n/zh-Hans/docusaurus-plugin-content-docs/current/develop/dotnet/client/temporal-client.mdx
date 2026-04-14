@@ -1,0 +1,517 @@
+---
+id: temporal-client
+title: Temporal CLIent - .NET SDK
+sidebar_label: Temporal CLIent
+description: Create a Temporal Client, connect to Temporal Cloud, start a Workflow, and get Workflow results using the Temporal
+  Create a Temporal Client, connect to Temporal Cloud, start a Workflow, and get Workflow results using the Temporal
+  .NET SDK with detailed steps and code examples.
+keywords:
+  - developer guide
+  - sdk
+  - dotnet
+  - temporal client
+tags:
+  - .Net SDK
+  - Temporal SDKs
+  - Temporal Client
+  - Certificates
+---
+
+[Temporal CLIent](/encyclopedia/Temporal-sdks#Temporal-client) 使您能够与 Temporal 服务进行通信。
+与 Temporal 服务的通信使您可以执行诸如启动 Workflow Execution、发送 Signal 和
+查询 Workflow Execution、获取 Workflow 结果等。
+
+本页向您展示如何使用 .NET SDK 和 Temporal CLIent 执行以下操作：
+
+- [连接到本地开发 Temporal 服务](#connect-to-development-service)
+- [连接到 Temporal Cloud](#connect-to-Temporal-cloud)
+- [启动 Workflow Execution](#start-Workflow)
+- [获取 Workflow 结果](#get-Workflow-结果)
+
+Temporal CLIent 无法在 Workflow 内部初始化和使用。然而，使用
+Temporal CLI 位于 Activity 内部，与 Temporal 服务进行通信。
+
+## 连接到开发 Temporal 服务 {#connect-to-development-service}
+
+使用
+[`TemporalClient.ConnectAsync`](https://dotnet.Temporal.io/api/Temporalio.Client.TemporalClient.html#Temporalio_Client_TemporalClient_ConnectAsync_Temporalio_Client_TemporalClientConnectOptions_)
+创建一个客户端。连接选项包括 Temporal Server 地址、Namespace 和（可选）TLS
+配置。您可以直接在代码中提供这些选项，或者从**环境变量**和/或
+**TOML 配置文件** 使用“Temporalio.Client.EnvConfig”帮助程序。我们推荐环境变量或
+配置文件用于安全、可重复的配置。
+
+当您在本地运行 Temporal 服务时（例如使用
+[Temporal CLI 开发服务器](https://docs.Temporal.io/cli/server#start-dev))，所需的选项很少。如果你
+不指定主机/端口，大多数连接默认为“127.0.0.1:7233”和“默认”Namespace。
+
+<Tabs groupId="connect-options-dotnet" defaultValue="config-file" >
+
+<TabItem value="config-file" label="Configuration File">
+
+您可以使用 TOML 配置文件来设置 Temporal CLIent 的连接选项。配置文件可以让你
+配置多个配置文件，每个配置文件都有自己的一组连接选项。然后，您可以指定在以下情况下使用哪个配置文件：
+创建 Temporal CLIent。您可以使用环境变量“Temporal_CONFIG_FILE”来指定
+TOML 文件或直接在代码中提供文件的路径。如果不提供配置文件路径，SDK
+在路径“~/.config/Temporalio/Temporal.toml”或操作系统上的等效路径中查找它。参考
+[环境配置](/references/client-environment-configuration) 了解更多配置细节
+文件和配置文件。
+
+:::info
+
+配置文件中设置的连接选项的优先级低于环境变量。这意味着如果
+您在配置文件和环境变量中设置相同的选项，即环境变量值
+覆盖配置文件中设置的选项。
+
+:::
+
+例如，以下 TOML 配置文件定义了两个配置文件：“default”和“prod”。每个配置文件都有自己的
+连接选项集。
+
+```toml title="config.toml"
+# Default profile for local development
+[profile.default]
+address = "localhost:7233"
+namespace = "default"
+
+# Optional: Add custom gRPC headers
+[profile.default.grpc_meta]
+my-custom-header = "development-value"
+trace-id = "dev-trace-123"
+
+# Production profile for Temporal Cloud
+[profile.prod]
+address = "your-namespace.a1b2c.tmprl.cloud:7233"
+namespace = "your-namespace"
+api_key = "your-api-key-here"
+
+# TLS configuration for production
+[profile.prod.tls]
+# TLS auto-enables when TLS config or an API key is present
+# disabled = false
+client_cert_path = "/etc/temporal/certs/client.pem"
+client_key_path  = "/etc/temporal/certs/client.key"
+
+# Custom headers for production
+[profile.prod.grpc_meta]
+environment     = "production"
+service-version = "v1.2.3"
+```
+
+您可以使用配置文件中的配置文件创建 Temporal CLIent，如下所示。在此示例中，您加载
+本地开发的“default”配置文件：
+
+```csharp title="LoadFromFile.cs" {27-30}
+using Temporalio.Client;
+using Temporalio.Client.EnvConfig;
+
+namespace TemporalioSamples.EnvConfig;
+
+/// <summary>
+/// Sample demonstrating loading the default environment configuration profile
+/// from a TOML file.
+/// </summary>
+public static class LoadFromFile
+{
+    public static async Task RunAsync()
+    {
+        Console.WriteLine("--- Loading default profile from config.toml ---");
+
+        try
+        {
+            // For this sample to be self-contained, we explicitly provide the path to
+            // the config.toml file included in this directory.
+            // By default though, the config.toml file will be loaded from
+            // ~/.config/temporalio/temporal.toml (or the equivalent standard config directory on your OS).
+            var configFile = Path.Combine(Directory.GetCurrentDirectory(), "config.toml");
+
+            // LoadClientConnectOptions is a helper that loads a profile and prepares
+            // the config for TemporalClient.ConnectAsync. By default, it loads the
+            // "default" profile.
+            var connectOptions = ClientEnvConfig.LoadClientConnectOptions(new ClientEnvConfig.ProfileLoadOptions
+            {
+                ConfigSource = DataSource.FromPath(configFile),
+            });
+
+            Console.WriteLine($"Loaded 'default' profile from {configFile}.");
+            Console.WriteLine($"  Address: {connectOptions.TargetHost}");
+            Console.WriteLine($"  Namespace: {connectOptions.Namespace}");
+            if (connectOptions.RpcMetadata?.Count > 0)
+            {
+                Console.WriteLine($"  gRPC Metadata: {string.Join(", ", connectOptions.RpcMetadata.Select(kv => $"{kv.Key}={kv.Value}"))}");
+            }
+
+            Console.WriteLine("\nAttempting to connect to client...");
+
+            var client = await TemporalClient.ConnectAsync(connectOptions);
+            Console.WriteLine("✅ Client connected successfully!");
+
+            // Test the connection by checking the service
+            var sysInfo = await client.Connection.WorkflowService.GetSystemInfoAsync(new());
+            Console.WriteLine("✅ Successfully verified connection to Temporal server!\n{0}", sysInfo);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Console.WriteLine($"❌ Failed to connect: {ex.Message}");
+        }
+    }
+}
+```
+
+</TabItem>
+
+<TabItem value="env-vars" label="Environment Variables">
+
+使用“EnvConfig”包通过环境变量设置 Temporal CLIent 的连接选项。欲了解以下列表
+所有可用的环境变量及其默认值，请参阅
+[环境配置](/references/client-environment-configuration)。
+
+例如，以下代码片段加载所有环境变量并使用选项创建 Temporal CLIent
+在这些变量中指定。如果您已在默认位置定义了配置文件
+(`~/.config/Temporalio/Temporal.toml`) 或由 `Temporal_CONFIG_FILE` 环境指定的自定义位置
+变量，这也将加载配置文件中的默认配置文件。但是，通过环境设置的任何选项
+变量将优先。
+
+在运行 .NET 应用程序之前设置以下环境变量。将占位符值替换为您的
+实际配置。由于这是针对本地开发 Temporal 服务，因此这些值连接到 `localhost:7233` 并
+“默认”Namespace。您可以完全忽略这些变量，因为它们是默认值。
+
+```bash
+export TEMPORAL_NAMESPACE="default"
+export TEMPORAL_ADDRESS="localhost:7233"
+```
+
+设置环境变量后，使用以下代码创建Temporal CLIent：
+
+```csharp
+using Temporalio.Client;
+using Temporalio.Client.EnvConfig;
+
+namespace TemporalioSamples.EnvConfig;
+
+/// <summary>
+/// Sample demonstrating loading the default environment configuration profile
+/// from a TOML file.
+/// </summary>
+public static class LoadFromFile
+{
+    public static async Task RunAsync()
+    {
+        try
+        {
+            var connectOptions = ClientEnvConfig.LoadClientConnectOptions();
+
+            Console.WriteLine("\nAttempting to connect to client...");
+
+            var client = await TemporalClient.ConnectAsync(connectOptions);
+            Console.WriteLine("✅ Client connected successfully!");
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Console.WriteLine($"❌ Failed to connect: {ex.Message}");
+        }
+    }
+}
+```
+
+</TabItem>
+
+<TabItem value="code" label="Code">
+
+如果不想使用环境变量或配置文件，可以直接在中指定连接选项
+代码。这样方便本地开发和测试。您还可以从环境加载基本配置
+变量或配置文件，然后覆盖代码中的特定选项。
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using Temporalio.Client;
+
+namespace TemporalioSamples.Manual
+{
+    public static class ManualConnect
+    {
+        public static async Task RunAsync()
+        {
+            Console.WriteLine("--- Connecting manually to Temporal ---");
+
+            var client = await TemporalClient.ConnectAsync(new TemporalClientConnectOptions
+            {
+                TargetHost = "localhost:7233",
+                Namespace  = "default",
+            });
+
+            Console.WriteLine("✅ Connected to local Temporal service!");
+        }
+    }
+}
+
+```
+
+</TabItem>
+
+</Tabs>
+
+## 连接到 Temporal Cloud {#connect-to-Temporal-cloud}
+
+您可以使用 [API 密钥](/cloud/api-keys) 或通过 mTLS 连接到 Temporal Cloud。连接至 Temporal
+与连接到不安全的云或任何安全的 Temporal 服务相比，云或任何安全的 Temporal 服务需要额外的连接选项
+本地开发实例：
+
+- 您的身份验证凭据。
+  - 如果您使用 API 密钥，请提供 API 密钥值。
+  - 如果您使用 mTLS，请提供 mTLS CA 证书和 mTLS 私钥。
+- 您的 _Namespace 和帐户 ID_ 组合，遵循格式“<Namespace_id>.<account_id>”。
+- 建议的端点是 gRPC Namespace 端点：`<Namespace>.<account>.tmprl.cloud:7233`。
+  该端点适用于所有 Namespace，并自动将流量定向到具有 [高可用性](/cloud/high-availability) 的 Namespace 的活动区域。
+  有关端点选项的更多信息，请参阅[访问 Namespaces](/cloud/Namespaces#access-Namespaces)。
+
+您可以在 Namespaces 选项卡上找到 Namespace 和帐户 ID 以及端点：
+
+![左侧为 Namespace 和账户 ID 组合，右侧为区域终端节点](/img/cloud/apikeys/Namespaces-and-regional-endpoints.png)
+
+有关管理和生成 Temporal Cloud 客户端证书的更多信息，请参阅
+[如何在Temporal Cloud中管理证书](/cloud/certificates)。
+
+您可以使用环境变量、配置文件或直接在代码中提供这些连接选项。
+
+<Tabs groupId="connect-api-key-options-dotnet" defaultValue="config-file" >
+
+<TabItem value="config-file" label="Configuration File">
+
+您可以使用 TOML 配置文件来设置 Temporal CLIent 的连接选项。配置文件可以让你
+配置多个配置文件，每个配置文件都有自己的一组连接选项。然后，您可以指定在以下情况下使用哪个配置文件：
+创建 Temporal CLIent。有关可在 TOML 文件中设置的所有可用配置选项的列表，请参阅
+[环境配置](/references/client-environment-configuration)。
+
+您可以使用环境变量“Temporal_CONFIG_FILE”指定TOML文件的位置或提供路径
+直接在代码中写入文件。如果您不提供配置文件的路径，SDK 将在
+默认路径`~/.config/Temporalio/Temporal.toml`。
+
+:::info
+
+配置文件中设置的连接选项的优先级低于环境变量。这意味着如果
+您在配置文件和环境变量中设置相同的选项，即环境变量值
+覆盖配置文件中设置的选项。
+
+:::
+
+例如，以下 TOML 配置文件定义了一个“cloud”配置文件，其中包含必要的连接选项
+通过 API 密钥连接到 Temporal Cloud：
+
+```toml
+# Cloud profile for Temporal Cloud
+[profile.cloud]
+address = "your-namespace.a1b2c.tmprl.cloud:7233"
+namespace = "your-namespace"
+api_key = "your-api-key-here"
+```
+
+如果您想使用 mTLS 身份验证而不是 API 密钥，请将“api_key”字段替换为您的 mTLS 证书，然后
+私钥：
+
+```toml
+# Cloud profile for Temporal Cloud
+[profile.cloud]
+address = "your-namespace.a1b2c.tmprl.cloud:7233"
+namespace = "your-namespace"
+tls_client_cert_data = "your-tls-client-cert-data"
+tls_client_key_path = "your-tls-client-key-path"
+```
+
+使用配置文件中定义的连接选项，使用“ClientEnvConfig.LoadClientConnectOptions”
+方法使用“staging”配置文件创建 Temporal CLIent，如下所示。加载配置文件后，您还可以
+在创建客户端之前以编程方式覆盖特定的连接选项。
+
+```csharp title="LoadProfile.cs" {25. 41}
+using Temporalio.Client;
+using Temporalio.Client.EnvConfig;
+
+namespace TemporalioSamples.EnvConfig;
+
+/// <summary>
+/// Sample demonstrating loading a named environment configuration profile and
+/// programmatically overriding its values.
+/// </summary>
+public static class LoadProfile
+{
+    public static async Task RunAsync()
+    {
+        Console.WriteLine("--- Loading 'staging' profile with programmatic overrides ---");
+
+        try
+        {
+            var configFile = Path.Combine(Directory.GetCurrentDirectory(), "config.toml");
+            var profileName = "staging";
+
+            Console.WriteLine("The 'staging' profile in config.toml has an incorrect address (localhost:9999).");
+            Console.WriteLine("We'll programmatically override it to the correct address.");
+
+            // Load the 'staging' profile
+            var connectOptions = ClientEnvConfig.LoadClientConnectOptions(new ClientEnvConfig.ProfileLoadOptions
+            {
+                Profile = profileName,
+                ConfigSource = DataSource.FromPath(configFile),
+            });
+
+            // Override the target host to the correct address.
+            // This is the recommended way to override configuration values.
+            connectOptions.TargetHost = "localhost:7233";
+
+            Console.WriteLine($"\nLoaded '{profileName}' profile from {configFile} with overrides.");
+            Console.WriteLine($"  Address: {connectOptions.TargetHost} (overridden from localhost:9999)");
+            Console.WriteLine($"  Namespace: {connectOptions.Namespace}");
+
+            Console.WriteLine("\nAttempting to connect to client...");
+
+            var client = await TemporalClient.ConnectAsync(connectOptions);
+            Console.WriteLine("✅ Client connected successfully!");
+
+            // Test the connection by checking the service
+            var sysInfo = await client.Connection.WorkflowService.GetSystemInfoAsync(new());
+            Console.WriteLine("✅ Successfully verified connection to Temporal server!\n{0}", sysInfo);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Console.WriteLine($"❌ Failed to connect: {ex.Message}");
+        }
+    }
+}
+```
+
+</TabItem>
+
+<TabItem value="env-vars" label="Environment Variables">
+
+连接 Temporal Cloud 需要以下环境变量：
+
+- `Temporal_Namespace`：您的 Namespace 和帐户 ID 组合，格式为 `<Namespace_id>.<account_id>`。
+- `Temporal_ADDRESS`：Temporal Cloud Namespace 的 gRPC 端点。
+- `Temporal_API_KEY`：您的 API 密钥值。如果您使用 API 密钥身份验证，则为必需。
+- `Temporal_TLS_CLIENT_CERT_DATA` 或 `Temporal_TLS_CLIENT_CERT_PATH`：您的 mTLS 客户端证书数据或文件路径。
+  如果您使用 mTLS 身份验证，则为必需。
+- `Temporal_TLS_CLIENT_KEY_DATA` 或 `Temporal_TLS_CLIENT_KEY_PATH`：您的 mTLS 客户端私钥数据或文件路径。
+  如果您使用 mTLS 身份验证，则为必需。
+
+在运行 .NET 应用程序之前，请确保您的环境中存在这些环境变量。
+
+导入“Temporalio.Client.EnvConfig”Namespace，以使用环境变量设置 Temporal CLIent 的连接选项。
+`ClientEnvConfig.LoadClientConnectOptions` 方法将自动加载所有环境变量。查看所有可用的列表
+环境变量及其默认值，参考
+[环境配置](/references/client-environment-configuration)。
+
+例如，以下代码片段加载所有环境变量并使用选项创建 Temporal CLIent
+在这些变量中指定。如果您已在默认位置定义了配置文件
+(`~/.config/Temporalio/Temporal.toml`) 或由 `Temporal_CONFIG_FILE` 环境指定的自定义位置
+变量，这也将加载配置文件中的默认配置文件。但是，通过环境设置的任何选项
+变量将优先。
+
+```csharp {16,20}
+using Temporalio.Client;
+using Temporalio.Client.EnvConfig;
+
+namespace TemporalioSamples.EnvConfig;
+
+/// <summary>
+/// Sample demonstrating loading the default environment configuration profile
+/// from a TOML file.
+/// </summary>
+public static class LoadFromFile
+{
+    public static async Task RunAsync()
+    {
+        try
+        {
+            var connectOptions = ClientEnvConfig.LoadClientConnectOptions();
+
+            Console.WriteLine("\nAttempting to connect to client...");
+
+            var client = await TemporalClient.ConnectAsync(connectOptions);
+            Console.WriteLine("✅ Client connected successfully!");
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Console.WriteLine($"❌ Failed to connect: {ex.Message}");
+        }
+    }
+}
+```
+
+</TabItem>
+
+<TabItem value="code" label="Code">
+
+您还可以直接在 .NET 代码中提供连接选项。要创建初始连接，请提供
+Namespace 和“TemporalClient.ConnectAsync”方法的 API 密钥值。
+
+```csharp
+var myClient = TemporalClient.ConnectAsync(new(<endpoint>)
+{
+    Namespace = "<namespace_id>.<account_id>",
+    ApiKey = "<APIKey>",
+    Tls = new(),
+});
+```
+
+对于 Update API 密钥，Update 现有客户端连接上的“ApiKey”值：
+
+```csharp
+myClient.Connection.ApiKey = myKeyUpdated;
+```
+
+</TabItem>
+
+</Tabs>
+
+## 启动 Workflow {#start-Workflow}
+
+**如何使用 Temporal .NET SDK 启动 Workflow**
+
+[Workflow Execution](/Workflow-execution) 语义依赖于多个参数，即启动 Workflow Execution
+您必须提供将用于任务的 Task Queue（Worker 正在轮询的任务）、Workflow Type、
+特定于语言的上下文数据和 Workflow 函数参数。
+
+生成 Workflow Execution 的请求会导致 Temporal 服务创建第一个事件
+([WorkflowExecutionStarted](/references/events#Workflowexecutionstarted)) 在 Workflow Execution Event History 中。的
+Temporal 服务然后创建第一个 Workflow Task，从而产生第一个
+[WorkflowTaskScheduled](/references/events#WorkflowtaskScheduled) 事件。
+
+要在 .NET 中启动 Workflow Execution，请使用“StartWorkflowAsync()”或“ExecuteWorkflowAsync()”方法
+客户。您必须在
+赋予该方法的“WorkflowOptions”。
+
+```csharp
+var result = await client.ExecuteWorkflowAsync(
+    (MyWorkflow wf) => wf.RunAsync(),
+    new(id: "my-workflow-id", taskQueue: "my-task-queue");
+Console.WriteLine("Result: {0}", result);
+```
+
+## 获取 Workflow 结果 {#get-Workflow-results}
+
+**如何使用 Temporal .NET SDK 获取 Workflow Execution 的结果**
+
+如果启动 Workflow Execution 的调用成功，您将获得对 Workflow Execution 运行 ID 的访问权限。
+
+Workflow Id、Run Id 和 Namespace 可用于唯一标识系统中的 Workflow Execution 并获取其
+结果。
+
+可以阻止结果的进展（同步执行）或在其他时间点获取结果
+（异步执行）。
+
+在 Temporal Platform 中，使用查询作为访问状态和数据的首选方法也是可以接受的。
+Workflow Execution 的结果。
+
+使用 StartWorkflowAsync() 或 GetWorkflowHandle() 返回 Workflow 句柄。然后使用 GetResultAsync() 方法
+等待 Workflow 的结果。
+
+要通过 ID 获取现有 Workflow 的句柄，您可以使用“GetWorkflowHandle()”。
+
+然后使用
+[`DescribeAsync()`](https://dotnet.Temporal.io/api/Temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_DescribeAsync_Temporalio_Client_WorkflowDescribeOptions_)
+获取 Workflow 的当前状态。如果Workflow不存在，则调用失败。
+
+```csharp
+var handle = client.GetWorkflowHandle("my-workflow-id");
+var result = await handle.GetResultAsync<string>();
+Console.WriteLine("Result: {0}", result);
+```

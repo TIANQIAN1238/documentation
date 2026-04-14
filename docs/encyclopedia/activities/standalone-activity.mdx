@@ -1,8 +1,8 @@
 ---
 id: standalone-activity
-title: Standalone Activity
-sidebar_label: Standalone Activity
-description: Learn about Standalone Activities in Temporal, their benefits, execution model, and when to use them.
+title: "独立式 Activity"
+sidebar_label: "独立式 Activity"
+description: "了解 Temporal 中的独立活动、其优点、执行模型以及何时使用它们。"
 slug: /standalone-activity
 toc_max_heading_level: 4
 keywords:
@@ -18,82 +18,89 @@ tags:
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Standalone Activities are available as a [Pre-release](/evaluate/development-production-features/release-stages#pre-release) feature in [Temporal Cloud](#temporal-cloud-support) and in a [special release](#temporal-cli-support) of the Temporal CLI.
+独立活动可作为 [Temporal Cloud](/evaluate/development-production-features/release-stages#pre-release) 和 Temporal CLI 的 [特别发布](#temporal-cloud-support) 中的 [预发布](#temporal-cli-support) 功能使用。
 
 :::
 
-See [limitations](#pre-release-limitations) below.
+请参阅下面的 [局限性](#pre-release-limitations)。
 
-## What is a Standalone Activity? {#standalone-activity}
+<a id="standalone-activity"></a>
+## 什么是独立 Activity？ {#standalone-activity}
 
-A top-level [Activity Execution](/activity-execution) that is started directly by a
-[Client](/encyclopedia/temporal-sdks#temporal-client), without using a Workflow, is called a
-Standalone Activity.
+由直接启动的顶级 [Activity 执行](/activity-execution)
+[客户](/encyclopedia/temporal-sdks#temporal-client)，不使用 Workflow，被称为
+独立式 Activity。
 
-Standalone Activities are Temporal's [job queue](/evaluate/development-production-features/job-queue).
+独立活动是 Temporal 的 [作业队列](/evaluate/development-production-features/job-queue)。
 
-If you need to orchestrate multiple Activities, then you should use a Workflow. But if you just need
-to execute a single Activity, then you can use a Standalone Activity. This will result in fewer
-[Billable Actions](/cloud/actions#actions-in-workflows) in Temporal Cloud than using a Workflow to
-run a single Activity. If your Activity Execution is short-lived, then you will also notice lower
-latency, since there are fewer Worker round-trips than when executing the Activity in a Workflow.
+如果您需要编排多个活动，那么您应该使用 Workflow。但如果你只需要
+执行单个 Activity，那么您可以使用独立的 Activity。这将导致更少
+Temporal Cloud 中的 [可计费操作](/cloud/actions#actions-in-workflows) 比使用 Workflow
+运行单个 Activity。如果您的 Activity 执行是短暂的，那么您还会注意到较低
+延迟，因为 Worker 往返次数比在 Workflow 中执行 Activity 时少。
 
-Standalone Activities support the same retry policies and timeouts as Workflow Activities, and you
-write your Activity Functions in the same way for both. In fact, an Activity Function can be
-executed both as a Standalone Activity and as a Workflow Activity.
+独立活动支持与 Workflow 活动相同的重试策略和超时，并且您
+以相同的方式为两者编写 Activity 函数。事实上，Activity 函数可以是
+既可作为独立 Activity 又可作为 Workflow Activity 执行。
 
-## Use cases
+<a id="use-cases"></a>
+## 用例 {#use-cases}
 
-Standalone Activities can be used for [durable job processing use
-cases](/evaluate/development-production-features/job-queue) such as sending an email, processing a
-webhook, syncing data, or executing a single function reliably with built-in retries and timeouts.
+独立活动可用于 [耐用的作业处理用途
+案例](/evaluate/development-production-features/job-queue)，例如发送电子邮件、处理
+webhook、同步数据或通过内置重试和超时可靠地执行单个函数。
 
-## Key features
-- Execute any Temporal Activity as a top-level primitive without the overhead of a Workflow
-- Native async job processing model: schedule -> dispatch -> process -> result
-- No head-of-line blocking - a slow job doesn’t block the dispatch of other Tasks
-- Arbitrary length jobs with heartbeats for liveness and checkpointing progress
-- At-least-once execution by default with native retry policy and timeouts
-- At-most-once execution if retry max attempts is 1
-- Addressable - get an Activity ID / Run ID and get the result, cancel, and terminate
-- Deduplication - with conflict policy: (USE_EXISTING, …), reuse policy: (REJECT_DUPLICATES, …)
-- Separate ID space from Workflows - Standalone Activities are a different kind of top-level execution
-- Priority and fairness - multi-tenant fairness, weighted priority tiers, and safeguards against starvation of lower-weighted tasks
-- Visibility - list Activity Executions and view status, retry count, and last error
-- Manual completion by ID (or token): ignore activity return and wait for external completion
-- Activity metrics - including counts for success, failure, timeout, and cancel
-- Dual use - execute Activities within a Workflow or standalone with no Worker code changes
+<a id="key-features"></a>
+## 主要特点 {#key-features}
+- 将任何 Temporal Activity 作为顶级原语执行，而无需 Workflow 的开销
+- 本机异步作业处理模型：Schedule -> 调度 -> 处理 -> 结果
+- 无队头阻塞 - 缓慢的作业不会阻塞其他任务的调度
+- 任意长度的作业，带有心跳以确保活动和检查点进度
+- 默认情况下至少执行一次，使用本机 Retry Policy 和超时
+- 如果重试最大尝试次数为 1，则最多执行一次
+- 可寻址 - 获取 Activity ID / 运行 ID 并获取结果、取消和终止
+- 重复数据删除 - 具有冲突策略：(USE_EXISTING, …)，重用策略：(REJECT_DUPLICATES, …)
+- 与 Workflow 分开的 ID 空间 - 独立活动是一种不同类型的顶级执行
+- 优先级和公平性 - 多租户公平性、加权优先级以及防止低权重任务匮乏的保障
+- Visibility - 列出 Activity 执行并查看状态、重试计数和最后一个错误
+- 通过ID（或令牌）手动完成：忽略Activity返回并等待外部完成
+- Activity 指标 - 包括成功、失败、超时和取消的计数
+- 双重用途 - 在 Workflow 内执行活动或独立执行活动，无需更改 Worker 代码
 
-## Pre-release limitations
+<a id="pre-release-limitations"></a>
+## 预发布限制 {#pre-release-limitations}
 
-The pre-release of Standalone Activities is recommended for experimental use only and has some known limitations.
+建议仅将预发布的独立活动用于实验用途，并具有一些已知的限制。
 
-General limitations:
-- Not suitable for production use cases during Pre-release
-- Delete, pause, reset, and update options are not supported yet
-- The `TerminateExisting` conflict policy is not supported yet
+一般限制：
+- 不适合预发布期间的生产用例
+- 尚不支持删除、暂停、重置和 Update 选项
+- 尚不支持`TerminateExisting`冲突策略
 
-Temporal Cloud limitations:
-- Standalone Activities are free for evaluation purposes during Pre-release, so we reserve the right to limit usage if it exceeds a reasonable amount
-- 1 day max retention for Standalone Activities
-- We recommend enabling Standalone Activities on a new namespace for dev/test experimental use only
+Temporal Cloud 限制：
+- 预发布期间，独立活动可免费用于评估目的，因此，如果超出合理数量，我们保留限制使用的权利
+- 独立活动最多保留 1 天
+- 我们建议在新的 Namespace 上启用独立活动，仅供开发/测试实验使用
 
-## Temporal CLI support
+<a id="temporal-cli-support"></a>
+## Temporal CLI 支持 {#temporal-cli-support}
 
-A [special release of the Temporal CLI](https://github.com/temporalio/cli/releases/tag/v1.6.2-standalone-activity) supports Standalone Activities during Pre-release:
-- The `temporal activity` subcommand supports Standalone Activities with commands including: `start`, `result`, and `list`
-- Temporal Dev Server has Standalone Activities enabled by default in this special CLI release for local testing
+[Temporal CLI 特别发布](https://github.com/temporalio/cli/releases/tag/v1.6.2-standalone-activity) 在预发布期间支持独立活动：
+- `Temporal Activity` 子命令支持独立活动，命令包括：`start`、`result` 和 `list`
+- Temporal 开发服务器在此特殊 CLI 版本中默认启用独立活动以进行本地测试
 
-## Temporal Cloud support
+<a id="temporal-cloud-support"></a>
+## Temporal Cloud 支持 {#temporal-cloud-support}
 
-Contact your account team to enable Standalone Activities in Temporal Cloud as a Pre-release feature.
+请联系您的客户团队以在 Temporal Cloud 中启用独立活动作为预发布功能。
 
-## Get started
+<a id="get-started"></a>
+## 开始吧 {#get-started}
 
 :::tip RESOURCES
 
-- [Go SDK - Standalone Activities quick start and code sample](/develop/go/activities/standalone-activities)
-- [Python SDK - Standalone Activities quick start and code sample](/develop/python/activities/standalone-activities)
-- [.NET SDK - Standalone Activities quick start and code sample](/develop/dotnet/activities/standalone-activities)
+- [Go SDK - 独立活动快速入门和代码示例](/develop/go/activities/standalone-activities)
+- [Python SDK - 独立活动快速入门和代码示例](/develop/python/activities/standalone-activities)
+- [.NET SDK - 独立活动快速入门和代码示例](/develop/dotnet/activities/standalone-activities)
 
   :::

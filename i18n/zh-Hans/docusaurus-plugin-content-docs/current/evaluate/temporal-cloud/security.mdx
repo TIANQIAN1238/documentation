@@ -1,0 +1,165 @@
+---
+id: security
+title: Security model - Temporal Cloud
+sidebar_label: Security model
+description: Temporal Cloud provides robust security for applications, data, and its platform with features like mTLS, client-side encryption, PrivateLink, and SOC 2 Type 2 compliance.
+slug: /cloud/security
+toc_max_heading_level: 4
+keywords:
+  - introduction
+  - security
+  - temporal cloud
+tags:
+  - Multitenancy
+  - Security
+  - Temporal Cloud
+---
+
+**What kind of security does Temporal Cloud provide?**
+
+The security model of [Temporal Cloud](/cloud) encompasses applications, data, and the Temporal Cloud platform itself.
+
+:::info General platform security
+
+For information about the general security features of Temporal, see our [Platform security page](/security).
+
+:::
+
+## Application and data {#applications-and-data}
+
+**What is the security model for applications and data in Temporal Cloud?**
+
+### Code execution boundaries
+
+Temporal Cloud provides the capabilities of Temporal Server as a managed service; it does not manage your applications or [Workers](/Workers#Worker).
+Applications and services written using [Temporal SDKs](/encyclopedia/Temporal-sdks) run in your computing environment, such as containers (Docker, Kubernetes) or virtual machines (in any hosting environment).
+You have full control over how you secure your applications and services.
+
+### Data Converter: Client-side encryption
+
+The optional [Data Conversion](/dataconversion) capability of the Temporal Platform lets you transparently encrypt data before it's sent to Temporal Cloud and decrypt it when it comes out.
+
+Data Conversion runs on your Temporal Workers and [Clients](/encyclopedia/Temporal-sdks#Temporal-client); Temporal Cloud cannot see or decrypt your data.
+If you use this feature, data stored in Temporal Cloud remains encrypted even if the service itself is compromised.
+
+By deploying a [Codec Server](/production-deployment/data-encryption) you can securely decrypt data in the [Temporal Web UI](/web-ui) without sharing encryption keys with Temporal.
+
+## The platform {#the-platform}
+
+**What is the security model for the Temporal Cloud platform?**
+
+### Namespace isolation
+
+The base unit of isolation in a Temporal environment is a [Namespace](/Namespaces).
+Each Temporal Cloud account can have multiple Namespaces, and each Namespace is isolated to ensure your workloads remain secure and performant.
+
+#### Authentication
+
+Each Namespace is secured with your choice of authentication method:
+- **mTLS certificates** - Namespace-specific X.509 certificates for mutual TLS authentication
+- **API keys** - Namespace-scoped API keys for authentication
+
+See [API Keys](/cloud/api-keys) and [mTLS Certificates](/cloud/certificates) for more details on configuring authentication for your Namespace.
+
+#### Rate limiting
+
+Temporal Cloud protects each Namespace with separate rate limits to prevent noisy neighbor problems:
+- **Actions Per Second (APS)** - Limits the rate of [actions](/best-practices/managing-aps-limits) performed in your Workflows
+- **Operations Per Second (OPS)** - Limits the rate of all [operations](/references/operation-list) that create load on Temporal Server
+
+These per-Namespace rate limits ensure that one Namespace experiencing a traffic spike cannot impact the performance or reliability of other Namespaces, whether those Namespaces belong to a single Temporal Cloud account or separate ones.
+
+See [Rate limiting](/cloud/limits) for more information about Temporal Cloud limits, and [Monitoring trends against limits](/cloud/service-health#rps-aps-rate-limits) for monitoring best practices.
+
+#### Inter-Namespace communication
+
+Namespaces are isolated by default. The only way for Workflows in one Namespace to interact with Workflows in another Namespace is through [Temporal Nexus](/Nexus), which provides controlled, secure cross-Namespace communication via Nexus Endpoints.
+
+See [Nexus Security](/Nexus/security) for details on how Nexus enables secure inter-Namespace communication.
+
+#### Logical segregation
+
+Temporal Cloud is a multi-tenant service.
+Namespaces in the same environment are logically segregated.
+Namespaces do not share data processing or data storage across regional boundaries.
+
+### Private Connectivity
+
+Temporal Cloud supports private connectivity to enable you to connect to Temporal Cloud from a secured network.
+
+See the [Connectivity](/cloud/connectivity) page for more information and details about using AWS PrivateLink and GCP Private Service Connect with Temporal Cloud.
+
+### Temporal Nexus
+
+Like Namespaces, a Nexus Endpoint is an account-scoped resource that is global within a Temporal Cloud account.
+Any Developer role (or higher) in an account, who is also a Namespace Admin on the endpoint’s target Namespace, can manage (create/Update/delete) a Nexus Endpoint.
+All users with a Read-only role (or higher) in an account, can view and browse the full list of Endpoints.
+
+Runtime access from a Workflow in a caller Namespace to a Nexus Endpoint is controlled by an allowlist policy (of caller Namespaces) for each Endpoint in the Nexus API registry.
+Workers authenticate with Temporal Cloud as they do today with mTLS certificates or API keys as allowed by the Namespace configuration.
+Nexus requests are sent from the caller’s Namespace to the handler’s Namespace over a secure multi-region mTLS Envoy mesh.
+
+对于有效负载加密，DataConverter 对 Nexus Operation 的工作方式与对 Worker 和 Temporal Cloud 之间发送的其他有效负载的工作方式相同。
+
+有关详细信息，请参阅 [Nexus 安全](/Nexus/security)。
+
+### 加密
+
+:::tip TLS vs mTLS
+
+**TLS**（传输层安全）对传输中的数据进行加密。 **mTLS**（双向 TLS）是一种身份验证方法，客户端和服务器均提供证书来验证身份。所有 Temporal Cloud 连接均使用 TLS 加密。当您选择“mTLS 身份验证”时，您选择的是如何证明您的身份，而不是您的连接是否加密。
+
+:::
+
+**传输中**：与 Temporal Cloud 的所有连接都使用 TLS 1.3 加密，无论您的身份验证方法如何（[API 密钥](/cloud/api-keys) 或 [mTLS 证书](/cloud/certificates)）。
+
+**静态**：数据存储在两个位置：Elasticsearch 实例（在 SDK 客户端、[CLI](/cloud/tcld) 或 Web UI 中过滤 Workflow 时使用）和核心 Temporal Cloud 持久层。
+两者均使用 AES-256-GCM 进行静态加密。
+
+＃＃＃ 身份
+
+对 Temporal Cloud gRPC 端点的身份验证支持两种方法：
+
+- **[API 密钥](/cloud/api-keys)**：使用不记名令牌进行基于身份的身份验证。推荐用于大多数用例。
+- **[mTLS 证书](/cloud/certificates)**：使用 CA 颁发的客户端证书进行相互 TLS 身份验证。
+
+两种方法都提供与 Temporal Cloud 的安全、加密连接。根据您组织的安全要求和密钥管理首选项进行选择。
+
+有关 Temporal Cloud UI 的用户身份验证，请参阅[如何使用 Temporal Cloud 管理 SAML 身份验证](/cloud/saml)。
+
+＃＃＃ 使用权
+
+授权在帐户和 Namespace 级别进行管理。
+用户和系统被分配一个或多个预配置的角色。
+用户拥有管理员、开发人员和只读用户的[帐户级别角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。
+系统和应用程序进程拥有各自不同的角色。
+
+### 监控
+
+除了针对操作和可用性要求进行广泛的系统监控之外，我们还收集和监控来自 AWS 环境的审核日志以及对 gRPC API（由 SDK、CLI 和 Web UI 使用）的所有调用。
+这些审核日志可用于提取到您的安全监控系统中。
+
+### 测试
+
+我们与第三方签订合同，每年进行一次全面的渗透测试（社会工程除外）。
+此外，我们还会根据需要执行有针对性的第三方和内部测试，例如在发布重要功能时。
+
+### 内部 Temporal 访问
+
+我们将生产系统的访问权限限制为维护我们生产基础设施的一小部分员工。
+我们记录对生产系统的所有访问；不允许共享帐户。
+通过 SSO 访问所有生产系统，并启用 MFA。
+
+仅在有限的时间内授予对我们的云环境的访问权限，最多 8 小时。
+（有关更多信息，请参阅博客文章 [在 Temporal 上推出访问时间](https://Temporal.io/blog/rolling-out-access-hours-at-Temporal)。）
+
+所有 Temporal 工程系统均由 GitHub 凭据保护，这需要 Temporal GitHub 组织的成员资格和 MFA。
+访问补助金每季度审查一次。
+
+1. **加载租户配置** - 检索此 XPROT035X 应处理的租户列表（从配置文件、API 或数据库）
+2. **创建 [XPROT022Xs](/task-queue)** - 对于每个租户，生成唯一的 XPROT022X 名称（例如 `customer-{tenant-id}`）
+3. **注册 [XPROT027Xs](/XPROT027Xs) 和 [Activities](/activities)** - 注册您的 XPROT027X 和 XPROT028X 实现一次，传递租户特定的 XPROT022X 名称
+4. **轮询多个 XPROT022X** - 单个 XPROT035X 进程轮询所有分配的租户 XPROT022X
+
+Temporal Technologies 经过 SOC 2 Type 2 认证，符合 GDPR 和 HIPAA 法规。
+可通过我们的[联系](https://pages.Temporal.io/contact-us)页面请求进行合规审核。

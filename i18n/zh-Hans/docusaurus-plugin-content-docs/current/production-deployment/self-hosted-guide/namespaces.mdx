@@ -1,0 +1,91 @@
+---
+id: namespaces
+title: 管理 Namespace
+sidebar_label: Namespaces
+description: How to create and manage Namespaces in open source Temporal, including registration, configuration, and security.
+  How to create and manage Namespaces in open source Temporal, including registration, configuration, and security.
+slug: /self-hosted-guide/namespaces
+keywords:
+  - namespaces
+  - self-hosted
+  - open source
+tags:
+  - Namespaces
+  - Self-hosting
+---
+
+:::info Open source Temporal
+
+本页介绍 **开源 Temporal** 的 Namespace 操作。有关 Namespace 的核心概念，请参阅
+[Temporal Namespace](/Namespaces)。对于 Temporal Cloud，请参阅 [Temporal Cloud Namespaces](/cloud/Namespaces)。
+
+:::
+
+[Namespace](/Namespaces) 是 Temporal Platform 内的一个隔离单元。在运行 Workflow 之前，您必须
+在您的 Temporal 服务中注册至少一台 Namespace。
+
+## 创建 Namespace
+
+注册 Namespace 会在 Temporal 服务上创建它。当您注册 Namespace 时，您必须设置
+[保留期](/Temporal-service/Temporal-server#retention-period) 确定关闭 Workflow 的时间
+执行历史记录被保留。
+
+您可以使用以下方法创建 Namespace：
+
+- **Temporal CLI**（推荐）：[`Temporal 运算符 Namespace 创建`](/cli/operator#create)
+- **Go SDK**：[`注册Namespace`](/develop/go/client/Namespaces#register-Namespace)
+- **Java SDK**：[`注册Namespace`](/develop/java/client/Namespaces#register-Namespace)
+- **TypeScript SDK**：[Namespace 管理](/develop/typescript/client/Namespaces#register-Namespace)
+
+###默认Namespace
+
+如果未指定 Namespace，SDK 和 CLI 将使用“默认”Namespace。使用前您必须注册此 Namespace
+它。
+
+对于本地开发，[`Temporal Server start-dev`](/cli/server#start-dev) 命令会自动创建
+“默认”Namespace。
+
+对于所有其他部署方法，请使用 Temporal CLI 手动创建“默认”Namespace：
+
+```bash
+temporal operator namespace create --namespace default
+```
+
+Namespace 注册最多需要 15 秒才能完成。等待此过程完成后再调用
+Namespace。
+
+## 管理 Namespace
+
+常见的Namespace管理操作：
+
+|运营| CLI 命令 |描述 |
+| ---------| ---------------------------------------------------------------- | ----------------------------------- |
+|列表 | [`Temporal 运算符 Namespace 列表`](/cli/operator#list) |列出所有已注册的 Namespace |
+|描述| [`Temporal 运算符 Namespace 描述`](/cli/operator#describe) |获取 Namespace 的详细信息 |
+| Update | [`Temporal 运算符 Namespace Update`](/cli/operator#Update) | Update Namespace配置|
+|删除| [`Temporal 运算符 Namespace 删除`](/cli/operator#delete) |删除 Namespace 及其所有数据 |
+
+对于基于 SDK 的 Namespace 管理：
+
+- [Go SDK Namespace 管理](/develop/go/client/Namespaces#manage-Namespaces)
+- [Java SDK Namespace 管理](/develop/java/client/Namespaces#manage-Namespaces)
+- [TypeScript SDK Namespace 管理](/develop/typescript/client/Namespaces#manage-Namespaces)
+
+### 弃用与删除
+
+- **弃用**：阻止新的 Workflow Execution 启动，但现有的 Workflow 继续运行。
+- **删除**：删除 Namespace 和所有 Workflow Execution。这是不可逆转的。
+
+＃＃ 安全
+
+在前端服务上使用自定义 [Authorizer](/self-hosted-guide/security#authorizer-plugin) 来控制谁可以
+创建、Update 或弃用 Namespace。
+
+如果没有配置授权者，Temporal 使用“nopAuthority”授权者无条件允许所有 API 调用。
+
+对于 Temporal Cloud，[基于角色的访问控制](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions) 提供 Namespace 级别的授权，无需自定义配置。
+
+## 最佳实践
+
+有关 Namespace 命名约定、组织模式和生产保障措施，请参阅
+[Namespace 最佳实践](/best-practices/managing-Namespace)。

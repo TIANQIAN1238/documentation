@@ -1,8 +1,8 @@
 ---
 id: quickstart
-title: Nexus .NET Quickstart
-sidebar_label: Quickstart
-description: Build a Nexus Service that wraps an existing Temporal Workflow using the .NET SDK
+title: "Nexus .NET 快速入门"
+sidebar_label: "快速入门"
+description: "使用 .NET SDK 构建一个 Nexus 服务来包装现有的 Temporal Workflow"
 keywords:
   - nexus
   - dotnet
@@ -18,36 +18,38 @@ hide_table_of_contents: true
 
 import { SetupSteps, SetupStep, CodeSnippet } from '@site/src/components/elements/SetupSteps';
 
-# Nexus .NET Quickstart
+<a id="nexus-net-quickstart"></a>
+# Nexus .NET 快速入门 {#nexus-net-quickstart}
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal .NET SDK support for Nexus is in [Public Preview](/evaluate/development-production-features/release-stages#public-preview).
+Temporal .NET SDK 对 Nexus 的支持位于 [公开预览](/evaluate/development-production-features/release-stages#public-preview) 中。
 
 :::
 
-[Temporal Nexus](/evaluate/nexus) connects Temporal Applications within and across Namespaces using a Nexus Endpoint, a Nexus Service contract, and Nexus Operations. Build a Nexus Service that wraps an existing Temporal Workflow, then invoke it from a caller Workflow.
+[Temporal Nexus](/evaluate/nexus) 使用 Nexus 端点、Nexus 服务合同和 Nexus 操作连接 Namespace 内部和之间的 Temporal 应用程序。构建一个包装现有 Temporal Workflow 的 Nexus 服务，然后从调用者 Workflow 调用它。
 
 :::info NEW TO NEXUS?
 
-This page will help you get a working sample running in .NET.
+此页面将帮助您获得在 .NET 中运行的工作示例。
 
-To evaluate whether Nexus fits your use case, see the [evaluation guide](/evaluate/nexus) and to learn more about Nexus features, click [here](/nexus).
+要评估 Nexus 是否适合您的使用案例，请参阅 [评估指南](/evaluate/nexus)，要了解有关 Nexus 功能的更多信息，请单击 [这里](/nexus)。
 
 :::
 
-**Prerequisites:** Complete the [.NET SDK Quickstart](/develop/dotnet/set-up-your-local-dotnet) first.
-You should have `SayHelloWorkflow`, `MyActivities`, and a `Worker` project from that guide.
+**先决条件：** 首先完成 [.NET SDK 快速入门](/develop/dotnet/set-up-your-local-dotnet)。
+您应该拥有该指南中的 `SayHelloWorkflow`、`MyActivities` 和 `Worker` 项目。
 
-## What you'll build
+<a id="what-youll-build"></a>
+## 你将构建什么 {#what-youll-build}
 
-You have `SayHelloWorkflow` running in the `default` Namespace.
+您有 `SayHelloWorkflow` 在 `default` Namespace 中运行。
 
-By the end of this guide:
+在本指南结束时：
 
-1. A Nexus Service will expose `SayHelloWorkflow` as an Operation.
-2. A second Namespace will contain a Workflow that calls that Operation.
-3. The caller Workflow will get back `"Hello, Temporal!"` — the same result, but across Namespaces.
+1. Nexus 服务将 `SayHelloWorkflow` 公开为操作。
+2. 第二个 Namespace 将包含调用该操作的 Workflow。
+3. 调用者 Workflow 将返回 `"Hello, Temporal!"` — 相同的结果，但跨越 Namespace。
 
 <SetupSteps>
 
@@ -74,13 +76,14 @@ public interface ISayHelloNexusService
 </>
 }>
 
-## 1. Define the Nexus Service
+<a id="1-define-the-nexus-service"></a>
+## 1.定义Nexus服务 {#1-define-the-nexus-service}
 
-Create a file called `ISayHelloNexusService.cs` in the `Workflow` project.
+在 `Workflow` 项目中创建一个名为 `ISayHelloNexusService.cs` 的文件。
 
-The `[NexusService]` attribute on an interface defines the Nexus Service contract. `[NexusOperation]` marks each method that callers can invoke. The `EndpointName` static field is shared between the handler and caller to keep the endpoint name in one place.
+接口上的 `[NexusService]` 属性定义 Nexus 服务契约。 `[NexusOperation]` 标记调用者可以调用的每个方法。 `EndpointName` 静态字段在处理程序和调用者之间共享，以将端点名称保留在一处。
 
-`SayHelloWorkflow` returns `string`, so the operation output type is `string`. The input is a `record` carrying the workflow argument.
+`SayHelloWorkflow` 返回 `string`，因此运算输出类型为 `string`。输入是携带 Workflow 参数的 `record`。
 
 </SetupStep>
 
@@ -109,15 +112,16 @@ public class SayHelloNexusServiceHandler
 </>
 }>
 
-## 2. Define the Nexus Operation handler
+<a id="2-define-the-nexus-operation-handler"></a>
+## 2. 定义 Nexus 操作处理程序 {#2-define-the-nexus-operation-handler}
 
-Create a file called `SayHelloNexusServiceHandler.cs` in the `Workflow` project.
+在 `Workflow` 项目中创建一个名为 `SayHelloNexusServiceHandler.cs` 的文件。
 
-`[NexusServiceHandler]` links this class to the `ISayHelloNexusService` contract. Each `[NexusOperationHandler]` method returns an `IOperationHandler` that describes how the operation runs.
+`[NexusServiceHandler]` 将该类链接到 `ISayHelloNexusService` 合约。每个 `[NexusOperationHandler]` 方法都会返回一个描述操作如何运行的 `IOperationHandler`。
 
-`WorkflowRunOperationHandler.FromHandleFactory` creates an asynchronous operation backed by a Workflow run. The `input.Name` bridges the Nexus `MyInput` record to `SayHelloWorkflow`'s `string` parameter.
+`WorkflowRunOperationHandler.FromHandleFactory` 创建由 Workflow 运行支持的异步操作。 `input.Name` 将 Nexus `MyInput` 记录桥接到 `SayHelloWorkflow` 的 `string` 参数。
 
-Using `context.HandlerContext.RequestId` as the Workflow ID ensures that retried Nexus operation requests are deduplicated.
+使用 `context.HandlerContext.RequestId` 作为 Workflow ID 可确保对重试的 Nexus 操作请求进行重复数据删除。
 
 </SetupStep>
 
@@ -138,11 +142,12 @@ using var worker = new TemporalWorker(
 </>
 }>
 
-## 3. Register the Nexus Service handler in a Worker
+<a id="3-register-the-nexus-service-handler-in-a-worker"></a>
+## 3. 在 Worker 中注册 Nexus 服务处理程序 {#3-register-the-nexus-service-handler-in-a-worker}
 
-Update `Worker/Program.cs` to register the Nexus Service handler alongside the existing Workflow and Activity registrations.
+Update `Worker/Program.cs` 与现有的 Workflow 和 Activity 注册一起注册 Nexus 服务处理程序。
 
-A Worker will only handle incoming Nexus requests if the Nexus Service handlers are registered. Like `.AddActivity()`, `.AddNexusService()` takes an instance — both register concrete objects that the Worker dispatches work to.
+如果注册了 Nexus 服务处理程序，Worker 将仅处理传入的 Nexus 请求。与 `.AddActivity()` 一样，`.AddNexusService()` 也采用一个实例 - 两者都注册 Worker 将工作分派到的具体对象。
 
 </SetupStep>
 
@@ -173,13 +178,14 @@ public class CallerWorkflow
 </>
 }>
 
-## 4. Develop the caller Workflow
+<a id="4-develop-the-caller-workflow"></a>
+## 4.开发调用者Workflow {#4-develop-the-caller-workflow}
 
-Create a file called `CallerWorkflow.cs` in the `Workflow` project.
+在 `Workflow` 项目中创建一个名为 `CallerWorkflow.cs` 的文件。
 
-The caller Workflow uses `Workflow.CreateNexusWorkflowClient<T>()` to get a typed client bound to the Nexus Endpoint. `ExecuteNexusOperationAsync` starts the operation and waits for the result.
+调用者 Workflow 使用 `Workflow.CreateNexusWorkflowClient<T>()` 获取绑定到 Nexus 端点的类型化客户端。 `ExecuteNexusOperationAsync`开始运算并等待结果。
 
-The caller only depends on the Service contract (`ISayHelloNexusService`), not the handler implementation. This decoupling is what allows the caller and handler to live in separate Namespaces or even separate codebases.
+调用者仅依赖于服务合约（`ISayHelloNexusService`），而不依赖于处理程序实现。这种解耦允许调用者和处理程序位于单独的 Namespace 甚至单独的代码库中。
 
 </SetupStep>
 
@@ -200,13 +206,14 @@ The caller only depends on the Service contract (`ISayHelloNexusService`), not t
 </>
 }>
 
-## 5. Create the caller Namespace and Nexus Endpoint
+<a id="5-create-the-caller-namespace-and-nexus-endpoint"></a>
+## 5. 创建调用者 Namespace 和 Nexus 端点 {#5-create-the-caller-namespace-and-nexus-endpoint}
 
-Before running the application, create a caller Namespace and a Nexus Endpoint to route requests from the caller to the handler. The handler uses the `default` Namespace that was created when you started the dev server.
+在运行应用程序之前，创建一个调用者 Namespace 和一个 Nexus 端点以将请求从调用者路由到处理程序。该处理程序使用启动开发服务器时创建的 `default` Namespace。
 
-Namespaces provide isolation between the caller and handler sides. The Nexus Endpoint acts as a routing layer that connects the caller Namespace to the handler's target Namespace and Task Queue. The endpoint name must match the `EndpointName` constant defined in Step 1.
+Namespace 在调用方和处理程序方之间提供隔离。 Nexus 端点充当路由层，将调用方 Namespace 连接到处理程序的目标 Namespace 和 Task Queue。端点名称必须与步骤 1 中定义的 `EndpointName` 常量匹配。
 
-Make sure your local Temporal dev server is running (`temporal server start-dev`).
+确保您的本地 Temporal 开发服务器正在运行 (`Temporal Server start-dev`)。
 
 </SetupStep>
 
@@ -225,11 +232,12 @@ dotnet add CallerStarter/CallerStarter.csproj package Temporalio`}
 </>
 }>
 
-## 6. Add the caller project
+<a id="6-add-the-caller-project"></a>
+## 6.添加调用者项目 {#6-add-the-caller-project}
 
-Create a `CallerStarter` console project that starts a caller Worker and executes the Workflow.
+创建一个 `CallerStarter` 控制台项目，启动调用者 Worker 并执行 Workflow。
 
-The commands on the right create a new console project, add it to the solution, reference the Workflow project, and add the Temporalio package.
+右侧的命令创建一个新的控制台项目，将其添加到解决方案中，引用 Workflow 项目，然后添加 Temporalio 包。
 
 </SetupStep>
 
@@ -272,11 +280,12 @@ try { await workerTask; } catch (OperationCanceledException) { }`}
 </>
 }>
 
-## 7. Create the caller starter
+<a id="7-create-the-caller-starter"></a>
+## 7. 创建调用者启动程序 {#7-create-the-caller-starter}
 
-Create the `CallerStarter/Program.cs` file with the code on the right.
+使用右侧的代码创建 `CallerStarter/Program.cs` 文件。
 
-This brings everything together: the caller Worker hosts `CallerWorkflow`, which uses the Nexus client to invoke `SayHello` on the handler side. The full request flows from the caller Workflow, through the Nexus Endpoint, to the handler Worker running `SayHelloWorkflow`, and back to the caller.
+这将所有内容结合在一起：调用者 Worker 托管 `CallerWorkflow`，它使用 Nexus 客户端在处理程序端调用 `SayHello`。完整请求从调用者 Workflow 通过 Nexus 端点流向运行 `SayHelloWorkflow` 的处理程序 Worker，然后返回调用者。
 
 </SetupStep>
 
@@ -294,31 +303,33 @@ This brings everything together: the caller Worker hosts `CallerWorkflow`, which
 </>
 }>
 
-## 8. Run and verify
+<a id="8-run-and-verify"></a>
+## 8.运行并验证 {#8-run-and-verify}
 
-Run the application using the commands on the right.
+使用右侧的命令运行应用程序。
 
-You should see:
+你应该看到：
 
 ```
 Workflow result: Hello, Temporal!
 ```
 
-Open the [Temporal Web UI](http://localhost:8233) and find the `CallerWorkflow` execution in the `my-caller-namespace` Namespace. You should see `NexusOperationScheduled`, `NexusOperationStarted`, and `NexusOperationCompleted` events in the Workflow history.
+打开[Temporal 网页用户界面](http://localhost:8233)，在`my-caller-Namespace` Namespace中找到`CallerWorkflow`执行。您应该在 Workflow 历史记录中看到 `NexusOperationScheduled`、`NexusOperationStarted` 和 `NexusOperationCompleted` 事件。
 
 </SetupStep>
 
 </SetupSteps>
 
-## Next Steps
+<a id="next-steps"></a>
+## 后续步骤 {#next-steps}
 
-Now that you have a working Nexus Service, here are some resources to deepen your understanding:
+现在您已经有了一个正在运行的 Nexus 服务，这里有一些资源可以加深您的理解：
 
-- **[.NET Nexus Feature Guide](/develop/dotnet/nexus)**: Covers synchronous and asynchronous Operations, error handling, cancellation, and cross-Namespace calls.
-- **[Nexus Operations](/nexus/operations)**: The full Operation lifecycle, including retries, timeouts, and execution semantics.
-- **[Nexus Services](/nexus/services)**: Designing Service contracts and registering multiple Services per Worker.
-- **[Nexus Patterns](/nexus/patterns)**: Comparing the collocated and router-queue deployment patterns.
-- **[Error Handling in Nexus](/nexus/error-handling)**: Handling retryable and non-retryable errors across caller and handler boundaries.
-- **[Execution Debugging](/nexus/execution-debugging)**: Bi-directional linking and OpenTelemetry tracing for debugging Nexus calls.
-- **[Nexus Endpoints](/nexus/endpoints)**: Managing Endpoints and understanding how they route requests.
-- **[Temporal Nexus on Temporal Cloud](/cloud/nexus)**: Deploying Nexus in a production Temporal Cloud environment with built-in access controls and multi-region connectivity.
+- **[.NET Nexus 功能指南](/develop/dotnet/nexus)**：涵盖同步和异步操作、错误处理、取消和跨 Namespace 调用。
+- **[Nexus 操作](/nexus/operations)**：完整的操作生命周期，包括重试、超时和执行语义。
+- **[Nexus 服务](/nexus/services)**：根据 Worker 设计服务合同并注册多个服务。
+- **[Nexus 图案](/nexus/patterns)**：比较并置部署模式和路由器队列部署模式。
+- **[Nexus 中的错误处理](/nexus/error-handling)**：跨调用者和处理程序边界处理可重试和不可重试的错误。
+- **[执行调试](/nexus/execution-debugging)**：用于调试 Nexus 调用的双向链接和 OpenTelemetry 跟踪。
+- **[Nexus 端点](/nexus/endpoints)**：管理端点并了解它们如何路由请求。
+- **[Temporal Nexus 上 Temporal Cloud](/cloud/nexus)**：在具有内置访问控制和多区域连接的生产 Temporal Cloud 环境中部署 Nexus。

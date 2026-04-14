@@ -1,0 +1,51 @@
+---
+id: notifications 
+title: 通知
+sidebar_label: 通知
+description: 接收有关 Temporal Cloud 的 Update，包括证书何时到期、对 Update 计费以及故障转移何时完成。
+slug: /cloud/notifications
+toc_max_heading_level: 4
+keywords:
+  - notification
+  - explanation
+  - how-to
+  - operations
+  - temporal cloud
+  - email
+tags:
+  - Notification
+  - Security
+  - Temporal Cloud
+  - Billing
+---
+
+## 获取有关 Temporal Cloud 状态的通知 {#cloud-status}
+
+如果发生事件，Temporal Update 会显示 [Temporal Cloud 状态页面](https://status.Temporal.io/)，其中包含重要的 Update。
+用户可以通过访问此页面以自己喜欢的模式（例如电子邮件、Slack、短信等）订阅 Update。
+
+## 获取有关管理事件的通知 {#admin-notifications}
+
+Temporal Cloud 发送电子邮件以通知用户重要的管理事件。
+
+|发送电子邮件的原因 |谁收到电子邮件 |
+|------------------ | --------------------------------|
+|证书 15 天后到期 |全局管理员、Namespace 管理员、帐户所有者 |
+|证书 10 天后到期 |全局管理员、Namespace 管理员、帐户所有者 |
+|证书 5 天后过期 |全局管理员、Namespace 管理员、帐户所有者 |
+| API 密钥 30 天后过期 |全局管理员、帐户所有者、个人用户（如果 API 密钥有所有者）|
+| API 密钥 20 天后过期 |全局管理员、帐户所有者、个人用户（如果 API 密钥有所有者）|
+| API 密钥 10 天后过期 |全局管理员、帐户所有者、个人用户（如果 API 密钥有所有者）|
+|注册积分将在 30 天后过期 |帐户所有者、财务管理员 |
+|注册积分将在 14 天后过期 |帐户所有者、财务管理员 |
+|注册积分将于 7 天后过期 |帐户所有者、财务管理员 |
+|注册积分将在 1 天后过期 |帐户所有者、财务管理员 |
+|注册积分已消耗 50% |帐户所有者、财务管理员 |
+|注册积分已消耗 90% |帐户所有者、财务管理员 |
+|帐户计划类型已更改 |全局管理员、账户所有者、财务管理员 |
+| Namespace 故障转移已完成/失败 |全局管理员、Namespace 管理员、帐户所有者 |
+
+为确保您收到电子邮件通知，请配置垃圾邮件过滤器以允许来自
+`noreply@Temporal.io`。
+
+要提供有关通知或请求更改的反馈，请[创建支持票证](/cloud/support#support-ticket)。

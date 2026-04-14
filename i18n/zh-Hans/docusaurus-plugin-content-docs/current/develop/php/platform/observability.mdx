@@ -1,0 +1,203 @@
+---
+id: observability
+title: 可观测性 - PHP SDK
+sidebar_label: 可观察性
+description: 探索 Temporal 开发人员可观察性指南，了解 Visibility API 和 Search Attribute，帮助您高效管理 Workflow Execution。
+toc_max_heading_level: 4
+keywords:
+  - guide-context
+  - php
+  - logging and metrics
+  - search attribute
+  - search attributes
+  - upsert search attributes
+  - workflow
+tags:
+  - Observability
+  - Search Attributes
+  - Workflows
+  - PHP SDK
+  - Temporal SDKs
+---
+
+Temporal 开发人员指南的可观察性部分涵盖了查看 [Temporal 应用程序](/Temporal#Temporal-应用程序) 当前状态的多种方法，即查看 [Workflow Executions](/Workflow-执行) 被跟踪的方法[Temporal Platform](/Temporal#Temporal-platform) 以及任何指定 Workflow Execution 当前或执行点的状态。
+
+本节介绍与查看应用程序状态相关的功能，包括：
+
+- [从 Workflow 登录](#logging)
+- [Visibility](#Visibility)
+
+## 从 Workflow 记录 {#logging}
+
+日志记录使您能够在代码执行期间记录关键信息。
+记录器创建审核跟踪并捕获有关 Workflow 操作的信息。
+适当的日志记录级别取决于您的具体需求。
+在开发或故障排除期间，您可能会使用调试甚至跟踪。
+在生产中，您可以使用 info 或 warn 来避免日志量过多。
+
+记录器支持以下日志记录级别：
+
+|水平|使用 |
+| -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| '追踪' |最详细的日志记录级别，用于非常细粒度的信息。                               |
+| `调试` |详细信息，通常可用于调试目的。                                            |
+| `信息` |有关应用程序操作的一般信息。                                                    |
+| `警告` |指示不会阻止应用程序运行的潜在有害情况或小问题。 |
+| `错误` |指示可能仍允许应用程序继续运行的错误情况。                    |
+
+心跳可以包含描述 XPROT028X 当前进度的“详细信息”字段。
+如果 XPROT028X 重试，XPROT028X 可以访问发送到 Temporal 服务的最后一次心跳的“详细信息”。
+
+要在 Workflow 代码中获取 PSR-3 兼容记录器，请使用 [`Workflow::getLogger()`](https://php.Temporal.io/classes/Temporal-Workflow.html#method_getLogger) 方法。
+
+```php
+use Temporal\Workflow;
+
+#[Workflow\WorkflowInterface]
+class MyWorkflow
+{
+    #[Workflow\WorkflowMethod]
+    public function execute(string $param): \Generator
+    {
+        Workflow::getLogger()->info('Workflow started', ['parameter' => $param]);
+
+        // Your workflow implementation
+
+        Workflow::getLogger()->info('Workflow completed');
+        return 'Done';
+    }
+}
+```
+
+Workflow 记录器会自动使用当前的 Task Queue 名称来丰富日志上下文。
+
+除非将 Worker 选项设置为 true，否则重播模式下的日志将被忽略。
+
+```php
+$factory = WorkerFactory::create();
+$worker = $factory->newWorker('your-task-queue', WorkerOptions::new()
+    ->withEnableLoggingInReplay(true)
+);
+```
+
+### 默认记录器
+
+默认情况下，PHP SDK 使用 StderrLogger 将日志消息输出到标准错误流。
+这些消息由 RoadRunner 自动捕获，并以 INFO 级别合并到其日志系统中，确保在开发和生产环境中正确收集日志。
+有关 RoadRunner 日志记录功能的更多详细信息，请参阅 [RoadRunner Logger 文档](https://docs.roadrunner.dev/docs/logging-and-observability/logger)。
+
+### 如何提供自定义记录器 {#custom-logger}
+
+您可以在创建 Worker 时设置自定义 PSR-3 兼容记录器：
+
+```php
+$myLogger = new MyLogger();
+
+$workerFactory = WorkerFactory::create(converter: $converter);
+$worker = $workerFactory->newWorker(
+    taskQueue: 'my-task-queue',
+    logger: $myLogger,
+);
+```
+
+## Visibility API {#Visibility}
+
+Temporal Platform 中的术语 Visibility 是指使操作员能够查看 Temporal 服务中当前存在的 Workflow Execution 的子系统和 API。
+
+### 如何使用 Search Attributes {#search-attributes}
+
+检索 Workflow Execution 的典型方法是通过其 Workflow Id。
+
+但是，有时您会希望根据另一属性检索一个或多个 Workflow Execution。例如，假设您想要获取某个时间范围内失败的某种类型的所有 Workflow Execution，以便您可以使用相同的参数启动新的 Workflow Execution。
+
+您可以使用 [Search Attributes](/search-attribute) 来执行此操作。
+
+- [默认 Search Attributes](/search-attribute#default-search-attribute) 像 `WorkflowType`、`StartTime` 和 `ExecutionStatus` 会自动添加到 Workflow Executions。
+- [自定义 Search Attributes](/search-attribute#custom-search-attribute) 可以包含自己的特定于域的数据（例如“customerId”或“numItems”）。
+
+使用定制 Search Attribute 的步骤如下：
+
+- 使用“Temporal 运算符搜索属性创建”或云 UI 在 Temporal 服务中创建新的 Search Attribute。
+- 为 Workflow Execution 设置 Search Attribute 的值：
+  - 在客户端上，在启动执行时将其作为选项包含在内。
+  - 在 Workflow 中通过调用 `UpsertSearchAttributes`。
+- 读取Search Attribute的值：
+  - 在客户端上调用“DescribeWorkflow”。
+  - 在 Workflow 中，通过查看“WorkflowInfo”。
+- Query Workflow Execution 由 Search Attribute 使用 [列表过滤器](/list-filter)：
+  - [在 Temporal CLI 中](/cli/Workflow#list)。
+  - 在代码中调用“ListWorkflowExecutions”。
+
+以下是 Query Workflow Executions 的操作方法：
+
+在客户端上使用 [listWorkflowExecutions()](https://php.Temporal.io/classes/Temporal-Client-WorkflowClientInterface.html#method_listWorkflowExecutions) 方法，并传递一个 [List Filter](/list-filter) 作为参数来过滤列出的 Workflow。
+结果是一个可迭代的分页器，因此您可以使用“foreach”循环来迭代结果。
+
+```php
+$paginator = $workflowClient->listWorkflowExecutions('WorkflowType="GreetingWorkflow"');
+
+foreach ($paginator as $info) {
+    echo "Workflow ID: {$info->execution->getID()}\n";
+}
+```
+
+### 如何设置自定义 Search Attributes {#custom-search-attributes}
+
+在 Temporal 服务中创建自定义 Search Attribute 后（使用“Temporal 运算符搜索属性创建”或云 UI），您可以在启动 Workflow 时设置自定义 Search Attribute 的值。
+
+要设置自定义 Search Attribute，请对 Workflow 存根使用“WorkflowOptions”上的“withTypedSearchAttributes”方法。
+类型化 Search Attribute 是一个“TypedSearchAttributes”集合。
+
+```php
+$keyDestinationTime = SearchAttributeKey::forDatetime('DestinationTime');
+$keyOrderId = SearchAttributeKey::forKeyword('OrderId');
+
+$workflow = $workflowClient->newWorkflowStub(
+    OrderWorkflowInterface::class,
+    WorkflowOptions::new()
+        ->withWorkflowExecutionTimeout('10 minutes')
+        ->withTypedSearchAttributes(
+            TypedSearchAttributes::empty()
+                ->withValue($keyOrderId, $orderid)
+                ->withValue($keyDestinationTime, new \DateTimeImmutable('2028-11-05T00:10:07Z'))
+        ),
+);
+```
+
+### 如何更新插入 Search Attributes {#upsert-search-attributes}
+
+在 Workflow 代码中，您可以使用 [`upsertTypedSearchAttributes`](https://php.Temporal.io/classes/Temporal-Workflow.html#method_upsertTypedSearchAttributes) 动态添加 Update Search Attribute。
+此方法对于属性需要根据内部逻辑或外部事件更改的 Workflow 特别有用。
+
+```php
+#[Workflow\UpdateMethod]
+public function postponeDestinationTime(\DateInterval $interval)
+{
+    // Get the key for the DestinationTime attribute
+    $keyDestinationTime = SearchAttributeKey::forDatetime('DestinationTime');
+
+    /** @var DateTimeImmutable $destinationTime */
+    $destinationTime = Workflow::getInfo()->typedSearchAttributes->get($keyDestinationTime);
+
+    Workflow::upsertTypedSearchAttributes(
+        $keyDestinationTime->valueSet($destinationTime->add($interval)),
+    );
+}
+```
+
+### 如何从 Workflow 中删除 Search Attribute {#remove-search-attribute}
+
+要删除之前设置的 Search Attribute，请将其设置为空地图。
+
+```php
+#[Workflow\UpdateMethod]
+public function unsetDestinationTime()
+{
+    // Get the key for the DestinationTime attribute
+    $keyDestinationTime = SearchAttributeKey::forDatetime('DestinationTime');
+
+    Workflow::upsertTypedSearchAttributes(
+        $keyDestinationTime->valueUnset(),
+    );
+}
+```

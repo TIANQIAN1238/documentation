@@ -1,8 +1,8 @@
 ---
 id: converters-and-encryption
-title: Converters and encryption - .NET SDK
-sidebar_label: Converters and encryption
-description: Use a custom Payload Codec and Converter in the .NET SDK to modify Temporal Data Conversion behavior, including examples for encryption and camel case conversion.
+title: 转换器与加密 - .NET SDK
+sidebar_label: 转换器与加密
+description: 在 .NET SDK 中使用自定义 Payload Codec 和 Converter 来修改 Temporal Data Conversion 行为，包括加密和驼峰命名转换示例。
 keywords:
   - sdk
   - dotnet
@@ -20,27 +20,17 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-Temporal's security model is designed around client-side encryption of Payloads.
-A client may encrypt Payloads before sending them to the server, and decrypt them after receiving them from the server.
-This provides a high degree of confidentiality because the Temporal Server itself has absolutely no knowledge of the actual data.
-It also gives implementers more power and more freedom regarding which client is able to read which data -- they can control access with keys, algorithms, or other security measures.
+Temporal 的安全模型围绕 Payload 的客户端加密设计。客户端可以在将 Payload 发送到服务器之前对其进行加密，并在从服务器接收后对其进行解密。这提供了高度的机密性，因为 Temporal Server 本身对实际数据完全不知情。它还为实现者提供了更多关于哪个客户端能够读取哪些数据的权力和自由——他们可以通过密钥、算法或其他安全措施控制访问。
 
-A Temporal developer adds client-side encryption of Payloads by providing a Custom Payload Codec to its Client.
-Depending on business needs, a complete implementation of Payload Encryption may involve selecting appropriate encryption algorithms, managing encryption keys, restricting a subset of their users from viewing payload output, or a combination of these.
+Temporal 开发者通过向其 Client 提供自定义 Payload Codec 来添加 Payload 的客户端加密。根据业务需求，Payload 加密的完整实现可能涉及选择合适的加密算法、管理加密密钥、限制部分用户查看 Payload 输出，或这些措施的组合。
 
-The server itself never adds encryption over Payloads.
-Therefore, unless client-side encryption is implemented, Payload data will be persisted in non-encrypted form to the data store, and any Client that can make requests to a Temporal namespace (including the Temporal UI and CLI) will be able to read Payloads contained in Workflows.
-When working with sensitive data, you should always implement Payload encryption.
+服务器本身从不对 Payload 添加加密。因此，除非实现了客户端加密，否则 Payload 数据将以非加密形式持久化到数据存储中，任何能够向 Temporal Namespace 发出请求的 Client（包括 Temporal UI 和 CLI）都能读取 Workflow 中包含的 Payload。在处理敏感数据时，应始终实现 Payload 加密。
 
-## Custom Payload Codec {#custom-payload-codec}
+## 自定义 Payload Codec {#custom-payload-codec}
 
-Custom Data Converters can change the default Temporal Data Conversion behavior by adding hooks, sending payloads to external storage, or performing different encoding steps.
-If you only need to change the encoding performed on your payloads -- by adding compression or encryption -- you can override the default Data Converter to use a new `PayloadCodec`.
+自定义 Data Converter 可以通过添加钩子、将 Payload 发送到外部存储或执行不同的编码步骤来更改默认的 Temporal Data Conversion 行为。如果只需要更改对 Payload 执行的编码——通过添加压缩或加密——可以覆盖默认的 Data Converter 以使用新的 `PayloadCodec`。
 
-The `IPayloadCodec` needs to implement `EncodeAsync()` and `DecodeAsync()` methods.
-These should convert the given payloads as needed into new payloads, using the `"encoding"` metadata field.
-Do not mutate the existing payloads.
-Here is an example of an encryption codec that just uses base64 in each direction:
+`IPayloadCodec` 需要实现 `EncodeAsync()` 和 `DecodeAsync()` 方法。这些方法应使用 `"encoding"` 元数据字段将给定的 Payload 按需转换为新的 Payload。不要修改现有的 Payload。以下是一个使用 base64 进行双向编码的加密 Codec 示例：
 
 ```csharp
 public class EncryptionCodec : IPayloadCodec
@@ -75,9 +65,9 @@ public class EncryptionCodec : IPayloadCodec
 }
 ```
 
-**Set Data Converter to use custom Payload Codec**
+**设置 Data Converter 以使用自定义 Payload Codec**
 
-When creating a client, the default `DataConverter` can be updated with the payload codec like so:
+创建客户端时，可以使用如下方式通过 Payload Codec 更新默认的 `DataConverter`：
 
 ```csharp
 var myClient = await TemporalClient.ConnectAsync(new("localhost:7233")
@@ -86,54 +76,43 @@ var myClient = await TemporalClient.ConnectAsync(new("localhost:7233")
 });
 ```
 
-- Data **encoding** is performed by the client using the converters and codecs provided by Temporal or your custom implementation when passing input to the Temporal Cluster. For example, plain text input is usually serialized into a JSON object, and can then be compressed or encrypted.
-- Data **decoding** may be performed by your application logic during your Workflows or Activities as necessary, but decoded Workflow results are never persisted back to the Temporal Cluster. Instead, they are stored encoded on the Cluster, and you need to provide an additional parameter when using the [temporal workflow show](/cli/workflow#show) command or when browsing the Web UI to view output.
+- 数据**编码**由客户端使用 Temporal 提供的或自定义的转换器和 Codec 在向 Temporal Cluster 传递输入时执行。例如，纯文本输入通常先序列化为 JSON 对象，然后可以进行压缩或加密。
+- 数据**解码**可以在 Workflow 或 Activity 中由应用逻辑按需执行，但解码后的 Workflow 结果不会持久化回 Temporal Cluster。相反，它们以编码形式存储在 Cluster 上，你需要在使用 [temporal workflow show](/cli/workflow#show) 命令或在 Web UI 中浏览时提供附加参数来查看输出。
 
-For reference, see the [Encryption](https://github.com/temporalio/samples-dotnet/tree/main/src/Encryption) sample.
+参考示例，请参阅 [Encryption](https://github.com/temporalio/samples-dotnet/tree/main/src/Encryption) 示例。
 
-### Using a Codec Server
+### 使用 Codec Server
 
-A Codec Server is an HTTP server that uses your custom Codec logic to decode your data remotely.
-The Codec Server is independent of the Temporal Cluster and decodes your encrypted payloads through predefined endpoints.
-You create, operate, and manage access to your Codec Server in your own environment.
-The Temporal CLI and the Web UI in turn provide built-in hooks to call the Codec Server to decode encrypted payloads on demand.
-Refer to the [Codec Server](/production-deployment/data-encryption) documentation for information on how to design and deploy a Codec Server.
+Codec Server 是一个 HTTP 服务器，它使用自定义的 Codec 逻辑远程解码数据。Codec Server 独立于 Temporal Cluster，通过预定义的端点解码加密的 Payload。你在自己的环境中创建、运行和管理对 Codec Server 的访问。Temporal CLI 和 Web UI 提供内置钩子，可按需调用 Codec Server 解码加密的 Payload。有关如何设计和部署 Codec Server 的信息，请参阅 [Codec Server](/production-deployment/data-encryption) 文档。
 
-## Payload conversion
+## Payload 转换
 
-Temporal SDKs provide a default [Payload Converter](/payload-converter) that can be customized to convert a custom data type to [Payload](/dataconversion#payload) and back.
+Temporal SDK 提供了一个默认的 [Payload Converter](/payload-converter)，可以自定义以将自定义数据类型转换为 [Payload](/dataconversion#payload) 并再转换回来。
 
-### Conversion sequence {#conversion-sequence}
+### 转换顺序 {#conversion-sequence}
 
-The order in which your encoding Payload Converters are applied depend on the order given to the Data Converter.
-You can set multiple encoding Payload Converters to run your conversions.
-When the Data Converter receives a value for conversion, it passes through each Payload Converter in sequence until the converter that handles the data type does the conversion.
+编码 Payload Converter 的应用顺序取决于提供给 Data Converter 的顺序。可以设置多个编码 Payload Converter 来运行转换。当 Data Converter 接收到需要转换的值时，它会按顺序通过每个 Payload Converter，直到处理该数据类型的转换器完成转换。
 
-Payload Converters can be customized independently of a Payload Codec.
-Temporal's Converter architecture looks like this:
+Payload Converter 可以独立于 Payload Codec 进行自定义。Temporal 的 Converter 架构如下所示：
 
 <CaptionedImage
     src="/img/info/converter-architecture.png"
     title="Temporal converter architecture"
 />
 
-### Custom Payload Converter {#custom-payload-converter}
+### 自定义 Payload Converter {#custom-payload-converter}
 
-Data converters are used to convert raw Temporal payloads to/from actual .NET types.
-A custom data converter can be set via the `DataConverter` option when creating a client. Data converters are a combination of payload converters, payload codecs, and failure converters.
-Payload converters convert .NET values to/from serialized bytes. Payload codecs convert bytes to bytes (e.g. for compression or encryption). Failure converters convert exceptions to/from serialized failures.
+Data Converter 用于将原始 Temporal Payload 与实际 .NET 类型相互转换。创建客户端时，可以通过 `DataConverter` 选项设置自定义 Data Converter。Data Converter 是 Payload Converter、Payload Codec 和 Failure Converter 的组合。Payload Converter 将 .NET 值与序列化字节相互转换。Payload Codec 将字节转换为字节（例如用于压缩或加密）。Failure Converter 将异常与序列化的 Failure 相互转换。
 
-Data converters are in the `Temporalio.Converters` namespace.
-The default data converter uses a default payload converter, which supports the following types:
+Data Converter 位于 `Temporalio.Converters` 命名空间中。默认的 Data Converter 使用默认的 Payload Converter，支持以下类型：
 
 - `null`
 - `byte[]`
-- `Google.Protobuf.IMessage` instances
-- Anything that `System.Text.Json` supports
-- `IRawValue` as unconverted raw payloads
+- `Google.Protobuf.IMessage` 实例
+- `System.Text.Json` 支持的任何类型
+- `IRawValue` 作为未转换的原始 Payload
 
-Custom converters can be created for all uses. For example, to create client with a data converter that converts all C#
-property names to camel case, you would:
+可以为所有用途创建自定义转换器。例如，要创建一个将所有 C# 属性名转换为驼峰命名的 Data Converter，可以：
 
 ```csharp
 using System.Text.Json;

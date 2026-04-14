@@ -1,4 +1,4 @@
-| Region                 | Private Service Connect Service Name                                                      |
+| 地区                 | 专用服务连接服务名称                                                      |
 | ---------------------- | ----------------------------------------------------------------------------------------- |
 | `asia-south1`          | `projects/prod-d5spc2sfeshws33bg33vwdef7/regions/asia-south1/serviceAttachments/pl-7w7tw` |
 | `us-central1`          | `projects/prod-d9ch6v2ybver8d2a8fyf7qru9/regions/us-central1/serviceAttachments/pl-5xzn`   |

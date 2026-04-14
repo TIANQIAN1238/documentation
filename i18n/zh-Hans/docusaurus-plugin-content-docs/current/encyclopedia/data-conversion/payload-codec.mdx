@@ -1,0 +1,48 @@
+---
+id: payload-codec
+title: Payload Codec
+sidebar_label: Payload Codec
+description: A Payload Codec performs bytes-to-bytes transformations on Temporal Payloads, often for compression and encryption.
+slug: /payload-codec
+toc_max_heading_level: 4
+keywords:
+  - encryption
+  - explanation
+  - keys
+  - payloads
+  - secrets
+  - data-converters
+  - payload-codec
+tags:
+  - Concepts
+  - Encryption
+  - Data Converters
+  - Security
+---
+
+本页讨论[有效负载编解码器](#payload-codec)。
+
+## 什么是有效负载编解码器？ {#payload-编解码器}
+
+Payload Codec 将 [Payloads](/dataconversion#payload) 数组（例如，Workflow 参数列表）转换为另一个 Payloads 数组。
+
+序列化为有效负载时，首先应用有效负载转换器将对象转换为字节，然后应用编解码器将字节转换为字节。
+从有效负载反序列化时，首先应用编解码器以反转效果，然后应用有效负载转换器。
+
+使用自定义有效负载编解码器来转换您的有效负载；例如，对 Workflow Execution 数据实施压缩和/或加密。
+
+### 加密{#加密}
+
+在自定义 Data Converter 中使用端到端加密可确保 Temporal Server 处理敏感应用程序数据时的安全。
+
+在自定义负载编解码器中应用您的加密逻辑，并在本地使用它来加密数据。
+您维护所有加密密钥，Temporal Server 只能看到加密数据。请参阅[什么是密钥管理？](/key-management) 以获取更多指导。
+
+您的数据仅以未加密的方式存在于客户端以及您控制的主机上执行 Workflow 和活动的 Worker 进程上。有关详细信息，请参阅[保护您的数据](/生产部署/数据加密)。
+
+The following samples use encryption (AES GCM with 256-bit key) in a custom Data Converter:
+
+- [Go sample](https://github.com/Temporalio/samples-go/tree/main/encryption)
+- [Java sample](https://github.com/Temporalio/samples-java/tree/main/core/src/main/java/io/Temporal/samples/encryptedpayloads)
+- [Python sample](https://github.com/Temporalio/samples-python/tree/main/encryption)
+- [TypeScript sample](https://github.com/Temporalio/samples-typescript/tree/main/encryption)

@@ -1,0 +1,90 @@
+---
+id: execution
+title: Activity 执行 - TypeScript SDK
+description: 展示如何使用 TypeScript SDK 执行 Activity
+sidebar_label: Activity执行
+slug: /develop/typescript/activities/execution
+toc_max_heading_level: 3
+tags:
+  - TypeScript SDK
+  - Temporal SDKs
+  - Activity
+---
+
+## 如何启动 Activity 执行 {#Activity-execution}
+
+对生成 [Activity 执行](/Activity-执行) 的调用写入
+[Workflow Definition]（/Workflow-定义）。在 TypeScript 中，您永远不会直接调用 Activity 函数。相反，你
+将您的活动的类型和 Activity 选项传递给“proxyActivities”函数。这会给你一个
+_Activity Handle_，一个类型安全的代理对象，其函数名称和签名与您的实际活动相同。来自
+Activity 句柄，您可以调用您的活动，就像它们是普通的异步函数一样。
+
+```typescript
+import { proxyActivities } from '@temporalio/workflow';
+// Only import the activity types, not the functions themselves
+import type * as activities from './activities';
+
+// Retrieve the Activity Handle by passing in the Activity types and options
+const activityHandle = proxyActivities<typeof activities>({
+  startToCloseTimeout: '1 minute',
+});
+
+// Deconstruct the individual Activity functions from the Activity Handle
+const { greet } = activityHandle;
+
+// A workflow that calls an activity
+export async function example(name: string): Promise<string> {
+  return await greet(name);
+}
+```
+
+当您调用代理函数时，Workflow 不会直接执行 Activity 代码。相反，它 Schedule 是
+Activity 任务。 Activity 任务变为 Scheduled 后，Worker 即可拾取并执行该任务。这个
+导致一组三个 [Activity 任务](/tasks#Activity-task) 相关事件：
+[ActivityTaskScheduled](/references/events#ActivitytaskScheduled),
+[ActivityTaskStarted](/references/events#Activitytaskstarted)，以及
+Workflow Execution Event History 中的 [ActivityTaskCompleted](/references/events#Activitytaskcompleted)。
+
+Worker 可以同时运行多个 Activity 执行，所有执行都使用相同的 Activity 功能代码。 Temporal可以
+如果失败或超时，也可以重试 Activity。因此，您应该将“活动”编写为
+[idempotency](/encyclopedia/activities/Activity-definition.mdx#idempotency)：使用以下命令多次调用它们
+相同的输入应该与调用它们一次具有相同的效果。
+
+:::tip Every Activity call you make is recorded in the Workflow’s execution history, including the parameters you pass
+和返回的值。此历史记录使 Temporal 能够在故障后恢复 Workflow。因为
+必须存储和重播整个历史记录，避免将大型对象作为 Activity 输入或返回值传递。保管
+小有效负载将有助于您的 Workflow 高效重放和恢复。 :::
+
+## 如何设置所需的 Activity 超时 {#required-timeout}
+
+Activity 执行语义依赖于多个参数。唯一需要设置的值是
+[Schedule-关闭超时](/encyclopedia/Detecting-Activity-failures#Schedule-to-close-timeout) 或
+[开始到关闭超时](/encyclopedia/Detecting-Activity-failures#start-to-close-timeout)。这些值设置在
+Activity 选项。
+
+默认情况下，当您允许 XPROT002X 完成未完成的处理程序执行时，您的 XPROT035X 将记录一条警告。
+您可以通过将 `unfinished_policy` 参数传递给 [`@XPROT027X.XPROT036X`](https://python.XPROT026X.io/XPROT026Xio.XPROT027X.html#XPROT036X) / [`XPROT027X.XPROT037X`](https://python.XPROT026X.io/XPROT026Xio.XPROT027X.html#XPROT037X) 装饰器：
+
+调用生成 [Activity Execution](/Activity-execution) 会生成
+[ScheduleActivityTask](/references/commands#ScheduleActivitytask) 命令并为 Workflow 提供 Awaitable。
+Workflow Execution 可以阻止进度，直到通过 Awaitable 获得结果为止，或者继续
+取得进展，并在结果可用时加以利用。
+
+由于活动是通过其字符串名称引用的，因此您可以动态引用它们来获取活动的结果
+Activity 执行。
+
+```typescript
+export async function DynamicWorkflow(activityName, ...args) {
+  const acts = proxyActivities(/* activityOptions */);
+
+  // these are equivalent
+  await acts.activity1();
+  await acts['activity1']();
+
+  let result = await acts[activityName](...args);
+  return result;
+}
+```
+
+`proxyActivities()` 返回一个调用函数中的活动的对象。 `acts[ActivityName]()` 引用
+Activity 使用 Activity 名称，然后返回结果。

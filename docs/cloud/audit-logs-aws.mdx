@@ -1,8 +1,8 @@
 ---
 id: audit-logs-aws
-title: Audit Logs - AWS Kinesis
-sidebar_label: Amazon Kinesis
-description: Audit Logs in Temporal Cloud provides forensic information, integrating with AWS Kinesis for secure data handling and supporting key Admin and API Key operations. This streamlines audit and compliance processes.
+title: "审核日志 - AWS Kinesis"
+sidebar_label: "亚马逊运动"
+description: "Temporal Cloud 中的审核日志提供取证信息，与 AWS Kinesis 集成以实现安全数据处理并支持关键管理和 API 密钥操作。这简化了审计和合规流程。"
 slug: /cloud/audit-logs-aws
 toc_max_heading_level: 4
 keywords:
@@ -21,66 +21,68 @@ tags:
   - AWS
 ---
 
-## Configure Audit Logs using AWS Kinesis {#configure-audit-log}
+<a id="configure-audit-log"></a>
+## 使用 AWS Kinesis {#configure-audit-log} 配置审核日志
+要设置审核日志，您必须拥有 Amazon Web Services (AWS) 账户并设置 Kinesis Data Streams。
 
-To set up Audit Logs, you must have an Amazon Web Services (AWS) account and set up Kinesis Data Streams.
+1. 如果您没有 AWS 账户，请按照 [创建并激活 AWS 账户](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/) 中 AWS 的说明进行操作。
+2. 要设置 Kinesis Data Streams，请打开 [AWS 管理控制台](https://aws.amazon.com/console/)，搜索 Kinesis，然后开始设置过程。
 
-1. If you don't have an AWS account, follow the instructions from AWS in [Create and activate an AWS account](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/).
-2. To set up Kinesis Data Streams, open the [AWS Management Console](https://aws.amazon.com/console/), search for Kinesis, and start the setup process.
+您可以使用 [此 AWS CloudFormation 模板](https://temporal-auditlogs-config.s3.us-west-2.amazonaws.com/cloudformation/iam-role-for-temporal-audit-logs.yaml) 创建一个 IAM 角色，该角色可以访问您账户中的 Kinesis 流。
 
-You can use [this AWS CloudFormation template](https://temporal-auditlogs-config.s3.us-west-2.amazonaws.com/cloudformation/iam-role-for-temporal-audit-logs.yaml) to create an IAM role with access to a Kinesis stream you have in your account.
+请注意，Kinesis 的速率限制为每秒 1,000 条消息，并且对写入的记录数量和记录大小都有配额。
+有关详细信息，请参阅 [为什么我的 Kinesis 数据流受到限制？](https://aws.amazon.com/premiumsupport/knowledge-center/kinesis-data-stream-throttling/)
 
-Be aware that Kinesis has a rate limit of 1,000 messages per second and quotas for both the number of records written and the size of the records.
-For more information, see [Why is my Kinesis data stream throttling?](https://aws.amazon.com/premiumsupport/knowledge-center/kinesis-data-stream-throttling/)
+<a id="create-an-audit-log-sink"></a>
+### 创建审核日志接收器 {#create-an-audit-log-sink}
 
-### Create an Audit Log sink
+1. 在 Temporal Cloud 用户界面中，选择“**设置**”。
+1. 在**设置**页面上，选择**审核日志**。
+1. 在 **审核日志集成** 卡中，选择 **设置**。
+1. 在 **审核日志集成** 页面上，选择您的 **访问方法**（**自动** 或 **手动**）。
+   - **自动：** 从云 UI 在您的 AWS 账户中配置 AWS CloudFormation 堆栈。
+   - **手动：** 使用生成的 AWS CloudFormation 模板手动设置 Kinesis。
+1. 在 **Kinesis ARN** 中，粘贴您的 AWS 账户中的 Kinesis ARN。
+1. 在 **角色名称** 中，提供新 IAM 角色的名称。
+1. 在 **选择 AWS 区域** 中，为您的 Kinesis 流选择适当的区域。
 
-1. In the Temporal Cloud UI, select **Settings**.
-1. On the **Settings** page, select **Audit Logs**.
-1. In the **Audit Log Integration** card, select **Setup**.
-1. On the **Audit Log Integration** page, choose your **Access method** (either **Auto** or **Manual**).
-   - **Auto:** Configure the AWS CloudFormation stack in your AWS account from the Cloud UI.
-   - **Manual:** Use a generated AWS CloudFormation template to set up Kinesis manually.
-1. In **Kinesis ARN**, paste the Kinesis ARN from your AWS account.
-1. In **Role name**, provide a name for a new IAM Role.
-1. In **Select an AWS region**, select the appropriate region for your Kinesis stream.
+如果您选择 **自动** 访问方法，请继续执行以下步骤：
 
-If you chose the **Auto** access method, continue with the following steps:
+1. 选择 **保存并启动堆栈**。
+1. 在 AWS CloudFormation 控制台的 **堆栈名称** 中，指定堆栈的名称。
+1. 在页面右下角，选择“**创建堆栈**”。
 
-1. Select **Save and launch stack**.
-1. In **Stack name** in the AWS CloudFormation console, specify a name for the stack.
-1. In the lower-right corner of the page, select **Create stack**.
+如果您选择 **手动** 访问方法，请继续执行以下步骤：
 
-If you chose the **Manual** access method, continue with the following steps:
+1. 选择**保存并下载模板**。
+1. 打开[AWS CloudFormation 控制台](https://console.aws.amazon.com/cloudformation/)。
+1. 选择**创建堆栈**。
+1. 在 **创建堆栈** 页面上，选择 **模板已准备好** 和 **Update 模板文件**。
+1. 选择 **选择文件** 并指定您在步骤 1 中生成的模板。
+1. 在本页和接下来的两页上选择“**下一步**”。
+1. 在**查看**页面上，选择**创建堆栈**。
 
-1. Select **Save and download template**.
-1. Open the [AWS CloudFormation console](https://console.aws.amazon.com/cloudformation/).
-1. Select **Create Stack**.
-1. On the **Create stack** page, select **Template is ready** and **Update a template file**.
-1. Select **Choose file** and specify the template you generated in step 1.
-1. Select **Next** on this page and on the next two pages.
-1. On the **Review** page, select **Create stack**.
+为了确保审核日志可以流入 Kinesis 流，您可以使用 **验证** 按钮来确认其设置正确。这验证了 Temporal 可以成功写入您的流。
+如果一切配置正确，您将看到 `Success` 状态，指示 Temporal 已写入 kinesis 流。
 
-To ensure that Audit Logs can flow into the Kinesis stream, you can use the **Verify** button to confirm it is set up correctly. This validates that Temporal can successfully write to your stream.
-If everything is configured correctly, you will see a `Success` status indicating Temporal has written to the kinesis stream.
+<a id="consume-an-audit-log"></a>
+## 使用审核日志 {#consume-an-audit-log}
+**如何使用审核日志**
 
-## Consume an Audit Log {#consume-an-audit-log}
-
-**How to consume an Audit Log**
-
-After you create an Audit Log sink, wait for the logs to flow into the Kinesis stream.
-You will see the first logs within 10 minutes after you configure the sink.
+创建审核日志接收器后，等待日志流入 Kinesis 流。
+配置接收器后 10 分钟内您将看到第一个日志。
 
 :::note
 
-You must configure and implement your own consumer of the Kinesis stream.
-For an example, see [Example of consuming an Audit Log](#example-of-consuming-an-audit-log).
+您必须配置并实现您自己的 Kinesis 流使用者。
+有关示例，请参见 [使用审核日志的示例](#example-of-consuming-an-audit-log)。
 
 :::
 
-### Example of consuming an Audit Log
+<a id="example-of-consuming-an-audit-log"></a>
+### 使用审核日志的示例 {#example-of-consuming-an-audit-log}
 
-The following Go code is an example of consuming Audit Logs from a Kinesis stream and delivering them to an S3 bucket.
+以下 Go 代码是使用 Kinesis 流中的审核日志并将其传送到 S3 存储桶的示例。
 
 ```go
 func main() {
@@ -108,8 +110,8 @@ func main() {
 }
 ```
 
-The preceding code also prints the logs in the terminal.
-The following is a sample result.
+前面的代码还在终端中打印日志。
+以下是示例结果。
 
 ```json
 {

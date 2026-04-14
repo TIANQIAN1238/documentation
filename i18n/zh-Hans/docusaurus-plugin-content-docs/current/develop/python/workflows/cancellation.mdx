@@ -1,0 +1,200 @@
+---
+id: cancellation
+title: 取消 - Python SDK
+sidebar_label: 消除
+description: Interrupt a Workflow Execution using the Temporal Python SDK. Choose between canceling for a graceful stop or
+  Interrupt a Workflow Execution using the Temporal Python SDK. Choose between canceling for a graceful stop or
+  terminating for a forceful stop.
+keywords:
+  - cancel workflow execution
+  - activity cancellation
+  - terminate workflow execution
+  - interrupt workflow execution
+  - graceful workflow cancelation
+  - forceful workflow termination
+  - workflow cancelation logic
+  - activity heartbeats
+tags:
+  - Workflows
+  - Python SDK
+  - Temporal SDKs
+---
+
+您可以通过以下方式之一中断 Workflow Execution：
+
+- [取消](#cancellation)：取消 Workflow 提供了一种停止 Workflow Execution 的优雅方法。
+- [终止](#termination)：终止 Workflow 会强制停止 Workflow Execution。
+
+终止 Workflow 会强制停止 Workflow Execution。此操作类似于终止进程。
+
+- 系统在 Workflow 历史记录中记录“WorkflowExecutionTermulated”事件。
+- 强制终止并立即停止 Workflow Execution。
+- Workflow 代码没有机会处理终止。
+- Workflow Task 不会获得 Scheduled。
+
+在大多数情况下，取消是更好的选择，因为它可以让 Workflow 优雅地完成。仅在以下情况下终止
+Workflow卡住，无法正常取消。
+
+## 取消 Workflow Execution {#cancellation}
+
+取消 Workflow 提供了一种停止 Workflow Execution 的优雅方法。此操作类似于将“SIGTERM”发送到
+过程。
+
+- 系统在 Workflow 历史记录中记录“WorkflowExecutionCancelRequested”事件。
+- Workflow Task 让 Scheduled 来处理取消。
+- Workflow 代码可以处理取消并执行任何清理逻辑。
+- 系统不会强制停止 Workflow。
+
+要在 Python 中取消 Workflow Execution，请使用
+Workflow 句柄上的 [cancel()](https://python.Temporal.io/Temporalio.client.WorkflowHandle.html#cancel) 函数。
+
+```python
+await client.get_workflow_handle("your_workflow_id").cancel()
+```
+
+### 从 Workflow 取消 Activity {#cancel-Activity}
+
+从 Workflow 内取消 Activity 要求 Activity 执行发送心跳并设置心跳
+超时。如果不调用Heartbeat，Activity将无法接收取消请求。当任何非立即
+Activity 执行后，Activity 执行应发送心跳并设置
+[心跳超时](/encyclopedia/Detecting-Activity-failures#heartbeat-timeout) 确保服务器知道它是
+仍在工作。
+
+当取消 Activity 时，Activity 会在下一个可用机会时引发错误。如果清理逻辑
+需要执行，可以在“finally”子句中或在捕获的取消错误中完成。然而，对于 Activity
+要显示已取消，需要重新引发异常。
+
+:::note
+
+与常规活动不同，[本地活动](/local-Activity) 如果不发送心跳，则可以取消。本地
+活动在本地处理，处理取消逻辑所需的所有信息都可以在同一个
+Worker 过程。
+
+:::
+
+要从 Workflow Execution 取消 Activity，请致电
+Activity 处理上的 [cancel()](https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancel) 方法
+从 [start_Activity()](https://python.Temporal.io/Temporalio.Workflow.html#start_Activity) 返回。
+
+```python
+@activity.defn
+async def cancellable_activity(input: ComposeArgsInput) -> NoReturn:
+    try:
+        while True:
+            print("Heartbeating cancel activity")
+            await asyncio.sleep(0.5)
+            activity.heartbeat("some details")
+    except asyncio.CancelledError:
+        print("Activity cancelled")
+        raise
+
+
+@activity.defn
+async def run_activity(input: ComposeArgsInput):
+    print("Executing activity")
+    return input.arg1 + input.arg2
+
+@workflow.defn
+ class GreetingWorkflow:
+     @workflow.run
+     async def run(self, input: ComposeArgsInput) -> None:
+        activity_handle = workflow.start_activity(
+            cancellable_activity,
+            ComposeArgsInput(input.arg1, input.arg2),
+            start_to_close_timeout=timedelta(minutes=5),
+            heartbeat_timeout=timedelta(seconds=30),
+        )
+
+        await asyncio.sleep(3)
+        activity_handle.cancel()
+```
+
+:::note
+
+Activity 句柄是一个 Python 任务。通过调用“cancel()”，您实际上是在请求取消任务。
+
+:::
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/XPROT026Xio/samples-python/blob/main/message_passing/safe_message_handlers/XPROT027X.py">
+    查看源代码
+
+终止 Workflow 会强制停止 Workflow Execution。此操作类似于终止进程。
+
+- 系统在 Workflow 历史记录中记录“WorkflowExecutionTermulated”事件。
+- 强制终止并立即停止 Workflow Execution。
+- Workflow 代码没有机会处理终止。
+- Workflow Task 不会获得 Scheduled。
+
+要在 Python 中终止 Workflow Execution，请使用
+Workflow 上的 [terminate()](https://python.Temporal.io/Temporalio.client.WorkflowHandle.html#terminate) 函数
+手柄。
+
+```python
+await client.get_workflow_handle("your_workflow_id").terminate()
+```
+
+- XPROT040X 处理程序使用“def”，而不是“async def”。
+  您无法执行异步操作，例如在 XPROT040X 处理程序中执行 XPROT028X。
+
+重置 Workflow Execution 将终止当前的 Workflow Execution 并从
+您在 Event History 中指定的点。当 Workflow 由于非确定性错误或其他原因而被阻止时，请使用重置
+阻止其完成的问题。
+
+当您重置 Workflow 时，重置点之前的 Event History 将被复制到新的 Workflow Execution，并且
+Workflow 从该点开始使用当前代码恢复。仅当您解决了根本问题（例如
+删除不确定性代码。重置点之后取得的任何进度都将被丢弃。给出一个理由，当
+重置，因为它将记录在 Event History 中。
+
+<Tabs>
+
+<TabItem value="web-ui" label="Web UI">
+
+1. 导航至Workflow Execution详细信息页面，
+2. 单击右上角下拉菜单中的 **重置** 按钮，
+3. 选择要重置的事件 ID，
+4. 提供重置原因，
+5. 确认重置。
+
+Web UI 显示可用的重置点，并在重置完成后创建指向新 Workflow Execution 的链接。
+
+</TabItem>
+
+<TabItem value="cli" label="Temporal CLI">
+
+使用“Temporal Workflow重置”命令重置Workflow Execution：
+
+```bash
+temporal workflow reset \
+    --workflow-id <workflow-id> \
+    --event-id <event-id> \
+    --reason "Reason for reset"
+```
+
+例如：
+
+```bash
+temporal workflow reset \
+    --workflow-id my-background-check \
+    --event-id 4 \
+    --reason "Fixed non-deterministic code"
+```
+
+默认情况下，该命令会将最新的 Workflow Execution 重置为“默认”Namespace。使用 `--run-id` 重置
+具体运行。使用 `--Namespace` 指定不同的 Namespace：
+
+```bash
+temporal workflow reset \
+    --workflow-id my-background-check \
+    --event-id 4 \
+    --reason "Fixed non-deterministic code" \
+    --namespace my-namespace \
+    --tls-cert-path /path/to/cert.pem \
+    --tls-key-path /path/to/key.pem
+```
+
+重置后监视新的 Workflow Execution 以确保其成功完成。
+
+</TabItem>
+
+</Tabs>

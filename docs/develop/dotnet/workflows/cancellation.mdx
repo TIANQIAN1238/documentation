@@ -1,8 +1,8 @@
 ---
 id: cancellation
-title: Cancellation - .NET SDK
-sidebar_label: Cancellation
-description:
+title: "取消 - .NET SDK"
+sidebar_label: "消除"
+description: Interrupt Workflow Execution in .NET using the Temporal SDK. Cancel for graceful stops; terminate for forceful stops.
   Interrupt Workflow Execution in .NET using the Temporal SDK. Cancel for graceful stops; terminate for forceful stops.
   Handle Cancellation in Workflow and Activities efficiently.
 toc_max_heading_level: 4
@@ -34,40 +34,40 @@ tags:
   - Temporal SDKs
 ---
 
-This page shows how to interrupt a Workflow Execution.
+本页显示如何中断 Workflow Execution。
 
-You can interrupt a Workflow Execution in one of the following ways:
+您可以通过以下方式之一中断 Workflow Execution：
 
-- [Cancel](#cancellation): Canceling a Workflow provides a graceful way to stop Workflow Execution.
-- [Terminate](#termination): Terminating a Workflow forcefully stops Workflow Execution.
+- [取消](#cancellation)：取消 Workflow 提供了一种停止 Workflow Execution 的优雅方法。
+- [终止](#termination)：终止 Workflow 会强制停止 Workflow Execution。
 
-Terminating a Workflow forcefully stops Workflow Execution. This action resembles killing a process.
+终止 Workflow 会强制停止 Workflow Execution。此操作类似于终止进程。
 
-- The system records a `WorkflowExecutionTerminated` event in the Workflow History.
-- The termination forcefully and immediately stops the Workflow Execution.
-- The Workflow code gets no chance to handle termination.
-- A Workflow Task doesn't get scheduled.
+- 系统在 Workflow 历史记录中记录 `WorkflowExecutionTerminated` 事件。
+- 强制终止并立即停止 Workflow Execution。
+- Workflow 代码没有机会处理终止。
+- Workflow 任务不会获得 Scheduled。
 
-In most cases, canceling is preferable because it allows the Workflow to finish gracefully. Terminate only if the
-Workflow is stuck and cannot be canceled normally.
+在大多数情况下，取消是更好的选择，因为它允许 Workflow 优雅地完成。仅在以下情况下终止
+Workflow被卡住，无法正常取消。
 
-## Cancellation {#cancellation}
+<a id="cancellation"></a>
+## 取消 {#cancellation}
+要赋予 Workflow 及其活动取消的能力，请执行以下操作：
 
-To give a Workflow and its Activities the ability to be cancelled, do the following:
+- 在 Workflow 内处理取消请求。
+- 设置 Activity 心跳超时。
+- 侦听并处理 Activity 内的取消请求。
+- 从 Temporal CLIent 发送取消请求。
 
-- Handle a Cancellation request within a Workflow.
-- Set Activity Heartbeat Timeouts.
-- Listen for and handle a Cancellation request within an Activity.
-- Send a Cancellation request from a Temporal Client.
+<a id="handle-cancellation-in-workflow"></a>
+### 在 Workflow {#handle-cancellation-in-Workflow} 中处理取消
+可以编写 Workflow Definition 来响应取消请求。 Activity 通常运行在
+取消执行清理。
 
-### Handle Cancellation in Workflow {#handle-cancellation-in-workflow}
-
-Workflow Definitions can be written to respond to cancellation requests. It is common for an Activity to be run on
-Cancellation to perform cleanup.
-
-Cancellation Requests on Workflows cancel the `Workflow.CancellationToken`. This is the token that is implicitly used
-for all calls within the workflow as well (e.g. Timers, Activities, etc) and therefore cancellation is propagated to
-them to be handled and bubble out.
+Workflow 上的取消请求会取消 `Workflow.CancellationToken`。这是隐式使用的令牌
+对于 Workflow 内的所有调用（例如 Timer、活动等），因此取消会传播到
+它们被处理并冒泡。
 
 ```csharp
 [WorkflowRun]
@@ -107,12 +107,12 @@ public async Task RunAsync()
 }
 ```
 
-### Handle Cancellation in an Activity {#handle-cancellation-in-an-activity}
-
-Ensure that the Activity is [Heartbeating](/develop/dotnet/activities/timeouts#activity-heartbeats) to receive the
-Cancellation request and stop execution. Also make sure that the
-[Heartbeat Timeout](/develop/dotnet/activities/timeouts#heartbeat-timeout) is set on the Activity Options when calling
-from the Workflow. An Activity Cancellation Request cancels the `CancellationToken` on the `ActivityExecutionContext`.
+<a id="handle-cancellation-in-an-activity"></a>
+### 在 Activity {#handle-cancellation-in-an-Activity} 中处理取消
+确保 Activity 是 [心跳](/develop/dotnet/activities/timeouts#activity-heartbeats) 以接收
+取消请求并停止执行。还要确保
+调用时，[心跳超时](/develop/dotnet/activities/timeouts#heartbeat-timeout) 在 Activity 选项上设置
+来自 Workflow。 Activity 取消请求取消 `ActivityExecutionContext` 上的 `CancellationToken`。
 
 ```csharp
 [Activity]
@@ -131,9 +131,9 @@ public async Task MyActivityAsync()
 }
 ```
 
-### Request Cancellation {#request-cancellation}
-
-Use `CancelAsync` on the `WorkflowHandle` to cancel a Workflow Execution.
+<a id="request-cancellation"></a>
+### 请求取消 {#request-cancellation}
+在 `WorkflowHandle` 上使用 `CancelAsync` 取消 Workflow Execution。
 
 ```csharp
 // Get a workflow handle by its workflow ID. This could be made specific to a run by passing run ID.
@@ -145,10 +145,11 @@ var handle = myClient.GetWorkflowHandle("my-workflow-id");
 await handle.CancelAsync();
 ```
 
-#### How to request Cancellation of an Activity
+<a id="how-to-request-cancellation-of-an-activity"></a>
+#### 如何请求取消 Activity {#how-to-request-cancellation-of-an-activity}
 
-By default, Activities are automatically cancelled when the Workflow is cancelled since the workflow cancellation token
-is used by activities by default. To issue a cancellation explicitly, a new cancellation token can be created.
+默认情况下，由于 Workflow 取消令牌而取消 Workflow 时，活动会自动取消
+默认情况下由活动使用。要显式发出取消，可以创建新的取消令牌。
 
 ```csharp
 [WorkflowRun]
@@ -180,11 +181,11 @@ public async Task RunAsync()
 }
 ```
 
-## Termination {#termination}
-
-To Terminate a Workflow Execution in .NET, use the
-[TerminateAsync()](https://dotnet.temporal.io/api/Temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_TerminateAsync_System_String_Temporalio_Client_WorkflowTerminateOptions_)
-method on the Workflow handle.
+<a id="termination"></a>
+## 终止 {#termination}
+要终止 .NET 中的 Workflow Execution，请使用
+[终止异步()](https://dotnet.temporal.io/api/temporalio.Client.WorkflowHandle.html#Temporalio_Client_WorkflowHandle_TerminateAsync_System_String_Temporalio_Client_WorkflowTerminateOptions_)
+Workflow 句柄上的方法。
 
 ```csharp
 // Get a workflow handle by its workflow ID. This could be made specific to a run by passing run ID.
@@ -195,37 +196,37 @@ var handle = myClient.GetWorkflowHandle("my-workflow-id");
 await handle.TerminateAsync();
 ```
 
-Workflow Executions can also be Terminated directly from the WebUI. In this case, a custom note can be logged from the
-UI when that happens.
+Workflow Execution 也可以直接从 WebUI 终止。在这种情况下，可以从以下位置记录自定义注释：
+发生这种情况时的用户界面。
 
-## Reset a Workflow Execution {#reset}
+<a id="reset"></a>
+## 重置 Workflow Execution {#reset}
+重置 Workflow Execution 将终止当前的 Workflow Execution 并从
+您在其 Event History 中指定的点。当 Workflow 由于非确定性错误或其他原因而被阻止时，请使用重置
+阻止其完成的问题。
 
-Resetting a Workflow Execution terminates the current Workflow Execution and starts a new Workflow Execution from a
-point you specify in its Event History. Use reset when a Workflow is blocked due to a non-deterministic error or other
-issues that prevent it from completing.
-
-When you reset a Workflow, the Event History up to the reset point is copied to the new Workflow Execution, and the
-Workflow resumes from that point with the current code. Reset only works if you've fixed the underlying issue, such as
-removing non-deterministic code. Any progress made after the reset point will be discarded. Provide a reason when
-resetting, as it will be recorded in the Event History.
+当您重置 Workflow 时，重置点之前的 Event History 将被复制到新的 Workflow Execution，并且
+Workflow 从该点使用当前代码恢复。仅当您解决了根本问题（例如
+删除不确定性代码。重置点之后取得的任何进度都将被丢弃。给出一个理由，当
+重置，因为它将记录在 Event History 中。
 
 <Tabs>
 
 <TabItem value="web-ui" label="Web UI">
 
-1. Navigate to the Workflow Execution details page,
-2. Click the **Reset** button in the top right dropdown menu,
-3. Select the Event ID to reset to,
-4. Provide a reason for the reset,
-5. Confirm the reset.
+1. 导航至Workflow Execution详细信息页面，
+2. 单击右上角下拉菜单中的 **重置** 按钮，
+3. 选择要重置的事件 ID，
+4. 提供重置原因，
+5. 确认重置。
 
-The Web UI shows available reset points and creates a link to the new Workflow Execution after the reset completes.
+Web UI 显示可用的重置点，并在重置完成后创建指向新 Workflow Execution 的链接。
 
 </TabItem>
 
 <TabItem value="cli" label="Temporal CLI">
 
-Use the `temporal workflow reset` command to reset a Workflow Execution:
+使用 `Temporal Workflow reset` 命令重置 Workflow Execution：
 
 ```bash
 temporal workflow reset \
@@ -234,7 +235,7 @@ temporal workflow reset \
     --reason "Reason for reset"
 ```
 
-For example:
+例如：
 
 ```bash
 temporal workflow reset \
@@ -243,8 +244,8 @@ temporal workflow reset \
     --reason "Fixed non-deterministic code"
 ```
 
-By default, the command resets the latest Workflow Execution in the `default` Namespace. Use `--run-id` to reset a
-specific run. Use `--namespace` to specify a different Namespace:
+默认情况下，该命令重置 `default` Namespace 中最新的 Workflow Execution。使用 `--run-id` 重置
+具体运行。使用 `--Namespace` 指定不同的 Namespace：
 
 ```bash
 temporal workflow reset \
@@ -256,7 +257,7 @@ temporal workflow reset \
     --tls-key-path /path/to/key.pem
 ```
 
-Monitor the new Workflow Execution after resetting to ensure it completes successfully.
+重置后监视新的 Workflow Execution 以确保其成功完成。
 
 </TabItem>
 

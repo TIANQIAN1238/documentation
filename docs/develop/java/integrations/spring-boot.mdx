@@ -1,7 +1,7 @@
 ---
 id: spring-boot
-title: Spring Boot integration - Java SDK
-sidebar_label: Spring Boot integration
+title: "Spring Boot 集成 - Java SDK"
+sidebar_label: "Spring Boot 集成"
 slug: /develop/java/integrations/spring-boot-integration
 toc_max_heading_level: 2
 keywords:
@@ -10,31 +10,31 @@ tags:
   - Spring Boot
   - Java SDK
   - Temporal SDKs
-description: Learn about the Temporal Spring Boot integration
+description: "了解 Temporal Spring Boot 集成"
 ---
 
-This guide introduces the [Temporal Spring Boot](https://central.sonatype.com/artifact/io.temporal/temporal-spring-boot-starter?smo=true) integration. The Temporal Spring Boot integration is the easiest way to get started using the Temporal Java SDK if you are a current [Spring](https://spring.io/) user.
+本指南介绍 [Temporal 弹簧靴](https://central.sonatype.com/artifact/io.temporal/temporal-spring-boot-starter?smo=true) 集成。如果您当前是 [春天](https://spring.io/) 用户，Temporal Spring Boot 集成是开始使用 Temporal Java SDK 的最简单方法。
 
-This section includes the following topics:
+本节包括以下主题：
 
-- [Setup Dependency](#setup-dependency)
-- [Connect to your Temporal Service](#connect)
-- [Configure Workers](#configure-workers)
-- [Customize Options](#customize-options)
-- [Interceptors](#interceptors)
-- [Integrations](#integrations)
-- [Testing](#testing)
+- [设置依赖关系](#setup-dependency)
+- [连接到您的 Temporal 服务](#connect)
+- [配置 Worker](#configure-workers)
+- [自定义选项](#customize-options)
+- [拦截器](#interceptors)
+- [集成](#integrations)
+- [测试](#testing)
 
-## Setup Dependency {#setup-dependency}
+## 设置依赖项 {#setup-dependency}
 
-To start using the Temporal Spring Boot integration, you need to add [`io.temporal:temporal-spring-boot-starter`](https://search.maven.org/artifact/io.temporal/temporal-spring-boot-starter)
-as a dependency to your Spring project:
+要开始使用 Temporal Spring Boot 集成，您需要添加 [`io.Temporal:Temporal-spring-boot-starter`](https://search.maven.org/artifact/io.temporal/temporal-spring-boot-starter)
+作为 Spring 项目的依赖项：
 
 :::note
-Temporal's Spring Boot integration currently supports Spring Boot 2.x, 3.x, and 4.x
+Temporal 的 Spring Boot 集成目前支持 Spring Boot 2.x、3.x 和 4.x
 :::
 
-**[Apache Maven](https://maven.apache.org/):**
+**[阿帕奇Maven](https://maven.apache.org/)：**
 
 ```maven
 <dependency>
@@ -44,19 +44,20 @@ Temporal's Spring Boot integration currently supports Spring Boot 2.x, 3.x, and 
 </dependency>
 ```
 
-**[Gradle Groovy DSL](https://gradle.org/):**
+**[Gradle Groovy DSL](https://gradle.org/)：**
 
 ```groovy
 implementation ("io.temporal:temporal-spring-boot-starter:1.31.0")
 ```
 
-## Connect {#connect}
+## 连接 {#connect}
 
-See the [Temporal Client documentation](/develop/java/client/temporal-client) for more information about connecting to a Temporal Service.
+有关连接到 Temporal 服务的更多信息，请参阅 [Temporal CLIent 文档](/develop/java/client/temporal-client)。
 
-To create an autoconfigured `WorkflowClient`, you need to specify some connection details in your `application.yml` file, as described in the next section.
+要创建自动配置的 `WorkflowClient`，您需要在 `application.yml` 文件中指定一些连接详细信息，如下一节所述。
 
-### Connect to your local Temporal Service
+<a id="connect-to-your-local-temporal-service"></a>
+### 连接到您本地的 Temporal 服务 {#connect-to-your-local-temporal-service}
 
 ```yaml
 spring.temporal:
@@ -64,7 +65,7 @@ spring.temporal:
     target: local # you can specify a host:port here for a remote connection
 ```
 
-This is enough to autowire a `WorkflowClient` in your Spring Boot application:
+这足以在 Spring Boot 应用程序中自动装配 `WorkflowClient`：
 
 ```java
 @SpringBootApplication
@@ -74,9 +75,10 @@ class App {
 }
 ```
 
-### Connect to a custom Namespace
+<a id="connect-to-a-custom-namespace"></a>
+### 连接到自定义 Namespace {#connect-to-a-custom-namespace}
 
-You can also connect to a custom Namespace by specifying the `spring.temporal.namespace` property.
+您还可以通过指定 `spring.Temporal.Namespace` 属性连接到自定义 Namespace。
 
 ```yaml
 spring.temporal:
@@ -85,13 +87,14 @@ spring.temporal:
   namespace: <custom namespace> # you can specify a custom namespace that you are using
 ```
 
-## Connect to Temporal Cloud {#connect}
+## 连接到 Temporal Cloud {#connect}
 
-You can also connect to Temporal Cloud, using either an API key or mTLS for authentication.
+您还可以使用 API 密钥或 mTLS 连接到 Temporal Cloud 进行身份验证。
 
-See the [Connect to Temporal Cloud](/develop/java/client/temporal-client#connect-to-temporal-cloud) section for more information about connecting to Temporal Cloud.
+有关连接到 Temporal Cloud 的更多信息，请参阅 [连接到 Temporal Cloud](/develop/java/client/temporal-client#connect-to-temporal-cloud) 部分。
 
-### Using an API key
+<a id="using-an-api-key"></a>
+### 使用 API 密钥 {#using-an-api-key}
 
 ```yaml
 spring.temporal:
@@ -101,7 +104,8 @@ spring.temporal:
   namespace: <namespace>
 ```
 
-### Using mTLS
+<a id="using-mtls"></a>
+### 使用 mTLS {#using-mtls}
 
 ```
 spring.temporal:
@@ -113,11 +117,13 @@ spring.temporal:
   namespace: <namespace>
 ```
 
-## Configure Workers {#configure-workers}
+<a id="configure-workers"></a>
+## 配置 Workers {#configure-workers}
 
-Temporal's Spring Boot integration supports two configuration methods for Workers: explicit configuration and auto-discovery.
+Temporal 的 Spring Boot 集成支持 Worker 的两种配置方法：显式配置和自动发现。
 
-### Explicit configuration
+<a id="explicit-configuration"></a>
+### 显式配置 {#explicit-configuration}
 
 ```yaml
 spring.temporal:
@@ -130,9 +136,10 @@ spring.temporal:
         - activity-bean-name1
 ```
 
-### Auto Discovery
+<a id="auto-discovery"></a>
+### 自动发现 {#auto-discovery}
 
-Auto Discovery allows you to skip specifying Workflow classes, Activity beans, and Nexus Service beans explicitly in the config by referencing Worker Task Queue names or Worker Names on Workflow, Activity implementations, and Nexus Service implementations. Auto-discovery is applied after and on top of an explicit configuration.
+自动发现允许您通过在 Workflow、Activity 实现和 Nexus 服务上引用 Worker Task Queue 名称或 Worker 名称来跳过在配置中显式指定 Workflow 类、Activity beans 和 Nexus 服务 beans实施。自动发现在显式配置之后和之上应用。
 
 ```
 spring.temporal:
@@ -141,15 +148,16 @@ spring.temporal:
       - your.package # enumerate all the packages that contain your workflow implementations.
 ```
 
-#### What is auto-discovered:
+<a id="what-is-auto-discovered"></a>
+#### 自动发现的内容： {#what-is-auto-discovered}
 
-- Workflow implementation classes annotated with `io.temporal.spring.boot.WorkflowImpl`
-- Activity beans present Spring context whose implementations are annotated with `io.temporal.spring.boot.ActivityImpl`
-- Nexus Service beans present in Spring context whose implementations are annotated with `io.temporal.spring.boot.NexusServiceImpl`
-- Workers if a Task Queue is referenced by the annotations but not explicitly configured. Default configuration will be used.
+- Workflow 实现类用 `io.Temporal.spring.boot.WorkflowImpl` 注释
+- Activity beans呈现Spring上下文，其实现用`io.Temporal.spring.boot.ActivityImpl`注释
+- Nexus 存在于 Spring 上下文中的服务 bean，其实现用 `io.Temporal.spring.boot.NexusServiceImpl` 注释
+- 如果注释引用了 Task Queue 但未显式配置，则为 Worker。将使用默认配置。
 
 :::note
-`io.temporal.spring.boot.ActivityImpl` and `io.temporal.spring.boot.NexusServiceImpl` should be applied to beans, one way to do this is to annotate your Activity implementation class with `@Component`
+`io.Temporal.spring.boot.ActivityImpl` 和 `io.Temporal.spring.boot.NexusServiceImpl` 应该应用于 bean，一种方法是使用 `@Component` 注释 Activity 实现类
 :::
 
 ```
@@ -164,49 +172,51 @@ public class MyActivityImpl implements MyActivity {
 ```
 
 :::note
-Auto-discovered Workflow implementation classes, Activity beans, and Nexus Service beans will be registered with the configured Workers if not already registered.
+自动发现的 Workflow 实现类、Activity bean 和 Nexus 服务 bean 将使用配置的 Worker 进行注册（如果尚未注册）。
 :::
 
-## Interceptors {#interceptors}
+## 拦截器 {#interceptors}
 
-To enable Interceptors, you can create beans by implementing the `io.temporal.common.interceptors.WorkflowClientInterceptor`, `io.temporal.common.interceptors.ScheduleClientInterceptor`, or `io.temporal.common.interceptors.WorkerInterceptor` interface. Interceptors will be registered in the order specified by the `@Order` annotation.
+要启用拦截器，您可以通过实现 `io.Temporal.common.interceptors.WorkflowClientInterceptor`、`io.Temporal.common.interceptors.ScheduleClientInterceptor` 或 `io.Temporal.common.interceptors.WorkerInterceptor` 接口来创建 Bean。拦截器将按照 `@Order` 注解指定的顺序进行注册。
 
-## Integrations {#integrations}
+## 集成 {#integrations}
 
-The Temporal Spring Boot integration also has built in support for various tools in the Spring ecosystem, such as metrics and tracing.
+Temporal Spring Boot 集成还内置了对 Spring 生态系统中各种工具的支持，例如指标和跟踪。
 
-### Metrics
+<a id="metrics"></a>
+### 指标 {#metrics}
 
-You can set up built-in Spring Boot metrics using [Spring Boot Actuator](https://docs.spring.io/spring-boot/reference/actuator/metrics.html). The Temporal Spring Boot integration will pick up the `MeterRegistry` bean and use it to report Temporal metrics.
+您可以使用 [弹簧启动执行器](https://docs.spring.io/spring-boot/reference/actuator/metrics.html) 设置内置 Spring Boot 指标。 Temporal Spring Boot 集成将获取 `MeterRegistry` bean 并使用它来报告 Temporal 指标。
 
-Alternatively, you can define a custom `io.micrometer.core.instrument.MeterRegistry` bean in the application context.
+或者，您可以在应用程序上下文中定义自定义 `io.micrometer.core.instrument.MeterRegistry` bean。
 
-### Tracing
+<a id="tracing"></a>
+### 追踪 {#tracing}
 
-You can set up [Spring Cloud Sleuth](https://spring.io/projects/spring-cloud-sleuth) with an OpenTelemetry export. The Temporal Spring Boot integration will pick up the OpenTelemetry bean configured by `spring-cloud-sleuth-otel-autoconfigure` and use it for Temporal traces.
+您可以使用 OpenTelemetry 导出设置 [春云侦探](https://spring.io/projects/spring-cloud-sleuth)。 Temporal Spring Boot 集成将获取 `spring-cloud-sleuth-otel-autoconfigure` 配置的 OpenTelemetry bean 并将其用于 Temporal 跟踪。
 
-Alternatively, you can define a custom `io.opentelemetry.api.OpenTelemetry` for OpenTelemetry or `io.opentracing.Tracer` for an OpenTracing bean in the application context.
+或者，您可以在应用程序上下文中为 OpenTelemetry 定义自定义 `io.opentelemetry.api.OpenTelemetry` 或为 OpenTracing bean 定义 `io.opentracing.Tracer`。
 
-## Customization of Options {#customize-options}
+## 选项自定义 {#customize-options}
 
-To programmatically customize the various options that are created by the Spring Boot integration, you can create beans that implement the `io.temporal.spring.boot.TemporalOptionsCustomizer<OptionsBuilderType>` interface. This will be called after the options in your properties files are applied.
+要以编程方式自定义由 Spring Boot 集成创建的各种选项，您可以创建实现 `io.Temporal.spring.boot.TemporalOptionsCustomizer<OptionsBuilderType>` 接口的 bean。这将在应用属性文件中的选项后调用。
 
-Where `OptionsType` may be one of:
+其中 `OptionsType` 可能是以下之一：
 
-    * `WorkflowServiceStubsOptions.Builder`
+* `WorkflowServiceStubsOptions.Builder`
     * `WorkflowClientOptions.Builder`
     * `WorkerFactoryOptions.Builder`
     * `WorkerOptions.Builder`
     * `WorkflowImplementationOptions.Builder`
     * `TestEnvironmentOptions.Builder`
 
-`io.temporal.spring.boot.WorkerOptionsCustomizer` may be used instead of `TemporalOptionsCustomizer<WorkerOptions.Builder>` if `WorkerOptions` needs to be customized on the Task Queue or Worker name.
+如果需要在 Task Queue 或 Worker 名称上自定义 `WorkerOptions`，则可以使用 `io.Temporal.spring.boot.WorkerOptionsCustomizer` 代替 `TemporalOptionsCustomizer<WorkerOptions.Builder>`。
 
-`io.temporal.spring.boot.WorkflowImplementationOptionsCustomizer` may be used instead of `TemporalOptionsCustomizer<WorkflowImplementationOptions.Builder>` if `WorkflowImplementationOptions` needs to be customized on Workflow Type.
+如果需要在 Workflow 类型上定制 `WorkflowImplementationOptions`，则可以使用 `io.Temporal.spring.boot.WorkflowImplementationOptionsCustomizer` 代替 `TemporalOptionsCustomizer<WorkflowImplementationOptions.Builder>`。
 
-## Testing {#testing}
+## 测试 {#testing}
 
-The Temporal Spring Boot integration also has easy support for testing your Temporal code. Add the following to your `application.yml` to reconfigure the client to work through `io.temporal.testing.TestWorkflowEnvironment` that uses in-memory Java Test Server:
+Temporal Spring Boot 集成还可以轻松支持测试 Temporal 代码。将以下内容添加到 `application.yml` 以重新配置客户端以通过使用内存 Java 测试服务器的 `io.Temporal.testing.TestWorkflowEnvironment` 进行工作：
 
 ```
 spring.temporal:
@@ -214,7 +224,7 @@ spring.temporal:
     enabled: true
 ```
 
-When `spring.temporal.test-server.enabled:true` is added, the `spring.temporal.connection` section is ignored. This allows wiring the `TestWorkflowEnvironment` bean in your unit tests:
+添加 `spring.Temporal.test-server.enabled:true` 时，`spring.Temporal.connection` 部分将被忽略。这允许在单元测试中连接 `TestWorkflowEnvironment` bean：
 
 ```
 @SpringBootTest(classes = Test.Configuration.class)
@@ -240,4 +250,4 @@ public class Test {
 }
 ```
 
-See the [Java SDK test frameworks documentation](/develop/java/best-practices/testing-suite#test-frameworks) for more information about testing.
+有关测试的更多信息，请参阅 [Java SDK 测试框架文档](/develop/java/best-practices/testing-suite#test-frameworks)。

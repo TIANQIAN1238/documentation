@@ -1,0 +1,24 @@
+---
+id: activity-retry-simulator
+title: 如何可视化具有超时的 Activity Retry Policy
+sidebar_label: Activity重试模拟器
+description: 可视化 Activity 执行时间，尝试超时、重试策略，并使用我们的工具模拟场景。配置重试并查看其对成功或失败的影响。
+tags:
+  - Activities
+---
+
+使用此工具可视化总 Activity 执行时间并尝试不同的 Activity 超时和重试策略。
+有关 Activity 任务执行时间的列表，请使用[此计算器](https://Temporal-time.netlify.app/?initialInterval=1&maxInterval=100&maxReties=10&backoffCoefficient=2)。
+
+该模拟器基于常见的 Activity 用例，即调用第三方 HTTP API 并返回结果。
+请参阅下面的示例代码片段。
+
+使用 Activity 重试设置来配置 API 请求成功或失败所需的时间。
+有一个选项可以生成场景。
+_队列中的任务时间_模拟 Activity 任务在 Task Queue 中等待的时间。
+
+使用 Activity 超时和 Retry Policy 设置来查看它们如何影响 Activity 执行的成功或失败。
+
+import { RetrySimulator } from '@site/src/components';
+
+<RetrySimulator />

@@ -1,8 +1,8 @@
 ---
 id: payload-converter
-title: Payload Converter
-sidebar_label: Payload Converter
-description: A Payload Converter serializes and deserializes values to and from bytes for use in the Temporal SDK.
+title: "有效负载转换器"
+sidebar_label: "有效负载转换器"
+description: "有效负载转换器将值与字节进行序列化和反序列化，以便在 Temporal SDK 中使用。"
 slug: /payload-converter
 toc_max_heading_level: 4
 keywords:
@@ -20,20 +20,20 @@ tags:
   - Security
 ---
 
-This page discusses [Payload Converter](#payload-converter).
+本页讨论 [有效负载转换器](#payload-converter)。
 
-## What is a Payload Converter? {#payload-converter}
+## 什么是有效负载转换器？ {#payload-converter}
 
-A Payload Converter serializes data, converting values to bytes and back.
+有效负载转换器序列化数据，将值转换为字节并返回。
 
-When you initiate a Workflow Execution through a Client and pass data as input, the input is serialized using a Data Converter that runs it through a set of Payload Converters.
-When your Workflow Execution starts, this data input is deserialized and passed as input to your Workflow.
+当您通过客户端启动 Workflow Execution 并将数据作为输入传递时，输入将使用 Data Converter 进行序列化，该 Data Converter 通过一组有效负载转换器运行它。
+当您的 Workflow Execution 启动时，此数据输入将被反序列化并作为输入传递到 Workflow。
 
-### Composite Data Converters {#composite-data-converters}
+### 复合 Data Converters {#composite-data-converters}
 
-A Composite Data Converter is used to apply custom, type-specific Payload Converters in a specified order.
-A Composite Data Converter can be comprised of custom rules that you created, and it can also leverage the default Data Converters built into Temporal.
-In fact, the default Data Converter logic is implemented internally in the Temporal source as a Composite Data Converter. It defines these rules in this order:
+复合 Data Converter 用于按指定顺序应用自定义的、特定于类型的有效负载转换器。
+复合 Data Converter 可以由您创建的自定义规则组成，它还可以利用 Temporal 中内置的默认 Data Converter。
+事实上，默认的 Data Converter 逻辑在 Temporal 源内部作为复合 Data Converter 实现。它按以下顺序定义这些规则：
 
 ```go
 defaultDataConverter = NewCompositeDataConverter(
@@ -45,14 +45,14 @@ defaultDataConverter = NewCompositeDataConverter(
 )
 ```
 
-The order in which the Payload Converters are applied is important.
-During serialization, the Data Converter tries the Payload Converters in that specific order until a Payload Converter returns a non-nil Payload.
-A custom PayloadConverter must implement the functions:
+应用有效负载转换器的顺序很重要。
+在序列化期间，Data Converter 按特定顺序尝试有效负载转换器，直到有效负载转换器返回非零有效负载。
+自定义 PayloadConverter 必须实现以下功能：
 
-- `FromPayload` (for a single value) or
-- `FromPayloads` (for a list of values) to convert to values from a Payload, and
-- `ToPayload` (for a single value) or
-- `ToPayloads` (for a list of values) to convert values to a Payload.
+- `FromPayload`（对于单个值）或
+- `FromPayloads`（用于值列表）转换为有效负载中的值，以及
+- `ToPayload`（对于单个值）或
+- `ToPayloads`（用于值列表）将值转换为有效负载。
 
-Defining a new Composite Data Converter is not always necessary to implement custom data handling.
-Each SDK allows you to override or configure the default Converter with a custom Payload Codec.
+定义新的复合体 Data Converter 并不总是需要实现自定义数据处理。
+每个 SDK 都允许您使用自定义负载编解码器覆盖或配置默认转换器。

@@ -1,0 +1,125 @@
+---
+id: child-workflows
+title: Child Workflows
+sidebar_label: Child Workflows
+description: Temporal Platform 中的子 Workflow Execution 由同一 Namespace 中的另一个 Workflow 启动。
+slug: /child-workflows
+toc_max_heading_level: 4
+keywords:
+  - child workflow execution
+  - temporal workflow management
+  - parent close policy
+  - workflow execution scalability
+  - temporal SDK child workflow
+  - manage workflows with temporal
+  - workflow partitioning
+  - asynchronous child workflows
+  - child workflow serialization
+  - temporal namespace workflows
+  - child vs activity execution
+  - workflow periodic execution
+  - temporal SDK guides
+  - parent workflow termination
+  - child workflow best practices
+tags:
+  - Concepts
+  - Child Workflows
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+子 Workflow Execution 是从同一 Namespace 中的另一个 Workflow 中生成的 [Workflow Execution](/Workflow-执行)。
+
+- [Go SDK Child Workflow 功能指南](/develop/go/Workflows/child-Workflows)
+- [Java SDK Child Workflow 功能指南](/develop/java/Workflows/child-Workflows)
+- [PHP SDK Child Workflow 功能指南](/develop/php/Workflows/child-Workflows)
+- [Python SDK Child Workflow 功能指南](/develop/python/Workflows/child-Workflows)
+- [TypeScript SDK Child Workflow 功能指南](/develop/typescript/Workflows/child-Workflows)
+- [.NET SDK Child Workflow 功能指南](/develop/dotnet/Workflows/child-Workflows)
+
+Workflow Execution 既可以是父 Workflow Execution，也可以是子 Workflow Execution，因为任何 Workflow 都可以生成另一个 Workflow。
+
+<CaptionedImage
+src="/diagrams/parent-child-Workflow-execution-relationship.svg"
+    title="父子Workflow Execution实体关系"
+    />
+
+父 Workflow Execution 必须等待子 Workflow Execution 生成。
+父级可以选择等待子级 Workflow Execution 的结果。
+如果父级不等待子级的结果（包括父级对 Continue-As-New 的任何使用），请考虑子级的 [父级关闭策略](/parent-close-policy)。
+
+:::note
+
+当父级使用 [Continue-As-New](/Workflow-execution/Continue-As-New) 时，Child Workflow 不会继承。
+这意味着，如果父 Workflow Execution 使用 Continue-As-New，则任何正在进行的子 Workflow Execution 将不会保留在新的连续父实例中。
+
+:::
+
+当父 Workflow Execution 达到关闭状态时，Temporal 服务根据子项的 [父项关闭策略](/parent-close-policy) 将取消请求或终止传播到子项 Workflow Execution。
+
+如果子 Workflow Execution 使用 Continue-As-New，则从父 Workflow Execution 的角度来看，整个运行链将被视为单个执行。
+
+<CaptionedImage
+src="/diagrams/parent-child-Workflow-execution-with-Continue-As-New.svg"
+    title="父级和子级 Workflow Execution 实体关系与Continue As New"
+    />
+
+## 何时使用 Child Workflows
+
+没有理由仅仅为了代码组织而使用 Child Workflow。
+您可以使用面向对象的结构和其他代码组织技术来处理复杂性。
+如果您的问题在 Activity 执行和已处理的 Signal 数量方面有限制，通常建议从单个 Workflow Definition 开始。
+它比多个异步通信 Workflow 更简单。
+
+然而，使用 Child Workflow 有几个合理的理由。
+
+### 创建一个单独的服务
+
+由于子 Workflow Execution 可以由与父 Workflow Execution 完全独立的一组 [Worker](/Workers#Worker) 处理，因此它可以充当完全独立的服务。
+但是，这也意味着父 Workflow Execution 和子 Workflow Execution 不共享任何本地状态。
+与所有 Workflow Execution 一样，它们只能通过异步 [Signals](/sending-messages#sending-Signals) 进行通信。
+
+### 将问题分成更小的块
+
+单个 Workflow Execution 具有 [Event History](/Workflow-execution/event#event-history) 大小限制，这在使用 Child Workflow 时需要考虑一些因素。
+
+一方面，由于子 Workflow Execution 具有自己的事件历史记录，因此它们通常用于将大型工作负载划分为较小的块。
+例如，单个 Workflow Execution 的 Event History 中没有足够的空间来生成 100,000 个 [Activity 执行](/Activity-执行)。
+但父 Workflow Execution 可以生成 1,000 个子 Workflow Execution，每个子 Workflow Execution 生成 1,000 个 Activity 执行，从而实现总共 1,000,000 个 Activity 执行。
+
+但是，由于父级 Workflow Execution Event History 包含与子级 Workflow Execution 的状态相对应的[事件](/Workflow-execution/event#event)，因此单个父级不应生成超过 1,000 个子级 Workflow Execution。
+
+然而，一般来说，子 Workflow Execution 会导致事件历史记录中记录的总体事件多于活动。
+由于 Event History 中的每个条目都是计算资源的_成本_，因此这可能成为非常大的工作负载中的一个因素。
+因此，我们建议从使用活动的单个 Workflow 实施开始，直到明确需要 Child Workflow。
+
+### 代表单个资源
+
+与所有 Workflow Execution 一样，子 Workflow Execution 可以创建与资源的一对一映射。
+它可用于使用其 ID 来管理资源以保证唯一性。
+例如，管理主机升级的 Workflow 可以为每个主机生成一个子 Workflow Execution（主机名为 Workflow Id），并使用它们来确保主机上的所有操作都被序列化。
+
+### 周期性逻辑执行
+
+Child Workflow 可用于执行一些周期性逻辑，而不会压垮父级 Workflow Event History。
+在这种情况下，父 Workflow 启动 Child Workflow，该 Child Workflow 根据需要多次执行周期性逻辑调用 [Continue-As-New](/Workflow-execution/Continue-As-New)，然后完成。
+从父级的角度来看，这只是一次 Child Workflow 调用。
+
+### Child Workflow 与 Activity
+
+子 Workflow Execution 和 Activity 执行都是从 Workflow 开始的，因此您可能会对何时使用哪个感到困惑。
+以下是一些重要的区别：
+
+- Child Workflow 可以访问所有 Workflow API，但与其他 Workflow 一样受到相同的[确定性约束](/Workflow-definition#definition-constraints)。
+  Activity 具有相反的优点和缺点 - 无法访问 Workflow API，但没有 Workflow 限制。
+- 如果其父项被“放弃”的 [父项关闭策略](/parent-close-policy) 取消，则子项 Workflow Execution 可以继续运行。
+  当 Workflow Execution 被取消时，Activity 执行_总是_被取消。
+  （它可以对 Signal 的取消做出反应以进行清理。）
+  该决定大致类似于在终端中生成子进程来执行工作与在同一进程中执行工作。
+- Temporal 跟踪 Event History 中子 Workflow Execution 内的所有状态变化。
+  仅跟踪 Activity 执行的输入、输出和重试尝试。
+
+Workflow 对由多个活动或其他 Child Workflow 组成的复合操作进行建模。
+Activity 通常对外部世界的单个操作进行建模。
+
+我们的建议：**如有疑问，请使用 Activity。**

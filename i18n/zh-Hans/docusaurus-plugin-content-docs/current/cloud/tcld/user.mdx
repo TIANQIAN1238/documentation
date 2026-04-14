@@ -1,0 +1,339 @@
+---
+id: user
+title: tcld 用户命令参考
+sidebar_label: 用户
+description: 使用 tcld 命令在 Temporal Cloud 中轻松管理用户；删除、获取信息、邀请、列出、重新发送邀请、设置帐户角色以及无缝设置 Namespace 权限。
+slug: /cloud/tcld/user/
+toc_max_heading_level: 4
+keywords:
+  - cli reference
+  - tcld
+tags:
+  - Temporal Cloud
+  - tcld
+  - Users
+---
+
+“tcld user”命令管理 Temporal Cloud 中的用户。
+
+别名：`u`
+
+- [tcld用户删除](#delete)
+- [tcld 用户获取](#get)
+- [tcld 用户邀请](#invite)
+- [tcld 用户列表](#list)
+- [tcld 用户重新发送邀请](#resend-invite)
+- [tcld 用户设置帐户角色](#set-account-role)
+- [tcld用户设置-Namespace-权限](#set-Namespace-权限)
+
+＃＃ 删除
+
+“tcld 用户删除”命令删除 Temporal Cloud 中的指定用户。
+您必须设置 `--user-email` 或 `--user-id` 来指定要删除的用户。
+
+别名：`d`
+
+以下修饰符控制命令的行为。
+
+#### --用户电子邮件
+
+指定要删除的用户的电子邮件地址。
+
+**例子**
+
+```command
+tcld user delete --user-email <test@example.com>
+```
+
+＃＃＃＃  - 用户身份
+
+指定要删除的用户的用户标识符。
+
+**例子**
+
+```command
+tcld user delete --user-id <test-user-id>
+```
+
+#### --请求 ID
+
+用于异步操作的请求标识符。
+
+如果未设置，服务器会分配一个标识符。
+
+别名：`-r`
+
+#### --资源版本
+
+指定 Update 的资源版本 (ETag)。
+如果未指定，则使用最新版本。
+
+别名：`-v`
+
+＃＃ 得到
+
+`tcld user get` 命令获取有关 Temporal Cloud 中指定用户的信息。
+您必须设置“--user-email”或“--user-id”。
+
+别名：`g`
+
+以下修饰符控制命令的行为。
+
+#### --用户电子邮件
+
+指定要获取相关信息的用户的电子邮件地址。
+
+**例子**
+
+```command
+tcld user delete --user-email <test@example.com>
+```
+
+＃＃＃＃  - 用户身份
+
+指定要获取相关信息的用户的用户标识符。
+
+**例子**
+
+```command
+tcld user delete --user-id <test-user-id>
+```
+
+＃＃ 邀请
+
+“tcld Namespace 邀请”命令邀请指定用户加入 Temporal Cloud。
+
+别名：`我`
+
+以下修饰符控制命令的行为。
+
+#### --用户电子邮件
+
+_所需修饰符_
+
+指定要邀请的用户的电子邮件地址。
+您可以多次提供此修饰符以在单个请求中邀请多个用户。
+
+别名：`-e`
+
+#### --账户角色
+
+_所需修饰符_
+
+为受邀用户指定[帐户级别角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。
+
+可用的帐户角色：`admin` | `开发人员` | ‘读’。
+
+别名：`--ar`
+
+#### --Namespace-权限
+
+为受邀用户指定 [Namespace 级别权限](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions)。
+您可以多次提供此修饰符以在单个请求中设置多个 Namespace 权限。
+
+每个值的格式必须为“Namespace=permission-type”。
+
+可用的 Namespace 权限：`Admin` | `写` | ‘读’。
+
+别名：`-p`
+
+#### --请求 ID
+
+用于异步操作的请求标识符。
+
+如果未设置，服务器会分配一个标识符。
+
+别名：`-r`
+
+```command
+tcld user invite --user-email <test@example.com> --account-role developer --namespace-permission ns1=Admin --namespace-permission ns2=Write --request-id <123456>
+```
+
+＃＃ 列表
+
+“tcld 用户列表”命令返回 Temporal Cloud 中的分页用户列表。
+
+别名：`l`
+
+**例子**
+
+```command
+tcld user list
+```
+
+以下修饰符控制命令的行为。
+
+#### --Namespace
+
+列出拥有 Namespace 权限的用户。
+
+别名：`-n`
+
+**例子**
+
+```command
+tcld user list --namespace <namespace_id>
+```
+
+#### --页面令牌
+
+用于分页列表用户请求的页面令牌。
+
+别名：`-p`
+
+#### --页面大小
+
+分页列表用户请求的页面大小。
+
+默认为 10。
+
+别名：`-s`
+
+## 重新发送邀请
+
+先决条件：
+
+别名：`里`
+
+#### XPROT026X\_cloud\_v1\_XPROT025X\_open\_XPROT027Xs
+
+#### --用户电子邮件
+
+指定要重新发送邀请的用户的电子邮件地址。
+
+**例子**
+
+```bash
+tcld user resend-invite --user-email <test@example.com>
+```
+
+＃＃＃＃  - 用户身份
+
+指定要重新发送邀请的用户的用户标识符。
+
+**例子**
+
+```bash
+tcld user resend-invite --user-id <test-user-id>
+```
+
+#### --请求 ID
+
+用于异步操作的请求标识符。
+
+如果未设置，服务器会分配一个标识符。
+
+别名：`-r`
+
+## 设置帐户角色
+
+`tcld user set-account-role` 命令为 Temporal Cloud 中的指定用户设置[帐户级别角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。
+您必须设置“--user-email”或“--user-id”。
+
+别名：`里`
+
+以下修饰符控制命令的行为。
+
+#### --账户角色
+
+_所需修饰符_
+
+指定要分配给用户的帐户级角色。
+
+可用的帐户角色：`admin` | `开发人员` | ‘读’。
+
+别名：`-ar`
+
+#### --用户电子邮件
+
+指定要为其分配帐户级角色的用户的电子邮件地址。
+
+别名：`-e`
+
+**例子**
+
+```command
+tcld user set-account-role --user-email <test@example.com> --account-role Developer
+```
+
+＃＃＃＃  - 用户身份
+
+指定要为其分配帐户级角色的用户的用户标识符。
+
+别名：`--id`
+
+**例子**
+
+```command
+tcld user set-account-role --user-id <test-user-id> --account-role Developer
+```
+
+#### --请求 ID
+
+用于异步操作的请求标识符。
+
+如果未设置，服务器会分配一个标识符。
+
+别名：`-r`
+
+#### --资源版本
+
+指定 Update 的资源版本 (ETag)。
+如果未指定，则使用最新版本。
+
+别名：`-v`
+
+## 设置-Namespace-权限
+
+`tcld user set-Namespace-permissions` 命令为 Temporal Cloud 中的指定用户设置 [Namespace 级别权限](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions)。
+您必须设置“--user-email”或“--user-id”。
+
+别名：`snp`
+
+以下修饰符控制命令的行为。
+
+#### --用户电子邮件
+
+指定要为其分配 Namespace 级别权限的用户的电子邮件地址。
+
+**例子**
+
+```command
+tcld user set-namespace-permissions --user-email <test@example.com>
+```
+
+＃＃＃＃  - 用户身份
+
+指定要为其分配 Namespace 级别权限的用户的用户标识符。
+
+**例子**
+
+```command
+tcld user set-namespace-permissions --user-id <test-user-id>
+```
+
+#### --请求 ID
+
+用于分配 Namespace 级别权限的请求标识符。
+
+如果未设置，服务器会分配一个标识符。
+
+别名：`-r`
+
+#### --资源版本
+
+指定要分配 Namespace 级别权限的资源版本 (ETag)。
+如果未指定，则使用最新版本。
+
+别名：`-v`
+
+#### --Namespace-权限
+
+为受邀用户指定 [Namespace 级别权限](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions)。
+您可以多次提供此修饰符以在单个请求中设置多个 Namespace 权限。
+
+每个值的格式必须为“Namespace=permission-type”。
+
+可用的 Namespace 权限：`Admin` | `写` | ‘读’。
+
+别名：`-p`

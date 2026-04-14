@@ -1,8 +1,8 @@
 ---
 id: converters-and-encryption
-title: Converters and encryption - Ruby SDK
-sidebar_label: Converters and encryption
-description: Use a custom Payload Codec and Converter in the Ruby SDK to modify Temporal Data Conversion behavior, including examples for encryption and formatting.
+title: 转换器与加密 - Ruby SDK
+sidebar_label: 转换器与加密
+description: 在 Ruby SDK 中使用自定义 Payload Codec 和 Converter 来修改 Temporal Data Conversion 行为，包括加密和格式化示例。
 keywords:
   - sdk
   - ruby
@@ -20,27 +20,17 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-Temporal's security model is designed around client-side encryption of Payloads.
-A client may encrypt Payloads before sending them to the server, and decrypt them after receiving them from the server.
-This provides a high degree of confidentiality because the Temporal Server itself has absolutely no knowledge of the actual data.
-It also gives implementers more power and more freedom regarding which client is able to read which data -- they can control access with keys, algorithms, or other security measures.
+Temporal 的安全模型围绕 Payload 的客户端加密设计。客户端可以在将 Payload 发送到服务器之前对其进行加密，并在从服务器接收后对其进行解密。这提供了高度的机密性，因为 Temporal Server 本身对实际数据完全不知情。它还为实现者提供了更多关于哪个客户端能够读取哪些数据的权力和自由——他们可以通过密钥、算法或其他安全措施控制访问。
 
-A Temporal developer adds client-side encryption of Payloads by providing a Custom Payload Codec to its Client.
-Depending on business needs, a complete implementation of Payload Encryption may involve selecting appropriate encryption algorithms, managing encryption keys, restricting a subset of their users from viewing payload output, or a combination of these.
+Temporal 开发者通过向其 Client 提供自定义 Payload Codec 来添加 Payload 的客户端加密。根据业务需求，Payload 加密的完整实现可能涉及选择合适的加密算法、管理加密密钥、限制部分用户查看 Payload 输出，或这些措施的组合。
 
-The server itself never adds encryption over Payloads.
-Therefore, unless client-side encryption is implemented, Payload data will be persisted in non-encrypted form to the data store, and any Client that can make requests to a Temporal namespace (including the Temporal UI and CLI) will be able to read Payloads contained in Workflows.
-When working with sensitive data, you should always implement Payload encryption.
+服务器本身从不对 Payload 添加加密。因此，除非实现了客户端加密，否则 Payload 数据将以非加密形式持久化到数据存储中，任何能够向 Temporal Namespace 发出请求的 Client（包括 Temporal UI 和 CLI）都能读取 Workflow 中包含的 Payload。在处理敏感数据时，应始终实现 Payload 加密。
 
-## Custom Payload Codec {#custom-payload-codec}
+## 自定义 Payload Codec {#custom-payload-codec}
 
-Custom Data Converters can change the default Temporal Data Conversion behavior by adding hooks, sending payloads to external storage, or performing different encoding steps.
-If you only need to change the encoding performed on your payloads -- by adding compression or encryption -- you can override the default Data Converter to use a new `PayloadCodec`.
+自定义 Data Converter 可以通过添加钩子、将 Payload 发送到外部存储或执行不同的编码步骤来更改默认的 Temporal Data Conversion 行为。如果只需要更改对 Payload 执行的编码——通过添加压缩或加密——可以覆盖默认的 Data Converter 以使用新的 `PayloadCodec`。
 
-The Payload Codec needs to extend `Temporalio::Converters::PayloadCodec` and implement `encode` and `decode` methods.
-These should convert the given payloads as needed into new payloads, using the `"encoding"` metadata field.
-Do not mutate the existing payloads.
-Here is an example of an encryption codec that just uses base64 in each direction:
+Payload Codec 需要继承 `Temporalio::Converters::PayloadCodec` 并实现 `encode` 和 `decode` 方法。这些方法应使用 `"encoding"` 元数据字段将给定的 Payload 按需转换为新的 Payload。不要修改现有的 Payload。以下是一个使用 base64 进行双向编码的加密 Codec 示例：
 
 ```ruby
 class Base64Codec < Temporalio::Converters::PayloadCodec
@@ -68,9 +58,9 @@ class Base64Codec < Temporalio::Converters::PayloadCodec
 end
 ```
 
-**Set Data Converter to use custom Payload Codec**
+**设置 Data Converter 以使用自定义 Payload Codec**
 
-When creating a client, the default `DataConverter` can be updated with the payload codec like so:
+创建客户端时，可以使用如下方式通过 Payload Codec 更新默认的 `DataConverter`：
 
 ```ruby
 my_client = Temporalio::Client.connect(
@@ -80,72 +70,50 @@ my_client = Temporalio::Client.connect(
 )
 ```
 
-- Data **encoding** is performed by the client using the converters and codecs provided by Temporal or your custom implementation when passing input to the Temporal Cluster. For example, plain text input is usually serialized into a JSON object, and can then be compressed or encrypted.
-- Data **decoding** may be performed by your application logic during your Workflows or Activities as necessary, but decoded Workflow results are never persisted back to the Temporal Cluster.
-  Instead, they are stored encoded on the Cluster, and you need to provide an additional parameter when using the [temporal workflow show](/cli/workflow#show) command or when browsing the Web UI to view output.
+- 数据**编码**由客户端使用 Temporal 提供的或自定义的转换器和 Codec 在向 Temporal Cluster 传递输入时执行。例如，纯文本输入通常先序列化为 JSON 对象，然后可以进行压缩或加密。
+- 数据**解码**可以在 Workflow 或 Activity 中由应用逻辑按需执行，但解码后的 Workflow 结果不会持久化回 Temporal Cluster。相反，它们以编码形式存储在 Cluster 上，你需要在使用 [temporal workflow show](/cli/workflow#show) 命令或在 Web UI 中浏览时提供附加参数来查看输出。
 
 <!-- TODO: For reference, see the [Encryption](https://github.com/temporalio/samples-ruby/tree/main/encryption) sample. -->
 
-### Using a Codec Server
+### 使用 Codec Server
 
-A Codec Server is an HTTP server that uses your custom Codec logic to decode your data remotely.
-The Codec Server is independent of the Temporal Cluster and decodes your encrypted payloads through predefined endpoints.
-You create, operate, and manage access to your Codec Server in your own environment.
-The Temporal CLI and the Web UI in turn provide built-in hooks to call the Codec Server to decode encrypted payloads on demand.
-Refer to the [Codec Server](/production-deployment/data-encryption) documentation for information on how to design and deploy a Codec Server.
+Codec Server 是一个 HTTP 服务器，它使用自定义的 Codec 逻辑远程解码数据。Codec Server 独立于 Temporal Cluster，通过预定义的端点解码加密的 Payload。你在自己的环境中创建、运行和管理对 Codec Server 的访问。Temporal CLI 和 Web UI 提供内置钩子，可按需调用 Codec Server 解码加密的 Payload。有关如何设计和部署 Codec Server 的信息，请参阅 [Codec Server](/production-deployment/data-encryption) 文档。
 
-## Payload conversion {#custom-payload-converter}
+## Payload 转换 {#custom-payload-converter}
 
-Temporal SDKs provide a default [Payload Converter](/payload-converter) that can be customized to convert a custom data type to [Payload](/dataconversion#payload) and back.
+Temporal SDK 提供了一个默认的 [Payload Converter](/payload-converter)，可以自定义以将自定义数据类型转换为 [Payload](/dataconversion#payload) 并再转换回来。
 
-### Conversion sequence {#conversion-sequence}
+### 转换顺序 {#conversion-sequence}
 
-The order in which your encoding Payload Converters are applied depend on the order given to the Data Converter.
-You can set multiple encoding Payload Converters to run your conversions.
-When the Data Converter receives a value for conversion, it passes through each Payload Converter in sequence until the converter that handles the data type does the conversion.
+编码 Payload Converter 的应用顺序取决于提供给 Data Converter 的顺序。可以设置多个编码 Payload Converter 来运行转换。当 Data Converter 接收到需要转换的值时，它会按顺序通过每个 Payload Converter，直到处理该数据类型的转换器完成转换。
 
-Payload Converters can be customized independently of a Payload Codec.
-Temporal's Converter architecture looks like this:
+Payload Converter 可以独立于 Payload Codec 进行自定义。Temporal 的 Converter 架构如下所示：
 
 <CaptionedImage
     src="/img/info/converter-architecture.png"
     title="Temporal converter architecture"
 />
 
-### Supported Data Types {#supported-data-types}
+### 支持的数据类型 {#supported-data-types}
 
-Data converters are used to convert raw Temporal payloads to/from actual Ruby types.
-A custom data converter can be set via the `data_converter` keyword argument when creating a client. Data converters are a combination of payload converters, payload codecs, and failure converters.
-Payload converters convert Ruby values to/from serialized bytes. Payload codecs convert bytes to bytes (e.g. for compression or encryption). Failure converters convert exceptions to/from serialized failures.
+Data Converter 用于将原始 Temporal Payload 与实际 Ruby 类型相互转换。创建客户端时，可以通过 `data_converter` 关键字参数设置自定义 Data Converter。Data Converter 是 Payload Converter、Payload Codec 和 Failure Converter 的组合。Payload Converter 将 Ruby 值与序列化字节相互转换。Payload Codec 将字节转换为字节（例如用于压缩或加密）。Failure Converter 将异常与序列化的 Failure 相互转换。
 
-Data converters are in the `Temporalio::Converters` module.
-The default data converter uses a default payload converter, which supports the following types:
+Data Converter 位于 `Temporalio::Converters` 模块中。默认的 Data Converter 使用默认的 Payload Converter，支持以下类型：
 
 - `nil`
-- "bytes" (i.e. `String` with `Encoding::ASCII_8BIT` encoding)
-- `Google::Protobuf::MessageExts` instances
-- [JSON module](https://docs.ruby-lang.org/en/master/JSON.html) for everything else
+- "bytes"（即使用 `Encoding::ASCII_8BIT` 编码的 `String`）
+- `Google::Protobuf::MessageExts` 实例
+- 其他所有类型使用 [JSON 模块](https://docs.ruby-lang.org/en/master/JSON.html)
 
-This means that normal Ruby objects will use `JSON.generate` when serializing and `JSON.parse` when deserializing (with `create_additions: true` set by default).
-So a Ruby object will often appear as a hash when deserialized.
-Also, hashes that are passed in with symbol keys end up with string keys when deserialized.
-While "JSON Additions" are supported, it is not cross-SDK-language compatible since this is a Ruby-specific construct.
+这意味着普通 Ruby 对象在序列化时使用 `JSON.generate`，在反序列化时使用 `JSON.parse`（默认设置 `create_additions: true`）。因此，Ruby 对象反序列化后通常呈现为哈希。此外，传入时使用 symbol 键的哈希在反序列化后会变成 string 键。虽然支持"JSON Additions"，但由于这是 Ruby 特有的构造，因此不跨 SDK 语言兼容。
 
-The default payload converter is a collection of "encoding payload converters".
-On serialize, each encoding converter will be tried in order until one accepts (default falls through to the JSON one).
-The encoding converter sets an `encoding` metadata value which is used to know which converter to use on deserialize.
-Custom encoding converters can be created, or even the entire payload converter can be replaced with a different implementation.
+默认的 Payload Converter 是"编码 Payload Converter"的集合。在序列化时，每个编码转换器会按顺序尝试，直到有一个接受（默认回退到 JSON 转换器）。编码转换器设置一个 `encoding` 元数据值，用于在反序列化时确定使用哪个转换器。可以创建自定义编码转换器，甚至可以用不同的实现完全替换 Payload Converter。
 
-**NOTE:** For ActiveRecord, or other general/ORM models that are used for a different purpose, it is not recommended to try to reuse them as Temporal models.
-Eventually model purposes diverge and models for a Temporal workflows/activities should be specific to their use for clarity and compatibility reasons.
-Also many Ruby ORMs do many lazy things and therefore provide unclear serialization semantics.
-Instead, consider having models specific for workflows/activities and translate to/from existing models as needed.
-See the next section on how to do this with ActiveModel objects.
+**注意：** 对于 ActiveRecord 或其他用于不同目的的通用/ORM 模型，不建议尝试将其作为 Temporal 模型重用。最终模型用途会分化，用于 Temporal Workflow/Activity 的模型应专用于其目的，以保证清晰性和兼容性。此外，许多 Ruby ORM 会进行大量延迟操作，因此提供不清晰的序列化语义。建议为 Workflow/Activity 创建专用模型，并根据需要与现有模型相互转换。请参阅下一节了解如何使用 ActiveModel 对象实现这一点。
 
 #### ActiveModel {#active-model}
 
-By default, ActiveModel objects do not natively support the `JSON` module.
-A mixin can be created to add this support for ActiveModel, for example:
+默认情况下，ActiveModel 对象不原生支持 `JSON` 模块。可以创建一个 mixin 来为 ActiveModel 添加此支持，例如：
 
 ```ruby
 module ActiveModelJSONSupport
@@ -170,6 +138,4 @@ module ActiveModelJSONSupport
 end
 ```
 
-Now if `include ActiveModelJSONSupport` is present on any ActiveModel class, on serialization `to_json` will be used which will use `as_json` which calls the super `as_json` but also includes the fully qualified class name as the JSON
-`create_id` key.
-On deserialization, Ruby JSON then uses this key to know what class to call `json_create` on.
+现在，如果任何 ActiveModel 类中存在 `include ActiveModelJSONSupport`，在序列化时会使用 `to_json`，它会调用 `as_json`，进而调用父类的 `as_json` 并将完全限定类名作为 JSON `create_id` 键附加其中。在反序列化时，Ruby JSON 使用此键来确定调用哪个类的 `json_create`。

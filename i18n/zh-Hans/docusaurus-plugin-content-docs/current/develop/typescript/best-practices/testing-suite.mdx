@@ -1,0 +1,589 @@
+---
+id: testing-suite
+title: 测试 - TypeScript SDK
+sidebar_label: 测试
+description: Temporal 应用程序开发指南的测试部分涵盖了 Workflow 和集成测试的框架，包括端到端、集成、单元测试和跳时功能。
+toc_max_heading_level: 4
+keywords:
+  - testing
+tags:
+  - Testing
+  - TypeScript SDK
+  - Temporal SDKs
+---
+
+Temporal 应用程序开发指南的测试部分描述了促进 Workflow 和集成测试的框架。
+
+在 Temporal 的上下文中，您可以创建以下类型的自动化测试：
+
+- **端到端：** 运行 Temporal Server 和 Worker 及其所有 Workflow 和活动；从客户端启动 Workflow 并与之交互。
+- **集成：** 端到端和单元测试之间的任何内容。
+  - 使用模拟上下文和其他 SDK 导入（通常是网络请求）运行活动。
+  - 通过模拟活动运行 Worker，并使用客户端启动 Workflow。
+  - 使用模拟 SDK 导入运行 Workflow。
+- **单元：** 运行一段 Workflow 或 Activity 代码（函数或方法）并模拟它调用的任何代码。
+
+我们通常建议将大部分测试编写为集成测试。
+
+由于测试服务器支持跳过时间，因此请使用测试服务器与 Worker 进行端到端测试和集成测试。
+
+## 测试框架 {#test-frameworks}
+
+一些 SDK 提供流行测试框架、运行器或库的支持或示例。
+
+TypeScript 有 [Jest](https://jestjs.io/) 和 [Mocha](https://mochajs.org/) 的示例测试。
+
+**笑话**
+
+- 最低 Jest 版本：`27.0.0`
+- [Sample test file](https://github.com/Temporalio/samples-typescript/blob/main/activities-examples/src/Workflows.test.ts)
+- [`jest.config.js`](https://github.com/Temporalio/samples-typescript/blob/main/activities-examples/jest.config.js) (必须使用 [`testEnvironment: 'node'`](https://jestjs.io/docs/configuration#testenvironment-string)；不支持`testEnvironment: 'jsdom'`)
+
+**摩卡**
+
+- [示例测试文件](https://github.com/Temporalio/samples-typescript/blob/main/activities-examples/src/mocha/Workflows.test.ts)
+- 测试覆盖库：[`@Temporalio/nyc-test-coverage`](https://github.com/Temporalio/sdk-typescript/tree/main/packages/nyc-test-coverage)
+
+## 测试活动 {#test-activities}
+
+Activity 可以使用模拟 Activity 环境进行测试，该环境提供了一种模拟 Activity 上下文、监听心跳和取消 Activity 的方法。
+此行为允许您通过直接调用 Activity 来单独测试 Activity，而无需创建 Worker 来运行 Activity。
+
+### 运行 Activity {#run-an-Activity}
+
+如果 Activity 引用其上下文，则您需要在单独测试时模拟该上下文。
+
+首先，创建一个 [`MockActivityEnvironment`](https://typescript.Temporal.io/api/classes/testing.MockActivityEnvironment)。
+构造函数接受可选的部分 Activity [`Info`](https://typescript.Temporal.io/api/interfaces/Activity.Info) 对象，以防测试需要任何信息字段。
+
+然后使用 [`MockActivityEnvironment.run()`](https://typescript.Temporal.io/api/classes/testing.MockActivityEnvironment#run) 在 Activity [Context](https://typescript.Temporal.io/api/classes/Activity.Context) 中运行函数。
+
+```ts
+import { activityInfo } from '@temporalio/activity';
+import { MockActivityEnvironment } from '@temporalio/testing';
+import assert from 'assert';
+
+// A function that takes two numbers and returns a promise that resolves to the sum of the two numbers
+// and the current attempt.
+async function activityFoo(a: number, b: number): Promise<number> {
+  return a + b + activityInfo().attempt;
+}
+
+// Create a MockActivityEnvironment with attempt set to 2. Run the activityFoo
+// function with parameters 5 and 35. Assert that the result is 42.
+const env = new MockActivityEnvironment({ attempt: 2 });
+const result = await env.run(activityFoo, 5, 35);
+assert.equal(result, 42);
+```
+
+### 聆听心跳 {#listen-toheartbeats}
+
+当 Activity 发送心跳时，请确保您可以在测试代码中看到心跳，以便您可以验证它们。
+
+[`MockActivityEnvironment`](https://typescript.Temporal.io/api/classes/testing.MockActivityEnvironment) 是一个 [`EventEmitter`](https://nodejs.org/api/events.html#class-eventemitter)，它发出一个 `heartbeat` 事件，您可以使用该事件监听 Activity 发出的心跳。
+
+当 Activity 由 Worker 运行时，心跳会受到限制以避免服务器过载。
+但是，“MockActivityEnvironment”不会限制心跳。
+
+```ts
+import { heartbeat } from '@temporalio/activity';
+import assert from 'assert';
+
+async function activityFoo(): Promise<void> {
+  heartbeat(6);
+}
+
+const env = new MockActivityEnvironment();
+
+env.on('heartbeat', (d: unknown) => {
+  assert(d === 6);
+});
+
+await env.run(activityFoo);
+```
+
+### 取消 Activity {#cancel-an-Activity}
+
+如果 Activity 应该对取消做出反应，您可以通过取消来测试它是否正确反应。
+
+[`MockActivityEnvironment`](https://typescript.Temporal.io/api/classes/testing.MockActivityEnvironment) 公开了一个 [`.cancel()`](https://typescript.Temporal.io/api/classes/testing.MockActivityEnvironment#cancel) 方法，用于取消Activity 上下文。
+
+```ts
+import { CancelledFailure, heatbeat, sleep } from '@temporalio/activity';
+import { MockActivityEnvironment } from '@temporalio/testing';
+import assert from 'assert';
+
+async function activityFoo(): Promise<void> {
+  heartbeat(6);
+  // @temporalio/activity's sleep() is Cancellation-aware, which means that on Cancellation,
+  // CancelledFailure will be thrown from it.
+  await sleep(100);
+}
+
+const env = new MockActivityEnvironment();
+
+env.on('heartbeat', (d: unknown) => {
+  assert(d === 6);
+});
+
+await assert.rejects(env.run(activityFoo), (err) => {
+  assert.ok(err instanceof CancelledFailure);
+});
+```
+
+## 测试 Workflows {#test-Workflows}
+
+### 如何模拟活动 {#mock-activities}
+
+在对 Workflow 进行单元测试时模拟 Activity 调用。
+
+当使用 Worker 集成测试 Workflow 时，您可以通过向 Worker 提供模拟 Activity 实现来模拟活动。
+
+仅针对正在测试的 Workflow 实施相关活动。
+
+```ts
+import type * as activities from './activities';
+
+// Creating a mock object of the activities.
+const mockActivities: Partial<typeof activities> = {
+  makeHTTPRequest: async () => '99',
+};
+
+// Creating a worker with the mocked activities.
+const worker = await Worker.create({
+  activities: mockActivities,
+  // ...
+});
+```
+
+### 如何跳过时间{#skip-time}
+
+一些长期运行的 Workflow 可以持续数月甚至数年。
+实施测试框架允许您的 Workflow 代码跳过时间并在几秒钟内完成测试，而不是 Workflow 指定的时间。
+
+例如，如果您的 Workflow 睡眠了一天，或者 Activity 发生故障且重试间隔较长，则无需等待整个睡眠周期的长度来测试睡眠功能是否起作用。
+相反，通过及时向前跳跃并及时完成测试来测试睡眠后发生的逻辑。
+
+大多数 SDK 中包含的测试框架是 Temporal Server 的内存中实现，支持跳过时间。
+时间是“TestWorkflowEnvironment”实例的全局属性：跳过时间（自动或手动）适用于所有当前正在运行的测试。
+如果不同的测试需要不同的时间行为，请按系列运行测试或使用测试服务器的单独实例运行测试。
+例如，您可以并行运行所有具有自动时间跳过功能的测试，然后串行运行所有具有手动时间跳过功能的测试，然后并行运行所有不带时间跳过功能的测试。
+
+#### 设置时间跳过 {#setting-up}
+
+在您选择的 SDK 中设置跳时测试框架。
+
+```bash
+npm install @temporalio/testing
+```
+
+`@Temporalio/testing` 包下载测试服务器并导出 [`TestWorkflowEnvironment`](https://typescript.Temporal.io/api/classes/testing.TestWorkflowEnvironment)，您可以使用它将客户端和 Worker 连接到测试服务器并与测试服务器交互。
+
+[`TestWorkflowEnvironment.createTimeSkipping`](https://typescript.Temporal.io/api/classes/testing.TestWorkflowEnvironment#createtimeskipping) 启动测试服务器。
+典型的测试套件应设置一个测试环境实例，以便在所有测试中重用（例如，在 [Jest](https://jestjs.io/) `beforeAll` 挂钩或 [Mocha](https://mochajs.org/) `before()` 挂钩中）。
+
+```typescript
+import { TestWorkflowEnvironment } from '@temporalio/testing';
+
+let testEnv: TestWorkflowEnvironment;
+
+// beforeAll and afterAll are injected by Jest
+beforeAll(async () => {
+  testEnv = await TestWorkflowEnvironment.createTimeSkipping();
+});
+
+afterAll(async () => {
+  await testEnv?.teardown();
+});
+```
+
+`TestWorkflowEnvironment` 有 [`client`](https://typescript.Temporal.io/api/classes/testing.TestWorkflowEnvironment#client) 和 [`nativeConnection`](https://typescript.Temporal.io/api/classes/testing.TestWorkflowEnvironment#nativeconnection) 用于创建Workers：
+
+```typescript
+import { Worker } from '@temporalio/worker';
+import { v4 as uuid4 } from 'uuid';
+import { workflowFoo } from './workflows';
+
+test('workflowFoo', async () => {
+  const worker = await Worker.create({
+    connection: testEnv.nativeConnection,
+    taskQueue: 'test',
+    ...
+  });
+  const result = await worker.runUntil(
+    testEnv.client.workflow.execute(workflowFoo, {
+      workflowId: uuid4(),
+      taskQueue: 'test',
+    })
+  );
+  expect(result).toEqual('foo');
+});
+```
+
+此测试使用测试连接创建 Worker，运行 Worker 直到 Workflow 完成，然后对 Workflow 的结果进行断言。
+Workflow 使用连接到测试服务器的“testEnv.client.Workflow”执行。
+
+#### 自动跳过时间 {#automatic-method}
+
+您可以在您选择的 SDK 中自动跳过时间。
+启动一个测试服务器进程，根据需要跳过时间。
+例如，在跳时模式下，Timer（包括睡眠和条件超时）会快进，除非活动正在运行。
+
+测试服务器在“正常”时间启动。
+当您使用“TestWorkflowEnvironment.client.Workflow.execute()”或“.result()”时，测试服务器会切换到“跳过”时间模式，直到 Workflow 完成。
+在“跳过”模式下，Timer（`sleep()` 调用和 `condition()` 超时）会快进，除非 Activity 正在运行。
+
+`Workflows.ts`
+
+```ts
+import { sleep } from '@temporalio/workflow';
+
+export async function sleeperWorkflow() {
+  await sleep('1 day');
+}
+```
+
+`测试.ts`
+
+```ts
+import { sleeperWorkflow } from './workflows';
+
+test('sleep completes almost immediately', async () => {
+  const worker = await Worker.create({
+    connection: testEnv.nativeConnection,
+    taskQueue: 'test',
+    workflowsPath: require.resolve('./workflows'),
+  });
+  // Does not wait an entire day
+  await worker.runUntil(
+    testEnv.client.workflow.execute(sleeperWorkflow, {
+      workflowId: uuid(),
+      taskQueue: 'test',
+    }),
+  );
+});
+```
+
+#### 手动跳过时间 {#manual-method}
+
+在您选择的 SDK 中手动跳过时间。
+
+您可以从测试代码中调用“testEnv.sleep()”来提前测试服务器的时间。
+这对于测试中间状态或无限期长时间运行的 Workflow 非常有用。
+但是，要使用“testEnv.sleep()”，您需要通过使用“.start()”而不是“.execute()”（并且不调用“.result()”）启动 Workflow 来避免自动跳过时间。
+
+`Workflow.ts`
+
+```ts
+import { sleep } from '@temporalio/workflow';
+import { defineQuery, setHandler } from '@temporalio/workflow';
+
+export const daysQuery = defineQuery('days');
+
+export async function sleeperWorkflow() {
+  let numDays = 0;
+
+  setHandler(daysQuery, () => numDays);
+
+  for (let i = 0; i < 100; i++) {
+    await sleep('1 day');
+    numDays++;
+  }
+}
+```
+
+`测试.ts`
+
+```ts
+test('sleeperWorkflow counts days correctly', async () => {
+  const worker = await Worker.create({
+    connection: testEnv.nativeConnection,
+    taskQueue: 'test',
+    workflowsPath: require.resolve('./workflows'),
+  });
+
+  // `start()` starts the test server in "normal" mode, not skipped time mode.
+  // If you don't advance time using `testEnv.sleep()`, then `sleeperWorkflow()`
+  // will run for days.
+  handle = await testEnv.client.workflow.start(sleeperWorkflow, {
+    workflowId: uuid4(),
+    taskQueue,
+  });
+
+  worker.run();
+
+  let numDays = await handle.query(daysQuery);
+  assert.equal(numDays, 0);
+
+  // Advance the test server's time by 25 hours
+  await testEnv.sleep('25 hours');
+  numDays = await handle.query(daysQuery);
+  assert.equal(numDays, 1);
+
+  await testEnv.sleep('25 hours');
+  numDays = await handle.query(daysQuery);
+  assert.equal(numDays, 2);
+});
+```
+
+#### 跳过活动时间 {#skip-time-in-activities}
+
+跳过您选择的 SDK 中的“活动”时间。
+
+从模拟 Activity 调用 [`TestWorkflowEnvironment.sleep`](https://typescript.Temporal.io/api/classes/testing.TestWorkflowEnvironment#sleep)。
+
+在以下测试中，“processOrderWorkflow”一天后向用户发送通知。
+`processOrder` 模拟 Activity 调用 `testEnv.sleep(‘2 days')`，在此期间 Workflow 发送电子邮件（通过调用 `sendNotificationEmail` Activity）。
+
+然后，在 Workflow 完成后，我们断言调用了“sendNotificationEmail”。
+
+<详情>
+<摘要>
+Workflow 实施
+</summary>
+
+<!--SNIPSTART打字稿-Timer-提醒-Workflow-->
+[Timer-examples/src/Workflows.ts](https://github.com/Temporalio/samples-typescript/blob/main/Timer-examples/src/Workflows.ts)
+```ts
+export async function processOrderWorkflow({
+  orderProcessingMS,
+  sendDelayedEmailTimeoutMS,
+}: ProcessOrderOptions): Promise<string> {
+  let processing = true;
+  // Dynamically define the timeout based on given input
+  const { processOrder } = proxyActivities<ReturnType<typeof createActivities>>({
+    startToCloseTimeout: orderProcessingMS,
+  });
+
+  const processOrderPromise = processOrder().then(() => {
+    processing = false;
+  });
+
+  await Promise.race([processOrderPromise, sleep(sendDelayedEmailTimeoutMS)]);
+
+  if (processing) {
+    await sendNotificationEmail();
+
+    await processOrderPromise;
+  }
+
+  return 'Order completed!';
+}
+```
+<!--SNIPEND-->
+
+</details>
+
+<!--SNIPSTART typescript-Timer-reminder-test-->
+[Timer-examples/src/test/Workflows.test.ts](https://github.com/Temporalio/samples-typescript/blob/main/Timer-examples/src/test/Workflows.test.ts)
+```ts
+it('sends reminder email if processOrder does not complete in time', async () => {
+  // This test doesn't actually take days to complete: the TestWorkflowEnvironment starts the
+  // Test Server, which automatically skips time when there are no running Activities.
+  let emailSent = false;
+  const mockActivities: ReturnType<typeof createActivities> = {
+    async processOrder() {
+      // Test server switches to "normal" time while an Activity is executing.
+      // Call `env.sleep` to skip ahead 2 days, by which time sendNotificationEmail
+      // should have been called.
+      await env.sleep('2 days');
+    },
+    async sendNotificationEmail() {
+      emailSent = true;
+    },
+  };
+  const worker = await Worker.create({
+    connection: env.nativeConnection,
+    taskQueue: 'test',
+    workflowsPath: require.resolve('../workflows'),
+    activities: mockActivities,
+  });
+  await worker.runUntil(
+    env.client.workflow.execute(processOrderWorkflow, {
+      workflowId: uuid(),
+      taskQueue: 'test',
+      args: [{ orderProcessingMS: ms('3 days'), sendDelayedEmailTimeoutMS: ms('1 day') }],
+    }),
+  );
+  assert.ok(emailSent);
+});
+```
+<!--SNIPEND-->
+
+### Workflow 上下文中的测试函数 {#Workflow-context}
+
+对于要在 Workflow 上下文中运行的函数或方法（可以获取当前的 Workflow 信息，或者在 TypeScript 或 Python 的情况下在沙箱内运行），它需要由 Worker 运行，就好像它是 Workflow 一样。
+
+:::note
+
+本节适用于 Python 和 TypeScript。
+在 Python 中，我们仅允许测试 Workflow，而不允许测试与 Workflow 相关的通用代码。
+
+:::
+
+要测试 Workflow 代码中不是 Workflow 的函数，请将其导出的文件放入 [WorkerOptions.WorkflowsPath](https://typescript.Temporal.io/api/interfaces/Worker.WorkerOptions#Workflowspath)。
+然后像 Workflow 一样执行该函数：
+
+`Workflows/带有 Workflow-function-to-test.ts 的文件`
+
+```ts
+import { sleep } from '@temporalio/workflow';
+
+export async function functionToTest(): Promise<number> {
+  await sleep('1 day');
+  return 42;
+}
+```
+
+`测试.ts`
+
+```ts
+const worker = await Worker.create({
+  connection: testEnv.nativeConnection,
+  workflowsPath: require.resolve(
+    './workflows/file-with-workflow-function-to-test',
+  ),
+});
+
+const result = await worker.runUntil(
+  testEnv.client.workflow.execute(functionToTest, workflowOptions),
+);
+
+assert.equal(result, 42);
+```
+
+如果“functionToTest”启动 Child Workflow，则必须从同一文件导出该 Workflow（以便 Worker 知道它）：
+
+```ts
+import { sleep } from '@temporalio/workflow';
+import { someWorkflowToRunAsChild } from './some-workflow';
+
+export { someWorkflowToRunAsChild };
+
+export async function functionToTest(): Promise<number> {
+  const result = await wf.executeChild(someWorkflowToRunAsChild);
+  return result + 42;
+}
+```
+
+### 在 Workflow 中断言 {#assert-in-Workflow}
+
+XPROT003X 要求 Workflow 代码是[确定性](/Workflow-definition#definition-constraints)。
+如果您对 Workflow 代码进行的更改会导致重播时出现不确定行为，则您需要使用我们的版本控制方法之一来优雅地对正在运行的 Workflow 进行 XPROT037X。
+通过版本控制，您可以修改 XPROT000X，以便新的执行使用 XPROT037Xd 代码，而现有的执行继续运行原始版本。
+您可以使用两种主要的版本控制方法：
+
+`assert` 方法在 Python 和 TypeScript 中可用。
+
+Node.js [`assert`](https://nodejs.org/api/assert.html) 模块包含在 Workflow 捆绑包中。
+
+默认情况下，失败的“assert”语句会抛出“AssertionError”，这会导致 [Workflow Task](/tasks#Workflow-task) 失败并无限期重试。
+
+为了防止这种行为，请使用“@Temporalio/testing”中的[“WorkflowInterceptorModules”](https://typescript.Temporal.io/api/Namespaces/testing/#Workflowinterceptormodules)。
+这些拦截器捕获“AssertionError”并将其转换为“ApplicationFailure”，使整个 Workflow Execution（不仅仅是 Workflow Task）失败。
+
+`Workflows/带有 Workflow-function-to-test.ts 的文件`
+
+```ts
+import assert from 'assert';
+
+export async function functionToTest() {
+  assert.ok(false);
+}
+```
+
+`测试.ts`
+
+```ts
+import {
+  TestWorkflowEnvironment,
+  workflowInterceptorModules,
+} from '@temporalio/testing';
+
+const worker = await Worker.create({
+  connection: testEnv.nativeConnection,
+  interceptors: {
+    workflowModules: workflowInterceptorModules,
+  },
+  workflowsPath: require.resolve(
+    './workflows/file-with-workflow-function-to-test',
+  ),
+});
+
+await worker.runUntil(
+  testEnv.client.workflow.execute(functionToTest, workflowOptions), // throws WorkflowFailedError
+);
+```
+
+## 如何重播 Workflow Execution {#replay}
+
+回放可重现 Workflow Execution 的准确状态。
+您可以从 Event History 的开头重播 Workflow。
+
+仅当 [Workflow Definition](/Workflow-definition) 从确定性角度来看与提供的历史记录兼容时，重播才会成功。
+
+当您测试 Workflow Definition 的更改时，我们建议执行以下操作作为 CI 检查的一部分：
+
+1. 确定被测 Worker 代码将针对哪些 Workflow Type 或 Task Queue（或两者）。
+2. 使用 SDK 客户端以编程方式或通过 Temporal CLI，从每个 Task Queue 下载最近打开和关闭的 Workflow 的一组代表性事件历史记录。
+3. 通过重播运行事件历史记录。
+4. 如果重播期间遇到任何错误，则 CI 失败。
+
+以下是获取和重播事件历史记录的示例：
+
+要重播单个 Event History，请使用 [Worker.runReplayHistory](https://typescript.Temporal.io/api/classes/Worker.Worker#runreplayhistory)。
+
+当重放 Event History 并检测到非确定性（即 Workflow 代码与历史记录不兼容）时，会抛出 [DeterminismViolationError](https://typescript.Temporal.io/api/classes/Workflow.DeterminismViolationError)。
+如果由于任何其他原因重播失败，则会抛出 [ReplayError](https://typescript.Temporal.io/api/classes/Worker.ReplayError)。
+
+在以下示例中，从磁盘上的 JSON 文件加载单个 Event History（从 [Web UI](/web-ui) 或 [Temporal CLI](/cli/Workflow#show) 获取）：
+
+```ts
+const filePath = './history_file.json';
+const history = await JSON.parse(fs.promises.readFile(filePath, 'utf8'));
+await Worker.runReplayHistory(
+  {
+    workflowsPath: require.resolve('./your/workflows'),
+  },
+  history,
+);
+```
+
+或者，我们可以使用客户端以编程方式下载 Event History：
+
+```ts
+const connection = await Connection.connect({ address });
+const client = new Client({ connection, namespace: 'your-namespace' });
+const handle = client.workflow.getHandle('your-workflow-id');
+const history = await handle.fetchHistory();
+await Worker.runReplayHistory(
+  {
+    workflowsPath: require.resolve('./your/workflows'),
+  },
+  history,
+);
+```
+
+为了确保对 Workflow 的更改可以安全部署，我们建议您从相关 Task Queue 获取事件历史记录并批量重播它们。
+您可以通过组合 [Client.Workflow.list()](https://typescript.Temporal.io/api/classes/client.WorkflowClient#list) 和[Worker.runReplayHistories()](https://typescript.Temporal.io/api/classes/Worker.Worker#runreplayhistories) API。
+
+在以下示例中（从服务器 1.18 开始，需要启用 [高级 Visibility](/Visibility#advanced-Visibility)），从服务器下载事件历史记录，然后通过传入客户端和一组 Workflow 执行来重播。
+异步迭代器返回的结果包含有关 Workflow Execution 以及重播期间是否发生错误的信息。
+
+```ts
+const executions = client.workflow.list({
+  query: 'TaskQueue=foo and StartTime > "2022-01-01T12:00:00"',
+});
+const histories = executions.intoHistories();
+const results = Worker.runReplayHistories(
+  {
+    workflowsPath: require.resolve('./your/workflows'),
+  },
+  histories,
+);
+for await (const result of results) {
+  if (result.error) {
+    console.error('Replay failed', result);
+  }
+}
+```

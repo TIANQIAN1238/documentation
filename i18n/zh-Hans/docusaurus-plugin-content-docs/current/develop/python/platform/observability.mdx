@@ -1,0 +1,229 @@
+---
+id: observability
+title: 可观测性 - Python SDK
+sidebar_label: 可观察性
+description: 了解如何使用指标、跟踪、日志记录和 Visibility API 监控您的 Temporal 应用程序。发出指标、设置跟踪、从 Workflow 记录并使用自定义 Search Attribute。
+toc_max_heading_level: 2
+keywords:
+  - client
+  - code sample
+  - developer-guide
+  - guide-context
+  - how-to
+  - logging
+  - python
+  - python sdk
+  - sdk
+  - search attribute
+  - workflow
+tags:
+  - Observability
+  - Workflows
+  - Search Attributes
+  - Python SDK
+  - Temporal SDKs
+---
+
+Temporal 开发人员指南的可观察性部分涵盖了查看 [Temporal 应用程序](/Temporal#Temporal-应用程序) 当前状态的多种方法，即查看 [Workflow Executions](/Workflow-执行) 被跟踪的方法[Temporal Platform](/Temporal#Temporal-platform) 以及任何指定 Workflow Execution 当前或执行点的状态。
+
+本节介绍与查看应用程序状态相关的功能，包括：
+
+- [发出指标](#metrics)
+- [设置跟踪](#tracing)
+- [从 Workflow 登录](#logging)
+- [Visibility API](#Visibility)
+
+## 发出指标 {#metrics}
+
+**如何发出指标**
+
+每个 Temporal SDK 都能够从客户端或 Worker 进程发出一组可选的指标。
+有关能够发出的指标的完整列表，请参阅[SDK 指标参考](/references/sdk-metrics)。
+
+- 有关 Prometheus 和 Grafana 集成的概述，请参阅[监控](/self-hosted-guide/monitoring) 指南。
+- 有关指标列表，请参阅[SDK 指标参考](/references/sdk-metrics)。
+- 有关使用 Python SDK 公开指标的端到端示例，请参阅 [samples-python](https://github.com/Temporalio/samples-python/tree/main/prometheus) 存储库。
+
+Python 中的指标是全局配置的；因此，您应该在任何其他 Temporal 代码之前设置 Prometheus 端点。
+
+以下示例在端口“9000”上公开 Prometheus 端点。
+
+```python
+from temporalio.runtime import Runtime, TelemetryConfig, PrometheusConfig
+
+# Create a new runtime that has telemetry enabled. Create this first to avoid
+# the default Runtime from being lazily created.
+new_runtime = Runtime(telemetry=TelemetryConfig(metrics=PrometheusConfig(bind_address="0.0.0.0:9000")))
+my_client = await Client.connect("my.temporal.host:7233", runtime=new_runtime)
+```
+
+## 设置跟踪 {#tracing}
+
+**如何设置追踪**
+
+跟踪允许您查看 Workflow 的调用图及其活动和任何 Child Workflow。
+
+Temporal Web 的跟踪功能主要跟踪 Temporal 上下文中的 Activity 执行。如果您需要特定于您的用例的自定义跟踪，您应该利用上下文传播来相应地添加跟踪逻辑。
+
+要在 Python 中配置跟踪，请安装“opentelemetry”依赖项。
+
+```bash
+# This command installs the `opentelemetry` dependencies.
+pip install temporalio[opentelemetry]
+```
+
+然后 [`Temporalio.contrib.opentelemetry.TracingInterceptor`](https://python.Temporal.io/Temporalio.contrib.opentelemetry.TracingInterceptor.html) 类可以设置为拦截器作为参数[`Client.connect()`](https://python.Temporal.io/Temporalio.client.Client.html#connect)。
+
+连接客户端后，将为 Worker 上的所有客户端调用、活动和 Workflow 调用创建跨度。
+Span 是通过服务器创建和序列化的，以提供 Workflow Execution 的一个跟踪。
+
+## 从 Workflow 记录 {#logging}
+
+日志记录使您能够在代码执行期间记录关键信息。
+记录器创建审核跟踪并捕获有关 Workflow 操作的信息。
+适当的日志记录级别取决于您的具体需求。
+在开发或故障排除期间，您可能会使用调试甚至跟踪。
+在生产中，您可以使用 info 或 warn 来避免日志量过多。
+
+记录器支持以下日志记录级别：
+
+|水平|使用 |
+| -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| '追踪' |最详细的日志记录级别，用于非常细粒度的信息。                               |
+| `调试` |详细信息，通常可用于调试目的。                                            |
+| `信息` |有关应用程序操作的一般信息。                                                    |
+| `警告` |指示不会阻止应用程序运行的潜在有害情况或小问题。 |
+| `错误` |指示可能仍允许应用程序继续运行的错误情况。                    |
+
+Temporal SDK 核心通常使用“WARN”作为其默认日志记录级别。
+
+**如何从 Workflow 登录**
+
+将日志和错误发送到日志记录服务，以便当出现问题时，您可以看到发生了什么。
+
+SDK 核心使用“WARN”作为其默认日志记录级别。
+
+您可以通过导入日志记录模块“logging”，使用 Python 标准库从 Workflow 进行日志记录。
+
+将日志记录配置设置为您想要公开日志的级别。
+以下示例将日志记录信息级别设置为“INFO”。
+
+```python
+logging.basicConfig(level=logging.INFO)
+```
+
+然后在 Workflow 中，设置 Workflow 上的 [`logger`](https://python.Temporal.io/Temporalio.Workflow.html#logger) 和级别。以下示例记录 Workflow。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/your_loggers/your_Workflow_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+# ...
+        workflow.logger.info("Workflow input parameter: %s" % name)
+```
+
+### 自定义记录器 {#custom-logger}
+
+使用自定义记录器进行记录。
+
+使用内置的 [Python 日志记录工具](https://docs.python.org/3/library/logging.html) 设置自定义记录器。
+
+## Visibility API {#Visibility}
+
+Temporal Platform 中的术语 Visibility 是指使操作员能够查看 Temporal 服务中当前存在的 Workflow Execution 的子系统和 API。
+
+### 使用 Search Attributes {#search-attributes}
+
+检索 Workflow Execution 的典型方法是通过其 Workflow Id。
+
+但是，有时您会希望根据另一属性检索一个或多个 Workflow Execution。例如，假设您想要获取某个时间范围内失败的某种类型的所有 Workflow Execution，以便您可以使用相同的参数启动新的 Workflow Execution。
+
+您可以使用 [Search Attributes](/search-attribute) 来执行此操作。
+
+- [默认 Search Attributes](/search-attribute#default-search-attribute) 像 `WorkflowType`、`StartTime` 和 `ExecutionStatus` 会自动添加到 Workflow Executions。
+- [自定义 Search Attributes](/search-attribute#custom-search-attribute) 可以包含自己的特定于域的数据（例如“customerId”或“numItems”）。
+
+使用定制 Search Attribute 的步骤如下：
+
+- 在 Temporal CLI 或 Web UI 的 Temporal 服务中创建新的 Search Attribute。
+  - 例如：“Temporal 运算符搜索属性创建 --name CustomKeywordField --type Text”
+    - 将“CustomKeywordField”替换为您的 Search Attribute 的名称。
+    - 将“Text”替换为与您的 Search Attribute 关联的类型值：“Text” | `关键字` | `Int` | “双”| `布尔` | `日期时间` | `关键字列表`
+- 为 Workflow Execution 设置 Search Attribute 的值：
+  - 在客户端上，在启动执行时将其作为选项包含在内。
+  - 在 Workflow 中通过调用 `upsert_search_attributes`。
+- 读取Search Attribute的值：
+  - 在客户端上调用“DescribeWorkflow”。
+  - 在 Workflow 中，通过查看“WorkflowInfo”。
+- Query Workflow Execution 由 Search Attribute 使用 [列表过滤器](/list-filter)：
+  - [在 Temporal CLI 中](/cli/operator#list-2)
+  - 在代码中调用“ListWorkflowExecutions”。
+
+以下是 Query Workflow Executions 的操作方法：
+
+在客户端句柄上使用 [list_Workflows()](https://python.Temporal.io/Temporalio.client.Client.html#list_Workflows) 方法并传递 [List Filter](/list-filter) 作为参数来过滤列出的 Workflow。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/your_Visibility/starter_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+# ...
+    async for workflow in client.list_workflows('WorkflowType="GreetingWorkflow"'):
+        print(f"Workflow: {workflow.id}")
+```
+
+### 如何设置自定义 Search Attributes {#custom-search-attributes}
+
+在 Temporal 服务中创建自定义 Search Attribute 后（使用“Temporal 运算符搜索属性创建”或云 UI），您可以在启动 Workflow 时设置自定义 Search Attribute 的值。
+
+使用“SearchAttributeKey”创建您的 Search Attribute。然后，当使用“client.start_Workflow()”启动 Workflow Execution 时，通过将包含每个键和起始值的“SearchAttributePair()”实例传递给名为“search_attributes”的参数来包含自定义 Search Attribute。
+如果您有“Keyword”类型的自定义 Search Attribute“CustomerId”和“Text”类型的“MiscData”，您可以提供以下起始值：
+
+```python
+customer_id_key = SearchAttributeKey.for_keyword("CustomerId")
+misc_data_key = SearchAttributeKey.for_text("MiscData")
+
+handle = await client.start_workflow(
+    GreetingWorkflow.run,
+    id="search-attributes-workflow-id",
+    task_queue="search-attributes-task-queue",
+    search_attributes=TypedSearchAttributes([
+        SearchAttributePair(customer_id_key, "customer_1"),
+        SearchAttributePair(misc_data_key, "customer_1_data")
+    ]),
+)
+```
+
+在此示例中，“CustomerId”和“MiscData”设置为 Search Attributes。
+这些属性对于基于客户 ID 或下订单日期的 Querying Workflow 非常有用。
+
+### 更新插入 Search Attributes {#upsert-search-attributes}
+
+您可以在 Workflow 代码中更新插入 Search Attribute 以添加 Update Search Attribute。
+
+要更新插入自定义 Search Attribute，请使用 [`upsert_search_attributes()`](https://python.Temporal.io/Temporalio.Workflow.html#upsert_search_attributes) 方法传递 `SearchAttributeUpdate()` 列表。
+这些可以通过 Search Attribute 键上的 value_set 调用来创建：
+
+```python
+workflow.upsert_search_attributes([
+    customer_id_key.value_set("customer_2")
+])
+```
+
+### 从 Workflow 中删除 Search Attribute {#remove-search-attribute}
+
+要删除之前设置的 Search Attribute，请在 Search Attribute 键上使用“value_unset call”。
+
+```python
+workflow.upsert_search_attributes([
+    customer_id_key.value_unset()
+])
+```

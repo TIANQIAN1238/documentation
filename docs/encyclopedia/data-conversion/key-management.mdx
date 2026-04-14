@@ -1,8 +1,8 @@
 ---
 id: key-management
-title: Key management
-sidebar_label: Key management
-description: Learn about key management practices for securing encryption keys in Temporal applications.
+title: "密钥管理"
+sidebar_label: "密钥管理"
+description: "了解用于保护 Temporal 应用程序中的加密密钥的密钥管理实践。"
 slug: /key-management
 toc_max_heading_level: 4
 keywords:
@@ -20,32 +20,35 @@ tags:
   - Security
 ---
 
-This page discusses [Key Management](#key-management).
+本页讨论 [密钥管理](#key-management)。
 
-## What is Key Management? {#key-management}
+<a id="key-management"></a>
+## 什么是密钥管理？ {#key-management}
 
-Key Management is a fundamental part of working with encryption keys.
+密钥管理是使用加密密钥的基本部分。
 
-There are many computational and logistical aspects to generating and rotating keys, and this usually calls for a dedicated application in your stack. Here are some general recommendations for working with encryption keys for Temporal applications:
+生成和轮换密钥涉及许多计算和逻辑方面，这通常需要堆栈中的专用应用程序。以下是使用 Temporal 应用程序加密密钥的一些一般建议：
 
-- [Symmetric Encryption](https://en.wikipedia.org/wiki/Symmetric-key_algorithm) is generally faster and will produce smaller payloads than asymmetric. Normally, an advantage of _asymmetric_ encryption is that it allows you to distribute your encryption and decryption keys separately, but depending on your infrastructure, this might not offer any security benefits with Temporal.
+- [对称加密](https://en.wikipedia.org/wiki/Symmetric-key_algorithm) 通常比非对称速度更快，并且产生的有效载荷更小。通常，非对称加密的优点是它允许您单独分发加密和解密密钥，但根据您的基础设施，这可能不会为 Temporal 提供任何安全优势。
 
-- AES-based algorithms are [hardware accelerated in Go](https://pkg.go.dev/crypto/aes) and other languages. AES algorithms are widely vetted and trusted, and there are many different variants that may suit your requirements. Load tests using `ALG_AES_256_GCM_HKDF_SHA512_COMMIT_KEY` have performed well.
+- 基于AES的算法有[Go 中的硬件加速](https://pkg.go.dev/crypto/aes)等语言。 AES 算法经过广泛审查和信任，有许多不同的变体可以满足您的要求。使用 `ALG_AES_256_GCM_HKDF_SHA512_COMMIT_KEY` 的负载测试表现良好。
 
-- Store your encryption keys in the same manner as you store passwords, config details, and other sensitive data. When possible, load the key into your application, so you don't need to make a network call to retrieve it. Separate keys for each environment or namespace as much as possible.
+- 以与存储密码、配置详细信息和其他敏感数据相同的方式存储加密密钥。如果可能，请将密钥加载到您的应用程序中，这样您就不需要进行网络调用来检索它。尽可能为每个环境或 Namespace 提供单独的密钥。
 
-- Make sure you have a key rotation strategy in place in the event that your keys are compromised or need to be replaced for another reason. Consider using a dedicated secrets engine or a key management system (KMS). Note that when you rotate keys, you may also need to retain old keys to query old Workflows.
+- 确保您制定了密钥轮换策略，以防您的密钥遭到泄露或因其他原因需要更换。考虑使用专用秘密引擎或密钥管理系统 (KMS)。请注意，当您轮换密钥时，您可能还需要保留 Query 旧 Workflow 的旧密钥。
 
-### Key Rotation
+<a id="key-rotation"></a>
+### 按键轮换 {#key-rotation}
 
-National Institute of Standards and Technology (NIST) guidance recommends periodic rotation of encryption keys. For AES-GCM keys, rotation should occur before approximately 2^32 encryptions have been performed by a key version, following the guidelines of NIST publication 800-38D.
+美国国家标准与技术研究所 (NIST) 指南建议定期轮换加密密钥。对于 AES-GCM 密钥，应遵循 NIST 出版物 800-38D 的指南，在密钥版本执行大约 2^32 次加密之前进行轮换。
 
-It is recommended that operators estimate the encryption rate of a key and use that to determine a frequency of rotation that prevents the guidance limits from being reached. For example, if one determines that the estimated rate is 40 million operations per day, then rotating a key every three months is sufficient.
+建议操作员估计密钥的加密率，并使用它来确定防止达到指导限制的轮换频率。例如，如果确定估计速率为每天 4000 万次操作，那么每三个月轮换一次密钥就足够了。
 
-Key rotation should generally be transparent to the Temporal Data Converter implementation. Temporal's `Encode()` and `Decode()` steps only need to trigger as expected, and Temporal has no knowledge of how or when you are generating your encryption keys.
+密钥轮换通常对于 Temporal Data Converter 实现来说应该是透明的。 Temporal 的 `Encode()` 和 `Decode()` 步骤只需要按预期触发，并且 Temporal 不知道您如何或何时生成加密密钥。
 
-You should design your Encode and Decode steps to accept all the necessary parameters for your key management, such as the key version, alongside your payloads. Like the Data Converters, keys should be mapped to a Namespace in Temporal.
+您应该设计编码和解码步骤以接受密钥管理的所有必要参数，例如密钥版本以及有效负载。与 Data Converter 一样，键应映射到 Temporal 中的 Namespace。
 
-### Using Vault for Key Management
+<a id="using-vault-for-key-management"></a>
+### 使用 Vault 进行密钥管理 {#using-vault-for-key-management}
 
-[This repository](https://github.com/zboralski/codecserver) provides a robust and complete example of using Temporal with HashiCorp's [Vault](https://www.vaultproject.io/) secrets engine.
+[这个存储库](https://github.com/zboralski/codecserver) 提供了将 Temporal 与 HashiCorp 的 [避难所](https://www.vaultproject.io/) 秘密引擎结合使用的强大且完整的示例。

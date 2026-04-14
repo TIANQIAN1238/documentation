@@ -1,8 +1,8 @@
 ---
 id: worker-performance
-title: Worker performance
-description: Optimize Temporal SDK performance by fine-tuning maxConcurrentWorkflowTaskExecutionSize, Worker Cache options, and Poll Success Rate. Ensure balanced Worker resources and monitor metrics for best results.
-sidebar_label: Worker performance
+title: Worker 性能
+description: 通过精细调整 maxConcurrentWorkflowTaskExecutionSize、Worker 缓存选项和轮询成功率来优化 Temporal SDK 性能。确保 Worker 资源均衡并监控指标以获得最佳结果。
+sidebar_label: Worker 性能
 toc_max_heading_level: 3
 tags:
   - Workers
@@ -13,238 +13,226 @@ import { CaptionedImage } from '@site/src/components';
 import { LANGUAGE_TAB_GROUP, getLanguageLabel } from '@site/src/constants/languageTabs';
 import SdkTabs from '@site/src/components';
 
-This page documents metrics and configurations that drive the efficiency of your Worker fleet.
-It provides coverage of performance metric families, Worker configuration options, Task Queue information, backlog counts, Task rates, and how to evaluate Worker availability.
-This content covers practical methods for querying Task Queue information, and strategies for tuning Workers and Task Queue processing so you manage your resources effectively.
+本页记录了驱动 Worker 集群效率的指标和配置。涵盖性能指标系列、Worker 配置选项、Task Queue 信息、积压计数、Task 速率以及如何评估 Worker 可用性。本内容涵盖查询 Task Queue 信息的实用方法，以及调优 Worker 和 Task Queue 处理以有效管理资源的策略。
 
 :::info
 
-All metrics on this page are prepended with the `temporal_` prefix.
-For example, `worker_task_slots_available` is actually `temporal_worker_task_slots_available` when used.
-The omitted prefix makes the names more readable and descriptive.
+本页所有指标均以 `temporal_` 前缀开头。
+例如，`worker_task_slots_available` 实际使用时是 `temporal_worker_task_slots_available`。
+省略前缀是为了使名称更易读和描述性更强。
 
 :::
 
-## Worker performance concepts {#worker-performance-concepts}
+## Worker 性能概念 {#worker-performance-concepts}
 
-A Worker's performance characteristics are affected by, but not limited to, the following elements.
+Worker 的性能特征受以下因素（但不限于此）影响。
 
-### Task slots {#slots}
+### Task 槽位 {#slots}
 
-A **Worker Task Slot**, represents the capacity of a Temporal Worker to execute a single concurrent Task.
-Slots are crucial for managing the workload and performance of Workers in a Temporal application.
-They're used for both Workflow and Activity Tasks.
-When a Worker starts processing a Task, it occupies one slot.
-The number of available slots directly affects how many tasks a Worker can handle simultaneously.
+**Worker Task 槽位**代表 Temporal Worker 执行单个并发 Task 的容量。槽位对于管理 Temporal 应用中 Worker 的工作负载和性能至关重要。它们用于 Workflow 和 Activity Task。当 Worker 开始处理 Task 时，它会占用一个槽位。可用槽位的数量直接影响 Worker 可以同时处理多少个 Task。
 
-### Slot suppliers {#slot-suppliers}
+### Slot Supplier {#slot-suppliers}
 
-A **Slot Supplier** defines a strategy to provide slots for a Worker, increasing or decreasing the Worker's slot count.
-The supplier determines when it's acceptable to begin a new Task.
-Each supplier manages one slot type.
-There are slot types for Activity, Workflow, Nexus, or Local Activity Tasks.
-An available slot determines whether or not a Worker is willing to poll for, and execute, a new Task of that type.
+**Slot Supplier** 定义了为 Worker 提供槽位的策略，增加或减少 Worker 的槽位数量。Supplier 决定何时可以开始新 Task。每个 Supplier 管理一种槽位类型。槽位类型包括 Activity、Workflow、Nexus 或 Local Activity Task。可用槽位决定 Worker 是否愿意轮询并执行该类型的新 Task。
 
-Slot supplier strategies include manual assignment of fixed slot counts and resource-balanced "auto-tuner" assignment.
-Resource-based suppliers adjust slot counts based on CPU and memory resources.
-Available slot suppliers include:
+Slot Supplier 策略包括手动分配固定槽位数量和基于资源的"自动调整器"分配。基于资源的 Supplier 根据 CPU 和内存资源调整槽位数量。可用的 Slot Supplier 包括：
 
-- **Fixed Size Slot Suppliers**:
-  Hands out slots up to a preset limit.
-  This is useful if you have a concrete idea of how many resources your tasks are going to consume, and can easily determine an upper bound on how many should run at once.
-  When you need the absolute best performance, review your hardware and environment characteristics.
-  This information lets you calculate an appropriate fixed-size limit.
-  Evaluate the maximum number of slots you can support without oversubscribing or hitting out-of-memory conditions ("OOMing").
-  Using that value with a fixed-size supplier provides optimal results with the least overhead.
+- **固定大小 Slot Supplier（Fixed Size Slot Suppliers）**：
+  发放槽位直到预设限制。
+  如果您对 Task 将消耗多少资源有具体了解，并且可以轻松确定同时运行数量的上限，这非常有用。
+  当您需要绝对最佳性能时，请查看您的硬件和环境特性。
+  这些信息可让您计算适当的固定大小限制。
+  评估您可以支持的最大槽位数量，而不会造成过度订阅或内存溢出（"OOM"）。
+  将该值与固定大小 Supplier 结合使用可提供最优结果，且开销最小。
 
-- **Resource-Based Slot Suppliers**:
-  Hands out slots based on real-time CPU and memory usage.
-  You set target utilization for both CPU and memory and the Slot Supplier tries to reach those values without exceeding them under load.
-  A resource-based supplier will account for memory limits imposed in containerized environments.
-  It dynamically adjusts the number of available slots for different task types with respect to current system resources.
+- **基于资源的 Slot Supplier（Resource-Based Slot Suppliers）**：
+  根据实时 CPU 和内存使用情况发放槽位。
+  您设置 CPU 和内存的目标利用率，Slot Supplier 会尝试在负载下达到这些值而不超过它们。
+  基于资源的 Supplier 将考虑容器化环境中施加的内存限制。
+  它根据当前系统资源动态调整不同 Task 类型的可用槽位数量。
 
 :::info
 
-When running in a containerized environment, all SDKs use cgroups for both CPU and memory. CPU is accounted for at the container level.
+在容器化环境中运行时，所有 SDK 对 CPU 和内存都使用 cgroups。CPU 在容器级别计算。
 
 :::
 
-- **Custom Slot Suppliers**:
-  Hands out slots based on the custom logic that you define.
-  Use this approach when you need complete control over when Workers accept and execute Tasks.
-  For implementation details, see [Implement Custom Slot Suppliers](#custom-slot-implementation).
+- **自定义 Slot Supplier（Custom Slot Suppliers）**：
+  根据您定义的自定义逻辑发放槽位。
+  当您需要完全控制 Worker 何时接受和执行 Task 时，请使用此方法。
+  有关实现详情，请参阅[实现自定义 Slot Supplier](#custom-slot-implementation)。
 
 :::caution
 
-- You cannot guarantee that the targets for resource-based suppliers won't ever be exceeded.
-  Resources consumed during a task can't be known ahead of time.
+- 您无法保证基于资源的 Supplier 的目标永远不会被超过。
+  Task 消耗的资源在开始前无法预知。
 
-- Read about [choosing an appropriate slot supplier type](#choosing-slot-supplier-types) before picking one.
+- 在选择之前，请阅读[选择合适的 Slot Supplier 类型](#choosing-slot-supplier-types)。
 
-- Worker tuners supersede the existing `maxConcurrentXXXTask` style Worker options.
-  Using both styles will cause an error at Worker initialization time.
+- Worker tuner 取代了现有的 `maxConcurrentXXXTask` 风格的 Worker 选项。
+  同时使用两种风格将在 Worker 初始化时导致错误。
 
 :::
 
-### Worker tuning {#worker-tuning}
+### Worker 调优 {#worker-tuning}
 
-Worker tuning is the process of defining customized slot suppliers for the different task slots of a Worker to fine-tune its performance.
-You use special types called **Worker tuners** that assign slot suppliers to various Task Types, including Worker, Activity, Nexus, and Local Activity Tasks.
+Worker 调优是为 Worker 的不同 Task 槽位定义自定义 Slot Supplier 以精细调整其性能的过程。
+您使用称为 **Worker tuner** 的特殊类型，将 Slot Supplier 分配给各种 Task 类型，包括 Worker、Activity、Nexus 和 Local Activity Task。
 
-For more on how to configure and use Worker tuners, refer to [Worker runtime performance tuning](#worker-performance-tuning).
+有关如何配置和使用 Worker tuner 的更多信息，请参阅 [Worker 运行时性能调优](#worker-performance-tuning)。
 
 :::caution
 
-Worker tuners supersede the existing `maxConcurrentXXXTask` style Worker options.
-  Using both styles will cause an error at Worker initialization time.
+Worker tuner 取代了现有的 `maxConcurrentXXXTask` 风格的 Worker 选项。
+同时使用两种风格将在 Worker 初始化时导致错误。
 
 :::
 
-### Task Pollers 
+### Task Poller
 
-A Worker's **Task Pollers** play a crucial role in the Temporal architecture by efficiently ingesting work to Workers to support scalable, resilient Workflow Execution. 
-Pollers create long-polling connections to the Temporal Service and actively poll a Task Queue for Tasks to process. When a Task Poller receives a Task, it delivers the Task to the appropriate Executor Slot for processing.
+Worker 的 **Task Poller** 在 Temporal 架构中发挥着关键作用，通过高效地将工作接入 Worker 来支持可扩展、弹性的 Workflow Execution。
+Poller 创建与 Temporal Service 的长轮询连接，并主动轮询 Task Queue 以获取要处理的 Task。当 Task Poller 收到 Task 时，它将 Task 传递给适当的执行器槽位进行处理。
 
-Temporal SDKs implement support for *Poller Autoscaling*, which dynamically adjusts the number of pollers in use to maximize throughput for a given number of workers and the size of the task backlog. 
-Temporal recommends using Poller Autoscaling for the majority of use cases, as manually setting the number of pollers too high or too low for your workload will result in decreased performance. 
-To configure Poller Autoscaling, see [Configuring Poller Options](#configuring-poller-options) and samples for each Temporal SDK.
+Temporal SDK 实现了 *Poller 自动扩缩容（Poller Autoscaling）*支持，它根据给定数量的 Worker 和 Task 积压大小动态调整正在使用的轮询器数量，以最大化吞吐量。
+Temporal 建议在大多数用例中使用 Poller Autoscaling，因为手动将轮询器数量设置得过高或过低都会导致性能下降。
+要配置 Poller Autoscaling，请参阅[配置轮询器选项](#configuring-poller-options)以及每个 Temporal SDK 的示例。
 
-### Eager task execution
+### 即时 Task 执行
 
 :::caution
-Eager start does not respect Worker versioning. An eagerly started Workflow may run on any available local Worker even if that Worker is not the Current or Ramping version of its Worker deployment.
+即时启动不遵循 Worker Versioning。即时启动的 Workflow 可能在任何可用的本地 Worker 上运行，即使该 Worker 不是其 Worker Deployment 的 Current 或 Ramping 版本。
 :::
 
-As a latency optimization, Activity and Workflow Tasks may be started eagerly in a local Worker under the right circumstances.
+作为延迟优化，Activity 和 Workflow Task 在合适情况下可以在本地 Worker 中即时启动。
 
-#### Eager Activity Start
+#### 即时 Activity 启动
 
-Eager Activity Start may happen automatically if the Worker processing a Workflow Task has also registered the Activity Definition being called.
-If it does, it may try to reserve an Activity Slot for the execution of the Activity, and the server may respond to the Workflow Task completion with the Activity Task for the worker to execute immediately.
+如果处理 Workflow Task 的 Worker 也注册了被调用的 Activity 定义，可能会自动发生即时 Activity 启动。
+如果发生这种情况，它可能会尝试为 Activity 的执行保留一个 Activity 槽位，服务器可能会在 Workflow Task 完成时响应 Activity Task，供 Worker 立即执行。
 
-#### Eager Workflow Start
+#### 即时 Workflow 启动
 
-:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+:::tip 支持、稳定性和依赖信息
 
-Eager Workflow Start is available in [Public Preview](/evaluate/development-production-features/release-stages#public-preview) in the Go, Java, Python, and .NET SDKs.
-Eager Workflow Start is enabled for all Temporal Cloud users and self-hosted Temporal Server 1.29.0+. No additional configuration or access request is needed. However, you must set Request-Eager-Start to true when starting each Workflow for Eager Workflow Start to be used.
-
-:::
-
-Eager Workflow Start reduces the latency required to initiate a Workflow execution.
-It is recommended for short-lived Workflows that use Local Activities to interact with external services, especially when these interactions are initiated in the first Workflow Task and the Workflow is deployed near the Temporal Server to minimize network delay.
-
-This feature is particularly beneficial for Workflows with a “happy path” that must begin external interactions within tens of milliseconds, while still relying on Temporal’s server-driven retries and compensation mechanisms to ensure reliability in failure scenarios.
-
-**Quick Start**
-
-Eager Workflow Start requires the Starter and the Worker to share a Client located in the same process and setting the `request_eager_start` (or similar name) to true in the Start Workflow call.
-When set, and the Worker has a Workflow Task slot available and the Workflow Definition registered, the Worker can execute the first task of the Workflow locally without first making a round-trip to the Temporal Server.
-This is typically most useful in combination with a Local Activity executing in the first Workflow Task, since other Workflow API calls that require waiting on something will force a round-trip.
-
-:::tip RESOURCES
-
-- [Go SDK - Code sample](https://github.com/temporalio/samples-go/tree/main/eager-workflow-start)
-- [Java SDK - Code sample](https://github.com/temporalio/samples-java/blob/main/core/src/main/java/io/temporal/samples/hello/HelloEagerWorkflowStart.java)
-- Python SDK - use `request_eager_start` when calling `start_workflow` or `execute_workflow`
-- .NET SDK - use `RequestEagerStart` in your `WorkflowOptions` when starting a workflow
-- [Blog: Improving Latency with Eager Workflow Start](https://temporal.io/blog/improving-latency-with-eager-workflow-start)
+即时 Workflow 启动在 Go、Java、Python 和 .NET SDK 中处于[公开预览（Public Preview）](/evaluate/development-production-features/release-stages#public-preview)阶段。
+即时 Workflow 启动对所有 Temporal Cloud 用户和自托管 Temporal Server 1.29.0+ 启用。无需额外配置或访问请求。但是，在启动每个 Workflow 时必须将 Request-Eager-Start 设置为 true 才能使用即时 Workflow 启动。
 
 :::
 
-**How it works**
+即时 Workflow 启动减少了启动 Workflow Execution 所需的延迟。
+推荐用于使用 Local Activity 与外部服务交互的短暂 Workflow，特别是在这些交互在第一个 Workflow Task 中发起且 Workflow 部署在靠近 Temporal Server 的位置以最小化网络延迟时。
 
-The traditional way to start a Workflow decouples the starter program from the worker by sharing a Task Queue name between them, similar to a publish/subscribe pattern.
-This has many advantages: for example, we can reliably schedule a Workflow Execution without a running Worker, or separate the Worker and Workflow implementation from the Starter application and host them independently.
+该功能对于"正常路径"必须在几十毫秒内开始外部交互、同时仍然依赖 Temporal 服务器驱动的重试和补偿机制以确保故障场景可靠性的 Workflow 特别有益。
 
-But decoupling also makes it harder to optimize for latency.
-Instead, when the **Starter and Worker are collocated in the same process** and aware of each other, they can interact while bypassing the server, saving a few time-intensive operations.
+**快速入门**
+
+即时 Workflow 启动要求 Starter 和 Worker 共享位于同一进程中的 Client，并在 Start Workflow 调用中将 `request_eager_start`（或类似名称）设置为 true。
+设置后，如果 Worker 有可用的 Workflow Task 槽位并且已注册 Workflow 定义，Worker 可以在本地执行 Workflow 的第一个 Task，而无需先往返 Temporal Server。
+这通常与在第一个 Workflow Task 中执行的 Local Activity 结合使用最为有效，因为其他需要等待某些事情的 Workflow API 调用将强制往返。
+
+:::tip 资源
+
+- [Go SDK - 代码示例](https://github.com/temporalio/samples-go/tree/main/eager-workflow-start)
+- [Java SDK - 代码示例](https://github.com/temporalio/samples-java/blob/main/core/src/main/java/io/temporal/samples/hello/HelloEagerWorkflowStart.java)
+- Python SDK - 在调用 `start_workflow` 或 `execute_workflow` 时使用 `request_eager_start`
+- .NET SDK - 在启动 Workflow 时在 `WorkflowOptions` 中使用 `RequestEagerStart`
+- [博客：使用即时 Workflow 启动改善延迟](https://temporal.io/blog/improving-latency-with-eager-workflow-start)
+
+:::
+
+**工作原理**
+
+启动 Workflow 的传统方式通过在 Starter 程序和 Worker 之间共享 Task Queue 名称来解耦它们，类似于发布/订阅模式。
+这有许多优点：例如，我们可以在没有运行中的 Worker 的情况下可靠地调度 Workflow Execution，或者将 Worker 和 Workflow 实现与 Starter 应用分离并独立托管。
+
+但解耦也使得优化延迟变得更加困难。
+相反，当 **Starter 和 Worker 共存于同一进程**并且彼此感知时，它们可以在绕过服务器的情况下交互，节省一些耗时的操作。
 
 <CaptionedImage
     src="/img/develop/worker-performance/eager-workflow-start-flow.png"
-    title="Eager Workflow Start"
+    title="即时 Workflow 启动"
 />
 
-The above figure shows Eager Workflow Start in action:
+上图展示了即时 Workflow 启动的过程：
 
-1. The process begins with the Starter setting `request_eager_start` (or similar name) to true in the Start Workflow Options.
-1. The SDK will try to locate a local Worker that is willing to execute the first Workflow Task, and reserve an execution slot for it.
-1. If successful, the SDK will provide a hint to the server that eager mode is preferred for the new Workflow.
-1. The server not only registers the start of the Workflow in history, it also assigns the first Workflow Task to the Starter, all in the same DB update.
-1. The first task is included in the server response, no matching step required.
-1. The SDK extracts the task from the response, and dispatches it to the local worker.
+1. 进程开始时，Starter 在 Start Workflow 选项中将 `request_eager_start`（或类似名称）设置为 true。
+1. SDK 将尝试找到愿意执行第一个 Workflow Task 的本地 Worker，并为其保留执行槽位。
+1. 如果成功，SDK 将向服务器提示新 Workflow 首选即时模式。
+1. 服务器不仅在历史记录中注册 Workflow 的启动，还将第一个 Workflow Task 分配给 Starter，所有这些都在同一次数据库更新中完成。
+1. 第一个 Task 包含在服务器响应中，无需匹配步骤。
+1. SDK 从响应中提取 Task，并将其分发给本地 Worker。
 
-To recover from errors, Eager Workflow Start falls back to the non-eager path. For example, when the first Task is returned eagerly, but the local Worker fails or times out while processing the task, the server retries this task non-eagerly after WorkflowTaskTimeout.
+为了从错误中恢复，即时 Workflow 启动会回退到非即时路径。例如，当第一个 Task 被即时返回，但本地 Worker 在处理 Task 时失败或超时，服务器会在 WorkflowTaskTimeout 后非即时地重试此 Task。
 
-## Performance metrics for tuning {#metrics}
+## 调优性能指标 {#metrics}
 
-The Temporal SDKs emit metrics from Temporal Client usage and Worker Processes.
-Performance tuning uses three important SDK metric groups:
+Temporal SDK 从 Temporal Client 使用情况和 Worker 进程中发出指标。
+性能调优使用三个重要的 SDK 指标组：
 
-### Slot availability metrics
+### 槽位可用性指标
 
-Temporal's [`worker_task_slots_available`](/references/sdk-metrics#worker_task_slots_available) and `worker_task_slots_used` gauges can report the number of available executor “slots” that are currently available and unoccupied for a Worker type.
-Tag these with `worker_type=WorkflowWorker` for Workflow Task Workers or `worker_type=ActivityWorker` for Activity Workers.
+Temporal 的 [`worker_task_slots_available`](/references/sdk-metrics#worker_task_slots_available) 和 `worker_task_slots_used` 仪表可以报告某个 Worker 类型当前可用和未占用的执行器"槽位"数量。
+使用 `worker_type=WorkflowWorker` 标记 Workflow Task Worker，使用 `worker_type=ActivityWorker` 标记 Activity Worker。
 
 :::tip
 
-Unlike `worker_task_slots_used`, `worker_task_slots_available` can only be used with fixed size slot suppliers and can't be used with resource-based slot suppliers.
+与 `worker_task_slots_used` 不同，`worker_task_slots_available` 只能与固定大小的 Slot Supplier 一起使用，不能与基于资源的 Slot Supplier 一起使用。
 
 :::
 
-### Latency metrics
+### 延迟指标
 
-Temporal provides two latency timers: [`workflow_task_schedule_to_start_latency`](/references/sdk-metrics#workflow_task_schedule_to_start_latency) for Workflow Tasks and [`activity_schedule_to_start_latency`](/references/sdk-metrics#activity_schedule_to_start_latency) for Activities.
-A Schedule-To-Start latency is the time from when an Task is scheduled (that is, placed in a Queue) to when a Worker starts (that is, picks up from the Task Queue) that Task.
-These metrics help ensure that Tasks are being processed from the queue in a timely manner.
-For more information about `schedule_to_start` timeout and latency, see [Schedule-To-Start Timeout](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout).
+Temporal 提供两个延迟计时器：[`workflow_task_schedule_to_start_latency`](/references/sdk-metrics#workflow_task_schedule_to_start_latency) 用于 Workflow Task，[`activity_schedule_to_start_latency`](/references/sdk-metrics#activity_schedule_to_start_latency) 用于 Activity。
+Schedule-To-Start 延迟是从 Task 被调度（即放入队列）到 Worker 开始（即从 Task Queue 取出）该 Task 的时间。
+这些指标有助于确保 Task 从队列中及时处理。
+有关 `schedule_to_start` 超时和延迟的更多信息，请参阅 [Schedule-To-Start Timeout](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout)。
 
-### Cache metrics
+### 缓存指标
 
-The [`sticky_cache_size`](/references/sdk-metrics#sticky_cache_size) and [`workflow_active_thread_count`](/references/sdk-metrics#workflow_active_thread_count) metrics report the size of the Workflow cache and the number of cached Workflow threads.
+[`sticky_cache_size`](/references/sdk-metrics#sticky_cache_size) 和 [`workflow_active_thread_count`](/references/sdk-metrics#workflow_active_thread_count) 指标报告 Workflow 缓存的大小和缓存的 Workflow 线程数量。
 
-## Worker performance options {#configuration}
+## Worker 性能选项 {#configuration}
 
-Each Worker can be configured by providing custom Worker options (`WorkerOptions`) at instantiation.
-Options are specific to individual Workers and do not affect other members of your fleet.
+每个 Worker 可以通过在实例化时提供自定义 Worker 选项（`WorkerOptions`）来配置。
+选项特定于单个 Worker，不影响集群中的其他成员。
 
-### Executor slot options
+### 执行器槽位选项
 
-The `maxConcurrentWorkflowTaskExecutionSize` and `maxConcurrentActivityExecutionSize` options define the number of total available Workflow Task and Activity Task slots for a Worker.
+`maxConcurrentWorkflowTaskExecutionSize` 和 `maxConcurrentActivityExecutionSize` 选项定义了 Worker 的 Workflow Task 和 Activity Task 槽位总数。
 
 :::caution
 
-- Worker tuners supersede the existing `maxConcurrentXXXTask` style Worker options.
-  Using both styles will cause an error at Worker initialization time.
+- Worker tuner 取代了现有的 `maxConcurrentXXXTask` 风格的 Worker 选项。
+  同时使用两种风格将在 Worker 初始化时导致错误。
 
 :::
 
-### Configuring Poller Options 
+### 配置轮询器选项
 
-#### Recommended Approach
+#### 推荐方法
 
-The Temporal SDKs support Poller Autoscaling, which automatically selects an appropriate number of pollers based on need. Using this feature results in more efficient poller usage, better throughput, and schedule-to-start latency improvements. You can enable this feature by setting the `*_task_poller_behavior` options to `PollerBehaviorAutoscaling`. Names may vary slightly depending on the SDK. For specific examples of enabling Poller Autoscaling, see the SDK Examples section below. Poller Autoscaling will be the default configuration in future versions of Temporal SDKs.
+Temporal SDK 支持 Poller Autoscaling，它根据需要自动选择适当数量的轮询器。使用此功能可以更有效地使用轮询器，提高吞吐量，并改善 Schedule-to-Start 延迟。您可以通过将 `*_task_poller_behavior` 选项设置为 `PollerBehaviorAutoscaling` 来启用此功能。名称可能因 SDK 而略有不同。有关启用 Poller Autoscaling 的具体示例，请参阅下方的 SDK 示例部分。Poller Autoscaling 将成为未来版本 Temporal SDK 的默认配置。
 
 :::tip
 
-`PollerBehaviorAutoscaling` is only enabled in Temporal Server v1.28.0 and later.
+`PollerBehaviorAutoscaling` 仅在 Temporal Server v1.28.0 及更高版本中启用。
 
 :::
 
-#### Manual Configuration
+#### 手动配置
 
-There are options available to manually configure minimum, maximum, and initial poller counts, but it is not recommended to set these values manually for production use cases. To set these values manually, the following options are available: 
+有一些选项可用于手动配置最小、最大和初始轮询器数量，但不建议在生产用例中手动设置这些值。要手动设置这些值，可以使用以下选项：
 
-- `maxConcurrentWorkflowTaskPollers` (in the JavaSDK: `workflowPollThreadCount`)
-- `maxConcurrentActivityTaskPollers` (in the JavaSDK: `activityPollThreadCount`)
+- `maxConcurrentWorkflowTaskPollers`（在 Java SDK 中：`workflowPollThreadCount`）
+- `maxConcurrentActivityTaskPollers`（在 Java SDK 中：`activityPollThreadCount`）
 
-These options define the maximum count of pollers performing poll requests on Workflow and Activity Task Queues, respectively. 
+这些选项分别定义在 Workflow 和 Activity Task Queue 上执行轮询请求的轮询器最大数量。
 
-#### SDK Examples
+#### SDK 示例
 
 <SdkTabs>
 <SdkTabs.Go>
-[Go SDK docs](https://pkg.go.dev/go.temporal.io/sdk/worker#PollerBehaviorAutoscalingOptions)
+[Go SDK 文档](https://pkg.go.dev/go.temporal.io/sdk/worker#PollerBehaviorAutoscalingOptions)
 ```go
 w := worker.New(c, "my-task-queue", worker.Options{
   WorkflowTaskPollerBehavior: worker.NewPollerBehaviorAutoscaling(worker.PollerBehaviorAutoscalingOptions{}),
@@ -254,7 +242,7 @@ w := worker.New(c, "my-task-queue", worker.Options{
 ```
 </SdkTabs.Go>
 <SdkTabs.Java>
-[Java SDK docs](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/tuning/PollerBehaviorAutoscaling.html)
+[Java SDK 文档](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/tuning/PollerBehaviorAutoscaling.html)
 ```java
 public class WorkerExample {
     public static void main(String[] args) {
@@ -273,7 +261,7 @@ public class WorkerExample {
 ```
 </SdkTabs.Java>
 <SdkTabs.Python>
-[Python SDK docs](https://python.temporal.io/temporalio.worker.PollerBehaviorAutoscaling.html)
+[Python SDK 文档](https://python.temporal.io/temporalio.worker.PollerBehaviorAutoscaling.html)
 ```python
 worker = Worker(
     client,
@@ -288,7 +276,7 @@ worker = Worker(
 ```
 </SdkTabs.Python>
 <SdkTabs.TypeScript>
-[TypeScript SDK docs](https://typescript.temporal.io/api/interfaces/proto.temporal.api.sdk.v1.WorkerConfig.IAutoscalingPollerBehavior)
+[TypeScript SDK 文档](https://typescript.temporal.io/api/interfaces/proto.temporal.api.sdk.v1.WorkerConfig.IAutoscalingPollerBehavior)
 ```ts
 const worker = await Worker.create({
   connection,
@@ -303,7 +291,7 @@ const worker = await Worker.create({
 ```
 </SdkTabs.TypeScript>
 <SdkTabs.DotNet>
-[DotNet SDK docs](https://dotnet.temporal.io/api/Temporalio.Worker.Tuning.PollerBehavior.Autoscaling.html)
+[DotNet SDK 文档](https://dotnet.temporal.io/api/Temporalio.Worker.Tuning.PollerBehavior.Autoscaling.html)
 ```csharp
 using var worker = new TemporalWorker(
     client,
@@ -319,7 +307,7 @@ using var worker = new TemporalWorker(
 ```
 </SdkTabs.DotNet>
 <SdkTabs.Ruby>
-[Ruby SDK docs](https://ruby.temporal.io/Temporalio/Worker/PollerBehavior/Autoscaling.html)
+[Ruby SDK 文档](https://ruby.temporal.io/Temporalio/Worker/PollerBehavior/Autoscaling.html)
 ```ruby
 worker = Temporalio::Worker.new(
   client,
@@ -337,94 +325,88 @@ worker = Temporalio::Worker.new(
 </SdkTabs.Ruby>
 </SdkTabs>
 
-### Cache options (Java SDK) {#cache-options}
+### 缓存选项（Java SDK）{#cache-options}
 
-A Workflow Cache is created and shared between all Workers on a single host.
-It's designed to limit the resources used by the cache for each host/process.
-These options are defined on `WorkerFactoryOptions`:
+Workflow 缓存在单个主机上的所有 Worker 之间创建和共享。
+它旨在限制每个主机/进程的缓存资源使用。
+这些选项在 `WorkerFactoryOptions` 上定义：
 
-- `WorkerFactoryOptions#workflowCacheSize` defines the maximum number of cached Workflow Executions.
-  Each cached Workflow contains at least one Workflow thread and its resources (memory, etc.).
-- `maxWorkflowThreadCount` defines the maximum number of Workflow threads that may exist concurrently at any time.
+- `WorkerFactoryOptions#workflowCacheSize` 定义了缓存的 Workflow Execution 的最大数量。
+  每个缓存的 Workflow 至少包含一个 Workflow 线程及其资源（内存等）。
+- `maxWorkflowThreadCount` 定义了在任何时间可以同时存在的最大 Workflow 线程数。
 
-These cache options limit the resource consumption of the in-memory Workflow cache.
-Workflow cache options are shared between all Workers because the Workflow cache is tightly integrated with the resource consumption of the entire host.
-This includes memory and the total thread count, which should be limited per host/JVM.
+这些缓存选项限制了内存中 Workflow 缓存的资源消耗。
+Workflow 缓存选项在所有 Worker 之间共享，因为 Workflow 缓存与整个主机的资源消耗紧密集成。
+这包括内存和总线程数，应该按主机/JVM 进行限制。
 
-For Go, use [`SetStickyWorkflowCacheSize`](https://pkg.go.dev/go.temporal.io/sdk/worker#SetStickyWorkflowCacheSize). For Python, use the `max_cached_workflows` Worker option.
+对于 Go，使用 [`SetStickyWorkflowCacheSize`](https://pkg.go.dev/go.temporal.io/sdk/worker#SetStickyWorkflowCacheSize)。对于 Python，使用 `max_cached_workflows` Worker 选项。
 
-### "Large value" drawbacks
+### "大值"的缺点
 
-There are drawbacks when you use "large values everywhere."
-As with any multithreading system, specifying excessively large values without monitoring with the SDK and system metrics leads to constant resource contention/stealing
-This decreases the total throughput and increases latency jitter of the system.
+在"所有地方都使用大值"时存在缺点。
+与任何多线程系统一样，在不使用 SDK 和系统指标监控的情况下指定过大的值会导致持续的资源争用/抢占，
+这会降低系统的总吞吐量并增加延迟抖动。
 
-### Invariants (JavaSDK only) {#invariants}
+### 不变量（仅 Java SDK）{#invariants}
 
-These properties should always be true for a Worker's configuration.
+这些属性对于 Worker 的配置应始终为真。
 
-Perform this sanity check after the adjustments to Worker settings.
+在调整 Worker 设置后执行此合理性检查。
 
-1. `workflowCacheSize` should be ≤ `maxWorkflowThreadCount`. Each Workflow has at least one Workflow thread.
-2. `maxConcurrentWorkflowTaskExecutionSize` should be ≤ `maxWorkflowThreadCount`. Having more Worker slots than the Workflow cache size will lead to resource contention/stealing between executors and unpredictable delays. It's recommended that `maxWorkflowThreadCount` be at least 2x of `maxConcurrentWorkflowTaskExecutionSize`.
-3. `maxConcurrentWorkflowTaskPollers` should be significantly ≤ `maxConcurrentWorkflowTaskExecutionSize`. And `maxConcurrentActivityTaskPollers` should be significantly ≤ `maxConcurrentActivityExecutionSize`. The number of pollers should always be lower than the number of executors.
+1. `workflowCacheSize` 应该 ≤ `maxWorkflowThreadCount`。每个 Workflow 至少有一个 Workflow 线程。
+2. `maxConcurrentWorkflowTaskExecutionSize` 应该 ≤ `maxWorkflowThreadCount`。拥有比 Workflow 缓存大小更多的 Worker 槽位会导致执行器之间的资源争用/抢占和不可预测的延迟。建议 `maxWorkflowThreadCount` 至少是 `maxConcurrentWorkflowTaskExecutionSize` 的 2 倍。
+3. `maxConcurrentWorkflowTaskPollers` 应该显著 ≤ `maxConcurrentWorkflowTaskExecutionSize`。`maxConcurrentActivityTaskPollers` 应该显著 ≤ `maxConcurrentActivityExecutionSize`。轮询器数量应始终低于执行器数量。
 
-## Worker runtime performance tuning {#worker-performance-tuning}
+## Worker 运行时性能调优 {#worker-performance-tuning}
 
-Worker tuning manages the assignment of slot suppliers.
-A **Worker Tuner** instance exists per-Worker, providing slot suppliers for different slot types (Activity, Workflow, Nexus, or Local Activity Tasks).
-A tuner assigns different suppliers to each slot type.
-For example, it might provide a fixed assignment slot supplier for Workflows and use a resource-based supplier for Activities.
+Worker 调优管理 Slot Supplier 的分配。
+每个 Worker 存在一个 **Worker Tuner** 实例，为不同的槽位类型（Activity、Workflow、Nexus 或 Local Activity Task）提供 Slot Supplier。
+Tuner 为每种槽位类型分配不同的 Supplier。
+例如，它可能为 Workflow 提供固定分配的 Slot Supplier，并为 Activity 使用基于资源的 Supplier。
 
-### Choosing slot supplier types {#choosing-slot-supplier-types}
+### 选择 Slot Supplier 类型 {#choosing-slot-supplier-types}
 
-Temporal offers three types of slot suppliers: fixed assignment, resource-based, and custom.
-Here’s how to choose the best approach based on your system requirements and workload characteristics.
+Temporal 提供三种类型的 Slot Supplier：固定分配、基于资源和自定义。
+以下是如何根据系统需求和工作负载特性选择最佳方法。
 
-When choosing whether to opt for fixed assignment or resource-based suppliers, consider:
+在选择固定分配还是基于资源的 Supplier 时，请考虑：
 
-- Workflow Tasks make minimal demands on the CPU and, normally, do not consume much memory.
-  They are well-served by fixed-sized slot suppliers.
-- When very low Task completion latency & maximum throughput is important, avoid resourced-based auto-tuning slot suppliers.
-- Reserve auto-tuned resource-based slot suppliers for deployments with workloads that have resource
-  usage patterns you don't fully understand, and don't care to. It can offer **good-enough** performance
-  for workloads you don't want to spend time profiling.
+- Workflow Task 对 CPU 的需求极小，通常不消耗太多内存。
+  它们非常适合固定大小的 Slot Supplier。
+- 当非常低的 Task 完成延迟和最大吞吐量很重要时，避免使用基于资源的自动调整 Slot Supplier。
+- 将自动调整的基于资源的 Slot Supplier 保留给资源使用模式您不完全了解且不想深入研究的工作负载部署。它可以为您不想花时间分析的工作负载提供**足够好**的性能。
 
-Scenarios with tasks that have variable, or very high, per-task resource needs should rely on
-fixed-size suppliers and manual tuning. The resource-based tuner can never perform as well as a
-fixed-size tuner with appropriately chosen configuration, but can offer reasonable performance
-without the need for profiling.
+具有可变或非常高的每任务资源需求的场景应依赖固定大小的 Supplier 和手动调优。基于资源的 Tuner 永远无法达到具有适当配置的固定大小 Tuner 的性能，但可以在不需要分析的情况下提供合理的性能。
 
-The following use cases are well suited to resource-based auto-tuning slot suppliers: 
+以下用例非常适合基于资源的自动调整 Slot Supplier：
 
-- **You want acceptable performance with minimum effort**:
-  Resource-based suppliers can provide reasonable performance without the need for profiling your
-  workfload. They can be a great way to get started with new workloads. If a workload becomes very
-  performance-sensitive, we suggest you profile it and choose appropriate fixed-size numbers.
-- **Fluctuating workloads with low per-Task consumption**:
-  The resource-based supplier works well when each Task consumes few resources but may run for a (relatively) long time.
-  For example: HTTP calls or other blocking I/Os that spend most of their time waiting on external events.
-- **Protection from out-of-memory & over-subscription in the face of unpredictable per-task consumption:**
-  Do your Tasks often consume an unpredictable number of resources?
-  Do you want to avoid crashes without setting an overly-conservative fixed limit?
-  In these cases, the resource-based supplier is a good match.
-  Keep in mind that auto-tuning can never do a _perfect_ job and may sometimes exceed your requested system limits for CPU and memory.
+- **您希望以最小努力获得可接受的性能**：
+  基于资源的 Supplier 可以在不需要分析工作负载的情况下提供合理的性能。
+  它们是开始新工作负载的好方法。如果工作负载变得非常性能敏感，我们建议您对其进行分析并选择适当的固定大小数量。
+- **低每任务消耗的波动工作负载**：
+  基于资源的 Supplier 在每个 Task 消耗很少资源但可能运行相对较长时间时效果很好。
+  例如：HTTP 调用或其他大部分时间等待外部事件的阻塞 I/O。
+- **在不可预测的每任务消耗下防止内存溢出和过度订阅**：
+  您的 Task 是否经常消耗不可预测数量的资源？
+  您是否希望避免崩溃而不设置过于保守的固定限制？
+  在这些情况下，基于资源的 Supplier 是一个好选择。
+  请记住，自动调整永远无法做到_完美_，有时可能会超过您请求的 CPU 和内存系统限制。
 
-For the highest level of control over slot allocation, consider custom slot suppliers.
-This allows you to tailor the logic of how slots are allocated based on your system requirements.
-Custom suppliers provide flexibility to optimize for specific use cases that fixed assignment and resource-based suppliers may not fully address.
+对于最高级别的槽位分配控制，请考虑自定义 Slot Supplier。
+这允许您根据系统需求定制槽位分配逻辑。
+自定义 Supplier 提供了灵活性，以优化固定分配和基于资源的 Supplier 可能无法完全解决的特定用例。
 
-Choosing the right slot supplier depends on your workload complexity and the control you need over resource allocation.
-For predictable tasks, variable workloads, or complex dynamic scenarios, Temporal slot suppliers can meet your needs.
+选择合适的 Slot Supplier 取决于您的工作负载复杂性和您需要对资源分配的控制程度。
+对于可预测的任务、可变工作负载或复杂的动态场景，Temporal Slot Supplier 可以满足您的需求。
 
-### Implement Custom Slot Suppliers {#custom-slot-implementation}
+### 实现自定义 Slot Supplier {#custom-slot-implementation}
 
-Implement your own Slot Supplier to control how Workers are allocated Tasks and manage the processing of Workflows, Activities, and Nexus Operations.
-Custom Slot Suppliers let you fine-tune task processing based on your application's needs.
+实现您自己的 Slot Supplier，以控制 Worker 如何分配 Task 以及管理 Workflow、Activity 和 Nexus 操作的处理。
+自定义 Slot Supplier 让您可以根据应用程序的需求精细调整 Task 处理。
 
-Each SDK's reference documentation explains the specifics of the interface, but the core concepts are consistent across SDKs:
+每个 SDK 的参考文档解释了接口的具体细节，但核心概念在所有 SDK 中是一致的：
 
-| Language                                               | Slot Supplier Reference                                                                                                  |
+| 语言                                                   | Slot Supplier 参考                                                                                                       |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
 | <img src="/img/sdks/png/golang.png" height="24" />     | [`SlotSupplier`](https://pkg.go.dev/go.temporal.io/sdk/worker#SlotSupplier)                                              |
 | <img src="/img/sdks/png/java.png" height="24" />       | [`SlotSupplier`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/tuning/SlotSupplier.html) |
@@ -432,51 +414,50 @@ Each SDK's reference documentation explains the specifics of the interface, but 
 | <img src="/img/sdks/png/typescript.png" height="24" /> | [`CustomSlotSupplier`](https://typescript.temporal.io/api/interfaces/worker.CustomSlotSupplier)                          |
 | <img src="/img/sdks/png/dotnet.png" height="24" />     | [`CustomSlotSupplier`](https://dotnet.temporal.io/api/Temporalio.Worker.Tuning.CustomSlotSupplier.html)                  |
 
-Slot Suppliers issue `SlotPermit`s.
-These represent the right to use a slot of a specific type, namely Workflow, Activity, Local Activity, or Nexus.
-You control whether a Worker can perform certain tasks by issuing or withholding permits.
+Slot Supplier 发放 `SlotPermit`。
+这些代表使用特定类型槽位（即 Workflow、Activity、Local Activity 或 Nexus）的权利。
+您通过发放或扣留许可来控制 Worker 是否可以执行某些 Task。
 
-Custom Slot Suppliers must implement these functions:
+自定义 Slot Supplier 必须实现以下函数：
 
-- `reserveSlot` - Called before polling for new tasks. Your implementation can block and must return a Slot Permit once it decides to accept new work.
-- `tryReserveSlot` - Called for slot reservations in cases like eager activity processing. This must not block.
-- `markSlotUsed` - Called when a slot is about to be used for a task (not while it’s held during polling). It provides information about the task.
-- `releaseSlot` - Called when a slot is no longer needed, whether or not it was used.
+- `reserveSlot` - 在轮询新 Task 之前调用。您的实现可以阻塞，并且一旦决定接受新工作就必须返回一个 Slot Permit。
+- `tryReserveSlot` - 用于即时 Activity 处理等情况下的槽位预留。这不能阻塞。
+- `markSlotUsed` - 当槽位即将用于 Task 时调用（不是在轮询期间持有时）。它提供有关 Task 的信息。
+- `releaseSlot` - 当不再需要槽位时调用，无论是否已使用。
 
-Custom policies require more effort, but provide finer control over Task processing.
-By implementing your own Slot Supplier, you can tailor how Workflows, Activities, and Nexus Operations are handled, optimizing performance for your specific needs.
+自定义策略需要更多工作，但提供对 Task 处理的更精细控制。
+通过实现您自己的 Slot Supplier，您可以定制 Workflow、Activity 和 Nexus 操作的处理方式，为您的特定需求优化性能。
 
-### Slot supplier throttles
+### Slot Supplier 节流
 
-Auto-tuned suppliers may diverge from requested thresholds.
-The resources a given Task will use can't be known ahead of time.
-There is a fundamental tradeoff between how quickly a slot supplier is willing to accept Tasks and how well it can respect the defined thresholds.
+自动调整的 Supplier 可能会偏离请求的阈值。
+给定 Task 将使用的资源在开始前无法预知。
+在 Slot Supplier 愿意接受 Task 的速度和遵守定义阈值的能力之间存在根本性的权衡。
 
-Slot throttling is a mechanism to control the rate at which new slots for concurrent tasks are made available for processing.
-This concept is part of the resource-based auto-tuning feature for Workers.
-By waiting a brief period between making slots available, the Worker can assess how resource usage has changed since the last task began processing.
+槽位节流是一种控制并发 Task 的新槽位可用于处理的速率的机制。
+这个概念是 Worker 基于资源的自动调整功能的一部分。
+通过在使槽位可用之间等待短暂时间，Worker 可以评估自上次 Task 开始处理以来资源使用情况的变化。
 
-This throttle is called `rampThrottle` in the SDK options for resource-based slot suppliers.
-It defines the minimum time the Worker will wait between handing out new slots after passing the minimum slots number.
+这个节流在基于资源的 Slot Supplier 的 SDK 选项中称为 `rampThrottle`。
+它定义了 Worker 在超过最小槽位数量后，在发放新槽位之间等待的最短时间。
 
-**A higher `rampThrottle` trades off performance for safety.**
+**更高的 `rampThrottle` 以性能换取安全性。**
 
-For example:
+例如：
 
-If a just-started worker were to have no throttle, and there was a backlog of Tasks, it might immediately accept 100 Tasks at once.
-If each Task allocated 1GB of RAM, the Worker would likely run out of memory and crash.
-The throttle enforces a wait before handing out new slots (after a minimum number of slots have been occupied) so you can measure newly consumed resources.
+如果一个刚启动的 Worker 没有节流，并且有 Task 积压，它可能立即接受 100 个 Task。
+如果每个 Task 分配 1GB RAM，Worker 可能很快耗尽内存并崩溃。
+节流在超过最小占用槽位数量后强制等待再发放新槽位，这样您就可以测量新消耗的资源。
 
-## Performance tuning examples {#examples}
+## 性能调优示例 {#examples}
 
-The following examples show how to create and provision composite Worker tuners and set other
-performance related options.
-Each tuner provides slot suppliers for various Task types.
-These examples focus on Activities and Local Activities, since Workflow Tasks normally do not need resource-based tuning.
+以下示例展示了如何创建和配置复合 Worker tuner 以及设置其他性能相关选项。
+每个 Tuner 为各种 Task 类型提供 Slot Supplier。
+这些示例重点关注 Activity 和 Local Activity，因为 Workflow Task 通常不需要基于资源的调优。
 
 ### Go SDK
 
-**Resource-based tuner:**
+**基于资源的 Tuner：**
 
 <!--SNIPSTART go-resource-based-tuner-->
 [features/snippets/worker_tuner/worker_tuner.go](https://github.com/temporalio/features/blob/main/features/snippets/worker_tuner/worker_tuner.go)
@@ -498,10 +479,10 @@ func resourceBasedTuner() (worker.Options, error) {
 ```
 <!--SNIPEND-->
 
-**Composite tuner:**
+**复合 Tuner：**
 
-A composite tuner lets you mix different slot supplier strategies for each Task type.
-For example, you can use fixed-size slot suppliers for Workflow and Nexus Tasks while using resource-based slot suppliers for Activity and Local Activity Tasks.
+复合 Tuner 允许您为每种 Task 类型混合使用不同的 Slot Supplier 策略。
+例如，您可以为 Workflow 和 Nexus Task 使用固定大小的 Slot Supplier，同时为 Activity 和 Local Activity Task 使用基于资源的 Slot Supplier。
 
 <!--SNIPSTART go-composite-tuner-->
 [features/snippets/worker_tuner/worker_tuner.go](https://github.com/temporalio/features/blob/main/features/snippets/worker_tuner/worker_tuner.go)
@@ -678,104 +659,104 @@ var worker = new TemporalWorker(
     });
 ```
 
-## Workflow Cache Tuning
+## Workflow 缓存调优
 
-When the number of cached Workflow Executions reported by `sticky_cache_size` hits `workflowCacheSize` _or_ the number of threads reported by the `workflow_active_thread_count` metrics gauge hits `maxWorkflowThreadCount`, Workflow Executions will start to be evicted from the cache.
-An evicted Workflow Execution will need to be replayed when it gets any action that may advance it.
+当 `sticky_cache_size` 报告的缓存 Workflow Execution 数量达到 `workflowCacheSize` _或_ `workflow_active_thread_count` 指标仪表报告的线程数量达到 `maxWorkflowThreadCount` 时，Workflow Execution 将开始从缓存中被驱逐。
+被驱逐的 Workflow Execution 在获得任何可能推进其进展的操作时，都需要重放。
 
-If the Workflow Cache limits described above are hit, and Worker hosts have enough free RAM and are not close to reasonable thread limits, then you may choose to increase `workflowCacheSize` and `maxWorkflowThreadCount` limits to decrease the overall latency and cost of the Replays in the system.
-If the opposite occurs, consider decreasing the limits.
+如果上述 Workflow 缓存限制被触发，而 Worker 主机有足够的空闲 RAM 且未接近合理的线程限制，那么您可以选择增加 `workflowCacheSize` 和 `maxWorkflowThreadCount` 限制，以降低系统中 Replay 的总延迟和成本。
+如果出现相反情况，请考虑降低限制。
 
 :::note
 
-In CoreSDK based SDKs, like TypeScript, this metric works differently and should be monitored and adjusted on a per Worker and Task Queue basis.
+在基于 CoreSDK 的 SDK（如 TypeScript）中，此指标的工作方式不同，应按 Worker 和 Task Queue 进行监控和调整。
 
-The `maxWorkflowThreadCount` and `workflow_active_thread_count` parameters are for the Java SDK only.
-
-:::
-
-## Available Task Queue information {#task-queue-metrics}
-
-:::tip Support, stability, and dependency info
-
-The information listed in this section is readable using the `DescribeTaskQueueEnhanced` method in the [Go SDK](https://github.com/temporalio/sdk-go/blob/74320648ab0e4178b1fedde01672f9b5b9f6c898/client/client.go), with the [Temporal CLI](https://github.com/temporalio/cli/releases/tag/v1.1.0) `task-queue describe` command, and using `DescribeTaskQueue` through RPC.
+`maxWorkflowThreadCount` 和 `workflow_active_thread_count` 参数仅适用于 Java SDK。
 
 :::
 
-The Temporal Service reports information separately for each Task Queue type (not aggregated).
-Use the following Task Queue properties to retrieve and evaluate information about Task Queue health and performance.
-Available data include:
+## 可用的 Task Queue 信息 {#task-queue-metrics}
 
-- [`ApproximateBacklogCount`](#ApproximateBacklogCountAndAge) and [`ApproximateBacklogAge`](#ApproximateBacklogCountAndAge)
-- [`TasksAddRate`](#TasksAddRate-and-TasksDispatchRate) and [`TasksDispatchRate`](#TasksAddRate-and-TasksDispatchRate)
-- [`BacklogIncreaseRate`](#BacklogIncreaseRate) (derived from [`TasksAddRate`](#TasksAddRate-and-TasksDispatchRate) and [`TasksDispatchRate`](#TasksAddRate-and-TasksDispatchRate))
+:::tip 支持、稳定性和依赖信息
 
-### `ApproximateBacklogCount` and `ApproximateBacklogAge` {#ApproximateBacklogCountAndAge}
+本节列出的信息可使用 [Go SDK](https://github.com/temporalio/sdk-go/blob/74320648ab0e4178b1fedde01672f9b5b9f6c898/client/client.go) 中的 `DescribeTaskQueueEnhanced` 方法、[Temporal CLI](https://github.com/temporalio/cli/releases/tag/v1.1.0) 的 `task-queue describe` 命令以及通过 RPC 使用 `DescribeTaskQueue` 来读取。
 
-`ApproximateBacklogCount` represents the approximate count of Tasks currently backlogged in this Task Queue.
-The number may include expired Tasks as well as active Tasks, but it will eventually converge to the correct count over time.
+:::
 
-`ApproximateBacklogAge` returns the approximate age of the oldest Task in the backlog.
-The age is based on the creation time of the Task at the head of the queue.
+Temporal Service 分别报告每种 Task Queue 类型（非聚合）的信息。
+使用以下 Task Queue 属性来检索和评估有关 Task Queue 健康状况和性能的信息。
+可用数据包括：
 
-You can rely on both these counts when making scaling decisions.
+- [`ApproximateBacklogCount`](#ApproximateBacklogCountAndAge) 和 [`ApproximateBacklogAge`](#ApproximateBacklogCountAndAge)
+- [`TasksAddRate`](#TasksAddRate-and-TasksDispatchRate) 和 [`TasksDispatchRate`](#TasksAddRate-and-TasksDispatchRate)
+- [`BacklogIncreaseRate`](#BacklogIncreaseRate)（由 [`TasksAddRate`](#TasksAddRate-and-TasksDispatchRate) 和 [`TasksDispatchRate`](#TasksAddRate-and-TasksDispatchRate) 导出）
 
-Please note: [Sticky queues](https://docs.temporal.io/sticky-execution) will affect these values, but only for a few seconds.
-That's because Tasks sent to Sticky queues are not included in the returned values for `ApproximateBacklogCount` and `ApproximateBacklogAge`.
-Inaccuracies diminish as the backlog grows.
+### `ApproximateBacklogCount` 和 `ApproximateBacklogAge` {#ApproximateBacklogCountAndAge}
 
-### `TasksAddRate` and `TasksDispatchRate` {#TasksAddRate-and-TasksDispatchRate}
+`ApproximateBacklogCount` 表示当前在此 Task Queue 中积压的 Task 的大致数量。
+该数量可能包括已过期的 Task 以及活跃的 Task，但最终会随着时间的推移收敛到正确的计数。
 
-Reports the approximate Tasks-per-second added to or dispatched from a Task Queue.
-This rate is averaged over the most recent 30-second time interval.
-The calculations include Tasks that were added to or dispatched from the backlog as well as Tasks that were immediately dispatched and bypassed the backlog (sync-matched).
+`ApproximateBacklogAge` 返回积压中最旧 Task 的大致时间。
+该时间基于队列头部 Task 的创建时间。
 
-The actual Task delivery count may be significantly higher than the number reported by these two values:
+您可以在做扩展决策时依赖这两个计数。
 
-- Eager dispatch refers to a Temporal feature where Activities can be requested by an SDK using one Workflow Task completion response.
-  Tasks using Eager dispatch do not pass through Task Queues.
-- Tasks passed to Sticky Task Queues not included in the returned values for `TasksAddRate` and `TasksDispatchRate`.
+请注意：[粘性队列](https://docs.temporal.io/sticky-execution)会影响这些值，但只会影响几秒钟。
+这是因为发送到粘性队列的 Task 不包含在 `ApproximateBacklogCount` 和 `ApproximateBacklogAge` 的返回值中。
+随着积压增长，不准确性会减少。
+
+### `TasksAddRate` 和 `TasksDispatchRate` {#TasksAddRate-and-TasksDispatchRate}
+
+报告每秒添加到或从 Task Queue 派发的大致 Task 数量。
+该速率是最近 30 秒时间间隔内的平均值。
+计算包括添加到积压或从积压派发的 Task，以及立即派发并绕过积压（同步匹配）的 Task。
+
+实际 Task 交付数量可能明显高于这两个值报告的数量：
+
+- 即时派发是指 SDK 使用一次 Workflow Task 完成响应请求 Activity 的 Temporal 功能。
+  使用即时派发的 Task 不经过 Task Queue。
+- 传递到粘性 Task Queue 的 Task 不包含在 `TasksAddRate` 和 `TasksDispatchRate` 的返回值中。
 
 ### `BacklogIncreaseRate` {#BacklogIncreaseRate}
 
-Approximates the _net_ Tasks per second added to the backlog, averaged over the most recent 30 seconds.
-This is calculated as:
+近似计算每秒添加到积压的_净_ Task 数，以最近 30 秒为平均值。
+计算方式为：
 
 ```
 TasksAddRate - TasksDispatchRate
 ```
 
-- Positive values of `X` indicate the backlog is growing by about `X` Tasks per second.
-- Negative values of `X` indicate the backlog is shrinking by about `X` Tasks per second.
+- `X` 的正值表示积压以大约每秒 `X` 个 Task 的速率增长。
+- `X` 的负值表示积压以大约每秒 `X` 个 Task 的速率缩减。
 
-While individual `add` and `dispatch` rates may be inaccurate due to Eager and Sticky Task Queues, the `BacklogIncreaseRate` reliably reflects the rate at which the backlog is shrinking or growing for backlogs older than a few seconds.
+虽然由于即时和粘性 Task Queue 的原因，个别 `add` 和 `dispatch` 速率可能不准确，但 `BacklogIncreaseRate` 可靠地反映了积压超过几秒钟后的缩减或增长速率。
 
-## Evaluate Task Queue performance {#evaluate-worker-loads}
+## 评估 Task Queue 性能 {#evaluate-worker-loads}
 
-A [Task Queue](https://docs.temporal.io/task-queue) is a lightweight, dynamically allocated queue.
-[Worker Entities](/workers#worker-entity) poll the queue for [Tasks](https://docs.temporal.io/tasks#task) and retrieve Tasks to work on.
-Tasks are contexts that a Worker progresses using a specific Workflow Execution, Activity Execution, or a Nexus Task Execution.
-Each Task Queue type offers its Tasks to compatible Workers for Task completion.
-The Temporal Service dynamically creates different [Task Queue types](/task-queue) including Activity Task Queues, Workflow Task Queues, and Nexus Task Queues.
+[Task Queue](https://docs.temporal.io/task-queue) 是一个轻量级、动态分配的队列。
+[Worker Entity](/workers#worker-entity) 轮询队列以获取 [Task](https://docs.temporal.io/tasks#task) 并检索要处理的 Task。
+Task 是 Worker 使用特定 Workflow Execution、Activity Execution 或 Nexus Task Execution 推进的上下文。
+每种 Task Queue 类型向兼容的 Worker 提供其 Task 以完成 Task。
+Temporal Service 动态创建不同的 [Task Queue 类型](/task-queue)，包括 Activity Task Queue、Workflow Task Queue 和 Nexus Task Queue。
 
-With an accurate estimate of backlog Tasks, you can determine the optimal number of Workers to deploy.
-Balance your Worker count with the number of Tasks to achieve the best performance.
-This approach minimizes Task backlog saturation and reduces idle Workers.
+通过准确估计积压 Task，您可以确定要部署的最优 Worker 数量。
+平衡 Worker 数量与 Task 数量以实现最佳性能。
+这种方法最大程度地减少 Task 积压饱和度并减少空闲 Worker。
 
-Task Queue data provide numerical insights into your Task Queue activity and backlog characteristics.
-Use these numbers to tune your production deployments.
-Evaluate your Worker loads and assess whether you need to scale up or reduce your Worker deployment.
+Task Queue 数据提供了对 Task Queue 活动和积压特性的数字洞察。
+使用这些数字来调整您的生产部署。
+评估您的 Worker 负载并评估是否需要扩大或缩减 Worker 部署。
 
-:::note RATE LIMITS
+:::note 速率限制
 
-[Visibility API rate limits](/cloud/limits#visibility-api-rate-limit) apply to Task Queue performance data requests.
+[Visibility API 速率限制](/cloud/limits#visibility-api-rate-limit)适用于 Task Queue 性能数据请求。
 
 :::
 
-### Query Task Queue info with Temporal CLI {#cli-task-queue-info}
+### 使用 Temporal CLI 查询 Task Queue 信息 {#cli-task-queue-info}
 
-The Temporal CLI helps you monitor and evaluate Worker performance.
-Issue the following command to display a list of active Workers that have recently polled a Task Queue:
+Temporal CLI 帮助您监控和评估 Worker 性能。
+发出以下命令以显示最近轮询了 Task Queue 的活跃 Worker 列表：
 
 ```
 temporal task-queue describe \
@@ -783,20 +764,20 @@ temporal task-queue describe \
     [additional options]
 ```
 
-This command retrieves poller information, backlog statistics, and task reachability for Task types (available in Temporal Server v1.25.0, Temporal CLI 1.1 and later).
+此命令检索 Task 类型的轮询器信息、积压统计信息和 Task 可达性（在 Temporal Server v1.25.0、Temporal CLI 1.1 及更高版本中可用）。
 
 :::warning
 
-Task reachability status is experimental.
-Determining Task reachability incurs a non-trivial computing cost.
-This feature may significantly change or be removed in a future release.
+Task 可达性状态是实验性的。
+确定 Task 可达性会产生不可忽视的计算成本。
+此功能在未来版本中可能会发生重大变化或被删除。
 
 :::
 
-### Query Task Queue info with the Go SDK {#go-sdk-task-queue-info}
+### 使用 Go SDK 查询 Task Queue 信息 {#go-sdk-task-queue-info}
 
-Retrieve Task Queue data using the Go SDK by calling `DescribeTaskQueueEnhanced`.
-Specify the Task Queue name and set `ReportStats` to `true`, as in the following example:
+通过调用 `DescribeTaskQueueEnhanced` 使用 Go SDK 检索 Task Queue 数据。
+指定 Task Queue 名称并将 `ReportStats` 设置为 `true`，如以下示例所示：
 
 ```go
 for _, taskQueueName := range taskQueueNames {
@@ -813,98 +794,98 @@ for _, taskQueueName := range taskQueueNames {
     }
 ```
 
-### Evaluate Worker availability and capacity issues {#worker-capacity-issues}
+### 评估 Worker 可用性和容量问题 {#worker-capacity-issues}
 
-Each Temporal [Server](https://docs.temporal.io/temporal-service/temporal-server) records the last time of each poll request.
-This time is displayed in the `temporal task-queue describe` output.
+每个 Temporal [Server](https://docs.temporal.io/temporal-service/temporal-server) 记录每次轮询请求的最后时间。
+此时间显示在 `temporal task-queue describe` 输出中。
 
-- A `LastAccessTime` value exceeding one minute may indicate that the Worker fleet is at capacity or that Workers have shut down or been removed.
+- `LastAccessTime` 值超过一分钟可能表示 Worker 集群已达到容量上限，或 Worker 已关闭或被移除。
 
-- Values under 5 minutes typically suggest the Worker fleet is at capacity.
-  "At capacity" means that all Workflow and Activity slots are full.
+- 低于 5 分钟的值通常表明 Worker 集群已达到容量上限。
+  "达到容量上限"意味着所有 Workflow 和 Activity 槽位都已满。
 
-- Values over 5 minutes since the last poll request usually suggest that Workers have shut down or been removed.
-  Workers are removed if 5 minutes have passed since the last poll request.
+- 自上次轮询请求以来超过 5 分钟的值通常表明 Worker 已关闭或被移除。
+  如果最后一次轮询请求已过去 5 分钟，Worker 将被移除。
 
-### Manage your Worker fleet {#manage-your-worker-fleet}
+### 管理 Worker 集群 {#manage-your-worker-fleet}
 
-You can adjust the number of Workers to enhance Workflow Execution performance and manage your fleet size.
-For instance, a large backlog of Tasks with too few Workers will slow down Workflow Execution completions and decrease processing efficiency.
-Adding more Workers boosts speeds up completion rates and improves throughput.
-An empty backlog indicates low Worker utilization, allowing you to reduce your fleet and associated costs.
+您可以调整 Worker 数量以提高 Workflow Execution 性能并管理集群规模。
+例如，大量积压的 Task 和过少的 Worker 会减慢 Workflow Execution 完成速度并降低处理效率。
+添加更多 Worker 可以加快完成速度并提高吞吐量。
+空积压表示 Worker 利用率低，允许您减少集群及相关成本。
 
-The values provided by `temporal task-queue describe` can help you manage your Worker fleet deployment:
+`temporal task-queue describe` 提供的值可以帮助您管理 Worker 集群部署：
 
-- `ApproximateBacklogAge` shows how long Tasks have been waiting to be dispatched.
-  If this time grows too long, more Workers can boost Workflow efficiency.
+- `ApproximateBacklogAge` 显示 Task 等待派发的时间。
+  如果这段时间增长过长，更多 Worker 可以提升 Workflow 效率。
 
-- Calculate the demand per Worker by dividing the number of backlogged Tasks (`ApproximateBacklogCount`) by the number of Workers.
-  Determine if your task processing rate is within an acceptable range for your needs using the per-Worker demand (how many Tasks each Worker has yet to process), the backlog consumption rate (`TasksDispatchRate`, the rate at which Workers are processing Tasks), and the dispatch latency (`ApproximateBacklogAge`, the time the oldest Task has been waiting to be assigned to a Worker).
+- 通过将积压 Task 数量（`ApproximateBacklogCount`）除以 Worker 数量来计算每个 Worker 的需求。
+  使用每个 Worker 的需求（每个 Worker 还需处理多少 Task）、积压消耗速率（`TasksDispatchRate`，Worker 处理 Task 的速率）以及派发延迟（`ApproximateBacklogAge`，最旧 Task 等待分配给 Worker 的时间）来确定您的 Task 处理速率是否在您需求的可接受范围内。
 
-- The backlog increase rate (`BacklogIncreaseRate`) shows the changing demand on your Workers over time.
-  As this rate increases, you may need to add more Workers until demand and capacity are balanced.
-  As it decreases, you may be able to reduce your Worker fleet.
+- 积压增长率（`BacklogIncreaseRate`）显示 Worker 随时间变化的需求变化。
+  随着该速率增加，您可能需要添加更多 Worker，直到需求和容量平衡。
+  随着它减少，您可以减少 Worker 集群规模。
 
-## Task Queue processing tuning {#task-queues-processing-tuning}
+## Task Queue 处理调优 {#task-queues-processing-tuning}
 
-The following steps limit delays in Task Queue processing due to insufficient or unbalanced Workers.
-Review these steps if you notice high `schedule_to_start` metrics.
+以下步骤限制由于 Worker 不足或不均衡导致的 Task Queue 处理延迟。
+如果您注意到高 `schedule_to_start` 指标，请查看这些步骤。
 
-The steps are arranged in the recommended order of execution.
+这些步骤按推荐的执行顺序排列。
 
-### Hosts and Resources provisioning
+### 主机和资源配置
 
-If currently provisioned Worker hosts are fully utilized (near full CPU usage, high load average, etc), additional Workers hosts have to be provisioned to increase the capacity of the Workers pool.
+如果当前配置的 Worker 主机已完全利用（接近满 CPU 使用率、高平均负载等），则需要配置额外的 Worker 主机以增加 Worker 池的容量。
 
-**It's possible to have too many Workers**
+**可能有太多 Worker**
 
-Monitor the poll success (`poll_success`/`poll_success_sync`) and poll timeout `poll_timeouts` Server metric counters.
+监控轮询成功率（`poll_success`/`poll_success_sync`）和轮询超时 `poll_timeouts` 服务器指标计数器。
 
-Poll Success Rate = (`poll_success` + `poll_success_sync`) / (`poll_success` + `poll_success_sync` + `poll_timeouts`)
+轮询成功率 = (`poll_success` + `poll_success_sync`) / (`poll_success` + `poll_success_sync` + `poll_timeouts`)
 
-Poll Success Rate should be >90% in most cases of systems with a steady load. For high volume and low latency, try to target >95%.
+在大多数稳定负载的系统中，轮询成功率应 >90%。对于高吞吐量和低延迟，尝试目标 >95%。
 
-If you see
+如果您同时看到：
 
-1. low Poll Success Rate, and
-2. low `schedule_to_start_latency`, and
-3. low Worker hosts resource utilization at the same time,
+1. 低轮询成功率，
+2. 低 `schedule_to_start_latency`，
+3. 低 Worker 主机资源利用率，
 
-then you might have too many workers, consider sizing down.
+那么您可能有太多 Worker，考虑缩小规模。
 
-### Worker Executor Slots sizing
+### Worker 执行器槽位大小
 
-The main area to focus on when tuning is the number of Worker Executor Slots.
-Increase the maximum number of working slots by adjusting `maxConcurrentWorkflowTaskExecutionSize` or `maxConcurrentActivityExecutionSize` if both of the following conditions are met:
+调优时关注的主要领域是 Worker 执行器槽位的数量。
+如果同时满足以下两个条件，请通过调整 `maxConcurrentWorkflowTaskExecutionSize` 或 `maxConcurrentActivityExecutionSize` 来增加工作槽位的最大数量：
 
-1. The Worker hosts are underutilized (no bottlenecks on CPU, load average, etc.).
-2. The `worker_task_slots_available` metric from the corresponding Worker type frequently shows a depleted number of available Worker slots.
+1. Worker 主机未充分利用（CPU、平均负载等无瓶颈）。
+2. 来自相应 Worker 类型的 `worker_task_slots_available` 指标频繁显示可用 Worker 槽位数量耗尽。
 
-Alternatively, consider using a resource-based slot supplier as described [here](#slot-suppliers).
+或者，考虑使用[此处](#slot-suppliers)描述的基于资源的 Slot Supplier。
 
-### Poller count
+### 轮询器数量
 
-Sometimes, it can be appropriate to increase the number of task pollers.
-This is usually more common in situations where your Workers have somewhat high latency when communicating with the server.
-You can simply use automated poller tuning to handle this automatically.
+有时，增加 Task 轮询器的数量是合适的。
+这在 Worker 与服务器通信时延迟较高的情况下更为常见。
+您可以简单地使用自动化的轮询器调优来自动处理这个问题。
 
-Consider manual adjustment if:
+在以下情况下考虑手动调整：
 
-1. The Worker hosts are underutilized, for example, there are no bottlenecks on CPU, load average, etc.
-2. `worker_task_slots_available` metric from the corresponding Worker type shows that a significant percentage of Worker slots are available on a regular basis.
-3. The `schedule_to_start` metric is abnormally long.
+1. Worker 主机未充分利用，例如，CPU、平均负载等无瓶颈。
+2. 来自相应 Worker 类型的 `worker_task_slots_available` 指标显示，定期有大量百分比的 Worker 槽位可用。
+3. `schedule_to_start` 指标异常高。
 
-Then consider increasing the number of pollers by adjusting `maxConcurrentWorkflowTaskPollers` or `maxConcurrentActivityTaskPollers`, depending on which type of `schedule_to_start` metric is elevated.
+然后考虑通过调整 `maxConcurrentWorkflowTaskPollers` 或 `maxConcurrentActivityTaskPollers` 来增加轮询器数量，具体取决于哪种 `schedule_to_start` 指标偏高。
 
-### Rate Limiting
+### 速率限制
 
-If, after adjusting the poller and executors count as specified earlier, you still observe an elevated `schedule_to_start`, underutilized Worker hosts, or high `worker_task_slots_available`, you might want to check the following:
+如果在按照前面的说明调整轮询器和执行器数量后，您仍然观察到高 `schedule_to_start`、Worker 主机未充分利用或高 `worker_task_slots_available`，您可能需要检查以下内容：
 
-- If server-side rate limiting per Task Queue is set by `WorkerOptions#maxTaskQueueActivitiesPerSecond`, remove the limit or adjust the value up. (See [Go](/develop/go/workers/run-worker-process#taskqueueactivitiespersecond) and [Java](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/WorkerOptions.Builder.html).)
-- If Worker-side rate limiting per Worker is set by `WorkerOptions#maxWorkerActivitiesPerSecond`, remove the limit. (See [Go](/develop/go/workers/run-worker-process#workeractivitiespersecond), [TypeScript](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions#maxconcurrentactivitytaskexecutions), and [Java](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/WorkerOptions.Builder.html).)
+- 如果通过 `WorkerOptions#maxTaskQueueActivitiesPerSecond` 设置了每个 Task Queue 的服务器端速率限制，请删除该限制或向上调整该值。（参见 [Go](/develop/go/workers/run-worker-process#taskqueueactivitiespersecond) 和 [Java](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/WorkerOptions.Builder.html)。）
+- 如果通过 `WorkerOptions#maxWorkerActivitiesPerSecond` 设置了每个 Worker 的 Worker 端速率限制，请删除该限制。（参见 [Go](/develop/go/workers/run-worker-process#workeractivitiespersecond)、[TypeScript](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions#maxconcurrentactivitytaskexecutions) 和 [Java](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/WorkerOptions.Builder.html)。）
 
-## Related reading
+## 相关阅读
 
-- [Worker tuning quick reference](/develop/worker-tuning-reference) - SDK defaults and metrics by resource type
-- [Workers in production operation guide](https://temporal.io/blog/workers-in-production)
-- [Full set of SDK Metrics reference](/references/sdk-metrics)
+- [Worker 调优快速参考](/develop/worker-tuning-reference) - 按资源类型分类的 SDK 默认值和指标
+- [生产环境中的 Worker 操作指南](https://temporal.io/blog/workers-in-production)
+- [SDK 指标完整参考](/references/sdk-metrics)

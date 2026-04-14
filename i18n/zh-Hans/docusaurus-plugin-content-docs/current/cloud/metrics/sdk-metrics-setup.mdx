@@ -1,0 +1,146 @@
+---
+id: sdk-metrics-setup
+title: 使用 Prometheus 和 Grafana 监控 SDK 指标
+sidebar_label: SDK指标
+description: 使用 Prometheus 和 Grafana 设置 Temporal SDK 指标，以监控 Worker 和客户端性能。
+slug: /cloud/metrics/sdk-metrics-setup
+toc_max_heading_level: 4
+keywords:
+  - temporal sdk metrics
+  - prometheus scrape endpoint
+  - sdk metrics setup
+  - temporal sdk monitoring
+  - grafana sdk metrics
+  - worker metrics
+  - temporal sdk prometheus
+  - sdk metrics dashboard
+tags:
+  - Metrics
+  - Observability
+  - Temporal Cloud
+---
+
+import { ZoomingImage } from '@site/src/components';
+
+SDK 指标由用于启动 Worker 以及启动 Signal 或 Query Workflow Execution 的 SDK 客户端发出。
+与通过 Prometheus HTTP API 端点公开的 [Temporal Cloud 指标](/cloud/metrics/) 不同，SDK 指标要求您在应用程序代码中设置 Prometheus 抓取端点，以便 Prometheus 收集和聚合。
+
+有关可用 SDK 指标及其描述的完整列表，请参阅 [SDK 指标参考](/references/sdk-metrics)。
+
+设置 SDK 指标的过程包括以下步骤：
+
+1. 在应用程序代码中[公开指标端点](#sdk-metrics-setup)，Prometheus 可以在其中抓取 SDK 指标。
+2. [配置 Prometheus](#prometheus-configuration) 以抓取您的 SDK 指标端点。
+3. 在 Grafana 中[添加 SDK 指标数据源](#grafana-data-source-configuration)。
+4. [设置仪表板](#grafana-dashboards-setup) 以可视化 SDK 指标。
+
+使用您选择的 SDK 设置与 Temporal Cloud 的连接，并让一些 Workflow 在 Temporal Cloud 上运行。
+确保 Prometheus 和 Grafana 已安装。
+
+- [开始](/develop/go/client/Temporal-client#connect-to-Temporal-cloud)
+- [Java](/develop/java/client/Temporal-client#connect-to-Temporal-cloud)
+- [Python](/develop/python/client/Temporal-client#connect-to-Temporal-cloud)
+- [TypeScript](/develop/typescript/client/Temporal-client#connect-to-Temporal-cloud)
+- [.NET](/develop/dotnet/client/Temporal-client#connect-to-Temporal-cloud)
+
+## 公开指标端点 {#sdk-metrics-setup}
+
+XPROT009X 的[高可用性功能](/cloud/high-availability) 允许您将 XPROT009X XPROT025X 从一个区域或云提供商迁移到另一个区域或云提供商，并且零停机时间。
+
+- [Go SDK](/develop/go/platform/observability#metrics)
+- [Java SDK](/develop/java/platform/observability#metrics)
+- [TypeScript SDK](/develop/typescript/platform/observability#metrics)
+- [Python](/develop/python/platform/observability#metrics)
+- [.NET](/develop/dotnet/platform/observability#metrics)
+
+有关如何在每个 SDK 中配置指标的工作示例，请参阅指标示例：
+
+- [Go SDK 示例](https://github.com/Temporalio/samples-go/tree/main/metrics)
+- [Java SDK 示例](https://github.com/Temporalio/samples-java/tree/main/core/src/main/java/io/Temporal/samples/metrics)
+- [TypeScript SDK 示例](https://github.com/Temporalio/samples-typescript/tree/main/interceptors-opentelemetry)
+- [Python SDK 示例](https://github.com/Temporalio/samples-python/tree/main/custom_metric)
+- [.NET SDK 示例](https://github.com/Temporalio/samples-dotnet/tree/main/src/OpenTelemetry/DotNetMetrics)
+
+一些示例使用 OpenTelemtry 来检测指标。使用
+[带有 OpenTelemetry 的 Prometheus 导出器](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/prometheusexporter) 公开用于抓取的指标。
+
+## 配置 Prometheus {#prometheus-configuration}
+
+对于 Temporal SDK，您必须运行 Prometheus 并将其配置为侦听应用程序代码中公开的抓取端点。
+
+对于此示例，您可以在本地运行 Prometheus 或作为 Docker 容器运行。
+无论哪种情况，请确保将侦听目标设置为公开抓取端点的端口。
+此配置假设抓取端点设置为端口 8077，如 [SDK 指标设置](#sdk-metrics-setup) 示例中所示。
+
+```yaml
+global:
+  scrape_interval: 30s # Set the scrape interval to every 30 seconds. Default is every 1 minute.
+#...
+
+# Set your scrape configuration targets to the ports exposed on your endpoints in the SDK.
+scrape_configs:
+  - job_name: 'temporalsdkmetrics'
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets:
+          # This is the scrape endpoint where Prometheus listens for SDK metrics.
+          - localhost:8077
+        # You can have multiple targets here, provided they are set up in your application code.
+```
+
+有关如何在本地或使用 Docker 运行 Prometheus 的更多详细信息，请参阅 [Prometheus 文档](https://prometheus.io/docs/introduction/first_steps/)。
+
+要检查 Prometheus 是否正在从您的 SDK 目标接收指标，请转至 [http://localhost:9090](http://localhost:9090) 并导航至 **状态> 目标**。
+您的配置中定义的目标端点的状态显示在此处。
+
+## 在 Grafana 中添加 SDK 指标数据源 {#grafana-data-source-configuration}
+
+根据您使用 Grafana 的方式，您可以在本地安装并运行它，将其作为 Docker 容器运行，或者登录 Grafana Cloud 以设置数据源。
+
+如果您已在本地安装并运行 Grafana，请转至 [http://localhost:3000](http://localhost:3000) 并登录。
+
+要将 SDK 指标 Prometheus 端点添加为数据源，请执行以下操作：
+
+1. 转到 **配置> 数据源**。
+2. 选择**添加数据源> Prometheus**。
+3. 输入 SDK 指标数据源的名称，例如 _Temporal SDK 指标_。
+4. 在 **HTTP** 部分的 URL 字段中输入您的 Prometheus 端点。
+   如果按照本文示例中所述在本地运行 Prometheus，请输入“http://localhost:9090”。
+5. 对于本示例，在 **Auth** 部分中启用 **Skip TLS verify**。
+6. 单击“**保存并测试**”以验证数据源是否正常工作。
+
+如果您在设置此数据源时发现问题，请检查 SDK 中设置的端点是否显示指标。
+如果您在定义的抓取端点处看不到 SDK 指标，请检查您的 Worker 和 Workflow Execution 是否正在运行。
+如果您在抓取端点上看到指标，但 Prometheus 显示您的目标已关闭，则表明连接到 SDK 中设置的目标存在问题。
+验证您的 Prometheus 配置并重新启动 Prometheus。
+
+如果您将 Grafana 作为容器运行，则可以在 Grafana 配置中设置 SDK 指标 Prometheus 数据源。
+请参阅[开源 Temporal 服务的 Prometheus 和 Grafana 设置](/self-hosted-guide/monitoring#grafana) 一文中描述的示例 Grafana 配置。
+
+## 设置 Grafana 仪表板 {#grafana-dashboards-setup}
+
+要在 Grafana 中设置 SDK 指标仪表板，您可以使用 UI 或直接在 Grafana 部署中配置它们。
+
+:::tip
+
+Temporal 提供社区驱动的[Temporal SDK 的示例仪表板](https://github.com/Temporalio/dashboards/tree/master/sdk)，您可以对其进行自定义以满足您的需求。
+
+:::
+
+要在 Grafana 中导入仪表板：
+
+1. 在导航栏中，选择**仪表板** > **导入仪表板**。
+2. 您可以从 [Temporal SDK 示例仪表板](https://github.com/Temporalio/dashboards/tree/master/sdk) 复制并粘贴 JSON，或将 JSON 文件导入 Grafana。
+3. 保存仪表板并查看图表中的指标数据。
+
+要使用 UI 配置仪表板：
+
+1. 转到 **创建 > 仪表板** 并添加一个空面板。
+2. 在**面板配置**页面的**Query**选项卡中，选择您之前配置的“Temporal SDK 指标”数据源。
+3. 展开**指标浏览器**并选择所需的指标。
+   [开发人员指南 - Worker 性能](/develop/Worker-performance) 中描述了 Worker 性能指标的列表。
+   [SDK 指标](/references/sdk-metrics) 参考中列出了所有与 SDK 相关的指标。
+4. 图表现在应该根据您选择的查询显示数据。
+   请注意，仅当您拥有 Workflow Execution 数据并运行 Worker 时，SDK 指标才会显示。
+   如果您没有看到 SDK 指标，请运行 Worker 和 Workflow Execution，然后监控仪表板。

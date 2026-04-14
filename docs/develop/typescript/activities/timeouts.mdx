@@ -1,8 +1,8 @@
 ---
 id: timeouts
-title: Activity Timeouts - TypeScript SDK
-sidebar_label: Timeouts
-description: Optimize Workflow Execution with Temporal TypeScript SDK - Set Activity Timeouts and Retry Policies efficiently.
+title: "Activity 超时 - TypeScript SDK"
+sidebar_label: "超时"
+description: "使用 Temporal 优化 Workflow Execution TypeScript SDK - 有效设置 Activity 超时和重试策略。"
 toc_max_heading_level: 4
 keywords:
   - typescript
@@ -17,33 +17,34 @@ tags:
   - Temporal SDKs
 ---
 
-This page shows how to do the following:
+此页面显示如何执行以下操作：
 
-- [Activity Timeouts](#activity-timeouts)
+- [Activity 超时](#activity-timeouts)
 - [Activity Retry Policy](#activity-retries)
-- [Activity next Retry delay](#activity-next-retry-delay)
-- [Heartbeat an Activity](#activity-heartbeats)
-- [Activity Heartbeat Timeout](#activity-heartbeat-timeout)
+- [Activity 下一个重试延迟](#activity-next-retry-delay)
+- [心跳 Activity](#activity-heartbeats)
+- [Activity 心跳超时](#activity-heartbeat-timeout)
 
-## Activity Timeouts {#activity-timeouts}
+<a id="activity-timeouts"></a>
+## Activity 超时 {#activity-timeouts}
 
-**How to set Activity Timeouts using the Temporal TypeScript SDK**
+**如何使用 Temporal TypeScript SDK 设置 Activity 超时**
 
-Each Activity Timeout controls the maximum duration of a different aspect of an Activity Execution.
+每个 Activity 超时控制 Activity 执行不同方面的最大持续时间。
 
-The following Timeouts are available in the Activity Options:
+Activity 选项中提供以下超时：
 
-- **[Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout):** is the maximum amount of time allowed for the entire [Activity Execution](/activity-execution), from when the [Activity Task](/tasks#activity-task) is initially scheduled by the Workflow to when the server receives a successful completion for that Activity Task
-- **[Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout):** is the maximum time allowed for a single [Activity Task Execution](/tasks#activity-task-execution), from when the Activity Task Execution gets polled by a [Worker](/workers#worker) to when the server receives a successful completion for that Activity Task
-- **[Schedule-To-Start Timeout](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout):** is the maximum amount of time that is allowed from when an [Activity Task](/tasks#activity-task) is initially scheduled by the Workflow to when a [Worker](/workers#worker) polls the Activity Task Execution
+- **[Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout)：** 是整个 [Activity 执行](/activity-execution) 允许的最长时间，从 [Activity 任务](/tasks#activity-task) 最初由 Workflow 变为 Scheduled 时到服务器收到该 Activity 任务的成功完成时
+- **[开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)：** 是单个 [Activity 任务执行](/tasks#activity-task-execution) 允许的最长时间，从 [Worker](/workers#worker) 轮询 Activity 任务执行时到服务器收到该 Activity 任务成功完成时的时间
+- **[Schedule-启动超时](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout)：** 是从 [Activity 任务](/tasks#activity-task) 最初由 Workflow 执行 Scheduled 到 [Worker](/workers#worker) 轮询 Activity 任务执行的最大时间量
 
-An Activity Execution must have either the Start-To-Close or the Schedule-To-Close Timeout set.
+Activity 执行必须设置“开始到关闭”或“Schedule 到关闭超时”。
 
-The following properties can be set on the [`ActivityOptions`](https://typescript.temporal.io/api/interfaces/common.ActivityOptions) when creating Activity proxy functions using the [`proxyActivities()`](https://typescript.temporal.io/api/namespaces/workflow#proxyactivities) API:
+使用 [`proxyActivities()`](https://typescript.temporal.io/api/interfaces/common.ActivityOptions) API 创建 Activity 代理函数时，可以在 [`ActivityOptions`](https://typescript.temporal.io/api/namespaces/workflow#proxyactivities) 上设置以下属性：
 
-- [`scheduleToCloseTimeout`](https://typescript.temporal.io/api/interfaces/common.ActivityOptions/#scheduletoclosetimeout)
+- [`ScheduleToCloseTimeout`](https://typescript.temporal.io/api/interfaces/common.ActivityOptions/#scheduletoclosetimeout)
 - [`startToCloseTimeout`](https://typescript.temporal.io/api/interfaces/common.ActivityOptions/#starttoclosetimeout)
-- [`scheduleToStartTimeout`](https://typescript.temporal.io/api/interfaces/common.ActivityOptions/#scheduletostarttimeout)
+- [`ScheduleToStartTimeout`](https://typescript.temporal.io/api/interfaces/common.ActivityOptions/#scheduletostarttimeout)
 
 ```typescript
 const { myActivity } = proxyActivities<typeof activities>({
@@ -53,15 +54,16 @@ const { myActivity } = proxyActivities<typeof activities>({
 });
 ```
 
+<a id="activity-retries"></a>
 ## Activity Retry Policy {#activity-retries}
 
-**How to set an Activity Retry Policy using the Temporal TypeScript SDK**
+**如何使用 Temporal TypeScript SDK 设置 Activity Retry Policy**
 
-A Retry Policy works in cooperation with the timeouts to provide fine controls to optimize the execution experience.
+Retry Policy 与超时配合提供精细控制以优化执行体验。
 
-Activity Executions are automatically associated with a default [Retry Policy](/encyclopedia/retry-policies) if a custom one is not provided.
+Activity 如果未提供自定义执行，则执行会自动与默认 [Retry Policy](/encyclopedia/retry-policies) 关联。
 
-To set an Activity's Retry Policy in TypeScript, assign the [`ActivityOptions.retry`](https://typescript.temporal.io/api/interfaces/common.ActivityOptions#retry) property when creating the corresponding Activity proxy function using the [`proxyActivities()`](https://typescript.temporal.io/api/namespaces/workflow#proxyactivities) API.
+要在 TypeScript 中设置 Activity 的 Retry Policy，请在使用 [`proxyActivities()`](https://typescript.temporal.io/api/interfaces/common.ActivityOptions#retry) API 创建相应的 Activity 代理函数时分配 [`ActivityOptions.retry`](https://typescript.temporal.io/api/namespaces/workflow#proxyactivities) 属性。
 
 ```typescript
 const { myActivity } = proxyActivities<typeof activities>({
@@ -73,14 +75,15 @@ const { myActivity } = proxyActivities<typeof activities>({
 });
 ```
 
-## Activity next Retry delay {#activity-next-retry-delay}
+<a id="activity-next-retry-delay"></a>
+## Activity 下一次重试延迟 {#activity-next-retry-delay}
 
-**How to override the next Retry delay following an Activity failure using the Temporal TypeScript SDK**
+**如何使用 Temporal TypeScript SDK 覆盖 Activity 失败后的下一次重试延迟**
 
-The time to wait after a retryable Activity failure until the next retry is attempted is normally determined by that Activity's Retry Policy.
-However, an Activity may override that duration when explicitly failing with an [`ApplicationFailure`](https://typescript.temporal.io/api/classes/common.ApplicationFailure) by setting a next Retry delay.
+可重试的 Activity 失败后直到尝试下一次重试的等待时间通常由该 Activity 的 Retry Policy 确定。
+但是，当 [`ApplicationFailure`](https://typescript.temporal.io/api/classes/common.ApplicationFailure) 显式失败时，Activity 可以通过设置下一次重试延迟来覆盖该持续时间。
 
-To override the next Retry delay for an `ApplicationFailure` thrown by an Activity in TypeScript, provide the [`nextRetryDelay`](https://typescript.temporal.io/api/interfaces/common.ApplicationFailureOptions#nextretrydelay) property on the object argument of the [`ApplicationFailure.create()`](https://typescript.temporal.io/api/classes/common.ApplicationFailure#create) factory method.
+要覆盖 TypeScript 中 Activity 引发的 `ApplicationFailure` 的下一次重试延迟，请在 [`ApplicationFailure.create()`](https://typescript.temporal.io/api/interfaces/common.ApplicationFailureOptions#nextretrydelay) 工厂方法的对象参数上提供 [`nextRetryDelay`](https://typescript.temporal.io/api/classes/common.ApplicationFailure#create) 属性。
 
 ```typescript
 throw ApplicationFailure.create({
@@ -89,34 +92,35 @@ throw ApplicationFailure.create({
 });
 ```
 
-## Heartbeat an Activity {#activity-heartbeats}
+<a id="activity-heartbeats"></a>
+## 心跳 Activity {#activity-heartbeats}
 
-**How to Heartbeat an Activity using the Temporal TypeScript SDK**
+**如何使用 Temporal TypeScript SDK 对 Activity 进行检测**
 
-An [Activity Heartbeat](/encyclopedia/detecting-activity-failures#activity-heartbeat) is a ping from the [Worker Process](/workers#worker-process) that is executing the Activity to the [Temporal Service](/temporal-service).
-Each Heartbeat informs the Temporal Service that the [Activity Execution](/activity-execution) is making progress and the Worker has not crashed.
-If the Temporal Service does not receive a Heartbeat within a [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout) time period, the Activity will be considered as timed out and another [Activity Task Execution](/tasks#activity-task-execution) may be scheduled according to the Retry Policy.
+[Activity 心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 是从正在执行 Activity 的 [Worker 流程](/workers#worker-process) 到 [Temporal 服务](/temporal-service) 的 ping。
+每个心跳都会通知 Temporal 服务 [Activity 执行](/activity-execution) 正在取得进展并且 Worker 尚未崩溃。
+如果Temporal服务在[心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout)时间段内没有收到心跳，则Activity将被视为超时，并且根据Retry Policy，另一个[Activity 任务执行](/tasks#activity-task-execution)可能是Scheduled。
 
-Activity Cancellations are delivered to Activities from the Temporal Service when they Heartbeat.
-Activities that don't Heartbeat can't get notified of Cancellation requests.
+Activity 取消会在活动检测到时从 Temporal 服务传递到活动。
+没有 Heartbeat 的活动无法收到取消请求的通知。
 
 :::note Handling Activity Cancellation
-In the TypeScript SDK, Activity implementations must opt in to observe cancellation.
+在 TypeScript SDK 中，Activity 实现必须选择观察取消。
 
-Use one of the following in your Activity to be notified of cancellation:
-- `await Context.current().cancelled` — rejects with `CancelledFailure`.
-- `await Context.current().sleep(ms)` — rejects on cancellation.
-- Pass `Context.current().cancellationSignal` (an `AbortSignal`) to libraries that support abort.
+在您的 Activity 中使用以下其中一项即可收到取消通知：
+- `await Context.current().cancelled` — 拒绝 `CancelledFailure`。
+- `await Context.current().sleep(ms)` — 取消时被拒绝。
+- 将 `Context.current().cancellationSignal`（`AbortSignal`）传递给支持中止的库。
 
-> **Important:** Activities receive cancellation notifications when they heartbeat; if an Activity doesn’t heartbeat, delivery of the cancellation notification can be delayed.
+> **重要：** 活动在心跳时收到取消通知；如果 Activity 没有检测信号，则取消通知的传送可能会延迟。
 
-See [Activity namespace reference](https://typescript.temporal.io/api/namespaces/activity#cancellation) and [Context API](https://typescript.temporal.io/api/classes/activity.Context) for more information.
+有关详细信息，请参阅 [Activity Namespace 参考](https://typescript.temporal.io/api/namespaces/activity#cancellation) 和 [上下文API](https://typescript.temporal.io/api/classes/activity.Context)。
 :::
 
-Heartbeats may not always be sent to the Temporal Service—they may be [throttled](/encyclopedia/detecting-activity-failures#throttling) by the Worker.
-Heartbeat throttling may lead to Cancellation getting delivered later than expected.
+心跳可能并不总是发送到 Temporal 服务 — 它们可能是由 Worker 发送的 [节流](/encyclopedia/detecting-activity-failures#throttling)。
+心跳限制可能会导致取消的发送时间晚于预期。
 
-To Heartbeat an Activity Execution in TypeScript, call the [`heartbeat()`](https://typescript.temporal.io/api/namespaces/activity#heartbeat) function from the Activity implementation.
+要在 TypeScript 中对 Activity 执行进行检测，请从 Activity 实现中调用 [`heartbeat()`](https://typescript.temporal.io/api/namespaces/activity#heartbeat) 函数。
 
 ```typescript
 export async function myActivity(): Promise<void> {
@@ -129,9 +133,9 @@ export async function myActivity(): Promise<void> {
 }
 ```
 
-An Activity may optionally checkpoint its progression, by providing a `details` argument to the [`heartbeat()`](https://typescript.temporal.io/api/namespaces/activity#heartbeat) function.
-Should the Activity Execution times out and gets retried, then the Temporal Server will provide the `details` from the last Heartbeat it received to the next Activity Execution.
-This can be used to allow the Activity to efficiently resume its work.
+通过向 [`heartbeat()`](https://typescript.temporal.io/api/namespaces/activity#heartbeat) 函数提供 `details` 参数，Activity 可以选择检查其进程。
+如果 Activity 执行超时并重试，则 Temporal Server 将提供从上次收到的心跳到下一个 Activity 执行的 `details`。
+这可用于让 Activity 有效地恢复其工作。
 
 ```typescript
 export async function myActivity(): Promise<void> {
@@ -147,14 +151,15 @@ export async function myActivity(): Promise<void> {
 }
 ```
 
-## Activity Heartbeat Timeout {#activity-heartbeat-timeout}
+<a id="activity-heartbeat-timeout"></a>
+## Activity 心跳超时 {#activity-heartbeat-timeout}
 
-**How to set a Heartbeat Timeout using the Temporal TypeScript SDK**
+**如何使用 Temporal TypeScript SDK 设置心跳超时**
 
-A [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout) works in conjunction with [Activity Heartbeats](/encyclopedia/detecting-activity-failures#activity-heartbeat).
-If the Temporal Server doesn't receive a Heartbeat before expiration of the Heartbeat Timeout, the Activity is considered as timed out and another [Activity Task Execution](/tasks#activity-task-execution) may be scheduled according to the Retry Policy.
+[心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout) 与 [Activity 心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 配合使用。
+如果Temporal Server在心跳超时之前没有收到心跳，则Activity被认为超时，并且根据Retry Policy，另一个[Activity 任务执行](/tasks#activity-task-execution)可能是Scheduled。
 
-To set an Activity's Heartbeat Timeout in TypeScript, set the [`ActivityOptions.heartbeatTimeout`](https://typescript.temporal.io/api/interfaces/common.ActivityOptions#heartbeattimeout) property when creating the corresponding Activity proxy functions using the [`proxyActivities()`](https://typescript.temporal.io/api/namespaces/workflow#proxyactivities) API.
+要在 TypeScript 中设置 Activity 的心跳超时，请在使用 [`proxyActivities()`](https://typescript.temporal.io/api/interfaces/common.ActivityOptions#heartbeattimeout) API 创建相应的 Activity 代理函数时设置 [`ActivityOptions.heartbeatTimeout`](https://typescript.temporal.io/api/namespaces/workflow#proxyactivities) 属性。
 
 ```typescript
 const { myLongRunningActivity } = proxyActivities<typeof activities>({

@@ -1,8 +1,8 @@
 ---
 id: index
-title: Temporal CLI command reference
-sidebar_label: Temporal CLI
-description:
+title: "Temporal CLI 命令参考"
+sidebar_label: "Temporal CLI"
+description: The Temporal CLI offers terminal access to Temporal Services for managing, monitoring, and debugging Workflows and
   The Temporal CLI offers terminal access to Temporal Services for managing, monitoring, and debugging Workflows and
   Activities, including Namespace and Task Queue management, with embedded development support.
 slug: /cli
@@ -17,79 +17,81 @@ tags:
   - Temporal CLI
 ---
 
-The Temporal CLI provides direct access to a Temporal Service via the terminal. It's a powerful tool for managing,
-monitoring, and debugging Temporal Applications. You can use it to start, stop, inspect and operate on Workflows and
-Activities, and perform administrative tasks such as Namespace, Schedule, and Task Queue management.
+Temporal CLI 可通过终端直接访问 Temporal 服务。它是一个强大的管理工具，
+监视和调试 Temporal 应用程序。您可以用它来启动、停止、检查和操作 Workflow 和
+活动，并执行 Namespace、Schedule 和 Task Queue 管理等管理任务。
 
-The Temporal CLI also includes an embedded Temporal Service suitable for use in development and CI/CD. It includes the
-[Temporal Server](/temporal-service/temporal-server), SQLite persistence, and the [Temporal Web UI](/web-ui).
+Temporal CLI 还包括适合在开发和 CI/CD 中使用的嵌入式 Temporal 服务。它包括
+[Temporal Server](/temporal-service/temporal-server)、SQLite 持久性和 [Temporal 网页用户界面](/web-ui)。
 
 :::note
 
-When upgrading from [tctl](/tctl-v1) to the Temporal CLI, make sure to update your environment variables and use updated
-commands. For details, see [CLI release notes](https://github.com/temporalio/cli/releases/).
+从 [tctl](/tctl-v1) 升级到 Temporal CLI 时，请确保 Update 环境变量并使用 Updated
+命令。详细信息请参见[CLI 发行说明](https://github.com/temporalio/cli/releases/)。
 
 :::
 
-## Install the Temporal CLI {#install}
+## 安装 Temporal CLI {#install}
 
-The Temporal CLI is available on macOS, Windows, and Linux, or as a Docker image.
+Temporal CLI 可在 macOS、Windows 和 Linux 上使用，或作为 Docker 映像使用。
 
-### macOS
+### macOS {#macos}
 
-Choose one of the following install methods to install the Temporal CLI on macOS:
+选择以下安装方法之一在 macOS 上安装 Temporal CLI：
 
-- Install the Temporal CLI with Homebrew.
+- 使用 Homebrew 安装 Temporal CLI。
 
 ```shell
 brew install temporal
 ```
 
-- Install the Temporal CLI from CDN.
+- 从 CDN 安装 Temporal CLI。
 
-  1. Select the platform and architecture needed.
+1. 选择所需的平台和架构。
 
-  - Download for Darwin amd64: https://temporal.download/cli/archive/latest?platform=darwin&arch=amd64
-  - Download for Darwin arm64: https://temporal.download/cli/archive/latest?platform=darwin&arch=arm64
+- 下载达尔文 amd64：https://temporal.download/cli/archive/latest?platform=darwin&arch=amd64
+  - 下载达尔文arm64：https://temporal.download/cli/archive/latest?platform=darwin&arch=arm64
 
-  2. Extract the downloaded archive.
+2. 解压下载的存档。
 
-  3. Add the Temporal CLI binary to your PATH.
+3. 将 Temporal CLI 二进制文件添加到您的 PATH。
 
-### Linux
+### Linux {#linux}
 
-Choose one of the following install methods to install the Temporal CLI on Linux:
+选择以下安装方法之一在 Linux 上安装 Temporal CLI：
 
-- Install the Temporal CLI from CDN.
+- 从 CDN 安装 Temporal CLI。
 
-  1. Select the platform and architecture needed.
+1. 选择所需的平台和架构。
 
-  - Download for Linux amd64: https://temporal.download/cli/archive/latest?platform=linux&arch=amd64
-  - Download for Linux arm64: https://temporal.download/cli/archive/latest?platform=linux&arch=arm64
+- 下载适用于 Linux amd64 的版本：https://temporal.download/cli/archive/latest?platform=linux&arch=amd64
+  - 下载适用于 Linux arm64 的版本：https://temporal.download/cli/archive/latest?platform=linux&arch=arm64
 
-  2. Extract the downloaded archive.
+2. 解压下载的存档。
 
-  3. Add the `temporal` binary to your PATH.
+3. 将 `Temporal` 二进制文件添加到您的 PATH 中。
 
-### Windows
+<a id="windows"></a>
+### 窗口 {#windows}
 
-Choose one of the following methods to install the Temporal CLI on Windows:
+选择以下方法之一在 Windows 上安装 Temporal CLI：
 
-- Install the Temporal CLI from CDN.
+- 从 CDN 安装 Temporal CLI。
 
-  1. Select the platform and architecture needed and download the binary.
+1. 选择所需的平台和架构并下载二进制文件。
 
-  - Download for Windows amd64: https://temporal.download/cli/archive/latest?platform=windows&arch=amd64
-  - Download for Windows arm64: https://temporal.download/cli/archive/latest?platform=windows&arch=arm64
+- 下载适用于 Windows amd64 的版本：https://temporal.download/cli/archive/latest?platform=windows&arch=amd64
+  - 下载适用于 Windows arm64 的版本：https://temporal.download/cli/archive/latest?platform=windows&arch=arm64
 
-  2. Extract the downloaded archive.
+2. 解压下载的存档。
 
-  3. Add the `temporal.exe` binary to your PATH.
+3. 将 `Temporal.exe` 二进制文件添加到您的 PATH 中。
 
-### Docker
+<a id="docker"></a>
+### 码头工人 {#docker}
 
-The Temporal CLI container image is available on [DockerHub](https://hub.docker.com/r/temporalio/temporal) and can be
-run directly:
+Temporal CLI 容器映像可在 [DockerHub](https://hub.docker.com/r/temporalio/temporal) 上使用，并且可以
+直接运行：
 
 ```shell
 docker run --rm temporalio/temporal --help
@@ -97,8 +99,8 @@ docker run --rm temporalio/temporal --help
 
 :::note
 
-When running the Temporal CLI inside Docker, for the development server to be accessible from the host system, the
-server needs to be configured to listen on external IP and the ports need to be forwarded:
+在 Docker 内运行 Temporal CLI 时，为了能够从主机系统访问开发服务器，
+服务器需要配置为侦听外部IP并且需要转发端口：
 
 ```shell
 docker run --rm -p 7233:7233 -p 8233:8233 temporalio/temporal server start-dev --ip 0.0.0.0
@@ -107,23 +109,23 @@ docker run --rm -p 7233:7233 -p 8233:8233 temporalio/temporal server start-dev -
 
 :::
 
-## Start a Temporal development server {#start-dev-server}
+## 启动 Temporal 开发服务器 {#start-dev-server}
 
-To start a Temporal development server, run the following command:
+要启动 Temporal 开发服务器，请运行以下命令：
 
 ```bash
 temporal server start-dev
 ```
 
-This command automatically starts the Web UI, creates the `default` [Namespace](/namespaces), and uses an in-memory
-database.
+此命令自动启动 Web UI，创建 `default` [Namespace](/namespaces)，并使用内存中的
+数据库。
 
-The Temporal Server will be available on `localhost:7233` and the Temporal Web UI will be available at
-[`http://localhost:8233`](http://localhost:8233/).
+Temporal Server 将在 `localhost:7233` 上提供，Temporal Web UI 将在
+[`http://localhost:8233`](http://localhost:8233/)。
 
-The in-memory SQLite database does not persist if you stop the development server. Use the `--db-filename` option to
-specify a database file, persisting application state. This is helpful if you plan on stopping and re-starting the
-development server.
+如果停止开发服务器，内存中的 SQLite 数据库将不会保留。使用 `--db-filename` 选项
+指定一个数据库文件，持久化应用程序状态。如果您计划停止并重新启动，这会很有帮助
+开发服务器。
 
 ```shell
 temporal server start-dev --db-filename temporal.db
@@ -131,47 +133,49 @@ temporal server start-dev --db-filename temporal.db
 
 :::note
 
-Local databases created with `--db-filename` may not be compatible with newer versions of the Temporal CLI. The
-`temporal server start-dev` command is only intended for development environments.
+使用 `--db-filename` 创建的本地数据库可能与较新版本的 Temporal CLI 不兼容。的
+`Temporal Server start-dev` 命令仅适用于开发环境。
 
 :::
 
-For the full list of development server options, use the `--help` flag:
+有关开发服务器选项的完整列表，请使用 `--help` 标志：
 
 ```shell
 temporal server start-dev --help
 ```
 
-## Enable auto-completion {#enable-auto-completion}
+## 启用自动完成 {#enable-auto-completion}
 
-Enable auto-completion using the following commands.
+使用以下命令启用自动完成。
 
-### zsh auto-completion
+<a id="zsh-auto-completion"></a>
+### zsh 自动完成 {#zsh-auto-completion}
 
-1. Add the following line to your `~/.zshrc` startup script:
+1. 将以下行添加到 `~/.zshrc` 启动脚本中：
 
    ```sh
    eval "$(temporal completion zsh)"
    ```
 
-2. Re-launch your shell or run:
+2. 重新启动 shell 或运行：
 
    ```sh
    source ~/.zshrc
    ```
 
-### Bash auto-completion
+<a id="bash-auto-completion"></a>
+### Bash 自动完成 {#bash-auto-completion}
 
-1. Install [bash-completion](https://github.com/scop/bash-completion#installation) and add the software to your
-   `~/.bashrc`.
+1. 安装 [bash 完成](https://github.com/scop/bash-completion#installation) 并将软件添加到您的
+   `~/.bashrc`。
 
-2. Add the following line to your `~/.bashrc` startup script:
+2. 将以下行添加到 `~/.bashrc` 启动脚本中：
 
    ```sh
    eval "$(temporal completion bash)"
    ```
 
-3. Re-launch your shell or run:
+3. 重新启动 shell 或运行：
 
    ```sh
    source ~/.bashrc
@@ -179,158 +183,169 @@ Enable auto-completion using the following commands.
 
 :::note
 
-If auto-completion fails with the error: `bash: _get_comp_words_by_ref: command not found`, you did not successfully
-install [bash-completion](https://github.com/scop/bash-completion#installation). This package must be loaded into your
-shell for `temporal` auto-completion to work.
+如果自动完成失败并出现错误：`bash: _get_comp_words_by_ref: command not found`，则说明您没有成功
+安装 [bash 完成](https://github.com/scop/bash-completion#installation)。该包必须加载到您的
+`Temporal` 自动完成工作的 shell。
 
 :::
 
-### Fish auto-completion
+<a id="fish-auto-completion"></a>
+### Fish 自动完成 {#fish-auto-completion}
 
-1. Create the Fish custom completions directory if it does not already exist:
+1. 创建 Fish 自定义完成目录（如果尚不存在）：
 
    ```fish
    mkdir -p ~/.config/fish/completions
    ```
 
-2. Configure the completions to load when needed. Note: the file name must be `temporal.fish` or the completions will
-   not be found:
+2. 配置完成以在需要时加载。注意：文件名必须为`Temporal.fish`，否则补全将
+   找不到：
 
    ```fish
    echo 'eval "$(temporal completion fish)"' >~/.config/fish/completions/temporal.fish
    ```
 
-3. Re-launch your shell or run:
+3. 重新启动 shell 或运行：
 
    ```fish
    source ~/.config/fish/completions/temporal.fish
    ```
 
-## Command set
+<a id="command-set"></a>
+## 命令集 {#command-set}
 
-- [temporal activity](/cli/activity/)
-- [temporal batch](/cli/batch/)
-- [temporal env](/cli/env/)
-- [temporal operator](/cli/operator/)
-- [temporal schedule](/cli/schedule/)
-- [temporal server](/cli/server)
-- [temporal task-queue](/cli/task-queue/)
-- [temporal workflow](/cli/workflow/)
+- [Temporal Activity](/cli/activity/)
+- [Temporal批次](/cli/batch/)
+- [Temporal 环境](/cli/env/)
+- [Temporal操作员](/cli/operator/)
+- [Temporal Schedule](/cli/schedule/)
+- [Temporal Server](/cli/server)
+- [Temporal 任务队列](/cli/task-queue/)
+- [Temporal Workflow](/cli/workflow/)
 
-## Configuration
+## 配置 {#configuration}
 
-The following information provides important configuration details.
+以下信息提供了重要的配置详细信息。
 
-### Namespace registration
+<a id="configuration"></a>
+### Namespace 注册 {#namespace-registration}
 
-Namespaces are pre-registered at startup for immediate use. Customize pre-registered Namespaces with the following
-command:
+Namespace 在启动时预先注册以便立即使用。使用以下内容自定义预注册的 Namespace
+命令：
 
 ```shell
 temporal server start-dev --namespace foo --namespace bar
 ```
 
-Register Namespaces with `namespace create`:
+使用 `Namespace create` 注册 Namespace：
 
 ```shell
 temporal operator namespace create --namespace foo
 ```
 
-### Enable or disable Temporal UI
+<a id="namespace-registration"></a>
+### 启用或禁用 Temporal UI {#enable-or-disable-temporal-ui}
 
-By default, the Temporal UI is enabled when running the development server using the Temporal CLI. To disable the UI,
-use the `--headless` modifier:
+默认情况下，使用 Temporal CLI 运行开发服务器时会启用 Temporal UI。要禁用用户界面，
+使用 `--headless` 修饰符：
 
 ```shell
 temporal server start-dev --headless
 ```
 
-### Dynamic configuration
+<a id="enable-or-disable-temporal-ui"></a>
+### 动态配置 {#dynamic-configuration}
 
-Advanced Temporal CLI configuration requires a dynamic configuration file.
+高级 Temporal CLI 配置需要动态配置文件。
 
-To set values on the command line, use `--dynamic-config-value KEY=JSON_VALUE`. For example, enable the Search Attribute
-cache:
+要在命令行上设置值，请使用 `--dynamic-config-value KEY=JSON_VALUE`。例如，启用 Search Attribute
+缓存：
 
 ```bash
 temporal server start-dev --dynamic-config-value system.forceSearchAttributesCacheRefreshOnRead=false
 ```
 
-This setting makes created Search Attributes immediately available.
+此设置使创建的 Search Attribute 立即可用。
 
-## Environment variables
+<a id="dynamic-configuration"></a>
+## 环境变量 {#environment-variables}
 
-The following table describes the environment variables you can set for the Temporal CLI.
+下表描述了您可以为 Temporal CLI 设置的环境变量。
 
-<!-- This is an automatically generated file and the TEMPORAL_API_KEY correction will disappear on the next push. -->
+<!-- This is an automatically generated file and the Temporal_API_KEY correction will disappear on the next push. -->
 
-| Variable                                 | Definition                                                                | Client Option                   |
+| 多变的                                 | 定义                                                                | 客户选项                   |
 | ---------------------------------------- | ------------------------------------------------------------------------- | ------------------------------- |
-| `TEMPORAL_ADDRESS`                       | Host and port (formatted as host:port) for the Temporal Frontend Service. | --address                       |
-| `TEMPORAL_CODEC_AUTH`                    | Authorization header for requests to Codec Server.                        | --codec-auth                    |
-| `TEMPORAL_CODEC_ENDPOINT`                | Endpoint for remote Codec Server.                                         | --codec-endpoint                |
-| `TEMPORAL_NAMESPACE`                     | Namespace in Temporal Workflow. Default: "default".                       | --namespace                     |
-| `TEMPORAL_TLS_CA`                        | Path to server CA certificate.                                            | --tls-ca-path                   |
-| `TEMPORAL_TLS_CERT`                      | Path to x509 certificate.                                                 | --tls-cert-path                 |
-| `TEMPORAL_TLS_DISABLE_HOST_VERIFICATION` | Disables TLS host name verification. Default: false.                      | --tls-disable-host-verification |
-| `TEMPORAL_TLS_KEY`                       | Path to private certificate key.                                          | --tls-key-path                  |
-| `TEMPORAL_TLS_SERVER_NAME`               | Override for target TLS server name.                                      | --tls-server-name               |
-| `TEMPORAL_API_KEY`                       | API key used for authentication.                                          | --api-key                       |
+| `Temporal_ADDRESS`                       | Temporal 前端服务的主机和端口（格式为主机:端口）。 |  - 地址                       |
+| `Temporal_CODEC_AUTH`                    | 向 Codec Server 请求的授权标头。                        | --编解码器验证                    |
+| `Temporal_CODEC_ENDPOINT`                | 远程 Codec Server 的端点。                                         | --编解码器端点                |
+| `Temporal_Namespace`                     | Namespace 在 Temporal Workflow 中。默认值：“默认”。                       | --Namespace                     |
+| `Temporal_TLS_CA`                        | 服务器 CA 证书的路径。                                            | --tls-ca-路径                   |
+| `Temporal_TLS_CERT`                      | x509 证书的路径。                                                 | --tls-证书路径                 |
+| `Temporal_TLS_DISABLE_HOST_VERIFICATION` | 禁用 TLS 主机名验证。默认值：假。                      | --tls-禁用主机验证 |
+| `Temporal_TLS_KEY`                       | 私有证书密钥的路径。                                          | --tls-密钥路径                  |
+| `Temporal_TLS_SERVER_NAME`               | 覆盖目标 TLS 服务器名称。                                      | --tls-服务器名称               |
+| `Temporal_API_KEY`                       | 用于身份验证的 API 密钥。                                          | --api-key                       |
 
 <!-- This is an automatically generated file and this caution will disappear on the next push. -->
 <!-- issue: https://github.com/temporalio/cli/issues/776 -->
 
 :::tip ENVIRONMENT VARIABLES
 
-Do not confuse environment variables, set with your shell, with temporal env options.
+不要将使用 shell 设置的环境变量与 Temporal env 选项混淆。
 
 :::
 
-## Create and modify configuration files {#configuration-files}
+<a id="environment-variables"></a>
+## 创建和修改配置文件{#configuration-files}
 
-The Temporal CLI lets you create and modify TOML configuration files to store your environment variables and other
-settings. Refer to [Environment Configuration](../develop/environment-configuration#cli-integration) for more
-information.
+Temporal CLI 允许您创建和修改 TOML 配置文件来存储环境变量和其他变量
+设置。更多信息请参阅 [环境配置](../develop/environment-configuration#cli-integration)
+信息。
 
-## Proxy support
+<a id="configuration-files"></a>
+## 代理支持 {#proxy-support}
 
-The Temporal CLI provides support for users who are operating behind a proxy. This feature ensures seamless
-communication even in network-restricted environments.
+Temporal CLI 为在代理后面操作的用户提供支持。此功能可确保无缝
+即使在网络受限的环境中也能进行通信。
 
-#### Setting up proxy support
+<a id="proxy-support"></a>
+#### 设置代理支持 {#setting-up-proxy-support}
 
-If you are behind a proxy, you'll need to instruct the Temporal CLI to route its requests via that proxy. You can
-achieve this by setting the `HTTPS_PROXY` environment variable.
+如果您位于代理后面，则需要指示 Temporal CLI 通过该代理路由其请求。你可以
+通过设置 `HTTPS_PROXY` 环境变量来实现此目的。
 
 ```command
 export HTTPS_PROXY=<host>:<port>
 ```
 
-Replace `<host>` with the proxy's hostname or IP address, and `<port>` with the proxy's port number.
+将 `<host>` 替换为代理的主机名或 IP 地址，将 `<port>` 替换为代理的端口号。
 
-Once set, you can run the Temporal CLI commands as you normally would.
+设置后，您可以像平常一样运行 Temporal CLI 命令。
 
 :::note
 
-Temporal CLI uses the gRPC library which natively supports HTTP CONNECT proxies. The gRPC library checks for the
-`HTTPS_PROXY` (and its case-insensitive variants) environment variable to determine if it should route requests through
-a proxy.
+Temporal CLI 使用 gRPC 库，该库本身支持 HTTP CONNECT 代理。 gRPC 库检查
+`HTTPS_PROXY`（及其不区分大小写的变体）环境变量来确定是否应通过路由请求
+代理。
 
 :::
 
-In addition to `HTTPS_PROXY`, gRPC also respects the `NO_PROXY` environment variable. This can be useful if there are
-specific addresses or domains you wish to exclude from proxying.
+除了 `HTTPS_PROXY` 之外，gRPC 还遵循 `NO_PROXY` 环境变量。如果有的话这会很有用
+您希望从代理中排除的特定地址或域。
 
-For more information, see [Proxy](https://github.com/grpc/grpc-go/blob/master/Documentation/proxy.md) in the gRPC
-documentation.
+有关详细信息，请参阅 gRPC 中的 [代理人](https://github.com/grpc/grpc-go/blob/master/Documentation/proxy.md)
+文档。
 
-## Common CLI operations {#common-operations}
+<a id="setting-up-proxy-support"></a>
+## 常用 CLI 操作 {#common-operations}
 
-The following are some of the more common operations you can perform with the Temporal CLI.
+以下是您可以使用 Temporal CLI 执行的一些更常见的操作。
 
-### Start a Workflow
+<a id="common-operations"></a>
+### 启动 Workflow {#start-a-workflow}
 
-In another terminal, use the following commands to interact with the Server. The following command starts a Workflow:
+在另一个终端中，使用以下命令与服务器交互。以下命令启动 Workflow：
 
 ```shell
 $ temporal workflow start \
@@ -348,13 +363,13 @@ Running execution:
   Args        [456]
 ```
 
-Shorthand options are available:
+可以使用速记选项：
 
 ```shell
 temporal workflow start --task-queue hello-world --type MyWorkflow --workflow-id 123 --input 456
 ```
 
-You can also list and describe Workflows:
+您还可以列出并描述 Workflow：
 
 ```shell
 $ temporal workflow list
@@ -403,7 +418,7 @@ $ temporal workflow describe --workflow-id 123
 }
 ```
 
-For more detailed output in JSON format, use the following command:
+如需 JSON 格式的更详细输出，请使用以下命令：
 
 ```shell
 $ temporal workflow list --output json
@@ -426,7 +441,7 @@ $ temporal workflow list --output json
 ]
 ```
 
-Filter out Workflows based on Workflow Type with [jq](https://stedolan.github.io/jq/):
+根据带有 [杰克](https://stedolan.github.io/jq/) 的 Workflow 类型过滤出 Workflow：
 
 ```shell
 $ temporal workflow list --output json | jq '.[].type.name'
@@ -436,7 +451,7 @@ $ temporal workflow list --output json | jq '.[].type.name'
 "MyWorkflow"
 ```
 
-To count the number of Workflows, use the following command:
+要计算 Workflow 的数量，请使用以下命令：
 
 ```shell
 $ temporal workflow list --output json | jq '.[].type.name' | uniq -c
@@ -445,19 +460,20 @@ $ temporal workflow list --output json | jq '.[].type.name' | uniq -c
    2 "MyWorkflow"
 ```
 
-To see the full range of Workflow-related commands, run `temporal workflow` or see the
-[Temporal CLI workflow command reference](/cli/workflow).
+要查看与 Workflow 相关的完整命令，请运行 `Temporal Workflow` 或查看
+[Temporal CLI Workflow 命令参考](/cli/workflow)。
 
-For a full list of available commands, run `temporal` without arguments or see [Available commands](#command-set).
+有关可用命令的完整列表，请运行不带参数的 `Temporal` 或参阅 [可用命令](#command-set)。
 
-### Customize your environment variables
+<a id="start-a-workflow"></a>
+### 自定义您的环境变量 {#customize-your-environment-variables}
 
-To communicate with a different Server, like a production Namespace on Temporal Cloud:
+要与不同的服务器通信，例如 Temporal Cloud 上的生产 Namespace：
 
-1. Create an environment named `prod`.
-2. Pass `--env prod` to commands, like `temporal workflow list --env prod`.
+1. 创建一个名为`prod`的环境。
+2. 将 `--env prod` 传递给命令，例如 `Temporal Workflow list --env prod`。
 
-To create a new environment and set its properties:
+要创建新环境并设置其属性：
 
 ```shell
 temporal env set prod.namespace production.f45a2
@@ -466,7 +482,7 @@ temporal env set prod.tls-cert-path /temporal/certs/prod.pem
 temporal env set prod.tls-key-path /temporal/certs/prod.key
 ```
 
-Check your settings:
+检查您的设置：
 
 ```shell
 $ temporal env get prod
@@ -477,13 +493,13 @@ $ temporal env get prod
   tls-key-path   /temporal/certs/prod.key
 ```
 
-Run a command to test the connection:
+运行命令来测试连接：
 
 ```shell
 $ temporal workflow list --env prod
 ```
 
-For a full list of properties, use `temporal env set -h`.
+有关属性的完整列表，请使用 `Temporal env set -h`。
 
 ```shell
 $ temporal env set -h

@@ -1,8 +1,8 @@
 ---
 id: remote-data-encoding
-title: Remote data encoding
-sidebar_label: Remote data encoding
-description: Use remote encoding to transform data for the Temporal CLI and Web UI.
+title: "远程数据编码"
+sidebar_label: "远程数据编码"
+description: "使用远程编码转换 Temporal CLI 和 Web UI 的数据。"
 slug: /remote-data-encoding
 toc_max_heading_level: 4
 keywords:
@@ -20,38 +20,41 @@ tags:
   - Security
 ---
 
-This page discusses [Remote Data Encoding](#remote-data-encoding).
+本页讨论 [远程数据编码](#remote-data-encoding)。
 
-## What is remote data encoding? {#remote-data-encoding}
+<a id="remote-data-encoding"></a>
+## 什么是远程数据编码？ {#remote-data-encoding}
 
-Remote data encoding is exposing your Payload Codec via HTTP endpoints to support remote encoding and decoding.
+远程数据编码是通过 HTTP 端点公开您的 Payload Codec 以支持远程编码和解码。
 
-Running your encoding remotely allows you to use it with the [Temporal CLI](/cli) to encode/decode data for several commands including `temporal workflow show` and with Temporal Web UI to decode data in your Workflow Execution details view.
+远程运行编码允许您将其与 [Temporal CLI](/cli) 一起使用，对包括 `Temporal Workflow show` 在内的多个命令的数据进行编码/解码，并与 Temporal Web UI 一起使用，以解码 Workflow Execution 详细信息视图中的数据。
 
-To run data encoding/decoding remotely, use a [Codec Server](/codec-server). A Codec Server is an HTTP server that uses your custom Codec logic to decode your data remotely.
-The Codec Server is independent of the Temporal Service and decodes your encrypted payloads through predefined endpoints.
-You create, operate, and manage access to your Codec Server in your own environment.
-The Temporal CLI and the Web UI in turn provide built-in hooks to call the Codec Server to decode encrypted payloads on demand.
+要远程运行数据编码/解码，请使用 [Codec Server](/codec-server)。 Codec Server 是一个 HTTP 服务器，它使用您的自定义编解码器逻辑来远程解码您的数据。
+Codec Server 独立于 Temporal 服务，并通过预定义端点解码您的加密负载。
+您可以在自己的环境中创建、操作和管理对 Codec Server 的访问。
+Temporal CLI 和 Web UI 反过来提供内置挂钩来调用 Codec Server 以按需解码加密的有效负载。
 
-### Encoding data on the Web UI and CLI
+<a id="encoding-data-on-the-web-ui-and-cli"></a>
+### 在 Web UI 和 CLI 上编码数据 {#encoding-data-on-the-web-ui-and-cli}
 
-You can perform some operations on your Workflow Execution using the Temporal CLI and the Web UI.
-For example, you can start or signal an active Workflow Execution from the Temporal CLI or cancel a Workflow Execution from the Web UI, which might require inputs that contain sensitive data.
+您可以使用 Temporal CLI 和 Web UI 在 Workflow Execution 上执行一些操作。
+例如，您可以从 Temporal CLI 启动或 Signal 活动的 Workflow Execution，或者从 Web UI 取消 Workflow Execution，这可能需要包含敏感数据的输入。
 
-To encode this data, specify your [Codec Server endpoints](/codec-server) with the `codec-endpoint` parameter in [the Temporal CLI](/cli) and configure your Web UI to use the Codec Server endpoints.
+要编码此数据，请使用 [Temporal CLI](/codec-server) 中的 `codec-endpoint` 参数指定 [Codec Server 端点](/cli)，并将 Web UI 配置为使用 Codec Server 端点。
 
-### Decoding data on the Web UI and CLI
+<a id="decoding-data-on-the-web-ui-and-cli"></a>
+### 在 Web UI 和 CLI 上解码数据 {#decoding-data-on-the-web-ui-and-cli}
 
-If you use custom encoding, Payload data handled by the Temporal Service is stored encoded. Since the Web UI uses the [Visibility](/temporal-service/visibility) database to show events and data stored on the Temporal Server, all data in the Workflow Execution History in your Web UI is displayed in the encoded format.
+如果您使用自定义编码，则 Temporal 服务处理的有效负载数据将以编码方式存储。由于 Web UI 使用 [Visibility](/temporal-service/visibility) 数据库显示存储在 Temporal Server 上的事件和数据，因此 Web UI 中 Workflow Execution 历史记录中的所有数据都以编码格式显示。
 
-To decode output when using the Web UI and the Temporal CLI, use a [Codec Server](/codec-server).
+要在使用 Web UI 和 Temporal CLI 时解码输出，请使用 [Codec Server](/codec-server)。
 
-Note that a remote data encoder is a separate system with access to your encryption keys and exposes APIs to encode and decode any data.
-Evaluate and ensure that your remote data encoder endpoints are secured and only authorized users have access to them.
+请注意，远程数据编码器是一个独立的系统，可以访问您的加密密钥并公开 API 来编码和解码任何数据。
+评估并确保您的远程数据编码器端点是安全的，并且只有授权用户才能访问它们。
 
-Samples:
+样品：
 
-- [Go](https://github.com/temporalio/samples-go/tree/main/codec-server)
-- [Java](https://github.com/temporalio/sdk-java/tree/master/temporal-remote-data-encoder)
+- [去](https://github.com/temporalio/samples-go/tree/main/codec-server)
+- [爪哇](https://github.com/temporalio/sdk-java/tree/master/temporal-remote-data-encoder)
 - [Python](https://github.com/temporalio/samples-python/tree/main/encryption)
-- [TypeScript](https://github.com/temporalio/samples-typescript/tree/main/encryption)
+- [打字稿](https://github.com/temporalio/samples-typescript/tree/main/encryption)

@@ -1,9 +1,9 @@
 ---
 id: failovers
-title: Configure and trigger failovers
-sidebar_label: Configure and trigger failovers
+title: "配置并触发故障转移"
+sidebar_label: "配置并触发故障转移"
 slug: /cloud/high-availability/failovers
-description: How automatic and manual failovers work with Temporal Cloud HA
+description: "自动和手动故障转移如何与 Temporal Cloud HA 配合使用"
 tags:
   - Temporal Cloud
   - Production
@@ -21,203 +21,208 @@ keywords:
 
 import { ToolTipTerm, DiscoverableDisclosure, CaptionedImage } from '@site/src/components';
 
-In case of an incident or an outage, Temporal will automatically <ToolTipTerm term="fail over" src="failover" /> your Namespace from the primary to the replica.
-This lets Workflow Executions continue with minimal interruptions or data loss.
-You can also [manually initiate failovers](/cloud/high-availability/failovers) based on your situational monitoring or for testing.
+如果发生事故或中断，Temporal 会自动将 Namespace 从主服务器 <ToolTipTerm term="fail over" src="failover" /> 发送到副本服务器。
+这使得 Workflow Execution 能够以最小的中断或数据丢失继续运行。
+您还可以根据您的情况对[手动启动故障转移](/cloud/high-availability/failovers)进行监控或测试。
 
-Returning control from the replica to the primary is called a <ToolTipTerm term="failback" />.
-After a Temporal-managed failover, Temporal automatically fails back to the original region once it is healthy.
-See [Returning to the primary with failbacks](#failbacks) for details on automatic and manual failback options.
+将控制权从副本返回到主副本称为 <ToolTipTerm term="failback" />。
+在 Temporal 管理的故障转移后，一旦 Temporal 运行正常，它会自动故障恢复到原始区域。
+有关自动和手动故障回复选项的详细信息，请参阅 [通过故障回复返回到主数据库](#failbacks)。
 
-## Failovers
+<a id="failovers"></a>
+## 故障转移 {#failovers}
 
-Occasionally, a Namespace may become temporarily unavailable due to an unexpected incident.
-Temporal Cloud detects these issues using regular health checks.
+有时，Namespace 可能会因意外事件而暂时不可用。
+Temporal Cloud 使用定期运行状况检查来检测这些问题。
 
-### Health checks
+<a id="health-checks"></a>
+### 健康检查 {#health-checks}
 
-Temporal Cloud monitors error rates, latencies, and infrastructure problems, such as request timeouts.
-If it finds unhealthy conditions where indicators exceed the allowed thresholds, Temporal automatically switches the primary to the replica.
-In most cases, the replica is unaffected by the issue.
-This process is known as failover.
+Temporal Cloud 监控错误率、延迟和基础设施问题，例如请求超时。
+如果发现指标超出允许阈值的不健康状况，Temporal 会自动将主服务器切换到副本服务器。
+在大多数情况下，副本不受该问题的影响。
+此过程称为故障转移。
 
-### Automatic failovers
+<a id="automatic-failovers"></a>
+### 自动故障转移 {#automatic-failovers}
 
-Failovers prevent data loss and application interruptions.
-Existing Workflows continue, and new Workflows start as the incident is addressed.
+故障转移可防止数据丢失和应用程序中断。
+现有的 Workflow 继续运行，随着事件得到解决，新的 Workflow 开始运行。
 
-Temporal Cloud handles failovers automatically, ensuring continuity without manual intervention.
-Once the incident is resolved, Temporal Cloud automatically performs a [failback](#failbacks), shifting Workflow Execution processing back to the original region.
+Temporal Cloud 自动处理故障转移，确保连续性，无需手动干预。
+事件解决后，Temporal Cloud 会自动执行 [故障恢复](#failbacks)，将 Workflow Execution 处理转移回原始区域。
 
 <CaptionedImage src="/img/cloud/high-availability/failover.png" title="On failover, the replica becomes active and the Namespace endpoint directs access to it." />
 
-For more control over the failover process, you can [disable automated failovers](/cloud/high-availability/failovers#disabling-temporal-initiated).
+要对故障转移过程进行更多控制，您可以使用 [禁用自动故障转移](/cloud/high-availability/failovers#disabling-temporal-initiated)。
 
 :::tip
 
-You can test the failover of a Namespace with High Availability features by manually triggering a failover using the Web UI, the tcld CLI, or the Cloud Ops API.
-The Terraform provider does not support triggering failovers.
-In most scenarios, we recommend you let Temporal handle failovers for you.
+您可以使用 Web UI、tcld CLI 或 Cloud Ops API 手动触发故障转移来测试具有高可用性功能的 Namespace 的故障转移。
+Terraform 提供程序不支持触发故障转移。
+在大多数情况下，我们建议您让 Temporal 为您处理故障转移。
 
-After failover, be aware of the following points:
+故障转移后，请注意以下几点：
 
-- When working with Multi-region Namespaces, your CNAME may change.
-  For example, it may switch from aws-us-west-1.region.tmprl.cloud to aws-us-east-1.region.tmprl.cloud.
-  This change doesn't affect same-region Namespaces.
+- 使用多区域 Namespace 时，您的 CNAME 可能会更改。
+  例如，它可能从 aws-us-west-1.region.tmprl.cloud 切换到 aws-us-east-1.region.tmprl.cloud。
+  此更改不会影响同一区域的 Namespace。
 
-- Your Namespace endpoint _will not change_.
-  If it is `my_namespace.my_account.tmprl.cloud:7233` before failover, it will be `my_namespace.my_account.tmprl.cloud:7233` after failover.
+- 您的 Namespace 端点_不会改变_。
+  如果故障转移前为 `my_Namespace.my_account.tmprl.cloud:7233`，则故障转移后将为 `my_Namespace.my_account.tmprl.cloud:7233`。
 
 :::
 
-### The failover process {#failover-process}
+### 故障转移过程 {#failover-process}
 
-Temporal's automated failover process works as follows:
+Temporal的自动故障转移过程的工作原理如下：
 
-- During normal operation, the primary asynchronously copies operations and metadata to its replica, keeping them in sync.
-- If the primary becomes unavailable, Temporal detects the issue through health checks.
-  It automatically switches to the replica, using one of its available [failover scenarios](#scenarios).
-- The replica takes over the active role and becomes the primary.
-  Operations continue with minimal disruption.
-- When the original primary recovers, the roles can either switch back (failback, by default) or remain as they are, based on your Namespace settings.
-  Automatic role switching with failover and failback minimizes downtime for consistent availability.
+- 在正常操作期间，主服务器将操作和元数据异步复制到其副本，使它们保持同步。
+- 如果主数据库不可用，Temporal 会通过运行状况检查检测问题。
+  它使用可用的 [故障转移场景](#scenarios) 之一自动切换到副本。
+- 副本接管活动角色并成为主副本。
+  运营继续进行，干扰最小。
+- 当原始主恢复时，角色可以切换回（默认情况下故障回复）或保持原样，具体取决于您的 Namespace 设置。
+  具有故障转移和故障恢复功能的自动角色切换可最大限度地减少停机时间，从而实现一致的可用性。
 
 :::info
 
-A Namespace failover, which updates the "active region" field in the Namespace record, is a metadata update.
-This update is replicated through the Namespace metadata mechanism.
+Namespace 故障转移（Update 是 Namespace 记录中的“活动区域”字段）是元数据 Update。
+此 Update 通过 Namespace 元数据机制进行复制。
 
 :::
 
-## Failover scenarios {#scenarios}
+## 故障转移场景 {#scenarios}
 
-The Temporal Cloud failover mechanism supports several modes for executing Namespace failovers.
-These modes include graceful failover ("handover"), forced failover, and a hybrid mode.
-The hybrid mode is Temporal Cloud’s default Namespace behavior.
+Temporal Cloud 故障转移机制支持多种执行 Namespace 故障转移的模式。
+这些模式包括优雅的故障转移（“切换”）、强制故障转移和混合模式。
+混合模式是 Temporal Cloud 的默认 Namespace 行为。
 
-### Graceful failover (handover) {#graceful-failover}
+### 优雅的故障转移（切换） {#graceful-failover}
 
-In this mode, Temporal Cloud fully processes and drains replication Tasks.
-Temporal Cloud pauses traffic to the Namespace before the failover.
-Graceful failover prevents the loss of progress and avoids data conflicts.
+在此模式下，Temporal Cloud 完全处理并耗尽复制任务。
+Temporal Cloud 在故障转移之前暂停到 Namespace 的流量。
+优雅的故障转移可以防止进度丢失并避免数据冲突。
 
-During graceful failover, the Namespace may experience a brief period of unavailability. 
-This duration can be limited by the caller and defaults to 10 seconds. 
-If the system is unable to reach a consistent state within this timeout, the failover attempt is aborted and the Namespace reverts to its previous state.
-During this unavailable period:
+在正常故障转移期间，Namespace 可能会经历短暂的不可用状态。 
+此持续时间可由调用者限制，默认为 10 秒。 
+如果系统无法在此超时内达到一致状态，则故障转移尝试将中止，并且 Namespace 恢复到其之前的状态。
+在此不可用期间：
 
-- Existing Workflows stop progress.
-- Temporal Cloud returns a "Service unavailable error".
-  This error is retryable by the Temporal SDKs.
-- State transitions will not happen and tasks are not dispatched.
-- User requests like start/signal Workflow are rejected.
-- Operations are paused during handover.
+- 现有的 Workflow 停止进度。
+- Temporal Cloud 返回“服务不可用错误”。
+  Temporal SDK 可重试此错误。
+- 不会发生状态转换，并且不会分派任务。
+- 像 start/Signal Workflow 这样的用户请求被拒绝。
+- 切换期间操作暂停。
 
-This mode favors _consistency_ over availability.
+这种模式更注重一致性而不是可用性。
 
-### Forced failover {#forced-failover}
+### 强制故障转移 {#forced-failover}
 
-In this mode, a Namespace immediately activates in the replica.
-Events not replicated due to replication lag undergo conflict resolution upon reaching the new active Namespace.
+在此模式下，Namespace 会立即在副本中激活。
+由于复制滞后而未复制的事件在到达新的活动 Namespace 时会经历冲突解决。
 
-This mode prioritizes _availability_ over consistency.
+此模式优先考虑_可用性_而不是一致性。
 
-### Hybrid failover mode {#hybrid-failover}
+### 混合故障转移模式 {#hybrid-failover}
 
-While graceful failovers are preferred for consistency, they aren’t always practical.
-Temporal Cloud’s hybrid failover mode (the default mode) limits the initial graceful failover attempt to 10 seconds or less.
+虽然为了一致性而首选优雅的故障转移，但它们并不总是实用。
+Temporal Cloud 的混合故障转移模式（默认模式）将初始优雅故障转移尝试限制为 10 秒或更短。
 
-During this period:
+在此期间：
 
-- Existing Workflows stop progress.
-- Temporal Cloud returns a "Service unavailable error", which is retried by SDKs.
+- 现有的 Workflow 停止进度。
+- Temporal Cloud 返回“服务不可用错误”，由 SDK 重试。
 
-If the graceful approach doesn’t resolve the issue, Temporal Cloud automatically switches to a forced failover.
+如果优雅的方法无法解决问题，Temporal Cloud 会自动切换到强制故障转移。
 
-This strategy balances _consistency_ and _availability_ requirements.
+该策略平衡了_一致性_和_可用性_要求。
 
-### Scenario summary
+<a id="scenario-summary"></a>
+### 场景总结 {#scenario-summary}
 
-| Failover Scenario            | Characteristics                                         |
+| 故障转移场景            | 特征                                         |
 | ---------------------------- | ------------------------------------------------------- |
-| Graceful failover (handover) | Favors _consistency_ over availability.                 |
-| Forced failover              | Prioritizes _availability_ over consistency.            |
-| Hybrid failover mode         | Balances _consistency_ and _availability_ requirements. |
+| 优雅的故障转移（切换） | 倾向于_一致性_而不是可用性。                 |
+| 强制故障转移              | 优先考虑_可用性_而不是一致性。            |
+| 混合故障转移模式         | 平衡_一致性_和_可用性_要求。 |
 
-## Network partitions
+<a id="network-partitions"></a>
+## 网络分区 {#network-partitions}
 
-At any time only the primary or the replica is active.
-The only exception occurs in the event of a [network partition](https://en.wikipedia.org/wiki/Network_partition), when a Network splits into separate subnetworks.
-Should this occur, you can promote a replica to active status.
-**Caution:** This temporarily makes both regions active.
-After the network partition is resolved and communication between the isolation domains/regions is restored, a conflict resolution algorithm determines whether the primary or replica remains active.
+在任何时候，只有主数据库或副本数据库处于活动状态。
+唯一的例外发生在 [网络分区](https://en.wikipedia.org/wiki/Network_partition) 的情况下，即网络分裂成单独的子网。
+如果发生这种情况，您可以将副本提升为活动状态。
+**警告：** 这会暂时使两个区域都处于活动状态。
+解决网络分区并恢复隔离域/区域之间的通信后，冲突解决算法将确定主节点或副本是否保持活动状态。
 
 :::tip
 
-In traditional active/active replication, multiple nodes serve requests and accept writes simultaneously, ensuring strong synchronous data consistency.
-In contrast, with a Temporal Cloud Namespace with High Availability Features, only the primary accepts requests and writes at any given time.
-Workflow History Events are written to the primary first and then asynchronously replicated to the replica, ensuring that the replica remains in sync.
+在传统的主动/主动复制中，多个节点同时服务请求并接受写入，从而确保强同步数据一致性。
+相比之下，对于具有高可用性功能的 Temporal Cloud Namespace，只有主数据库在任何给定时间接受请求和写入。
+Workflow 历史事件首先写入主服务器，然后异步复制到副本，确保副本保持同步。
 
 :::
 
-## Conflict resolution {#conflict-resolution}
+## 冲突解决 {#conflict-resolution}
 
-Namespaces with replicas rely on asynchronous event replication.
-Updates made to the primary may not immediately be reflected in the replica due to <ToolTipTerm term="replication lag" />, particularly during failovers.
-In the event of a non-graceful failover, replication lag may cause a temporary setback in Workflow progress.
+具有副本的 Namespace 依赖于异步事件复制。
+由于 <ToolTipTerm term="replication lag" />，对主数据库所做的 Update 可能不会立即反映在副本中，特别是在故障转移期间。
+如果发生非正常故障转移，复制滞后可能会导致 Workflow 进度暂时倒退。
 
-Namespaces that aren't replicated can be configured to provide _at-most-once_ semantics for Activities execution when a retry policy's [maximum attempts](https://docs.temporal.io/retry-policies#maximum-attempts) is set to 0.
-High Availability Namespaces provide _at-least-once_ semantics for execution of Activities.
-Completed Activities _may_ be re-dispatched in a newly active Namespace, leading to repeated executions.
+当 Retry Policy 的 [最大尝试次数](https://docs.temporal.io/retry-policies#maximum-attempts) 设置为 0 时，未复制的 Namespace 可以配置为为活动执行提供_at-most-once_语义。
+高可用性 Namespace 为活动的执行提供至少一次语义。
+已完成的活动可能会在新活动的 Namespace 中重新分派，从而导致重复执行。
 
-When a Workflow Execution is updated in a newly active replica following a failover, events from the previously active Namespace that arrive after the failover can't be directly applied.
-At this point, Temporal Cloud has forked the Workflow History.
+当故障转移后新活动副本中的 Workflow Execution 为 Updated 时，无法直接应用故障转移后到达的先前活动 Namespace 中的事件。
+至此，Temporal Cloud 已经分叉了 Workflow 历史。
 
-After failover, Temporal Cloud creates a new branch history for execution, and begins its <ToolTipTerm term="conflict resolution"/> process.
-The Temporal Service ensures that Workflow Histories remain valid and are replayable by SDKs post-failover or after conflict resolution.
-This capability is crucial for ensuring Workflow Executions continue forward without losing progress, and for maintaining consistency across replication, even during incidents that cause disruptions in replication.
+故障转移后，Temporal Cloud 创建新的执行分支历史记录，并开始其 <ToolTipTerm term="conflict resolution"/> 进程。
+Temporal 服务确保 Workflow 历史记录保持有效，并且可由 SDK 在故障转移后或冲突解决后重播。
+此功能对于确保 Workflow Execution 继续前进而不丢失进度以及保持复制的一致性至关重要，即使在导致复制中断的事件期间也是如此。
 
 
-## Perform a manual failover {#triggering-failovers}
+## 执行手动故障转移 {#triggering-failovers}
 
-For some users, Temporal's automated health checks and failovers don't provide sufficient nuance and control.
-For this reason, you can manually trigger failovers based on your own custom alerts and for testing purposes.
-This section explains how and what to expect afterward.
+对于某些用户来说，Temporal 的自动运行状况检查和故障转移无法提供足够的细微差别和控制。
+因此，您可以根据自己的自定义警报手动触发故障转移并用于测试目的。
+本节解释了如何以及之后会发生什么。
 
 :::warning Check Your Replication Lag
 
-Always check the <ToolTipTerm term="replication lag" /> before initiating a failover.
-A forced failover when there is a significant replication lag has a higher likelihood of rolling back Workflow progress.
+在启动故障转移之前，请务必检查 <ToolTipTerm term="replication lag" />。
+当存在明显的复制滞后时，强制故障转移更有可能回滚 Workflow 进度。
 
 :::
 
-### Trigger the failover {#manual-failovers}
+### 触发故障转移 {#manual-failovers}
 
-You can trigger a failover manually using the Temporal&nbsp;Cloud Web&nbsp;UI, the tcld CLI, or the Cloud Ops API, depending on your preference and setup.
+您可以使用 Temporal Cloud Web UI、tcld CLI 或 Cloud Ops API 手动触发故障转移，具体取决于您的偏好和设置。
 
 :::info Terraform not supported
 
-The [Temporal Cloud Terraform provider](https://registry.terraform.io/providers/temporalio/temporalcloud/latest) does not support triggering failovers.
-You must use the Web UI, tcld CLI, or Cloud Ops API.
+[Temporal Cloud Terraform 提供商](https://registry.terraform.io/providers/temporalio/temporalcloud/latest)不支持触发故障转移。
+您必须使用 Web UI、tcld CLI 或 Cloud Ops API。
 
 :::
 
-The following instructions outline the steps for each method:
+以下说明概述了每种方法的步骤：
 
 <Tabs>
 
 <TabItem value="webui" label="Web UI">
 
-1. Visit the [Namespace page](https://cloud.temporal.io/namespaces) on the Temporal Cloud Web UI.
-1. Navigate to your Namespace details page and select the **Trigger a failover** option from the menu.
-1. Confirm your action.
-   After confirmation, Temporal initiates the failover.
+1. 在 Temporal Cloud Web UI 上访问 [Namespace页面](https://cloud.temporal.io/namespaces)。
+1. 导航到 Namespace 详细信息页面，然后从菜单中选择 **触发故障转移** 选项。
+1. 确认您的操作。
+   确认后，Temporal 启动故障转移。
 
 </TabItem>
 
 <TabItem value="tcldcli" label="tcld">
 
-To manually trigger a failover, run the following command in your terminal:
+要手动触发故障转移，请在终端中运行以下命令：
 
 ```
 tcld namespace failover \
@@ -225,26 +230,26 @@ tcld namespace failover \
     --region <target_region>
 ```
 
-The `<target_region>` must be the name of a region (example: `us-east-1`) where the Namespace has a replica that is ready to be failed over to (replica state is `Activated`).
+`<target_region>` 必须是 Namespace 具有准备进行故障转移的副本（副本状态为 `Activated`）的区域的名称（例如：`us-east-1`）。
 
-If using API key authentication with the `--api-key` flag, you must add it directly after the tcld command and before `namespace failover`.
+如果使用带有 `--api-key` 标志的 API 密钥身份验证，则必须将其直接添加到 tcld 命令之后、`Namespace failover` 之前。
 
 </TabItem>
 
 <TabItem value="ops-api" label="Cloud Ops API">
 
-You can trigger a failover programmatically using the [Cloud Ops API](/ops).
-The API is available via both HTTP and gRPC.
+您可以使用 [云运营 API](/ops) 以编程方式触发故障转移。
+该 API 可通过 HTTP 和 gRPC 获得。
 
-**Using HTTP**
+**使用 HTTP**
 
-Send a POST request to the [`FailoverNamespaceRegion`](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/high-availability/POST/cloud/namespaces/{namespace}/failover-region) endpoint:
+向 [`FailoverNamespaceRegion`](https://saas-api.tmprl.cloud/docs/httpapi.html#tag/high-availability/POST/cloud/namespaces/{namespace}/failover-region) 端点发送 POST 请求：
 
 ```
 POST https://saas-api.tmprl.cloud/cloud/namespaces/<namespace>/failover-region
 ```
 
-Request body:
+请求正文：
 
 ```json
 {
@@ -253,12 +258,12 @@ Request body:
 }
 ```
 
-- `region` (required): The [region code](/cloud/regions) of the region to failover to. Must be a region where the Namespace has a replica in `Activated` replica state, indicating the replica is ready to be failed over to. Example: `aws-us-east-1`
-- `asyncOperationId` (optional): A user-defined ID for tracking the async operation. If not set, the server will assign one.
+- `region`（必需）：要故障转移到的区域的 [地区代码](/cloud/regions)。必须是 Namespace 具有处于 `Activated` 副本状态的副本的区域，表示该副本已准备好进行故障转移。示例：`aws-us-east-1`
+- `asyncOperationId`（可选）：用于跟踪异步操作的用户定义 ID。如果没有设置，服务器会分配一个。
 
-**Using gRPC**
+**使用 gRPC**
 
-Use the [`FailoverNamespaceRegion`](https://buf.build/temporalio/cloud-api/docs/main:temporal.api.cloud.cloudservice.v1#temporal.api.cloud.cloudservice.v1.CloudService.FailoverNamespaceRegion) RPC with a [`FailoverNamespaceRegionRequest`](https://buf.build/temporalio/cloud-api/docs/main:temporal.api.cloud.cloudservice.v1#temporal.api.cloud.cloudservice.v1.FailoverNamespaceRegionRequest):
+将 [`FailoverNamespaceRegion`](https://buf.build/temporalio/cloud-api/docs/main:temporal.api.cloud.cloudservice.v1#temporal.api.cloud.cloudservice.v1.CloudService.FailoverNamespaceRegion) RPC 与 [`FailoverNamespaceRegionRequest`](https://buf.build/temporalio/cloud-api/docs/main:temporal.api.cloud.cloudservice.v1#temporal.api.cloud.cloudservice.v1.FailoverNamespaceRegionRequest) 一起使用：
 
 ```protobuf
 message FailoverNamespaceRegionRequest {
@@ -272,83 +277,87 @@ message FailoverNamespaceRegionRequest {
 }
 ```
 
-Both methods return a [`FailoverNamespaceRegionResponse`](https://buf.build/temporalio/cloud-api/docs/main:temporal.api.cloud.cloudservice.v1#temporal.api.cloud.cloudservice.v1.FailoverNamespaceRegionResponse) containing an async operation that you can use to track the failover status.
+两种方法都会返回包含异步操作的 [`FailoverNamespaceRegionResponse`](https://buf.build/temporalio/cloud-api/docs/main:temporal.api.cloud.cloudservice.v1#temporal.api.cloud.cloudservice.v1.FailoverNamespaceRegionResponse)，您可以使用该异步操作来跟踪故障转移状态。
 
 </TabItem>
 
 </Tabs>
 
-Once the failover async operation returns successfully, the Namespace will be failed over.
-Temporal manages retries for the failover workflow.
-In the rare event that an internal error prevents the failover from completing, the Temporal on-call team is automatically paged to intervene and force the failover to completion.
+一旦故障转移异步操作成功返回，Namespace 将进行故障转移。
+Temporal 管理故障转移 Workflow 的重试。
+在极少数情况下，如果内部错误导致故障转移无法完成，Temporal 待命团队会自动传呼以进行干预并强制故障转移完成。
 
-Temporal fails over the primary to the replica.
-See [Returning to the primary with failbacks](#failbacks) for details on how and when failback occurs.
+Temporal 将主服务器故障转移到副本服务器。
+有关如何以及何时发生故障恢复的详细信息，请参阅 [通过故障回复返回到主数据库](#failbacks)。
 
-### Post-failover event information {#info}
+### 故障转移后事件信息 {#info}
 
-After any failover, whether triggered by you or by Temporal, an event appears in both the [Temporal Cloud Web UI](https://cloud.temporal.io/namespaces) (on the Namespace detail page) and in your audit logs.
-The audit log entry for Failover uses the `"operation": "FailoverNamespace"` event.
-After failover, the replica becomes active, taking over in the isolation domain or region.
+任何故障转移后，无论是由您触发还是由 Temporal 触发，[Temporal Cloud 网页用户界面](https://cloud.temporal.io/namespaces)（在 Namespace 详细信息页面上）和审核日志中都会出现一个事件。
+故障转移的审核日志条目使用 `"operation": "FailoverNamespace"` 事件。
+故障转移后，副本将变为活动状态，接管隔离域或区域。
 
-You don't need to monitor Temporal Cloud's failover response in real time.
-Whenever there is a failover event, Temporal Cloud [notifies you via email](/cloud/notifications#admin-notifications)
+您不需要实时监控Temporal Cloud的故障转移响应。
+每当发生故障转移事件时，Temporal Cloud [通过电子邮件通知您](/cloud/notifications#admin-notifications)
 
-### Returning to the primary with failbacks {#failbacks}
+### 通过故障恢复返回到主数据库 {#failbacks}
 
-After a Temporal-managed (automatic) failover, Temporal Cloud automatically fails back to the original region once it is healthy.
-Follow [Temporal's status page](https://status.temporal.io) for updates on the original region's health.
+在 Temporal 管理的（自动）故障转移后，一旦 Temporal Cloud 运行正常，就会自动故障恢复到原始区域。
+关注 [Temporal的状态页面](https://status.temporal.io) 获取有关原始区域运行状况的 Update。
 
-#### After a Temporal-managed failover
+<a id="after-a-temporal-managed-failover"></a>
+#### Temporal 管理的故障转移后 {#after-a-temporal-managed-failover}
 
-When Temporal triggers an automatic failover due to an outage, Temporal will also trigger an automatic failback to the original region once the region recovers.
-No action is required from you.
+当 Temporal 因断电而触发自动故障转移时，一旦区域恢复，Temporal 也会触发自动故障恢复到原始区域。
+您无需采取任何行动。
 
-If you prefer to manage failback yourself, you have two options:
+如果您更喜欢自己管理故障恢复，您有两种选择：
 
-- **Opt out of automatic failback (manage failback manually):**
-  [Disable Temporal-managed failovers](#disabling-temporal-initiated) on the Namespace.
-  When you're ready to fail back to the original region, [trigger a failover](#manual-failovers) to that region and then re-enable Temporal-managed failovers.
+- **选择退出自动故障恢复（手动管理故障恢复）：**
+  Namespace 上的 [禁用 Temporal 管理的故障转移](#disabling-temporal-initiated)。
+  当您准备好故障恢复到原始区域时，将 [触发故障转移](#manual-failovers) 恢复到该区域，然后重新启用 Temporal 管理的故障转移。
 
-- **Stay on the new region permanently ("fail forward"):**
-  [Trigger a failover](#manual-failovers) to the region that is already active.
-  This tells Temporal that you want to treat the new region as your primary for as long as it's healthy.
-  Temporal-managed automatic failovers remain enabled, so Temporal will still protect you if the new region has an outage.
+- **永久留在新区域（“故障转发”）：**
+  [触发故障转移](#manual-failovers) 到已处于活动状态的区域。
+  这告诉 Temporal，只要新区域健康，您就希望将其视为您的主要区域。
+  Temporal 管理的自动故障转移保持启用状态，因此，如果新区域出现中断，Temporal 仍会为您提供保护。
 
-#### After a user-triggered failover
+<a id="after-a-user-triggered-failover"></a>
+#### 用户触发的故障转移后 {#after-a-user-triggered-failover}
 
-If you triggered a failover yourself during an outage (instead of relying on a Temporal-managed failover), Temporal will _not_ automatically fail back for you.
-You must [trigger a failover](#manual-failovers) back to the original region when it is healthy.
-Monitor [Temporal's status page](https://status.temporal.io) for updates on region health.
+如果您在中断期间自行触发故障转移（而不是依赖 Temporal 管理的故障转移），Temporal 将_不会_自动为您进行故障回复。
+当[触发故障转移](#manual-failovers)健康时，您必须回到原来的区域。
+监视 [Temporal的状态页面](https://status.temporal.io) 的 Update 区域运行状况。
 
-Automatic failback is only available after Temporal-managed (automatic) failovers.
+自动故障恢复仅在 Temporal 管理的（自动）故障转移后可用。
 
-#### How to check whether your Namespace will be automatically failed back
+<a id="how-to-check-whether-your-namespace-will-be-automatically-failed-back"></a>
+#### 如何检查您的Namespace是否会自动故障恢复 {#how-to-check-whether-your-namespace-will-be-automatically-failed-back}
 
-If you're not sure whether your Namespace will be automatically failed back, check the list of failovers in the Temporal Cloud Web UI on your Namespace's detail page:
+如果您不确定 Namespace 是否会自动故障恢复，请检查 Namespace 详细信息页面上的 Temporal Cloud Web UI 中的故障转移列表：
 
-- If the most recent failover was **Temporal-triggered**, then Temporal will automatically fail back the Namespace when the original region is healthy.
-- If the most recent failover was **user-triggered**, then the Namespace will _not_ be automatically failed back. You must trigger the failback yourself.
+- 如果最近的故障转移是 **Temporal 触发的**，则当原始区域运行状况良好时，Temporal 将自动故障回复 Namespace。
+- 如果最近的故障转移是**用户触发的**，则 Namespace 将不会自动进行故障恢复。您必须自己触发故障回复。
 
-## Disabling Temporal-initiated failovers {#disabling-temporal-initiated}
+<a id="disabling-temporal-initiated"></a>
+## 禁用 Temporal 启动的故障转移 {#disabling-temporal-initiated}
 
-When you add a replica to a Namespace, in the event of an incident or an outage Temporal Cloud automatically fails over the Namespace to its replica.
-_This is the recommended and default option._
+将副本添加到 Namespace 时，如果发生事件或中断，Temporal Cloud 会自动将 Namespace 故障转移到其副本。
+_这是推荐的默认选项。_
 
-However if you prefer to disable Temporal-initiated failovers and handle your own failovers, you can do so by following these instructions:
+但是，如果您希望禁用 Temporal 启动的故障转移并处理您自己的故障转移，则可以按照以下说明进行操作：
 
 <Tabs>
 
 <TabItem value="webui" label="Web UI">
 
-1. Navigate to the Namespace detail page in Temporal Cloud.
-1. Choose the "Disable Temporal-initiated failovers" option.
+1. 导航至 Temporal Cloud 中的 Namespace 详细信息页面。
+1. 选择“禁用 Temporal 启动的故障转移”选项。
 
 </TabItem>
 
 <TabItem value="tcldcli" label="tcld">
 
-To disable Temporal-initiated failovers, run the following command in your terminal:
+要禁用 Temporal 启动的故障转移，请在终端中运行以下命令：
 
 ```
 tcld namespace update-high-availability \
@@ -356,80 +365,81 @@ tcld namespace update-high-availability \
     --disable-auto-failover=true
 ```
 
-If using API key authentication with the `--api-key` flag, you must add it directly after the tcld command and before `namespace update-high-availability`
+如果使用带有 `--api-key` 标志的 API 密钥身份验证，则必须将其直接添加在 tcld 命令之后、`Namespace Update-high-availability` 之前
 
 </TabItem>
 
 </Tabs>
 
-Temporal Cloud disables its health-check initiated failovers.
-To restore the default behavior, unselect the option in the WebUI or change `true` to `false` in the CLI command.
+Temporal Cloud 禁用其运行状况检查启动的故障转移。
+要恢复默认行为，请在 WebUI 中取消选择该选项或在 CLI 命令中将 `true` 更改为 `false`。
 
-## Best practices: Workers and failovers {#worker}
+<a id="worker"></a>
+## 最佳实践：Worker 和故障转移 {#worker}
 
-Enabling High Availability for Namespaces doesn't require specific Worker configuration.
-The process is invisible to the Workers.
-When a Namespace fails over to the replica, the DNS redirection orchestrated by Temporal ensures that your existing Workers continue to poll the Namespace without interruption.
+为 Namespace 启用高可用性不需要特定的 Worker 配置。
+该过程对于 Worker 是不可见的。
+当 Namespace 故障转移到副本时，Temporal 协调的 DNS 重定向可确保您现有的 Worker 继续轮询 Namespace 而不会中断。
 
-When a Namespace fails over to a replica in a different region, Workers will be communicating cross-region.
+当 Namespace 故障转移到不同区域中的副本时，Worker 将进行跨区域通信。
 
-- If your application can’t tolerate this latency, deploy a second set of Workers in the replica's region or opt for a replica in the same region:
-- In the case of a complete regional outage, Workers in the original region may fail alongside the original Namespace.
-  To keep Workflows moving during this level of outage, deploy a second set of Workers to the secondary region.
+- 如果您的应用程序无法容忍此延迟，请在副本所在区域部署第二组 Worker 或选择同一区域中的副本：
+- 在区域完全中断的情况下，原始区域中的 Worker 可能会与原始 Namespace 一起发生故障。
+  要在此级别的中断期间保持 Workflow 移动，请将第二组 Worker 部署到次要区域。
 
 :::tip
 
-Temporal Cloud enforces a maximum connection lifetime of 5 minutes.
-This offers your Workers an opportunity to re-resolve the DNS.
+Temporal Cloud 强制最大连接生命周期为 5 分钟。
+这为您的 Worker 提供了重新解析 DNS 的机会。
 
 :::
 
-## Best practices: scheduled failover testing {#testing}
+## 最佳实践：Scheduled 故障转移测试 {#testing}
 
-Microservices and external dependencies will fail at some point.
-Testing failovers ensures your app can handle these failures effectively.
-Temporal recommends regular and periodic failover testing for mission-critical applications in production.
-By testing in non-emergency conditions, you verify that your app continues to function, even when parts of the infrastructure fail.
+微服务和外部依赖项有时会失败。
+测试故障转移可确保您的应用程序能够有效地处理这些故障。
+Temporal 建议对生产中的关键任务应用程序进行定期和定期的故障转移测试。
+通过在非紧急情况下进行测试，您可以验证您的应用程序是否能够继续运行，即使部分基础设施出现故障也是如此。
 
 <DiscoverableDisclosure label="Why test?">
 
 :::tip Safety First
 
-If this is your first time performing a failover test, run it with a test-specific namespace and application.
-This helps you gain operational experience before applying it to your production environment.
-Practice runs help ensure the process runs smoothly during real incidents in production.
+如果这是您第一次执行故障转移测试，请使用特定于测试的 Namespace 和应用程序运行它。
+这可以帮助您在将其应用到生产环境之前获得操作经验。
+练习运行有助于确保流程在生产中的实际事件中顺利运行。
 
 :::
 
-Failover testing (also known as "<ToolTipTerm term="trigger testing" />)" can:
+故障转移测试（也称为“<ToolTipTerm term="trigger testing" />”）可以：
 
-- **Validate replicated deployments**:
-  In multi-region setups, failover testing ensures your app can run from another region when the primary region experiences outages.
-  In standard setups, failover testing instead works with an isolation domain.
-  This maintains high availability in mission-critical deployments.
-  Manual testing confirms the failover mechanism works as expected, so your system handles incidents effectively.
+- **验证复制部署**：
+  在多区域设置中，故障转移测试可确保您的应用程序可以在主要区域发生中断时从另一个区域运行。
+  在标准设置中，故障转移测试改为使用隔离域。
+  这可以在关键任务部署中保持高可用性。
+  手动测试确认故障转移机制按预期工作，以便您的系统有效处理事件。
 
-- **Assess replication lag**:
-  In multi-region deployment, monitoring [replication lag](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p99) between regions is crucial.
-  Check the lag before initiating a failover to avoid rolling back Workflow progress.
-  This is less important when using isolation domains as failover is usually instantaneous.
-  Manual testing helps you practice this critical step and understand its impact.
+- **评估复制滞后**：
+  在多区域部署中，区域间的[复制滞后](/cloud/metrics/openmetrics/metrics-reference#temporal_cloud_v1_replication_lag_p99)监控至关重要。
+  在启动故障转移之前检查延迟以避免回滚 Workflow 进度。
+  当使用隔离域时，这一点不太重要，因为故障转移通常是瞬时的。
+  手动测试可以帮助您练习这一关键步骤并了解其影响。
 
-- **Assess recovery time**:
-  Manual testing helps you measure actual recovery time.
-  You can check if it meets your expected Recovery Time Objective (RTO) of 20 minutes or less, as stated in the [High Availability Namespace SLA](/cloud/sla).
+- **评估恢复时间**：
+  手动测试可帮助您测量实际恢复时间。
+  您可以检查它是否满足 [高可用性 Namespace SLA](/cloud/sla) 中所述的 20 分钟或更短的预期恢复时间目标 (RTO)。
 
-- **Identify potential issues**:
-  Failover testing uncovers problems not visible during normal operation.
-  This includes issues like [backlogs and capacity planning](https://temporal.io/blog/workers-in-production#testing-failure-paths-2438) and how external dependencies behave during a failover event.
+- **识别潜在问题**：
+  故障转移测试可以发现正常操作期间不可见的问题。
+  这包括 [积压和产能规划](https://temporal.io/blog/workers-in-production#testing-failure-paths-2438) 等问题以及外部依赖项在故障转移事件期间的行为方式。
 
-- **Validate fault-oblivious programming**:
-  Temporal uses a "fault-oblivious programming" model, where your app doesn’t need to explicitly handle many types of failures.
-  Testing failovers ensures that this model works as expected in your app.
+- **验证无故障编程**：
+  Temporal 使用“故障忽略编程”模型，您的应用程序不需要显式处理多种类型的故障。
+  测试故障转移可确保此模型在您的应用程序中按预期工作。
 
-- **Operational readiness**:
-  Regular testing familiarizes your team with the failover process, improving their ability to handle real incidents when they arise.
+- **操作准备**：
+  定期测试可以让您的团队熟悉故障转移过程，提高他们处理实际事件发生时的能力。
 
-Testing failovers regularly ensures your Temporal-based applications remain resilient and reliable, even when infrastructure fails.
+定期测试故障转移可确保基于 Temporal 的应用程序保持弹性和可靠性，即使基础设施发生故障也是如此。
 
 </DiscoverableDisclosure>

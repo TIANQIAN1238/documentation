@@ -1,8 +1,8 @@
 ---
 id: user
-title: tcld user command reference
-sidebar_label: user
-description: Manage users easily in Temporal Cloud with tcld commands; delete, get info, invite, list, resend invites, set account roles, and set namespace permissions seamlessly.
+title: "tcld 用户命令参考"
+sidebar_label: "用户"
+description: "使用 tcld 命令在 Temporal Cloud 中轻松管理用户；删除、获取信息、邀请、列出、重新发送邀请、设置帐户角色以及无缝设置 Namespace 权限。"
 slug: /cloud/tcld/user/
 toc_max_heading_level: 4
 keywords:
@@ -14,327 +14,351 @@ tags:
   - Users
 ---
 
-The `tcld user` commands manage users in Temporal Cloud.
+`tcld user` 命令管理 Temporal Cloud 中的用户。
 
-Alias: `u`
+别名：`u`
 
-- [tcld user delete](#delete)
-- [tcld user get](#get)
-- [tcld user invite](#invite)
-- [tcld user list](#list)
-- [tcld user resend-invite](#resend-invite)
-- [tcld user set-account-role](#set-account-role)
-- [tcld user set-namespace-permissions](#set-namespace-permissions)
+- [tcld 用户删除](#delete)
+- [tcld 用户获取](#get)
+- [tcld 用户邀请](#invite)
+- [tcld 用户列表](#list)
+- [tcld 用户重新发送邀请](#resend-invite)
+- [tcld 用户设置帐户角色](#set-account-role)
+- [tcld用户设置-Namespace-权限](#set-namespace-permissions)
 
-## delete
+## 删除 {#delete}
 
-The `tcld user delete` command deletes the specified user in Temporal Cloud.
-You must set either `--user-email` or `--user-id` to specify the user to be deleted.
+`tcld user delete` 命令删除 Temporal Cloud 中指定的用户。
+您必须设置 `--user-email` 或 `--user-id` 来指定要删除的用户。
 
-Alias: `d`
+别名：`d`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-#### --user-email
+<a id="delete"></a>
+#### --用户电子邮件 {#user-email}
 
-Specify the email address of the user to delete.
+指定要删除的用户的电子邮件地址。
 
-**Example**
-
-```command
-tcld user delete --user-email <test@example.com>
-```
-
-#### --user-id
-
-Specify the user identifier of the user to delete.
-
-**Example**
-
-```command
-tcld user delete --user-id <test-user-id>
-```
-
-#### --request-id
-
-The request identifier to use for the asynchronous operation.
-
-If not set, the server assigns an identifier.
-
-Alias: `-r`
-
-#### --resource-version
-
-Specify a resource version (ETag) to update from.
-If not specified, the latest version is used.
-
-Alias: `-v`
-
-## get
-
-The `tcld user get` command gets information about the specified user in Temporal Cloud.
-You must set either `--user-email` or `--user-id`.
-
-Alias: `g`
-
-The following modifiers control the behavior of the command.
-
-#### --user-email
-
-Specify the email address of the user to get information about.
-
-**Example**
+**例子**
 
 ```command
 tcld user delete --user-email <test@example.com>
 ```
 
-#### --user-id
+#### - 用户身份 {#user-id}
 
-Specify the user identifier of the user to get information about.
+指定要删除的用户的用户标识符。
 
-**Example**
+**例子**
 
 ```command
 tcld user delete --user-id <test-user-id>
 ```
 
-## invite
+<a id="user-email"></a>
+#### --请求 ID {#request-id}
 
-The `tcld namespace invite` command invites the specified user to join Temporal Cloud.
+用于异步操作的请求标识符。
 
-Alias: `i`
+如果未设置，服务器会分配一个标识符。
 
-The following modifiers control the behavior of the command.
+别名：`-r`
 
-#### --user-email
+<a id="user-id"></a>
+#### --资源版本 {#resource-version}
 
-_Required modifier_
+将资源版本 (ETag) 指定为 Update。
+如果未指定，则使用最新版本。
 
-Specify the email address of the user to be invited.
-You can supply this modifier multiple times to invite multiple users in a single request.
+别名：`-v`
 
-Alias: `-e`
+## 得到 {#get}
 
-#### --account-role
+`tcld user get` 命令获取 Temporal Cloud 中指定用户的信息。
+您必须设置 `--user-email` 或 `--user-id`。
 
-_Required modifier_
+别名：`g`
 
-Specify the [account-level Role](/cloud/manage-access/roles-and-permissions#account-level-roles) for the invited user.
+以下修饰符控制命令的行为。
 
-Available account roles: `admin` | `developer` | `read`.
+<a id="request-id"></a>
+#### --用户电子邮件 {#user-email}
 
-Alias: `--ar`
+指定要获取相关信息的用户的电子邮件地址。
 
-#### --namespace-permission
+**例子**
 
-Specify the [Namespace-level permissions](/cloud/manage-access/roles-and-permissions#namespace-level-permissions) for the invited user.
-You can supply this modifier multiple times to set multiple Namespace permissions in a single request.
+```command
+tcld user delete --user-email <test@example.com>
+```
 
-Each value must be in the format of `namespace=permission-type`.
+#### - 用户身份 {#user-id}
 
-Available namespace permissions: `Admin` | `Write` | `Read`.
+指定要获取相关信息的用户的用户标识符。
 
-Alias: `-p`
+**例子**
 
-#### --request-id
+```command
+tcld user delete --user-id <test-user-id>
+```
 
-The request identifier to use for the asynchronous operation.
+## 邀请 {#invite}
 
-If not set, the server assigns an identifier.
+`tcld Namespace invite` 命令邀请指定用户加入 Temporal Cloud。
 
-Alias: `-r`
+别名：`i`
+
+以下修饰符控制命令的行为。
+
+<a id="resource-version"></a>
+#### --用户电子邮件 {#user-email}
+
+_所需修饰符_
+
+指定要邀请的用户的电子邮件地址。
+您可以多次提供此修饰符以在单个请求中邀请多个用户。
+
+别名：`-e`
+
+<a id="get"></a>
+#### --账户角色 {#account-role}
+
+_所需修饰符_
+
+为受邀用户指定 [账户级角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。
+
+可用帐户角色：`admin` | `developer` | `read`。
+
+别名：`--ar`
+
+<a id="user-email"></a>
+#### --Namespace-权限 {#namespace-permission}
+
+为受邀用户指定 [Namespace级权限](/cloud/manage-access/roles-and-permissions#namespace-level-permissions)。
+您可以多次提供此修饰符以在单个请求中设置多个 Namespace 权限。
+
+每个值的格式必须为 `Namespace=permission-type`。
+
+可用的 Namespace 权限：`Admin` | `Write` | `Read`。
+
+别名：`-p`
+
+<a id="user-id"></a>
+#### --请求 ID {#request-id}
+
+用于异步操作的请求标识符。
+
+如果未设置，服务器会分配一个标识符。
+
+别名：`-r`
 
 ```command
 tcld user invite --user-email <test@example.com> --account-role developer --namespace-permission ns1=Admin --namespace-permission ns2=Write --request-id <123456>
 ```
 
-## list
+## 列表 {#list}
 
-The `tcld user list` command returns a paginated list of users in Temporal Cloud.
+`tcld user list` 命令返回 Temporal Cloud 中的分页用户列表。
 
-Alias: `l`
+别名：`l`
 
-**Example**
+**例子**
 
 ```command
 tcld user list
 ```
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-#### --namespace
+<a id="invite"></a>
+#### --Namespace {#namespace}
 
-List users that have permissions to the Namespace.
+列出拥有 Namespace 权限的用户。
 
-Alias: `-n`
+别名：`-n`
 
-**Example**
+**例子**
 
 ```command
 tcld user list --namespace <namespace_id>
 ```
 
-#### --page-token
+<a id="user-email"></a>
+#### --页面令牌 {#page-token}
 
-Page token for paging list users request.
+用于分页列表用户请求的页面令牌。
 
-Alias: `-p`
+别名：`-p`
 
-#### --page-size
+<a id="account-role"></a>
+#### --页面大小 {#page-size}
 
-Page size for paging list users request.
+分页列表用户请求的页面大小。
 
-Defaults to 10.
+默认为 10。
 
-Alias: `-s`
+别名：`-s`
 
-## resend-invite
+<a id="namespace-permission"></a>
+## 重新发送邀请 {#resend-invite}
 
-The `tcld user resend-invite` command resends an invitation to the specified user in Temporal Cloud.
-You must set either `--user-email` or `--user-id` to specify the user to receive another invitation.
+`tcld user resend-invite` 命令向 Temporal Cloud 中的指定用户重新发送邀请。
+您必须设置 `--user-email` 或 `--user-id` 来指定用户接收另一个邀请。
 
-Alias: `ri`
+别名：`ri`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-#### --user-email
+<a id="request-id"></a>
+#### --用户电子邮件 {#user-email}
 
-Specify the email address of the user to resend an invitation to.
+指定要重新发送邀请的用户的电子邮件地址。
 
-**Example**
+**例子**
 
 ```bash
 tcld user resend-invite --user-email <test@example.com>
 ```
 
-#### --user-id
+#### - 用户身份 {#user-id}
 
-Specify the user identifier of the user to resend an invitation to.
+指定要重新发送邀请的用户的用户标识符。
 
-**Example**
+**例子**
 
 ```bash
 tcld user resend-invite --user-id <test-user-id>
 ```
 
-#### --request-id
+<a id="list"></a>
+#### --请求 ID {#request-id}
 
-The request identifier to use for the asynchronous operation.
+用于异步操作的请求标识符。
 
-If not set, the server assigns an identifier.
+如果未设置，服务器会分配一个标识符。
 
-Alias: `-r`
+别名：`-r`
 
-## set-account-role
+<a id="namespace"></a>
+## 设置帐户角色 {#set-account-role}
 
-The `tcld user set-account-role` command sets an [account-level Role](/cloud/manage-access/roles-and-permissions#account-level-roles) for the specified user in Temporal Cloud.
-You must set either `--user-email` or `--user-id`.
+`tcld user set-account-role` 命令在 Temporal Cloud 中为指定用户设置 [账户级角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。
+您必须设置 `--user-email` 或 `--user-id`。
 
-Alias: `ri`
+别名：`ri`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-#### --account-role
+<a id="page-token"></a>
+#### --账户角色 {#account-role}
 
-_Required modifier_
+_所需修饰符_
 
-Specify the account-level Role to assign to the user.
+指定要分配给用户的帐户级角色。
 
-Available account roles: `admin` | `developer` | `read`.
+可用帐户角色：`admin` | `developer` | `read`。
 
-Alias: `-ar`
+别名：`-ar`
 
-#### --user-email
+<a id="page-size"></a>
+#### --用户电子邮件 {#user-email}
 
-Specify the email address of the user to assign an account-level Role to.
+指定要为其分配帐户级角色的用户的电子邮件地址。
 
-Alias: `-e`
+别名：`-e`
 
-**Example**
+**例子**
 
 ```command
 tcld user set-account-role --user-email <test@example.com> --account-role Developer
 ```
 
-#### --user-id
+#### - 用户身份 {#user-id}
 
-Specify the user identifier of the user to assign an account-level Role to.
+指定要为其分配帐户级角色的用户的用户标识符。
 
-Alias: `--id`
+别名：`--id`
 
-**Example**
+**例子**
 
 ```command
 tcld user set-account-role --user-id <test-user-id> --account-role Developer
 ```
 
-#### --request-id
+<a id="resend-invite"></a>
+#### --请求 ID {#request-id}
 
-The request identifier to use for the asynchronous operation.
+用于异步操作的请求标识符。
 
-If not set, the server assigns an identifier.
+如果未设置，服务器会分配一个标识符。
 
-Alias: `-r`
+别名：`-r`
 
-#### --resource-version
+<a id="user-email"></a>
+#### --资源版本 {#resource-version}
 
-Specify a resource version (ETag) to update from.
-If not specified, the latest version is used.
+将资源版本 (ETag) 指定为 Update。
+如果未指定，则使用最新版本。
 
-Alias: `-v`
+别名：`-v`
 
-## set-namespace-permissions
+<a id="user-id"></a>
+## 设置-Namespace-权限 {#set-namespace-permissions}
 
-The `tcld user set-namespace-permissions` command sets [Namespace-level permissions](/cloud/manage-access/roles-and-permissions#namespace-level-permissions) for a specified user in Temporal Cloud.
-You must set either `--user-email` or `--user-id`.
+`tcld user set-Namespace-permissions` 命令在 Temporal Cloud 中为指定用户设置 [Namespace级权限](/cloud/manage-access/roles-and-permissions#namespace-level-permissions)。
+您必须设置 `--user-email` 或 `--user-id`。
 
-Alias: `snp`
+别名：`snp`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-#### --user-email
+<a id="request-id"></a>
+#### --用户电子邮件 {#user-email}
 
-Specify the email address of the user to assign Namespace-level permissions to.
+指定要分配 Namespace 级别权限的用户的电子邮件地址。
 
-**Example**
+**例子**
 
 ```command
 tcld user set-namespace-permissions --user-email <test@example.com>
 ```
 
-#### --user-id
+#### - 用户身份 {#user-id}
 
-Specify the user identifier of the user to assign Namespace-level permissions to.
+指定要分配 Namespace 级别权限的用户的用户标识符。
 
-**Example**
+**例子**
 
 ```command
 tcld user set-namespace-permissions --user-id <test-user-id>
 ```
 
-#### --request-id
+<a id="set-account-role"></a>
+#### --请求 ID {#request-id}
 
-The request identifier to use to assign Namespace-level permissions to.
+用于分配 Namespace 级别权限的请求标识符。
 
-If not set, the server assigns an identifier.
+如果未设置，服务器会分配一个标识符。
 
-Alias: `-r`
+别名：`-r`
 
-#### --resource-version
+<a id="account-role"></a>
+#### --资源版本 {#resource-version}
 
-Specify a resource version (ETag) to assign Namespace-level permissions to.
-If not specified, the latest version is used.
+指定要分配 Namespace 级别权限的资源版本 (ETag)。
+如果未指定，则使用最新版本。
 
-Alias: `-v`
+别名：`-v`
 
-#### --namespace-permission
+<a id="user-email"></a>
+#### --Namespace-权限 {#namespace-permission}
 
-Specify the [Namespace-level permissions](/cloud/manage-access/roles-and-permissions#namespace-level-permissions) for the invited user.
-You can supply this modifier multiple times to set multiple Namespace permissions in a single request.
+为受邀用户指定 [Namespace级权限](/cloud/manage-access/roles-and-permissions#namespace-level-permissions)。
+您可以多次提供此修饰符以在单个请求中设置多个 Namespace 权限。
 
-Each value must be in the format of `namespace=permission-type`.
+每个值的格式必须为 `Namespace=permission-type`。
 
-Available namespace permissions: `Admin` | `Write` | `Read`.
+可用的 Namespace 权限：`Admin` | `Write` | `Read`。
 
-Alias: `-p`
+别名：`-p`

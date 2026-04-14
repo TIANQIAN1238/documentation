@@ -1,0 +1,43 @@
+---
+id: dynamic-workflow
+title: 动态 Workflow - Ruby SDK
+sidebar_label: 动态Workflow
+description: 本节介绍动态 Workflow 与 Ruby SDK
+toc_max_heading_level: 4
+keywords:
+  - Ruby SDK
+tags:
+  - Ruby SDK
+  - Temporal SDKs
+---
+
+## 设置动态 Workflow {#set-a-dynamic-Workflow}
+
+Temporal 中的动态 Workflow 是在运行时动态调用的 Workflow，如果没有注册其他同名的 Workflow。
+Workflow 可以通过调用定义顶部的“Workflow_dynamic”类方法来动态化。
+您必须先向 Worker 注册 Workflow，然后才能调用它。
+Worker 上只能存在一个 Dynamic Workflow。
+
+通常，动态与“Workflow_raw_args”结合使用，它不转换参数而是传递它们
+作为“Temporalio::Converters::RawValue”实例的分散数组。
+
+```ruby
+class MyDynamicWorkflow < Temporalio::Workflow::Definition
+  # Make this the dynamic workflow and accept raw args
+  workflow_dynamic
+  workflow_raw_args
+
+  def execute(*raw_args)
+    # Require a single arg for our workflow
+    raise Temporalio::Error::ApplicationError, 'One arg expected' unless raw_args.size == 1
+
+    # Use payload converter to convert it
+    name = Temporalio::Workflow.payload_converter.from_payload(raw_args.first.payload)
+    Temporalio::Workflow.execute_activity(
+      MyActivity,
+      { greeting: 'Hello', name: },
+      start_to_close_timeout: 100
+    )
+  end
+end
+```

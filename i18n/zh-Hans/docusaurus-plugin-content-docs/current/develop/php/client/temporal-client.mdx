@@ -1,0 +1,413 @@
+---
+id: temporal-client
+title: Temporal CLIent - PHP SDK
+sidebar_label: Temporal CLIent
+slug: /develop/php/client/temporal-client
+toc_max_heading_level: 3
+keywords:
+  - temporal-client
+tags:
+  - Temporal Client
+  - PHP SDK
+  - Temporal SDKs
+  - Certificates
+description: 将 Temporal CLIent 连接到 Temporal 服务并启动 Workflow Executions。本指南涵盖通信，包括发送 Signal 和查询。
+---
+
+本指南介绍 Temporal CLIents。
+它解释了客户端的作用和使用，并向您展示如何配置 PHP 客户端代码以连接到 Temporal 服务。
+
+此页面显示如何执行以下操作：
+
+- [连接到本地开发 Temporal 服务](#connect-to-a-dev-cluster)
+- [连接到 Temporal Cloud](#connect-to-Temporal-cloud)
+- [启动 Workflow Execution](#start-Workflow-执行)
+- [高级连接选项](#advanced-connection-options)
+
+## 如何将 Temporal CLIent 连接到 Temporal 服务 {#connect-to-a-dev-cluster}
+
+[Temporal CLIent](/encyclopedia/Temporal-sdks#Temporal-client) 使您能够与 [Temporal Service](/Temporal-service) 进行通信。
+与 Temporal 服务的通信包括但不限于以下内容：
+
+- 调度 Workflow Execution。
+- 启动 Workflow Execution。
+- 将 Signal 发送至 Workflow Execution。
+- 向 Workflow Execution 发送查询。
+- 将 Update 发送到 Workflow Execution。
+- 获取 Workflow Execution 的结果。
+- 提供 Activity 任务令牌。
+
+:::caution
+
+Temporal CLIent 无法在 Workflow 内部初始化和使用。
+但是，在 Activity 内使用 Temporal CLIent 与 Temporal 服务进行通信是可以接受且常见的。
+
+:::
+
+当您在本地运行 Temporal 服务（例如 [Temporal CLI](https://docs.Temporal.io/cli/server#start-dev)）时，您必须提供的连接选项数量最少。
+许多 SDK 默认为“127.0.0.1:7233”。
+
+在 PHP SDK 中，不同的客户端类负责不同的功能区域。
+[`ServiceClient`](https://php.Temporal.io/classes/Temporal-Client-gRPC-ServiceClient.html) 负责低级 API 和与 Temporal 服务的连接。
+它还用于更高级别的客户端：[`WorkflowClient`](https://php.Temporal.io/classes/Temporal-Client-WorkflowClient.html)和[`ScheduleClient`](https://php.Temporal.io/classes/Temporal-Client-ScheduleClient.html)。
+
+:::note
+
+RoadRunner 不需要仅使用客户端 API；但是，[gRPC 扩展](https://pecl.php.net/package/gRPC) 是必要的。
+
+:::
+
+使用 create() 工厂方法来创建客户端。
+
+```php
+use Temporal\Client\GRPC\ServiceClient;
+use Temporal\Client\WorkflowClient;
+
+$serviceClient = ServiceClient::create('localhost:7233');
+$workflowClient = WorkflowClient::create($serviceClient);
+
+// Use $workflowClient to work with Workflows ...
+```
+
+有关配置连接的更多信息，请参阅[高级连接选项](#advanced-connection-options) 部分。
+
+## 如何将 Temporal CLIent 连接到 Temporal Cloud {#connect-to-Temporal-cloud}
+
+当您连接到 [Temporal Cloud](/cloud) 时，您需要提供其他连接和客户端选项，其中包括以下内容：
+
+- [Temporal Cloud Namespace Id](/cloud/Namespaces#Temporal-cloud-Namespace-id)。
+- [Namespace 的 gRPC 端点](/cloud/Namespaces#Temporal-cloud-gRPC-endpoint)。
+  每个 Namespace 详细信息页面上的 [Temporal Cloud 网站](https://cloud.Temporal.io/Namespaces) 上提供了端点列表。
+  端点包含 Namespace Id 和端口。
+- mTLS CA 证书。
+- mTLS 私钥。
+
+有关管理和生成 Temporal Cloud 客户端证书的更多信息，请参阅[如何管理 Temporal Cloud 中的证书](/cloud/certificates)。
+
+有关配置 TLS 以保护 Temporal 服务的网络间和网络内通信的更多信息，请参阅[Temporal 自定义示例](https://github.com/Temporalio/samples-server)。
+
+使用 [`ServiceClient::createSSL()`](https://php.Temporal.io/classes/Temporal-Client-gRPC-BaseClient.html#method_createSSL) 方法配置与 Temporal 服务的客户端连接。
+`$clientKey` 参数必须与 `$clientPem` 结合使用来验证客户端。
+
+```php
+use Temporal\Client\ClientOptions;
+use Temporal\Client\GRPC\ServiceClient;
+use Temporal\Client\WorkflowClient;
+
+$serviceClient = \Temporal\Client\GRPC\ServiceClient::createSSL(
+    address: '<your-custom-namespace>.tmprl.cloud:7233',
+    // crt: 'certs/server-root-ca-cert.pem', # ROOT CA to validate the server cert
+    clientKey: 'certs/client-private-key.pem',
+    clientPem: 'certs/client-cert.pem',
+    // overrideServerName: 'tls-sample',
+);
+
+$workflowClient = WorkflowClient::create(
+    serviceClient: $serviceClient,
+    options: (new ClientOptions())
+        ->withNamespace('<your-custom-namespace>.<id>'),
+);
+```
+
+要[运行由 Temporal Cloud 管理的 Worker 进程](/develop/php/Workers/run-Worker-process#run-a-dev-Worker)，请以相同的方式配置 RoadRunner。
+
+```yml
+temporal:
+  # ...
+  tls:
+    # root_ca: 'certs/server-root-ca-cert.pem'
+    key: 'certs/client-private-key.pem'
+    cert: 'certs/client-cert.pem'
+    client_auth_type: require_and_verify_client_cert
+    # server_name: 'tls-sample'
+```
+
+要在客户端中设置 [API 密钥](/cloud/api-keys)，请使用 [`ServiceClient::withAuthKey()`](https://php.Temporal.io/classes/Temporal-Client-gRPC-BaseClient.html#method_withAuthKey) 方法：
+
+```php
+$serviceClient = \Temporal\Client\GRPC\ServiceClient::createSSL(/*...*/)
+    ->withAuthKey('your-api-key');
+```
+
+## 如何启动 Workflow Execution {#start-Workflow-execution}
+
+[Workflow Execution](/Workflow-执行) 语义依赖于多个参数，即，要启动 Workflow Execution，您必须提供将用于任务的 Task Queue（Worker 正在轮询的任务）、Workflow Type、特定于语言的上下文数据和 Workflow 函数参数。
+
+在以下示例中，所有 Workflow Execution 均使用 Temporal CLIent 启动。
+要从另一个 Workflow Execution 中生成 Workflow Execution，请使用 [Child Workflow](/develop/php/Workflows/child-Workflows) 或外部 Workflow API。
+
+请参阅[自定义 Workflow Type](/develop/php/Workflows/basics#Workflow-type) 部分，了解如何自定义 Workflow Type 的名称。
+
+生成 Workflow Execution 的请求会导致 Temporal 服务在 Workflow Execution Event History 中创建第一个事件 ([WorkflowExecutionStarted](/references/events#Workflowexecutionstarted))。
+然后，Temporal 服务创建第一个 Workflow Task，从而产生第一个 [WorkflowTaskScheduled](/references/events#WorkflowtaskScheduled) 事件。
+
+使用 Workflow 存根从客户端内启动 Workflow Execution。
+Workflow 存根是由 [`WorkflowClient`](https://php.Temporal.io/classes/Temporal-Client-WorkflowClient.html) 生成的代理。
+您可以在客户端代码中使用类型化或非类型化 Workflow 存根。
+
+- 类型化 Workflow 存根非常有用，因为它们是类型安全的，并且允许您直接调用 Workflow 方法，例如“#[WorkflowMethod]”、“#[QueryMethod]”、“#[SignalMethod]”和“#[UpdateMethod]”。
+- 非类型化 Workflow 存根不使用 Workflow 接口。它更灵活，因为它具有 [`WorkflowStubInterface`](https://php.Temporal.io/classes/Temporal-Client-WorkflowStubInterface.html) 中的方法，例如`start`，`Signal`，`getResults`，`Query`，`Signal`， “Update”、“取消”、“终止”等
+  使用无类型 Workflow 存根时，我们依赖 Workflow Type、Activity 类型、Child Workflow 类型以及 Query 和 Signal 名称。
+
+例如，有一个Workflow定义如下：
+
+```php
+#[WorkflowInterface]
+interface AccountTransferWorkflowInterface
+{
+    #[WorkflowMethod(name: "account.transfer")]
+    public function begin(UuidInterface $transactionId);
+
+    #[UpdateMethod(name: "pay")]
+    public function move(UuidInterface $from, UuidInterface $to, int $amount);
+
+    #[UpdateMethod(name: "finish")]
+    public function commit();
+
+    #[UpdateMethod(name: "cancel")]
+    public function rollback(string $reason);
+}
+```
+
+如果是 **类型** Workflow 存根，您可以使用 `AccountTransferWorkflowInterface` 直接调用 Workflow 方法：
+
+```php
+$stub = $workflowClient->newWorkflowStub(AccountTransferWorkflowInterface::class);
+
+$workflowClient->start($stub, $transactionId);
+$stub->move($from1, $to1, $amount1);
+$stub->move($from2, $to2, $amount2);
+$stub->commit();
+```
+
+如果是 **无类型** Workflow 存根，您需要显式指定 Workflow Type 和方法名称：
+
+```php
+$stub = $workflowClient->newUntypedWorkflowStub('account.transfer');
+
+$workflowClient->start($stub, $transactionId);
+$stub->update('pay', $from1, $to1, $amount1);
+$stub->update('pay', $from2, $to2, $amount2);
+$stub->update('finish');
+```
+
+Workflow Execution 可以同步或异步启动。
+
+当用户取消父 XPROT027X 时，可以根据可配置的子策略取消或放弃 XPROT011X。
+
+同步启动会启动 Workflow，然后等待其完成。启动的Workflow不会依赖于
+即使等待进程崩溃或停止，调用进程也会继续执行。
+
+请务必获取要启动的 Workflow 接口或类名称。
+例如：
+
+```php
+#[WorkflowInterface]
+interface AccountTransferWorkflowInterface
+{
+    #[WorkflowMethod(name: "MoneyTransfer")]
+    #[ReturnType(UuidInterface::class)]
+    public function transfer( string $fromAccountId, string $toAccountId, string $referenceId, int $amountCents);
+}
+```
+
+要在同步模式下启动 Workflow：
+
+```php
+$accountTransfer = $workflowClient->newWorkflowStub(
+    AccountTransferWorkflowInterface::class,
+);
+
+$result = $accountTransfer->transfer('fromID', 'toID', 'refID', 1000);
+```
+
+**异步启动**
+
+异步启动会启动 Workflow Execution 并立即返回调用者，无需等待结果。
+这是在现场环境中启动 Workflow 的最常见方法。
+
+要异步启动 Workflow，请将 Workflow 存根实例和启动参数传递到 [`WorkflowClient::start()`](https://php.Temporal.io/classes/Temporal-Client-WorkflowClientInterface.html#method_start) 方法中。
+
+```php
+$accountTransfer = $workflowClient->newWorkflowStub(
+    AccountTransferWorkflowInterface::class,
+);
+
+$run = $this->workflowClient->start($accountTransfer, 'fromID', 'toID', 'refID', 1000);
+```
+
+Workflow 启动后，您可以通过 [`WorkflowRun`](https://php.Temporal.io/classes/Temporal-Workflow-WorkflowRunInterface.html) 对象方法接收有关 Workflow Execution 或结果的详细信息：
+
+```php
+$run = $workflowClient->start($accountTransfer, 'fromID', 'toID', 'refID', 1000);
+
+// Get the Workflow ID
+var_dump($run->getExecution()->getID());
+
+// Describe the Workflow Execution
+var_dump($run->describe());
+
+// Wait for the Workflow to complete and get the result with 10-second timeout
+var_dump($run->getResult(timeout: 10));
+```
+
+**重复开始**
+
+您可以使用 [CronSchedule 选项](/develop/php/Workflows/Schedules#Temporal-cron-jobs) 在常规 Schedule 上启动 Workflow Execution。
+
+### 如何设置 Workflow 的 Task Queue {#set-task-queue}
+
+在大多数 SDK 中，唯一必须设置的 Workflow 选项是 [Task Queue](/task-queue) 的名称。
+使用 PHP 进行开发时，Task Queue 名称默认为“default”。
+虽然建议设置有意义的 Task Queue 名称以获得更好的可观察性，但 Workflow 可以在不设置此选项的情况下运行。
+
+:::note
+
+PHP 的默认值与大多数 SDK 不同，后者确实需要显式的 Task Queue 名称。
+
+:::
+
+为了执行您的代码，Worker 进程必须正在运行（[如何运行 Worker 进程](/develop/php/Workers/run-Worker-process#run-a-dev-Worker)）。
+此过程需要一个轮询相同 Task Queue 名称的 Worker 实体。
+
+使用 [`WorkflowOptions::withTaskQueue()`](https://php.Temporal.io/classes/Temporal-Client-WorkflowOptions.html#method_withTaskQueue) 在客户端代码中使用 Workflow 存根设置 Workflow Task 队列。
+
+```php
+$stub = $workflowClient->newWorkflowStub(
+    YourWorkflowInterface::class,
+    WorkflowOptions::new()
+        ->withTaskQueue("Workflow-Task-Queue-1"),
+);
+```
+
+### 如何设置 Workflow Id {#Workflow-id}
+
+尽管不是必需的，但我们建议您提供您自己的 [Workflow Id](/Workflow-execution/Workflowid-runid#Workflow-id)，它映射到业务流程或业务实体标识符，例如订单标识符或客户标识符。
+
+使用 [`WorkflowOptions::withTaskQueue()`](https://php.Temporal.io/classes/Temporal-Client-WorkflowOptions.html#method_withWorkflowId) 在客户端代码中使用 Workflow 存根设置 Workflow Id。
+
+```php
+$stub = $workflowClient->newWorkflowStub(
+    YourWorkflowInterface::class,
+    WorkflowOptions::new()
+        ->withWorkflowId("Workflow-Id"),
+);
+```
+
+### 如何获取 Workflow Execution 的结果 {#get-Workflow-results}
+
+如果启动 Workflow Execution 的调用成功，您将获得对 Workflow Execution 运行 ID 的访问权限。
+
+Workflow Id、运行 ID 和 Namespace 可用于唯一标识系统中的 Workflow Execution 并获取其结果。
+
+可以阻止结果的进展（同步执行）或在其他时间点获取结果（异步执行）。
+
+在 Temporal Platform 中，也可以使用查询作为访问 Workflow Execution 状态和结果的首选方法。
+
+如果您需要在异步启动后等待 Workflow 完成，请进行阻塞调用
+`WorkflowRun::getResult()` 方法。
+
+```php
+$stub = $workflowClient->newWorkflowStub(YourWorkflowInterface::class);
+$run = $workflowClient->start($stub, 'fromID', 'toID', 'refID', 1000);
+
+var_dump($run->getResult());
+```
+
+另外，请记住，所有有效负载数据都记录在
+[XPROT002X XPROT015X](/Workflow-execution/event#event-history) 和大型事件历史记录可能会影响 XPROT035X
+性能。这是因为整个 XPROT015X 可以通过以下方式传输到 XPROT035X 进程：
+[XPROT013X](/tasks#Workflow-任务)。
+
+```php
+$stub = $workflowClient->newUntypedWorkflowStub('account.transfer');
+$workflowClient->start($stub, 'fromID', 'toID', 'refID', 1000);
+
+var_dump($stub->getResult(timeout: 5.5));
+```
+
+请注意，您可以为“getResult()”方法指定一个超时（以秒为单位）。
+如果 Workflow 未在指定时间内完成，则会抛出“TimeoutException”。
+请参阅 [RPC 超时](#configure-rpc-timeout) 部分，了解如何限制所有 RPC 调用。
+
+## 高级连接选项 {#advanced-connection-options}
+
+在 PHP 中，以阻塞模式处理资源是常见的做法。
+长块会快速耗尽可用 Worker 池并导致应用程序故障。
+
+本节介绍 PHP SDK 使用 Temporal CLIent API 时的功能和配置示例。
+
+＃＃＃ 联系
+
+PHP SDK 中的 gRPC 连接默认是惰性连接，这意味着它们直到第一次调用才建立。
+To force establishing the connection to the Temporal Service, you can call the [`ConnectionInterface::connect()`](https://php.Temporal.io/classes/Temporal-Client-gRPC-Connection-ConnectionInterface.html#method_connect) or [`ServiceClient::getServerCapabilities()`](https://php.Temporal.io/classes/Temporal-Client-gRPC-ServiceClientInterface.html#method_getServerCapabilities) method.
+
+```php
+// ...
+$serviceClient->getConnection()->connect(timeout: 10);
+
+// or
+$serviceClient->getServerCapabilities();
+```
+
+如果由于某种原因建立的连接被破坏，SDK 将自动尝试恢复它，同时考虑到配置的 Retry Policy。
+
+要覆盖当前策略设置的下一个重试间隔，请在 XPROT028X 中引发 [ApplicationError](/references/failures#application-failure) 时传递“next_retry_delay”。
+该值替换并覆盖 Retry Policy 上通常的重试间隔。
+
+每当客户端无法连接到服务器时，就会生成带有状态代码的错误。
+如果状态代码为“UNKNOWN”、“UNAVAILABLE”或“RESOURCE_EXHAUSTED”，客户端将再次尝试连接。
+默认情况下，尝试次数没有限制，每次尝试的间隔范围为 0.5 到 100 秒，退避系数为 2。
+这意味着客户端可能会被阻止，直到它通过无限尝试建立与服务器的连接。
+
+如果要更改默认行为，请在创建客户端服务时使用“withRetryPolicy()”方法：
+
+```php
+use Temporal\Client\Common\RpcRetryOptions;
+use Temporal\Client\GRPC\ServiceClient;
+use Temporal\Client\WorkflowClient;
+
+$serviceClient = ServiceClient::create('localhost:7233');
+$workflowClient = WorkflowClient::create($serviceClient)
+    ->withRetryOptions(
+        RpcRetryOptions::new()
+            ->withMaximumAttempts(10)
+            ->withInitialInterval('1 second')   // The first retry will be in 1 second
+            ->withBackoffCoefficient(2.5)       // Each next retry time will be multiplied by 2.5
+            ->withMaximumInterval('20 seconds') // The maximum interval between attempts
+            ->withMaximumJitterCoefficient(0.2) // Actual retry time can be +/- 20% of the calculated time
+    );
+```
+
+- [错误处理](/develop/python/best-practices/error-handling)
+- [测试](/develop/python/best-practices/testing-suite)
+- [XPROT024X 沙箱](/develop/python/best-practices/python-sdk-sandbox)
+- [调试](/develop/python/best-practices/debugging)
+- [数据处理](/develop/python/data-handling)
+- [同步与异步](/develop/python/best-practices/python-sdk-sync-vs-async)
+
+当客户端调用服务的RPC时，等待响应没有默认的时间限制。这可能会导致代码调用 `$result = $WorkflowHandle->getResult();` 阻塞 PHP Worker，直到 Workflow 完成。在某些情况下，这不是所需的行为，可能需要设置合理的超时来等待 RPC 完成。
+
+使用“withTimeout()”方法构建一个对所有 RPC 调用都设置超时的客户端。
+
+```php
+use Temporal\Client\GRPC\ServiceClient;
+use Temporal\Client\WorkflowClient;
+
+$serviceClient = ServiceClient::create('localhost:7233');
+$workflowClient = WorkflowClient::create($serviceClient)
+    ->withTimeout(5.75);
+
+// Create a Workflow stub
+$stub = $workflowClient->newWorkflowStub(AccountTransferWorkflowInterface::class);
+
+// If the Workflow does not complete within 5.75 seconds, a TimeoutException will be thrown
+$result = $stub->transfer('fromID', 'toID', 'refID', 1000);
+```
+
+:::note
+
+`withTimeout()` 方法是不可变的。
+如果您需要更改单个操作的超时，请从现有客户端创建一个具有特定超时的新客户端：“$newClient = $WorkflowClient->withTimeout(0);”（“0”表示无超时）。
+
+:::

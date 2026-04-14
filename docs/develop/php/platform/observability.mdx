@@ -1,8 +1,8 @@
 ---
 id: observability
-title: Observability - PHP SDK
-sidebar_label: Observability
-description: Explore the Temporal Developer’s guide on observability to learn about Visibility APIs and Search Attributes, helping you manage Workflow Executions efficiently.
+title: "可观察性 - PHP SDK"
+sidebar_label: "可观察性"
+description: "探索 Temporal 可观察性开发人员指南，了解 Visibility API 和 Search Attribute，帮助您高效管理 Workflow Execution。"
 toc_max_heading_level: 4
 keywords:
   - guide-context
@@ -20,34 +20,34 @@ tags:
   - Temporal SDKs
 ---
 
-The observability section of the Temporal Developer's guide covers the many ways to view the current state of your [Temporal Application](/temporal#temporal-application)—that is, ways to view which [Workflow Executions](/workflow-execution) are tracked by the [Temporal Platform](/temporal#temporal-platform) and the state of any specified Workflow Execution, either currently or at points of an execution.
+Temporal 开发人员指南的可观察性部分涵盖了查看 [Temporal 应用](/temporal#temporal-application) 当前状态的多种方法，即查看 [Temporal平台](/workflow-execution) 跟踪哪些 [Workflow Executions](/temporal#temporal-platform) 以及任何指定 Workflow Execution 当前或执行点的状态的方法。
 
-This section covers features related to viewing the state of the application, including:
+本节介绍与查看应用程序状态相关的功能，包括：
 
-- [Log from a Workflow](#logging)
+- [从 Workflow 登录](#logging)
 - [Visibility](#visibility)
 
-## Log from a Workflow {#logging}
+<a id="logging"></a>
+## 从 Workflow {#logging} 记录
+日志记录使您能够在代码执行期间记录关键信息。
+记录器创建审计跟踪并捕获有关 Workflow 操作的信息。
+适当的日志记录级别取决于您的具体需求。
+在开发或故障排除期间，您可能会使用调试甚至跟踪。
+在生产中，您可以使用 info 或 warn 来避免日志量过多。
 
-Logging enables you to record critical information during code execution.
-Loggers create an audit trail and capture information about your Workflow's operation.
-An appropriate logging level depends on your specific needs.
-During development or troubleshooting, you might use debug or even trace.
-In production, you might use info or warn to avoid excessive log volume.
+记录器支持以下日志记录级别：
 
-The logger supports the following logging levels:
-
-| Level   | Use                                                                                                       |
+| 等级   | 使用                                                                                                       |
 | ------- | --------------------------------------------------------------------------------------------------------- |
-| `TRACE` | The most detailed level of logging, used for very fine-grained information.                               |
-| `DEBUG` | Detailed information, typically useful for debugging purposes.                                            |
-| `INFO`  | General information about the application's operation.                                                    |
-| `WARN`  | Indicates potentially harmful situations or minor issues that don't prevent the application from working. |
-| `ERROR` | Indicates error conditions that might still allow the application to continue running.                    |
+| `TRACE` | 最详细的日志记录级别，用于非常细粒度的信息。                               |
+| `DEBUG` | 详细信息，通常可用于调试目的。                                            |
+| `INFO`  | 有关应用程序操作的一般信息。                                                    |
+| `WARN`  | 指示不会阻止应用程序运行的潜在有害情况或小问题。 |
+| `ERROR` | 指示可能仍允许应用程序继续运行的错误情况。                    |
 
-The Temporal SDK core normally uses `WARN` as its default logging level.
+Temporal SDK 核心通常使用 `WARN` 作为其默认日志记录级别。
 
-To get a PSR-3 compatible logger in your Workflow code, use the [`Workflow::getLogger()`](https://php.temporal.io/classes/Temporal-Workflow.html#method_getLogger) method.
+要在 Workflow 代码中获取 PSR-3 兼容记录器，请使用 [`Workflow::getLogger()`](https://php.temporal.io/classes/temporal-Workflow.html#method_getLogger) 方法。
 
 ```php
 use Temporal\Workflow;
@@ -68,9 +68,9 @@ class MyWorkflow
 }
 ```
 
-The Workflow logger automatically enriches log context with the current Task Queue name.
+Workflow 记录器会自动使用当前的 Task Queue 名称来丰富日志上下文。
 
-Logs in replay mode are omitted unless the [`enableLoggingInReplay`](https://php.temporal.io/classes/Temporal-Worker-WorkerOptions.html#method_withEnableLoggingInReplay) Worker option is set to true.
+除非 [`enableLoggingInReplay`](https://php.temporal.io/classes/temporal-Worker-WorkerOptions.html#method_withEnableLoggingInReplay) Worker 选项设置为 true，否则重播模式下的日志将被忽略。
 
 ```php
 $factory = WorkerFactory::create();
@@ -79,15 +79,16 @@ $worker = $factory->newWorker('your-task-queue', WorkerOptions::new()
 );
 ```
 
-### Default Logger
+<a id="default-logger"></a>
+### 默认记录器 {#default-logger}
 
-By default, PHP SDK uses a [`StderrLogger`](https://php.temporal.io/classes/Temporal-Worker-Logger-StderrLogger.html) that outputs log messages to the standard error stream.
-These messages are automatically captured by RoadRunner and incorporated into its logging system with the INFO level, ensuring proper log collection in both development and production environments.
-For more details on RoadRunner's logging capabilities, see the [RoadRunner Logger documentation](https://docs.roadrunner.dev/docs/logging-and-observability/logger).
+默认情况下，PHP SDK 使用 [`StderrLogger`](https://php.temporal.io/classes/temporal-Worker-Logger-StderrLogger.html) 将日志消息输出到标准错误流。
+这些消息由 RoadRunner 自动捕获，并以 INFO 级别合并到其日志系统中，确保在开发和生产环境中正确收集日志。
+有关 RoadRunner 日志记录功能的更多详细信息，请参阅 [RoadRunner 记录器文档](https://docs.roadrunner.dev/docs/logging-and-observability/logger)。
 
-### How to provide a custom logger {#custom-logger}
-
-You can set a custom PSR-3 compatible logger when creating a Worker:
+<a id="custom-logger"></a>
+### 如何提供自定义记录器 {#custom-logger}
+您可以在创建 Worker 时设置自定义 PSR-3 兼容记录器：
 
 ```php
 $myLogger = new MyLogger();
@@ -99,38 +100,38 @@ $worker = $workerFactory->newWorker(
 );
 ```
 
-## Visibility APIs {#visibility}
+<a id="visibility"></a>
+## Visibility API {#visibility}
+Temporal 平台中的术语 Visibility 是指使操作员能够查看当前存在于 Temporal 服务中的 Workflow Execution 的子系统和 API。
 
-The term Visibility, within the Temporal Platform, refers to the subsystems and APIs that enable an operator to view Workflow Executions that currently exist within a Temporal Service.
+<a id="search-attributes"></a>
+### 如何使用 Search Attribute {#search-attributes}
+检索 Workflow Execution 的典型方法是通过其 Workflow Id。
 
-### How to use Search Attributes {#search-attributes}
+但是，有时您需要根据另一属性检索一个或多个 Workflow Execution。例如，假设您想要获取某个时间范围内失败的某种类型的所有 Workflow Execution，以便您可以使用相同的参数启动新的 Workflow Execution。
 
-The typical method of retrieving a Workflow Execution is by its Workflow Id.
+您可以使用 [Search Attributes](/search-attribute) 来完成此操作。
 
-However, sometimes you'll want to retrieve one or more Workflow Executions based on another property. For example, imagine you want to get all Workflow Executions of a certain type that have failed within a time range, so that you can start new ones with the same arguments.
+- [默认 Search Attribute](/search-attribute#default-search-attribute) 与 `WorkflowType`、`StartTime` 和 `ExecutionStatus` 一样，会自动添加到 Workflow Execution。
+- [定制 Search Attribute](/search-attribute#custom-search-attribute) 可以包含其自己的特定于域的数据（如 `customerId` 或 `numItems`）。
 
-You can do this with [Search Attributes](/search-attribute).
+使用自定义 Search Attribute 的步骤是：
 
-- [Default Search Attributes](/search-attribute#default-search-attribute) like `WorkflowType`, `StartTime` and `ExecutionStatus` are automatically added to Workflow Executions.
-- [Custom Search Attributes](/search-attribute#custom-search-attribute) can contain their own domain-specific data (like `customerId` or `numItems`).
+- 使用 `Temporal operator search-attribute create` 或云 UI 在 Temporal 服务中创建新的 Search Attribute。
+- 设置 Workflow Execution 的 Search Attribute 值：
+  - 在客户端上，在启动执行时将其作为选项包含在内。
+  - 在 Workflow 中通过调用 `UpsertSearchAttributes`。
+- 读取Search Attribute的值：
+  - 在客户端上通过调用 `DescribeWorkflow`。
+  - 在 Workflow 中查看 `WorkflowInfo`。
+- Query Workflow Execution 由 Search Attribute 使用 [列表过滤器](/list-filter) 实现：
+  - [在Temporal CLI中](/cli/workflow#list)。
+  - 在代码中调用 `ListWorkflowExecutions`。
 
-The steps to using custom Search Attributes are:
+以下是 Query Workflow Execution 的操作方法：
 
-- Create a new Search Attribute in your Temporal Service using `temporal operator search-attribute create` or the Cloud UI.
-- Set the value of the Search Attribute for a Workflow Execution:
-  - On the Client by including it as an option when starting the Execution.
-  - In the Workflow by calling `UpsertSearchAttributes`.
-- Read the value of the Search Attribute:
-  - On the Client by calling `DescribeWorkflow`.
-  - In the Workflow by looking at `WorkflowInfo`.
-- Query Workflow Executions by the Search Attribute using a [List Filter](/list-filter):
-  - [In the Temporal CLI](/cli/workflow#list).
-  - In code by calling `ListWorkflowExecutions`.
-
-Here is how to query Workflow Executions:
-
-Use the [listWorkflowExecutions()](https://php.temporal.io/classes/Temporal-Client-WorkflowClientInterface.html#method_listWorkflowExecutions) method on the Client and pass a [List Filter](/list-filter) as an argument to filter the listed Workflows.
-The result is an iterable paginator, so you can use the `foreach` loop to iterate over the results.
+在客户端上使用 [listWorkflowExecutions()](https://php.temporal.io/classes/temporal-Client-WorkflowClientInterface.html#method_listWorkflowExecutions) 方法并传递 [列表过滤器](/list-filter) 作为参数来过滤列出的 Workflow。
+结果是一个可迭代的分页器，因此您可以使用 `foreach` 循环来迭代结果。
 
 ```php
 $paginator = $workflowClient->listWorkflowExecutions('WorkflowType="GreetingWorkflow"');
@@ -140,12 +141,12 @@ foreach ($paginator as $info) {
 }
 ```
 
-### How to set custom Search Attributes {#custom-search-attributes}
+<a id="custom-search-attributes"></a>
+### 如何设置自定义 Search Attribute {#custom-search-attributes}
+在 Temporal 服务（使用 `Temporal operator search-attribute create` 或云 UI）中创建自定义 Search Attribute 后，您可以在启动 Workflow 时设置自定义 Search Attribute 的值。
 
-After you've created custom Search Attributes in your Temporal Service (using `temporal operator search-attribute create` or the Cloud UI), you can set the values of the custom Search Attributes when starting a Workflow.
-
-To set custom Search Attributes, use the `withTypedSearchAttributes` method on `WorkflowOptions` for a Workflow stub.
-Typed search attributes are a `TypedSearchAttributes` collection.
+要设置自定义 Search Attribute，请在 `WorkflowOptions` 上对 Workflow 存根使用 `withTypedSearchAttributes` 方法。
+类型为 Search Attribute 的是 `TypedSearchAttributes` 系列。
 
 ```php
 $keyDestinationTime = SearchAttributeKey::forDatetime('DestinationTime');
@@ -163,10 +164,10 @@ $workflow = $workflowClient->newWorkflowStub(
 );
 ```
 
-### How to upsert Search Attributes {#upsert-search-attributes}
-
-Within the Workflow code, you can dynamically add or update Search Attributes using [`upsertTypedSearchAttributes`](https://php.temporal.io/classes/Temporal-Workflow.html#method_upsertTypedSearchAttributes).
-This method is particularly useful for Workflows whose attributes need to change based on internal logic or external events.
+<a id="upsert-search-attributes"></a>
+### 如何更新插入 Search Attributes {#upsert-search-attributes}
+在 Workflow 代码中，您可以使用 [`upsertTypedSearchAttributes`](https://php.temporal.io/classes/temporal-Workflow.html#method_upsertTypedSearchAttributes) 动态添加或 Update Search Attribute。
+此方法对于属性需要根据内部逻辑或外部事件更改的 Workflow 特别有用。
 
 ```php
 #[Workflow\UpdateMethod]
@@ -184,9 +185,9 @@ public function postponeDestinationTime(\DateInterval $interval)
 }
 ```
 
-### How to remove a Search Attribute from a Workflow {#remove-search-attribute}
-
-To remove a Search Attribute that was previously set, set it to an empty Map.
+<a id="remove-search-attribute"></a>
+### 如何从 Workflow 中删除 Search Attribute {#remove-search-attribute}
+要删除之前设置的 Search Attribute，请将其设置为空地图。
 
 ```php
 #[Workflow\UpdateMethod]

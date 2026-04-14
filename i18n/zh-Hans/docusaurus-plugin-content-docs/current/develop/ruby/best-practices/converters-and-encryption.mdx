@@ -1,0 +1,175 @@
+---
+id: converters-and-encryption
+title: 转换器和加密 - Ruby SDK
+sidebar_label: 转换器和加密
+description: 使用 Ruby SDK 中的自定义有效负载编解码器和转换器来修改 Temporal 数据转换行为，包括加密和格式化的示例。
+keywords:
+  - sdk
+  - ruby
+  - data encryption
+  - codec
+  - converter
+tags:
+  - Ruby SDK
+  - Temporal SDKs
+  - Security
+  - Codec Server
+  - Data Converters
+  - Encryption
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+Temporal 的安全模型是围绕有效负载的客户端加密而设计的。
+客户端可以在将有效负载发送到服务器之前对其进行加密，并在从服务器接收到有效负载后对其进行解密。
+这提供了高度的保密性，因为 Temporal Server 本身完全不知道实际数据。
+它还为实施者提供了更多的权力和更多的自由来决定哪个客户端能够读取哪些数据——他们可以使用密钥、算法或其他安全措施来控制访问。
+
+Temporal 开发人员通过向客户端提供自定义有效负载编解码器来添加有效负载的客户端加密。
+根据业务需求，有效负载加密的完整实施可能涉及选择适当的加密算法、管理加密密钥、限制部分用户查看有效负载输出，或这些的组合。
+
+服务器本身永远不会在有效负载上添加加密。
+因此，除非实现客户端加密，否则有效负载数据将以非加密形式持久保存到数据存储中，并且任何可以向 Temporal Namespace（包括 Temporal UI 和 CLI）发出请求的客户端都将能够读取 Workflow 中包含的有效负载。
+在处理敏感数据时，您应该始终实施有效负载加密。
+
+## 自定义有效负载编解码器 {#custom-payload-codec}
+
+自定义 Data Converter 可以通过添加挂钩、将有效负载发送到外部存储或执行不同的编码步骤来更改默认的 Temporal 数据转换行为。
+如果您只需要更改对有效负载执行的编码（通过添加压缩或加密），您可以覆盖默认的 Data Converter 以使用新的“PayloadCodec”。
+
+Payload Codec需要扩展“Temporalio::Converters::PayloadCodec”并实现“encode”和“decode”方法。
+这些应该使用“encoding”元数据字段根据需要将给定的有效负载转换为新的有效负载。
+不要改变现有的有效负载。
+以下是在每个方向仅使用 base64 的加密编解码器的示例：
+
+```ruby
+class Base64Codec < Temporalio::Converters::PayloadCodec
+  def encode(payloads)
+    payloads.map do |p|
+      Temporalio::Api::Common::V1::Payload.new(
+        # Set our specific encoding. We may also want to add a key ID in here for use by
+        # the decode side
+        metadata: { 'encoding' => 'binary/my-payload-encoding' },
+        data: Base64.strict_encode64(p.to_proto)
+      )
+    end
+  end
+
+  def decode(payloads)
+    payloads.map do |p|
+      # Ignore if it doesn't have our expected encoding
+      next p unless p.metadata['encoding'] == 'binary/my-payload-encoding'
+
+      Temporalio::Api::Common::V1::Payload.decode(
+        Base64.strict_decode64(p.data)
+      )
+    end
+  end
+end
+```
+
+**设置 Data Converter 使用自定义有效负载编解码器**
+
+创建客户端时，默认的“DataConverter”可以是 Updated，其有效负载编解码器如下所示：
+
+```ruby
+my_client = Temporalio::Client.connect(
+  'localhost:7233',
+  'my-namespace',
+  data_converter: Temporalio::Converters::DataConverter.new(payload_codec: Base64Codec.new)
+)
+```
+
+- 数据**编码**由客户端在将输入传递到 Temporal 集群时使用 Temporal 提供的转换器和编解码器或您的自定义实现来执行。例如，纯文本输入通常会序列化为 JSON 对象，然后可以进行压缩或加密。
+- 数据**解码**可能会根据需要在 Workflow 或活动期间由您的应用程序逻辑执行，但解码的 Workflow 结果永远不会保留回 Temporal 集群。
+  相反，它们以编码形式存储在集群上，并且在使用 [Temporal Workflow show](/cli/Workflow#show) 命令或浏览 Web UI 以查看输出时，您需要提供附加参数。
+
+<!-- TODO：作为参考，请参阅[加密](https://github.com/Temporalio/samples-ruby/tree/main/encryption) 示例。 -->
+
+### 使用 Codec Server
+
+Codec Server 是一个 HTTP 服务器，它使用您的自定义编解码器逻辑来远程解码您的数据。
+Codec Server 独立于 Temporal 集群，并通过预定义端点解码您的加密有效负载。
+您可以在自己的环境中创建、操作和管理对 Codec Server 的访问。
+Temporal CLI 和 Web UI 反过来提供内置挂钩来调用 Codec Server 以按需解码加密的有效负载。
+有关如何设计和部署 Codec Server 的信息，请参阅 [Codec Server](/生产部署/数据加密) 文档。
+
+## 负载转换 {#custom-payload-converter}
+
+Temporal SDK 提供默认的 [Payload Converter](/payload-converter)，可对其进行自定义以将自定义数据类型转换为 [Payload](/dataconversion#payload) 并返回。
+
+### 转换序列 {#conversion-sequence}
+
+编码有效负载转换器的应用顺序取决于为 Data Converter 指定的顺序。
+您可以设置多个编码有效负载转换器来运行转换。
+当 Data Converter 接收到要转换的值时，它会依次经过每个有效负载转换器，直到处理该数据类型的转换器进行转换。
+
+有效负载转换器可以独立于有效负载编解码器进行定制。
+Temporal 的转换器架构如下所示：
+
+<CaptionedImage
+src =“/img/info/converter-architecture.png”
+    title="Temporal转换器架构"
+/>
+
+### 支持的数据类型 {#supported-data-types}
+
+Data Converter 用于将原始 Temporal 有效负载与实际 Ruby 类型相互转换。
+创建客户端时可以通过“data_converter”关键字参数设置自定义 Data Converter。 Data Converter 是有效负载转换器、有效负载编解码器和故障转换器的组合。
+有效负载转换器将 Ruby 值与序列化字节相互转换。有效负载编解码器将字节转换为字节（例如用于压缩或加密）。故障转换器将异常与序列化故障进行转换。
+
+Data Converter 位于“Temporalio::Converters”模块中。
+Data Converter默认使用默认的负载转换器，支持以下类型：
+
+- `无`
+-“字节”（即带有“Encoding::ASCII_8BIT”编码的“String”）
+- `Google::Protobuf::MessageExts` 实例
+- [JSON 模块](https://docs.ruby-lang.org/en/master/JSON.html) 用于其他所有内容
+
+这意味着普通 Ruby 对象在序列化时将使用 JSON.generate，在反序列化时使用 JSON.parse（默认设置为 create_additions: true）。
+因此，Ruby 对象在反序列化时通常会显示为哈希值。
+此外，反序列化时，使用符号键传入的哈希值最终会变成字符串键。
+虽然支持“JSON 添加”，但它不跨 SDK 语言兼容，因为这是 Ruby 特定的构造。
+
+默认的有效负载转换器是“编码有效负载转换器”的集合。
+序列化时，将按顺序尝试每个编码转换器，直到其中一个接受（默认为 JSON）。
+编码转换器设置一个“编码”元数据值，该值用于了解反序列化时使用哪个转换器。
+可以创建自定义编码转换器，甚至可以用不同的实现来替换整个有效负载转换器。
+
+**注意：** 对于 ActiveRecord 或用于不同目的的其他通用/ORM 模型，不建议尝试将它们重用为 Temporal 模型。
+最终模型用途会有所不同，出于清晰度和兼容性原因，Temporal Workflows/活动的模型应特定于其用途。
+此外，许多 Ruby ORM 做了很多偷懒的事情，因此提供了不明确的序列化语义。
+相反，请考虑使用特定于 Workflow/活动的模型，并根据需要与现有模型进行转换。
+请参阅下一节，了解如何使用 ActiveModel 对象执行此操作。
+
+#### ActiveModel {#active-model}
+
+默认情况下，ActiveModel 对象本身不支持“JSON”模块。
+可以创建一个 mixin 来添加对 ActiveModel 的支持，例如：
+
+```ruby
+module ActiveModelJSONSupport
+  extend ActiveSupport::Concern
+  include ActiveModel::Serializers::JSON
+
+  included do
+    def as_json(*)
+      super.merge(::JSON.create_id => self.class.name)
+    end
+
+    def to_json(*args)
+      as_json.to_json(*args)
+    end
+
+    def self.json_create(object)
+      object = object.dup
+      object.delete(::JSON.create_id)
+      new(**object.symbolize_keys)
+    end
+  end
+end
+```
+
+现在，如果任何 ActiveModel 类上存在“include ActiveModelJSONSupport”，则在序列化时将使用“to_json”，它将使用“as_json”，它调用超级“as_json”，但也包含完全限定的类名作为 JSON
+`create_id` 键。
+在反序列化时，Ruby JSON 使用此键来了解要在哪个类上调用“json_create”。

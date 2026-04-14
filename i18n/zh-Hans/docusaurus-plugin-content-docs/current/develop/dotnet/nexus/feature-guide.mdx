@@ -1,0 +1,561 @@
+---
+id: feature-guide
+title: Temporal Nexus - .NET SDK 功能指南
+sidebar_label: 功能指南
+description: 使用 .NET SDK 中的 Temporal Nexus，使用 Nexus 端点、Nexus Service 合约和 Nexus Operation 连接 Namespace 内部和 Namespace 之间的持久执行。
+toc_max_heading_level: 4
+keywords:
+  - temporal
+  - nexus
+  - dotnet
+  - sdk
+tags:
+  - Nexus
+  - .NET SDK
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+
+Temporal .NET SDK 对 Nexus 的支持处于 [公共预览](/evaluate/development-product-features/release-stages#public-preview) 中。
+
+:::
+
+使用 [Temporal Nexus](/evaluate/Nexus) 使用 Nexus 端点、Nexus Service 合约和 Nexus Operation 连接 Namespace 内部和 Namespace 之间的 Temporal 应用程序。
+
+此页面显示如何执行以下操作：
+
+- [运行启用 Nexus 的开发 Temporal 服务](#run-the-Temporal-Nexus-development-server)
+- [创建调用者和处理程序 Namespaces](#create-caller-handler-Namespaces)
+- [创建 Nexus 端点以将请求从调用者路由到处理程序](#create-Nexus-endpoint)
+- [定义 Nexus Service 合约](#define-Nexus-service-contract)
+- [开发 Nexus Service 和操作处理程序](#develop-Nexus-service-operation-handlers)
+- [开发使用 Nexus Service 的调用方 Workflow](#develop-caller-Workflow-Nexus-service)
+- [使用开发服务器跨 Namespace 进行 Nexus 调用](#Nexus-calls-across-Namespaces-dev-server)
+- [在 Temporal Cloud 中跨 Namespace 进行 Nexus 调用](#Nexus-calls-across-Namespaces-Temporal-cloud)
+
+:::note
+
+本文档使用源自 [.NET Nexus 示例](https://github.com/Temporalio/samples-dotnet/tree/main/src/NexusSimple) 的源代码。
+
+:::
+
+## 在启用 Nexus 的情况下运行 Temporal 开发服务器 {#run-the-Temporal-Nexus-development-server}
+
+先决条件：
+
+- [安装最新的Temporal CLI](https://learn.Temporal.io/getting_started/dotnet/dev_environment/#set-up-a-local-Temporal-service-for-development-with-Temporal-cli)（推荐v1.3.0或更高版本）
+- [安装最新的 Temporal .NET SDK](https://learn.Temporal.io/getting_started/dotnet/dev_environment/#install-the-Temporal-net-sdk) (v1.9.0 或更高版本)
+
+使用 Temporal Nexus 的第一步涉及启动启用 Nexus 的 Temporal Server。
+
+```
+temporal server start-dev
+```
+
+此命令自动使用 Web UI 启动 Temporal 开发服务器，并创建“默认”Namespace。它使用内存数据库，因此不要将其用于实际用例。
+
+现在应该可以通过 [http://localhost:8233](http://localhost:8233) 访问 Temporal Web UI，并且 Temporal Server 现在应该可以在 `localhost:7233` 上用于客户端连接。
+
+## 创建调用者和处理程序 Namespaces {#create-caller-handler-Namespaces}
+
+在设置 Nexus 端点之前，请为调用方和处理程序创建单独的 Namespace。
+
+```
+temporal operator namespace create --namespace nexus-simple-handler-namespace
+temporal operator namespace create --namespace nexus-simple-caller-namespace
+```
+
+`Nexus-simple-handler-Namespace` 将包含 Nexus Operation 处理程序，我们将在 `Nexus-simple-caller-Namespace` 中使用 Workflow 来调用该操作处理程序。
+我们使用不同的 Namespace 来演示跨 Namespace Nexus 调用。
+
+## 创建一个 Nexus 端点以将请求从调用者路由到处理程序 {#create-Nexus-endpoint}
+
+建立调用方和处理程序 Namespace 后，下一步是创建 Nexus 端点来路由请求。
+
+```
+temporal operator nexus endpoint create \
+  --name nexus-simple-endpoint \
+  --target-namespace nexus-simple-handler-namespace \
+  --target-task-queue nexus-simple-handler-sample
+```
+
+您还可以使用 Web UI 创建 Namespaces 和 Nexus 端点。
+
+## 计算独立活动 {#count-activities}
+
+为 Nexus Service 定义明确的合同对于顺利沟通至关重要。
+
+在此示例中，有一个服务包描述了服务和操作名称以及调用者 Workflow 使用 Nexus 端点的输入/输出类型。
+
+每个 [Temporal SDK 都包含并使用默认的 Data Converter](https://docs.Temporal.io/dataconversion)。
+默认 Data Converter 按以下顺序对有效负载进行编码：Null、字节数组、Protobuf JSON 和 JSON。
+在多语言环境中，即使用不止一种语言和 SDK 来开发 Temporal 解决方案，Protobuf 和 JSON 是常见选择。
+此示例使用序列化为 JSON 的 .NET 类。
+
+[NexusSimple/IHelloService.cs](https://github.com/Temporalio/samples-dotnet/blob/main/src/NexusSimple/IHelloService.cs)
+```csharp
+using NexusRpc;
+
+[NexusService]
+public interface IHelloService
+{
+    static readonly string EndpointName = "nexus-simple-endpoint";
+
+    [NexusOperation]
+    EchoOutput Echo(EchoInput input);
+
+    [NexusOperation]
+    HelloOutput SayHello(HelloInput input);
+
+    public record EchoInput(string Message);
+
+    public record EchoOutput(string Message);
+
+    public record HelloInput(string Name, HelloLanguage Language);
+
+    public record HelloOutput(string Message);
+
+    public enum HelloLanguage
+    {
+        En,
+        Fr,
+        De,
+        Es,
+        Tr,
+    }
+}
+```
+
+## 开发 Nexus Service 和操作处理程序 {#develop-Nexus-service-operation-handlers}
+
+Nexus Operation 处理程序通常在与它们抽象的底层 Temporal 原语相同的 Worker 中定义。
+操作处理程序可以决定给定的 Nexus Operation 是同步还是异步。
+他们可以使用 Temporal SDK 客户端调用底层 Temporal 原语，例如 Query、Signal 或 Update，或运行其他可靠的代码。
+处理程序应该是可靠的，因为 [断路器](/Nexus/operations#circum-writing) 在连续 5 个可重试错误后跳闸，阻止从调用者到该端点的所有操作。
+
+`Temporalio.Nexus` Namespace 具有帮助创建 Nexus Operation 的实用程序：
+
+- `NexusOperationExecutionContext.Current.TemporalClient` \- 获取 Worker 初始化所用的 Temporal CLIent，用于支持的同步处理程序
+  Temporal 原语，例如 Signal 和查询
+- `WorkflowRunOperationHandler.FromHandleFactory` \- 将 Workflow 作为异步 Nexus Operation 运行
+
+此示例从使用“OperationHandler.Sync”方法的同步操作处理程序示例开始，然后演示如何创建一个使用“WorkflowRunOperationHandler.FromHandleFactory”从 Nexus Operation 启动处理程序 Workflow 的异步操作处理程序。
+
+### 开发同步 Nexus Operation 处理程序
+
+`OperationHandler.Sync` 方法用于公开简单的 RPC 处理程序。
+使用“NexusOperationExecutionContext.Current.TemporalClient”获取 Signaling、Querying 的 Temporal CLIent 并列出 Workflow。
+实现还可以进行其他调用，但处理程序应该可靠，以避免触发[断路器](/Nexus/操作#电路中断)。
+
+[NexusSimple/Handler/HelloService.cs](https://github.com/Temporalio/samples-dotnet/blob/main/src/NexusSimple/Handler/HelloService.cs)
+```csharp
+using NexusRpc.Handlers;
+
+[NexusServiceHandler(typeof(IHelloService))]
+public class HelloService
+{
+    [NexusOperationHandler]
+    public IOperationHandler<IHelloService.EchoInput, IHelloService.EchoOutput> Echo() =>
+        // This Nexus service operation is a simple sync handler
+        OperationHandler.Sync<IHelloService.EchoInput, IHelloService.EchoOutput>(
+            (ctx, input) => new(input.Message));
+
+    // ...
+}
+```
+
+### 将 Temporal CLIent 用于 Signal、查询和 Update
+
+常见模式是在 Signal、Query 或 Update 和 Workflow 的同步处理程序中使用 Temporal CLIent。
+您还可以使用 Signal-With-Start 或 Update-With-Start 确保 Workflow 启动并向其发送 Signal 或 Update。
+所有调用必须在 [Nexus 请求超时](/cloud/limits#Nexus-operation-request-timeout) 内完成。 Update 的寿命应该很短，才能在这个期限内完成。
+
+### 开发异步 Nexus Operation 处理程序来启动 Workflow
+
+使用“WorkflowRunOperationHandler.FromHandleFactory”方法，这是将 Workflow 公开为操作的最简单方法。
+
+[NexusSimple/Handler/HelloService.cs](https://github.com/Temporalio/samples-dotnet/blob/main/src/NexusSimple/Handler/HelloService.cs)
+```csharp
+
+using NexusRpc.Handlers;
+using Temporalio.Nexus;
+
+[NexusServiceHandler(typeof(IHelloService))]
+public class HelloService
+{
+    // ...
+
+    [NexusOperationHandler]
+    public IOperationHandler<IHelloService.HelloInput, IHelloService.HelloOutput> SayHello() =>
+        // This Nexus service operation is backed by a workflow run
+        WorkflowRunOperationHandler.FromHandleFactory(
+            (WorkflowRunOperationContext context, IHelloService.HelloInput input) =>
+                context.StartWorkflowAsync(
+                    (HelloHandlerWorkflow wf) => wf.RunAsync(input),
+                    // Workflow IDs should typically be business meaningful IDs and are used to
+                    // dedupe workflow starts. For this example, we're using the request ID
+                    // allocated by Temporal when the caller workflow schedules the operation,
+                    // this ID is guaranteed to be stable across retries of this operation.
+                    new() { Id = context.HandlerContext.RequestId }));
+}
+```
+
+Workflow Id 通常应该是具有业务意义的 ID，用于对 Workflow 启动进行重复数据删除。一般来说，ID 应作为 Nexus Service 合约的一部分在操作输入中传递。
+
+:::tip RESOURCES
+
+[将多个 Nexus 调用者附加到处理程序 Workflow](/Nexus/operations#attaching-multiple-Nexus-callers)，冲突策略为 Use-Existing。
+
+:::
+
+#### 将 Nexus Operation 输入映射到多个 Workflow 参数
+
+一台 Nexus Operation 只能采用一个输入参数。如果您希望 Nexus Operation 启动带有多个参数的 Workflow，只需使用“RunAsync”传入不同的参数即可。
+
+[NexusMultiArg/Handler/HelloService.cs](https://github.com/Temporalio/samples-dotnet/blob/main/src/NexusMultiArg/Handler/HelloService.cs)
+```csharp
+[NexusServiceHandler(typeof(IHelloService))]
+public class HelloService
+{
+    [NexusOperationHandler]
+    public IOperationHandler<IHelloService.HelloInput, IHelloService.HelloOutput> SayHello() =>
+        // This Nexus service operation is backed by a workflow run. For this sample, we are
+        // altering the parameters to the workflow (in this case expanding to two parameters).
+        WorkflowRunOperationHandler.FromHandleFactory(
+            (WorkflowRunOperationContext context, IHelloService.HelloInput input) =>
+                context.StartWorkflowAsync(
+                    (HelloHandlerWorkflow wf) => wf.RunAsync(input.Language, input.Name),
+                    // Workflow IDs should typically be business meaningful IDs and are used to
+                    // dedupe workflow starts. For this example, we're using the request ID
+                    // allocated by Temporal when the caller workflow schedules the operation,
+                    // this ID is guaranteed to be stable across retries of this operation.
+                    new() { Id = context.HandlerContext.RequestId }));
+}
+```
+
+### 在 Worker 中注册 Nexus Service
+
+开发异步 Nexus Operation 处理程序来启动 Workflow 后，下一步是在 Worker 中注册 Nexus Service。
+
+[NexusSimple/Program.cs](https://github.com/Temporalio/samples-dotnet/blob/main/src/NexusSimple/Program.cs)
+```csharp
+async Task RunHandlerWorkerAsync()
+{
+    // Run worker until cancelled
+    logger.LogInformation("Running handler worker");
+    using var worker = new TemporalWorker(
+        await ConnectClientAsync("nexus-simple-handler-namespace"),
+        new TemporalWorkerOptions(taskQueue: "nexus-simple-handler-sample").
+            AddNexusService(new HelloService()).
+            AddWorkflow<HelloHandlerWorkflow>());
+    try
+    {
+        await worker.ExecuteAsync(tokenSource.Token);
+    }
+    catch (OperationCanceledException)
+    {
+        logger.LogInformation("Handler worker cancelled");
+    }
+}
+```
+
+## 开发使用 Nexus Service 的调用方 Workflow {#develop-caller-Workflow-Nexus-service}
+
+导入具有必要的服务和操作名称以及输入/输出类型的服务 API 包，以从调用者 Workflow 执行 Nexus Operation：
+
+[NexusSimple/Caller/EchoCallerWorkflow.Workflow.cs](https://github.com/Temporalio/samples-dotnet/blob/main/src/NexusSimple/Caller/EchoCallerWorkflow.Workflow.cs)
+```csharp
+using Temporalio.Workflows;
+
+[Workflow]
+public class EchoCallerWorkflow
+{
+    [WorkflowRun]
+    public async Task<string> RunAsync(string message)
+    {
+        var output = await Workflow.CreateNexusWorkflowClient<IHelloService>(IHelloService.EndpointName).
+            ExecuteNexusOperationAsync(svc => svc.Echo(new(message)));
+        return output.Message;
+    }
+}
+```
+
+[NexusSimple/Caller/HelloCallerWorkflow.Workflow.cs](https://github.com/Temporalio/samples-dotnet/blob/main/src/NexusSimple/Caller/HelloCallerWorkflow.Workflow.cs)
+```csharp
+using Temporalio.Workflows;
+
+[Workflow]
+public class HelloCallerWorkflow
+{
+    [WorkflowRun]
+    public async Task<string> RunAsync(string name, IHelloService.HelloLanguage language)
+    {
+        var output = await Workflow.CreateNexusWorkflowClient<IHelloService>(IHelloService.EndpointName).
+            ExecuteNexusOperationAsync(svc => svc.SayHello(new(name, language)));
+        return output.Message;
+    }
+}
+```
+
+### 设置 Nexus Operation 超时
+
+Nexus Operation 支持[三种类型的超时](/Nexus/operations#timeouts)，用于控制调用者愿意在操作生命周期的不同阶段等待的时间。
+调用“ExecuteNexusOperationAsync”时，在“NexusWorkflowOperationOptions”中设置这些超时。
+
+#### Schedule 关闭超时
+
+[Schedule-to-Close timeout](/Nexus/operations#Schedule-to-close-timeout) 限制操作从 Scheduled 到完成的总持续时间。
+Nexus 机械自动重试失败的请求，直到超过此超时。
+
+```csharp
+var output = await Workflow.CreateNexusWorkflowClient<IHelloService>(IHelloService.EndpointName).
+    ExecuteNexusOperationAsync(svc => svc.SayHello(new(name, language)), new NexusWorkflowOperationOptions
+    {
+        ScheduleToCloseTimeout = TimeSpan.FromMinutes(10),
+    });
+```
+
+#### Schedule 启动超时
+
+[Schedule-to-Start timeout](/Nexus/operations#Schedule-to-start-timeout) 限制调用者等待处理程序启动操作的时间。
+如果未设置，则不会强制执行 Schedule-to-Start 超时。
+
+```csharp
+var output = await Workflow.CreateNexusWorkflowClient<IHelloService>(IHelloService.EndpointName).
+    ExecuteNexusOperationAsync(svc => svc.SayHello(new(name, language)), new NexusWorkflowOperationOptions
+    {
+        ScheduleToStartTimeout = TimeSpan.FromMinutes(2),
+    });
+```
+
+#### 开始到关闭超时
+
+[启动到关闭超时](/Nexus/operations#start-to-close-timeout) 限制调用者在异步操作启动后等待异步操作完成的时间。
+此超时仅适用于异步操作。
+如果未设置，则不会强制执行“开始到关闭”超时。
+
+```csharp
+var output = await Workflow.CreateNexusWorkflowClient<IHelloService>(IHelloService.EndpointName).
+    ExecuteNexusOperationAsync(svc => svc.SayHello(new(name, language)), new NexusWorkflowOperationOptions
+    {
+        StartToCloseTimeout = TimeSpan.FromMinutes(5),
+    });
+```
+
+### 在 Worker 中注册调用者 Workflow
+
+开发完调用方 Workflow 后，下一步是将其注册到 Worker 上。
+
+[NexusSimple/Program.cs](https://github.com/Temporalio/samples-dotnet/blob/main/src/NexusSimple/Program.cs)
+```csharp
+async Task RunCallerWorkerAsync()
+{
+    // Run worker until cancelled
+    logger.LogInformation("Running caller worker");
+    using var worker = new TemporalWorker(
+        await ConnectClientAsync("nexus-simple-caller-namespace"),
+        new TemporalWorkerOptions(taskQueue: "nexus-simple-caller-sample").
+            AddWorkflow<EchoCallerWorkflow>().
+            AddWorkflow<HelloCallerWorkflow>());
+    try
+    {
+        await worker.ExecuteAsync(tokenSource.Token);
+    }
+    catch (OperationCanceledException)
+    {
+        logger.LogInformation("Caller worker cancelled");
+    }
+}
+```
+
+### 开发starter来启动调用者Workflow
+
+为了启动调用者 Workflow，需要使用启动程序。
+
+[NexusSimple/Program.cs](https://github.com/Temporalio/samples-dotnet/blob/main/src/NexusSimple/Program.cs)
+```csharp
+async Task ExecuteCallerWorkflowAsync()
+{
+    logger.LogInformation("Executing caller echo workflow");
+    var client = await ConnectClientAsync("nexus-simple-caller-namespace");
+    var result1 = await client.ExecuteWorkflowAsync(
+        (EchoCallerWorkflow wf) => wf.RunAsync("Nexus Echo 👋"),
+        new(id: "nexus-simple-echo-id", taskQueue: "nexus-simple-caller-sample"));
+    logger.LogInformation("Workflow result: {Result}", result1);
+
+    logger.LogInformation("Executing caller hello workflow");
+    var result2 = await client.ExecuteWorkflowAsync(
+        (HelloCallerWorkflow wf) => wf.RunAsync("Temporal", IHelloService.HelloLanguage.Es),
+        new(id: "nexus-simple-hello-id", taskQueue: "nexus-simple-caller-sample"));
+    logger.LogInformation("Workflow result: {Result}", result2);
+}
+```
+
+## 使用开发服务器 {#Nexus-calls-across-Namespaces-dev-server} 跨 Namespace 进行 Nexus 调用
+
+按照以下步骤运行 Nexus 处理程序 Worker、Nexus 调用程序 Worker 和启动应用程序。
+
+### 运行连接到本地开发服务器的 Worker
+
+运行 Nexus 处理程序 Worker：
+
+```bash
+dotnet run handler-worker
+```
+
+#### --XPROT025X
+
+```bash
+dotnet run caller-worker
+```
+
+### 启动呼叫者 Workflow
+
+当 Worker 运行时，本地开发过程的最后一步是启动调用者 Workflow。
+
+运行启动器：
+
+```bash
+dotnet run caller-workflow
+```
+
+这将显示已启动的两个 Workflow 及其结果。
+
+### 取消 Nexus Operation {#canceling-a-Nexus-操作}
+
+要从 Workflow 中取消 Nexus Operation，请取消传递给操作调用的取消令牌。在 Nexus 中只能取消异步操作，因为取消是使用操作令牌发送的。
+Workflow 或支持操作的其他资源可以选择忽略取消请求。
+如果忽略，操作可能会进入终止状态。
+
+当 Nexus Operation 启动时，调用者可以指定不同的取消类型来控制调用者对取消的反应：
+
+- `Abandon` - Do not request cancellation of the operation.
+- `TryCancel` - Initiate a cancellation request and immediately report cancellation to the caller. Note that this type doesn't guarantee that cancellation is delivered to the operation handler if the caller exits before the delivery is done.
+- `WaitCancellationRequested` - Request cancellation of the operation and wait for confirmation that the request was received. Doesn't wait for actual cancellation.
+- `WaitCancellationCompleted` - Wait for operation completion. Operation may or may not complete as cancelled.
+
+The default is `WaitCancellationCompleted`. Users can set a different option for `CancellationType` in `NexusWorkflowOperationOptions` when starting an operation.
+
+Once the caller Workflow completes, the caller's Nexus Machinery will not make any further attempts to cancel operations that are still running.
+It's okay to leave operations running in some use cases.
+To ensure cancellations are delivered, wait for all pending operations to finish before exiting the Workflow.
+
+See the [Nexus cancellation sample](https://github.com/Temporalio/samples-dotnet/tree/main/src/NexusCancellation) for reference.
+
+## Make Nexus calls across Namespaces in Temporal Cloud {#Nexus-calls-across-Namespaces-Temporal-cloud}
+
+This section assumes you are already familiar with how to connect a Worker to Temporal Cloud.
+The `tcld` CLI is used to create Namespaces and the Nexus Endpoint, and mTLS client certificates will be used to securely connect the caller and handler Workers to their respective Temporal Cloud Namespaces.
+
+### Install the latest `tcld` CLI and generate certificates
+
+To install the latest version of the `tcld` CLI, run the following command (on MacOS):
+
+```
+brew install temporalio/brew/tcld
+```
+
+If you don't already have certificates, you can generate them for mTLS Worker authentication using the command below:
+
+```
+tcld gen ca --org $YOUR_ORG_NAME --validity-period 1y --ca-cert ca.pem --ca-key ca.key
+```
+
+These certificates will be valid for one year.
+
+### Create caller and handler Namespaces
+
+Before deploying to Temporal Cloud, ensure that the appropriate Namespaces are created for both the caller and handler.
+If you already have these Namespaces, you don't need to do this.
+
+```
+tcld login
+
+tcld namespace create \
+  --namespace <your-caller-namespace> \
+  --region us-west-2 \
+  --ca-certificate-file 'path/to/your/ca.pem' \
+  --retention-days 1
+
+tcld namespace create \
+  --namespace <your-target-namespace> \
+  --region us-west-2 \
+  --ca-certificate-file 'path/to/your/ca.pem' \
+  --retention-days 1
+```
+
+Alternatively, you can create Namespaces through the UI: [https://cloud.Temporal.io/Namespaces](https://cloud.Temporal.io/Namespaces).
+
+### Create a Nexus Endpoint to route requests from caller to handler
+
+To create a Nexus Endpoint you must have a Developer account role or higher, and have NamespaceAdmin permission on the `--target-Namespace`.
+
+```
+tcld nexus endpoint create \
+  --name nexus-simple-endpoint \
+  --target-task-queue nexus-simple-handler-sample \
+  --target-namespace <your-handler-namespace.account> \
+  --allow-namespace <your-caller-namespace.account> \
+  --description-file endpoint_description.md
+```
+
+The `--allow-Namespace` is used to build an Endpoint allowlist of caller Namespaces that can use the Nexus Endpoint, as described in Runtime Access Control.
+
+Alternatively, you can create a Nexus Endpoint through the UI: [https://cloud.Temporal.io/Nexus](https://cloud.Temporal.io/Nexus).
+
+## Observability
+
+### Web UI
+
+A synchronous Nexus Operation will surface in the caller Workflow as follows, with just `NexusOperationScheduled` and `NexusOperationCompleted` events in the caller's Workflow history:
+
+<CaptionedImage
+    src="/img/cloud/Nexus/go-sdk-observability-sync.png"
+    title="Observability Sync"
+/>
+
+An asynchronous Nexus Operation will surface in the caller Workflow as follows, with `NexusOperationScheduled`, `NexusOperationStarted`, and `NexusOperationCompleted`, in the caller's Workflow history:
+
+<CaptionedImage
+    src="/img/cloud/Nexus/go-sdk-observability-async.png"
+    title="Observability Async"
+/>
+
+### Temporal CLI
+
+Use the `Workflow describe` command to show pending Nexus Operations in the caller Workflow and any attached callbacks on the handler Workflow:
+
+```
+temporal workflow describe -w <ID>
+```
+
+Nexus events are included in the caller's Workflow history:
+
+```
+temporal workflow show -w <ID>
+```
+
+For **asynchronous Nexus Operations** the following are reported in the caller's history:
+
+- `NexusOperationScheduled`
+- `NexusOperationStarted`
+- `NexusOperationCompleted`
+
+For **synchronous Nexus Operations** the following are reported in the caller's history:
+
+- `NexusOperationScheduled`
+- `NexusOperationCompleted`
+
+:::note
+
+`NexusOperationStarted` isn't reported in the caller's history for synchronous operations.
+
+:::
+
+## Learn more
+
+- Read the high-level description of the [Temporal Nexus feature](/evaluate/Nexus) and watch the [Nexus keynote and demo](https://youtu.be/qqc2vsv1mrU?feature=shared&t=2082).
+- Learn how Nexus works in the [Nexus deep dive talk](https://www.youtube.com/watch?v=izR9dQ_eIe4) and [Encyclopedia](/Nexus).
+- Deploy Nexus Endpoints in production with [Temporal Cloud](/cloud/Nexus).

@@ -1,7 +1,7 @@
 ---
-title: Worker deployment and performance
-sidebar_label: Worker deployment and performance
-description: Best practices for deploying and optimizing Temporal Workers for performance and reliability.
+title: Worker 部署与性能
+sidebar_label: Worker 部署与性能
+description: 部署和优化 Temporal Worker 以实现高性能和可靠性的最佳实践。
 toc_max_heading_level: 4
 keywords:
   - temporal worker
@@ -15,47 +15,29 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-This document outlines best practices for deploying and optimizing Workers to ensure high performance, reliability, and
-scalability. It covers deployment strategies, scaling techniques, tuning recommendations, and monitoring approaches to
-help you get the most out of your Temporal Workers.
+本文档概述了部署和优化 Worker 以确保高性能、可靠性和可扩展性的最佳实践。涵盖部署策略、扩展技术、调优建议和监控方法，帮助您充分利用 Temporal Worker。
 
-We also provide a reference application, the Order Management System (OMS), that demonstrates the deployment best
-practices in action. You can find the OMS codebase on
-[GitHub](https://github.com/temporalio/reference-app-orders-go/tree/main/docs).
+我们还提供了一个参考应用——订单管理系统（OMS），它展示了实际中的部署最佳实践。您可以在 [GitHub](https://github.com/temporalio/reference-app-orders-go/tree/main/docs) 上找到 OMS 代码库。
 
-## Quick checklist
+## 快速检查清单
 
-Designing a comprehensive Worker deployment strategy to optimize production performance involves many considerations. We
-provide a quick checklist to help you get started. Before deploying Workers to production, ensure you address the
-following. Follow the links to the relevant sections for more details.
+设计全面的 Worker 部署策略以优化生产性能涉及许多考虑因素。我们提供了一个快速检查清单来帮助您入门。在将 Worker 部署到生产环境之前，请确保解决以下问题。点击链接查看相关部分的更多详情。
 
-- **[Configure each Worker appropriately](#actively-tune-worker-options-instead-of-relying-on-defaults)**: Actively tune
-  Worker options based on your code, language runtime limits, and system resource constraints. Don't rely on defaults,
-  which are designed for ease in development and testing, but not optimal for production environments.
-- **[Deploy enough Workers](#interpret-metrics-as-a-whole)**: Monitor performance metrics and scale Workers to meet your
-  workload requirements.
-- **[Separate Task Queues logically](#separate-task-queues-logically)**: Size and split work across Task types
-  (Activities and Workflows) and Task Queues based on workload characteristics.
-- **[Version Workers for safe deployments](#use-worker-versioning-to-safely-deploy-new-workflow-code)**: Ensure you can
-  deploy new Workflow code without breaking running Executions.
-- **Run benchmarks**: Test your configuration under realistic load to confirm limits and settings are appropriate for
-  your environment.
+- **[适当配置每个 Worker](#actively-tune-worker-options-instead-of-relying-on-defaults)**：根据您的代码、语言运行时限制和系统资源约束主动调整 Worker 选项。不要依赖默认值，默认值是为开发和测试的便利性而设计的，对生产环境并非最优。
+- **[部署足够数量的 Worker](#interpret-metrics-as-a-whole)**：监控性能指标并扩展 Worker 以满足工作负载需求。
+- **[逻辑上分离 Task Queue](#separate-task-queues-logically)**：根据工作负载特征按 Task 类型（Activity 和 Workflow）和 Task Queue 进行工作的规模划分和拆分。
+- **[使用 Worker Versioning 安全部署](#use-worker-versioning-to-safely-deploy-new-workflow-code)**：确保您可以在不破坏正在运行的 Execution 的情况下部署新的 Workflow 代码。
+- **运行基准测试**：在真实负载下测试您的配置，以确认限制和设置适合您的环境。
 
-## Deployment and lifecycle management
+## 部署和生命周期管理
 
-Well-designed Worker deployment ensures resilience, observability, and maintainability. A Worker should be treated as a
-long-running service that can be deployed, upgraded, and scaled in a controlled way.
+良好设计的 Worker 部署确保弹性、可观测性和可维护性。Worker 应被视为可以以受控方式部署、升级和扩展的长运行服务。
 
-### Package and configure Workers for flexibility
+### 将 Worker 打包并配置以实现灵活性
 
-Workers should be artifacts produced by a CI/CD pipeline. Inject all required parameters for connecting to Temporal
-Cloud or a self-hosted Temporal Service at runtime via environment variables, configuration files, or command-line
-parameters. This allows for more granularity, easier testability, easier upgrades, scalability, and isolation of
-Workers.
+Worker 应该是由 CI/CD 流水线生成的制品。在运行时通过环境变量、配置文件或命令行参数注入连接到 Temporal Cloud 或自托管 Temporal Service 所需的所有参数。这允许更细粒度、更易于测试、更易于升级、更好的可扩展性和 Worker 隔离。
 
-In the order management reference app, Workers are packaged as Docker images with configuration provided via environment
-variables and mounted configuration files. The following Dockerfile uses a multi-stage build to create a minimal,
-production-ready Worker image:
+在订单管理参考应用中，Worker 被打包为 Docker 镜像，配置通过环境变量和挂载的配置文件提供。以下 Dockerfile 使用多阶段构建来创建一个最小化的生产就绪 Worker 镜像：
 
 {/* SNIPSTART oms-dockerfile-worker */}
 [Dockerfile](https://github.com/temporalio/reference-app-orders-go/blob/main/Dockerfile)
@@ -80,23 +62,19 @@ FROM busybox AS oms-worker
 ```
 {/* SNIPEND oms-dockerfile-worker */}
 
-This Dockerfile uses a multi-stage build pattern with two stages:
+此 Dockerfile 使用包含两个阶段的多阶段构建模式：
 
-1. `oms-builder` stage: compiles the Worker binary.
+1. `oms-builder` 阶段：编译 Worker 二进制文件。
 
-   1. Copies dependency files and downloads dependencies using BuildKit cache mounts to speed up subsequent builds.
-   2. Copies the application code and builds a statically linked binary that doesn't require external libraries at
-      runtime.
+   1. 复制依赖文件并使用 BuildKit 缓存挂载下载依赖，以加速后续构建。
+   2. 复制应用代码并构建不需要运行时外部库的静态链接二进制文件。
 
-2. `oms-worker` stage: creates a minimal final image.
+2. `oms-worker` 阶段：创建最小化的最终镜像。
 
-   1. Copies only the compiled binary from the `oms-builder` stage.
-   2. Sets the entrypoint to run the Worker process.
+   1. 仅从 `oms-builder` 阶段复制已编译的二进制文件。
+   2. 设置入口点以运行 Worker 进程。
 
-The entrypoint `oms worker` starts the Worker process, which reads configuration from environment variables at runtime.
-For example, the
-[Billing Worker deployment in Kubernetes](https://github.com/temporalio/reference-app-orders-go/blob/main/deployments/k8s/billing-worker-deployment.yaml)
-uses environment variables to configure the Worker:
+入口点 `oms worker` 启动 Worker 进程，该进程在运行时从环境变量读取配置。例如，[Kubernetes 中的 Billing Worker 部署](https://github.com/temporalio/reference-app-orders-go/blob/main/deployments/k8s/billing-worker-deployment.yaml)使用环境变量来配置 Worker：
 
 {/* SNIPSTART oms-billing-worker-deployment {"selectedLines": ["20-35"]} */}
 [deployments/k8s/billing-worker-deployment.yaml](https://github.com/temporalio/reference-app-orders-go/blob/main/deployments/k8s/billing-worker-deployment.yaml)
@@ -121,28 +99,20 @@ uses environment variables to configure the Worker:
 ```
 {/* SNIPEND */}
 
-### Separate Task Queues logically
+### 逻辑上分离 Task Queue
 
-Use separate Task Queues for distinct workloads. This isolation allows you to control rate limiting, prioritize certain
-workloads, and prevent one workload from starving another. For each Task Queue, ensure you configure at least two
-Workers to poll the Task Queue.
+为不同的工作负载使用单独的 Task Queue。这种隔离允许您控制速率限制、优先处理某些工作负载，并防止一个工作负载占用另一个工作负载的资源。对于每个 Task Queue，确保至少配置两个 Worker 来轮询该 Task Queue。
 
-In the order management reference app, each microservice has its own Task Queue. For example, the Billing Worker polls
-the `billing` Task Queue, while the Order Worker polls the `order` Task Queue. This separation allows each service to
-scale independently based on its workload.
+在订单管理参考应用中，每个微服务都有自己的 Task Queue。例如，Billing Worker 轮询 `billing` Task Queue，而 Order Worker 轮询 `order` Task Queue。这种分离允许每个服务根据其工作负载独立扩展。
 
 <CaptionedImage
   src="/diagrams/worker-best-practice-oms-architecture.png"
-  title="Diagram showing separate Task Queues for different Workers"
+  title="显示不同 Worker 各自使用独立 Task Queue 的示意图"
 />
 
-The following code snippet shows how the Billing Worker is set up to poll its Task Queue. The default value for
-`TaskQueue` is a constant defined in the `api.go` configuration file and is set to `billing`.
+以下代码片段展示了 Billing Worker 如何设置以轮询其 Task Queue。`TaskQueue` 的默认值是在 `api.go` 配置文件中定义的常量，设置为 `billing`。
 
-Since Task Queues are created dynamically when first used, a mismatch between the Client and Worker Task Queue names
-does not result in an error. Instead, it creates two different Task Queues, and the Worker never receives Tasks from the
-Temporal Service because it's polling the wrong queue. Define the Task Queue name as a constant that both the Client and
-Worker reference to avoid this issue.
+由于 Task Queue 在首次使用时动态创建，Client 和 Worker Task Queue 名称之间的不匹配不会导致错误。相反，它会创建两个不同的 Task Queue，Worker 永远不会从 Temporal Service 接收 Task，因为它在轮询错误的队列。将 Task Queue 名称定义为 Client 和 Worker 均引用的常量，以避免此问题。
 
 {/* SNIPSTART oms-billing-worker-go {"selectedLines": ["12-23"]} */}
 [app/billing/worker.go](https://github.com/temporalio/reference-app-orders-go/blob/main/app/billing/worker.go)
@@ -163,137 +133,73 @@ func RunWorker(ctx context.Context, config config.AppConfig, client client.Clien
 ```
 {/* SNIPEND */}
 
-### Use Worker Versioning to safely deploy new Workflow code
+### 使用 Worker Versioning 安全部署新 Workflow 代码
 
-Use Worker Versioning to deploy new Workflow code without breaking running Executions. Worker Versioning lets you map
-each Workflow Execution to a specific Worker Deployment Version identified by a build ID, which guarantees that pinned
-Workflows always run on the same Worker version where they started.
+使用 Worker Versioning 部署新 Workflow 代码，而不破坏正在运行的 Execution。Worker Versioning 允许您将每个 Workflow Execution 映射到由 Build ID 标识的特定 Worker Deployment Version，这保证了已固定的 Workflow 始终在启动它们的同一 Worker 版本上运行。
 
-For most teams, Worker Versioning should be the default approach for evolving Workflow code in production. It gives you
-safer rollouts, clearer rollback behavior, and a cleaner operational model than maintaining multiple code paths inside a
-Workflow definition.
+对于大多数团队，Worker Versioning 应该是在生产中演进 Workflow 代码的默认方法。它提供更安全的发布、更清晰的回滚行为，以及比在 Workflow 定义中维护多个代码路径更简洁的操作模型。
 
-To learn more about versioning Workflows, see the
-[Workflow Versioning](/production-deployment/worker-deployments/worker-versioning.mdx) guide or take our
-[Worker Versioning course](https://learn.temporal.io/courses/worker_versioning/).
+要了解更多关于 Workflow 版本控制的信息，请参阅 [Workflow Versioning](/production-deployment/worker-deployments/worker-versioning.mdx) 指南或参加我们的 [Worker Versioning 课程](https://learn.temporal.io/courses/worker_versioning/)。
 
 :::tip
 
-If your deployment environment cannot yet support Worker Versioning, you can use [Patching](/patching) to introduce
-changes to your Workflow code without breaking running Executions. Treat patching as a fallback for environments that
-cannot adopt versioned worker deployments yet, not as the default recommendation.
+如果您的部署环境尚不支持 Worker Versioning，您可以使用 [Patching](/patching) 来引入对 Workflow 代码的更改，而不会破坏正在运行的 Execution。将 Patching 视为尚无法采用版本化 Worker 部署的环境的备选方案，而非默认推荐。
 
 :::
 
-### Manage Event History growth
+### 管理 Event History 增长
 
-If a Worker goes offline and another Worker picks up the same Workflow Execution, the new Worker must replay the
-existing Event History to resume the Workflow Execution. If the Event History is too large or has too many Events,
-replay affects the performance of the new Worker and may even cause timeout errors well before the hard limit of 51,200
-Events is reached.
+如果一个 Worker 下线，另一个 Worker 接管同一个 Workflow Execution，新 Worker 必须重放现有的 Event History 才能恢复 Workflow Execution。如果 Event History 太大或包含太多 Event，重放会影响新 Worker 的性能，甚至可能在达到 51,200 个 Event 的硬性限制之前就导致超时错误。
 
-We recommend not exceeding a few thousand Events in a single Workflow Execution. The best way to handle Event History
-growth is to use the [Continue-As-New](/workflow-execution/continue-as-new) mechanism to continue under a new Workflow
-Execution with a new Event History, repeating this process as you approach the limits again.
+我们建议在单个 Workflow Execution 中不超过几千个 Event。处理 Event History 增长的最佳方式是使用 [Continue-As-New](/workflow-execution/continue-as-new) 机制，以新的 Event History 在新的 Workflow Execution 下继续，并在再次接近限制时重复此过程。
 
-All Temporal SDKs provide functions to suggest when to use [Continue-As-New](/workflow-execution/continue-as-new). For
-example, the Python SDK has the
-[`is_continue_as_new_suggested()`](https://python.temporal.io/temporalio.workflow.Info.html#is_continue_as_new_suggested)
-function that returns a `bool` indicating whether to use Continue-As-New.
+所有 Temporal SDK 都提供函数来建议何时使用 [Continue-As-New](/workflow-execution/continue-as-new)。例如，Python SDK 有 [`is_continue_as_new_suggested()`](https://python.temporal.io/temporalio.workflow.Info.html#is_continue_as_new_suggested) 函数，返回一个 `bool` 值，指示是否使用 Continue-As-New。
 
-In addition to the number of Events, monitor the size of the Event History. Input parameters and output values of both
-Workflows and Activities are stored in the Event History. Storing large amounts of data can lead to performance
-problems, so the Temporal Cluster limits both the size of individual payloads and the total Event History size. A
-Workflow Execution may be terminated if any single payload exceeds 2 MB or if the entire Event History exceeds 50 MB.
+除了 Event 数量外，还要监控 Event History 的大小。Workflow 和 Activity 的输入参数和输出值都存储在 Event History 中。存储大量数据可能导致性能问题，因此 Temporal Cluster 对单个 Payload 的大小和总 Event History 大小都有限制。如果任何单个 Payload 超过 2 MB 或整个 Event History 超过 50 MB，Workflow Execution 可能会被终止。
 
-To avoid hitting these limits, avoid passing large amounts of data into and out of Workflows and Activities. A common
-way to reduce payload and Event History size is the
-[Claim Check](https://dataengineering.wiki/Concepts/Software+Engineering/Claim+Check+Pattern) pattern, widely used with
-messaging systems such as Apache Kafka. Instead of passing large data into your function, store that data external to
-Temporal in a database or file system. Pass an identifier for the data, such as a primary key or path, into the function
-and use an Activity to retrieve it as needed. If your Activity produces large output, use a similar approach: write the
-data to an external system and return an identifier that can be used to retrieve it later.
+为避免达到这些限制，请避免向 Workflow 和 Activity 传入或传出大量数据。减少 Payload 和 Event History 大小的常见方式是 [Claim Check](https://dataengineering.wiki/Concepts/Software+Engineering/Claim+Check+Pattern) 模式，该模式在 Apache Kafka 等消息系统中被广泛使用。不要将大量数据传入函数，而是将数据存储在 Temporal 外部的数据库或文件系统中。将数据的标识符（如主键或路径）传入函数，并使用 Activity 按需检索它。如果您的 Activity 产生大量输出，使用类似的方法：将数据写入外部系统并返回可用于后续检索的标识符。
 
-## Scaling, monitoring, and tuning
+## 扩展、监控和调优
 
-Scaling and tuning are critical to Worker performance and cost efficiency. The goal is to balance concurrency,
-throughput, and resource utilization while maintaining low Task latency.
+扩展和调优对于 Worker 性能和成本效率至关重要。目标是在保持低 Task 延迟的同时平衡并发性、吞吐量和资源利用率。
 
-### Actively tune Worker options instead of relying on defaults
+### 主动调整 Worker 选项，而非依赖默认值
 
-Default Worker settings are designed to work across a wide range of use cases primarily for ease in development and
-testing. In production environments, your Workflow complexity, Activity duration, payload sizes, and infrastructure
-constraints all influence optimal Worker configuration. Actively tuning your Workers ensures they perform well under
-your specific workload conditions.
+默认 Worker 设置旨在覆盖广泛的用例，主要是为了开发和测试的便利性。在生产环境中，您的 Workflow 复杂性、Activity 持续时间、Payload 大小和基础设施约束都会影响最优 Worker 配置。主动调整 Worker 确保它们在您的特定工作负载条件下表现良好。
 
-To get started, focus on these key Worker options:
+首先，关注以下关键 Worker 选项：
 
-- **Task slots**: Limits how many Tasks execute concurrently. Set based on your Worker's CPU, memory, and the resource
-  demands of your code. You can choose different types of Slot Suppliers or implement a custom Slot Supplier to control
-  how Task slots are assigned to different Task types. Refer to
-  [Slot Suppliers](/develop/worker-performance#slot-suppliers) for more details.
-- **Sticky cache size**: Controls the size of the sticky cache for Workflow Executions. Larger caches reduce replay
-  overhead but consume more memory. Refer to [Workflow Cache Tuning](/develop/worker-performance#workflow-cache-tuning)
-  for more details.
-- **Poller counts**: Controls the number of pollers for Tasks. We recommend you use the Poller Autoscaling feature to
-  automatically adjust the number of pollers based on your workload. Refer to
-  [Configuring Poller Options](/develop/worker-performance#configuring-poller-options) for more details.
+- **Task 槽位（Task slots）**：限制同时执行的 Task 数量。根据 Worker 的 CPU、内存和代码的资源需求进行设置。您可以选择不同类型的 Slot Supplier 或实现自定义 Slot Supplier 来控制如何将 Task 槽位分配给不同的 Task 类型。详情请参阅 [Slot Suppliers](/develop/worker-performance#slot-suppliers)。
+- **粘性缓存大小（Sticky cache size）**：控制 Workflow Execution 的粘性缓存大小。较大的缓存可减少重放开销，但会消耗更多内存。详情请参阅 [Workflow 缓存调优](/develop/worker-performance#workflow-cache-tuning)。
+- **轮询器数量（Poller counts）**：控制 Task 的轮询器数量。我们建议您使用 Poller Autoscaling 功能，根据工作负载自动调整轮询器数量。详情请参阅[配置轮询器选项](/develop/worker-performance#configuring-poller-options)。
 
-Use the metrics listed in [Interpret metrics as a whole](#interpret-metrics-as-a-whole) to guide your tuning decisions.
+使用[整体解读指标](#interpret-metrics-as-a-whole)中列出的指标来指导您的调优决策。
 
-### Interpret metrics as a whole
+### 整体解读指标
 
-No single metric tells the full story. The following are some of the most useful Worker-related metrics to monitor. We
-recommend having all metrics listed below on your Worker monitoring dashboard. When you observe anomalies, correlate
-across multiple metrics to identify root causes.
+没有任何单一指标能说明全貌。以下是一些最有用的 Worker 相关指标。我们建议将下列所有指标都显示在您的 Worker 监控仪表板上。当您观察到异常时，需要关联多个指标以识别根本原因。
 
-- Worker CPU and memory utilization
-- `workflow_task_schedule_to_start_latency` and `activity_task_schedule_to_start_latency`
+- Worker CPU 和内存利用率
+- `workflow_task_schedule_to_start_latency` 和 `activity_task_schedule_to_start_latency`
 - `worker_task_slots_available`
-- `temporal_long_request_failure`, `temporal_request_failure`, `temporal_long_request_latency`, and
-  `temporal_request_latency`
+- `temporal_long_request_failure`、`temporal_request_failure`、`temporal_long_request_latency` 和 `temporal_request_latency`
 
-For example, Schedule-to-Start latency measures how long a Task waits in the queue before a Worker starts it. High
-latency means your Workers or pollers can’t keep up with incoming Tasks, but the root cause depends on your resource
-metrics:
+例如，Schedule-to-Start 延迟衡量 Task 在队列中等待 Worker 开始处理的时间。高延迟意味着您的 Worker 或轮询器无法跟上传入的 Task，但根本原因取决于您的资源指标：
 
-- High Schedule-to-Start latency and high CPU/memory: Workers are saturated. Scale up your Workers or add more Workers.
-  It's also possible your Workers are blocked on Activities. Refer to
-  [Troubleshooting - Depletion of Activity Task Slots](../troubleshooting/performance-bottlenecks.mdx#depletion-of-temporal_worker_task_slots_available-for-activityworker)
-  for guidance.
-- High Schedule-to-Start latency and low CPU/memory: Workers are underutilized. Increase the number of pollers, executor
-  slots, or both. If this is accompanied by high `temporal_long_request_latency` or `temporal_long_request_failure`,
-  your Workers are struggling to reach the Temporal Service. Refer to
-  [Troubleshooting - Long Request Latency](../troubleshooting/performance-bottlenecks.mdx#high-temporal_long_request_failure)
-  for guidance.
-- Low Schedule-to-Start latency and low CPU/memory: Depending on your workload, this could be normal. If you are
-  consistently seeing low memory usage and low CPU usage, you may be over-provisioning your Workers and can consider
-  scaling down.
+- 高 Schedule-to-Start 延迟且 CPU/内存使用率高：Worker 已饱和。扩展您的 Worker 或添加更多 Worker。也可能是您的 Worker 被 Activity 阻塞。请参阅[故障排查 - Activity Task 槽位耗尽](../troubleshooting/performance-bottlenecks.mdx#depletion-of-temporal_worker_task_slots_available-for-activityworker)以获取指导。
+- 高 Schedule-to-Start 延迟且 CPU/内存使用率低：Worker 未充分利用。增加轮询器数量、执行器槽位数量，或同时增加两者。如果同时伴随着高 `temporal_long_request_latency` 或 `temporal_long_request_failure`，说明您的 Worker 难以连接到 Temporal Service。请参阅[故障排查 - 长请求延迟](../troubleshooting/performance-bottlenecks.mdx#high-temporal_long_request_failure)以获取指导。
+- 低 Schedule-to-Start 延迟且 CPU/内存使用率低：根据您的工作负载，这可能是正常的。如果您持续看到低内存使用率和低 CPU 使用率，您可能过度配置了 Worker，可以考虑缩减规模。
 
-Refer to [Intro to Worker Tuning](https://temporal.io/blog/an-introduction-to-worker-tuning) for more details and
-examples on how to interpret Worker metrics.
+详情和关于如何解读 Worker 指标的更多示例，请参阅 [Worker 调优入门](https://temporal.io/blog/an-introduction-to-worker-tuning)。
 
-### Optimize Worker cache
+### 优化 Worker 缓存
 
-Workers keep a cache of Workflow Executions to improve performance by reducing replay overhead. However, larger caches
-consume more memory. The `temporal_sticky_cache_size` tracks the size of the cache. If you observe high memory usage for
-your Workers and high `temporal_sticky_cache_size`, you can be reasonably sure the cache is contributing to memory
-pressure.
+Worker 保留 Workflow Execution 的缓存，通过减少重放开销来提高性能。但是，较大的缓存会消耗更多内存。`temporal_sticky_cache_size` 跟踪缓存的大小。如果您观察到 Worker 的高内存使用率和高 `temporal_sticky_cache_size`，可以合理地认为缓存是造成内存压力的原因。
 
-Having a high `temporal_sticky_cache_size` by itself isn't necessarily an issue, but if your Workers are memory-bound,
-consider reducing the cache size to allow more concurrent executions. We recommend you experiment with different cache
-sizes in a staging environment to find the optimal setting for your Workflows. Refer to
-[Troubleshooting - Caching](../troubleshooting/performance-bottlenecks.mdx#caching) for more details on how to interpret
-the different cache-related metrics.
+单独的高 `temporal_sticky_cache_size` 本身不一定是问题，但如果您的 Worker 受内存限制，考虑减小缓存大小以允许更多并发执行。我们建议您在预发环境中尝试不同的缓存大小，以找到适合您 Workflow 的最优设置。请参阅[故障排查 - 缓存](../troubleshooting/performance-bottlenecks.mdx#caching)以获取有关如何解读不同缓存相关指标的更多详情。
 
-### Manage scale-down safely
+### 安全地管理缩容
 
-Before shutting down a Worker, verify that it does not have too many active Tasks. This is especially relevant if your
-Workers are handling long-running, expensive Activities.
+在关闭 Worker 之前，验证它没有太多活跃的 Task。如果您的 Worker 正在处理长时间运行的昂贵 Activity，这一点尤为重要。
 
-If `worker_task_slots_available` is at or near zero, the Worker is running active Tasks. Shutting it down could trigger
-expensive retries or timeouts for long-running Activities. Use
-[Graceful Shutdowns](/encyclopedia/workers/worker-shutdown#graceful-shutdown) to allow the Worker to complete its
-current Tasks before shutting down. All SDKs provide a way to configure Graceful Shutdowns. For example, the Go SDK has
-the [`WorkerStopTimeout` option](https://pkg.go.dev/go.temporal.io/sdk@v1.38.0/internal#WorkerOptions) that lets you
-configure how long the Worker has to complete its current Tasks before shutting down.
+如果 `worker_task_slots_available` 接近或等于零，说明 Worker 正在运行活跃的 Task。关闭它可能会触发长时间运行的 Activity 的昂贵重试或超时。使用[优雅关闭](/encyclopedia/workers/worker-shutdown#graceful-shutdown)允许 Worker 在关闭前完成其当前 Task。所有 SDK 都提供配置优雅关闭的方法。例如，Go SDK 有 [`WorkerStopTimeout` 选项](https://pkg.go.dev/go.temporal.io/sdk@v1.38.0/internal#WorkerOptions)，让您配置 Worker 在关闭前完成当前 Task 的等待时间。

@@ -1,8 +1,8 @@
 ---
 id: overview
-title: Overview - Temporal Cloud
-sidebar_label: Overview
-description: Temporal Cloud is a fully managed, globally distributed durable execution platform built on cell-based architecture. Available on AWS and GCP with consumption-based pricing and zero-downtime migration from self-hosted deployments.
+title: "概述 - Temporal Cloud"
+sidebar_label: "概述"
+description: "Temporal Cloud 是一个基于单元架构构建的完全托管的全球分布式持久执行平台。可在 AWS 和 GCP 上使用，并采用基于消耗的定价和从自托管部署的零停机迁移。"
 slug: /cloud/overview
 toc_max_heading_level: 4
 keywords:
@@ -16,183 +16,201 @@ tags:
   - Temporal Cloud
 ---
 
-Temporal Cloud is a fully managed durable execution platform.
-It handles the complexity of running Temporal at scale—persistence, replication, upgrades, and availability—so you can focus on building applications.
+Temporal Cloud 是一个完全托管的持久执行平台。
+它可以处理大规模运行 Temporal 的复杂性（持久性、复制、升级和可用性），因此您可以专注于构建应用程序。
 
-Your code runs in your environment.
-Temporal Cloud never sees your application logic or sensitive data.
-The platform stores encrypted Workflow state and orchestrates execution, while your Workers execute business logic wherever you deploy them.
+您的代码在您的环境中运行。
+Temporal Cloud 永远不会看到您的应用程序逻辑或敏感数据。
+该平台存储加密的 Workflow 状态并编排执行，而您的 Worker 无论您在何处部署它们，都可以执行业务逻辑。
 
-## How Temporal Cloud works
+<a id="how-temporal-cloud-works"></a>
+## Temporal Cloud 的工作原理 {#how-temporal-cloud-works}
 
-Temporal Cloud operates as the control plane for your distributed applications:
+Temporal Cloud 用作分布式应用程序的控制平面：
 
-1. **Your environment**: You run Workers that execute your Workflow and Activity code. These can be deployed anywhere—Kubernetes, VMs, serverless, on-premises.
-2. **Temporal Cloud**: Manages Workflow state, Event History, task queuing, and scheduling. All data is encrypted in transit and at rest.
-3. **Temporal SDKs**: Your applications use the SDK to communicate with Temporal Cloud over secure gRPC connections.
+1. **您的环境**：您运行 Worker 来执行您的 Workflow 和 Activity 代码。这些可以部署在任何地方——Kubernetes、虚拟机、无服务器、本地。
+2. **Temporal Cloud**：管理Workflow状态、Event History、任务排队和调度。所有数据在传输过程中和静态时都经过加密。
+3. **Temporal SDK**：您的应用程序使用 SDK 通过安全的 gRPC 连接与 Temporal Cloud 进行通信。
 
-This separation means Temporal Cloud scales independently of your application.
-You control compute resources for your Workers; Temporal handles the orchestration layer.
+这种分离意味着 Temporal Cloud 可以独立于您的应用程序进行扩展。
+您可以控制 Worker 的计算资源； Temporal 处理编排层。
 
-## Architecture
+＃＃ 建筑学
 
-### Cell-based infrastructure
+<a id="architecture"></a>
+### 基于单元的基础设施 {#architecture}
 
-Temporal Cloud uses a cell-based architecture to achieve isolation and scalability.
-Each cell is a self-contained deployment unit with its own:
+Temporal Cloud采用基于单元的架构来实现隔离和可扩展性。
+每个单元都是一个独立的部署单元，具有自己的：
 
-- Dedicated cloud account and VPC
-- Kubernetes cluster running Temporal services
-- Primary database with synchronous replication across three availability zones
-- Elasticsearch for Workflow visibility and search
-- Load balancers and ingress management
-- Observability and certificate infrastructure
+- 专用云账户和VPC
+- 运行 Temporal 服务的 Kubernetes 集群
+- 主数据库跨三个可用区同步复制
+- Elasticsearch Workflow Visibility 并搜索
+- 负载均衡器和入口管理
+- 可观察性和证书基础设施
 
-Cells act as failure domains.
-If infrastructure within a cell experiences issues, only Namespaces in that cell are affected.
-This design limits blast radius and enables independent scaling.
+单元充当故障域。
+如果单元内的基础设施遇到问题，则只有该单元中的 Namespace 受到影响。
+这种设计限制了爆炸半径并实现了独立缩放。
 
-### Data plane and control plane
+<a id="cell-based-infrastructure"></a>
+### 数据平面和控制平面 {#cell-based-infrastructure}
 
-**Data plane**: Where your Workflows execute. Each cell processes Workflow operations, persists state, and manages task queues. The data plane is optimized for low latency and high throughput.
+**数据平面**：Workflow 执行的位置。每个单元处理 Workflow 操作、保持状态并管理 Task Queue。数据平面针对低延迟和高吞吐量进行了优化。
 
-**Control plane**: Manages provisioning, configuration, and lifecycle operations. When you create a Namespace, the control plane:
-1. Selects an appropriate cell in your chosen region
-2. Provisions database resources and roles
-3. Generates and deploys mTLS certificates
-4. Configures ingress routes and validates connectivity
+**控制平面**：管理供应、配置和生命周期操作。当您创建 Namespace 时，控制平面：
+1. 在您选择的区域中选择合适的小区
+2. 提供数据库资源和角色
+3.生成并部署mTLS证书
+4. 配置入口路由并验证连接
 
-The control plane uses Temporal itself (durable execution) to orchestrate these operations reliably.
+控制平面使用 Temporal 本身（持久执行）来可靠地编排这些操作。
 
-### Multi-cloud availability
+<a id="data-plane-and-control-plane"></a>
+### 多云可用性 {#data-plane-and-control-plane}
 
-Temporal Cloud runs on both AWS and GCP:
+Temporal Cloud 在 AWS 和 GCP 上运行：
 
-- **14 AWS regions** spanning North America, Europe, Asia Pacific, and South America
-- **5 GCP regions** in North America, Europe, and Asia Pacific
+- **14 个 AWS 区域** 横跨北美、欧洲、亚太地区和南美
+- **北美、欧洲和亚太地区的 5 个 GCP 区域**
 
-You can create Namespaces in any supported region.
-For disaster recovery, you can replicate across regions within a cloud provider or across cloud providers entirely.
+您可以在任何受支持的区域创建 Namespace。
+对于灾难恢复，您可以跨云提供商内的区域或完全跨云提供商进行复制。
 
-See [Service regions](/cloud/regions) for the complete list of available regions.
+请参阅 [服务区域](/cloud/regions) 了解可用区域的完整列表。
 
-## Built-in reliability
+<a id="multi-cloud-availability"></a>
+## 内置可靠性 {#multi-cloud-availability}
 
-Every Temporal Cloud Namespace includes baseline high availability:
+每个 Temporal Cloud Namespace 都包含基线高可用性：
 
-- **Three-zone replication**: Workflow state synchronously replicates across three availability zones before acknowledging writes
-- **Automatic failover**: If one zone becomes unavailable, operations continue on the remaining zones
-- **99.9% SLA**: Contractual uptime guarantee for standard Namespaces
+- **三区复制**：Workflow 状态在确认写入之前跨三个可用区同步复制
+- **自动故障转移**：如果一个区域不可用，其余区域的操作将继续
+- **99.9% SLA**：标准 Namespace 的合同正常运行时间保证
 
-### High Availability features
+<a id="built-in-reliability"></a>
+### 高可用性功能 {#built-in-reliability}
 
-For workloads requiring stronger guarantees, Temporal Cloud offers three replication options:
+对于需要更强保证的工作负载，Temporal Cloud 提供三种复制选项：
 
-| Deployment | Description | Use case |
+| 部署 | 描述 | 使用案例 |
 |------------|-------------|----------|
-| **Same-region** | Replicate across isolated cells within one region | Single-region applications needing cell-level isolation |
-| **Multi-region** | Replicate across regions within one cloud provider | Geographic redundancy and compliance requirements |
-| **Multi-cloud** | Replicate across cloud providers (AWS ↔ GCP) | Maximum resilience against provider-level outages |
+| **同地区** | 在一个区域内的隔离细胞之间复制 | 需要单元级隔离的单区域应用 |
+| **多区域** | 在一个云提供商内跨区域复制 | 地理冗余和合规性要求 |
+| **多云** | 跨云提供商复制 (AWS ↔ GCP) | 最大程度地抵御提供商级中断 |
 
-High Availability Namespaces include:
-- **99.99% SLA**: Four-nines contractual uptime guarantee
-- **Sub-1-minute RPO**: Recovery Point Objective for data loss
-- **20-minute RTO**: Recovery Time Objective for failover completion
-- **Automatic or manual failover**: Choose your preferred failover strategy
+高可用性 Namespace 包括：
+- **99.99% SLA**：四个九的合同正常运行时间保证
+- **不到 1 分钟的 RPO**：数据丢失的恢复点目标
+- **20 分钟 RTO**：故障转移完成的恢复时间目标
+- **自动或手动故障转移**：选择您首选的故障转移策略
 
-See [High Availability](/cloud/high-availability) for configuration details.
+有关配置详细信息，请参阅 [高可用性](/cloud/high-availability)。
 
-## Security model
+<a id="high-availability-features"></a>
+## 安全模型 {#high-availability-features}
 
-Temporal Cloud implements defense-in-depth security:
+Temporal Cloud实现深度防御安全：
 
-### Your code stays with you
+<a id="security-model"></a>
+### 您的代码与您同在 {#security-model}
 
-Temporal Cloud never executes your application code.
-Workers run in your environment, connecting to Temporal Cloud over encrypted channels.
-You control access to your compute resources and secrets.
+Temporal Cloud 从不执行您的应用程序代码。
+Worker 在您的环境中运行，通过加密通道连接到 Temporal Cloud。
+您可以控制对计算资源和机密的访问。
 
-### Client-side encryption
+<a id="your-code-stays-with-you"></a>
+### 客户端加密 {#your-code-stays-with-you}
 
-The [Data Converter](/dataconversion) lets you encrypt payloads before they leave your Workers.
-Temporal Cloud stores ciphertext—if the service were compromised, your data remains encrypted.
-Deploy a [Codec Server](/production-deployment/data-encryption) to decrypt data in the Web UI without sharing keys.
+[Data Converter](/dataconversion) 允许您在有效负载离开 Worker 之前对其进行加密。
+Temporal Cloud 存储密文 - 如果服务遭到破坏，您的数据仍保持加密状态。
+部署 [Codec Server](/production-deployment/data-encryption) 以解密 Web UI 中的数据，而无需共享密钥。
 
-### Network isolation
+<a id="client-side-encryption"></a>
+### 网络隔离 {#client-side-encryption}
 
-- **mTLS authentication**: Per-Namespace certificate-based authentication for gRPC endpoints
-- **API key authentication**: Alternative to certificates for simpler key management
-- **Private connectivity**: AWS PrivateLink and GCP Private Service Connect for traffic that never traverses the public internet
+- **mTLS 身份验证**：针对 gRPC 端点的基于每 Namespace 证书的身份验证
+- **API 密钥身份验证**：替代证书以简化密钥管理
+- **私有连接**：AWS PrivateLink 和 GCP Private Service Connect 适用于从不经过公共互联网的流量
 
-### Compliance
+＃＃＃ 遵守
 
-Temporal Technologies maintains SOC 2 Type 2 certification and complies with GDPR and HIPAA regulations.
-Audit logs capture all API operations and can be exported to your security monitoring systems.
+Temporal Technologies 保持 SOC 2 Type 2 认证，并符合 GDPR 和 HIPAA 法规。
+审核日志捕获所有 API 操作，并可以导出到您的安全监控系统。
 
-See [Security model](/cloud/security) for complete details.
+有关完整详细信息，请参阅 [安全模型](/cloud/security)。
 
-## Consumption-based pricing
+<a id="network-isolation"></a>
+## 基于消费的定价 {#network-isolation}
 
-Temporal Cloud charges based on what you use:
+Temporal Cloud 根据您的使用情况收费：
 
-### Actions
+<a id="compliance"></a>
+### 行动 {#compliance}
 
-The primary billing unit.
-Actions are billable operations like starting Workflows, sending Signals, recording Heartbeats, and completing Activities.
-Pricing starts at $50 per million Actions with volume discounts as you scale.
+主要计费单位。
+操作是计费操作，例如启动 Workflow、发送 Signal、记录心跳和完成活动。
+起价为每百万次操作 50 美元，随着规模的扩大，可享受批量折扣。
 
-### Storage
+＃＃＃ 贮存
 
-- **Active Storage**: Event History for running Workflows
-- **Retained Storage**: Event History for completed Workflows (configurable retention period up to 90 days)
+- **活动存储**：Event History 用于运行 Workflow
+- **保留存储**：Event History 用于已完成的 Workflow（可配置保留期最长 90 天）
 
-### Plans
+<a id="consumption-based-pricing"></a>
+### 计划 {#consumption-based-pricing}
 
-Four tiers—Essentials, Business, Enterprise, and Mission Critical—with increasing support levels, included Actions/Storage, and features like SAML and SCIM.
-The Essentials plan starts at $100/month.
+四个层——基本层、商业层、企业层和关键任务层——支持级别不断增加，包括操作/存储以及 SAML 和 SCIM 等功能。
+Essentials 计划起价为 100 美元/月。
 
-Self-serve signup and plan management available at [cloud.temporal.io](https://cloud.temporal.io).
+[云.Temporal.io](https://cloud.temporal.io) 提供自助注册和计划管理。
 
-See [Pricing](/cloud/pricing) for detailed rates and examples.
+有关详细费率和示例，请参阅 [定价](/cloud/pricing)。
 
-## Portability
+<a id="actions"></a>
+## 便携性 {#actions}
 
-Temporal Cloud runs the same Temporal Server as the open-source distribution.
-This means:
+Temporal Cloud 运行与开源发行版相同的 Temporal Server。
+这意味着：
 
-### Zero code changes
+<a id="storage"></a>
+### 零代码更改 {#storage}
 
-Applications built for self-hosted Temporal work on Temporal Cloud without modification.
-Update your connection configuration to point at your Cloud Namespace—that's it.
+为自托管 Temporal 构建的应用程序无需修改即可在 Temporal Cloud 上运行。
+Update 您的连接配置指向您的云 Namespace - 就是这样。
 
-### Zero-downtime migration
+<a id="plans"></a>
+### 零停机迁移 {#plans}
 
-[Automated migration](/cloud/migrate/automated) uses Workflow replication to move running Workflows from self-hosted to Cloud (or between Cloud regions) without interruption.
-No Workflow restarts, no data loss, no downtime.
+[自动迁移](/cloud/migrate/automated) 使用 Workflow 复制将正在运行的 Workflow 从自托管移动到云（或在云区域之间），而不会中断。
+Workflow 不会重新启动，不会丢失数据，不会停机。
 
-[Manual migration](/cloud/migrate/manual) works by updating Clients and Workers to use new Namespace endpoints while existing Workflows complete naturally.
+[手动迁移](/cloud/migrate/manual) 的工作原理是更新客户端和 Worker 以使用新的 Namespace 端点，而现有的 Workflow 自然完成。
 
-### Bidirectional
+<a id="portability"></a>
+### 双向 {#portability}
 
-Move workloads from self-hosted to Cloud, Cloud to self-hosted, or between Cloud regions and providers.
-The same migration tooling works in any direction.
+将工作负载从自托管移动到云、从云移动到自托管，或者在云区域和提供商之间移动。
+相同的迁移工具可以在任何方向上工作。
 
-## Self-serve operations
+<a id="zero-code-changes"></a>
+## 自助操作 {#zero-code-changes}
 
-Temporal Cloud is designed for self-service:
+Temporal Cloud 专为自助服务而设计：
 
-- **Web UI**: Create Namespaces, manage users, configure settings at [cloud.temporal.io](https://cloud.temporal.io)
-- **CLI (`tcld`)**: Automate operations from the command line
-- **Terraform provider**: Infrastructure-as-code for Namespaces, users, and configuration
-- **Cloud Ops API**: Programmatic access for custom tooling and automation
+- **Web UI**：创建 Namespace、管理用户、在 [云.Temporal.io](https://cloud.temporal.io) 配置设置
+- **CLI (`tcld`)**：从命令行自动执行操作
+- **Terraform 提供程序**：Namespace、用户和配置的基础设施即代码
+- **Cloud Ops API**：自定义工具和自动化的编程访问
 
-No support tickets required for standard operations.
+标准操作无需支持票证。
 
-## Getting started
+＃＃ 入门
 
-1. [Sign up for Temporal Cloud](https://temporal.io/get-cloud)
-2. [Create your first Namespace](/cloud/namespaces)
-3. [Connect your Workers](/cloud/get-started#set-up-your-clients-and-workers)
-4. [Run your first Workflow](/cloud/get-started#run-your-first-workflow)
+1.[注册 Temporal Cloud](https://temporal.io/get-cloud)
+2.[创建您的第一个 Namespace](/cloud/namespaces)
+3.[连接您的 Worker](/cloud/get-started#set-up-your-clients-and-workers)
+4.[运行您的第一个 Workflow](/cloud/get-started#run-your-first-workflow)
 
-For existing Temporal users, see [Migration](/cloud/migrate) to move self-hosted workloads to Cloud.
+对于现有 Temporal 用户，请参阅 [迁移](/cloud/migrate) 将自托管工作负载迁移到云。

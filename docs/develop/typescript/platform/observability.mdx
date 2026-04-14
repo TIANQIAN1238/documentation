@@ -1,8 +1,8 @@
 ---
 id: observability
-title: Observability - TypeScript SDK
-sidebar_label: Observability
-description: Enhance the observability of your Temporal Application with metrics, tracing, logging, and visibility features. View Workflow state, set up OpenTelemetry, and customize logging for seamless monitoring and insights.
+title: "可观察性 - TypeScript SDK"
+sidebar_label: "可观察性"
+description: "通过指标、跟踪、日志记录和 Visibility 功能增强 Temporal 应用程序的可观察性。查看 Workflow 状态、设置 OpenTelemetry 并自定义日志记录以实现无缝监控和洞察。"
 toc_max_heading_level: 3
 keywords:
   - client
@@ -16,31 +16,31 @@ tags:
   - Temporal SDKs
 ---
 
-The observability section of the TypeScript developer guide covers the many ways to view the current state of your [Temporal Application](/temporal#temporal-application)—that is, ways to view which [Workflow Executions](/workflow-execution) are tracked by the [Temporal Platform](/temporal#temporal-platform) and the state of any specified Workflow Execution, either currently or at points of an execution.
+TypeScript 开发人员指南的可观察性部分涵盖了查看 [Temporal 应用](/temporal#temporal-application) 当前状态的多种方法，即查看 [Temporal平台](/workflow-execution) 跟踪哪些 [Workflow Executions](/temporal#temporal-platform) 以及任何指定 Workflow Execution 当前或执行点的状态的方法。
 
-This section covers features related to viewing the state of the application, including:
+本节介绍与查看应用程序状态相关的功能，包括：
 
-- [Emit metrics](#metrics)
-- [Set up tracing](#tracing)
-- [Log from a Workflow](#logging)
-- [Visibility APIs](#visibility)
+- [发出指标](#metrics)
+- [设置追踪](#tracing)
+- [从 Workflow 登录](#logging)
+- [Visibility API](#visibility)
 
-## Emit metrics {#metrics}
+<a id="metrics"></a>
+## 发出指标 {#metrics}
+每个 Temporal SDK 都能够从客户端或 Worker 进程发出一组可选的指标。
+有关能够发出的指标的完整列表，请参阅 [SDK指标参考](/references/sdk-metrics)。
 
-Each Temporal SDK is capable of emitting an optional set of metrics from either the Client or the Worker process.
-For a complete list of metrics capable of being emitted, see the [SDK metrics reference](/references/sdk-metrics).
+- 有关 Prometheus 和 Grafana 集成的概述，请参阅 [监控](/self-hosted-guide/monitoring) 指南。
+- 有关指标列表，请参阅 [SDK指标参考](/references/sdk-metrics)。
+- 有关使用 TypeScript SDK 公开指标的端到端示例，请参阅 [样本打字稿](https://github.com/temporalio/samples-typescript/tree/main/interceptors-opentelemetry) 存储库。
 
-- For an overview of Prometheus and Grafana integration, refer to the [Monitoring](/self-hosted-guide/monitoring) guide.
-- For a list of metrics, see the [SDK metrics reference](/references/sdk-metrics).
-- For an end-to-end example that exposes metrics with the TypeScript SDK, refer to the [samples-typescript](https://github.com/temporalio/samples-typescript/tree/main/interceptors-opentelemetry) repo.
+Workers 可以发出指标和跟踪。有几个[遥测选项](https://typescript.temporal.io/api/interfaces/worker.TelemetryOptions)可以提供给[`Runtime.install`](https://typescript.temporal.io/api/classes/worker.Runtime/#install)。常见的选项有：
 
-Workers can emit metrics and traces. There are a few [telemetry options](https://typescript.temporal.io/api/interfaces/worker.TelemetryOptions) that can be provided to [`Runtime.install`](https://typescript.temporal.io/api/classes/worker.Runtime/#install). The common options are:
+- `metrics: { otel: { url } }`：gRPC [打开遥测收集器](https://opentelemetry.io/docs/collector/) 的 URL。
+- `metrics: { prometheus: { bindAddress } }`：Worker 主机上的地址，该主机将具有要抓取的 [普罗米修斯](https://prometheus.io/) 指标。
 
-- `metrics: { otel: { url } }`: The URL of a gRPC [OpenTelemetry collector](https://opentelemetry.io/docs/collector/).
-- `metrics: { prometheus: { bindAddress } }`: Address on the Worker host that will have metrics for [Prometheus](https://prometheus.io/) to scrape.
-
-To set up tracing of Workflows and Activities, use our `opentelemetry-interceptors` package.
-(For details, see the next section.)
+要设置 Workflow 和活动的跟踪，请使用我们的 `opentelemetry-interceptors` 包。
+（有关详细信息，请参阅下一节。）
 
 ```typescript
 telemetryOptions: {
@@ -51,28 +51,28 @@ telemetryOptions: {
   },
 ```
 
-## Set up tracing {#tracing}
+<a id="tracing"></a>
+## 设置跟踪 {#tracing}
+跟踪允许您查看 Workflow 的调用图及其活动和任何 Child Workflow。
 
-Tracing allows you to view the call graph of a Workflow along with its Activities and any Child Workflows.
+Temporal Web 的跟踪功能主要跟踪 Temporal 上下文中的 Activity 执行。如果您需要特定于您的用例的自定义跟踪，您应该利用上下文传播来相应地添加跟踪逻辑。
 
-Temporal Web's tracing capabilities mainly track Activity Execution within a Temporal context. If you need custom tracing specific for your use case, you should make use of context propagation to add tracing logic accordingly.
+[`interceptors-opentelemetry`](https://github.com/temporalio/samples-typescript/tree/main/interceptors-opentelemetry) 示例展示了如何使用 SDK 的内置 OpenTelemetry 跟踪来跟踪从启动 Workflow 到 Workflow Execution 到从 Workflow 运行 Activity 的所有内容。
 
-The [`interceptors-opentelemetry`](https://github.com/temporalio/samples-typescript/tree/main/interceptors-opentelemetry) sample shows how to use the SDK's built-in OpenTelemetry tracing to trace everything from starting a Workflow to Workflow Execution to running an Activity from that Workflow.
+内置跟踪使用 Protobuf 消息标头（如启动 Workflow 时的 [这个](https://github.com/temporalio/api/blob/b2b8ae6592a8730dd5be6d90569d1aea84e1712f/temporal/api/workflowservice/v1/request_response.proto#L161)）将跟踪信息从客户端传播到 Workflow，并从 Workflow 传播到其后继者（当继续为新时）、子项和活动。
+所有这些执行都与单个跟踪标识符链接，并具有正确的 `parent -> child` 跨度关系。
 
-The built-in tracing uses protobuf message headers (like [this one](https://github.com/temporalio/api/blob/b2b8ae6592a8730dd5be6d90569d1aea84e1712f/temporal/api/workflowservice/v1/request_response.proto#L161) when starting a Workflow) to propagate the tracing information from the client to the Workflow and from the Workflow to its successors (when Continued As New), children, and Activities.
-All of these executions are linked with a single trace identifier and have the proper `parent -> child` span relation.
+只要使用兼容的 [上下文传播器](https://opentelemetry.io/docs/concepts/context-propagation/)，不同 Temporal SDK 之间的跟踪就可以兼容。
 
-Tracing is compatible between different Temporal SDKs as long as compatible [context propagators](https://opentelemetry.io/docs/concepts/context-propagation/) are used.
+**上下文传播**
 
-**Context propagation**
+TypeScript SDK 使用全局 OpenTelemetry 传播器。
 
-The TypeScript SDK uses the global OpenTelemetry propagator.
-
-To extend the default ([Trace Context](https://github.com/open-telemetry/opentelemetry-js/blob/main/packages/opentelemetry-core/README.md#w3ctracecontextpropagator-propagator) and [Baggage](https://github.com/open-telemetry/opentelemetry-js/blob/main/packages/opentelemetry-core/README.md#baggage-propagator) propagators) to also include the [Jaeger propagator](https://www.npmjs.com/package/@opentelemetry/propagator-jaeger), follow these steps:
+要将默认传播器（[跟踪上下文](https://github.com/open-telemetry/opentelemetry-js/blob/main/packages/opentelemetry-core/README.md#w3ctracecontextpropagator-propagator) 和 [行李](https://github.com/open-telemetry/opentelemetry-js/blob/main/packages/opentelemetry-core/README.md#baggage-propagator) 传播器）扩展为也包含 [耶格传播者](https://www.npmjs.com/package/@opentelemetry/propagator-jaeger)，请执行以下步骤：
 
 - `npm i @opentelemetry/propagator-jaeger`
 
-- At the top level of your Workflow code, add the following lines:
+- 在 Workflow 代码的顶层，添加以下行：
 
   ```js
   import { propagation } from '@opentelemetry/api';
@@ -94,37 +94,38 @@ To extend the default ([Trace Context](https://github.com/open-telemetry/opentel
   );
   ```
 
-Similarly, you can customize the OpenTelemetry `NodeSDK` propagators by following the instructions in the [Initialize the SDK](https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-sdk-node#initialize-the-sdk) section of the `README.md` file.
+同样，您可以按照 `README.md` 文件的 [初始化SDK](https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-sdk-node#initialize-the-sdk) 部分中的说明自定义 OpenTelemetry `NodeSDK` 传播器。
 
-## Log from a Workflow {#logging}
+<a id="logging"></a>
+## 从 Workflow {#logging} 记录
+日志记录使您能够在代码执行期间记录关键信息。
+记录器创建审计跟踪并捕获有关 Workflow 操作的信息。
+适当的日志记录级别取决于您的具体需求。
+在开发或故障排除期间，您可能会使用调试甚至跟踪。
+在生产中，您可以使用 info 或 warn 来避免日志量过多。
 
-Logging enables you to record critical information during code execution.
-Loggers create an audit trail and capture information about your Workflow's operation.
-An appropriate logging level depends on your specific needs.
-During development or troubleshooting, you might use debug or even trace.
-In production, you might use info or warn to avoid excessive log volume.
+记录器支持以下日志记录级别：
 
-The logger supports the following logging levels:
-
-| Level   | Use                                                                                                       |
+| 等级   | 使用                                                                                                       |
 | ------- | --------------------------------------------------------------------------------------------------------- |
-| `TRACE` | The most detailed level of logging, used for very fine-grained information.                               |
-| `DEBUG` | Detailed information, typically useful for debugging purposes.                                            |
-| `INFO`  | General information about the application's operation.                                                    |
-| `WARN`  | Indicates potentially harmful situations or minor issues that don't prevent the application from working. |
-| `ERROR` | Indicates error conditions that might still allow the application to continue running.                    |
+| `TRACE` | 最详细的日志记录级别，用于非常细粒度的信息。                               |
+| `DEBUG` | 详细信息，通常可用于调试目的。                                            |
+| `INFO`  | 有关应用程序操作的一般信息。                                                    |
+| `WARN`  | 指示不会阻止应用程序运行的潜在有害情况或小问题。 |
+| `ERROR` | 指示可能仍允许应用程序继续运行的错误情况。                    |
 
-The Temporal SDK core normally uses `WARN` as its default logging level.
+Temporal SDK 核心通常使用 `WARN` 作为其默认日志记录级别。
 
-### Logging from Activities
+<a id="logging-from-activities"></a>
+### 从活动记录 {#logging-from-activities}
 
-Activities run in the standard Node.js environment and may therefore use any Node.js logger directly.
+活动在标准 Node.js 环境中运行，因此可以直接使用任何 Node.js 记录器。
 
-The Temporal SDK however provides a convenient Activity Context logger, which funnels log messages to the [Runtime's logger](/develop/typescript/platform/observability#customizing-the-default-logger). Attributes from the current Activity context are automatically included as metadata on every log entries emitted using the Activity context logger, and some key events of the Activity's lifecycle are automatically logged (at DEBUG level for most messages; WARN for failures).
+然而，Temporal SDK 提供了一个方便的 Activity 上下文记录器，它将日志消息传送到 [运行时的记录器](/develop/typescript/platform/observability#customizing-the-default-logger)。当前 Activity 上下文中的属性将作为元数据自动包含在使用 Activity 上下文记录器发出的每个日志条目中，并且会自动记录 Activity 生命周期的一些关键事件（对于大多数消息，在 DEBUG 级别；对于失败为 WARN）。
 
 <details>
 <summary>
-Using the Activity Context logger
+使用 Activity 上下文记录器
 </summary>
 
 ```ts
@@ -140,23 +141,25 @@ export async function greet(name: string): Promise<string> {
 
 {/*
 
-#### Customizing Activity logging with `ActivityOutboundCallsInterceptor`
+<a id="customizing-activity-logging-with-activityoutboundcallsinterceptor"></a>
+#### 使用 `ActivityOutboundCallsInterceptor` 自定义 Activity 日志记录 {#customizing-activity-logging-with-activityoutboundcallsinterceptor}
 
-FIXME(JWH): Quick introduction to `ActivityOutboundCallsInterceptor.getLogAttributes()`.
+FIXME(JWH)：`ActivityOutboundCallsInterceptor.getLogAttributes()` 快速介绍。
 */}
 
-### Logging from Workflows
+<a id="logging-from-workflows"></a>
+### 从 Workflows 记录 {#logging-from-workflows}
 
-Workflows may not use regular Node.js loggers because:
+Workflows 可能不使用常规 Node.js 记录器，因为：
 
-1. Workflows run in a sandboxed environment and cannot do any I/O.
-1. Workflow code might get replayed at any time, which would result in duplicated log messages.
+1. Workflow 在沙盒环境中运行，无法执行任何 I/O。
+1. Workflow 代码可能随时重播，这将导致日志消息重复。
 
-The Temporal SDK however provides a Workflow Context logger, which funnels log messages to the [Runtime's logger](/develop/typescript/platform/observability#customizing-the-default-logger). Attributes from the current Workflow context are automatically included as metadata on every log entries emitted using the Workflow context logger, and some key events of the Workflow's lifecycle are automatically logged (at DEBUG level for most messages; WARN for failures).
+然而，Temporal SDK 提供了一个 Workflow 上下文记录器，它将日志消息传送到 [运行时的记录器](/develop/typescript/platform/observability#customizing-the-default-logger)。当前 Workflow 上下文中的属性将作为元数据自动包含在使用 Workflow 上下文记录器发出的每个日志条目中，并且会自动记录 Workflow 生命周期的一些关键事件（对于大多数消息，在 DEBUG 级别；对于失败为 WARN）。
 
 <details>
 <summary>
-Using the Workflow Context logger
+使用 Workflow 上下文记录器
 </summary>
 
 ```ts
@@ -170,40 +173,44 @@ export async function myWorkflow(name: string): Promise<string> {
 
 </details>
 
-The Workflow Context Logger tries to avoid reemitting log messages on Workflow Replays.
+Workflow 上下文记录器尝试避免在 Workflow 重放上重新发送日志消息。
 
 {/*
 
-#### Customizing Workflow logging using `WorkflowOutboundCallsInterceptor`
+<a id="customizing-workflow-logging-using-workflowoutboundcallsinterceptor"></a>
+#### 使用 `WorkflowOutboundCallsInterceptor` 自定义 Workflow 日志记录 {#customizing-workflow-logging-using-workflowoutboundcallsinterceptor}
 
-FIXME(JWH): Quick introduction to `WorkflowOutboundCallsInterceptor.getLogAttributes()`.
+FIXME(JWH)：`WorkflowOutboundCallsInterceptor.getLogAttributes()` 快速介绍。
 */}
 
-#### Limitations of Workflow logs
+<a id="limitations-of-workflow-logs"></a>
+#### Workflow 日志的限制 {#limitations-of-workflow-logs}
 
-Internally, Workflow logging uses Sinks, and is consequently subject to the same limitations as Sinks.
-Notably, logged objects must be serializable using the V8 serialization.
+在内部，Workflow 日志记录使用接收器，因此受到与接收器相同的限制。
+值得注意的是，记录的对象必须可以使用 V8 序列化进行序列化。
 
 {/* FIXME(JWH): Add more details and link to actual Sinks documentation */}
 
-### What is the Runtime's Logger
+<a id="what-is-the-runtimes-logger"></a>
+### 什么是运行时的记录器 {#what-is-the-runtimes-logger}
 
-A Temporal Worker may emit logs in various ways, including:
+Temporal Worker 可以通过多种方式发出日志，包括：
 
-- Messages emitted using the [Workflow Context Logger](#logging);
-- Messages emitted using the [Activity Context Logger](#logging-from-activities);
-- Messages emitted by the TypeScript SDK Worker itself;
-- Messages emitted by the underlying Temporal Core SDK (native code).
+- 使用 [Workflow 上下文记录器](#logging) 发出的消息；
+- 使用 [Activity 上下文记录器](#logging-from-activities) 发出的消息；
+- TypeScript SDK Worker 本身发出的消息；
+- 由底层 Temporal Core SDK（本机代码）发出的消息。
 
-All of these messages are internally routed to a single logger object, called the Runtime's Logger.
-By default, the Runtime's Logger simply writes messages to the console (i.e. the process's `STDOUT`).
+所有这些消息都在内部路由到单个记录器对象，称为运行时记录器。
+默认情况下，运行时的记录器只是将消息写入控制台（即进程的 `STDOUT`）。
 
-#### How to customize the Runtime's Logger
+<a id="how-to-customize-the-runtimes-logger"></a>
+#### 如何自定义运行时的记录器 {#how-to-customize-the-runtimes-logger}
 
-A custom Runtime Logger may be registered when the SDK `Runtime` is instantiated. This is done only once per process.
+当 SDK `Runtime` 实例化时，可以注册自定义运行时记录器。每个进程仅执行一次此操作。
 
-To register a custom Runtime Logger, you must explicitly instantiate the Runtime, using the [`Runtime.install()`](https://typescript.temporal.io/api/classes/worker.Runtime/#install) function.
-For example:
+要注册自定义运行时记录器，您必须使用 [`Runtime.install()`](https://typescript.temporal.io/api/classes/worker.Runtime/#install) 函数显式实例化运行时。
+例如：
 
 ```typescript
 import {
@@ -232,8 +239,8 @@ Runtime.install({
 });
 ```
 
-A common use case for this is to write log messages to a file to be picked up by a collector service, such as the [Datadog Agent](https://docs.datadoghq.com/logs/log_collection/nodejs/?tab=winston30).
-For example:
+一个常见的用例是将日志消息写入文件以供收集器服务（例如 [数据狗代理](https://docs.datadoghq.com/logs/log_collection/nodejs/?tab=winston30)）拾取。
+例如：
 
 ```typescript
 import {
@@ -266,31 +273,34 @@ Runtime.install({
 
 {/* FIXME(JWH): Everything below this point must be revisited and moved to a distinct section (Sinks). */}
 
-### Implementing custom Logging-like features based on Workflow Sinks
+<a id="implementing-custom-logging-like-features-based-on-workflow-sinks"></a>
+### 基于 Workflow 接收器实现自定义类似日志记录的功能 {#implementing-custom-logging-like-features-based-on-workflow-sinks}
 
-Sinks enable one-way export of logs, metrics, and traces from the Workflow isolate to the Node.js environment.
+接收器支持将日志、指标和跟踪从 Workflow 隔离区单向导出到 Node.js 环境。
 
 {/*
-Workflows in Temporal may be replayed from the beginning of their history when resumed. In order for Temporal to recreate the exact state Workflow code was in, the code is required to be fully deterministic. To prevent breaking determinism, in the TypeScript SDK, Workflow code runs in an isolated execution environment and may not use any of the Node.js APIs or communicate directly with the outside world. */}
+Temporal 中的 Workflow 在恢复时可以从其历史记录的开头重播。为了使 Temporal 重新创建 Workflow 代码所处的确切状态，代码需要完全确定。为了防止破坏确定性，在 TypeScript SDK 中，Workflow 代码在隔离的执行环境中运行，并且不得使用任何 Node.js API 或直接与外界通信。 */}
 
-Sinks are written as objects with methods.
-Similar to Activities, they are declared in the Worker and then proxied in Workflow code, and it helps to share types between both.
+接收器被写成带有方法的对象。
+与活动类似，它们在 Worker 中声明，然后在 Workflow 代码中代理，这有助于在两者之间共享类型。
 
-#### Comparing Sinks and Activities
+<a id="comparing-sinks-and-activities"></a>
+#### 比较接收器和活动 {#comparing-sinks-and-activities}
 
-Sinks are similar to Activities in that they are both registered on the Worker and proxied into the Workflow.
-However, they differ from Activities in important ways:
+接收器与活动类似，因为它们都在 Worker 上注册并代理到 Workflow 中。
+然而，它们在一些重要方面与活动不同：
 
-- A sink function doesn't return any value back to the Workflow and cannot be awaited.
-- A sink call isn't recorded in the Event History of a Workflow Execution (no timeouts or retries).
-- A sink function _always_ runs on the same Worker that runs the Workflow Execution it's called from.
+- 接收器函数不会将任何值返回到 Workflow，并且无法等待。
+- 接收器调用不会记录在 Workflow Execution 的 Event History 中（无超时或重试）。
+- 接收器函数_始终_在运行其调用的 Workflow Execution 的同一个 Worker 上运行。
 
-#### Declare the sink interface
+<a id="declare-the-sink-interface"></a>
+#### 声明接收器接口 {#declare-the-sink-interface}
 
-Explicitly declaring a sink's interface is optional but is useful for ensuring type safety in subsequent steps:
+显式声明接收器的接口是可选的，但对于确保后续步骤中的类型安全非常有用：
 
 <!--SNIPSTART typescript-logger-sink-interface-->
-[sinks/src/workflows.ts](https://github.com/temporalio/samples-typescript/blob/main/sinks/src/workflows.ts)
+[水槽/src/workflows.ts](https://github.com/temporalio/samples-typescript/blob/main/sinks/src/workflows.ts)
 ```ts
 import { log, proxySinks, Sinks } from '@temporalio/workflow';
 
@@ -304,14 +314,15 @@ export type MySinks = AlertSinks;
 ```
 <!--SNIPEND-->
 
-#### Implement sinks
+<a id="implement-sinks"></a>
+#### 实施水槽 {#implement-sinks}
 
-Implementing sinks is a two-step process.
+实施接收器是一个两步过程。
 
-Implement and inject the Sink function into a Worker
+实现 Sink 函数并将其注入到 Worker 中
 
-<!--SNIPSTART typescript-logger-sink-worker-->
-[sinks/src/worker.ts](https://github.com/temporalio/samples-typescript/blob/main/sinks/src/worker.ts)
+<!--SNIPSTART typescript-logger-sink-Worker-->
+[水槽/src/Worker.ts](https://github.com/temporalio/samples-typescript/blob/main/sinks/src/worker.ts)
 ```ts
 import { InjectedSinks, Worker } from '@temporalio/worker';
 import { MySinks } from './workflows';
@@ -347,13 +358,14 @@ main().catch((err) => {
 ```
 <!--SNIPEND-->
 
-- Sink function implementations are passed as an object into [WorkerOptions](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions/#sinks).
-- You can specify whether you want the injected function to be called during Workflow replay by setting the `callDuringReplay` option.
+- 接收器函数实现作为对象传递到 [Worker选项](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions/#sinks)。
+- 您可以通过设置 `callDuringReplay` 选项来指定是否希望在 Workflow 重放期间调用注入的函数。
 
-#### Proxy and call a sink function from a Workflow
+<a id="proxy-and-call-a-sink-function-from-a-workflow"></a>
+#### 从 Workflow 代理并调用接收器函数 {#proxy-and-call-a-sink-function-from-a-workflow}
 
-<!--SNIPSTART typescript-logger-sink-workflow-->
-[sinks/src/workflows.ts](https://github.com/temporalio/samples-typescript/blob/main/sinks/src/workflows.ts)
+<!--SNIPSTART typescript-logger-sink-Workflow-->
+[水槽/src/workflows.ts](https://github.com/temporalio/samples-typescript/blob/main/sinks/src/workflows.ts)
 ```ts
 const { alerter } = proxySinks<MySinks>();
 
@@ -365,31 +377,33 @@ export async function sinkWorkflow(): Promise<string> {
 ```
 <!--SNIPEND-->
 
-Some important features of the [InjectedSinkFunction](https://typescript.temporal.io/api/interfaces/worker.InjectedSinkFunction) interface:
+[注入Sink函数](https://typescript.temporal.io/api/interfaces/worker.InjectedSinkFunction) 接口的一些重要特性：
 
-- **Injected WorkflowInfo argument:** The first argument of a Sink function implementation is a [`workflowInfo` object](https://typescript.temporal.io/api/interfaces/workflow.WorkflowInfo/) that contains useful metadata.
-- **Limited arguments types:** The remaining Sink function arguments are copied between the sandbox and the Node.js environment using the [structured clone algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm).
-- **No return value:** To prevent breaking determinism, Sink functions cannot return values to the Workflow.
+- **注入的 WorkflowInfo 参数：** Sink 函数实现的第一个参数是包含有用元数据的 [`WorkflowInfo` 对象](https://typescript.temporal.io/api/interfaces/workflow.WorkflowInfo/)。
+- **有限的参数类型：** 剩余的 Sink 函数参数使用 [结构化克隆算法](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) 在沙箱和 Node.js 环境之间复制。
+- **无返回值：** 为了防止破坏确定性，Sink 函数不能将值返回到 Workflow。
 
-**Advanced: Performance considerations and non-blocking Sinks**
+**高级：性能考虑和非阻塞接收器**
 
-The injected sink function contributes to the overall Workflow Task processing duration.
+注入的接收器函数会影响整个 Workflow 任务处理持续时间。
 
-- If you have a long-running sink function, such as one that tries to communicate with external services, you might start seeing Workflow Task timeouts.
-- The effect is multiplied when using `callDuringReplay: true` and replaying long Workflow histories because the Workflow Task timer starts when the first history page is delivered to the Worker.
+- 如果您有一个长时间运行的接收器功能，例如尝试与外部服务通信的接收器功能，您可能会开始看到 Workflow 任务超时。
+- 使用 `callDuringReplay: true` 并重播长 Workflow 历史记录时，效果会成倍增加，因为 Workflow 任务 Timer 在第一个历史记录页面传送到 Worker 时启动。
 
-### How to provide a custom logger {#custom-logger}
+<a id="custom-logger"></a>
+### 如何提供自定义记录器 {#custom-logger}
+使用自定义记录器进行记录。
 
-Use a custom logger for logging.
+<a id="logging-in-workers-and-clients"></a>
+#### 登录 Worker 和客户端 {#logging-in-workers-and-clients}
 
-#### Logging in Workers and Clients
+Worker 附带一个默认记录器，默认使用 `console.error` 记录级别为 `INFO` 及更高级别的任何消息到 `STDERR`。
+以下 [日志级别](https://typescript.temporal.io/api/namespaces/worker#loglevel) 按严重性升序列出。
 
-The Worker comes with a default logger, which defaults to log any messages with level `INFO` and higher to `STDERR` using `console.error`.
-The following [log levels](https://typescript.temporal.io/api/namespaces/worker#loglevel) are listed in increasing order of severity.
+<a id="customizing-the-default-logger"></a>
+#### 自定义默认记录器 {#customizing-the-default-logger}
 
-#### Customizing the default logger
-
-Temporal uses a [`DefaultLogger`](https://typescript.temporal.io/api/classes/worker.DefaultLogger/) that implements the basic interface:
+Temporal 使用实现基本接口的 [`DefaultLogger`](https://typescript.temporal.io/api/classes/worker.DefaultLogger/)：
 
 ```ts
 import { DefaultLogger, Runtime } from '@temporalio/worker';
@@ -400,9 +414,10 @@ const logger = new DefaultLogger('WARN', ({ level, message }) => {
 Runtime.install({ logger });
 ```
 
-The previous code example sets the default logger to log only messages with level `WARN` and higher.
+前面的代码示例将默认记录器设置为仅记录级别为 `WARN` 及更高级别的消息。
 
-#### Accumulate logs for testing and reporting
+<a id="accumulate-logs-for-testing-and-reporting"></a>
+#### 积累日志以进行测试和报告 {#accumulate-logs-for-testing-and-reporting}
 
 ```ts
 import { DefaultLogger, LogEntry, LogLevel } from '@temporalio/worker';
@@ -416,7 +431,7 @@ logger.warn('lets', { a: 1 });
 logger.error('go');
 ```
 
-A common logging use case is logging to a file to be picked up by a collector like the [Datadog Agent](https://docs.datadoghq.com/logs/log_collection/nodejs/?tab=winston30).
+常见的日志记录用例是记录到由 [数据狗代理](https://docs.datadoghq.com/logs/log_collection/nodejs/?tab=winston30) 等收集器拾取的文件。
 
 ```ts
 import { Runtime } from '@temporalio/worker';
@@ -430,37 +445,37 @@ const logger = winston.createLogger({
 Runtime.install({ logger });
 ```
 
-## Visibility APIs {#visibility}
+<a id="visibility"></a>
+## Visibility API {#visibility}
+Temporal 平台中的术语 Visibility 是指使操作员能够查看当前存在于 Temporal 服务中的 Workflow Execution 的子系统和 API。
 
-The term Visibility, within the Temporal Platform, refers to the subsystems and APIs that enable an operator to view Workflow Executions that currently exist within a Temporal Service.
+<a id="search-attributes"></a>
+### 如何使用 Search Attribute {#search-attributes}
+检索 Workflow Execution 的典型方法是通过其 Workflow Id。
 
-### How to use Search Attributes {#search-attributes}
+但是，有时您需要根据另一属性检索一个或多个 Workflow Execution。例如，假设您想要获取某个时间范围内失败的某种类型的所有 Workflow Execution，以便您可以使用相同的参数启动新的 Workflow Execution。
 
-The typical method of retrieving a Workflow Execution is by its Workflow Id.
+您可以使用 [Search Attributes](/search-attribute) 来完成此操作。
 
-However, sometimes you'll want to retrieve one or more Workflow Executions based on another property. For example, imagine you want to get all Workflow Executions of a certain type that have failed within a time range, so that you can start new ones with the same arguments.
+- [默认 Search Attribute](/search-attribute#default-search-attribute) 与 `WorkflowType`、`StartTime` 和 `ExecutionStatus` 一样，会自动添加到 Workflow Execution。
+- [定制 Search Attribute](/search-attribute#custom-search-attribute) 可以包含其自己的特定于域的数据（如 `customerId` 或 `numItems`）。
 
-You can do this with [Search Attributes](/search-attribute).
+使用自定义 Search Attribute 的步骤是：
 
-- [Default Search Attributes](/search-attribute#default-search-attribute) like `WorkflowType`, `StartTime` and `ExecutionStatus` are automatically added to Workflow Executions.
-- [Custom Search Attributes](/search-attribute#custom-search-attribute) can contain their own domain-specific data (like `customerId` or `numItems`).
+- 使用 `Temporal operator search-attribute create` 或云 UI 在 Temporal 服务中创建新的 Search Attribute。
+- 设置 Workflow Execution 的 Search Attribute 值：
+  - 在客户端上，在启动执行时将其作为选项包含在内。
+  - 在 Workflow 中通过调用 `UpsertSearchAttributes`。
+- 读取Search Attribute的值：
+  - 在客户端上通过调用 `DescribeWorkflow`。
+  - 在 Workflow 中查看 `WorkflowInfo`。
+- Query Workflow Execution 由 Search Attribute 使用 [列表过滤器](/list-filter) 实现：
+  - [使用 Temporal CLI](/cli/workflow#list)。
+  - 在代码中调用 `ListWorkflowExecutions`。
 
-The steps to using custom Search Attributes are:
+以下是 Query Workflow Execution 的操作方法：
 
-- Create a new Search Attribute in your Temporal Service using `temporal operator search-attribute create` or the Cloud UI.
-- Set the value of the Search Attribute for a Workflow Execution:
-  - On the Client by including it as an option when starting the Execution.
-  - In the Workflow by calling `UpsertSearchAttributes`.
-- Read the value of the Search Attribute:
-  - On the Client by calling `DescribeWorkflow`.
-  - In the Workflow by looking at `WorkflowInfo`.
-- Query Workflow Executions by the Search Attribute using a [List Filter](/list-filter):
-  - [With the Temporal CLI](/cli/workflow#list).
-  - In code by calling `ListWorkflowExecutions`.
-
-Here is how to query Workflow Executions:
-
-Use [`WorkflowService.listWorkflowExecutions`](https://typescript.temporal.io/api/classes/proto.temporal.api.workflowservice.v1.WorkflowService-1#listworkflowexecutions):
+使用 [`WorkflowService.listWorkflowExecutions`](https://typescript.temporal.io/api/classes/proto.temporal.api.workflowservice.v1.WorkflowService-1#listworkflowexecutions)：
 
 ```typescript
 import { Connection } from '@temporalio/client';
@@ -471,16 +486,16 @@ const response = await connection.workflowService.listWorkflowExecutions({
 });
 ```
 
-where `query` is a [List Filter](/list-filter).
+其中 `Query` 是 [列表过滤器](/list-filter)。
 
-### How to set custom Search Attributes {#custom-search-attributes}
+<a id="custom-search-attributes"></a>
+### 如何设置自定义 Search Attribute {#custom-search-attributes}
+在 Temporal 服务（使用 `Temporal operator search-attribute create` 或云 UI）中创建自定义 Search Attribute 后，您可以在启动 Workflow 时设置自定义 Search Attribute 的值。
 
-After you've created custom Search Attributes in your Temporal Service (using `temporal operator search-attribute create` or the Cloud UI), you can set the values of the custom Search Attributes when starting a Workflow.
-
-Use [`WorkflowOptions.searchAttributes`](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions#searchattributes).
+使用 [`WorkflowOptions.searchAttributes`](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions#searchattributes)。
 
 <!--SNIPSTART typescript-search-attributes-client-->
-[search-attributes/src/client.ts](https://github.com/temporalio/samples-typescript/blob/main/search-attributes/src/client.ts)
+[搜索属性/src/client.ts](https://github.com/temporalio/samples-typescript/blob/main/search-attributes/src/client.ts)
 ```ts
 const handle = await client.workflow.start(example, {
   taskQueue: 'search-attributes',
@@ -500,16 +515,16 @@ const { searchAttributes } = await handle.describe();
 ```
 <!--SNIPEND-->
 
-The type of `searchAttributes` is `Record<string, string[] | number[] | boolean[] | Date[]>`.
+`searchAttributes` 的类型为 `Record<string, string[] | 数字[] | 布尔值[] | 日期[]>`。
 
-### How to upsert Search Attributes {#upsert-search-attributes}
+<a id="upsert-search-attributes"></a>
+### 如何更新插入 Search Attributes {#upsert-search-attributes}
+您可以更新插入 Search Attribute 以在 Workflow 代码中添加 Update Search Attribute。
 
-You can upsert Search Attributes to add or update Search Attributes from within Workflow code.
+在 Workflow 内部，我们可以读取 [`WorkflowInfo.searchAttributes`](https://typescript.temporal.io/api/interfaces/workflow.WorkflowInfo#searchattributes) 并调用 [`upsertSearchAttributes`](https://typescript.temporal.io/api/namespaces/workflow#upsertsearchattributes)：
 
-Inside a Workflow, we can read from [`WorkflowInfo.searchAttributes`](https://typescript.temporal.io/api/interfaces/workflow.WorkflowInfo#searchattributes) and call [`upsertSearchAttributes`](https://typescript.temporal.io/api/namespaces/workflow#upsertsearchattributes):
-
-<!--SNIPSTART typescript-search-attributes-workflow -->
-[search-attributes/src/workflows.ts](https://github.com/temporalio/samples-typescript/blob/main/search-attributes/src/workflows.ts)
+<!--SNIPSTART typescript-search-attributes-Workflow -->
+[搜索属性/src/workflows.ts](https://github.com/temporalio/samples-typescript/blob/main/search-attributes/src/workflows.ts)
 ```ts
 export async function example(): Promise<SearchAttributes> {
   const customInt = (workflowInfo().searchAttributes.CustomIntField?.[0] as number) || 0;
@@ -528,9 +543,9 @@ export async function example(): Promise<SearchAttributes> {
 ```
 <!--SNIPEND-->
 
-### How to remove a Search Attribute from a Workflow {#remove-search-attribute}
-
-To remove a Search Attribute that was previously set, set it to an empty array: `[]`.
+<a id="remove-search-attribute"></a>
+### 如何从 Workflow 中删除 Search Attribute {#remove-search-attribute}
+要删除之前设置的 Search Attribute，请将其设置为空数组：`[]`。
 
 ```typescript
 import { upsertSearchAttributes } from '@temporalio/workflow';

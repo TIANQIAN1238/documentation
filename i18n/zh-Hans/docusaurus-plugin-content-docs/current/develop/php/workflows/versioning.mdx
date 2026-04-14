@@ -1,0 +1,203 @@
+---
+id: versioning
+title: 版本控制 - PHP SDK 功能指南
+sidebar_label: 版本控制
+description: 确保 Temporal Workflow Execution 的确定性，并使用 PHP SDK 的修补和 Worker 版本控制 API 部署 Update。
+toc_max_heading_level: 4
+keywords:
+  - best practices
+  - code sample
+  - deployment
+  - deployment safety
+  - deprecated patches
+  - how-to
+  - patching
+  - php
+  - php sdk
+  - version
+  - versioning
+  - workflow completion
+  - workflow history
+  - workflow transition
+tags:
+  - Workflows
+  - Versioning
+  - Patching
+  - PHP SDK
+  - Temporal SDKs
+---
+
+由于 Temporal 中的 Workflow Execution 可以运行很长时间（有时是几个月甚至几年），因此通常需要对 Workflow Definition 进行更改，即使特定的 Workflow Execution 正在运行也是如此。
+
+Temporal Platform 要求 Workflow 代码是[确定性](/Workflow-definition#definition-constraints)。
+如果您对 Workflow 代码进行的更改会导致重播时出现不确定行为，则您需要使用我们的版本控制方法之一来优雅地对正在运行的 Workflow 进行 Update。
+通过版本控制，您可以修改 Workflow Definition，以便新的执行使用 Updated 代码，而现有的执行继续运行原始版本。
+您可以使用两种主要的版本控制方法：
+
+- [Worker 版本控制](/生产部署/Worker-部署/Worker-版本控制)。 Worker 版本控制功能允许您标记 Worker 并以编程方式在版本化部署中推出它们，以便旧的 Worker 可以运行旧的代码路径，而新的 Worker 可以运行新的代码路径。
+- [使用补丁进行版本控制](#php-sdk-patching-api)。此方法的工作原理是向与特定修订版相关的代码添加分支。它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
+
+## Worker 版本控制
+
+Temporal 的 [Worker 版本控制](/生产部署/Worker-deployments/Worker-versioning) 功能允许您标记 Worker 并以编程方式在部署版本中推出它们，以便旧的 Worker 可以运行旧的代码路径，新的 Worker 可以运行新的代码路径。这样，您就可以将 Workflow 固定到特定版本，从而无需修补。
+
+## 使用补丁进行版本控制 {#php-sdk-patching-api}
+
+### 使用 GetVersion 进行修补
+
+补丁在 Workflow 中定义特定更改的逻辑分支，类似于功能标志。
+它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
+当您想要进行可能影响现有 Workflow Execution 的实质性代码更改时，请创建补丁。请注意，无需修补 [固定 Workflows](/Worker-版本控制)。
+
+假设您有一个运行“prePatchActivity”的初始 Workflow：
+
+```php
+#[WorkflowInterface]
+class MyWorkflow
+{
+    private $activity;
+
+    public function __construct()
+    {
+        $this->activity = Workflow::newActivityStub(
+            YourActivityInterface::class,
+            ActivityOptions::new()->withScheduleToStartTimeout(60)
+        );
+    }
+
+    #[WorkflowMethod]
+    public function runAsync()
+    {
+        $result = yield $this->activity->prePatchActivity();
+    }
+}
+```
+
+假设您将“prePatchActivity”替换为“postPatchActivity”并部署了 Updated 代码。
+
+如果现有的 Workflow Execution 由 Workflow 代码的原始版本启动，其中运行了“prePatchActivity”，然后在新的 Worker 上恢复运行，其中它被替换为“postPatchActivity”，则服务器端 Event History 将不同步。
+这将导致 Workflow 因不确定性错误而失败。
+
+要解决此问题，您可以使用 [Workflow::getVersion](https://php.Temporal.io/classes/Temporal-Workflow.html#method_getVersion) 修补您的 Workflow：
+
+```php
+#[WorkflowInterface]
+class MyWorkflow
+{
+    // ...
+
+    #[WorkflowMethod]
+    public function runAsync()
+    {
+        $version = yield Workflow::getVersion('Step 1', Workflow::DEFAULT_VERSION, 1);
+
+        $result = $version === Workflow::DEFAULT_VERSION
+            ? yield $this->activity->prePatchActivity()
+            : yield $this->activity->postPatchActivity();
+    }
+}
+```
+
+当为新的 Workflow Execution 运行“getVersion()”时，它会在 Event History 中记录一个标记，以便将来针对该 Workflow Execution 的更改 ID（示例中的“步骤 1”）对“getVersion()”的所有调用将始终返回给定的版本号，在示例中为“1”。
+
+如果您进行其他更改，例如添加“anotherPatchActivity()”，则需要
+添加一些额外的代码：
+
+```php
+#[WorkflowInterface]
+class MyWorkflow
+{
+    // ...
+
+    #[WorkflowMethod]
+    public function runAsync()
+    {
+        $version = yield Workflow::getVersion('Step 1', Workflow::DEFAULT_VERSION, maxSupported: 2);
+
+        $result = match($version) {
+            Workflow::DEFAULT_VERSION => yield $this->activity->prePatchActivity()
+            1 => yield $this->activity->postPatchActivity();
+            2 => yield $this->activity->anotherPatchActivity();
+        };
+    }
+}
+```
+
+请注意，我们将“maxSupported”从 1 更改为 2。
+在引入之前已经通过此“getVersion()”调用的 Workflow 返回“DEFAULT_VERSION”。
+在“maxSupported”设置为 1 的情况下运行的 Workflow 返回 1。
+新Workflow回归2。
+
+在版本 1 之前的所有 Workflow Execution 都保留后，您可以删除该版本的代码：
+
+```php
+    #[WorkflowMethod]
+    public function runAsync()
+    {
+        $version = yield Workflow::getVersion('Step 1', minSupported: 1, maxSupported: 2);
+
+        $result = match($version) {
+            1 => yield $this->activity->postPatchActivity();
+            2 => yield $this->activity->anotherPatchActivity();
+        };
+    }
+```
+
+您会注意到“minSupported”已从“DEFAULT_VERSION”更改为“1”。
+如果在此代码上重放旧版本的 Workflow Execution 历史记录，则会失败，因为最低预期版本为 1。
+当版本 1 的所有 Workflow Execution 都保留后，您可以删除版本 1，以便您的代码如下所示：
+
+```php
+    #[WorkflowMethod]
+    public function runAsync()
+    {
+        $version = yield Workflow::getVersion('Step 1', minSupported: 2, maxSupported: 2);
+
+        $result = yield $this->activity->anotherPatchActivity();
+    }
+```
+
+修补允许您对当前运行的 Workflow 进行更改。
+它是一种引入兼容更改而不引入非确定性错误的强大方法。
+
+### Workflow 转换
+
+要了解修补为何有用，演示剪切整个 Workflow 会很有帮助。
+
+由于不兼容的更改仅影响相同类型的打开的 Workflow Execution，因此您可以通过在进行更改时创建全新的 Workflow 来避免确定性错误。
+为此，您可以复制 Workflow Definition 函数，为其指定不同的名称，然后将这两个名称注册到您的 Worker。
+
+例如，您可以将“MyWorkflow”复制为“MyWorkflowV2”：
+
+```php
+#[WorkflowInterface]
+class MyWorkflow
+{}
+
+#[WorkflowInterface]
+class MyWorkflowV2
+{}
+```
+
+然后，您需要 Update、Worker 配置以及任何其他标识符字符串来注册两个 Workflow Type。
+此方法的缺点是，它需要您复制代码并向 Update 复制用于启动 Workflow 的任何命令。
+随着时间的推移，这可能变得不切实际。
+此方法也不提供对任何仍在运行的 Workflow 进行版本控制的方法——它本质上只是一个转换，与修补不同。
+
+## 运行时检查 {#runtime-checking}
+
+Temporal PHP SDK 执行运行时检查以帮助防止明显的不兼容更改。
+在没有版本控制的情况下添加、删除或重新排序任何这些方法都会触发运行时检查并导致不确定性错误：
+
+- `Workflow.ExecuteActivity()`
+- `Workflow.ExecuteChildWorkflow()`
+- `Workflow.NewTimer()`
+- `Workflow.RequestCancelWorkflow()`
+- `Workflow.SideEffect()`
+- `Workflow.SignalExternalWorkflow()`
+- `Workflow.Sleep()`
+
+运行时检查不会执行彻底的检查。
+例如，它不会检查 Activity 的输入参数或 Timer 持续时间。
+每个 Temporal SDK 都以不同的方式实现这些健全性检查，并且它们并不是对非确定性更改的完整检查。
+相反，您应该在进行修订时合并[重播测试](/develop/php/best-practices/testing-suite#replay)。

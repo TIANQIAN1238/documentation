@@ -1,8 +1,8 @@
 ---
 id: run-worker-process
-title: Worker processes - Ruby SDK
-description: Shows how to run Worker processes with the Ruby SDK
-sidebar_label: Worker processes
+title: "Worker 流程 - Ruby SDK"
+description: "演示如何使用 Ruby SDK 运行 Worker 进程"
+sidebar_label: "Worker 流程"
 slug: /develop/ruby/workers/run-worker-process
 toc_max_heading_level: 3
 tags:
@@ -11,24 +11,25 @@ tags:
   - Worker
 ---
 
-## Run Worker Process {#run-worker-process}
+<a id="run-worker-process"></a>
+## 运行 Worker 进程 {#run-worker-process}
 
-The [Worker Process](/workers#worker-process) is where Workflow Functions and Activity Functions are actually executed.
-In a Temporal application deployment, you ship and scale as many Workers as you need to handle the load of your Workflows and Activities.
+[Worker 流程](/workers#worker-process) 是 Workflow 函数和 Activity 函数实际执行的地方。
+在 Temporal 应用程序部署中，您可以根据需要交付和扩展任意数量的 Worker，以处理 Workflow 和活动的负载。
 
-- Each [Worker Entity](/workers#worker-entity) in the Worker Process must register the exact Workflow Types and Activity Types it may execute.
-- Each Worker Entity must also associate itself with exactly one [Task Queue](/task-queue).
-- Each Worker Entity polling the same Task Queue must be registered with the same Workflow Types and Activity Types.
+- Worker 进程中的每个 [Worker 实体](/workers#worker-entity) 必须注册其可能执行的确切 Workflow 类型和 Activity 类型。
+- 每个 Worker 实体还必须将其自身与一个 [Task Queue](/task-queue) 关联起来。
+- 轮询相同 Task Queue 的每个 Worker 实体必须使用相同的 Workflow 类型和 Activity 类型进行注册。
 
-A [Worker Entity](/workers#worker-entity) is the component within a Worker Process that listens to a specific Task Queue.
+[Worker 实体](/workers#worker-entity) 是 Worker 进程中侦听特定 Task Queue 的组件。
 
-A Worker Entity contains a Workflow Worker and/or an Activity Worker, which makes progress on Workflow Executions and Activity Executions, respectively.
+Worker 实体包含 Workflow Worker 和/或 Activity Worker，它们分别在 Workflow Execution 和 Activity 执行上取得进展。
 
-Workers are implemented in each Temporal SDK, and can be deployed with just a bit of boilerplate.
-To create a Worker, use `Temporalio::Worker.new()`, providing the Worker options which include Task Queue, Workflows, and Activities and more.
+Worker 在每个 Temporal SDK 中实现，并且只需一些样板即可部署。
+要创建 Worker，请使用 `Temporalio::Worker.new()`，提供 Worker 选项，其中包括 Task Queue、Workflow 和活动等。
 
-The following code example creates a Worker that polls for tasks from the Task Queue and executes the Workflow.
-When a Worker is created, it accepts a list of Workflows, a list of Activities, or both.
+以下代码示例创建一个 Worker，该 Worker 轮询来自 Task Queue 的任务并执行 Workflow。
+创建 Worker 时，它接受 Workflow 列表、活动列表或两者。
 
 ```ruby
 # Create a client to localhost on default namespace
@@ -49,9 +50,9 @@ worker = Temporalio::Worker.new(
 worker.run(shutdown_signals: ['SIGINT'])
 ```
 
-To run multiple workers, `Temporalio::Worker.run_all` may be used instead.
+要运行多个 Worker，可以改用 `Temporalio::Worker.run_all`。
 
-All Workers listening to the same Task Queue name must be registered to handle the exact same Workflows Types and Activity Types.
+必须注册所有监听相同 Task Queue 名称的 Worker 才能处理完全相同的 Workflow 类型和 Activity 类型。
 
-If a Worker polls a Task for a Workflow Type or Activity Type it does not know about, it fails that Task.
-However, the failure of the Task does not cause the associated Workflow Execution to fail.
+如果 Worker 轮询任务以查找它不知道的 Workflow 类型或 Activity 类型，则该任务将失败。
+但是，任务失败不会导致关联的 Workflow Execution 失败。

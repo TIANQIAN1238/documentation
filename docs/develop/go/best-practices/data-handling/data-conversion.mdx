@@ -1,40 +1,40 @@
 ---
 id: data-conversion
-title: Payload conversion - Go SDK
-sidebar_label: Payload conversion
+title: Payload 转换 - Go SDK
+sidebar_label: Payload 转换
 slug: /develop/go/data-handling/data-conversion
 toc_max_heading_level: 2
 tags:
   - Data Converters
   - Go SDK
   - Temporal SDKs
-description: Customize how Temporal serializes application objects using Payload Converters in the Go SDK, including composite data converters and custom type examples.
+description: 使用 Go SDK 中的 Payload Converter 自定义 Temporal 序列化应用程序对象的方式，包括复合 Data Converter 和自定义类型示例。
 ---
 
 import { CaptionedImage } from '@site/src/components';
 
-Temporal SDKs provide a default [Payload Converter](/payload-converter) that can be customized to convert a custom data type to [Payload](/dataconversion#payload) and back.
+Temporal SDK 提供了默认的 [Payload Converter](/payload-converter)，可以自定义以将自定义数据类型与 [Payload](/dataconversion#payload) 相互转换。
 
-The order in which your encoding Payload Converters are applied depend on the order given to the Data Converter.
-You can set multiple encoding Payload Converters to run your conversions.
-When the Data Converter receives a value for conversion, it passes through each Payload Converter in sequence until the converter that handles the data type does the conversion.
+编码 Payload Converter 的应用顺序取决于传递给 Data Converter 的顺序。
+你可以设置多个编码 Payload Converter 来执行转换。
+当 Data Converter 收到需要转换的值时，它会依次经过每个 Payload Converter，直到能够处理该数据类型的转换器完成转换为止。
 
-Payload Converters can be customized independently of a Payload Codec.
-Temporal's Converter architecture looks like this:
+Payload Converter 可以独立于 Payload Codec 进行自定义。
+Temporal 的 Converter 架构如下所示：
 
 <CaptionedImage
     src="/img/info/converter-architecture.png"
     title="Temporal converter architecture"
 />
 
-## Use a custom Payload Converter {#custom-payload-converter}
+## 使用自定义 Payload Converter {#custom-payload-converter}
 
-Use a [Composite Data Converter](https://pkg.go.dev/go.temporal.io/sdk/converter#CompositeDataConverter) to apply custom, type-specific Payload Converters in a specified order.
-Defining a new Composite Data Converter is not always necessary to implement custom data handling.
-You can override the default Converter with a custom Codec, but a Composite Data Converter may be necessary for complex Workflow logic.
+使用 [Composite Data Converter](https://pkg.go.dev/go.temporal.io/sdk/converter#CompositeDataConverter) 按指定顺序应用自定义的、类型特定的 Payload Converter。
+实现自定义数据处理并不总是需要定义新的 Composite Data Converter。
+你可以使用自定义 Codec 覆盖默认 Converter，但对于复杂的 Workflow 逻辑，可能需要使用 Composite Data Converter。
 
-`NewCompositeDataConverter` creates a new instance of `CompositeDataConverter` from an ordered list of type-specific Payload Converters.
-The following type-specific Payload Converters are available in the Go SDK, listed in the order that they are applied by the default Data Converter:
+`NewCompositeDataConverter` 从有序的类型特定 Payload Converter 列表创建 `CompositeDataConverter` 的新实例。
+Go SDK 中提供了以下类型特定的 Payload Converter，按默认 Data Converter 的应用顺序列出：
 
 - [NewNilPayloadConverter()](https://pkg.go.dev/go.temporal.io/sdk/converter#NilPayloadConverter.ToString)
 - [NewByteSlicePayloadConverter()](https://pkg.go.dev/go.temporal.io/sdk/converter#ByteSlicePayloadConverter)
@@ -42,17 +42,17 @@ The following type-specific Payload Converters are available in the Go SDK, list
 - [NewProtoPayloadConverter()](https://pkg.go.dev/go.temporal.io/sdk/converter#ProtoPayloadConverter)
 - [NewJSONPayloadConverter()](https://pkg.go.dev/go.temporal.io/sdk/converter#JSONPayloadConverter)
 
-The order in which the Payload Converters are applied is important because during serialization the Data Converter tries the Payload Converters in that specific order until a Payload Converter returns a non-nil Payload.
+Payload Converter 的应用顺序非常重要，因为在序列化过程中，Data Converter 会按照特定顺序依次尝试每个 Payload Converter，直到某个 Payload Converter 返回非 nil 的 Payload 为止。
 
-To set your custom Payload Converter, use [`NewCompositeDataConverter`](https://pkg.go.dev/go.temporal.io/sdk/converter#NewCompositeDataConverter) and set it as the Data Converter in the Client options.
+要设置自定义 Payload Converter，请使用 [`NewCompositeDataConverter`](https://pkg.go.dev/go.temporal.io/sdk/converter#NewCompositeDataConverter) 并在 Client 选项中将其设置为 Data Converter。
 
-- To replace the default Data Converter with a custom `NewCompositeDataConverter`, use the following.
+- 要用自定义的 `NewCompositeDataConverter` 替换默认 Data Converter，请使用以下代码：
 
   ```go
   dataConverter := converter.NewCompositeDataConverter(YourCustomPayloadConverter())
   ```
 
-- To add your custom type conversion to the default Data Converter, use the following to keep the defaults but set yours just before the default JSON fall through.
+- 要将自定义类型转换添加到默认 Data Converter，请使用以下代码保留默认值，同时在默认 JSON 兜底之前设置你的转换器：
 
   ```go
   dataConverter := converter.NewCompositeDataConverter(

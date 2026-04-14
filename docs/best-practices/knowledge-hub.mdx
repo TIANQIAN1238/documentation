@@ -1,8 +1,8 @@
 ---
 id: knowledge-hub
-title: Knowledge Hub
-sidebar_label: Knowledge Hub
-description:
+title: "知识中心"
+sidebar_label: "知识中心"
+description: Best practices for building and maintaining an internal Temporal knowledge hub that accelerates developer onboarding,
   Best practices for building and maintaining an internal Temporal knowledge hub that accelerates developer onboarding,
   reduces platform team support load, and establishes consistent standards across your organization.
 toc_max_heading_level: 3
@@ -13,134 +13,142 @@ tags:
   - Best Practices
 ---
 
-As organizations scale their Temporal adoption, the use cases become more complex, and it can be difficult to locate all the relevant information you need.
-Tribal knowledge gets siloed within teams, leading to inconsistent patterns for Workflow design, error handling, and testing.
-This fragmentation leads to an increased burden on support, as well as slower onboarding for new developers.
-You may also inadvertently introduce security vulnerabilities or compliance gaps.
-To prevent these issues, you can establish an internal Temporal knowledge hub to address common issues that arise when multiple teams
-adopt Temporal independently.
+随着组织扩大 Temporal 采用范围，这样变得更加复杂，而且可能很难找到您需要的所有相关信息。
+团队内部的部落知识被孤立，导致Workflow设计、错误处理和测试模式不一致。
+这种碎片化导致支持负担增加，并且新开​​发人员的入职速度变慢。
+您还可能无意中引入安全漏洞或合规性漏洞。
+为了防止这些问题，您可以建立一个内部 Temporal 知识中心来解决多个团队时出现的常见问题
+独立采用Temporal。
 
-This guide covers what belongs in a knowledge hub, how to communicate it, and how to keep it useful over time.
-To bootstrap your knowledge hub, use the
-[Temporal Platform Hub](https://go.temporal.io/platform-hub) template as a starting point.
+本指南介绍了知识中心的内容、如何传播知识以及如何保持其有用性。
+要引导您的知识中心，请使用
+以[Temporal 平台集线器](https://go.temporal.io/platform-hub)模板为起点。
 
-## What belongs in your knowledge hub
+<a id="what-belongs-in-your-knowledge-hub"></a>
+## 您所属的知识中心是什么 {#what-belongs-in-your-knowledge-hub}
 
-Although Temporal itself has [thorough documentation](https://docs.temporal.io/), not all of it applies to your organization or your teams' use cases.
-The knowledge hub distills the documentation into just the specific information your teams need.
-One way to organize the content is according to where developers are in their journey.
-The following sample outline shows what sections to include.
+Temporal 本身具有 [观赏的文档](https://docs.temporal.io/)，但并非所有内容都适用于您的组织或团队的示例。
+您的知识中心将文档提炼为团队需要的特定信息。
+组织内容的一种方法是根据开发人员的阶段。
+以下示例大纲显示了要包含的部分。
 
-### Evaluate
+＃＃＃评价
 
-The Evaluation section helps developers understand what Temporal is and whether it fits their problem.
-Goals for this section are to increase knowledge hub traffic and decrease the support question rate.
-Include the following items in this section:
+评估部分可帮助开发人员了解 Temporal 是什么以及它是否适合他们的问题。
+本部分的目标是增加知识中心流量并降低支持问题率。
+本节中包括以下项目：
 
-- **Temporal overview** explains what Temporal is, why your organization chose it, and the business value metrics
-  that justify adoption.
-- **Decision framework** provides qualifying questions, good and bad use cases, and alternative recommendations so
-  developers can determine whether Temporal fits their problem.
+- **Temporal 概述**解释了 Temporal 是什么、您的组织选择它的原因以及业务价值指标
+  这证明了采用的合理性。
+- **决策框架**提供限定问题、好的和坏的方案以及替代建议，以便
+  开发人员可以确定 Temporal 是否适合他们的问题。
 
-### Build
+＃＃＃建造
 
-The Build section is aimed at developers who are just getting started with Temporal.
-The goal of this section is to give developers a single path from zero to a running Workflow.
-Include the following items in this section:
+构建部分面向刚刚开始使用 Temporal 的开发人员。
+本节的目标是为开发人员提供从零到运行 Workflow 的单一路径。
+本节中包括以下项目：
 
-- **Getting started** walks developers through a 30-minute quickstart covering environment setup, a starter template,
-  and running a first Workflow locally and on Temporal Cloud. Use an existing Temporal [quickstart](/quickstarts), or build one from your own use case.
-- **Learning paths** provides self-paced courses from foundational to advanced topics, tailored by persona, and links
-  to [Temporal's free training](https://learn.temporal.io/).
+- **入门**引导开发人员完成30分钟的快速入门，内容设置、入门模板、
+  并在本地和 Temporal Cloud 上运行第一个 Workflow。使用现有的 Temporal [快速入门](/quickstarts)，或根据您自己的示例构建一个。
+- **学习路径**提供从基础到高级主题的自定详细课程，按人物和链接定制
+  至[Temporal的免费培训](https://learn.temporal.io/)。
 
-### Ship
+＃＃＃船
 
-The Ship section provides the architecture standards and guardrails developers need to go from a local prototype to a production
-deployment.
-The goal for this section is to provide reference material developers need to reduce their time to production.
-Include the following items in this section:
+船舶部分提供了开发人员从本地原型到生产所需的架构标准和护栏
+部署。
+本节的目标是提供开发人员在生产时间内所需的参考材料。
+本节中包括以下项目：
 
-- **Architecture and standards** documents Namespace conventions, connectivity requirements, and Worker deployment
-  standards that every team follows.
-- **Cost guidance** explains billable Actions, storage tiers, and cost-saving tips so developers build cost-efficient
-  Workflows.
-- **Shared responsibility** defines an ownership matrix between Platform and Application teams across IAM,
-  infrastructure, development, deployment, observability, and operations.
-- **Design patterns** curates Workflow patterns with descriptions and code sample links that developers can adopt
-  directly.
+- **架构和标准**记录 Namespace 规定、连接要求和 Worker 部署
+  每个团队都遵循的标准。
+- **成本指南**解释了计算操作、存储层和成本节约技巧，便于开发人员构建具有高效成本的产品
+  Workflow。
+- **共同责任**定义了跨 IAM 的平台和应用程序团队之间的阵列矩阵，
+  基础、开发、部署、可观察性和运营设施。
+- **设计模式** 策划Workflow模式，其中包含开发人员可以采用的描述和代码示例链接
+  直接。
 
-### Operate
+＃＃＃操作
 
-The Operate section gives developers the tools to self-serve during incidents and find answers without escalating to the Platform team.
-The goal of this section is to decrease the number of questions to support.
-Include the following items in this section:
+操作部分为开发人员提供了在发生事件时进行自助服务并找到答案的工具，从而消耗了上报给平台团队的时间。
+本节的目标是减少需要支持的问题数量。
+本节中包括以下项目：
 
-- **Troubleshooting and escalation** covers observability tools, runbooks for common issues, escalation paths, SLAs,
-  and example alert definitions.
-- **Support and FAQs** documents your support tier, ticket submission process, Temporal account contacts, expert-led
-  session types, and frequently asked questions.
+- **故障排除和升级**主题可观察性工具、常见问题的操作手册、升级路径、SLA、
+  以及警报描述示例。
+- **支持和常见问题解答记录**您的支持级别、票证提交流程、Temporal 账户活塞、专家主导
+  会话类型和常见问题。
 
-## Measuring success of your knowledge hub
+<a id="evaluate"></a>
+## 自由知识中心的成功 {#evaluate}
 
-After you've created your knowledge hub, establish metrics to measure its effectiveness for your organization.
-The following table shows example indicators that organizations use to measure the impact of their knowledge hub,
-along with realistic before-and-after targets:
+创建知识中心后，建立指标来简化其对组织的有效性。
+下面显示了组织用于简化其知识中心影响的示例指标，
+以及现实的平衡目标：
 
-| Metric | Before Knowledge Hub | Target | What it tells you |
+| 公制 | 之前的知识中心 | 目标 | 它告诉你什么 |
 | :--- | :--- | :--- | :--- |
-| **Time to first Workflow** | Days to weeks (developers piece together scattered resources) | Under 30 minutes (developers follow a single getting started guide) | Measures onboarding friction. A short time to first Workflow signals that your getting started guide is effective. |
-| **Time to Workflow in production** | Weeks to months (blocked by unclear Namespace provisioning and deployment processes) | Under 2 weeks (developers follow documented self-service provisioning) | Measures the gap between development and delivering value. Long times point to missing documentation and automation opportunities. |
-| **Support question rate** | 20-30+ questions per week to the Platform team via Slack | Fewer than 5 per week | Measures self-service resolution. A declining trend shows that developers are finding answers in the knowledge hub instead of asking the Platform team. |
-| **Knowledge Hub traffic** | N/A (no centralized resource exists) | Steady or growing page views per month | Identifies which content developers rely on and where gaps remain. Declining traffic on a page may indicate it is outdated; high traffic with high bounce rates may indicate the page is not answering the question. |
+| **第一次Workflow的时间** | 几天到几周（开发人员将分散的资源拼凑在一起） | 30分钟以内（开发人员遵循单一入门指南） | 测量艰难。第一次使用 Workflow Signal 的时间很短，您的入门指南是有效的。 |
+| **Workflow投入制作的时间** | 几周到几个月（因 Namespace 配置和部署流程不明确而受阻） | 不到 2 周（开发人员遵循记录的自助服务配置） | 快速表明开发与交付价值之间的差距。很长一段时间的需求文档和自动化机会。 |
+| **支持提问率** | 每周通过 Slack 向平台团队提出 20-30 个多个问题 | 每周少于5次 | 快速自助服务解决方案。下降趋势表明开发人员正在知识中心寻找答案，而不是询问平台团队。 |
+| **中心知识流量** | N/A（不存在集中资源） | 每月页面浏览量稳定或增长 | 确定开发人员依赖哪些内容以及仍然存在差距。页面流量下降可能表明该页面已过时；高流量和高跳出率可能表明该页面没有回答问题。 |
 
-These metrics create a feedback loop: measure, identify gaps, improve content, and measure again.
+这些指标创建了一个反馈循环：测量、识别差距、改进内容，然后重新测量。
 
-## What doesn't belong in your knowledge hub
+<a id="build"></a>
+## 哪些内容不属于您的知识中心 {#build}
 
-A knowledge hub is not a mirror of [Temporal's official documentation](https://docs.temporal.io/).
-Avoid duplicating SDK API references, concept explanations, or release notes that Temporal already maintains.
-When that content changes, your copy becomes a source of confusion rather than clarity.
-Instead, link to the official docs and reserve your knowledge hub for organization-specific decisions, conventions,
-and operational procedures that Temporal's public documentation does not cover.
+知识中心不是 [Temporal的官方文档](https://docs.temporal.io/) 的镜像。
+避免重复 Temporal 已维护的 SDK API 参考、概念解释或发行说明。
+当内容发生变化时，您的副本会变得清晰而不杂乱。
+相反，链接到官方文档并保留您的知识中心以用于特定于组织的决策、约定、
+Temporal 的公共文档未讨论操作程序和操作程序。
 
-## How to maintain and communicate your knowledge hub
+<a id="ship"></a>
+## 如何维护和交流您的知识中心 {#ship}
 
-Having a thorough, complete knowledge hub isn't useful if the information becomes stale, or if developers don't know it exists.
+如果信息变得陈旧，或者开发人员不知道它的存在，那么拥有彻底、完整的知识中心就无用处。
 
-### Assign ownership
+<a id="operate"></a>
+### 分配头部 {#operate}
 
-Designate a Platform team or developer experience team as the owner.
-This team is responsible for initial content creation, ongoing maintenance, and reviewing contributions from
-application teams.
+指定平台团队或开发人员体验团队作为业主。
+团队负责初始内容创建、持续维护并审查来自
+应用团队。
 
-### Make it discoverable
+<a id="measuring-success-of-your-knowledge-hub"></a>
+### 发现 {#measuring-success-of-your-knowledge-hub}
 
-A knowledge hub that developers can not find is the same as not having one.
+开发者缺少知识中心就等于没有知识中心。
 
-- Register a short URL (for example, `go/temporal`) that redirects to the knowledge hub.
-- Pin the link in your Temporal-related communication channels (Slack, Microsoft Teams).
-- When answering questions in Slack, respond with a link to the relevant knowledge hub page instead of re-explaining
-  inline.
-  This builds the habit of checking the hub first.
+- 注册一个重定向到知识中心的短URL（例如`go/temporal`）。
+- 将链接固定在与 Temporal 相关的沟通渠道（Slack、Microsoft Teams）中。
+- 在Slack中回答问题时，回复相关知识中心页面的链接，而不是重新解释
+  内联。
+  此习俗首先检查了行器的习惯。
 
-### Review metrics regularly
+###定期审查指标
 
-Track the metrics from [Measuring success of your knowledge hub](#measuring-success-of-your-knowledge-hub) on a regular cadence to identify what is
-working and where gaps remain.
+定期跟踪 [便捷知识中心的成功](#measuring-success-of-your-knowledge-hub) 的指标，仪表是什么
+工作仍然以及存在差距的地方。
 
-Capture every question that reaches the Platform team through Slack or tickets as a candidate for new content.
+通过 Slack 或票证捕获平台团队的每个问题，作为新内容的候选者。
 
-Solicit contributions from application teams through a lightweight process such as a pull request template.
+通过拉取请求模板等轻量级流程征求应用程序团队的贡献。
 
-### Keep content current
+<a id="what-doesnt-belong-in-your-knowledge-hub"></a>
+### 保持内容最新 {#what-doesnt-belong-in-your-knowledge-hub}
 
-- **Review on a cadence**: Review each page at least quarterly.
-  Assign a review owner and date to each page so staleness is visible.
-- **Tie updates to events**: Update the knowledge hub whenever your organization changes its Temporal architecture,
-  updates its deployment tooling, or modifies its shared responsibility model.
-- **Prune aggressively**: Remove or archive content that no longer applies.
-  Outdated documentation is worse than no documentation because developers follow it and get unexpected results.
+- **按节奏审核**：至少每季度审核一次每一页。
+  为每个页面分配评论业主和日期，以便查看过时情况。
+- **将 Update 与事件关联**：只要您的组织更改其 Temporal 架构时，Update 就是知识中心，
+  Update 其部署工具，或修改其共享责任模型。
+- **积极修剪**：删除或归档不再适用的内容。
+  有过的文档比没有文档更糟糕，因为开发人员遵循它就会得到很快的结果。
 
-## Get started
+<a id="how-to-maintain-and-communicate-your-knowledge-hub"></a>
+## 开始吧 {#how-to-maintain-and-communicate-your-knowledge-hub}
 
-Start with the [Temporal Platform Hub template](https://go.temporal.io/platform-hub) as your foundation.
+从 [Temporal 平台集线器模板](https://go.temporal.io/platform-hub) 作为您的基础开始。

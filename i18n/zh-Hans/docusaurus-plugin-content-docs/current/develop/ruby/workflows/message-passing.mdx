@@ -1,0 +1,742 @@
+---
+id: message-passing
+title: 消息传递 - Ruby SDK
+sidebar_label: 消息传递
+description: 使用 Temporal Ruby SDK 通过查询、Signal 和 Update 进行开发。
+toc_max_heading_level: 3
+keywords:
+  - ruby signals
+  - send signal from client
+  - send signal from workflow
+  - signal with start
+  - workflow queries
+  - sending queries
+  - workflow updates
+  - dynamic workflows
+  - dynamic activities
+  - dynamic signals
+  - dynamic queries
+tags:
+  - Ruby SDK
+  - Temporal SDKs
+---
+
+Workflow 可以像有状态服务一样接收消息：查询、Signal 和 Update。
+这些消息通过 Workflow 代码中定义的处理程序方法与 Workflow 交互。
+客户端使用消息来读取 Workflow 状态或更改其行为。
+
+有关一般概述，请参阅[Workflow 消息传递](/encyclopedia/Workflow-message-passing)。
+
+## 编写消息处理程序 {#writing-message-handlers}
+
+:::info
+下面的代码是[工作解决方案](https://github.com/Temporalio/samples-ruby/tree/main/message_passing_simple)的一部分。
+:::
+
+编写消息处理程序时请遵循以下准则：
+
+- 消息处理程序被定义为 Workflow 类上的方法，通过在定义处理程序方法之前调用三个类方法之一进行修饰：“Workflow_Query”、“Workflow_Signal”和“Workflow_Update”。
+- 这些还隐式创建与实例方法同名的类方法以供调用者使用。
+- 处理程序和主 Workflow 函数的参数和返回值必须是 [serialized](/dataconversion)。
+- 优先选择单个哈希/对象输入参数而不是多个输入参数。
+  哈希/对象参数允许您在不更改调用签名的情况下添加字段。
+
+### Query 处理程序 {#queries}
+
+[Query](/sending-messages#sending-queries) 是从 Workflow Execution 检索状态的同步操作。
+定义为方法：
+
+```ruby
+class GreetingWorkflow < Temporalio::Workflow::Definition
+  # ...
+
+  workflow_query
+  def languages(input)
+    # A query handler returns a value: it can inspect but must not mutate the Workflow state.
+    if input['include_unsupported']
+      CallGreetingService.greetings.keys.sort
+    else
+      @greetings.keys.sort
+    end
+  end
+
+  # ...
+end
+```
+
+或者作为属性读取器：
+
+```ruby
+class GreetingWorkflow < Temporalio::Workflow::Definition
+  # This is the equivalent of:
+  #    workflow_query
+  #    def language
+  #      @language
+  #    end
+  workflow_query_attr_reader :language
+
+  # ...
+end
+```
+
+- `Workflow_Query` 类方法可以接受参数。
+  请参阅 API 参考文档：[`Workflow_Query`](https://ruby.Temporal.io/Temporalio/Workflow/Definition.html#Workflow_Query-class_method)。
+- Query 处理程序不得修改 Workflow 状态。
+- 您无法执行异步阻塞操作，例如在 Query 处理程序中执行 Activity。
+
+### Signal 处理程序 {#Signals}
+
+[Signal](/sending-messages#sending-Signals) 是发送到正在运行的 Workflow Execution 的异步消息，用于更改其状态并控制其流程：
+
+```ruby
+class GreetingWorkflow < Temporalio::Workflow::Definition
+  # ...
+
+  workflow_signal
+  def approve(input)
+    # A signal handler mutates the workflow state but cannot return a value.
+    @approved_for_release = true
+    @approver_name = input['name']
+  end
+
+  # ...
+end
+```
+
+- `Workflow_Signal` 类方法可以接受参数。
+  请参阅 API 文档：[`Workflow_Signal`](https://ruby.Temporal.io/Temporalio/Workflow/Definition.html#Workflow_Signal-class_method)。
+
+- 处理程序不应返回值。
+  服务器立即发送响应，无需等待 Workflow 处理 Signal。
+
+- Signal（和 Update）处理程序可以是异步和阻塞的。
+  这允许您使用活动、Child Workflow、耐用的 Timer、等待条件等。
+  有关安全使用异步 Signal 和 Update 处理程序的指南，请参阅[异步处理程序](#async-handlers) 和 [Workflow 消息传递](/encyclopedia/Workflow-message-passing)。
+
+### Update 处理程序和验证器 {#Updates}
+
+[Update](/sending-messages#sending-Updates) 是发送到正在运行的 Workflow Execution 的可跟踪同步请求。
+它可以更改 Workflow 状态、控制其流程并返回结果。
+发送方必须等待，直到 Worker 接受或拒绝 Update。
+如果出现问题，发送者可能会进一步等待接收返回值或异常：
+
+```ruby
+class GreetingWorkflow < Temporalio::Workflow::Definition
+  # ...
+
+  workflow_update
+  def set_language(new_language) # rubocop:disable Naming/AccessorMethodName
+    # An update handler can mutate the workflow state and return a value.
+    prev = @language.to_sym
+    @language = new_language.to_sym
+    prev
+  end
+
+  workflow_update_validator(:set_language)
+  def validate_set_language(new_language)
+    # In an update validator you raise any exception to reject the update.
+    raise "#{new_language} is not supported" unless @greetings.include?(new_language.to_sym)
+  end
+
+  # ...
+end
+```
+
+- `Workflow_Update` 类方法可以采用 [`Workflow_Update`](https://ruby.Temporal.io/Temporalio/Workflow/Definition.html#Workflow_Update-class_method) 的 API 参考文档中所述的参数。
+
+## 实施部署时重放测试
+
+- 使用验证器接受和拒绝 Update：
+  - 要拒绝 Update，请在验证器中引发任何类型的异常。
+  - 如果没有验证器，Update 始终被接受。
+- 验证器和 Event History：
+  - 无论接受是自动的还是编程的，“WorkflowExecutionUpdateAccepted”事件都会写入历史记录。
+  - 当验证器引发错误时，Update 被拒绝，Update 不会运行，并且“WorkflowExecutionUpdateAccepted”不会添加到 Event History。
+    调用者收到“Update 失败”错误。
+
+- 使用 [`current_Update_info`](https://ruby.Temporal.io/Temporalio/Workflow.html#current_Update_info-class_method) 获取有关当前 Update 的信息。
+  这包括 Update ID，它在使用 Continue-As-New 时可用于重复数据删除：请参阅[确保消息仅处理一次](/handling-messages#exactly-once-message-processing)。
+- Update（和 Signal）处理程序可以是异步和阻塞的。
+  这允许您使用活动、Child Workflow、耐用的 Timer、等待条件等。
+  有关安全使用异步 Update 和 Signal 处理程序的指南，请参阅[异步处理程序](#async-handlers) 和 [Workflow 消息传递](/encyclopedia/Workflow-message-passing)。
+
+## 发送消息 {#send-messages}
+
+要发送查询、Signal 或 Update，您可以调用 [`WorkflowHandle`](https://ruby.Temporal.io/Temporalio/Client/WorkflowHandle.html) 实例上的方法。
+要获取Workflow手柄，您可以：
+
+- 使用 [`Client#start_Workflow`](https://ruby.Temporal.io/Temporalio/Client.html#start_Workflow-instance_method) 启动 Workflow 并返回其句柄。
+- 使用 [`Client#Workflow_handle`](https://ruby.Temporal.io/Temporalio/Client.html#Workflow_handle-instance_method) 方法通过 Workflow Id 检索 Workflow 句柄。
+
+例如：
+
+```ruby
+client = Temporalio::Client.connect('localhost:7233', 'default')
+handle = client.start_workflow(
+  MessagePassingSimple::GreetingWorkflow,
+  id: 'message-passing-simple-sample-workflow-id',
+  task_queue: 'message-passing-simple-sample'
+)
+```
+
+要检查发送消息时所需的参数类型以及查询和 Update 的返回类型，请参阅 Workflow Definition 中相应的处理程序方法。
+
+:::warning Using Continue-as-New and Updates
+
+- Temporal_不_支持 Update 处理程序中的 Continue-As-New 功能。
+- 使用 Continue-As-New 之前完成所有处理程序。
+- 使用主要 Workflow Definition 方法中的 Continue-As-New，就像完成或失败 Workflow Execution 一样。
+
+:::
+
+### 发送 Query {#send-Query}
+
+使用 [`WorkflowHandle#Query`](https://ruby.Temporal.io/Temporalio/Client/WorkflowHandle.html#Query-instance_method) 调用 Query 方法：
+
+```ruby
+supported_languages = handle.query(MessagePassingSimple::GreetingWorkflow.languages, { include_unsupported: false })
+```
+
+- 发送 Query 不会将事件添加到 Workflow 的 Event History。
+
+- 您可以在 Namespace 的 Workflow 保留期内向已关闭的 Workflow Execution 发送查询。
+  这包括已完成、失败或超时的 Workflow。
+  Querying 终止的 Workflow 不安全，因此不受支持。
+
+- Worker 必须在线并轮询 Task Queue 才能处理 Query。
+
+### 发送 Signal {#send-Signal}
+
+您可以将 Signal 从 Temporal CLIent 或另一个 Workflow Execution 发送到 Workflow Execution。
+但是，您只能将 Signal 发送到尚未关闭的 Workflow Execution。
+
+#### 来自客户端 {#send-Signal-from-client}
+
+使用客户端代码中的 [`WorkflowHandle#Signal`](https://ruby.Temporal.io/Temporalio/Client/WorkflowHandle.html#Signal-instance_method) 发送 Signal：
+
+```ruby
+handle.signal(MessagePassingSimple::GreetingWorkflow.approve, { name: 'John Q. Approver' })
+```
+
+- 当服务器接受 Signal 时调用返回；它并不等待 Signal 被传送到 Workflow Execution。
+
+- [WorkflowExecutionSignaled](/references/events#WorkflowexecutionSignaled) 事件出现在 Workflow 的 Event History 中。
+
+#### 来自 Workflow {#send-Signal-from-Workflow}
+
+Workflow 可以将 Signal 发送到另一个 Workflow，称为_外部 Signal_。
+在这种情况下，您需要获取外部 Workflow 的 Workflow 手柄。
+使用“Temporalio::Workflow.external_Workflow_handle”，传递正在运行的 Workflow Id，以检索 Workflow 句柄：
+
+```ruby
+class WorkflowB < Temporalio::Workflow::Definition
+  def execute
+    handle = Temporalio::Workflow.external_workflow_handle('workflow-a-id')
+    handle.signal(WorkflowA.some_signal, 'some signal arg')
+  end
+end
+```
+
+当发送外部 Signal 时：
+
+- [SignalExternalWorkflowExecutionInitiated](/references/events#SignalexternalWorkflowexecutioninitied) 事件出现在发送者的 Event History 中。
+- [WorkflowExecutionSignaled](/references/events#WorkflowexecutionSignaled) 事件出现在收件人的 Event History 中。
+
+#### Signal-带启动 {#Signal-带启动}
+
+Signal-With-Start 允许客户端将 Signal 发送到 Workflow Execution，如果尚未运行则启动执行。
+如果 Workflow 与给定的 Workflow Id 一起运行，则它将是 Signaled。
+如果没有，将启动新的 Workflow，并立即启动 Signal。
+
+要使用 Signal-With-Start，请使用“WithStartWorkflowOperation”调用“Signal_with_start_Workflow”：
+
+```ruby
+client = Temporalio::Client.connect('localhost:7233', 'default')
+
+# Create start-workflow operation for use with signal-with-start
+start_workflow_operation = Temporalio::Client::WithStartWorkflowOperation.new(
+  MyWorkflow, 'my-workflow-input',
+  id: 'my-workflow-id', task_queue: 'my-workflow-task-queue'
+)
+# Perform signal-with-start
+handle = client.signal_with_start_workflow(
+  MyWorkflow.my_signal, 'signal-input', start_workflow_operation:
+)
+```
+
+### 发送 Update {#send-Update-from-client}
+
+Update 是同步、阻塞调用，可以更改 Workflow 状态、控制其流程并返回结果。
+
+发送 Update 的客户端必须等待服务器将 Update 传送给 Worker。
+Worker 必须可用且响应迅速。
+如果服务器收到请求后需要立即响应，请改用 Signal。
+另请注意，您无法将 Update 发送到其他 Workflow Execution。
+
+- 当 Worker 确认 Update 通过验证时，将“WorkflowExecutionUpdateAccepted”添加到 Event History。
+- 当 Worker 确认 Update 已完成时，将“WorkflowExecutionUpdateCompleted”添加到 Event History。
+
+要将 Update 发送到 Workflow Execution，您可以：
+
+- 从 Workflow 句柄中使用“execute_Update”调用 Update 方法，并等待 Update 完成。
+  此代码获取 Update 结果：
+
+  ```ruby
+  prev_language = handle.execute_update(MessagePassingSimple::GreetingWorkflow.set_language, :chinese)
+  ```
+
+2. 一旦 Update 被接受，就使用“start_Update”接收句柄。
+     它返回一个“WorkflowUpdateHandle”
+
+- 稍后使用此“WorkflowUpdateHandle”来获取结果。
+  - 异步 Update 处理程序通常执行长时间运行的异步活动。
+  - `start_Update` 仅等到 Worker 接受或拒绝 Update，而不是等到所有异步操作完成。
+
+例如：
+
+  ```ruby
+  # Start an update and then wait for it to complete
+  update_handle = handle.start_update(
+    MessagePassingSimple::GreetingWorkflow.apply_language_with_lookup,
+    :arabic,
+    wait_for_stage: Temporalio::Client::WorkflowUpdateWaitStage::ACCEPTED
+  )
+  prev_language = update_handle.result
+  ```
+
+有关更多详细信息，请参阅“异步处理程序”部分。
+
+#### Update-带启动 {#Update-带启动}
+
+:::tip Stability
+
+在 Temporal Cloud 的 [公开预览](/evaluate/development-product-features/release-stages#public-preview) 中。
+
+最低 Temporal Server 版本 [Temporal Server 版本 1.26](https://github.com/Temporalio/Temporal/releases/tag/v1.26.2)
+
+:::
+
+[Update-with-Start](/sending-messages#Update-with-start) 允许您[发送 Update](/develop/ruby/Workflows/message-passing#send-Update-from-client) 来检查具有该 ID 的已运行 Workflow 是否存在：
+
+- 如果 Workflow 存在，则处理 Update。
+- 如果 Workflow 不存在，则使用给定 ID 启动新的 Workflow Execution，并在主 Workflow 方法开始执行之前处理 Update。
+
+使用execute_Update_with_start_Workflow一次性启动Update并等待结果。
+
+或者，使用 start_Update_with_start_Workflow 启动 Update 并接收 WorkflowUpdateHandle，然后使用 Update_handle.result 从 Update 检索结果。
+
+一旦到达所请求的 Update 等待阶段或请求超时，这些调用就会返回。
+
+- 您需要提供“WithStartWorkflowOperation”来定义必要时启动的 Workflow 及其参数。
+- 创建 `WithStartWorkflowOperation` 时，您必须指定 [id_conflict_policy](/Workflow-execution/Workflowid-runid#Workflow-id-conflict-policy)。
+  请注意，“WithStartWorkflowOperation”只能使用一次。
+
+这是一个例子：
+
+```ruby
+client = Temporalio::Client.connect('localhost:7233', 'default')
+
+# Create start-workflow operation for use with update-with-start
+start_workflow_operation = Temporalio::Client::WithStartWorkflowOperation.new(
+  MyWorkflow, 'my-workflow-input',
+  id: 'my-workflow-id', task_queue: 'my-workflow-task-queue',
+  id_conflict_policy: Temporalio::WorkflowIDConflictPolicy::USE_EXISTING
+)
+# Perform update-with-start and get update result
+update_result = client.execute_with_start_workflow(
+  MyWorkflow.my_update, 'update-input', start_workflow_operation:
+)
+# The workflow handle is on the start operation, here's an example of waiting on
+# workflow result
+workflow_result = start_workflow_operation.workflow_handle.result
+```
+
+了解 XPROT012X 过时的 XPROT035X 版本控制 API。
+
+本节介绍常见的写入操作，例如 Signal 和 Update 处理程序。
+它不适用于纯读取操作，例如查询或 Update 验证器。
+
+:::tip
+
+有关其他信息，请参阅[将工作注入主 Workflow](/handling-messages#injecting-work-into-main-Workflow) 和[确保消息仅处理一次](/handling-messages#exactly-once-message-processing)。
+
+:::
+
+### 添加异步处理程序 {#async-handlers}
+
+Signal 和 Update 处理程序可以是异步的，也可以是阻塞的。
+使用异步调用允许您等待活动、Child Workflow、持久 Timer、等待条件等。
+这扩展了处理程序可以完成的操作的可能性，但这也意味着处理程序执行和您的主要 Workflow 方法都是同时运行的，并在等待调用时在它们之间进行切换。
+
+为了安全地使用异步处理程序，了解可能出错的事情至关重要。
+有关安全使用异步 Signal 和 Update 处理程序的指南，请参阅[Workflow 消息传递](/encyclopedia/Workflow-message-passing)，以及下面的[控制处理程序并发](#control-handler-concurrency) 和[等待消息处理程序完成](#wait-for-message-handlers) 部分。
+
+以下代码是模拟对远程服务的网络调用的Activity：
+
+```ruby
+class CallGreetingService < Temporalio::Activity::Definition
+  def execute(to_language)
+    # Simulate a network call
+    sleep(0.2)
+    # This intentionally returns nil on not found
+    CallGreetingService.greetings[to_language.to_sym]
+  end
+
+  def self.greetings
+    @greetings ||= {
+      arabic: 'مرحبا بالعالم',
+      chinese: '你好，世界',
+      english: 'Hello, world',
+      french: 'Bonjour, monde',
+      hindi: 'नमस्ते दुनिया',
+      portuguese: 'Olá mundo',
+      spanish: 'Hola mundo'
+    }
+  end
+end
+```
+
+以下代码是Workflow Update，用于异步使用前面的Activity：
+
+```ruby
+class GreetingWorkflow < Temporalio::Workflow::Definition
+  # ...
+
+  workflow_update
+  def apply_language_with_lookup(new_language)
+    # Call an activity if it's not there.
+    unless @greetings.include?(new_language.to_sym)
+      # We use a mutex so that, if this handler is executed multiple times, each execution
+      # can schedule the activity only when the previously scheduled activity has
+      # completed. This ensures that multiple calls to apply_language_with_lookup are
+      # processed in order.
+      @apply_language_mutex ||= Mutex.new
+      @apply_language_mutex.synchronize do
+        greeting = Temporalio::Workflow.execute_activity(
+          CallGreetingService, new_language, start_to_close_timeout: 10
+        )
+        # The requested language might not be supported by the remote service. If so, we
+        # raise ApplicationError, which will fail the update. The
+        # WorkflowExecutionUpdateAccepted event will still be added to history. (Update
+        # validators can be used to reject updates before any event is written to history,
+        # but they cannot be async, and so we cannot use an update validator for this
+        # purpose.)
+        raise Temporalio::Error::ApplicationError, "Greeting service does not support #{new_language}" unless greeting
+
+        @greetings[new_language.to_sym] = greeting
+      end
+    end
+    set_language(new_language)
+  end
+end
+```
+
+更新异步调用的代码后，您的 Update 处理程序可以 Schedule 和 Activity 并等待结果。
+尽管异步 Signal 处理程序可以启动类似的网络任务，但使用 Update 处理程序允许客户端在 Activity 完成后接收结果或错误。
+这可以让您的客户端跟踪 Update 的活动、Child Workflow 等执行的异步工作的进度。
+
+### 使用等待条件{#block-with-wait}
+
+有时，异步 Signal 或 Update 处理程序需要满足某些条件才能继续。
+将等待条件与 [`wait_condition`](https://ruby.Temporal.io/Temporalio/Workflow.html#wait_condition-class_method) 一起使用会设置一个函数，该函数会阻止代码继续执行，直到条件为真为止。
+这是一个重要的功能，可以帮助您控制处理程序逻辑。
+
+以下是“wait_condition”的两个重要用例：
+
+- 在处理程序中等待，直到适合继续。
+- 在主 Workflow 中等待，直到所有活动处理程序完成。
+
+您正在等待的条件状态可以是 Updated，并反映 Workflow 代码的任何部分。
+这包括主 Workflow 方法、其他处理程序或由主 Workflow 方法生成的子协程等。
+
+#### 在处理程序中 {#wait-in-handlers}
+
+有时，异步 Signal 或 Update 处理程序需要满足某些条件才能继续。
+将等待条件与 [`wait_condition`](https://ruby.Temporal.io/Temporalio/Workflow.html#wait_condition-class_method) 一起使用会设置一个函数，该函数会阻止代码继续执行，直到条件为真为止。
+这是一个重要的功能，可以帮助您控制处理程序逻辑。
+
+考虑在 Update 处理程序执行之前运行的“ready_for_Update_to_execute”方法。
+`wait_condition` 调用会等待，直到满足您的条件：
+
+```ruby
+workflow_update
+def my_update(my_update_input)
+  Temporalio::Workflow.wait_condition { ready_for_update_to_execute(my_update_input) }
+  # ...
+end
+```
+
+请记住：处理程序可以在主 Workflow 方法启动之前执行。
+
+#### 在完成 Workflow {#wait-for-message-handlers} 之前
+
+Workflow 等待条件可以确保您的处理程序在 Workflow 完成之前完成。
+当您的 Workflow 使用异步 Signal 或 Update 处理程序时，您的主 Workflow 方法可以在处理程序仍在等待异步任务（例如 Activity 结果）时返回 或 Continue-As-New。
+Workflow 完成可能会在处理程序完成关键工作之前中断处理程序，并在尝试检索 Update 结果时导致客户端错误。
+使用 `Temporalio::Workflow.all_handlers_finished?` 来解决这个问题，让你的 Workflow 顺利结束：
+
+```ruby
+class MyWorkflow < Temporalio::Workflow::Definition
+  def execute
+    # ...
+
+    Temporalio::Workflow.wait_condition { Temporalio::Workflow.all_handlers_finished? }
+    'workflow-result'
+  end
+end
+```
+
+默认情况下，当您允许 Workflow Execution 完成未完成的处理程序执行时，您的 Worker 将记录一条警告。
+您可以通过将 `unfinished_policy` 参数传递给 [`Workflow_Signal`](https://ruby.Temporal.io/Temporalio/Workflow/Definition.html#Workflow_Signal-class_method) / [`Workflow_Update`](https://ruby.Temporal.io/Temporalio/Workflow/Definition.html#Workflow_Update-class_method)类方法：
+
+```ruby
+workflow_update unfinished_policy: Temporalio::Workflow::HandlerUnfinishedPolicy::ABANDON
+def my_update
+  # ...
+```
+
+有关详细信息，请参阅[Workflow 完成之前的完成处理程序](/handling-messages#finishing-message-handlers)。
+
+### 使用 Workflow_init 提前访问输入
+
+`initialize` 上面的 `Workflow_init` 类方法使其能够访问 [Workflow 输入](/handling-messages#Workflow-initializers)。
+当您在构造函数上使用“Workflow_init”时，您可以为构造函数提供与“execute”方法相同的 Workflow 参数。
+然后，SDK 将确保您的构造函数接收[客户端发送](/develop/ruby/client/Temporal-client#start-Workflow) 的 Workflow 输入参数。
+Workflow 输入参数也会传递给您的“execute”方法——无论您是否使用“initialize”之上的“Workflow_init”类方法，这种情况总是会发生。
+
+这是一个例子。
+构造函数和“execute”必须具有相同类型的相同参数：
+
+```ruby
+class WorkflowInitWorkflow < Temporalio::Workflow::Definition
+  workflow_init
+  def initialize(input)
+    @name_with_title = "Sir #{input['name']}"
+  end
+
+  def execute(input)
+    Temporalio::Workflow.wait_condition { @title_has_been_checked }
+    "Hello, #{@name_with_title}"
+  end
+
+  workflow_update
+  def check_title_validity
+    # The handler is now guaranteed to see some workflow input since it was
+    # processed by the constructor
+    valid = Temporalio::Workflow.execute_activity(
+      CheckTitleValidityActivity,
+      @name_with_title,
+      start_to_close_timeout: 100
+    )
+    @title_has_been_checked = true
+    valid
+  end
+end
+```
+
+### 使用锁来防止并发处理程序执行 {#control-handler-concurrency}
+
+并发进程可以以不可预测的方式交互。
+当多个处理程序实例同时运行时，编写不正确的[并发消息传递](/handling-messages#message-handler-concurrency)代码可能无法正常工作。
+这是一个病态病例的例子：
+
+```ruby
+class MyWorkflow < Temporalio::Workflow::Definition
+  # ...
+
+  workflow_signal
+  def bad_handler
+    data = Temporalio::Workflow.execute_activity(
+      FetchDataActivity,
+      start_to_close_timeout: 100
+    )
+    @x = data['x']
+    # 🐛🐛 Bug!! If multiple instances of this handler are executing concurrently, then
+    # there may be times when the Workflow has @x from one Activity execution and @y
+    # from another.
+    Temporalio::Workflow.sleep(1)
+    @y = data['y']
+  end
+end
+```
+
+与互斥锁“Mutex”协调访问可以更正此代码。
+锁定可确保在任何给定时间只有一个处理程序实例可以执行特定的代码部分：
+
+```ruby
+class MyWorkflow < Temporalio::Workflow::Definition
+  # ...
+
+  workflow_signal
+  def safe_handler
+    @mutex ||= Mutex.new
+    @mutex.synchronize do
+      data = Temporalio::Workflow.execute_activity(
+        FetchDataActivity,
+        start_to_close_timeout: 100
+      )
+      @x = data['x']
+      # 🐛🐛 Bug!! If multiple instances of this handler are executing concurrently, then
+      # there may be times when the Workflow has @x from one Activity execution and @y
+      # from another.
+      Temporalio::Workflow.sleep(1)
+      @y = data['y']
+    end
+  end
+end
+```
+
+对于其他并发选项，“wait_condition”可用于执行更高级的操作，例如使用整数
+属性 + `wait_condition` 作为信号量。
+
+## 故障排除 {#message-handler-troubleshooting}
+
+将 Signal、Update 或 Query 发送到 Workflow 时，您的客户端可能会遇到以下错误：
+
+- **客户端无法联系服务器**：
+  您将收到一个 [`Temporalio::Error::RPCError`](https://ruby.Temporal.io/Temporalio/Error/RPCError.html) 异常，其 `code` 是 [`Code`](https://ruby.Temporal.io/Temporalio/Error/RPCError/Code.html) 中定义的 `UNAVAILABLE` 常量（经过一段时间后）重试）。
+
+- **Workflow 不存在**：
+  您将收到一个 [`Temporalio::Error::RPCError`](https://ruby.Temporal.io/Temporalio/Error/RPCError.html) 异常，其 `code` 是 [`Code`](https://ruby.Temporal.io/Temporalio/Error/RPCError/Code.html) 中定义的 `NOT_FOUND` 常量。
+
+有关此主题的非特定于 Ruby 的讨论，请参阅[消息处理程序中的异常](/handling-messages#exceptions)。
+
+### Signal 问题 {#Signal-问题}
+
+使用 Signal 时，您的请求在执行过程中产生的唯一异常是“RPCError”。
+所有处理程序在处理程序请求生命周期的初始（Worker 之前）部分都可能会遇到其他异常。
+
+对于查询和 Update，客户端等待来自 Worker 的响应。
+如果 Worker 执行处理程序期间出现问题，客户端可能会收到异常。
+
+### Update 问题 {#Update-问题}
+
+使用 Updates 时，您可能会遇到以下错误：
+
+- **没有 Workflow Worker 正在轮询 Task Queue**：
+  SDK 客户端将无限期地重试您的请求。
+  在 [RPC 选项](https://ruby.Temporal.io/Temporalio/Client/RPCOptions.html) 中使用“取消”来取消 Update。
+  这会引发 [WorkflowUpdateRPCTimeoutOrCanceledError](https://ruby.Temporal.io/Temporalio/Error/WorkflowUpdateRPCTimeoutOrCanceledError.html) 异常。
+
+- **Update 失败**：您将收到 [`WorkflowUpdateFailedError`](https://ruby.Temporal.io/Temporalio/Error/WorkflowUpdateFailedError.html) 异常。
+  有两种方式可以发生这种情况：
+
+- Update 被 Workflow 中与 Update 处理程序一起定义的 Update 验证器拒绝。
+
+- Update 被接受后失败。
+
+Update 故障类似于 [Workflow 故障](/references/failures)。
+  导致 main 方法中的 Workflow 失败的问题也会导致 Update 处理程序中的 Update 失败。
+  这些可能包括：
+
+- 失败的 Child Workflow
+      - Activity 失败（如果 Activity 重试已设置为有限次数）
+      - Workflow 作者提出 `ApplicationError`
+      - Worker 上的“Workflow_failure_exception_types”或 Workflow_failure_exception_type 上列出的任何错误Workflow（默认为空）
+
+- **处理程序导致 Workflow Task 失败**：
+  [Workflow Task 故障](/references/failures) 会导致服务器无限期地重试 Workflow Task。您的 Update 请求会发生什么情况取决于其阶段：
+  - 如果服务器尚未接受请求，您将收到“FAILED_PRECONDITION”[“Temporalio::Error::RPCError”](https://ruby.Temporal.io/Temporalio/Error/RPCError.html) 异常。
+  - 如果请求已被接受，则该请求是持久的。
+    一旦 Workflow 在代码部署后再次恢复正常，请使用 [`WorkflowUpdateHandle`](https://ruby.Temporal.io/Temporalio/Client/WorkflowUpdateHandle.html) 获取 Update 结果。
+
+- **Workflow 完成，而 Update 处理程序执行正在进行**：
+  您将收到 [`Temporalio::Error::RPCError`](https://ruby.Temporal.io/Temporalio/Error/RPCError.html)“Workflow Execution 已完成”。
+
+如果 Workflow 在 Update 处理程序执行正在进行时完成，则会发生这种情况，例如因为
+
+- Workflow 被取消或失败。
+
+- Workflow 正常完成或继续如新，并且 Workflow 作者没有[等待处理程序完成](/handling-messages#finishing-message-handlers)。
+
+### Query 问题 {#Query-问题}
+
+使用查询时，您可能会遇到以下错误：
+
+- **没有 Workflow Worker 轮询 Task Queue**：
+  您将收到一个 [`Temporalio::Error::RPCError`](https://ruby.Temporal.io/Temporalio/Error/RPCError.html) 异常，其 `code` 是 [`Code`](https://ruby.Temporal.io/Temporalio/Error/RPCError/Code.html) 中定义的 `FAILED_PRECONDITION` 常量。
+
+- **Query 失败**：
+  如果 Query 期间出现问题，您将收到 [`WorkflowQueryFailedError`](https://ruby.Temporal.io/Temporalio/Error/WorkflowQueryFailedError.html) 异常。
+  Query 处理程序中的任何异常都会触发此错误。
+  这与 Signal 和 Update 请求不同，其中异常可能会导致 Workflow Task 失败。
+
+- **处理程序导致 Workflow Task 失败。**
+  例如，如果 Query 处理程序阻塞线程太长时间而没有屈服，就会发生这种情况。
+
+## 动态处理程序 {#dynamic-handler}
+
+Temporal 支持动态查询、Signal、Update、Workflow 和活动。
+这些是未命名的处理程序，如果不存在具有给定名称的其他静态定义的处理程序，则会调用这些处理程序。
+
+动态处理程序可以灵活地处理运行时未知的查询、Signal、Update、Workflow 或活动名称的情况。
+
+:::caution
+
+应明智地使用动态处理程序作为后备机制而不是主要方法。
+过度使用它们可能会导致可维护性和调试问题。
+
+相反，Signal、查询、Workflow 或活动应尽可能静态定义，并使用表明其用途的清晰名称。
+使用静态定义作为构建 Workflow 的主要方式。
+
+保留动态处理程序，用于处理程序名称在编译时未知且需要在运行时动态查找的情况。
+它们旨在处理边缘情况并充当包罗万象的角色，而不是作为调用逻辑的主要方式。
+
+:::
+
+### 动态 Query {#set-a-dynamic-Query}
+
+Temporal 中的动态 Query 是一种 Query 方法，如果没有注册其他同名的 Query，则在运行时动态调用该方法。
+通过在“Workflow_Query”类方法上将“dynamic”设置为“true”，可以将 Query 设为动态。
+Workflow 上只能存在一个 Dynamic Query。
+
+Query 处理程序参数必须接受字符串名称作为第一个参数。通常，用户将“raw_args”设置为“true”，并将第二个参数设置为“*args”，它将是“Temporalio::Converters::RawValue”的数组。
+[Temporalio::Workflow.payload_converter](https://ruby.Temporal.io/Temporalio/Workflow.html#payload_converter-class_method) 属性用于将原始值实例转换为正确的类型。
+
+```ruby
+workflow_query dynamic: true, raw_args: true
+def dynamic_query(query_name, *args)
+  first_param = Temporalio::Workflow.payload_converter.from_payload(
+    args.first || raise 'Missing first parameter'
+  )
+  "Got parameter #{first_param} for query #{query_name}"
+end
+```
+
+### 动态 Signal {#set-a-dynamic-Signal}
+
+Temporal 中的动态 Signal 是在运行时动态调用的 Signal，如果没有注册具有相同输入的其他 Signal。
+通过在“Workflow_Signal”类方法上将“dynamic”设置为“true”，可以将 Signal 设为动态。
+Workflow 上只能存在一个 Dynamic Signal。
+
+Signal 处理程序参数必须接受字符串名称作为第一个参数。通常，用户将“raw_args”设置为“true”，并将第二个参数设置为“*args”，它将是“Temporalio::Converters::RawValue”的数组。
+[Temporalio::Workflow.payload_converter](https://ruby.Temporal.io/Temporalio/Workflow.html#payload_converter-class_method) 属性用于将原始值实例转换为正确的类型。
+
+```ruby
+workflow_signal dynamic: true, raw_args: true
+def dynamic_signal(signal_name, *args)
+  first_param = Temporalio::Workflow.payload_converter.from_payload(
+    args.first || raise 'Missing first parameter'
+  )
+  @pending_things << "Got parameter #{first_param} for signal #{signal_name}"
+end
+```
+
+### 动态 Update {#set-a-dynamic-Update}
+
+Temporal 中的动态 Update 是在运行时动态调用的 Update，如果没有注册具有相同输入的其他 Update。
+通过在“Workflow_Update”类方法上将“dynamic”设置为“true”，可以将 Update 设为动态。
+Workflow 上只能存在一个 Dynamic Update。
+
+Update 处理程序参数必须接受字符串名称作为第一个参数。通常，用户将“raw_args”设置为“true”，并将第二个参数设置为“*args”，它将是“Temporalio::Converters::RawValue”的数组。
+[Temporalio::Workflow.payload_converter](https://ruby.Temporal.io/Temporalio/Workflow.html#payload_converter-class_method) 属性用于将原始值实例转换为正确的类型。
+
+```ruby
+workflow_update dynamic: true, raw_args: true
+def dynamic_update(update_name, *args)
+  first_param = Temporalio::Workflow.payload_converter.from_payload(
+    args.first || raise 'Missing first parameter'
+  )
+  @pending_things << "Got parameter #{first_param} for update #{update_name}"
+end
+```

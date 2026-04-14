@@ -1,7 +1,7 @@
 ---
 id: context-propagation
-title: Context Propagation - Go SDK
-sidebar_label: Context Propagation
+title: "上下文传播 - Go SDK"
+sidebar_label: "上下文传播"
 toc_max_heading_level: 4
 keywords:
   - context propagation
@@ -13,29 +13,31 @@ tags:
   - Context Propagation
   - Go SDK
   - Temporal SDKs
-description: How to propagate custom key-value data across Workflow, Activity, and Child Workflow boundaries using the Temporal Go SDK.
+description: "如何使用 Temporal Go SDK 跨 Workflow、Activity 和 Child Workflow 边界传播自定义键值数据。"
 ---
 
-Context propagation lets you pass custom key-value data from a Client to Workflows, and from Workflows to Activities and Child Workflows, without threading it through every function signature. Common use cases include propagating tracing IDs, tenant IDs, auth tokens, or other request-scoped metadata.
+上下文传播允许您将自定义键值数据从客户端传递到 Workflow，以及从 Workflow 传递到活动和 Child Workflow，而无需将其通过每个函数签名进行线程化。常见用例包括传播跟踪 ID、租户 ID、身份验证令牌或其他请求范围的元数据。
 
 {/* TODO: Link to /encyclopedia/context-propagation once that page lands */}
 
 :::tip
 
-If you want to propagate tracing context, check if there is a [built-in tracing interceptor](/develop/go/platform/observability#tracing) for your library before building a custom context propagator.
+如果要传播跟踪上下文，请在构建自定义上下文传播器之前检查您的库是否有 [内置跟踪拦截器](/develop/go/platform/observability#tracing)。
 
 :::
 
-## How it works
+<a id="how-it-works"></a>
+## 它是如何工作的 {#how-it-works}
 
-1. **Register** a context propagator on the Client via `ContextPropagators` in [ClientOptions](https://pkg.go.dev/go.temporal.io/sdk/internal#ClientOptions)
-2. **Inject** - On outbound calls, the SDK calls `Inject` (from `context.Context`) or `InjectFromWorkflow` (from `workflow.Context`) to serialize values into Temporal headers
-3. **Extract** - On inbound calls, the SDK calls `Extract` (into `context.Context`) or `ExtractToWorkflow` (into `workflow.Context`) to deserialize headers back into the context
-4. **Access** - Your Workflow and Activity code reads values from the context as usual
+1. **通过[客户选项](https://pkg.go.dev/go.temporal.io/sdk/internal#ClientOptions)中的`ContextPropagators`在客户端上**注册**上下文传播器
+2. **注入** - 在出站调用中，SDK 调用 `Inject`（来自 `context.Context`）或 `InjectFromWorkflow`（来自 `Workflow.Context`）将值序列化到 Temporal 标头中
+3. **提取** - 在入站调用中，SDK 调用 `Extract`（到 `context.Context`）或 `ExtractToWorkflow`（到 `Workflow.Context`）以将标头反序列化回上下文中
+4. **访问** - 您的 Workflow 和 Activity 代码照常从上下文中读取值
 
-## Implement a context propagator
+<a id="implement-a-context-propagator"></a>
+## 实现一个上下文传播器 {#implement-a-context-propagator}
 
-A context propagator implements the [`ContextPropagator`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ContextPropagator) interface:
+上下文传播器实现 [`ContextPropagator`](https://pkg.go.dev/go.temporal.io/sdk/workflow#ContextPropagator) 接口：
 
 ```go
 type ContextPropagator interface {
@@ -50,9 +52,9 @@ type ContextPropagator interface {
 }
 ```
 
-There are two pairs of methods because Go uses `context.Context` in non-Workflow code (Client, Activities) and `workflow.Context` inside Workflows. You must implement all four methods for values to propagate across every boundary (Client → Workflow → Activity/Child Workflow).
+有两对方法，因为 Go 在非 Workflow 代码（客户端、活动）中使用 `context.Context`，在 Workflow 中使用 `Workflow.Context`。您必须实现所有四种方法，以便值能够跨每个边界传播（客户端 → Workflow → Activity/Child Workflow）。
 
-Here is a propagator that carries a custom key-value pair from the Client to Workflows and Activities (from the [context propagation sample](https://github.com/temporalio/samples-go/tree/main/ctxpropagation)):
+下面是一个传播器，它将自定义键值对从客户端传送到 Workflow 和活动（来自 [上下文传播样本](https://github.com/temporalio/samples-go/tree/main/ctxpropagation)）：
 
 
 <!--SNIPSTART samples-go-ctx-propagation-propagator-->
@@ -123,9 +125,10 @@ func (s *propagator) Extract(ctx context.Context, reader workflow.HeaderReader) 
 ```
 <!--SNIPEND-->
 
-## Register the propagator and set context values
+<a id="register-the-propagator-and-set-context-values"></a>
+## 注册传播器并设置上下文值 {#register-the-propagator-and-set-context-values}
 
-Register the propagator on the Client. Then set context values before starting a Workflow:
+在客户端上注册传播器。然后在启动 Workflow 之前设置上下文值：
 
 <!--SNIPSTART samples-go-ctx-propagation-starter-->
 [ctxpropagation/starter/main.go](https://github.com/temporalio/samples-go/blob/main/ctxpropagation/starter/main.go)
@@ -154,14 +157,15 @@ we, err := c.ExecuteWorkflow(ctx, workflowOptions, ctxpropagation.CtxPropWorkflo
 ```
 <!--SNIPEND-->
 
-You can also register context propagators through a [Plugin](/develop/plugins-guide) if you are building a reusable library.
+如果您正在构建可重用的库，您还可以通过 [插件](/develop/plugins-guide) 注册上下文传播器。
 
-## Access propagated values
+<a id="access-propagated-values"></a>
+## 访问传播值 {#access-propagated-values}
 
-In your Workflow, the propagated values are available on the `workflow.Context`. When the Workflow starts an Activity, the SDK automatically propagates the same values:
+在 Workflow 中，传播的值在 `Workflow.Context` 上可用。当 Workflow 启动 Activity 时，SDK 会自动传播相同的值：
 
-<!--SNIPSTART samples-go-ctx-propagation-workflow-->
-[ctxpropagation/workflow.go](https://github.com/temporalio/samples-go/blob/main/ctxpropagation/workflow.go)
+<!--SNIPSTART samples-go-ctx-propagation-Workflow-->
+[ctxpropagation/Workflow.go](https://github.com/temporalio/samples-go/blob/main/ctxpropagation/workflow.go)
 ```go
 // CtxPropWorkflow workflow definition
 func CtxPropWorkflow(ctx workflow.Context) (err error) {
@@ -187,7 +191,7 @@ func CtxPropWorkflow(ctx workflow.Context) (err error) {
 ```
 <!--SNIPEND-->
 
-<!--SNIPSTART samples-go-ctx-propagation-activity-->
+<!--SNIPSTART samples-go-ctx-propagation-Activity-->
 [ctxpropagation/activities.go](https://github.com/temporalio/samples-go/blob/main/ctxpropagation/activities.go)
 ```go
 func SampleActivity(ctx context.Context) (*Values, error) {
@@ -200,14 +204,16 @@ func SampleActivity(ctx context.Context) (*Values, error) {
 ```
 <!--SNIPEND-->
 
-You can configure multiple context propagators on a single Client, each responsible for its own set of keys.
+您可以在单个客户端上配置多个上下文传播器，每个传播器负责自己的一组密钥。
 
-## Context propagation over Nexus
+<a id="context-propagation-over-nexus"></a>
+## Nexus 上的上下文传播 {#context-propagation-over-nexus}
 
-Nexus does not use the `ContextPropagator` interface. It relies on a Temporal-agnostic protocol with its own header format (`nexus.Header`, a wrapper around `map[string]string`).
+Nexus 不使用 `ContextPropagator` 接口。它依赖于与 Temporal 无关的协议，具有自己的标头格式（`Nexus.Header`，`map[string]string` 的包装器）。
 
-To propagate context over Nexus Operation calls, use interceptors to explicitly serialize and deserialize context into the Nexus header. See the [Nexus Context Propagation sample](https://github.com/temporalio/samples-go/tree/main/nexus-context-propagation).
+要通过 Nexus 操作调用传播上下文，请使用拦截器将上下文显式序列化和反序列化到 Nexus 标头中。请参阅 [Nexus 上下文传播示例](https://github.com/temporalio/samples-go/tree/main/nexus-context-propagation)。
 
-## Further reading
+<a id="further-reading"></a>
+## 进一步阅读 {#further-reading}
 
-- [Passing Context with Temporal](https://spiralscout.com/blog/passing-context-with-temporal) - A conceptual guide to middleware and walkthrough of building a context propagator in Go
+- [使用 Temporal 传递上下文](https://spiralscout.com/blog/passing-context-with-temporal) - 中间件概念指南和在 Go 中构建上下文传播器的演练

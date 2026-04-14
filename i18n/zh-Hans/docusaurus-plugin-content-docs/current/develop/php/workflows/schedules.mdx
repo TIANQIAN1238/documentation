@@ -1,0 +1,92 @@
+---
+id: schedules
+title: Schedules - PHP SDK
+sidebar_label: Schedules
+slug: /develop/php/workflows/schedules
+toc_max_heading_level: 2
+keywords:
+  - schedules
+tags:
+  - Workflows
+  - Schedules
+  - PHP SDK
+  - Temporal SDKs
+description: 在 PHP 中使用 Workflow 启动延迟和 Temporal Cron 作业。延迟 Workflow Execution 或使用 Temporal CLIent 通过 Cron Schedule 设置重复任务。
+---
+
+此页面显示如何执行以下操作：
+
+- [如何使用启动延迟](#start-delay)
+- [如何使用 Temporal 计划任务](#Temporal-cron-jobs)
+
+## 如何使用启动延迟 {#start-delay}
+
+如果您需要延迟 Workflow 的执行而不需要定期启动，请使用 Workflow [启动延迟](/Workflow-execution/Timers-delays) 功能。
+在这里，您只需指定调度第一个 Workflow Task 之前等待的时间。
+
+```php
+$workflow = $workflowClient->newWorkflowStub(
+    GreeterWorkflowInterface::class,
+    WorkflowOptions::new()
+        ->withWorkflowStartDelay(CarbonInterval::minutes(10)),
+);
+$workflowClient->start($workflow, 'Hello world!');
+```
+
+## 如何使用 Temporal 计划任务 {#Temporal-cron-jobs}
+
+:::caution Cron support is not recommended
+
+我们建议使用 [Schedules](https://docs.Temporal.io/Schedule) 而不是 Cron 作业。
+Schedule 旨在提供更好的开发人员体验，包括更多配置选项以及 Update 或暂停运行 Schedule 的能力。
+
+:::
+
+[Temporal Cron Job](/cron-job) 是在调用中提供 Cron Schedule 来生成 Workflow Execution 时发生的一系列 Workflow Execution。
+
+当调用生成 Workflow Execution 时，将提供 Cron Schedule 作为选项。
+
+使用“CronSchedule('* * * * *')”设置您的 Cron Schedule。
+Temporal Workflow Schedule Cron 字符串遵循以下格式：
+
+```
+┌───────────── minute (0 - 59)
+│ ┌───────────── hour (0 - 23)
+│ │ ┌───────────── day of the month (1 - 31)
+│ │ │ ┌───────────── month (1 - 12)
+│ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+│ │ │ │ │
+* * * * *
+```
+
+以下示例在 PHP 中设置 Cron Schedule：
+
+```php
+  $workflow = $this->workflowClient->newWorkflowStub(
+      CronWorkflowInterface::class,
+      WorkflowOptions::new()
+          ->withWorkflowId(CronWorkflowInterface::WORKFLOW_ID)
+          ->withCronSchedule('* * * * *')
+          // Execution timeout limits total time. Cron will stop executing after this timeout.
+          ->withWorkflowExecutionTimeout(CarbonInterval::minutes(10))
+          // Run timeout limits duration of a single workflow invocation.
+          ->withWorkflowRunTimeout(CarbonInterval::minute(1))
+  );
+
+  $output->writeln("Starting <comment>CronWorkflow</comment>... ");
+
+  try {
+      $run = $this->workflowClient->start($workflow, 'Antony');
+      // ...
+  }
+```
+
+设置“withCronSchedule”会将 Workflow Execution 变成 Temporal Cron 作业。
+有关更多信息，请参阅 [PHP 示例](https://github.com/Temporalio/samples-php/tree/master/app/src/Cron) 示例代码或 PHP SDK `WorkflowOptions` [源代码](https://github.com/Temporalio/sdk-php/blob/master/src/Client/WorkflowOptions.php)。
+
+:::tip Schedule Auto-Deletion
+
+一旦 Schedule 完成创建所有 Workflow Execution，Temporal 服务就会将其删除，因为它不会再次触发。
+Temporal 服务不保证何时会发生此删除。
+
+:::

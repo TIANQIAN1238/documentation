@@ -121,7 +121,7 @@ function ResultsFooter({ state, onClose }: ResultsFooterProps) {
       <AskAIButton query={state.query} closeDocSearch={onClose} />
       <Link to={createSearchLink(state.query)} onClick={onClose}>
         <Translate id="theme.SearchBar.seeAll" values={{ count: state.context.nbHits }}>
-          {'See all {count} results'}
+          {'查看全部 {count} 条结果'}
         </Translate>
       </Link>
     </div>

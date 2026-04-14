@@ -1,7 +1,7 @@
 ---
 id: schedules
-title: Schedules - Go SDK
-sidebar_label: Schedules
+title: "Schedules - Go SDK"
+sidebar_label: "Schedules"
 toc_max_heading_level: 4
 keywords:
   - schedules
@@ -10,42 +10,44 @@ tags:
   - Schedules
   - Go SDK
   - Temporal SDKs
-description: Schedule Workflows, start them with delays or as Temporal Cron Jobs using the Go SDK. Master scheduling, backfilling, pausing, deleting, and updating Workflows.
+description: "Schedule Workflow，延迟启动它们或使用 Go SDK 作为 Temporal Cron 作业。主调度、回填、暂停、删除和更新 Workflow。"
 ---
 
-This page shows how to do the following:
+此页面显示如何执行以下操作：
 
 - [Scheduled Workflows](#schedule-a-workflow)
-  - [Create a Schedule](#create-schedule)
-  - [Backfill a Schedule](#backfill-schedule)
-  - [Delete a Schedule](#delete-schedule)
-  - [Describe a Schedule](#describe-schedule)
-  - [List Schedules](#list-schedules)
-  - [Pause a Schedule](#pause-schedule)
-  - [Trigger a Schedule](#trigger-schedule)
-  - [Update a Schedule](#update-schedule)
-- [Start delay](#start-delay)
-- [Temporal Cron Jobs](#temporal-cron-jobs)
+  - [创建一个 Schedule](#create-schedule)
+  - [回填 Schedule](#backfill-schedule)
+  - [删除 Schedule](#delete-schedule)
+  - [描述 Schedule](#describe-schedule)
+  - [列出 Schedule](#list-schedules)
+  - [暂停 Schedule](#pause-schedule)
+  - [触发 Schedule](#trigger-schedule)
+  - [Update 和 Schedule](#update-schedule)
+- [启动延迟](#start-delay)
+- [Temporal 计划任务](#temporal-cron-jobs)
 
+<a id="schedule-a-workflow"></a>
 ## Scheduled Workflows {#schedule-a-workflow}
 
-Scheduling Workflows is a crucial aspect of any automation process, especially when dealing with time-sensitive tasks. By scheduling a Workflow, you can automate repetitive tasks, reduce the need for manual intervention, and ensure timely execution of your business processes.
+调度 Workflow 是任何自动化流程的一个重要方面，尤其是在处理时间敏感的任务时。通过调度 Workflow，您可以自动执行重复性任务，减少手动干预的需要，并确保及时执行业务流程。
 
-Use any of the following actions to help Schedule a Workflow Execution and take control over your automation process.
+使用以下任一操作来帮助 Schedule 和 Workflow Execution 并控制您的自动化流程。
 
-### Create a Schedule {#create-schedule}
+<a id="create-schedule"></a>
+### 创建一个 Schedule {#create-schedule}
 
-Schedules are initiated with the `create` call.
-The user generates a unique Schedule ID for each new Schedule.
+Schedule 通过 `create` 调用启动。
+用户为每个新的 Schedule 生成唯一的 Schedule ID。
 
-To create a Schedule in Go, use `Create()` on the [Client](/encyclopedia/temporal-sdks#temporal-client).
-Schedules must be initialized with a Schedule ID, [Spec](/schedule), and [Action](/schedule) in `client.ScheduleOptions{}`.
+要在 Go 中创建 Schedule，请在 [客户](/encyclopedia/temporal-sdks#temporal-client) 上使用 `Create()`。
+Schedule 必须使用 `client.ScheduleOptions{}` 中的 Schedule ID、[规格](/schedule) 和 [行动](/schedule) 进行初始化。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/features/schedules/create/main.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -70,24 +72,25 @@ func main() {
 
 :::tip Schedule Auto-Deletion
 
-Once a Schedule has completed creating all its Workflow Executions, the Temporal Service deletes it since it won’t fire again.
-The Temporal Service doesn't guarantee when this removal will happen.
+一旦 Schedule 完成创建其所有 Workflow Execution，Temporal 服务就会将其删除，因为它不会再次触发。
+Temporal 服务不保证何时会发生此删除。
 
 :::
 
-### Backfill a Schedule {#backfill-schedule}
+<a id="backfill-schedule"></a>
+### 回填 Schedule {#backfill-schedule}
 
-Backfilling a Schedule executes [Workflow Tasks](/tasks#workflow-task) ahead of the Schedule's specified time range.
-This is useful for executing a missed or delayed Action, or for testing the Workflow ahead of time.
+回填 Schedule 会在 Schedule 的指定时间范围之前执行 [Workflow 任务](/tasks#workflow-task)。
+这对于执行错过或延迟的操作或提前测试 Workflow 非常有用。
 
-To backfill a Schedule in Go, use `Backfill()` on `ScheduleHandle`.
-Specify the start and end times to execute the Workflow, along with the overlap policy.
+要在 Go 中回填 Schedule，请在 `ScheduleHandle` 上使用 `Backfill()`。
+指定执行 Workflow 的开始和结束时间以及重叠策略。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/features/schedules/backfill/main.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -115,18 +118,19 @@ func main() {
 // ...
 ```
 
-### Delete a Schedule {#delete-schedule}
+<a id="delete-schedule"></a>
+### 删除 Schedule {#delete-schedule}
 
-Deleting a Schedule erases a Schedule.
-Deletion does not affect any Workflows started by the Schedule.
+删除 Schedule 会擦除 Schedule。
+删除不会影响由 Schedule 启动的任何 Workflow。
 
-To delete a Schedule, use `Delete()` on the `ScheduleHandle`.
+要删除 Schedule，请在 `ScheduleHandle` 上使用 `Delete()`。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/features/schedules/delete/main.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -142,18 +146,19 @@ func main() {
 // ...
 ```
 
-### Describe a Schedule {#describe-schedule}
+<a id="describe-schedule"></a>
+### 描述 Schedule {#describe-schedule}
 
-`Describe` retrieves information about the current Schedule configuration.
-This can include details about the Schedule Spec (such as Intervals), CronExpressions, and Schedule State.
+`Describe` 检索有关当前 Schedule 配置的信息。
+这可以包括有关 Schedule 规范（例如间隔）、CronExpressions 和 Schedule 状态的详细信息。
 
-To describe a Schedule, use `Describe()` on the ScheduleHandle.
+要描述 Schedule，请在 ScheduleHandle 上使用 `Describe()`。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/features/schedules/describe/main.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -163,17 +168,18 @@ func main() {
 // ...
 ```
 
-### List Schedules {#list-schedules}
+<a id="list-schedules"></a>
+### 列出 Schedules {#list-schedules}
 
-The `List` action returns all available Schedules and their respective Schedule IDs.
+`List` 操作返回所有可用的 Schedule 及其各自的 Schedule ID。
 
-To return information on all Schedules, use `ScheduleClient.List()`.
+要返回所有 Schedule 的信息，请使用 `ScheduleClient.List()`。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/features/schedules/list/main.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -189,21 +195,22 @@ func main() {
 // ...
 ```
 
-### Pause a Schedule {#pause-schedule}
+<a id="pause-schedule"></a>
+### 暂停 Schedule {#pause-schedule}
 
-`Pause` and `Unpause` enable the start or stop of all future Workflow Runs on a given Schedule.
+`Pause` 和 `Unpause` 启用或停止在给定 Schedule 上运行的所有未来 Workflow。
 
-Pausing a Schedule halts all future Workflow Runs.
-Pausing can be enabled by setting `State.Paused` to `true`, or by using `Pause()` on the ScheduleHandle.
+暂停 Schedule 将停止所有未来的 Workflow 运行。
+可以通过将 `State.Paused` 设置为 `true` 或使用 ScheduleHandle 上的 `Pause()` 来启用暂停。
 
-Unpausing a Schedule allows the Workflow to execute as planned.
-To unpause a Schedule, use `Unpause()` on `ScheduleHandle`.
+取消暂停 Schedule 允许 Workflow 按计划执行。
+要取消暂停 Schedule，请在 `ScheduleHandle` 上使用 `Unpause()`。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/features/schedules/pause/main.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -218,18 +225,19 @@ func main() {
 	})
 ```
 
-### Trigger a Schedule {#trigger-schedule}
+<a id="trigger-schedule"></a>
+### 触发 Schedule {#trigger-schedule}
 
-Triggering a Schedule immediately executes an Action defined in that Schedule.
-By default, `trigger` is subject to the Overlap Policy.
+触发 Schedule 会立即执行该 Schedule 中定义的操作。
+默认情况下，`trigger` 受重叠策略约束。
 
-To trigger a Scheduled Workflow Execution, use `trigger()` on `ScheduleHandle`.
+要触发 Scheduled Workflow Execution，请在 `ScheduleHandle` 上使用 `trigger()`。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/features/schedules/trigger/main.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -244,18 +252,19 @@ func main() {
 // ...
 ```
 
-### Update a Schedule {#update-schedule}
+<a id="update-schedule"></a>
+### Update 和 Schedule {#update-schedule}
 
-Updating a Schedule changes the configuration of an existing Schedule.
-These changes can be made to Workflow Actions, Action parameters, Memos, and the Workflow's Cancellation Policy.
+更新 Schedule 会更改现有 Schedule 的配置。
+这些更改可以对 Workflow 操作、操作参数、备忘录和 Workflow 的取消策略进行。
 
-Use `Update()` on the ScheduleHandle to modify a Schedule.
+在 ScheduleHandle 上使用 `Update()` 修改 Schedule。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/go/features/schedules/update/main.go">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```go
@@ -274,11 +283,11 @@ func main() {
 // ...
 ```
 
-## Start Delay {#start-delay}
+## 启动延迟 {#start-delay}
 
-Use `StartDelay` to schedule a Workflow Execution at a specific one-time future point rather than on a recurring schedule.
+在特定的一次性未来点而不是在重复出现的 Schedule 上使用 `StartDelay` 至 Schedule 和 Workflow Execution。
 
-Create an instance of [`StartWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk/client#StartWorkflowOptions) from the `go.temporal.io/sdk/client` package, set the `StartDelay` field, and pass the instance to the `ExecuteWorkflow` call.
+从 `go.Temporal.io/sdk/client` 包创建 [`StartWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk/client#StartWorkflowOptions) 的实例，设置 `StartDelay` 字段，并将该实例传递给 `ExecuteWorkflow` 调用。
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -293,23 +302,24 @@ if err != nil {
 }
 ```
 
-## Temporal Cron Jobs {#temporal-cron-jobs}
+<a id="temporal-cron-jobs"></a>
+## Temporal Cron 作业 {#temporal-cron-jobs}
 
 :::caution Cron support is not recommended
 
-We recommend using [Schedules](https://docs.temporal.io/schedule) instead of Cron Jobs.
-Schedules were built to provide a better developer experience, including more configuration options and the ability to update or pause running Schedules.
+我们建议使用 [Schedules](https://docs.temporal.io/schedule) 而不是 Cron 作业。
+Schedule 旨在提供更好的开发人员体验，包括更多配置选项以及 Update 或暂停运行 Schedule 的能力。
 
 :::
 
-A [Temporal Cron Job](/cron-job) is the series of Workflow Executions that occur when a Cron Schedule is provided in the call to spawn a Workflow Execution.
+[Temporal 计划任务](/cron-job) 是在调用中提供 Cron Schedule 来生成 Workflow Execution 时发生的一系列 Workflow Execution。
 
-A Cron Schedule is provided as an option when the call to spawn a Workflow Execution is made.
+当调用生成 Workflow Execution 时，会提供 Cron Schedule 作为选项。
 
-Create an instance of [`StartWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk/client#StartWorkflowOptions) from the `go.temporal.io/sdk/client` package, set the `CronSchedule` field, and pass the instance to the `ExecuteWorkflow` call.
+从 `go.Temporal.io/sdk/client` 包创建 [`StartWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk/client#StartWorkflowOptions) 的实例，设置 `CronSchedule` 字段，并将该实例传递给 `ExecuteWorkflow` 调用。
 
-- Type: `string`
-- Default: None
+- 型号：`string`
+- 默认：无
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -322,7 +332,7 @@ if err != nil {
 }
 ```
 
-Temporal Workflow Schedule Cron strings follow this format:
+Temporal Workflow Schedule Cron 字符串遵循以下格式：
 
 ```
 ┌───────────── minute (0 - 59)

@@ -1,109 +1,111 @@
 ---
 id: run-a-development-server
-title: Run a development server
-description: Shows how to run a development Temporal Service
-sidebar_label: Run a development server
+title: "运行开发服务器"
+description: "展示如何运行开发 Temporal 服务"
+sidebar_label: "运行开发服务器"
 toc_max_heading_level: 3
 tags:
   - Temporal Client
   - Temporal SDKs
 ---
 
-## How to install the Temporal CLI and run a development server {#run-a-development-server}
+## 如何安装 Temporal CLI 并运行开发服务器 {#run-a-development-server}
 
-This page describes how to install the [Temporal CLI](/cli) and run a development Temporal Service. The local
-development Temporal Service comes packaged with the [Temporal Web UI](/web-ui).
+本页介绍如何安装 [Temporal CLI](/cli) 并运行开发 Temporal 服务。当地的
+开发 Temporal 服务随 [Temporal 网页用户界面](/web-ui) 一起提供。
 
-For information on deploying and running a self-hosted production Temporal Service, see the
-[Self-hosted guide](/self-hosted-guide), or sign up for [Temporal Cloud](/cloud) and let us run your production Temporal
-Service for you.
+有关部署和运行自托管生产 Temporal 服务的信息，请参阅
+[自托管指南](/self-hosted-guide)，或注册 [Temporal Cloud](/cloud)，让我们运行您的生产 Temporal
+为您服务。
 
-Temporal CLI is a tool for interacting with a Temporal Service from the command line and it includes a distribution of
-the Temporal Server and Web UI. This local development Temporal Service runs as a single process with zero runtime
-dependencies and it supports persistence to disk and in-memory mode through SQLite.
+Temporal CLI 是一个用于从命令行与 Temporal 服务交互的工具，它包括
+Temporal Server 和 Web UI。此本地开发 Temporal 服务作为单个进程运行，运行时间为零
+依赖项，它支持通过 SQLite 持久化到磁盘和内存模式。
 
-**Install the Temporal CLI**
+**安装Temporal CLI**
 
-The Temporal CLI is available on macOS, Windows, and Linux.
+Temporal CLI 可在 macOS、Windows 和 Linux 上使用。
 
 ### macOS
 
-**How to install the Temporal CLI on macOS**
+**如何在 macOS 上安装 Temporal CLI**
 
-Choose one of the following install methods to install the Temporal CLI on macOS:
+选择以下安装方法之一在 macOS 上安装 Temporal CLI：
 
-**Install the Temporal CLI with Homebrew**
+**使用 Homebrew 安装 Temporal CLI**
 
 ```bash
 brew install temporal
 ```
 
-**Install the Temporal CLI from CDN**
+**从 CDN 安装 Temporal CLI**
 
-1. Select the platform and architecture needed.
+1. 选择所需的平台和架构。
 
-- Download for Darwin amd64: https://temporal.download/cli/archive/latest?platform=darwin&arch=amd64
-- Download for Darwin arm64: https://temporal.download/cli/archive/latest?platform=darwin&arch=arm64
+- 下载达尔文 amd64：https://temporal.download/cli/archive/latest?platform=darwin&arch=amd64
+- 下载达尔文arm64：https://temporal.download/cli/archive/latest?platform=darwin&arch=arm64
 
-2. Extract the downloaded archive.
+2. 解压下载的存档。
 
-3. Add the `temporal` binary to your PATH.
+3. 将 `Temporal` 二进制文件添加到您的 PATH 中。
 
 ### Linux
 
-**How to install the Temporal CLI on Linux**
+**如何在 Linux 上安装 Temporal CLI**
 
-Choose one of the following install methods to install the Temporal CLI on Linux:
+选择以下安装方法之一在 Linux 上安装 Temporal CLI：
 
-**Install the Temporal CLI with Homebrew**
+**使用 Homebrew 安装 Temporal CLI**
 
 ```bash
 brew install temporal
 ```
 
-**Install the Temporal CLI from CDN**
+**从 CDN 安装 Temporal CLI**
 
-1. Select the platform and architecture needed.
+1. 选择所需的平台和架构。
 
-- Download for Linux amd64: https://temporal.download/cli/archive/latest?platform=linux&arch=amd64
-- Download for Linux arm64: https://temporal.download/cli/archive/latest?platform=linux&arch=arm64
+- 下载适用于 Linux amd64 的版本：https://temporal.download/cli/archive/latest?platform=linux&arch=amd64
+- 下载适用于 Linux arm64 的版本：https://temporal.download/cli/archive/latest?platform=linux&arch=arm64
 
-2. Extract the downloaded archive.
+2. 解压下载的存档。
 
-3. Add the `temporal` binary to your PATH.
+3. 将 `Temporal` 二进制文件添加到您的 PATH 中。
 
-### Windows
+<a id="windows"></a>
+### 窗口 {#windows}
 
-**How to install the Temporal CLI on Windows**
+**如何在 Windows 上安装 Temporal CLI**
 
-Follow these instructions to install the Temporal CLI on Windows:
+请按照以下说明在 Windows 上安装 Temporal CLI：
 
-**Install the Temporal CLI from CDN**
+**从 CDN 安装 Temporal CLI**
 
-1. Select the platform and architecture needed and download the binary.
+1. 选择所需的平台和架构并下载二进制文件。
 
-- Download for Windows amd64: https://temporal.download/cli/archive/latest?platform=windows&arch=amd64
-- Download for Windows arm64: https://temporal.download/cli/archive/latest?platform=windows&arch=arm64
+- 下载适用于 Windows amd64 的版本：https://temporal.download/cli/archive/latest?platform=windows&arch=amd64
+- 下载适用于 Windows arm64 的版本：https://temporal.download/cli/archive/latest?platform=windows&arch=arm64
 
-2. Extract the downloaded archive.
+2. 解压下载的存档。
 
-3. Add the `temporal.exe` binary to your PATH.
+3. 将 `Temporal.exe` 二进制文件添加到您的 PATH 中。
 
-### Start the Temporal Development Server
+<a id="start-the-temporal-development-server"></a>
+### 启动Temporal开发服务器 {#start-the-temporal-development-server}
 
-Start the Temporal Development Server by using the `server start-dev` command.
+使用 `server start-dev` 命令启动 Temporal 开发服务器。
 
 ```bash
 temporal server start-dev
 ```
 
-This command automatically starts the Web UI, creates the default [Namespace](/namespaces), and uses an in-memory
-database.
+此命令自动启动 Web UI，创建默认的 [Namespace](/namespaces)，并使用内存中的
+数据库。
 
-The Temporal Server should be available on `localhost:7233` and the Temporal Web UI should be accessible at
-[`http://localhost:8233`](http://localhost:8233/).
+Temporal Server 应在 `localhost:7233` 上可用，而 Temporal Web UI 应可在以下位置访问：
+[`http://localhost:8233`](http://localhost:8233/)。
 
-The server's startup configuration can be customized using command line options. For a full list of options, run:
+可以使用命令行选项自定义服务器的启动配置。要获得完整的选项列表，请运行：
 
 ```bash
 temporal server start-dev --help

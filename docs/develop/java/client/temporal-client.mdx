@@ -1,9 +1,9 @@
 ---
 id: temporal-client
-title: Temporal Client - Java SDK
-sidebar_label: Temporal Client
+title: "Temporal CLIent - Java SDK"
+sidebar_label: "Temporal CLIent"
 toc_max_heading_level: 3
-description:
+description: This guide introduces Temporal Clients, explaining their role and configuration in Java to connect to various Temporal
   This guide introduces Temporal Clients, explaining their role and configuration in Java to connect to various Temporal
   Services, including starting Workflow Executions and customizing Workflow options.
 keywords:
@@ -32,33 +32,33 @@ tags:
   - Certificates
 ---
 
-A [Temporal Client](/encyclopedia/temporal-sdks#temporal-client) enables you to communicate with the
-[Temporal Service](/temporal-service). Communication with a Temporal Service lets you perform actions such as starting
-Workflow Executions, sending Signals to Workflow Executions, sending Queries to Workflow Executions, getting the results
-of a Workflow Execution, and providing Activity Task Tokens.
+[Temporal CLIent](/encyclopedia/temporal-sdks#temporal-client) 使您能够与
+[Temporal 服务](/temporal-service)。与 Temporal 服务的通信允许您执行启动等操作
+Workflow Executions，发送Signals到Workflow Executions，发送查询到Workflow Executions，得到结果
+Workflow Execution，并提供 Activity 任务令牌。
 
-This page shows you how to do the following using the Java SDK with the Temporal Client:
+本页向您展示如何使用 Java SDK 和 Temporal CLIent 执行以下操作：
 
-- [Connect to a local development Temporal Service](#connect-to-development-service)
-- [Connect to Temporal Cloud](#connect-to-temporal-cloud)
-- [Start a Workflow Execution](#start-workflow-execution)
-- [Get Workflow results](#get-workflow-results)
+- [连接到本地开发 Temporal 服务](#connect-to-development-service)
+- [连接到 Temporal Cloud](#connect-to-temporal-cloud)
+- [启动 Workflow Execution](#start-workflow-execution)
+- [获取 Workflow 结果](#get-workflow-results)
 
 :::caution
 
-A Temporal Client cannot be initialized and used inside a Workflow. However, it is acceptable and common to use a
-Temporal Client inside an Activity to communicate with a Temporal Service.
+Temporal CLIent 无法在 Workflow 内部初始化和使用。然而，使用
+Temporal CLIent 位于 Activity 内部，与 Temporal 服务进行通信。
 
 :::
 
-## Connect to a development Temporal Service {#connect-to-development-service}
+## 连接到开发 Temporal 服务 {#connect-to-development-service}
 
-Use the `newLocalServiceStubs` method to create a stub that points to the Temporal development service, and then use the
-[`WorkflowClient.newInstance` method](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowClient.html#newInstance(io.temporal.serviceclient.WorkflowServiceStubs))
-to create a Temporal Client.
+使用 `newLocalServiceStubs` 方法创建指向 Temporal 开发服务的存根，然后使用
+[`WorkflowClient.newInstance`方法](https://javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowClient.html#newInstance(io.temporal.serviceclient.WorkflowServiceStubs)）
+创建 Temporal CLIent。
 
 <!--SNIPSTART javasdk-build-caller-app-using-local-client {"selectedLines": ["11-17"], "highlightedLines": ["3","7"]}-->
-[sample-apps/java/client/devserver-client-sample/src/main/java/clientsample/YourCallerApp.java](https://github.com/temporalio/documentation/blob/main/sample-apps/java/client/devserver-client-sample/src/main/java/clientsample/YourCallerApp.java)
+[示例应用程序/java/client/devserver-client-sample/src/main/java/clientsample/YourCallerApp.java](https://github.com/temporalio/documentation/blob/main/sample-apps/java/client/devserver-client-sample/src/main/java/clientsample/YourCallerApp.java)
 ```java {3,7}
 // ...
         // Create an instance that connects to a Temporal Service running on the local
@@ -71,33 +71,33 @@ to create a Temporal Client.
 ```
 <!--SNIPEND-->
 
-When you create a new Client with an instance of `newLocalServiceStubs`, the Client connects to the default local port
-at port 7233. When you don't specify a custom Namespace, the Client connects to the `default` Namespace.
+当您使用 `newLocalServiceStubs` 实例创建新客户端时，客户端会连接到默认本地端口
+在端口 7233 处。当您未指定自定义 Namespace 时，客户端将连接到 `default` Namespace。
 
-To connect to a custom Namespace, use the `WorkflowClientOptions.Builder.setNamespace` method to set the Namespace. Then
-pass the `clientOptions` to the `WorkflowClient.newInstance` method.
+要连接到自定义 Namespace，请使用 `WorkflowClientOptions.Builder.setNamespace` 方法设置 Namespace。然后
+将 `clientOptions` 传递给 `WorkflowClient.newInstance` 方法。
 
 <Tabs groupId="connect-options" defaultValue="config-file" >
 
 <TabItem value="config-file" label="Configuration File">
 
-You can use a TOML configuration file to set connection options for the Temporal Client. The configuration file lets you
-configure multiple profiles, each with its own set of connection options. You can then specify which profile to use when
-creating the Temporal Client. You can use the environment variable `TEMPORAL_CONFIG_FILE` to specify the location of the
-TOML file or provide the path to the file directly in code. If you don't provide the configuration file path, the SDK
-looks for it at the path `~/.config/temporalio/temporal.toml`. For a list of all available configuration options, refer
-to [Environment Configuration](/references/client-environment-configuration)
+您可以使用 TOML 配置文件来设置 Temporal CLIent 的连接选项。配置文件可以让你
+配置多个配置文件，每个配置文件都有自己的一组连接选项。然后，您可以指定在以下情况下使用哪个配置文件：
+创建 Temporal CLIent。您可以使用环境变量 `Temporal_CONFIG_FILE` 来指定
+TOML 文件或直接在代码中提供文件的路径。如果不提供配置文件路径，SDK
+在路径 `~/.config/temporalio/temporal.toml` 中查找它。有关所有可用配置选项的列表，请参阅
+至 [环境配置](/references/client-environment-configuration)
 
 :::info
 
-The connection options set in configuration files have lower precedence than environment variables. This means that if
-you set the same option in both the configuration file and as an environment variable, the environment variable value
-overrides the option set in the configuration file.
+配置文件中设置的连接选项的优先级低于环境变量。这意味着如果
+您在配置文件和环境变量中设置相同的选项，即环境变量值
+覆盖配置文件中设置的选项。
 
 :::
 
-For example, the following TOML configuration file defines two profiles: `default` and `prod`. Each profile has its own
-set of connection options.
+例如，以下 TOML 配置文件定义了两个配置文件：`default` 和 `prod`。每个配置文件都有自己的
+连接选项集。
 
 ```toml
 # Default profile for local development
@@ -130,11 +130,11 @@ environment = "production"
 service-version = "v1.2.3"
 ```
 
-You can create a Temporal Client using a specific profile from the configuration file as follows. First use
-`ClientConfigProfile.load` to load the profile from the configuration file. Then use
-`profile.toWorkflowServiceStubsOptions` and `profile.toWorkflowClientOptions` to convert the profile to
-`WorkflowServiceStubsOptions` and `WorkflowClientOptions` respectively. Then use `WorkflowClient.newInstance` to create
-a Temporal Client.
+您可以使用配置文件中的特定配置文件创建 Temporal CLIent，如下所示。首次使用
+`ClientConfigProfile.load` 从配置文件加载配置文件。然后使用
+`profile.toWorkflowServiceStubsOptions` 和 `profile.toWorkflowClientOptions` 将配置文件转换为
+分别为 `WorkflowServiceStubsOptions` 和 `WorkflowClientOptions`。然后使用`WorkflowClient.newInstance`创建
+Temporal CLIent。
 
 ```java {21-25,32-34}
 import io.temporal.client.WorkflowClient;
@@ -198,15 +198,15 @@ public class LoadFromFile {
 </TabItem>
 <TabItem value="env-vars" label="Environment Variables">
 
-Use the `envconfig` package to set connection options for the Temporal Client using environment variables. For a list of
-all available environment variables and their default values, refer to
-[Environment Configuration](/references/client-environment-configuration).
+使用 `envconfig` 包通过环境变量设置 Temporal CLIent 的连接选项。欲了解以下列表
+所有可用的环境变量及其默认值，请参阅
+[环境配置](/references/client-environment-configuration)。
 
-For example, the following code snippet loads all environment variables and creates a Temporal Client with the options
-specified in those variables. If you have defined a configuration file at either the default location
-(`~/.config/temporalio/temporal.toml`) or a custom location specified by the `TEMPORAL_CONFIG_FILE` environment
-variable, this will also load the default profile in the configuration file. However, any options set via environment
-variables will take precedence.
+例如，以下代码片段加载所有环境变量并使用选项创建 Temporal CLIent
+在这些变量中指定。如果您已在默认位置定义了配置文件
+(`~/.config/temporalio/temporal.toml`) 或 `Temporal_CONFIG_FILE` 环境指定的自定义位置
+变量，这也将加载配置文件中的默认配置文件。但是，通过环境设置的任何选项
+变量将优先。
 
 ```java {18-19,26-28}
 import io.temporal.client.WorkflowClient;
@@ -265,12 +265,12 @@ public class LoadFromFile {
 
 <TabItem value="code" label="Code">
 
-If you don't want to use environment variables or a configuration file, you can specify connection options directly in
-code. This is convenient for local development and testing. You can also load a base configuration from environment
-variables or a configuration file, and then override specific options in code.
+如果不想使用环境变量或配置文件，可以直接在中指定连接选项
+代码。这样方便本地开发和测试。您还可以从环境加载基本配置
+变量或配置文件，然后覆盖代码中的特定选项。
 
-<!--SNIPSTART javasdk-build-caller-app-using-local-client-custom-namespace {"selectedLines": ["23-31"]}-->
-[sample-apps/java/client/devserver-namespace-client-sample/src/main/java/clientsample/YourCallerApp.java](https://github.com/temporalio/documentation/blob/main/sample-apps/java/client/devserver-namespace-client-sample/src/main/java/clientsample/YourCallerApp.java)
+<!--SNIPSTART javasdk-build-caller-app-using-local-client-custom-Namespace {"selectedLines": ["23-31"]}-->
+[示例应用程序/java/client/devserver-Namespace-client-sample/src/main/java/clientsample/YourCallerApp.java](https://github.com/temporalio/documentation/blob/main/sample-apps/java/client/devserver-namespace-client-sample/src/main/java/clientsample/YourCallerApp.java)
 ```java
 // ...
         // Add the Namespace as a Client Option
@@ -288,49 +288,50 @@ variables or a configuration file, and then override specific options in code.
 </TabItem>
 </Tabs>
 
-## Connect to Temporal Cloud {#connect-to-temporal-cloud}
+<a id="connect-to-temporal-cloud"></a>
+## 连接到 Temporal Cloud {#connect-to-temporal-cloud}
 
-You can connect to Temporal Cloud using either an [API key](/cloud/api-keys) or through [mTLS](/cloud/certificates).
-Connection to Temporal Cloud or any secured Temporal Service requires additional connection options compared to
-connecting to an unsecured local development instance:
+您可以使用 [API密钥](/cloud/api-keys) 或通过 [mTLS](/cloud/certificates) 连接到 Temporal Cloud。
+与 Temporal Cloud 或任何安全的 Temporal 服务的连接需要额外的连接选项
+连接到不安全的本地开发实例：
 
-- Your credentials for authentication.
-  - If you are using an API key, provide the API key value.
-  - If you are using mTLS, provide the mTLS CA certificate and mTLS private key.
-- Your _Namespace and Account ID_ combination, which follows the format `<namespace_id>.<account_id>`.
-- The recommended _endpoint_ is the gRPC Namespace endpoint: `<namespace>.<account>.tmprl.cloud:7233`.
-  This endpoint works for all Namespaces and automatically directs traffic to the active region for Namespaces with [High Availability](/cloud/high-availability).
-  See [accessing Namespaces](/cloud/namespaces#access-namespaces) for more information on endpoint options.
+- 您的身份验证凭据。
+  - 如果您使用 API 密钥，请提供 API 密钥值。
+  - 如果您使用 mTLS，请提供 mTLS CA 证书和 mTLS 私钥。
+- 您的 _Namespace 和帐户 ID_ 组合，格式为 `<Namespace_id>.<account_id>`。
+- 建议的_端点_是 gRPC Namespace 端点：`<Namespace>.<account>.tmprl.cloud:7233`。
+  此端点适用于所有 Namespace，并自动将流量定向到具有 [高可用性](/cloud/high-availability) 的 Namespace 的活动区域。
+  有关端点选项的更多信息，请参阅 [访问 Namespace](/cloud/namespaces#access-namespaces)。
 
-You can find the Namespace and Account ID, as well as the endpoint, on the Namespaces tab:
+您可以在 Namespaces 选项卡上找到 Namespace 和账户 ID 以及终端节点：
 
-![The Namespace and Account ID combination on the left, and the regional endpoint on the right](/img/cloud/apikeys/namespaces-and-regional-endpoints.png)
+![左侧为 Namespace 和账户 ID 组合，右侧为区域终端节点](/img/cloud/apikeys/namespaces-and-regional-endpoints.png)
 
-You can provide these connection options using environment variables, a configuration file, or directly in code.
+您可以使用环境变量、配置文件或直接在代码中提供这些连接选项。
 
 <Tabs groupId="connect-options" defaultValue="config-file" >
 
 <TabItem value="config-file" label="Configuration File">
 
-You can use a TOML configuration file to set connection options for the Temporal Client. The configuration file lets you
-configure multiple profiles, each with its own set of connection options. You can then specify which profile to use when
-creating the Temporal Client. For a list of all available configuration options you can set in the TOML file, refer to
-[Environment Configuration](/references/client-environment-configuration).
+您可以使用 TOML 配置文件来设置 Temporal CLIent 的连接选项。配置文件可以让你
+配置多个配置文件，每个配置文件都有自己的一组连接选项。然后，您可以指定在以下情况下使用哪个配置文件：
+创建 Temporal CLIent。有关可在 TOML 文件中设置的所有可用配置选项的列表，请参阅
+[环境配置](/references/client-environment-configuration)。
 
-You can use the environment variable `TEMPORAL_CONFIG_FILE` to specify the location of the TOML file or provide the path
-to the file directly in code. If you don't provide the path to the configuration file, the SDK looks for it at the
-default path `~/.config/temporalio/temporal.toml`.
+您可以使用环境变量 `Temporal_CONFIG_FILE` 指定 TOML 文件的位置或提供路径
+直接在代码中写入文件。如果您不提供配置文件的路径，SDK 将在
+默认路径 `~/.config/temporalio/temporal.toml`。
 
 :::info
 
-The connection options set in configuration files have lower precedence than environment variables. This means that if
-you set the same option in both the configuration file and as an environment variable, the environment variable value
-overrides the option set in the configuration file.
+配置文件中设置的连接选项的优先级低于环境变量。这意味着如果
+您在配置文件和环境变量中设置相同的选项，即环境变量值
+覆盖配置文件中设置的选项。
 
 :::
 
-For example, the following TOML configuration file defines a `cloud` profile with the necessary connection options to
-connect to Temporal Cloud via an API key:
+例如，以下 TOML 配置文件定义了 `cloud` 配置文件，其中包含必要的连接选项
+通过 API 密钥连接到 Temporal Cloud：
 
 ```toml
 # Cloud profile for Temporal Cloud
@@ -340,8 +341,8 @@ namespace = "your-namespace"
 api_key = "your-api-key-here"
 ```
 
-If you want to use mTLS authentication instead of an API key, replace the `api_key` field with your mTLS certificate and
-private key:
+如果您想使用 mTLS 身份验证而不是 API 密钥，请将 `api_key` 字段替换为您的 mTLS 证书，然后
+私钥：
 
 ```toml
 # Cloud profile for Temporal Cloud
@@ -352,9 +353,9 @@ tls_client_cert_data = "your-tls-client-cert-data"
 tls_client_key_path = "your-tls-client-key-path"
 ```
 
-With the connections options defined in the configuration file, use the `LoadClientOptions` function in the `envconfig`
-package to create a Temporal Client using the `cloud` profile as follows. After loading the profile, you can also
-programmatically override specific connection options before creating the client.
+使用配置文件中定义的连接选项，使用 `envconfig` 中的 `LoadClientOptions` 函数
+包以使用 `cloud` 配置文件创建 Temporal CLIent，如下所示。加载配置文件后，您还可以
+在创建客户端之前以编程方式覆盖特定的连接选项。
 
 ```java {25-30,33-35,42-44}
 import io.temporal.client.WorkflowClient;
@@ -428,21 +429,21 @@ public class LoadProfile {
 </TabItem>
 <TabItem value="env-vars" label="Environment Variables">
 
-The following environment variables are required to connect to Temporal Cloud:
+连接到 Temporal Cloud 需要以下环境变量：
 
-- `TEMPORAL_NAMESPACE`: Your Namespace and Account ID combination in the format `<namespace_id>.<account_id>`.
-- `TEMPORAL_ADDRESS`: The gRPC endpoint for your Temporal Cloud Namespace.
-- `TEMPORAL_API_KEY`: Your API key value. Required if you are using API key authentication.
-- `TEMPORAL_TLS_CLIENT_CERT_DATA` or `TEMPORAL_TLS_CLIENT_CERT_PATH`: Your mTLS client certificate data or file path.
-  Required if you are using mTLS authentication.
-- `TEMPORAL_TLS_CLIENT_KEY_DATA` or `TEMPORAL_TLS_CLIENT_KEY_PATH`: Your mTLS client private key data or file path.
-  Required if you are using mTLS authentication.
+- `Temporal_Namespace`：您的 Namespace 和帐户 ID 组合，格式为 `<Namespace_id>.<account_id>`。
+- `Temporal_ADDRESS`：Temporal Cloud Namespace 的 gRPC 端点。
+- `Temporal_API_KEY`：您的 API 密钥值。如果您使用 API 密钥身份验证，则为必需。
+- `Temporal_TLS_CLIENT_CERT_DATA` 或 `Temporal_TLS_CLIENT_CERT_PATH`：您的 mTLS 客户端证书数据或文件路径。
+  如果您使用 mTLS 身份验证，则为必需。
+- `Temporal_TLS_CLIENT_KEY_DATA` 或 `Temporal_TLS_CLIENT_KEY_PATH`：您的 mTLS 客户端私钥数据或文件路径。
+  如果您使用 mTLS 身份验证，则为必需。
 
-Ensure these environment variables exist in your environment before running your Java application.
+在运行 Java 应用程序之前，请确保您的环境中存在这些环境变量。
 
-Import the `io.temporal.envconfig` package to set connection options for the Temporal Client using environment variables. The `ClientConfigProfile.load` method will automatically load all environment variables. For a list of all available environment variables and their default values, refer to [Environment Configuration](/references/client-environment-configuration).
+导入 `io.Temporal.envconfig` 包以使用环境变量设置 Temporal CLIent 的连接选项。 `ClientConfigProfile.load`方法将自动加载所有环境变量。有关所有可用环境变量及其默认值的列表，请参阅 [环境配置](/references/client-environment-configuration)。
 
-For example, the following code snippet loads all environment variables and creates a Temporal Client with the options specified in those variables. If you have defined a configuration file at either the default location (`~/.config/temporalio/temporal.toml`) or a custom location specified by the `TEMPORAL_CONFIG_FILE` environment variable, this will also load the default profile in the configuration file. However, any options set via environment variables will take precedence.
+例如，以下代码片段加载所有环境变量并使用这些变量中指定的选项创建 Temporal CLIent。如果您已在默认位置 (`~/.config/temporalio/temporal.toml`) 或 `Temporal_CONFIG_FILE` 环境变量指定的自定义位置定义了配置文件，则这也将加载配置文件中的默认配置文件。但是，通过环境变量设置的任何选项都将优先。
 
 ```java {17-18,25-27}
 import io.temporal.client.WorkflowClientOptions;
@@ -499,8 +500,8 @@ public class LoadFromFile {
 </TabItem>
 <TabItem value="code" label="Code">
 
-Now, when instantiating a Temporal `client` in your Temporal Java SDK code, provide the API key with
-`WorkflowServiceStubsOptions` and the Namespace and Account ID in `WorkflowClient.newInstance`:
+现在，在 Temporal Java SDK 代码中实例化 Temporal `client` 时，请提供 API 密钥
+`WorkflowServiceStubsOptions` 和 `WorkflowClient.newInstance` 中的 Namespace 和帐户 ID：
 
 ```java
     WorkflowServiceStubs service =
@@ -519,7 +520,7 @@ Now, when instantiating a Temporal `client` in your Temporal Java SDK code, prov
             service, WorkflowClientOptions.newBuilder().setNamespace(<namespace_id>.<account_id>).build());
 ```
 
-To update the API key, update the `stubOptions`:
+对于 Update API 密钥、Update `stubOptions`：
 
 ```java
 String myKey = <APIKey>;
@@ -531,15 +532,15 @@ WorkflowServiceStubsOptions stubOptions =
 myKey = "Bearer " + <new APIKey>;
 ```
 
-To connect to Temporal Cloud using mTLS, you need to provide the mTLS CA certificate and mTLS private key. You can then
-use the `SimpleSslContextBuilder` to build an SSL context. Then use the
-`WorkflowServiceStubsOptions.Builder.setSslContext` method to set the SSL context.
+要使用mTLS连接到Temporal Cloud，您需要提供mTLS CA证书和mTLS私钥。那么你可以
+使用 `SimpleSslContextBuilder` 构建 SSL 上下文。然后使用
+`WorkflowServiceStubsOptions.Builder.setSslContext` 设置 SSL 上下文的方法。
 
-When you use a remote service, you don't use the `newLocalServiceStubs` convenience method. Instead, set your
-connection details as stub configuration options:
+当您使用远程服务时，您不使用 `newLocalServiceStubs` 便捷方法。相反，设置你的
+作为存根配置选项的连接详细信息：
 
-<!--SNIPSTART javasdk-build-caller-app-using-temporal-cloud {"selectedLines": ["46-54"]}-->
-[sample-apps/java/client/cloudserver-client-sample/src/main/java/clientsample/YourCallerApp.java](https://github.com/temporalio/documentation/blob/main/sample-apps/java/client/cloudserver-client-sample/src/main/java/clientsample/YourCallerApp.java)
+<!--SNIPSTART javasdk-build-caller-app-using-Temporal-cloud {"selectedLines": ["46-54"]}-->
+[示例应用程序/java/client/cloudserver-client-sample/src/main/java/clientsample/YourCallerApp.java](https://github.com/temporalio/documentation/blob/main/sample-apps/java/client/cloudserver-client-sample/src/main/java/clientsample/YourCallerApp.java)
 ```java
 // ...
             // Set the Service Stub options (SSL context and gRPC endpoint)
@@ -554,21 +555,21 @@ connection details as stub configuration options:
 ```
 <!--SNIPEND-->
 
-Each Temporal Cloud service Client has four prerequisites.
+每个 Temporal Cloud 服务客户端都有四个先决条件。
 
-- The full Namespace Id from the [Cloud Namespace](https://cloud.temporal.io/namespaces) details page
-- The gRPC endpoint from the [Cloud Namespace](https://cloud.temporal.io/namespaces) details page
-- Your mTLS private key
-- Your mTLS x509 Certificate
+- [云 Namespace](https://cloud.temporal.io/namespaces) 详细信息页面中的完整 Namespace Id
+- [云 Namespace](https://cloud.temporal.io/namespaces) 详细信息页面中的 gRPC 端点
+- 您的 mTLS 私钥
+- 您的 mTLS x509 证书
 
-Retrieve these values before building your Client.
+在构建客户端之前检索这些值。
 
-The following sample generates an SSL context from the mTLS .pem and .key files. Along with the gRPC endpoint, this
-information configures a service stub for Temporal Cloud. Add the Namespace to your Client build options and initialize
-the new Client:
+以下示例从 mTLS .pem 和 .key 文件生成 SSL 上下文。与 gRPC 端点一起，此
+信息配置 Temporal Cloud 的服务存根。将 Namespace 添加到您的客户端构建选项并初始化
+新客户：
 
-<!--SNIPSTART javasdk-build-caller-app-using-temporal-cloud {"selectedLines": ["41-64"]}-->
-[sample-apps/java/client/cloudserver-client-sample/src/main/java/clientsample/YourCallerApp.java](https://github.com/temporalio/documentation/blob/main/sample-apps/java/client/cloudserver-client-sample/src/main/java/clientsample/YourCallerApp.java)
+<!--SNIPSTART javasdk-build-caller-app-using-Temporal-cloud {"selectedLines": ["41-64"]}-->
+[示例应用程序/java/client/cloudserver-client-sample/src/main/java/clientsample/YourCallerApp.java](https://github.com/temporalio/documentation/blob/main/sample-apps/java/client/cloudserver-client-sample/src/main/java/clientsample/YourCallerApp.java)
 ```java
 // ...
             // Generate an SSL context
@@ -601,53 +602,54 @@ the new Client:
 </TabItem>
 </Tabs>
 
-## Start a Workflow Execution {#start-workflow-execution}
+<a id="start-workflow-execution"></a>
+## 启动 Workflow Execution {#start-workflow-execution}
 
-[Workflow Execution](/workflow-execution) semantics rely on several parameters—that is, to start a Workflow Execution
-you must supply a Task Queue that will be used for the Tasks (one that a Worker is polling), the Workflow Type,
-language-specific contextual data, and Workflow Function parameters.
+[Workflow Execution](/workflow-execution) 语义依赖于几个参数，即启动 Workflow Execution
+您必须提供将用于任务的 Task Queue（Worker 正在轮询的任务）、Workflow 类型、
+特定于语言的上下文数据和 Workflow 函数参数。
 
-In the examples below, all Workflow Executions are started using a Temporal Client. To spawn Workflow Executions from
-within another Workflow Execution, use either the [Child Workflow](/develop/java/workflows/child-workflows) or External Workflow
-APIs.
+在下面的示例中，所有 Workflow Execution 均使用 Temporal CLIent 启动。从中生成 Workflow Execution
+在另一个 Workflow Execution 中，使用 [Child Workflow](/develop/java/workflows/child-workflows) 或外部 Workflow
+API。
 
-See the [Customize Workflow Type](/develop/java/workflows/basics#workflow-type) section to see how to customize the name
-of the Workflow Type.
+请参阅 [定制Workflow型](/develop/java/workflows/basics#workflow-type) 部分以了解如何自定义名称
+Workflow 型的。
 
-A request to spawn a Workflow Execution causes the Temporal Service to create the first Event
-([WorkflowExecutionStarted](/references/events#workflowexecutionstarted)) in the Workflow Execution Event History. The
-Temporal Service then creates the first Workflow Task, resulting in the first
-[WorkflowTaskScheduled](/references/events#workflowtaskscheduled) Event.
+生成 Workflow Execution 的请求会导致 Temporal 服务创建第一个事件
+([Workflow执行开始](/references/events#workflowexecutionstarted)) 在 Workflow Execution Event History 中。的
+然后，Temporal 服务创建第一个 Workflow 任务，从而产生第一个
+[Workflow任务Scheduled](/references/events#workflowtaskscheduled) 事件。
 
-Use `WorkflowStub` to start a Workflow Execution from within a Client, and `ExternalWorkflowStub` to start a different
-Workflow Execution from within a Workflow.
+使用 `WorkflowStub` 从客户端内启动 Workflow Execution，并使用 `ExternalWorkflowStub` 启动不同的
+来自 Workflow 内的 Workflow Execution。
 
-See [`SignalwithStart`](/develop/java/workflows/message-passing#signal-with-start) to start a Workflow Execution to receive a
+请参阅 [`SignalwithStart`](/develop/java/workflows/message-passing#signal-with-start) 启动 Workflow Execution 来接收
 Signal from within another Workflow.
 
-**Using `WorkflowStub`**
+**使用 `WorkflowStub`**
 
-`WorkflowStub` is a proxy generated by the `WorkflowClient`. Each time a new Workflow Execution is started, an instance
-of the Workflow implementation object is created. Then, one of the methods (depending on the Workflow Type of the
-instance) annotated with `@WorkflowMethod` can be invoked. As soon as this method returns, the Workflow Execution is
-considered to be complete.
+`WorkflowStub` 是由 `WorkflowClient` 生成的代理。每次启动新的 Workflow Execution 时，都会生成一个实例
+Workflow 实现对象的创建。然后，其中一种方法（取决于 Workflow 的类型）
+可以调用用 `@WorkflowMethod` 注释的实例）。此方法一返回，Workflow Execution 就会
+被认为是完整的。
 
-You can use a typed or untyped `WorkflowStub` in the client code.
+您可以在客户端代码中使用类型化或非类型化的 `WorkflowStub`。
 
-- Typed `WorkflowStub` are useful because they are type safe and allow you to invoke your Workflow methods such as
-  `@WorkflowMethod`, `@QueryMethod`, and `@SignalMethod` directly.
-- An untyped `WorkflowStub` does not use the Workflow interface, and is not type safe. It is more flexible because it
-  has methods from the `WorkflowStub` interface, such as `start`, `signalWithStart`, `getResults` (sync and async),
-  `query`, `signal`, `cancel` and `terminate`. Note that the Temporal Java SDK also provides typed `WorkflowStub`
-  versions for these methods. When using untyped `WorkflowStub`, we rely on the Workflow Type, Activity Type, Child
-  Workflow Type, as well as Query and Signal names. For details, see [Temporal Client](#connect-to-development-service).
+- 类型化的 `WorkflowStub` 很有用，因为它们是类型安全的，并允许您调用 Workflow 方法，例如
+  直接 `@WorkflowMethod`、`@QueryMethod` 和 `@SignalMethod`。
+- 非类型化 `WorkflowStub` 不使用 Workflow 接口，并且不是类型安全的。它更加灵活，因为它
+  具有来自 `WorkflowStub` 接口的方法，例如 `start`、`SignalWithStart`、`getResults`（同步和异步），
+  `Query`、`Signal`、`cancel` 和 `terminate`。请注意，Temporal Java SDK 还提供类型为 `WorkflowStub`
+  这些方法的版本。当使用无类型的 `WorkflowStub` 时，我们依赖于 Workflow 类型、Activity 类型、子代
+  Workflow 类型，以及 Query 和 Signal 名称。有关详细信息，请参见 [Temporal CLIent](#connect-to-development-service)。
 
-A Workflow Execution can be started either synchronously or asynchronously.
+Workflow Execution 可以同步或异步启动。
 
-- Synchronous invocation starts a Workflow and then waits for its completion. If the process that started the Workflow
-  crashes or stops waiting, the Workflow continues executing. Because Workflows are potentially long-running, and Client
-  crashes happen, it is not very commonly found in production use. The following example is a type-safe approach for
-  starting a Workflow Execution synchronously.
+- 同步调用启动 Workflow，然后等待其完成。如果启动 Workflow 的进程
+  崩溃或停止等待，Workflow 继续执行。因为 Workflow 可能会长时间运行，并且客户端
+  崩溃发生，在生产使用中并不常见。以下示例是类型安全的方法
+  同步启动 Workflow Execution。
 
   ```java
     NotifyUserAccounts workflow = client.newWorkflowStub(
@@ -665,15 +667,15 @@ A Workflow Execution can be started either synchronously or asynchronously.
   // notify(String[] accountIds) is a Workflow method defined in the Workflow Definition.
   ```
 
-- Asynchronous start initiates a Workflow Execution and immediately returns to the caller. This is the most common way
-  to start Workflows in production code. The
+- 异步启动启动 Workflow Execution 并立即返回给调用者。这是最常见的方式
+  在生产代码中启动 Workflows。的
   [`WorkflowClient`](https://github.com/temporalio/sdk-java/blob/master/temporal-sdk/src/main/java/io/temporal/client/WorkflowClient.java)
-  provides some static methods, such as `start`, `execute`, `signalWithStart` etc., that help with starting your
-  Workflows asynchronously.
+  提供了一些静态方法，例如 `start`、`execute`、`SignalWithStart` 等，帮助您启动
+  Workflow 异步。
 
-  The following examples show how to start Workflow Executions asynchronously, with either typed or untyped
-  `WorkflowStub`.
-  - **Typed WorkflowStub Example**
+以下示例显示如何使用类型化或非类型化异步启动 Workflow Execution
+  `WorkflowStub`。
+  - **键入 WorkflowStub 示例**
 
     ```java
     // create typed Workflow stub
@@ -687,7 +689,7 @@ A Workflow Execution can be started either synchronously or asynchronously.
     WorkflowClient.start(workflow::greetCustomer);
     ```
 
-  - **Untyped WorkflowStub Example**
+- **无类型 WorkflowStub 示例**
 
     ```java
     WorkflowStub untyped = client.newUntypedWorkflowStub("FileProcessingWorkflow",
@@ -700,8 +702,8 @@ A Workflow Execution can be started either synchronously or asynchronously.
     untyped.start(argument);
     ```
 
-You can call a Dynamic Workflow implementation using an untyped `WorkflowStub`. The following example shows how to call
-the Dynamic Workflow implementation in the Client code.
+您可以使用非类型化 `WorkflowStub` 调用动态 Workflow 实现。下面的例子展示了如何调用
+客户端代码中的动态 Workflow 实现。
 
 ```java
     WorkflowClient client = WorkflowClient.newInstance(service);
@@ -718,20 +720,20 @@ the Dynamic Workflow implementation in the Client code.
     WorkflowStub workflow = client.newUntypedWorkflowStub("DynamicWF", workflowOptions);
 ```
 
-`DynamicWorkflow` can be used to invoke different Workflow Types. To check what type is running when your Dynamic
-Workflow `execute` method runs, use `getWorkflowType()` in the implementation code.
+`DynamicWorkflow` 可用于调用不同的 Workflow 类型。检查 Dynamic 时运行的类型
+Workflow `execute`方法运行，在实现代码中使用`getWorkflowType()`。
 
 ```java
 String type = Workflow.getInfo().getWorkflowType();
 ```
 
-See [Workflow Execution Result](#get-workflow-results) for details on how to get the results of the Workflow Execution.
+有关如何获取 Workflow Execution 结果的详细信息，请参阅 [Workflow Execution 结果](#get-workflow-results)。
 
-**Using `ExternalWorkflowStub`**
+**使用 `ExternalWorkflowStub`**
 
-Use `ExternalWorkflowStub` within a Workflow to invoke, and send Signals to, other Workflows by type.
+在 Workflow 中使用 `ExternalWorkflowStub` 来调用 Signal，并将 Signal 按类型发送到其他 Workflow。
 
-This helps particularly for executing Workflows written in other language SDKs, as shown in the following example.
+这对于执行用其他语言 SDK 编写的 Workflow 特别有帮助，如以下示例所示。
 
 ```java
 @Override
@@ -740,28 +742,28 @@ This helps particularly for executing Workflows written in other language SDKs, 
     }
 ```
 
-See the [Temporal Polyglot](https://github.com/tsurdilo/temporal-polyglot) code for examples of executing Workflows
-written in other language SDKs.
+有关执行 Workflow 的示例，请参阅 [Temporal 多语言](https://github.com/tsurdilo/temporal-polyglot) 代码
+用其他语言的 SDK 编写。
 
-**Recurring start**
+**重复开始**
 
-You can start a Workflow Execution on a regular schedule by using
-[`setCronSchedule`](/develop/java/workflows/schedules#cron-schedule) Workflow option in the Client code.
+您可以使用以下命令在常规 Schedule 上启动 Workflow Execution
+客户端代码中的 [`setCronSchedule`](/develop/java/workflows/schedules#cron-schedule) Workflow 选项。
 
-### How to set a Workflow's Task Queue {#set-task-queue}
+### 如何设置 Workflow 的 Task Queue {#set-task-queue}
 
-In most SDKs, the only Workflow Option that must be set is the name of the [Task Queue](/task-queue).
+在大多数 SDK 中，唯一必须设置的 Workflow 选项是 [Task Queue](/task-queue) 的名称。
 
-For your code to execute, a Worker Process must be running. This process needs a Worker Entity that is polling the same
-Task Queue name.
+为了执行您的代码，Worker 进程必须正在运行。此过程需要一个轮询相同的 Worker 实体
+Task Queue 名称。
 
-Set the Workflow Task Queue with the
+设置 Workflow Task Queue
 [`WorkflowStub`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html)
-instance in the Client code using
-[`WorkflowOptions.Builder.setTaskQueue`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html).
+客户端代码中的实例使用
+[`WorkflowOptions.Builder.setTaskQueue`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html)。
 
-- Type: `String`
-- Default: none
+- 型号：`String`
+- 默认值：无
 
 ```java
 //create Workflow stub for YourWorkflowInterface
@@ -775,19 +777,20 @@ YourWorkflowInterface workflow1 =
                 .build());
 ```
 
-### How to set a Workflow Id {#workflow-id}
+<a id="workflow-id"></a>
+### 如何设置 Workflow Id {#workflow-id}
 
-Although it is not required, we recommend providing your own
-[Workflow Id](/workflow-execution/workflowid-runid#workflow-id) that maps to a business process or business entity
-identifier, such as an order identifier or customer identifier.
+尽管不是必需的，但我们建议您提供自己的
+[Workflow ID](/workflow-execution/workflowid-runid#workflow-id) 映射到业务流程或业务实体
+标识符，例如订单标识符或客户标识符。
 
-Set the Workflow Id with the
+使用以下命令设置 Workflow Id
 [`WorkflowStub`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html)
-instance in the Client code using
-[`WorkflowOptions.Builder.setWorkflowId​`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html).
+客户端代码中的实例使用
+[`WorkflowOptions.Builder.setWorkflowId​`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html)。
 
-- Type: `String`
-- Default: none
+- 型号：`String`
+- 默认值：无
 
 ```java
 //create Workflow stub for YourWorkflowInterface
@@ -801,38 +804,39 @@ YourWorkflowInterface workflow1 =
                 .build());
 ```
 
-### Java WorkflowOptions reference {#workflow-options-reference}
+<a id="workflow-options-reference"></a>
+### Java WorkflowOptions 参考 {#workflow-options-reference}
 
-Create a
-[`newWorkflowStub`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html) in
-the Temporal Client code, call the instance of the Workflow, and set the Workflow options with the
+创建一个
+[`newWorkflowStub`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html) 在
+Temporal CLIent 代码，调用 Workflow 的实例，并使用以下命令设置 Workflow 选项
 [`WorkflowOptions.Builder`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html)
-class.
+类。
 
-The following fields are available:
+以下字段可用：
 
-| Option                                                  | Required             | Type                                                                                                                 |
+| 选项                                                  | 必需的             | 类型                                                                                                                 |
 | ------------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| [`WorkflowId`](#workflowid)                             | No (but recommended) | String                                                                                                               |
-| [`TaskQueue`](#taskqueue)                               | **Yes**              | String                                                                                                               |
-| [`WorkflowExecutionTimeout`](#workflowexecutiontimeout) | No                   | `Duration`                                                                                                           |
-| [`WorkflowRunTimeout`](#workflowruntimeout)             | No                   | `Duration`                                                                                                           |
-| [`WorkflowTaskTimeout`](#workflowtasktimeout)           | No                   | `Duration`                                                                                                           |
-| [`WorkflowIdReusePolicy`](#workflowidreusepolicy)       | No                   | `WorkflowIdReusePolicy`                                                                                              |
-| [`RetryOptions`](#retryoptions)                         | No                   | [`RetryOptions`](https://www.javadoc.io/static/io.temporal/temporal-sdk/1.17.0/io/temporal/common/RetryOptions.html) |
-| [`CronSchedule`](#cronschedule)                         | No                   | String                                                                                                               |
-| [`Memo`](#memo)                                         | No                   | string                                                                                                               |
-| [`SearchAttributes`](#searchattributes)                 | No                   | `Map<String, Object>`                                                                                                |
+| [`WorkflowId`](#workflowid)                             | 否（但推荐） | 细绳                                                                                                               |
+| [`TaskQueue`](#taskqueue)                               | **是的**              | 细绳                                                                                                               |
+| [`WorkflowExecutionTimeout`](#workflowexecutiontimeout) | 不                   | `Duration`                                                                                                           |
+| [`WorkflowRunTimeout`](#workflowruntimeout)             | 不                   | `Duration`                                                                                                           |
+| [`WorkflowTaskTimeout`](#workflowtasktimeout)           | 不                   | `Duration`                                                                                                           |
+| [`WorkflowIdReusePolicy`](#workflowidreusepolicy)       | 不                   | `WorkflowIdReusePolicy`                                                                                              |
+| [`RetryOptions`](#retryoptions)                         | 不                   | [`RetryOptions`](https://www.javadoc.io/static/io.temporal/temporal-sdk/1.17.0/io/temporal/common/RetryOptions.html) |
+| [`CronSchedule`](#cronschedule)                         | 不                   | 细绳                                                                                                               |
+| [`Memo`](#memo)                                         | 不                   | 细绳                                                                                                               |
+| [`SearchAttributes`](#searchattributes)                 | 不                   | `Map<String, Object>`                                                                                                |
 
 #### WorkflowId
 
-Set the Workflow Id with the
+使用以下命令设置 Workflow Id
 [`WorkflowStub`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html)
-instance in the Client code using
-[`WorkflowOptions.Builder.setWorkflowId​`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html).
+客户端代码中的实例使用
+[`WorkflowOptions.Builder.setWorkflowId​`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html)。
 
-- Type: `String`
-- Default: none
+- 型号：`String`
+- 默认值：无
 
 ```java
 //create Workflow stub for YourWorkflowInterface
@@ -846,15 +850,16 @@ YourWorkflowInterface workflow1 =
                 .build());
 ```
 
-#### TaskQueue
+<a id="taskqueue"></a>
+#### 任务队列 {#taskqueue}
 
-Set the Workflow Task Queue with the
+设置 Workflow Task Queue
 [`WorkflowStub`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html)
-instance in the Client code using
-[`WorkflowOptions.Builder.setTaskQueue`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html).
+客户端代码中的实例使用
+[`WorkflowOptions.Builder.setTaskQueue`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html)。
 
-- Type: `String`
-- Default: none
+- 型号：`String`
+- 默认值：无
 
 ```java
 //create Workflow stub for YourWorkflowInterface
@@ -868,15 +873,16 @@ YourWorkflowInterface workflow1 =
                 .build());
 ```
 
-#### WorkflowExecutionTimeout
+<a id="workflowexecutiontimeout"></a>
+#### Workflow执行超时 {#workflowexecutiontimeout}
 
-Set the [Workflow Execution Timeout](/encyclopedia/detecting-workflow-failures#workflow-execution-timeout) with the
+设置 [Workflow Execution 超时](/encyclopedia/detecting-workflow-failures#workflow-execution-timeout)
 [`WorkflowStub`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html)
-instance in the Client code using
-[`WorkflowOptions.Builder.setWorkflowExecutionTimeout`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html).
+客户端代码中的实例使用
+[`WorkflowOptions.Builder.setWorkflowExecutionTimeout`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html)。
 
-- Type: `Duration`
-- Default: Unlimited
+- 型号：`Duration`
+- 默认：无限制
 
 ```java
 //create Workflow stub for YourWorkflowInterface
@@ -893,13 +899,13 @@ YourWorkflowInterface workflow1 =
 
 #### WorkflowRunTimeout
 
-Set the Workflow Run Timeout with the
+使用以下命令设置 Workflow 运行超时
 [`WorkflowStub`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html)
-instance in the Client code using
-[`WorkflowOptions.Builder.setWorkflowRunTimeout`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html).
+客户端代码中的实例使用
+[`WorkflowOptions.Builder.setWorkflowRunTimeout`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html)。
 
-- Type: `Duration`
-- Default: Same as [WorkflowExecutionTimeout](#workflowexecutiontimeout).
+- 型号：`Duration`
+- 默认值：与 [Workflow执行超时](#workflowexecutiontimeout) 相同。
 
 ```java
 //create Workflow stub for YourWorkflowInterface
@@ -916,14 +922,14 @@ YourWorkflowInterface workflow1 =
 
 #### WorkflowTaskTimeout
 
-Set the Workflow Task Timeout with the
+使用以下命令设置 Workflow 任务超时
 [`WorkflowStub`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html)
-instance in the Client code using
-[`WorkflowOptions.Builder.setWorkflowTaskTimeout`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html).
+客户端代码中的实例使用
+[`WorkflowOptions.Builder.setWorkflowTaskTimeout`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html)。
 
-- Type: `Duration`
-- Default: 10 seconds.
-- Values: Maximum accepted value is 60 seconds.
+- 型号：`Duration`
+- 默认：10 秒。
+- 值：可接受的最大值为 60 秒。
 
 ```java
 //create Workflow stub for YourWorkflowInterface
@@ -938,15 +944,16 @@ YourWorkflowInterface workflow1 =
                 .build());
 ```
 
-#### WorkflowIDReusePolicy
+<a id="workflowidreusepolicy"></a>
+#### WorkflowID重用策略 {#workflowidreusepolicy}
 
-- Type: `WorkflowIdReusePolicy`
-- Default: `AllowDuplicate`
-- Values:
-  - `enums.AllowDuplicateFailedOnly`: The Workflow can start if the earlier Workflow Execution failed, Canceled, or
-    Terminated.
-  - `AllowDuplicate`: The Workflow can start regardless of the earlier Execution's closure status.
-  - `RejectDuplicate`: The Workflow can not start if there is a earlier Run.
+- 型号：`WorkflowIdReusePolicy`
+- 默认：`AllowDuplicate`
+- 价值观：
+  - `enums.AllowDuplicateFailedOnly`：如果较早的 Workflow Execution 失败、取消或，则 Workflow 可以启动
+    终止。
+  - `AllowDuplicate`：无论先前执行的关闭状态如何，Workflow 都可以启动。
+  - `RejectDuplicate`：如果有较早的运行，则 Workflow 无法启动。
 
 ```java
 //create Workflow stub for GreetWorkflowInterface
@@ -962,15 +969,16 @@ GreetWorkflowInterface workflow1 =
                 .build());
 ```
 
-#### RetryOptions
+<a id="retryoptions"></a>
+#### 重试选项 {#retryoptions}
 
-To set a Workflow Retry Options in the
+设置 Workflow 重试选项
 [`WorkflowStub`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html)
-instance use
-[`WorkflowOptions.Builder.setWorkflowRetryOptions`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html).
+实例使用
+[`WorkflowOptions.Builder.setWorkflowRetryOptions`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html)。
 
-- Type: `RetryOptions`
-- Default: `Null` which means no retries will be attempted.
+- 型号：`RetryOptions`
+- 默认值：`Null`，这意味着不会尝试重试。
 
 ```java
 //create Workflow stub for GreetWorkflowInterface
@@ -987,21 +995,21 @@ GreetWorkflowInterface workflow1 =
 
 #### CronSchedule
 
-A [Temporal Cron Job](/cron-job) is the series of Workflow Executions that occur when a Cron Schedule is provided in the
-call to spawn a Workflow Execution.
+[Temporal 计划任务](/cron-job) 是在 Cron Schedule 中提供时出现的一系列 Workflow Execution。
+调用以生成 Workflow Execution。
 
-A Cron Schedule is provided as an option when the call to spawn a Workflow Execution is made.
+当调用生成 Workflow Execution 时，会提供 Cron Schedule 作为选项。
 
-Set the Cron Schedule with the
+使用以下命令设置 Cron Schedule
 [`WorkflowStub`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowStub.html)
-instance in the Client code using
-[`WorkflowOptions.Builder.setCronSchedule`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html).
+客户端代码中的实例使用
+[`WorkflowOptions.Builder.setCronSchedule`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/client/WorkflowOptions.Builder.html)。
 
-Setting `setCronSchedule` changes the Workflow Execution into a Temporal Cron Job. The default timezone for a Cron is
-UTC.
+设置 `setCronSchedule` 将 Workflow Execution 更改为 Temporal Cron 作业。 Cron 的默认时区是
+世界标准时间。
 
-- Type: `String`
-- Default: None
+- 型号：`String`
+- 默认：无
 
 ```java
 //create Workflow stub for YourWorkflowInterface
@@ -1016,13 +1024,14 @@ YourWorkflowInterface workflow1 =
                 .build());
 ```
 
-For more details, see the
-[HelloCron Sample](https://github.com/temporalio/samples-java/blob/main/core/src/main/java/io/temporal/samples/hello/HelloCron.java).
+有关更多详细信息，请参阅
+[HelloCron 示例](https://github.com/temporalio/samples-java/blob/main/core/src/main/java/io/temporal/samples/hello/HelloCron.java)。
 
-#### Memo
+<a id="memo"></a>
+#### 备忘录 {#memo}
 
-- Type: `String`
-- Default: None
+- 型号：`String`
+- 默认：无
 
 ```java
 //create Workflow stub for GreetWorkflowInterface
@@ -1039,14 +1048,15 @@ GreetWorkflowInterface workflow1 =
                 .build());
 ```
 
-#### SearchAttributes
+<a id="searchattributes"></a>
+#### 搜索属性 {#searchattributes}
 
-Search Attributes are additional indexed information attributed to Workflow and used for search and visibility. These
-can be used in a query of List/Scan/Count Workflow APIs. The key and its value type must be registered on Temporal
-server side.
+Search Attribute 是归属于 Workflow 的附加索引信息，用于搜索和 Visibility。这些
+可用于列表/扫描/计数 Workflow API 的 Query。键及其值类型必须在 Temporal 上注册
+服务器端。
 
-- Type: `Map<String, Object>`
-- Default: None
+- 型号：`Map<String, Object>`
+- 默认：无
 
 ```java
 private static void parentWorkflow() {
@@ -1057,32 +1067,33 @@ private static void parentWorkflow() {
                         .build();
 ```
 
-The following Java types are supported:
+支持以下 Java 类型：
 
-- String
-- Long, Integer, Short, Byte
-- Boolean
-- Double
-- OffsetDateTime
-- Collection of the types in this list.
+- 字符串
+- 长整型、短整型、字节型
+- 布尔值
+- 双人间
+- 偏移日期时间
+- 此列表中类型的集合。
 
-### How to get the result of a Workflow Execution in Java {#get-workflow-results}
+<a id="get-workflow-results"></a>
+### 如何在 Java 中获取 Workflow Execution 的结果 {#get-workflow-results}
 
-If the call to start a Workflow Execution is successful, you will gain access to the Workflow Execution's Run Id.
+如果启动 Workflow Execution 的调用成功，您将获得对 Workflow Execution 的运行 ID 的访问权限。
 
-The Workflow Id, Run Id, and Namespace may be used to uniquely identify a Workflow Execution in the system and get its
-result.
+Workflow Id、Run Id 和 Namespace 可用于唯一标识系统中的 Workflow Execution 并获取其
+结果。
 
-It's possible to both block progress on the result (synchronous execution) or get the result at some other point in time
-(asynchronous execution).
+可以阻止结果的进展（同步执行）或在其他时间点获取结果
+（异步执行）。
 
-In the Temporal Platform, it's also acceptable to use Queries as the preferred method for accessing the state and
-results of Workflow Executions.
+在 Temporal 平台中，也可以使用查询作为访问状态和数据的首选方法。
+Workflow Execution 的结果。
 
-A synchronous Workflow Execution blocks your client thread until the Workflow Execution completes (or fails) and get the
-results (or error in case of failure).
+同步 Workflow Execution 会阻塞您的客户端线程，直到 Workflow Execution 完成（或失败）并获取
+结果（或失败时的错误）。
 
-The following example is a type-safe approach for getting the results of a synchronous Workflow Execution.
+以下示例是用于获取同步 Workflow Execution 结果的类型安全方法。
 
 ```java
  FileProcessingWorkflow workflow = client.newWorkflowStub(
@@ -1096,11 +1107,11 @@ The following example is a type-safe approach for getting the results of a synch
 String result = workflow.processfile(new Argument());
 ```
 
-An asynchronous Workflow Execution immediately returns a value to the caller.
+异步 Workflow Execution 立即向调用者返回一个值。
 
-The following examples show how to get the results of a Workflow Execution through typed and untyped `WorkflowStub`.
+以下示例演示如何通过类型化和非类型化 `WorkflowStub` 获取 Workflow Execution 的结果。
 
-- **Typed WorkflowStub Example**
+- **键入 WorkflowStub 示例**
 
   ```java
   // create typed Workflow stub
@@ -1113,7 +1124,7 @@ The following examples show how to get the results of a Workflow Execution throu
   WorkflowClient.start(workflow::greetCustomer);
   ```
 
-- **Untyped WorkflowStub Example**
+- **无类型 WorkflowStub 示例**
 
   ```java
   WorkflowStub untyped = client.newUntypedWorkflowStub("FileProcessingWorkflow",
@@ -1126,13 +1137,13 @@ The following examples show how to get the results of a Workflow Execution throu
   untyped.start(argument);
   ```
 
-If you need to wait for a Workflow Execution to complete after an asynchronous start, the most straightforward way is to
-call the blocking Workflow instance again.
+如果您需要在异步启动后等待 Workflow Execution 完成，最直接的方法是
+再次调用阻塞的 Workflow 实例。
 
-Note that if `WorkflowOptions.WorkflowIdReusePolicy` is not set to `AllowDuplicate`, then instead of throwing
-`DuplicateWorkflowException`, it reconnects to an existing Workflow and waits for its completion.
+请注意，如果 `WorkflowOptions.WorkflowIdReusePolicy` 未设置为 `AllowDuplicate`，则不抛出
+`DuplicateWorkflowException`，它重新连接到现有的 Workflow 并等待其完成。
 
-The following example shows how to do this from a different process than the one that started the Workflow Execution.
+以下示例显示如何从启动 Workflow Execution 的进程不同的进程执行此操作。
 
 ```java
 YourWorkflow workflow = client.newWorkflowStub(YourWorkflow.class, workflowId);
@@ -1141,8 +1152,8 @@ YourWorkflow workflow = client.newWorkflowStub(YourWorkflow.class, workflowId);
 String result = workflow.yourMethod();
 ```
 
-Another way to connect to an existing Workflow and wait for its completion from another process, is to use
-`UntypedWorkflowStub`. For example:
+连接到现有 Workflow 并等待另一个进程完成的另一种方法是使用
+`UntypedWorkflowStub`。例如：
 
 ```java
 WorkflowStub workflowStub = client.newUntypedWorkflowStub(workflowType, workflowOptions);
@@ -1151,10 +1162,10 @@ WorkflowStub workflowStub = client.newUntypedWorkflowStub(workflowType, workflow
 String result = untyped.getResult(String.class);
 ```
 
-**Get last (successful) completion result**
+**获取最后（成功）完成结果**
 
-For a Temporal Cron Job, get the result of previous successful runs using `GetLastCompletionResult()`. The method
-returns `null` if there is no previous completion. The following example shows how to implement this in a Workflow.
+对于 Temporal Cron 作业，使用 `GetLastCompletionResult()` 获取之前成功运行的结果。方法
+如果没有先前的完成，则返回 `null`。以下示例显示如何在 Workflow 中实现此功能。
 
 ```java
 public String cronWorkflow() {
@@ -1168,7 +1179,7 @@ public String cronWorkflow() {
 }
 ```
 
-Note that this works even if one of the Cron schedule runs failed. The next schedule will still get the last successful
-result if it ever successfully completed at least once. For example, for a daily cron Workflow, if the run succeeds on
-the first day and fails on the second day, then the third day run will get the result from first day's run using these
-APIs.
+请注意，即使 Cron Schedule 之一运行失败，此操作也有效。下一个Schedule仍然会取得最后的成功
+如果它至少成功完成一次，就会得到结果。例如，对于每日 cron Workflow，如果运行成功
+第一天失败，第二天失败，然后第三天运行将使用这些获得第一天运行的结果
+API。

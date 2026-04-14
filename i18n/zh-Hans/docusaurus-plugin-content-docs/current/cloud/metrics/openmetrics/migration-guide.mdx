@@ -1,0 +1,420 @@
+---
+id: migration-guide
+title: OpenMetrics 迁移指南
+sidebar_label: 迁移指南
+description: 从 Prometheus Query 端点迁移到 Temporal Cloud 中的新 OpenMetrics 端点。
+keywords:
+  - temporal cloud metrics configuration
+  - configure metrics endpoint
+  - temporal cloud observability
+  - tcld CLI guide
+  - temporal cloud UI setup
+  - grafana temporal integration
+  - prometheus metrics endpoint
+  - observability tools integration
+  - openmetrics migration
+  - prometheus query endpoint deprecation
+tags:
+  - Metrics
+  - Observability
+  - OpenMetrics
+  - Temporal Cloud
+---
+
+import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
+import { CaptionedImage } from '@site/src/components';
+
+Temporal Cloud 正在从 Prometheus Query 端点过渡到行业标准 OpenMetrics
+（与 Prometheus 兼容）指标收集端点。此迁移代表了您的方式的重大改进
+可以监控您的 Temporal Cloud 工作负载，带来增强的功能，更好地与可观察性工具集成，
+以及访问以前不可用的高基数指标。
+
+:::danger PromQL endpoint deprecated
+
+PromQL 端点已于 2026 年 4 月 2 日弃用，并且不再接受新用户。
+将于 **2026 年 10 月 5 日**对所有用户禁用 PromQL 端点。
+在此日期之前完成到 OpenMetrics 端点的迁移。
+
+:::
+
+## 为什么我们要做出这样的改变
+
+1. **行业标准格式**：与 Prometheus 和 OpenTelemetry 以及所有主要可观测性原生兼容
+   平台（Datadog、New Relic 等）无需自定义集成。
+
+2. **高基数指标**：访问以前不可用的维度，包括：
+   - 多个指标上的“Temporal_task_queue”标签
+   - 用于 Workflow 特定监控的“Temporal_Workflow_type”标签
+   - 新的 Task Queue 积压指标可更好地操作 Visibility
+3. **准确的百分位数**：我们的新系统为延迟指标提供准确的百分位数计算，即使在
+   与普罗米修斯式的直方图不同，存在大量异常值。
+
+4. **简化集成**：直接从可观察性工具中抓取，无需中间转换层。
+
+5. **增强性能**：针对高基数数据进行了优化，并具有内置的系统稳定性保障措施。数据是
+   根据最新指标，从发出之日起可节省三分钟
+   [可从任何主要服务提供商处获取](https://docs.datadoghq.com/integrations/guide/cloud-metric-delay/)。
+
+## 发生了什么变化
+
+|方面|当前 Query 端点 |新的 OpenMetrics 端点 |
+| ---------------------- | -------------------------------------------------- | ------------------------------------------- |
+| **协议** |普罗米修斯 Query API (`/api/v1/Query`) | OpenMetrics 抓取端点 (`/v1/metrics`) |
+| **身份验证** |具有客户特定端点的 mTLS 证书 |具有全局端点的 API 密钥 |
+| **公制 Temporality** |累计计数器 | Delta Temporality（预先计算的费率）|
+| **Query 要求** |支持直接查询 |需要可观测平台 |
+| **基数** |有限标签|高基数标签可用 |
+| **指标命名** | `*_v0_*` 指标 | `*_v1_*` 指标 |
+
+## 迁移时间表
+
+**2026 年 4 月 2 日 - PromQL 端点已弃用**
+
+- PromQL 端点不再接受新用户。
+- 现有用户应开始迁移到 OpenMetrics 端点。
+
+**2026 年 10 月 5 日 - PromQL 端点已禁用**
+
+- PromQL 端点将对所有用户禁用。
+- 在此日期之前，所有指标消耗都必须使用 OpenMetrics 端点。
+
+:::important Action Required
+
+2026 年 10 月 5 日之前完成迁移。
+
+:::
+
+## 显着差异
+
+### 1\.不再在 Prometheus 查询中使用 `rate()`
+
+现在，指标已通过 delta Temporality 预先计算为每秒速率。
+
+**之前（Prometheus Query 端点）**：
+
+```
+rate(temporal_cloud_v0_frontend_service_request_count[1m])
+```
+
+**之后（OpenMetrics 端点）**：
+
+```
+temporal_cloud_v1_service_request_count
+```
+
+### 2\.不再适用的功能
+
+OpenMetrics 的指标已经是速率，因此某些 Prometheus 函数不再有意义。下面是一个
+一些功能的非详尽列表：
+
+- ❌ `rate()` \- 已经计算
+- ❌ `increase()` \- 增加比率是没有意义的
+- ❌ `irate()` \- 即时汇率不适用
+- ❌ `histogram_quantile()` \- 不适用（提供显式百分位数）
+- ✅ `sum()`, `avg()`, `max()`, `min()` \- 仍然正常工作
+
+### 3\.百分位数指标
+
+新端点提供明确的百分位数指标（p50、p95、p99）而不是直方图桶：
+
+**之前（Prometheus Query 端点）**：使用 `histogram_quantile()` 计算百分位数
+
+```shell
+histogram_quantile(0.95, rate(temporal_cloud_v0_service_latency_bucket[5m]))
+```
+
+**之后（OpenMetrics端点）**：直接使用预先计算的百分位数
+
+```
+temporal_cloud_v1_service_latency_p95
+```
+
+**重要权衡**：虽然预先计算的百分位数对于单个时间序列来说更准确，但它们_不能
+准确聚合_。例如：
+
+- ❌ 无法对 Namespace 之间的 p95 值求和或平均以获得全局 p95
+- ❌ 无法跨区域或 Task Queue 聚合 p95 值
+- ✅ 仍然可以准确查看单个 Namespace/Task Queue 百分位数
+- ✅ 对单个系列进行更准确的百分位数计算，尤其是对于异常值
+
+### 4\.身份验证设置
+
+**之前**：具有客户特定端点的 mTLS 证书
+
+```shell
+curl --cert /path/to/client.pem \
+     --key /path/to/client.key \
+     --cacert /path/to/ca.pem \
+
+"https://<customer-specific>.tmprl.cloud/api/v1/query?query=rate(temporal_cloud_v0_frontend_service_request_count[5m])&time=2025-01-15T10:00:00Z"
+```
+
+**之后**：具有全局端点的 API 密钥
+
+```shell
+curl -H "Authorization: Bearer <API_KEY>" https://metrics.temporal.io/v1/metrics
+```
+
+## 迁移步骤
+
+### 创建 API 密钥
+
+使用“指标只读”帐户级别角色在 Temporal Cloud UI 设置中创建一个服务帐户。
+
+:::note
+
+由于这是帐户级角色，因此将其范围限定为特定 Namespace 没有任何影响，因为它将有权访问完整的权限
+帐户的指标。
+
+:::
+
+<CaptionedImage
+src =“/img/cloud/metrics/service-account-with-metrics-role.png”
+  title="创建具有 Metrics 只读角色的服务帐户"
+/>
+
+创建完成后，您可以在此服务帐户中创建一个 API 密钥，该密钥将继承该角色。保存此API
+将密钥保存在安全位置并使用它来访问指标 API。
+
+要测试其是否有效，请使用您的 API 密钥卷曲端点。
+
+输出应类似于以下示例：
+
+```shell
+$ curl -H "Authorization: Bearer <API_KEY>" https://metrics.temporal.io/v1/metrics
+
+# TYPE temporal_cloud_v1_service_error_count gauge
+# HELP temporal_cloud_v1_service_error_count The number of gRPC errors returned by frontend service
+# TYPE temporal_cloud_v1_service_pending_requests gauge
+# HELP temporal_cloud_v1_service_pending_requests The number of pollers that are waiting for a task
+# TYPE temporal_cloud_v1_service_request_count gauge
+# HELP temporal_cloud_v1_service_request_count The number of RPC requests received by the service..
+```
+
+现在您已准备好抓取您的指标\！
+
+### 配置 Grafana \+ Prometheus
+
+#### Update 普罗米修斯配置
+
+使用您的 API 密钥为 OpenMetrics 端点添加新的抓取作业。
+
+```yaml
+scrape_configs:
+  - job_name: temporal-cloud
+    static_configs:
+      - targets:
+          - 'metrics.temporal.io'
+    scheme: https
+    metrics_path: '/v1/metrics'
+    honor_timestamps: true
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    authorization:
+      type: Bearer
+      credentials: 'API_KEY'
+```
+
+:::note
+
+这取代了您与 Query 端点一起使用的直接 Grafana 数据源配置。
+
+:::
+
+#### 安装新仪表板
+
+- 下载新的 Grafana 仪表板：
+  [Temporal_cloud_openmetrics.json](https://github.com/Temporalio/dashboards/blob/master/cloud/Temporal_cloud_openmetrics.json)
+- 在过渡期间与现有仪表板一起导入
+- Update 任何自定义警报和查询以使用新指标并删除“rate()”函数
+
+#### 其他可观测性提供商
+
+请参阅可观察性系统的文档，了解如何配置它以抓取此端点并检索
+您的指标：
+
+- [Datadog](https://docs.datadoghq.com/integrations/Temporal-cloud-openmetrics/)
+- [NewRelic](https://docs.newrelic.com/docs/infrastruct/prometheus-integrations/install-configure-openmetrics/configure-prometheus-openmetrics-integrations/)
+- [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/configuration/#receivers)
+
+所有这些集成的示例都在[此处](https://github.com/Temporal-community/cloud-metrics-scrape-examples)。
+
+### 指标映射参考
+
+以下是用于将指标从旧 Query 端点映射到新 OpenMetrics 端点的模板。请注意，所有指标都遵循“v0”→“v1”版本更改的模式，根本区别在于大多数指标从累积计数器转变为预先计算的比率。请注意，下面的标签只是添加到指标中的新标签。有关标签的完整列表，请参阅 /cloud/metrics/openmetrics/metrics-reference。
+
+#### 前端服务指标
+
+|旧指标 (v0) |新指标 (v1) |新标签|
+| -------------------------------------------------- | -------------------------------------------------- | ---------- |
+| `Temporal_cloud_v0_frontend_service_error_count` | `Temporal_cloud_v1_service_error_count` | `地区` |
+| `Temporal_cloud_v0_frontend_service_request_count` | `Temporal_cloud_v1_service_request_count` | `地区` |
+| `Temporal_cloud_v0_resource_exhausted_error_count` | `Temporal_cloud_v1_resource_exhausted_error_count` | `地区` |
+| `Temporal_cloud_v0_state_transition_count` |没有直接等效的| - |
+| `Temporal_cloud_v0_total_action_count` | `Temporal_cloud_v1_total_action_count` | `地区` |
+
+:::note State transition count removed
+
+“Temporal_cloud_v0_state_transition_count”在 OpenMetrics 端点中没有等效指标。
+要调整 Temporal Cloud 的工作负载大小（例如，从自托管迁移时），请同时使用基于操作的指标 (`Temporal_cloud_v1_total_action_count`) 和基于请求的指标 (`Temporal_cloud_v1_service_request_count`)。
+
+:::
+
+#### Workflow 指标
+
+|旧指标 (v0) |新指标 (v1) |新标签 |
+| --------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------- |
+| `Temporal_cloud_v0_Workflow_cancel_count` | `Temporal_cloud_v1_Workflow_cancel_count` | `区域` `Temporal_Workflow_type` `Temporal_task_queue` |
+| `Temporal_cloud_v0_Workflow_continued_as_new_count` | `Temporal_cloud_v1_Workflow_continued_as_new_count` | `区域` `Temporal_Workflow_type` `Temporal_task_queue` |
+| `Temporal_cloud_v0_Workflow_failed_count` | `Temporal_cloud_v1_Workflow_failed_count` | `区域` `Temporal_Workflow_type` `Temporal_task_queue` |
+| `Temporal_cloud_v0_Workflow_success_count` | `Temporal_cloud_v1_Workflow_success_count` | `区域` `Temporal_Workflow_type` `Temporal_task_queue` |
+| `Temporal_cloud_v0_Workflow_terminate_count` | `Temporal_cloud_v1_Workflow_terminate_count` | `区域` `Temporal_Workflow_type` `Temporal_task_queue` |
+| `Temporal_cloud_v0_Workflow_timeout_count` | `Temporal_cloud_v1_Workflow_timeout_count` | `区域` `Temporal_Workflow_type` `Temporal_task_queue` |
+
+#### 民意调查指标
+
+|旧指标 (v0) |新指标 (v1) |新标签 |
+| ------------------------------------------- | ------------------------------------------- | ------------------------------------------ |
+| `Temporal_cloud_v0_poll_success_count` | `Temporal_cloud_v1_poll_success_count` | `区域` `Temporal_task_queue` |
+| `Temporal_cloud_v0_poll_success_sync_count` | `Temporal_cloud_v1_poll_success_sync_count` | `区域` `Temporal_task_queue` |
+| `Temporal_cloud_v0_poll_timeout_count` | `Temporal_cloud_v1_poll_timeout_count` | `区域` `Temporal_task_queue` |
+
+#### 延迟指标
+
+|旧指标 (v0) |新指标 (v1) |新标签|
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `Temporal_cloud_v0_service_latency_bucket Temporal_cloud_v0_service_latency_count Temporal_cloud_v0_service_latency_sum` | `Temporal_cloud_v1_service_latency_p99 Temporal_cloud_v1_service_latency_p95 Temporal_cloud_v1_service_latency_p50` | `地区` |
+| `Temporal_cloud_v0_replication_lag_bucket Temporal_cloud_v0_replication_lag_count Temporal_cloud_v0_replication_lag_sum` | `Temporal_cloud_v1_replication_lag_p99 Temporal_cloud_v1_replication_lag_p95 Temporal_cloud_v1_replication_lag_p50` | `地区` |
+
+#### Schedule 指标
+
+|旧指标 (v0) |新指标 (v1) |新标签|
+| -------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------- |
+| `Temporal_cloud_v0_Schedule_action_success_count` | `Temporal_cloud_v1_Schedule_action_success_count` | `地区` |
+| `Temporal_cloud_v0_Schedule_buffer_overruns_count` | `Temporal_cloud_v1_Schedule_buffer_overruns_count` | `地区` |
+| `Temporal_cloud_v0_Schedule_missed_catchup_window_count` | `Temporal_cloud_v1_Schedule_missed_catchup_window_count` | `地区` |
+| `Temporal_cloud_v0_Schedule_rate_limited_count` | `Temporal_cloud_v1_Schedule_rate_limited_count` | `地区` |
+
+除了这些指标之外，我们的 OpenMetrics 端点还提供了许多新指标。
+
+:::info
+
+有关所有可用指标及其完整说明的最新列表，请参阅[指标参考](/cloud/metrics/openmetrics/metrics-reference)。
+
+:::
+
+### 管理高基数
+
+新端点提供对高基数标签的访问，可以显着增加您的指标量：
+
+#### 高基数标签
+
+- `Temporal_task_queue`
+- `Temporal_Workflow_type`
+
+#### 最佳实践
+
+##### Namespace/公制过滤
+
+Namespace 过滤可用于确保抓取相关 Namespace 的指标，从而减少基数。
+
+```
+https://metrics.temporal.io/v1/metrics?namespaces=production-*
+```
+
+可以通过仅抓取给定 Namespace 的相关指标来进一步采取这一措施，从而确保任何新的高点
+对于您的可观察性系统来说，基数指标不会成为问题。
+
+```
+https://metrics.temporal.io/v1/metrics?metrics=temporal_cloud_v1_workflow_success_count?namespaces=production-*
+```
+
+##### 重新标记
+
+如果上述方法不起作用，请考虑在抓取后但在摄取前将有问题的标签丢弃到您的可观察性中
+系统。
+
+例如，在 Prometheus 中，可以通过以下方式完成
+[重新标记规则](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config)。
+
+```yaml
+metric_relabel_configs:
+- source_labels: [__name__]
+  regex: 'temporal_cloud_v1_poll_success_count'
+  action: labeldrop
+  regex: 'temporal_task_queue'
+```
+
+或者，您甚至可以重新标记某些标签值以保留重要的标签值。例如，可以重命名
+不太重要的 Task Queue 为“未知”，同时保留重要的。
+
+```yaml
+metric_relabel_configs:
+  - source_labels: [temporal_task_queue]
+    regex: '(critical-queue|payment-queue)'
+    target_label: __tmp_keep_original
+    replacement: 'true'
+  # For anything without the keep flag, replace with "unknown"
+  - source_labels: [__tmp_keep_original]
+    regex: '' # empty/missing value
+    target_label: temporal_task_queue
+    replacement: 'unknown'
+  # Clean up the temporary label
+  - regex: '__tmp_keep_original'
+    action: labeldrop
+```
+
+## 限制
+
+有关详细信息，请参阅 [API 限制](/cloud/metrics/openmetrics/api-reference#api-limits)。
+
+＃＃ 常问问题
+
+### 问：promQL 和 OpenMetrics 端点之间的指标是否匹配？
+
+不会。指标大致相同，但由于聚合差异和窗口，值可能不会
+两个端点之间完全匹配。有些指标可能始终不同，例如
+“Temporal_cloud_v1_total_action_count”，其中包括 OpenMetrics 端点中的历史导出操作。如果是
+一致的差异 OpenMetrics 端点被认为更准确。
+
+### 问：我仍然可以直接使用 Query 指标（例如使用 Grafana 仪表板）吗？
+
+目前，OpenMetrics 端点需要一个可观察平台来收集 Query 指标。直接 Querying 通过
+不支持返回时间序列数据的 API。支持此类 Query 模式是未来路线图项目。
+
+### 问：我现有的仪表板和警报会发生什么情况？
+
+在过渡期间，两个端点均保持活动状态。
+
+### 问：历史数据会保留吗？
+
+来自 Query 端点的历史数据将保留在您的可观测平台中。为了保持连续性：
+
+- 在转换期间在查询中合并旧（`v0`）和新（`v1`）指标
+- 考虑使用 PromQL `or` 运算符：`metric_v1 或 metric_v0`
+
+### 问：抓取的频率或返回的数据量是否有限制？
+
+这些限制记录在[此处](/cloud/metrics/openmetrics/api-reference#api-limits)。
+
+### 问：为什么我的抓取中缺少一些指标？我没有看到记录的所有指标。
+
+OpenMetrics 端点仅返回在一分钟聚合窗口期间生成的指标。这是
+与 Query 端点不同，Query 端点可能返回零。
+
+**这意味着什么：**
+
+- 如果最后一分钟没有 Workflow 失败，则“Temporal_cloud_v1_Workflow_failed_count”将不会出现在该抓取中。
+- 如果特定的 Task Queue 没有 Activity，则其指标将不存在。
+- 根据系统 Activity，返回的指标集因抓取而异。
+
+**这是正常行为。** 与某些填充零的指标系统不同，OpenMetrics 端点遵循稀疏
+报告模式 \- 指标仅在有实际数据要报告时出现。
+
+**如何在查询中处理这个问题：**
+
+```
+(temporal_cloud_v1_workflow_failed_count{namespace="production"} or vector(0))
+```
+
+即使由于没有 Activity 而暂时缺少指标，这也可以确保您的仪表板和警报正常工作。

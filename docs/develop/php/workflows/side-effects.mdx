@@ -1,7 +1,7 @@
 ---
 id: side-effects
-title: Side Effects - PHP SDK
-sidebar_label: Side effects
+title: "Side Effects - PHP SDK"
+sidebar_label: "Side Effects"
 slug: /develop/php/workflows/side-effects
 toc_max_heading_level: 2
 keywords:
@@ -10,26 +10,26 @@ tags:
   - Side-effects
   - PHP SDK
   - Temporal SDKs
-description: Use Side Effects in PHP to execute non-deterministic code like generating UUIDs or random numbers in a Workflow without compromising its determinism.
+description: "在 PHP 中使用 Side Effect 执行非确定性代码，例如在 Workflow 中生成 UUID 或随机数，而不会影响其确定性。"
 ---
 
-## How to use Side Effects in PHP {#side-effects}
+## 如何在 PHP 中使用 Side Effect {#side-effects}
 
-Side Effects are used to execute non-deterministic code, such as generating a UUID or a random number, without compromising determinism in the Workflow. This is done by storing the results of the Side Effect into the Workflow [Event History](/workflow-execution/event#event-history).
+Side Effect 用于执行非确定性代码，例如生成 UUID 或随机数，而不影响 Workflow 中的确定性。这是通过将 Side Effect 的结果存储到 Workflow [Event History](/workflow-execution/event#event-history) 中来完成的。
 
-A Side Effect doesn't re-execute during a Replay. Instead, it returns the recorded result from the Workflow Execution Event History.
+Side Effect 在重播期间不会重新执行。相反，它返回 Workflow Execution Event History 的记录结果。
 
-Side Effects shouldn't fail. An exception that is thrown from the Side Effect causes failure and retry of the current Workflow Task.
+Side Effect 不应失败。从 Side Effect 引发的异常会导致当前 Workflow 任务失败并重试。
 
-An Activity or a Local Activity can also be used instead of a Side Effect, as its results are also persisted in Workflow Execution History.
+也可以使用 Activity 或本地 Activity 代替 Side Effect，因为其结果也保留在 Workflow Execution 历史记录中。
 
 :::note
 
-You shouldn't modify the Workflow state inside a Side Effect, because they're not re-executed during Replay. Side Effect functions should only return a value, and that value can be used in Workflow code to alter state.
+您不应修改 Side Effect 内的 Workflow 状态，因为它们在重播期间不会重新执行。 Side Effect 函数应该只返回一个值，并且该值可以在 Workflow 代码中使用来更改状态。
 
 :::
 
-To use a Side Effect in PHP, use the `Workflow::sideEffect()` function in your Workflow Definition to run non-deterministic code and return a value.
+要在 PHP 中使用 Side Effect，请使用 Workflow Definition 中的 `Workflow::sideEffect()` 函数来运行非确定性代码并返回值。
 
 ```php
 #[Workflow\WorkflowMethod]

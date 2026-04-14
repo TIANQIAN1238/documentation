@@ -1,0 +1,187 @@
+---
+id: generate-certificates
+title: tcld 生成证书命令参考
+sidebar_label: 生成证书
+description: 使用 tcld 生成证书命令为 Temporal Cloud 生成证书颁发机构和终端实体 TLS 证书。使用修饰符进行定制。
+slug: /cloud/tcld/generate-certificates/
+toc_max_heading_level: 4
+keywords:
+  - cli-reference
+  - tcld
+tags:
+  - Temporal Cloud
+  - tcld
+  - Certificates
+---
+
+“tcldgenerate-certificates”命令为 Temporal Cloud 生成证书颁发机构 (CA) 和终端实体 TLS 证书。
+
+别名：`gen`
+
+- [tcld 生成证书 证书颁发机构证书](#证书颁发机构证书)
+- [tcld 生成证书最终实体证书](#end-entity-certificate)
+
+## tcld 生成证书 证书颁发机构证书 {#证书颁发机构证书}
+
+## 操作 {#metrics-操作}
+
+`tcld 生成证书证书颁发机构证书 <修饰符>`
+
+别名：`ca`
+
+以下修饰符控制命令的行为。
+
+＃＃＃＃  - 组织
+
+指定证书生成的组织名称。
+
+别名：`--org`
+
+**例子**
+
+```bash
+tcld generate-certificates certificate-authority-certificate --organization <value>
+```
+
+#### --有效期
+
+指定证书的有效期限。
+将值的格式设置为 d/h（例如，“30d10h”表示证书持续 30 天 10 小时）。
+
+别名：`-d`
+
+**例子**
+
+```bash
+tcld generate-certificates certificate-authority-certificate --validity-period <value>
+```
+
+#### --ca 证书文件
+
+指定将存储生成的 X.509 证书文件的“.pem”文件的路径。
+
+别名：`--ca-cert`
+
+**例子**
+
+```bash
+tcld generate-certificates certificate-authority-certificate --ca-certificate-file <path>
+```
+
+#### --ca-密钥文件
+
+指定将存储证书私钥的“.key”文件的路径。
+
+别名：`--ca-key`
+
+**例子**
+
+```bash
+tcld generate-certificates certificate-authority-certificate --ca-key-file <path>
+```
+
+#### --rsa 算法
+
+启用后，将为证书生成 4096 位 RSA 密钥对，而不是 ECDSA P-384 密钥对。
+由于 ECDSA P-384 密钥对是建议的默认值，因此禁用此选项。
+
+别名：`--rsa`
+
+**例子**
+
+```bash
+tcld generate-certificates certificate-authority-certificate --rsa-algorithm <boolean>
+```
+
+## tcld 生成证书最终实体证书 {#end-entity-certificate}
+
+“tcldgenerate-certificatesend-entity-certificate”命令为 Temporal Cloud 生成最终实体（叶）证书。
+
+`tcld 生成证书最终实体证书 <修饰符>`
+
+别名：「叶」
+
+以下修饰符控制命令的行为。
+
+＃＃＃＃  - 组织
+
+指定证书生成的组织名称。
+
+别名：`--org`
+
+**例子**
+
+```bash
+tcld generate-certificates end-entity-certificate --organization <value>
+```
+
+#### --组织单位
+
+可选：指定组织单位的名称。
+
+#### --账户角色
+
+```bash
+tcld generate-certificates end-entity-certificate --organization-unit <value>
+```
+
+#### --有效期
+
+指定证书的有效期限。
+将值的格式设置为 d/h（例如，“30d10h”表示证书持续 30 天 10 小时）。
+
+别名：`-d`
+
+**例子**
+
+```bash
+tcld generate-certificates end-entity-certificate --validity-period <value>
+```
+
+#### --ca 证书文件
+
+在证书颁发机构的“.pem”文件中指定 X.509 CA 证书的路径。
+
+别名：`--ca-cert`
+
+**例子**
+
+```bash
+tcld generate-certificates end-entity-certificate --ca-certificate-file <path>
+```
+
+#### --ca-密钥文件
+
+在证书颁发机构的“.key”文件中指定私钥的路径。
+
+别名：`--ca-key`
+
+**例子**
+
+```bash
+tcld generate-certificates end-entity-certificate --ca-key-file <path>
+```
+
+#### --证书文件
+
+指定将存储生成的 X.509 叶证书文件的“.pem”文件的路径。
+
+别名：`--cert`
+
+**例子**
+
+```bash
+tcld generate-certificates end-entity-certificate --certificate-file <path>
+```
+
+#### --密钥文件
+
+指定将存储叶证书私钥的“.key”文件的路径。
+
+别名：`--key`
+
+**例子**
+
+```bash
+tcld generate-certificates end-entity-certificate --key-file <path>
+```

@@ -1,0 +1,221 @@
+---
+id: monitoring
+title: 监控 Temporal Platform 指标
+sidebar_label: 监控
+description: 使用 Prometheus、StatsD 和 M3 监视和运行状况检查自托管 Temporal Platform，以跟踪 Temporal 服务、客户端和 Worker 指标，以进行性能和问题故障排除。
+slug: /self-hosted-guide/monitoring
+toc_max_heading_level: 4
+keywords:
+  - cluster
+  - grafana
+  - how-to
+  - prometheus
+tags:
+  - Temporal Service
+  - Self-hosting
+  - Observability
+---
+
+Temporal 服务和 SDK 发出可用于监控性能和解决问题的指标。 
+您可以将这些指标转发到任何监控和可观察平台。
+
+本指南将提供配置 [Prometheus](https://prometheus.io/) 和 [Grafana](https://grafana.com/) 的示例，以使用 Temporal 发出的可观测性指标。
+该解决方案可以单独工作，也可以作为您进一步定制和与其他可观察性工具集成的基准。
+例如，还可以在堆栈中使用 [OpenTelemetry Collector](https://Temporal.io/code-exchange/Temporal-opentelemetry)，而不是直接使用 Prometheus 抓取指标，或使用 [Datadog](#datadog) 作为前端而不是 Grafana。
+
+此配置假设您已安装 [Docker](https://www.docker.com/) 并通过 CLI 运行 [Temporal 开发服务器](https://Temporal.io/setup/start-development-server)。
+
+您的 XPROT009X 消耗包括操作成本和存储成本。
+
+本节讨论从 Temporal SDK 导出指标，以及设置 Prometheus 收集有关 Temporal 服务、Temporal CLIent 和 Temporal Worker 性能的指标。
+
+Temporal 服务和 SDK 默认发出所有指标。
+但是，您必须在应用程序代码（使用 Temporal SDK）和 Temporal 服务配置中启用 Prometheus，以收集从 SDK 和 Temporal 服务发出的指标。
+
+首先，您需要创建一个“prometheus.yml”配置文件，其中包含一些要从中收集指标的目标端口。
+以下示例包含一个 Temporal 服务指标目标和两个 Temporal Worker (SDK) 指标目标：
+
+```
+global:
+ scrape_interval: 10s
+scrape_configs:
+ - job_name: 'temporalmetrics'
+   metrics_path: /metrics
+   scheme: http
+   static_configs:
+     # Temporal Service metrics target
+     - targets:
+         - 'host.docker.internal:8000'
+       labels:
+         group: 'server-metrics'
+
+     # Local app targets (set in SDK code)
+     - targets:
+         - 'host.docker.internal:8077'
+         - 'host.docker.internal:8078'
+       labels:
+         group: 'sdk-metrics'
+```
+
+在此示例中，Prometheus 配置为以 10 秒的间隔进行抓取，并侦听“host.docker.internal:8000”上的 Temporal 服务指标以及两个目标“host.docker.internal:8077”和“host.docker.internal:8078”上的 SDK 指标。
+必须使用您首选的 SDK 在应用程序代码中的“WorkflowServiceStubs”上设置“8077”和“8078”端口 - 下一节中有一个示例。
+您可以根据需要设置任意数量的目标。
+
+:::info
+
+有关 Prometheus 的更多配置选项，请参阅 [Prometheus 文档](https://prometheus.io/docs/prometheus/latest/configuration/configuration/)。
+
+:::
+
+您可以使用 Docker 通过以下配置运行官方 Prometheus 映像：
+
+```bash
+docker run -p 9090:9090 -v /path/to/prometheus.yml /etc/prometheus/prometheus.yml prom/prometheus
+```
+
+接下来，使用附加的“--metrics-port 8000”参数从 CLI 启动 Temporal 开发服务器：
+
+```bash
+temporal server start-dev --metrics-port 8000
+```
+
+:::info
+
+请参阅 [Temporal 集群配置参考](/references/configuration#global) 以公开来自生产服务的指标。
+
+:::
+
+您现在应该在本地运行 Prometheus 和 Temporal 服务，其中 Temporal 向 Prometheus 提供服务指标。
+接下来，您还需要配置 SDK 指标。
+
+### SDK指标设置
+
+SDK 指标由 Temporal、Worker 和其他客户端发出，必须在您的应用程序代码中进行配置。
+可观察性指南中的指标部分详细介绍了如何为所有支持的 SDK 创建挂钩：
+
+- [Go](/develop/go/platform/observability#metrics)
+- [Java](/develop/java/platform/observability#metrics)
+- [PHP](/develop/php/platform/observability)
+- [Python](/develop/python/platform/observability#metrics)
+- [TypeScript](/develop/typescript/platform/observability#metrics)
+- [.NET](/develop/dotnet/platform/observability#metrics)
+- [Ruby](/develop/ruby/platform/observability#metrics)
+
+有关如何从每个 SDK 公开指标的端到端示例，请参阅指标示例：
+
+- [Go SDK 示例](https://github.com/Temporalio/samples-go/tree/main/metrics)
+- [Java SDK 示例](https://github.com/Temporalio/samples-java/tree/main/core/src/main/java/io/Temporal/samples/metrics)
+- [Python SDK 示例](https://github.com/Temporalio/samples-python/tree/main/prometheus)
+- [TypeScript SDK 示例](https://github.com/Temporalio/samples-typescript/tree/main/interceptors-opentelemetry)
+- [.NET SDK 示例](https://github.com/Temporalio/samples-dotnet/tree/main/src/OpenTelemetry)
+
+其中一些可能需要您根据此处的 Prometheus 示例设置不同的指标端口号，该示例默认配置为抓取端口“8077”和“8078”。
+按照每个示例的说明运行 Workflow 并开始发出指标。
+这将使您能够在下一部分中填充仪表板，并了解如何根据您的需求进一步自定义 Temporal 可观察性。
+
+### 验证 Prometheus 配置
+
+一旦您的 Workflow 运行并发出指标，您可以访问本地 Prometheus 实例上的 [http://localhost:9090/targets](http://localhost:9090/targets) 以验证它是否能够抓取提供的端点。
+
+![Prometheus 抓取目标](/img/observability/prometheus-targets.png)
+
+此示例显示了来自 Temporal 开发服务器提供的服务器指标端点的响应，以及 Prometheus 配置中定义的两个 SDK 指标端点。
+为了创建此示例，我们使用了 Go 和 Python 指标示例，分别在端口 8077 和 8088 上运行。
+如果您没有将数据推送到正好 3 个指标端点，则您的环境可能会有所不同。
+
+接下来，您可以访问 [本地 Prometheus Query 端点](http://localhost:9090/Query) 对导出的指标手动运行 [PromQL](https://prometheus.io/docs/prometheus/latest/Querying/basics/) 查询，或者继续下一部分配置 Grafana 以根据这些指标生成仪表板。
+
+## 格拉法纳
+
+配置 [Prometheus](#prometheus) 后，将 Grafana 部署为指标前端，并将其配置为使用 Prometheus 作为数据源。
+
+和以前一样，您可以使用 Docker 运行官方 Grafana 镜像：
+
+```bash
+docker run -d -p 3000:3000 grafana/grafana-enterprise
+```
+
+这将部署一个 Grafana 实例，默认用户名和密码为“admin”/“admin”。
+在生产中，您需要配置身份验证并控制对 Grafana 的端口访问。
+
+:::info
+
+有关如何自定义 Grafana 设置的更多信息，请参阅 [Grafana 文档](https://grafana.com/docs/grafana/latest/setup-grafana/)。
+
+:::
+
+接下来，配置 Grafana 使用 Prometheus 作为数据源。
+为此，请从 Grafana 侧边栏的“连接”菜单中单击“添加新数据源”，然后从列表中添加 Prometheus。
+
+系统将提示您添加其他配置参数。
+如果您使用 Docker 遵循本指南，请使用“http://host.docker.internal:9090”作为 Prometheus 地址。
+这是 [Docker Desktop 提供的 DNS 名称](https://docs.docker.com/desktop/features/networking/#use-cases-and-workarounds)，它解析为主机使用的内部 IP 地址，并允许您跨 Docker 容器连接应用程序，而无需额外的配置规则。
+这是您需要为 Prometheus 配置设置的唯一参数。
+提供后，向下滚动到“保存并测试”按钮，您可以验证 Prometheus 作为此 Grafana 实例的数据源。
+
+![Grafana 数据源](/img/observability/grafana-data-sources.png)
+
+在此示例中，Grafana 设置为在端口 9090 处从 Prometheus 提取指标，如 Prometheus 配置中所定义。
+
+现在，您只需添加我们提供的一些仪表板即可可视化 Temporal 指标。
+
+### 仪表板设置
+
+我们提供社区驱动的 Grafana 仪表板，可用于监控 [仪表板](https://github.com/Temporalio/dashboards/) 存储库中的 Temporal Server 和 SDK 指标。
+按照该存储库的自述文件中的说明将仪表板导入 Grafana。
+
+这样，您可以创建至少一个仪表板来监控服务器指标：
+
+![Grafana 服务器指标](/img/observability/grafana-server-metrics.png)
+
+至少还有一个用于监控 SDK 指标的仪表板：
+
+![Grafana SDK 指标](/img/observability/grafana-sdk-metrics.png)
+
+:::info
+
+#### 自定义存档器常见问题解答
+
+:::
+
+从这里，您可以为任何受监控的参数配置 Grafana [警报](https://grafana.com/docs/grafana/latest/alerting/)，将自定义指标添加到 Temporal SDK 代码中，并使用这些可观察性功能来帮助扩展您的 Temporal 部署。
+有关更多信息，请参阅[集群指标](/references/cluster-metrics) 和 [SDK 指标](/references/sdk-metrics) 参考。
+
+## 配置 Temporal 服务健康检查 {#health-checks}
+
+[前端服务](/Temporal-service/Temporal-server#frontend-service)支持TCP或[gRPC](https://github.com/gRPC/gRPC/blob/875066b61e3b57af4bb1d6e36aabe95a4f6ba4f7/src/proto/gRPC/health/v1/health.proto#L45) 端口 7233 上的运行状况检查。
+
+如果您使用 Nomad 来管理容器，则 TCP 的检查节将如下所示：
+
+```
+service {
+  check {
+    type     = "tcp"
+    port     = 7233
+    interval = "10s"
+    timeout  = "2s"
+  }
+```
+
+或者像 gRPC 这样（需要 Consul ≥ `1.0.5`）：
+
+```
+service {
+  check {
+    type         = "grpc"
+    port         = 7233
+    interval     = "10s"
+    timeout      = "2s"
+  }
+```
+
+## 通过 Helm Chart 安装
+
+如果您通过 [Helm Chart](https://github.com/Temporalio/helm-charts) 安装和运行 Temporal，您还可以[提供其他参数](https://github.com/Temporalio/helm-charts?tab=readme-ov-file#exploring-metrics-via-grafana) 来填充和探索开箱即用的 Grafana 仪表板。
+
+## 数据狗 {#datadog}
+
+Datadog 具有 Temporal 集成，用于收集 Temporal 服务指标。
+[配置 Prometheus](#prometheus) 后，您可以配置 [Datadog Agent](https://docs.datadoghq.com/integrations/Temporal/)。
+
+如果您使用[Temporal Cloud](/cloud/overview)，您还可以[直接集成Datadog](https://docs.datadoghq.com/integrations/Temporal-cloud/)，无需使用Prometheus。

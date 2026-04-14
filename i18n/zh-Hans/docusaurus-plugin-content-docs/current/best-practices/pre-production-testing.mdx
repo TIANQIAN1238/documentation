@@ -1,0 +1,379 @@
+---
+title: XPROT017X命令参考
+sidebar_label: 生产前测试
+description: 为运行 Temporal 应用程序的团队提供经验驱动的测试实践，涵盖故障注入、负载测试和操作验证。
+toc_max_heading_level: 4
+keywords:
+  - testing
+  - pre-production
+  - load testing
+  - chaos engineering
+  - best practices
+tags:
+  - Best Practices
+  - Temporal Cloud
+---
+
+本指南为运行 Temporal 应用程序的团队收集了实用的、经验驱动的测试实践。
+目标不仅仅是验证事物是否失败和恢复，而是建立在现实条件下“恢复”、“正确性”、“一致性”和“可操作性”的信心。
+
+以下场景假设您熟悉 Temporal 概念，例如 [Namespaces](/Namespaces)、[Workers](/Workers)、[Task Queues](/task-queue)、[历史分片](/Temporal-service/Temporal-server#history-shard)、 [Timers](/Workflow-执行/Timers-延迟)和[Workflow重播](/Workflow-执行#重播)。
+如果您需要背景知识，请从[了解 Temporal](/evaluate/understanding-Temporal#durable-execution) 开始。
+
+在 Temporal Cloud 中开始任何负载测试之前，我们建议您与您的 Temporal 客户团队和我们的开发人员成功工程团队联系。
+
+## 指导原则
+
+在进行具体实验之前，请记住以下原则：
+
+- **失败是正常的**：Temporal 旨在应对失败和问题，但*您的应用程序逻辑*也必须如此。
+- **部分故障通常比完全故障更难处理**：“大部分工作”的系统暴露出最多的缺陷。
+- **恢复路径值得与稳定状态一样多的测试**：分析恢复应用程序行为与分析失败行为一样多。
+- **在破坏之前建立可观察性**：确保指标、日志和 Visibility 工具在注入故障之前就位。
+- **测试是一个持续的过程**：测试永远不会结束。测试是一种实践。
+
+## Worker 测试
+
+**相关最佳实践**：[Worker 部署和性能](/best-practices/Worker)、适当的超时、管理 Worker 关闭、幂等性
+
+- [Worker关机](/百科/Workers/Worker-关机)
+
+### 杀死所有 Worker，然后重新启动它们
+
+**要测试什么**
+
+突然终止处理 Task Queue 的所有 Worker，然后重新启动它们。
+
+**为什么重要**
+
+- 验证至少一次执行语义。
+- 确保活动是幂等的并且 Workflow 干净地重播。
+- 验证任务超时和重试以及 Worker 是否可以完成业务流程。
+
+**如何运行这个**
+
+取决于执行环境：
+
+- **Kubernetes**：将 pod 计数设置为零：
+  ```bash
+  kubectl scale deployment <deployment-name> --replicas=0 -n <namespace>
+  kubectl scale deployment <deployment-name> --replicas=3 -n <namespace>
+  ```
+- **Azure 应用服务**：
+  ```bash
+  az webapp restart --name <app-name> --resource-group <resource-group>
+  ```
+
+**看点**
+
+- 重复/不正确的 Activity 结果
+- Workflow 故障
+- Workflow 积压增长和耗尽时间
+
+### Worker频繁重启
+
+**要测试什么**
+
+每隔几分钟定期重新启动固定或随机百分比（例如 20-30%）的 Worker 机群。
+
+**为什么重要**
+
+- 模拟故障模式，其中 Worker 由于 CPU 利用率高和活动中计算密集型逻辑的内存不足错误而重新启动。
+- 确保 Temporal 使特定粘性 Task Queue 无效，并将任务重新分配给关联的非粘性 Task Queue。
+
+**如何运行这个**
+
+- **Kubernetes**：使用“kubectl”构建一个脚本来循环随机删除 Pod。
+- **Chaos Mesh**：[模拟 pod 故障](https://chaos-mesh.org/docs/simulate-pod-chaos-on-kubernetes/)。
+- **应用服务**：再次缩小和放大。
+
+**看点**
+
+- 重播延迟
+- Workflow 和 Activity 完成
+- 重复/不正确的 Activity 结果
+- Workflow 故障
+- Workflow 积压增长和耗尽时间
+
+## 负载测试
+
+### 预加载测试设置：成功的期望
+
+1. 提供 SDK 指标（不仅仅是云指标）
+2. 了解并预测您应该从这些指标中看到什么：
+   - 速率限制（`Temporal_cloud_v1_resource_exhausted_error_count`）
+   - Workflow 故障（`Temporal_cloud_v1_Workflow_failed_count`）
+   - Workflow Execution 时间（`Workflow_endtoend_latency`）
+   - 高云延迟（`Temporal_cloud_v1_service_latency_p95`）
+   - [Worker 指标](/develop/Worker-性能) (`Workflow_task_Schedule_to_start_latency` 和 `Activity_Schedule_to_start_latency`)
+3. 提前确定吞吐量要求。与您的客户团队合作，将其与 Namespace 容量相匹配，以避免速率限制。容量增加是通过 Temporal 支持完成的，并且可以请求进行负载测试（短期）。
+4. 自动运行负载测试，以便您可以随意启动和停止它。如何清除临时的 Workflow Execution？
+5. 该测试“成功”是什么样子？具体说明业务术语中规定的指标和数字。
+
+### 验证下游负载能力
+
+**相关最佳实践**：幂等活动、有界重试、适当的超时和重试策略、了解达到限制时的行为
+
+**要测试什么**
+
+- Schedule 通过启动许多 Workflow 产生大量操作和请求
+- 增加数量，直到下游系统开始超载
+
+**为什么重要**
+
+验证高负载下 Temporal 应用程序和应用程序依赖性的行为。
+
+**如何运行这个**
+
+以超过吞吐量限制的速率启动 Workflow。示例：[Temporal-ratelimit-tester-go](https://github.com/joshmsmith/Temporal-ratelimit-tester-go)
+
+**看点**
+
+- 下游服务错误率（HTTP 5xx、数据库错误）
+- 增加下游服务延迟和饱和度指标
+- Activity 故障率，特别是可重试错误和不可重试错误之间的分类
+- Activity 针对过载系统的重试和退避行为
+- Workflow 积压增长和耗尽时间
+- 数据的正确性和一致性（确保Activity在胁迫下保持幂等性）
+- Worker CPU/内存利用率
+
+### 验证速率限制行为
+
+**相关最佳实践**：[管理 Namespace 容量限制](/best-practices/managing-aps-limits)，了解达到限制时的行为
+
+**要测试什么**
+
+- Schedule 通过启动许多 Workflow 产生大量操作和请求
+- 增加数量，直到获得速率限制（触发指标 [`Temporal_cloud_v0_resource_exhausted_error_count`](/cloud/metrics/reference#Temporal_cloud_v0_resource_exhausted_error_count)）
+
+**为什么重要**
+
+验证高负载下云服务的行为：“在 Temporal Cloud 中，速率限制的影响是增加延迟，而不是丢失工作。Worker 可能需要更长的时间才能完成 Workflow。”
+
+**如何运行这个**
+
+1.（可选）降低测试 Namespace 的速率限制，使其更容易达到限制
+2. 计算当前吞吐量（生产中）的当前 APS
+3. 计算超出限制所需的 Workflow 吞吐量
+4. 使用 [Temporal-ratelimit-tester-go](https://github.com/joshmsmith/Temporal-ratelimit-tester-go) 以超过吞吐量限制的速率启动 Workflow
+
+**看点**
+
+- 速率受限时的 Worker 行为
+- 速率受限时的客户行为
+- Temporal 请求和 long_request 失败率
+- Workflow 成功率
+- Workflow 延迟率
+
+## 故障转移和可用性
+
+**相关最佳实践**：针对关键工作负载使用[高可用性功能](/cloud/high-availability)。
+
+- [高可用性监控](/cloud/high-availability/monitoring)
+
+### 测试区域故障转移
+
+**要测试什么**
+
+触发 Namespace 的[高可用性](/cloud/high-availability) 故障转移事件。
+
+**为什么重要**
+
+- 真正的中断是混乱的并且很少是孤立的。
+- 确保您的运营手册和自动化具有弹性。
+- 验证 Worker 和 Namespace 故障转移行为。
+
+**如何运行这个**
+
+根据[手动故障转移文档](/cloud/high-availability/failovers#manual-failovers) 执行手动故障转移。
+
+**看点**
+
+- Namespace 可用性
+- 客户端和 Worker 连接到故障转移区域
+- Workflow Task 重新分配
+- 人机交互恢复步骤
+
+## 依赖性和下游测试
+
+### 打破 Workflow 的调用方式
+
+**要测试什么**
+
+故意破坏或降低 Activity 使用的下游依赖项：
+
+- 使数据库只读或不可用
+- 将高延迟或错误率注入外部 API
+- 限制或暂停消息队列和事件流
+
+**为什么重要**
+
+- Temporal 保证 Workflow 的耐用性，而不是依赖性可用性。
+- 验证活动是否可重试、幂等且具有正确的超时限制。
+- 确保 Workflow 取得进展，而不是在损坏的依赖项上进行活锁。
+
+**看点**
+
+- Activity 重试和退避行为
+- 长时间运行的活动的心跳有效性
+- 数据库连接耗尽和重试风暴
+- API 超时与 Activity 超时
+- 故障是否作为 Signal、补偿或 Workflow 级错误传播
+
+**这揭示了反模式**
+
+- 非幂等活动
+- 无限次重试而不会断路
+- 使用 Workflow 逻辑“等待”损坏的依赖关系
+
+## 部署和代码级测试
+
+### 通过版本控制部署 Workflow 更改
+
+**相关最佳实践**：实施版本控制策略。
+
+- [Workflow 版本控制策略 - 开发者园地](https://community.Temporal.io/t/Workflow-versioning-strategies/6911)
+- [Worker 版本控制](/生产部署/Worker-部署/Worker-版本控制)
+- [重播测试](/evaluate/development-product-features/testing-suite)
+
+**要测试什么**
+
+- 部署 Workflow 代码，该代码会引入非确定性错误 (NDE)，但使用版本控制策略可以成功部署
+- 验证Workflow成功并清除积压的任务
+
+**为什么重要**
+
+- 计划外的濒死体验可能会带来痛苦的惊喜
+- 测试版本控制策略和补丁规则以建立生产信心
+
+**看点**
+
+- Workflow Task故障原因
+- 版本控制和修补模式的有效性
+
+### 部署导致 NDE 的版本，然后恢复
+
+**相关最佳实践**：实施版本控制策略。
+
+- [Workflow 版本控制策略 - 开发者园地](https://community.Temporal.io/t/Workflow-versioning-strategies/6911)
+- [Worker 版本控制](/生产部署/Worker-部署/Worker-版本控制)
+- [重播测试](/evaluate/development-product-features/testing-suite)
+
+**要测试什么**
+
+- 部署引入非确定性错误 (NDE) 的 Workflow 代码
+- 尝试回滚到已知良好的版本，或应用版本控制策略以成功应用新更改
+- 清除或恢复积压的任务
+
+**为什么重要**
+
+- 计划外的濒死体验可能会带来痛苦的惊喜
+- 测试版本控制策略、补丁规则和恢复工具
+
+**看点**
+
+- Workflow Task故障原因
+- 积压增长和流失时间
+- 版本控制和修补模式的有效性
+
+## 网络级测试
+
+如果您的基础设施在 Worker 和 Temporal 服务之间引入网络边界（例如防火墙、VPN 或网络策略），或者您需要在长时间断开连接期间验证应用程序行为，则以下场景最为相关。
+
+**相关最佳实践**：幂等活动、有界重试、适当的超时
+
+- [Activity 超时](https://Temporal.io/blog/Activity-timeouts)
+- [幂等性和持久执行](https://Temporal.io/blog/idempotency-and-durable-execution)
+
+### 删除与 Namespace 的网络连接
+
+**要测试什么**
+
+暂时阻止 Worker 与 Namespace 的 Temporal 服务之间的所有网络访问。
+
+**为什么重要**
+
+- 验证长时间断开连接下的 Worker 重试行为、粘性 Task Queue 行为、Worker 恢复性能、回退策略和 Workflow 重播确定性。
+- 确保不对“始终在线”连接做出任何假设。
+
+**执行 Temporal 故障模式**
+
+- Workflow Task 超时与重试
+- Activity 重试语义
+- 长时间间隔后重播的正确性
+
+**如何运行这个**
+
+- **Kubernetes**：应用拒绝从 Worker Pod 到 Temporal API 的出口的 NetworkPolicy。
+- **[ToxiProxy](https://github.com/Shopify/toxiproxy)**：证明您的应用程序没有单点故障。
+- **Chaos Mesh / Litmus**：网络混沌，完全丢包。
+- **本地测试**：使用 iptables 或防火墙规则阻止端口。
+
+**看点**
+
+- Workflow 失败（重放、超时）
+- Workflow Task 重试
+- Activity 故障、分类（可重试与不可重试）
+- Worker 重新连接风暴期间的 CPU 使用率
+
+## 可观察性检查表
+
+在测试之前（和期间），确保 Visibility 进入：
+
+- Workflow Task 和 Activity 故障率
+- 吞吐量限制和使用
+- Workflow 和 Activity 端到端延迟
+- 任务延迟和积压深度
+- Workflow 历史规模和事件计数
+- Worker CPU、内存和重启计数
+- gRPC 错误代码
+- 重试行为
+
+## 比赛日操作手册
+
+在 Scheduled 比赛日或真实事件模拟期间运行测试时，请使用此清单。
+
+### 开始之前
+
+- 确保人们知道您正在测试以及您正在尝试什么场景
+  - 让支持您调用的 API 的团队知道您正在测试
+  - 联系 Temporal Cloud 支持和客户团队进行协调
+- SDK 和云指标的仪表板
+  - 任务延迟、积压深度、Workflow 故障、Activity 故障
+- 警报静音或适当路由
+- 已知良好的部署工件可用
+- 回滚和规模控制已验证
+
+### 测试期间
+
+- 引入*一次一个变量*
+- 记录每个实验的开始/停止时间
+- 捕获意外行为的屏幕截图或日志
+- 跟踪积压增长和流失率
+
+### 恢复验证
+
+- Workflows 无需人工干预即可恢复
+- 无永久性 Workflow Task 故障（除非故意）
+- Activity 重试行为符合预期
+- 积压订单在可预测的时间内耗尽
+
+### 行动后审查
+
+- 识别不清楚的警报或缺失的指标/警报
+- Update 重试、超时或版本控制策略
+- 记录意外情况和运营债务
+
+＃＃ 概括
+
+使用 Temporal 进行生产前测试不仅仅是为了证明耐用性 - 还为了证明*在压力下的可操作性*。
+您希望在投入生产之前完成练习并知道该做什么，并且必须真正做到这一点。
+
+如果您的系统仍然存在：
+
+- 连接问题
+- 重复故障转移
+- 大于预期负载
+- 大量 Worker 流失
+
+...那么您就可以放心，它已准备好应对多种生产混乱。

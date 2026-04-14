@@ -1,8 +1,8 @@
 ---
 id: checklist
-title: Temporal Platform's production readiness checklist
-sidebar_label: Production checklist
-description: Optimize your Temporal Service for production with scaling, metrics, load testing, and effective workflow versioning techniques. Ensure robust performance and future-proof your workflows.
+title: "Temporal 平台的生产准备清单"
+sidebar_label: "生产清单"
+description: "通过扩展、指标、负载测试和有效的 Workflow 版本控制技术优化您的 Temporal 生产服务。确保您的 Workflow 具有强大的性能和面向未来的能力。"
 slug: /self-hosted-guide/production-checklist
 toc_max_heading_level: 4
 keywords:
@@ -19,136 +19,142 @@ tags:
   - Durable Execution
 ---
 
-This page describes common challenges customers face who self-host Temporal and it shares recommendations to mitigate those issues.
+本页面介绍了自行托管 Temporal 的客户面临的常见挑战，并分享了缓解这些问题的建议。
 
-Temporal at its core is about durability and reliability.
-To ensure this durability and reliability, a Temporal Service must be deployed according to best practices.
+Temporal 的核心是耐用性和可靠性。
+为了确保这种耐用性和可靠性，必须根据最佳实践部署 Temporal 服务。
 
-This guide provides a path to demonstrate that Temporal consumers can be confident in a Temporal Service and provides a list of key tests you as a user should perform against the service.
+本指南提供了一种途径来证明 Temporal 消费者可以对 Temporal 服务充满信心，并提供了您作为用户应针对该服务执行的关键测试列表。
 
-## Self-Hosting Challenge Areas
+<a id="self-hosting-challenge-areas"></a>
+## 自托管挑战区域 {#self-hosting-challenge-areas}
 
-Significant engineering and ongoing effort is required to resolve several potential challenges:
+需要大量的工程设计和持续的努力来解决几个潜在的挑战：
 
-- Scalability with spiky or growing workloads
-- Global hosting
-- Uptime, availability and reliability
-- Management and control plane
-- Latency, which must be kept low and consistent
-- [Security](/self-hosted-guide/security)
-- Maintenance and upgrades
-- Expert support to users of the service
-- Cost management
+- 峰值或不断增长的工作负载的可扩展性
+- 全球托管
+- 正常运行时间、可用性和可靠性
+- 管理和控制平面
+- 延迟，必须保持较低且一致
+- [安全](/self-hosted-guide/security)
+- 维护和升级
+- 为服务用户提供专家支持
+- 成本管理
 
-Each of these components is an essential part of building a mission critical Temporal Service.
-Without demonstrated architectural durability, the value of Temporal's [Durable Execution](https://temporal.io/how-it-works) model is compromised.
+其中每个组件都是构建关键任务 Temporal 服务的重要组成部分。
+如果没有证明建筑耐用性，Temporal 的 [持久的执行力](https://temporal.io/how-it-works) 型号的价值就会受到影响。
 
-## Scalability with Variable or Growing Workloads {#scaling-and-metrics}
+## 可变或不断增长的工作负载的可扩展性 {#scaling-and-metrics}
 
-Workloads can be highly variable, and you may experience sustained workload spikes.
-Temporal recommends scaling your clusters to well above the average throughput.
-See [Scaling Temporal: The Basics](https://temporal.io/blog/scaling-temporal-the-basics) for an introduction to the topic.
+工作负载可能变化很大，您可能会遇到持续的工作负载峰值。
+Temporal 建议将集群扩展至远高于平均吞吐量。
+有关该主题的介绍，请参阅 [缩放 Temporal：基础知识](https://temporal.io/blog/scaling-temporal-the-basics)。
 
-Temporal server throughput is often limited by the number of [Shards](/temporal-service/temporal-server#history-shard) configured for the Temporal Service.
-A Shard is a unit within a Temporal Service by which concurrent Workflow Execution throughput can be scaled.
-Shard capacity, and often overall cluster throughput, is set at build time for a cluster and that cluster setting cannot be adjusted later.
-Adding more Shards if needed requires a cluster rebuild, and a migration to the new cluster.
+Temporal Server 吞吐量通常受到为 Temporal 服务配置的 [碎片](/temporal-service/temporal-server#history-shard) 数量的限制。
+分片是 Temporal 服务中的一个单元，通过它可以扩展并发 Workflow Execution 吞吐量。
+分片容量（通常是整个集群吞吐量）是在集群构建时设置的，并且该集群设置以后无法调整。
+如果需要添加更多分片需要重建集群并迁移到新集群。
 
-The requirements of your Temporal Service will vary widely based on your intended production workload.
-You will want to run your own proof of concept tests and watch for key metrics to understand the system health and scaling needs.
+您的 Temporal 服务的要求将根据您的预期生产工作负载而有很大差异。
+您将需要运行自己的概念验证测试并观察关键指标以了解系统运行状况和扩展需求。
 
-**Load testing.** You can use [the Omes benchmarking tool](https://github.com/temporalio/omes/), see how we ourselves [stress test Temporal](https://temporal.io/blog/temporal-deep-dive-stress-testing/), or write your own.
+**负载测试。** 您可以使用[Omes 基准测试工具](https://github.com/temporalio/omes/)，看看我们自己如何[压力测试Temporal](https://temporal.io/blog/temporal-deep-dive-stress-testing/)，或者编写您自己的。
 
-All metrics emitted by the server are [listed in Temporal's source](https://github.com/temporalio/temporal/blob/main/common/metrics/defs.go).
-There are also equivalent metrics that you can configure from the client side.
-At a high level, you will want to track these 3 categories of metrics:
+服务器发出的所有指标均为 [列在 Temporal 的源中](https://github.com/temporalio/temporal/blob/main/common/metrics/defs.go)。
+您还可以从客户端配置等效指标。
+在较高层面上，您需要跟踪以下 3 类指标：
 
-- **Service metrics**: For each request made by the service handler we emit `service_requests`, `service_errors`, and `service_latency` metrics with `type`, `operation`, and `namespace` tags.
-  This gives you basic visibility into service usage and allows you to look at request rates across services, namespaces and even operations.
-- **Persistence metrics**: The Server emits `persistence_requests`, `persistence_errors` and `persistence_latency` metrics for each persistence operation.
-  These metrics include the `operation` tag such that you can get the request rates, error rates or latencies per operation.
-  These are super useful in identifying issues caused by the database.
-- **Workflow Execution stats**: The Server also emits counters for when Workflow Executions are complete.
-  These are useful in getting overall stats about Workflow Execution completions.
-  Use `workflow_success`, `workflow_failed`, `workflow_timeout`, `workflow_terminate` and `workflow_cancel` counters for each type of Workflow Execution completion.
-  These include the `namespace` tag.
+- **服务指标**：对于服务处理程序发出的每个请求，我们都会发出带有 `type`、`operation` 和 `Namespace` 标签的 `service_requests`、`service_errors` 和 `service_latency` 指标。
+  这为您提供了基本的服务使用情况，并允许您查看跨服务、Namespace 甚至操作的请求率。
+- **持久性指标**：服务器为每个持久性操作发出 `persistence_requests`、`persistence_errors` 和 `persistence_latency` 指标。
+  这些指标包括 `operation` 标签，以便您可以获得每个操作的请求率、错误率或延迟。
+  这些对于识别数据库引起的问题非常有用。
+- **Workflow Execution 统计**：服务器还会在 Workflow Execution 完成时发出计数器。
+  这些对于获取有关 Workflow Execution 完成情况的总体统计数据非常有用。
+  对每种类型的 Workflow Execution 完成使用 `Workflow_success`、`Workflow_failed`、`Workflow_timeout`、`Workflow_terminate` 和 `Workflow_cancel` 计数器。
+  其中包括 `Namespace` 标签。
 
-## Availability
+<a id="availability"></a>
+## 可用性 {#availability}
 
-A high level of availability and reliability (99.99%) is a requirement for mission critical deployments.
-Temporal recommends testing for this availability level while load testing.
-We also recommend validating this level of reliability while doing server upgrades, to ensure no loss of service availability.
+高水平的可用性和可靠性 (99.99%) 是关键任务部署的要求。
+Temporal 建议在负载测试时测试此可用性级别。
+我们还建议在进行服务器升级时验证此级别的可靠性，以确保服务可用性不会丢失。
 
-Temporal Clusters can be deployed in as many regions as needed to meet various requirements:
+Temporal集群可以根据需要部署在多个区域，以满足不同的需求：
 
-- Data Residency
-- Latency
-- Security / Isolation
-  This can multiply the effort to implement and maintain clusters.
+- 数据驻留
+- 延迟
+- 安全/隔离
+  这会增加实施和维护集群的工作量。
 
-[Temporal Cloud is available in various cloud provider regions](/cloud/service-availability).
+[Temporal Cloud 在各个云提供商区域均可用](/cloud/service-availability)。
 
-## Management and Control Plane
+<a id="management-and-control-plane"></a>
+## 管理和控制平面 {#management-and-control-plane}
 
-Temporal success leads to larger Temporal deployments.
-Needs can increase, and can go from having one or two production use cases in a single region to many use cases in many regions.
-Running multiple Temporal Services is complex work, as each needs its own setup, tuning, and configuration.
+Temporal 的成功导致了更大规模的 Temporal 部署。
+需求可能会增加，并且可能从在单个区域中拥有一两个生产用例到在多个区域中拥有许多用例。
+运行多个 Temporal 服务是一项复杂的工作，因为每个服务都需要自己的设置、调整和配置。
 
-Needing to monitor and manage all your Temporal Services in a unified way leads to operational management pain.
-Consider adding a layer on top of Temporal to manage multiple Temporal Services: a control plane.
-A control plane manages and directs data flow, deciding where data packets should be sent.
-A Temporal Service data plane can streamline operations and improve efficiency.
-Since Temporal does not ship its own open source data plane, rolling your own can be complex and take effort to add.
+需要以统一的方式监控和管理所有 Temporal 服务会导致运营管理的痛苦。
+考虑在 Temporal 之上添加一个层来管理多个 Temporal 服务：控制平面。
+控制平面管理和引导数据流，决定数据包应发送到何处。
+Temporal 服务数据平面可以简化操作并提高效率。
+由于 Temporal 没有提供自己的开源数据平面，因此自行构建可能会很复杂并且需要花费精力来添加。
 
-Temporal Cloud provides exactly that support.
-With Temporal Cloud, all Namespaces in all regions can be managed from a single view.
-[Temporal Cloud](https://temporal.io/cloud) also has RBAC functionality that can delegate responsibilities for individual Namespaces.
+Temporal Cloud 正是提供了这种支持。
+借助 Temporal Cloud，可以从单个视图管理所有区域中的所有 Namespace。
+[Temporal Cloud](https://temporal.io/cloud) 还具有 RBAC 功能，可以委派各个 Namespace 的职责。
 
-Self-hosted Temporal does not support RBAC or audit logging out of the box.
-Temporal Cloud provides RBAC and SSO support, audit logging, data encryption, third party penetration test validation, and SOC 2-Type II and HIPAA compliance.
+自托管 Temporal 不支持开箱即用的 RBAC 或审核日志记录。
+Temporal Cloud 提供 RBAC 和 SSO 支持、审核日志记录、数据加密、第三方渗透测试验证以及 SOC 2-Type II 和 HIPAA 合规性。
 
-## Maintenance and Upgrades
+<a id="maintenance-and-upgrades"></a>
+## 维护和升级 {#maintenance-and-upgrades}
 
-Temporal recommends keeping up-to-date and not falling behind on your server versions.
+Temporal 建议您的服务器版本保持最新并且不要落后。
 
-Temporal Server is proactively updated, and releases as often as every two weeks.
-Temporal recommends [upgrading sequentially](/self-hosted-guide/upgrade-server), not skipping any minor versions, although you can skip patch versions.
-No support is guaranteed for Temporal Server, but very old servers will be hard for even the community to support, so we encourage you to keep up to date.
-You must create and maintain the infrastructure to host and run your self-hosted Temporal installation, such as Kubernetes, as well as data stores for persistence.
+Temporal Server 是主动 Updated，并且每两周发布一次。
+Temporal 推荐 [依次升级](/self-hosted-guide/upgrade-server)，不跳过任何次要版本，尽管您可以跳过补丁版本。
+不保证对 Temporal Server 的支持，但非常旧的服务器甚至社区都很难支持，因此我们鼓励您保持最新状态。
+您必须创建和维护基础架构来托管和运行自托管 Temporal 安装（例如 Kubernetes）以及用于持久性的数据存储。
 
-Server upgrades can negatively affect self-hosted Temporal Service availability.
-Temporal recommends load and availability testing during the upgrade process to understand the performance implications.
+服务器升级可能会对自托管 Temporal 服务可用性产生负面影响。
+Temporal 建议在升级过程中进行负载和可用性测试，以了解性能影响。
 
-Temporal Cloud updates are managed by the Temporal Cloud team; Cloud upgrades are seamless.
+Temporal Cloud Update 由 Temporal Cloud 团队管理；云升级是无缝的。
 
-## Expert Support
+<a id="expert-support"></a>
+## 专家支持 {#expert-support}
 
-Temporal recommends that customer platform teams who are building out a Temporal service gain deep experience across the lifecycle and breadth of a Temporal application.
+Temporal 建议构建 Temporal 服务的客户平台团队在 Temporal 应用程序的生命周期和广度上获得丰富的经验。
 
-Specific activities include:
+具体活动包括：
 
-- [Worker tuning](/develop/worker-performance)
-- [Worker best practices](/workers)
-- Code reviews
-- Design guidance
-- Training
-- Code reviews
-- Security reviews
-- [Metrics](/references/sdk-metrics) and monitoring
-- Technical onboarding
+- [Worker 调音](/develop/worker-performance)
+- [Worker 最佳实践](/workers)
+- 代码审查
+- 设计指导
+- 培训
+- 代码审查
+- 安全审查
+- [指标](/references/sdk-metrics)和监控
+- 技术入职
 
-[Temporal support](/cloud/support) provides guidance on all of the above.
+[Temporal 支持](/cloud/support) 提供有关上述所有内容的指导。
 
-## Cost Management
+<a id="cost-management"></a>
+## 成本管理 {#cost-management}
 
-Running a mission critical, global Temporal Service can be expensive.
-Temporal Server is a complex system to run and scale.
-Temporal recommends performance testing and planning scaling as your performance requirements evolve.
-Following our guidance can oversize your self-hosted Temporal Server installs, but this is necessary to handle unpredictable spiky workloads.
-Performance testing can help you right-size your environments.
-Running mission critical Temporal as a Service requires multiple Temporal Clusters for high availability and global coverage.
+运行关键任务的全球 Temporal 服务可能会很昂贵。
+Temporal Server 是一个运行和扩展复杂的系统。
+Temporal 建议随着性能需求的变化进行性能测试和规划扩展。
+遵循我们的指南可能会使您的自托管 Temporal Server 安装规模过大，但这对于处理不可预测的峰值工作负载是必要的。
+性能测试可以帮助您调整环境规模。
+将关键任务 Temporal 作为服务运行需要多个 Temporal 集群来实现高可用性和全球覆盖。
 
-It is a good practice to have trained, experienced administrators familiar with Temporal Service architecture to maintain your Temporal servers and provide a mission critical service.
-Staffing, training and skill development can be significant costs to maintaining a Temporal Service.
+最好由经过培训、经验丰富、熟悉 Temporal 服务架构的管理员来维护您的 Temporal Server 并提供关键任务服务。
+人员配置、培训和技能开发可能是维护 Temporal 服务的巨大成本。
 
-[Temporal Cloud](https://temporal.io/cloud) can be significantly less expensive to set up and scale.
+[Temporal Cloud](https://temporal.io/cloud) 的设置和扩展成本显着降低。

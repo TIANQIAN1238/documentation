@@ -1,0 +1,227 @@
+---
+id: web-ui-environment-variables
+title: Temporal Web UI环境变量参考
+sidebar_label: Web UI 环境变量
+description: Dynamically configure Temporal Web UI with environment variables in Docker for settings like TEMPORAL_ADDRESS,
+  Dynamically configure Temporal Web UI with environment variables in Docker for settings like TEMPORAL_ADDRESS,
+  authentication, TLS, OpenAPI, and more.
+toc_max_heading_level: 4
+keywords:
+  - docker
+  - reference
+  - ui server
+  - webui
+tags:
+  - Reference
+  - Temporal Web UI
+---
+
+您可以使用环境变量动态更改 Temporal Web UI 的配置。
+
+这些可以在许多环境中使用，例如 Docker。例如：
+
+```
+docker run\
+-e TEMPORAL_ADDRESS=127.0.0.1:7233\
+-e TEMPORAL_UI_PORT=8080\
+-e TEMPORAL_UI_PUBLIC_PATH=path/to/webui\
+-e TEMPORAL_UI_ENABLED=true\
+-e TEMPORAL_CLOUD_UI=false\
+-e TEMPORAL_DEFAULT_NAMESPACE=default\
+-e TEMPORAL_FEEDBACK_URL=https://feedback.here\
+-e TEMPORAL_CONFIG_REFRESH_INTERVAL=0s\
+-e TEMPORAL_SHOW_TEMPORAL_SYSTEM_NAMESPACE=false\
+-e TEMPORAL_DISABLE_WRITE_ACTIONS=false\
+-e TEMPORAL_AUTH_ENABLED=true\
+-e TEMPORAL_AUTH_TYPE=oidc\
+-e TEMPORAL_AUTH_PROVIDER_URL=https://accounts.google.com\
+-e TEMPORAL_AUTH_ISSUER_URL=https://accounts.google.com\
+-e TEMPORAL_AUTH_CLIENT_ID=xxxxx-xxxx.apps.googleusercontent.com\
+-e TEMPORAL_AUTH_CLIENT_SECRET=xxxxxxxxxxxxxxx\
+-e TEMPORAL_AUTH_CALLBACK_URL=https://xxxx.com:8080/auth/sso/callback\
+-e TEMPORAL_AUTH_SCOPES=openid,email,profile\
+-e TEMPORAL_TLS_CA=../ca.cert\
+-e TEMPORAL_TLS_CERT=../cluster.pem\
+-e TEMPORAL_TLS_KEY=../cluster.key\
+-e TEMPORAL_TLS_ENABLE_HOST_VERIFICATION=true\
+-e TEMPORAL_TLS_SERVER_NAME=tls-server\
+-e TEMPORAL_CODEC_ENDPOINT=https://codec.server\
+-e TEMPORAL_CODEC_PASS_ACCESS_TOKEN=false\
+-e TEMPORAL_CODEC_INCLUDE_CREDENTIALS=false\
+-e TEMPORAL_HIDE_LOGS=false\
+temporalio/ui:<tag>
+```
+
+默认情况下，您不能同时运行超过 30 个 XPROT008X 的 XPROT029X，有关详细信息，请参阅[限制](/XPROT027X-execution/limits#XPROT027X-execution-XPROT039X-operation-limits)。
+
+## `Temporal_ADDRESS`
+
+Temporal 集群的[前端服务](/Temporal-service/Temporal-server#frontend-service) 地址。这个
+可以使用 [在基本配置文件中](/references/web-ui-configuration#TemporalgRPCaddress) 设置变量
+`TemporalgRPC地址`。
+
+设置其他环境变量需要此变量。
+
+## `Temporal_UI_PORT`
+
+Temporal WebUI 服务器和 HTTP API 使用的端口。
+
+“Temporal_OPENAPI_ENABLED”和所有与身份验证相关的设置需要此变量才能正常工作。
+
+## `Temporal_UI_PUBLIC_PATH`
+
+存储诸如“”或“/custom-path”之类的值，允许从子路径提供 UI。
+
+## `Temporal_UI_ENABLED`
+
+启用或禁用 Temporal 集群的[浏览器 UI](/references/web-ui-configuration#enableui)。
+
+启用浏览器 UI 允许从 Web 浏览器访问服务器。如果禁用，则无法查看服务器
+在 Web 上，但 UI 服务器 API 仍然可用。
+
+## `Temporal_CLOUD_UI`
+
+如果启用，请使用 Temporal Cloud 中的备用 UI。
+
+## `Temporal_DEFAULT_Namespace`
+
+Web UI 首先打开的默认 [Namespace](/Namespaces)。
+
+## `Temporal_FEEDBACK_URL`
+
+用户单击 UI 中的“反馈”按钮时定向到的 URL。
+
+如果未指定，此变量默认为 UI 的 GitHub 问题页面。
+
+## `Temporal_CONFIG_REFRESH_INTERVAL`
+
+确定 UI 服务器读取配置文件中新值的频率。
+
+## `Temporal_SHOW_Temporal_SYSTEM_Namespace`
+
+如果启用，则会在 Web UI 中显示处理内部 Temporal Workflow 的系统 Namespace。
+
+## `Temporal_DISABLE_WRITE_ACTIONS`
+
+禁用 UI 中允许用户修改 Workflow 或活动的任何按钮。
+
+## `Temporal_AUTH_ENABLED`
+
+启用或禁用 Web UI 身份验证和授权方法。
+
+启用后，Web UI 将使用
+[UI配置文件](/references/web-ui-configuration#auth)用于验证用户身份。
+
+当“Temporal_AUTH_ENABLED”设置为“true”时，可以定义所有与身份验证相关的变量。禁用该变量将
+保留给定值。
+
+## `Temporal_AUTH_TYPE`
+
+XPROT006X 服务器和任何 API 使用的路径。
+
+## `Temporal_AUTH_PROVIDER_URL`
+
+用于身份验证和授权的 .wellknown IDP 发现 URL。
+
+可以使用 [auth](/references/web-ui-configuration#auth) 在 UI 服务器配置中进行设置。
+
+## `Temporal_AUTH_ISSUER_URL`
+
+身份验证或授权颁发者的 URL。
+
+仅当颁发者与身份验证提供者 URL 不同时才需要此值。
+
+## `Temporal_AUTH_CLIENT_ID`
+
+用于身份验证或授权的客户端 ID。
+
+该值是必需参数。
+
+## `Temporal_AUTH_CLIENT_SECRET`
+
+用于身份验证和授权的客户端密钥。
+
+oAuth 客户端使用客户端密钥进行身份验证。
+
+## `Temporal_AUTH_CALLBACK_URL`
+
+Temporal 用于身份验证和授权的回调 URL。
+
+用户在 IDP 中完成身份验证后，IDP 会调用回调 URL。
+
+## `Temporal_AUTH_SCOPES`
+
+指定一组 auth 范围。通常，这是“openid”、“profile”、“email”。
+
+## `Temporal_TLS_CA`
+
+传输层安全 (TLS) 证书颁发机构文件的路径。
+
+为了[为您的服务器配置 TLS](/references/web-ui-configuration#tls)，您需要颁发 CA 证书
+由受信任的证书颁发机构颁发。设置此变量以正确定位和使用该文件。
+
+## `Temporal_TLS_CERT`
+
+传输层安全 (TLS) 证书的路径。
+
+为了[为您的服务器配置 TLS](/references/web-ui-configuration#tls)，您需要一个自签名的
+证书。设置路径以允许环境找到并使用证书。
+
+## `Temporal_TLS_KEY`
+
+传输层安全性 (TLS) [密钥文件](/references/web-ui-configuration#tls) 的路径。
+
+密钥文件用于创建用于加密和签名的私钥和公钥。这些键一起用于创建
+证书。
+
+## `Temporal_TLS_CA_DATA`
+
+存储 TLS CA 文件的数据。
+
+可以使用此变量代替为“Temporal_TLS_CA”提供路径。
+
+## `Temporal_TLS_CERT_DATA`
+
+存储 TLS 证书文件的数据。
+
+可以使用此变量来代替提供“Temporal_TLS_CERT”的路径。
+
+## `Temporal_TLS_KEY_DATA`
+
+存储 TLS 密钥文件的数据。
+
+可以使用此变量代替为“Temporal_TLS_KEY”提供路径。
+
+## `Temporal_TLS_ENABLE_HOST_VERIFICATION`
+
+启用或禁用[传输层安全 (TLS) 主机验证](/references/web-ui-configuration#tls)。
+
+启用后，TLS 会检查主机服务器以确保文件发送到正确的 URL 或从正确的 URL 发送。
+
+## `Temporal_TLS_SERVER_NAME`
+
+运行[传输层安全 (TLS) 协议](/references/web-ui-configuration#tls) 的服务器。
+
+TLS 允许当前服务器将加密文件传输到其他 URL，而无需暴露自身。因为
+为此，TLS 运行一个中间服务器。
+
+`XPROT044X admin db clean` 命令从目标数据库中清除损坏的 [XPROT002Xs](/XPROT027X-execution)。
+
+[Codec Server](/codec-server) 的端点（如果已配置）。
+
+## `Temporal_CODEC_PASS_ACCESS_TOKEN`
+
+指定是否在使用 Codec Server 的请求中发送 JWT 访问令牌作为“授权”标头。
+
+## `Temporal_CODEC_INCLUDE_CREDENTIALS`
+
+指定是否将凭据与对 Codec Server 的请求一起包含。
+
+## `Temporal_FORWARD_HEADERS`
+
+转发指定的 HTTP 标头，将 HTTP API 请求定向到 Temporal gRPC 后端。这是一个逗号分隔的
+要转发的 HTTP 标头列表。
+
+## `Temporal_隐藏日志`
+
+如果启用，则不打印 Temporal 服务的日志。

@@ -1,8 +1,8 @@
 ---
 id: set-up-your-local-typescript
-title: Set up your local with the Typescript SDK
-sidebar_label: Quickstart
-description: Configure your local development environment to get started developing with Temporal
+title: "使用 TypeScript SDK 设置本地"
+sidebar_label: "快速入门"
+description: "配置本地开发环境以开始使用 Temporal 进行开发"
 keywords:
   - set up
   - getting started
@@ -18,9 +18,10 @@ hide_table_of_contents: true
 import { SetupSteps, SetupStep, CodeSnippet } from '@site/src/components/elements/SetupSteps';
 import { CallToAction } from '@site/src/components/elements/CallToAction';
 
-# Quickstart
+<a id="quickstart"></a>
+# 快速入门 {#quickstart}
 
-Configure your local development environment to get started developing with Temporal.
+配置本地开发环境以开始使用 Temporal 进行开发。
 
 <SetupSteps>
 <SetupStep code={
@@ -29,10 +30,11 @@ Configure your local development environment to get started developing with Temp
     <p>Install Node.js via your package manager by following the <a href="https://nodejs.org/en/download/" target="_blank">official Node.js instructions</a>.</p>
   </>
 }>
-## Install Node.js
+<a id="install-nodejs"></a>
+## 安装 Node.js {#install-nodejs}
 
-The TypeScript SDK requires Node.js 20 or later. Install Node.js via your package manager by following the official
-Node.js instructions.
+TypeScript SDK 需要 Node.js 20 或更高版本。按照官方说明通过包管理器安装 Node.js
+Node.js 说明。
 
 </SetupStep>
 
@@ -46,17 +48,18 @@ npx @temporalio/create@latest ./my-app
 </>
 }>
 
-## Install the Temporal TypeScript SDK
+<a id="install-the-temporal-typescript-sdk"></a>
+## 安装 Temporal TypeScript SDK {#install-the-temporal-typescript-sdk}
 
-You can create a new project with the Temporal SDK:
+您可以使用 Temporal SDK 创建一个新项目：
 
-If you're creating a new project using `npx @temporalio/create`, the required SDK packages will be installed
-automatically.
+如果您使用 `npx @Temporalio/create` 创建新项目，则将安装所需的 SDK 包
+自动。
 
-To add Temporal to an existing project, install the required packages manually with
-`npm install @temporalio/client @temporalio/worker @temporalio/workflow`.
+要将 Temporal 添加到现有项目，请使用以下命令手动安装所需的包
+`npm install @Temporalio/client @Temporalio/Worker @Temporalio/Workflow`。
 
-Next, you'll configure a local Temporal Service for development.
+接下来，您将配置本地 Temporal 服务以进行开发。
 
 </SetupStep>
 
@@ -96,12 +99,13 @@ Next, you'll configure a local Temporal Service for development.
 </>
 }>
 
-## Install Temporal CLI
+<a id="install-temporal-cli"></a>
+## 安装 Temporal CLI {#install-temporal-cli}
 
-The fastest way to get a development version of the Temporal Service running on your local machine is to use
-[Temporal CLI](https://docs.temporal.io/cli).
+在本地计算机上运行 Temporal 服务的开发版本的最快方法是使用
+[Temporal CLI](https://docs.temporal.io/cli)。
 
-Choose your operating system to install Temporal CLI.
+选择您的操作系统来安装 Temporal CLI。
 
 </SetupStep>
 
@@ -123,39 +127,42 @@ temporal server start-dev --ui-port 8080
 </>
 }>
 
-## Start the development server
+<a id="start-the-development-server"></a>
+## 启动开发服务器 {#start-the-development-server}
 
-Once you've installed Temporal CLI and added it to your PATH, open a new Terminal window and run the following command.
+安装 Temporal CLI 并将其添加到 PATH 后，打开一个新的终端窗口并运行以下命令。
 
-This command starts a local Temporal Service. It starts the Web UI, creates the default Namespace, and uses an in-memory
-database.
+此命令启动本地 Temporal 服务。它启动 Web UI，创建默认的 Namespace，并使用内存中的
+数据库。
 
-The Temporal Service will be available on localhost:7233. The Temporal Web UI will be available at
+Temporal 服务将在 localhost:7233 上可用。 Temporal Web UI 将在以下网址提供：
 http://localhost:8233.
 
-Leave the local Temporal Service running as you work through tutorials and other projects. You can stop the Temporal
-Service at any time by pressing CTRL+C.
+当您完成教程和其他项目时，让本地 Temporal 服务保持运行。您可以停止 Temporal
+按 CTRL+C 可随时提供服务。
 
-Once you have everything installed, you're ready to build apps with Temporal on your local machine.
+安装完所有内容后，您就可以在本地计算机上使用 Temporal 构建应用程序了。
 
 </SetupStep>
 </SetupSteps>
 
-## Run Hello World: Test Your Installation
+<a id="run-hello-world-test-your-installation"></a>
+## 运行 Hello World：测试您的安装 {#run-hello-world-test-your-installation}
 
-Now let's verify your setup is working by creating and running a complete Temporal application with both a Workflow and
-Activity.
+现在，让我们通过创建并运行一个完整的 Temporal 应用程序来验证您的设置是否正常工作，其中包含 Workflow 和
+Activity。
 
-This test will confirm that:
+该测试将确认：
 
-- The Temporal TypeScript SDK is properly installed
-- Your local Temporal Service is running
-- You can successfully create and execute Workflows and Activities
-- The communication between components is functioning correctly
+- Temporal TypeScript SDK 已正确安装
+- 您本地的 Temporal 服务正在运行
+- 您可以成功创建并执行 Workflow 和活动
+- 组件之间的通信功能正常
 
-### 1. Create the Activity
+<a id="1-create-the-activity"></a>
+### 1.创建Activity {#1-create-the-activity}
 
-Create an Activity file (activities.ts):
+创建 Activity 文件（activities.ts）：
 
 ```ts
 export async function greet(name: string): Promise<string> {
@@ -163,14 +170,15 @@ export async function greet(name: string): Promise<string> {
 }
 ```
 
-An Activity is a normal function or method that executes a single, well-defined action (either short or long running),
-which often involve interacting with the outside world, such as sending emails, making network requests, writing to a
-database, or calling an API, which are prone to failure. If an Activity fails, Temporal automatically retries it based
-on your configuration.
+Activity 是执行单个明确定义的操作（短期或长期运行）的普通函数或方法，
+这通常涉及与外界交互，例如发送电子邮件、发出网络请求、向
+数据库，或者调用API，这些都容易失败。如果 Activity 失败，Temporal 会根据情况自动重试
+根据您的配置。
 
-### 2. Create the Workflow
+<a id="2-create-the-workflow"></a>
+### 2.创建Workflow {#2-create-the-workflow}
 
-Create a Workflow file (workflows.ts):
+创建 Workflow 文件 (Workflows.ts)：
 
 ```ts
 import { proxyActivities } from '@temporalio/workflow';
@@ -187,13 +195,14 @@ export async function example(name: string): Promise<string> {
 }
 ```
 
-Workflows orchestrate Activities and contain the application logic. Temporal Workflows are resilient. They can run and
-keep running for years, even if the underlying infrastructure fails. If the application itself crashes, Temporal will
-automatically recreate its pre-failure state so it can continue right where it left off.
+Workflow 编排活动并包含应用程序逻辑。 Temporal Workflow 具有弹性。他们可以奔跑并且
+即使底层基础设施出现故障，也能持续运行数年。如果应用程序本身崩溃，Temporal 将
+自动重新创建故障前的状态，以便可以从中断处继续。
 
-### 3. Create and Run the Worker
+<a id="3-create-and-run-the-worker"></a>
+### 3. 创建并运行 Worker {#3-create-and-run-the-worker}
 
-Create a Worker file (worker.ts):
+创建 Worker 文件 (Worker.ts)：
 
 ```ts
 import { NativeConnection, Worker } from '@temporalio/worker';
@@ -240,27 +249,28 @@ run().catch((err) => {
 });
 ```
 
-Run the Worker and keep this terminal running:
+运行 Worker 并保持此终端运行：
 
 ```bash
 npm run start
 ```
 
-With your Activity and Workflow defined, you need a Worker to execute them. A Worker polls a Task Queue, that you
-configure it to poll, looking for work to do. Once the Worker dequeues a Workflow or Activity task from the Task Queue,
-it then executes that task.
+定义了 Activity 和 Workflow 后，您需要 Worker 来执行它们。 Worker 轮询 Task Queue，您
+将其配置为轮询，寻找要做的工作。一旦 Worker 将 Workflow 或 Activity 任务从 Task Queue 中出列，
+然后它执行该任务。
 
-Workers are a crucial part of your Temporal application as they're what actually execute the tasks defined in your
-Workflows and Activities. For more information on Workers, see
-[Understanding Temporal](/evaluate/understanding-temporal#workers) and a [deep dive into Workers](/workers).
+Worker 是 Temporal 应用程序的重要组成部分，因为它们实际执行您的 Temporal 应用程序中定义的任务。
+Workflow 和活动。有关 Worker 的更多信息，请参阅
+[了解 Temporal](/evaluate/understanding-temporal#workers) 和 [深入研究 Worker](/workers)。
 
-### 4. Execute the Workflow
+<a id="4-execute-the-workflow"></a>
+### 4.执行Workflow {#4-execute-the-workflow}
 
-Now that your Worker is running, it's time to start a Workflow Execution.
+现在您的 Worker 正在运行，是时候启动 Workflow Execution 了。
 
-This final step will validate that everything is working correctly with your file labeled `client.ts`.
+最后一步将验证标记为 `client.ts` 的文件是否一切正常。
 
-Create a separate file called `client.ts`.
+创建一个名为 `client.ts` 的单独文件。
 
 ```ts
 import { Client, Connection } from '@temporalio/client';
@@ -300,30 +310,31 @@ run().catch((err) => {
 });
 ```
 
-Then run:
+然后运行：
 
 ```bash
 npm run workflow
 ```
 
-### Verify Success
+<a id="verify-success"></a>
+### 验证成功 {#verify-success}
 
-If everything is working correctly, you should see:
+如果一切正常，您应该看到：
 
-- Worker processing the workflow and activity
-- Output: `Workflow result: Hello, Temporal!`
-- Workflow Execution details in the [Temporal Web UI](http://localhost:8233)
+- Worker 处理 Workflow 和 Activity
+- 输出：`Workflow result: Hello, Temporal!`
+- [Temporal 网页用户界面](http://localhost:8233) 中的 Workflow Execution 详细信息
 
 <details>
 <summary><strong>Additional details about Workflow Execution</strong></summary>
 
-- Temporal clients are not explicitly closed.
-- To enable TLS, set the `tls` option to `true` for default settings or pass a [`TLSConfig`](https://typescript.temporal.io/api/interfaces/worker.TLSConfig) for custom configuration.
-- Calling `client.workflow.start()` and `client.workflow.execute()` send a command to Temporal Server to schedule a new
-  Workflow Execution on the specified Task Queue.
-- If you started a Workflow with `client.workflow.start()`, you can choose to wait for the result anytime with
-  handle.result().
-- Using a Workflow Handle isn't necessary with `client.workflow.execute()`.
+- Temporal CLIents 未明确关闭。
+- 要启用 TLS，请将 `tls` 选项设置为 `true` 以进行默认设置，或传递 [`TLSConfig`](https://typescript.temporal.io/api/interfaces/worker.TLSConfig) 以进行自定义配置。
+- 调用`client.Workflow.start()`和`client.Workflow.execute()`发送命令到Temporal Server到Schedule一个新的
+  Workflow Execution 位于指定的 Task Queue 上。
+- 如果您使用`client.Workflow.start()`开始了Workflow，您可以选择随时等待结果
+  处理.结果()。
+- `client.Workflow.execute()` 无需使用 Workflow 手柄。
 
 </details>
 

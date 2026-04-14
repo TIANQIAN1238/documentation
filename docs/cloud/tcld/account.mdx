@@ -1,8 +1,8 @@
 ---
 id: account
-title: tcld account command reference
-sidebar_label: account
-description: Manage Temporal Cloud accounts using tcld commands. Get account details, configure and manage metrics endpoints, and handle end-entity certificates efficiently with various commands.
+title: "tcld 账户命令参考"
+sidebar_label: "帐户"
+description: "使用 tcld 命令管理 Temporal Cloud 帐户。获取帐户详细信息，配置和管理指标端点，并使用各种命令有效地处理最终实体证书。"
 slug: /cloud/tcld/account
 toc_max_heading_level: 4
 keywords:
@@ -14,601 +14,657 @@ tags:
   - Accounts
 ---
 
-The `tcld account` commands manage accounts in Temporal Cloud.
+`tcld account` 命令管理 Temporal Cloud 中的帐户。
 
-Alias: `a`
+别名：`a`
 
-- [tcld account audit-log](#audit-log)
-- [tcld account get](#get)
-- [tcld account list-regions](#list-regions)
-- [tcld account metrics](#metrics)
+- [tcld 帐户审核日志](#audit-log)
+- [tcld账号获取](#get)
+- [tcld 帐户列表-区域](#list-regions)
+- [tcld 帐户指标](#metrics)
 
-## audit-log
+<a id="audit-log"></a>
+## 审计日志 {#audit-log}
 
-The `tcld account audit-log` command manage Audit Logs in Temporal Cloud.
+`tcld account audit-log` 命令管理 Temporal Cloud 中的审核日志。
 
-Alias: `al`
+别名：`al`
 
-- [tcld account audit-log kinesis](#kinesis)
-- [tcld account audit-log pubsub](#pubsub)
+- [tcld 帐户审计日志 kinesis](#kinesis)
+- [tcld 帐户审核日志 pubsub](#pubsub)
 
-### kinesis
+<a id="kinesis"></a>
+### 运动 {#kinesis}
 
-The `tcld account audit-log kinesis` command manages Kinesis audit log sinks.
+`tcld account audit-log kinesis` 命令管理 Kinesis 审核日志接收器。
 
-Alias: `k`
+别名：`k`
 
-- [tcld account audit-log kinesis create](#create)
-- [tcld account audit-log kinesis delete](#delete)
-- [tcld account audit-log kinesis get](#account-audit-log-kinesis-get)
-- [tcld account audit-log kinesis list](#list)
-- [tcld account audit-log kinesis update](#update)
-- [tcld account audit-log kinesis validate](#validate)
+- [tcld 帐户审计日志 kinesis 创建](#create)
+- [tcld 帐户审核日志 kinesis 删除](#delete)
+- [tcld 帐户审核日志 kinesis 获取](#account-audit-log-kinesis-get)
+- [tcld 帐户审核日志 kinesis 列表](#list)
+- [tcld 帐户审核日志 kinesis Update](#update)
+- [tcld 帐户审核日志 kinesis 验证](#validate)
 
-#### create
+#### 创造 {#create}
 
-The `tcld account audit-log kinesis` command creates a Kinesis audit log sink.
+`tcld account audit-log kinesis` 命令创建 Kinesis 审核日志接收器。
 
-Alias: `c`
+别名：`c`
 
-##### --destination-uri
+<a id="create"></a>
+##### --目标 uri {#destination-uri}
 
-The destination URI of the audit log sink.
+审核日志接收器的目标 URI。
 
-Alias: `du`
+别名：`du`
 
-##### --region
+##### - 地区 {#region}
 
-The region to use for the request.
+用于请求的区域。
 
-Alias: `re`
+别名：`re`
 
-##### --role-name
+<a id="destination-uri"></a>
+##### --角色名称 {#role-name}
 
-The role name to use to write to the sink.
+用于写入接收器的角色名称。
 
-Alias: `rn`
+别名：`rn`
 
-##### --sink-name
+<a id="region"></a>
+##### --接收器名称 {#sink-name}
 
-Provide a name for the sink.
+提供水槽的名称。
 
-#### delete
+#### 删除 {#delete}
 
-The `tcld account audit-log kinesis delete` command deletes an audit log sink.
+`tcld account audit-log kinesis delete` 命令删除审核日志接收器。
 
-Alias: `d`
+别名：`d`
 
-##### --resource-version
+<a id="role-name"></a>
+##### --资源版本 {#resource-version}
 
-The resource-version (etag) to update from, if not set the cli will use the latest (optional).
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
 
-Alias: `v`
+别名：`v`
 
-##### --sink-name
+<a id="sink-name"></a>
+##### --接收器名称 {#sink-name}
 
-Provide a name for the sink.
+提供水槽的名称。
 
-#### get {#account-audit-log-kinesis-get}
+<a id="delete"></a>
+#### 获取 {#account-audit-log-kinesis-get}
 
-The `tcld account audit-log kinesis get` command gets an audit log sink.
+`tcld account audit-log kinesis get` 命令获取审核日志接收器。
 
-Alias: `g`
+别名：`g`
 
-##### --sink-name
+<a id="resource-version"></a>
+##### --接收器名称 {#sink-name}
 
-Provide a name for the sink.
+提供水槽的名称。
 
-#### list
+#### 列表 {#list}
 
-The `tcld account audit-log kinesis list` command lists audit log sinks on the account.
+`tcld account audit-log kinesis list` 命令列出帐户上的审核日志接收器。
 
-Alias: `l`
+别名：`l`
 
-##### --page-size
+<a id="sink-name"></a>
+##### --页面大小 {#page-size}
 
-The page size for list operations.
+列表操作的页面大小。
 
-##### --page-token
+<a id="account-audit-log-kinesis-get"></a>
+##### --页面令牌 {#page-token}
 
-The page token for list operations.
+用于列表操作的页面令牌。
 
-#### update
+<a id="sink-name"></a>
+#### Update {#update}
 
-The `tcld account audit-log kinesis update` command updates an audit log sink.
+`tcld account audit-log kinesis Update` 命令 Update 是审核日志接收器。
 
-Alias: `u`
+别名：`u`
 
-##### --destination-uri
+<a id="list"></a>
+##### --目标 uri {#destination-uri}
 
-The destination URI of the audit log sink.
+审核日志接收器的目标 URI。
 
-Alias: `du`
+别名：`du`
 
-##### --enabled
+<a id="page-size"></a>
+##### --启用 {#enabled}
 
-Whether the sink is enabled.
+接收器是否启用。
 
-##### --region
+##### - 地区 {#region}
 
-The region to use for the request.
+用于请求的区域。
 
-Alias: `re`
+别名：`re`
 
-##### --resource-version
+<a id="page-token"></a>
+##### --资源版本 {#resource-version}
 
-The resource-version (etag) to update from, if not set the cli will use the latest (optional).
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
 
-Alias: `v`
+别名：`v`
 
-##### --role-name
+<a id="update"></a>
+##### --角色名称 {#role-name}
 
-The role name to use to write to the sink.
+用于写入接收器的角色名称。
 
-Alias: `rn`
+别名：`rn`
 
-##### --sink-name
+<a id="destination-uri"></a>
+##### --接收器名称 {#sink-name}
 
-Provide a name for the sink.
+提供水槽的名称。
 
-#### validate
+#### 证实 {#validate}
 
-The `tcld account audit-log kinesis validate` command verifies Temporal Cloud can write to a Kinesis sink.
+`tcld account audit-log kinesis validate` 命令验证 Temporal Cloud 是否可以写入 Kinesis 接收器。
 
-Alias: `v`
+别名：`v`
 
-##### --destination-uri
+<a id="enabled"></a>
+##### --目标 uri {#destination-uri}
 
-The destination URI of the audit log sink.
+审核日志接收器的目标 URI。
 
-Alias: `du`
+别名：`du`
 
-##### --region
+##### - 地区 {#region}
 
-The region to use for the request.
+用于请求的区域。
 
-Alias: `re`
+别名：`re`
 
-##### --role-name
+<a id="region"></a>
+##### --角色名称 {#role-name}
 
-The role name to use to write to the sink.
+用于写入接收器的角色名称。
 
-Alias: `rn`
+别名：`rn`
 
-##### --sink-name
+<a id="resource-version"></a>
+##### --接收器名称 {#sink-name}
 
-Provide a name for the sink.
+提供水槽的名称。
 
-### pubsub
+<a id="role-name"></a>
+### 发布订阅 {#pubsub}
 
-The `tcld account audit-log pubsub` command manages Pub/Sub audit log sinks.
+`tcld account audit-log pubsub` 命令管理 Pub/Sub 审核日志接收器。
 
-Alias: `ps`
+别名：`ps`
 
-- [tcld account audit-log pubsub create](#create)
-- [tcld account audit-log pubsub delete](#delete)
-- [tcld account audit-log pubsub get](#account-audit-log-pubsub-get)
-- [tcld account audit-log pubsub list](#list)
-- [tcld account audit-log pubsub update](#update)
-- [tcld account audit-log pubsub validate](#validate)
+- [tcld 帐户审核日志 pubsub 创建](#create)
+- [tcld 帐户审核日志 pubsub 删除](#delete)
+- [tcld 帐户审核日志 pubsub 获取](#account-audit-log-pubsub-get)
+- [tcld 帐户审核日志 pubsub 列表](#list)
+- [tcld 帐户审核日志 pubsub Update](#update)
+- [tcld 帐户审核日志 pubsub 验证](#validate)
 
-#### create
+#### 创造 {#create}
 
-The `tcld account audit-log pubsub` command creates a Pub/Sub audit log sink.
+`tcld account audit-log pubsub` 命令创建 Pub/Sub 审核日志接收器。
 
-Alias: `c`
+别名：`c`
 
-##### --service-account-email
+<a id="sink-name"></a>
+##### --服务帐户电子邮件 {#service-account-email}
 
-The service account email to impersonate to write to the sink.
+模拟写入接收器的服务帐户电子邮件。
 
-Alias: `sae`
+别名：`sae`
 
-##### --sink-name
+<a id="validate"></a>
+##### --接收器名称 {#sink-name}
 
-Provide a name for the sink.
+提供水槽的名称。
 
-##### --topic-name
+<a id="destination-uri"></a>
+##### --主题名称 {#topic-name}
 
-The topic name to write to the sink.
+要写入接收器的主题名称。
 
-Alias: `tn`
+别名：`tn`
 
-#### delete
+#### 删除 {#delete}
 
-The `tcld account audit-log pubsub delete` command deletes an audit log sink.
+`tcld account audit-log pubsub delete` 命令删除审核日志接收器。
 
-Alias: `d`
+别名：`d`
 
-##### --resource-version
+<a id="region"></a>
+##### --资源版本 {#resource-version}
 
-The resource-version (etag) to update from, if not set the cli will use the latest (optional).
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
 
-Alias: `v`
+别名：`v`
 
-##### --sink-name
+<a id="role-name"></a>
+##### --接收器名称 {#sink-name}
 
-Provide a name for the sink.
+提供水槽的名称。
 
-#### get {#account-audit-log-pubsub-get}
+<a id="sink-name"></a>
+#### 获取 {#account-audit-log-pubsub-get}
 
-The `tcld account audit-log pubsub get` command gets an audit log sink.
+`tcld account audit-log pubsub get` 命令获取审核日志接收器。
 
-Alias: `g`
+别名：`g`
 
-##### --sink-name
+<a id="pubsub"></a>
+##### --接收器名称 {#sink-name}
 
-Provide a name for the sink.
+提供水槽的名称。
 
-#### list
+#### 列表 {#list}
 
-The `tcld account audit-log pubsub list` command lists audit log sinks on the account.
+`tcld account audit-log pubsub list` 命令列出帐户上的审核日志接收器。
 
-Alias: `l`
+别名：`l`
 
-##### --page-size
+<a id="create"></a>
+##### --页面大小 {#page-size}
 
-The page size for list operations.
+列表操作的页面大小。
 
-##### --page-token
+<a id="service-account-email"></a>
+##### --页面令牌 {#page-token}
 
-The page token for list operations.
+用于列表操作的页面令牌。
 
-#### update
+<a id="sink-name"></a>
+#### Update {#update}
 
-The `tcld account audit-log pubsub update` command updates an audit log sink.
+`tcld account audit-log pubsub Update` 命令 Update 是审核日志接收器。
 
-Alias: `u`
+别名：`u`
 
-##### --enabled
+<a id="topic-name"></a>
+##### --启用 {#enabled}
 
-Whether the sink is enabled.
+接收器是否启用。
 
-##### --resource-version
+<a id="delete"></a>
+##### --资源版本 {#resource-version}
 
-The resource-version (etag) to update from, if not set the cli will use the latest (optional).
+资源版本（etag）从Update开始，如果没有设置，cli将使用最新的（可选）。
 
-Alias: `v`
+别名：`v`
 
-##### --service-account-email
+<a id="resource-version"></a>
+##### --服务帐户电子邮件 {#service-account-email}
 
-The service account email to impersonate to write to the sink.
+模拟写入接收器的服务帐户电子邮件。
 
-Alias: `sae`
+别名：`sae`
 
-##### --sink-name
+<a id="sink-name"></a>
+##### --接收器名称 {#sink-name}
 
-Provide a name for the sink.
+提供水槽的名称。
 
-##### --topic-name
+<a id="account-audit-log-pubsub-get"></a>
+##### --主题名称 {#topic-name}
 
-The topic name to write to the sink.
+要写入接收器的主题名称。
 
-Alias: `tn`
+别名：`tn`
 
-#### validate
+#### 证实 {#validate}
 
-The `tcld account audit-log pubsub validate` command verifies Temporal Cloud can write to a Pub/Sub sink.
+`tcld account audit-log pubsub validate` 命令验证 Temporal Cloud 是否可以写入 Pub/Sub 接收器。
 
-Alias: `v`
+别名：`v`
 
-##### --service-account-email
+<a id="sink-name"></a>
+##### --服务帐户电子邮件 {#service-account-email}
 
-The service account email to impersonate to write to the sink.
+模拟写入接收器的服务帐户电子邮件。
 
-Alias: `sae`
+别名：`sae`
 
-##### --sink-name
+<a id="list"></a>
+##### --接收器名称 {#sink-name}
 
-Provide a name for the sink.
+提供水槽的名称。
 
-##### --topic-name
+<a id="page-size"></a>
+##### --主题名称 {#topic-name}
 
-The topic name to write to the sink.
+要写入接收器的主题名称。
 
-Alias: `tn`
+别名：`tn`
 
-## get
+## 得到 {#get}
 
-The `tcld account get` command gets information about the Temporal Cloud account you are logged into.
+`tcld account get` 命令获取有关您登录的 Temporal Cloud 帐户的信息。
 
-Alias: `g`
+别名：`g`
 
 `tcld account get`
 
-The command has no modifiers.
+该命令没有修饰符。
 
-## list-regions
+<a id="page-token"></a>
+## 列表区域 {#list-regions}
 
-The `tcld account list-regions` lists all regions where the account can provision namespaces.
+`tcld account list-regions` 列出了账户可以配置 Namespace 的所有区域。
 
-Alias: `l`
+别名：`l`
 
-## metrics
+<a id="update"></a>
+## 指标 {#metrics}
 
-The `tcld account metrics` commands configure the metrics endpoint for the Temporal Cloud account that is currently logged in.
+`tcld account metrics` 命令为当前登录的 Temporal Cloud 帐户配置指标端点。
 
-Alias: `m`
+别名：`m`
 
-- [tcld account metrics enable](#enable)
-- [tcld account metrics disable](#disable)
-- [tcld account metrics accepted-client-ca](#accepted-client-ca)
+- [tcld 账户指标启用](#enable)
+- [tcld 账户指标禁用](#disable)
+- [tcld 帐户指标已接受-客户-ca](#accepted-client-ca)
 
-### accepted-client-ca
+<a id="enabled"></a>
+### 接受-客户端-ca {#accepted-client-ca}
 
-The `tcld account metrics accepted-client-ca` commands manage the end-entity certificates for the metrics endpoint of the Temporal Cloud account that is currently logged in.
+`tcld account metrics accepted-client-ca` 命令管理当前登录的 Temporal Cloud 帐户的指标端点的最终实体证书。
 
 :::info
 
-The end-entity certificates for the metrics endpoint must chain up to the CA certificate used for the account. For more information, see [Certificate requirements](/cloud/certificates#certificate-requirements).
+指标端点的最终实体证书必须链接到用于帐户的 CA 证书。有关详细信息，请参阅 [证书要求](/cloud/certificates#certificate-requirements)。
 
 :::
 
-Alias: `ca`
+别名：`ca`
 
-- [tcld account metrics accepted-client-ca add](#add)
-- [tcld account metrics accepted-client-ca list](#list)
-- [tcld account metrics accepted-client-ca set](#set)
-- [tcld account metrics accepted-client-ca remove](#remove)
+- [tcld 帐户指标已接受-客户-ca 添加](#add)
+- [tcld 帐户指标已接受-客户-ca 列表](#list)
+- [tcld 帐户指标已接受-客户-ca 集](#set)
+- [tcld 帐户指标已接受-客户-ca 删除](#remove)
 
-#### add
+#### 添加 {#add}
 
-The `tcld account metrics accepted-client-ca add` command adds end-entity certificates to the metrics endpoint of a Temporal Cloud account.
+`tcld account metrics accepted-client-ca add` 命令将终端实体证书添加到 Temporal Cloud 帐户的指标端点。
 
 :::info
 
-The end-entity certificates for the metrics endpoint must chain up to the CA certificate used for the account. For more information, see [Certificate requirements](/cloud/certificates#certificate-requirements).
+指标端点的最终实体证书必须链接到用于帐户的 CA 证书。有关详细信息，请参阅 [证书要求](/cloud/certificates#certificate-requirements)。
 
 :::
 
 `tcld account metrics accepted-client-ca add --ca-certificate <value>`
 
-Alias: `a`
+别名：`a`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-##### --request-id
+<a id="resource-version"></a>
+##### --请求 ID {#request-id}
 
-Specify a request identifier to use for the asynchronous operation. If not specified, the server assigns a request identifier.
+指定用于异步操作的请求标识符。如果未指定，服务器会分配一个请求标识符。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca add --request-id <request_id> --ca-certificate <encoded_certificate>
 ```
 
-##### --resource-version
+<a id="service-account-email"></a>
+##### --资源版本 {#resource-version}
 
-Specify a resource version (ETag) to update from. If not specified, the latest version is used.
+将资源版本 (ETag) 指定为 Update。如果未指定，则使用最新版本。
 
-Alias: `-v`
+别名：`-v`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca add --resource-version <etag> --ca-certificate <encoded_certificate>
 ```
 
-##### --ca-certificate
+<a id="sink-name"></a>
+##### --ca 证书 {#ca-certificate}
 
-_Required modifier unless `--ca-certificate-file` is specified_
+_必需的修饰符，除非指定了 `--ca-certificate-file`_
 
-Specify a base64-encoded string of a CA certificate PEM file.
+指定 CA 证书 PEM 文件的 Base64 编码字符串。
 
-If both `--ca-certificate` and `--ca-certificate-file` are specified, only `--ca-certificate` is used.
+如果同时指定了 `--ca-certificate` 和 `--ca-certificate-file`，则仅使用 `--ca-certificate`。
 
-Alias: `-c`
+别名：`-c`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca add --ca-certificate <encoded_certificate>
 ```
 
-##### --ca-certificate-file
+<a id="topic-name"></a>
+##### --ca 证书文件 {#ca-certificate-file}
 
-_Required modifier unless `--ca-certificate` is specified_
+_必需的修饰符，除非指定了 `--ca-certificate`_
 
-Specify a path to a CA certificate PEM file.
+指定 CA 证书 PEM 文件的路径。
 
-If both `--ca-certificate` and `--ca-certificate-file` are specified, only `--ca-certificate` is used.
+如果同时指定了 `--ca-certificate` 和 `--ca-certificate-file`，则仅使用 `--ca-certificate`。
 
-Alias: `-f`
+别名：`-f`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca add --ca-certificate-file <path>
 ```
 
-#### list
+#### 列表 {#list}
 
-The `tcld account metrics accepted-client-ca list` command lists the end-entity certificates that are currently configured for the metrics endpoint of a Temporal Cloud account.
+`tcld account metrics accepted-client-ca list` 命令列出当前为 Temporal Cloud 帐户的指标端点配置的最终实体证书。
 
 `tcld account metrics accepted-client-ca list`
 
-Alias: `l`
+别名：`l`
 
-The command has no modifiers.
+该命令没有修饰符。
 
-#### remove
+#### 消除 {#remove}
 
-The `tcld account metrics accepted-client-ca remove` command removes end-entity certificates from the metrics endpoint of a Temporal Cloud account.
+`tcld account metrics accepted-client-ca remove` 命令从 Temporal Cloud 帐户的指标端点中删除最终实体证书。
 
 `tcld account metrics accepted-client-ca remove --ca-certificate <value>`
 
-Alias: `r`
+别名：`r`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-##### --request-id
+<a id="validate"></a>
+##### --请求 ID {#request-id}
 
-Specify a request identifier to use for the asynchronous operation. If not specified, the server assigns a request identifier.
+指定用于异步操作的请求标识符。如果未指定，服务器会分配一个请求标识符。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca remove --request-id <request_id> --ca-certificate <encoded_certificate>
 ```
 
-##### --resource-version
+<a id="service-account-email"></a>
+##### --资源版本 {#resource-version}
 
-Specify a resource version (ETag) to update from. If not specified, the latest version is used.
+将资源版本 (ETag) 指定为 Update。如果未指定，则使用最新版本。
 
-Alias: `-v`
+别名：`-v`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca remove --resource-version <etag> --ca-certificate <encoded_certificate>
 ```
 
-##### --ca-certificate
+<a id="sink-name"></a>
+##### --ca 证书 {#ca-certificate}
 
-_Required modifier unless `--ca-certificate-fingerprint` or `--ca-certificate-file` is specified_
+_必需的修饰符，除非指定了 `--ca-certificate-fingerprint` 或 `--ca-certificate-file`_
 
-Specify a base64-encoded string of a CA certificate PEM file.
+指定 CA 证书 PEM 文件的 Base64 编码字符串。
 
-If `--ca-certificate-fingerprint` is also specified, both `--ca-certificate` and `--ca-certificate-file` are ignored.
+如果还指定了 `--ca-certificate-fingerprint`，则 `--ca-certificate` 和 `--ca-certificate-file` 都将被忽略。
 
-If `--ca-certificate-file` is also specified but `--ca-certificate-fingerprint` is not, only `--ca-certificate` is used.
+如果还指定了 `--ca-certificate-file` 但未指定 `--ca-certificate-fingerprint`，则仅使用 `--ca-certificate`。
 
-Alias: `-c`
+别名：`-c`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca remove --ca-certificate <encoded_certificate>
 ```
 
-##### --ca-certificate-file
+<a id="topic-name"></a>
+##### --ca 证书文件 {#ca-certificate-file}
 
-_Required modifier unless `--ca-certificate-fingerprint` or `--ca-certificate` is specified_
+_必需的修饰符，除非指定了 `--ca-certificate-fingerprint` 或 `--ca-certificate`_
 
-Specify a path to a CA certificate PEM file.
+指定 CA 证书 PEM 文件的路径。
 
-If `--ca-certificate-fingerprint` is also specified, both `--ca-certificate-file` and `--ca-certificate` are ignored.
+如果还指定了 `--ca-certificate-fingerprint`，则 `--ca-certificate-file` 和 `--ca-certificate` 都将被忽略。
 
-If `--ca-certificate` is also specified but `--ca-certificate-fingerprint` is not, only `--ca-certificate` is used.
+如果还指定了 `--ca-certificate` 但未指定 `--ca-certificate-fingerprint`，则仅使用 `--ca-certificate`。
 
-Alias: `-f`
+别名：`-f`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca remove --ca-certificate-file <path>
 ```
 
-##### --ca-certificate-fingerprint
+<a id="get"></a>
+##### --ca-证书指纹 {#ca-certificate-fingerprint}
 
-_Required modifier unless `--ca-certificate` or `--ca-certificate-file` is specified_
+_必需的修饰符，除非指定了 `--ca-certificate` 或 `--ca-certificate-file`_
 
-Specify the fingerprint of a CA certificate.
+指定CA证书的指纹。
 
-If `--ca-certificate`, `--ca-certificate-file`, or both are also specified, they are ignored.
+如果同时指定了 `--ca-certificate`、`--ca-certificate-file` 或两者，则它们将被忽略。
 
-Alias: `--fp`
+别名：`--fp`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca remove --ca-certificate-fingerprint <fingerprint>
 ```
 
-#### set
+#### 放 {#set}
 
-The `tcld account metrics accepted-client-ca set` command sets the end-entity certificates for the metrics endpoint of a Temporal Cloud account.
+`tcld account metrics accepted-client-ca set` 命令为 Temporal Cloud 帐户的指标端点设置最终实体证书。
 
 :::info
 
-The end-entity certificates for the metrics endpoint must chain up to the CA certificate used for the account. For more information, see [Certificate requirements](/cloud/certificates#certificate-requirements).
+指标端点的最终实体证书必须链接到用于帐户的 CA 证书。有关详细信息，请参阅 [证书要求](/cloud/certificates#certificate-requirements)。
 
 :::
 
 `tcld account metrics accepted-client-ca set --ca-certificate <value>`
 
-Alias: `s`
+别名：`s`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-##### --request-id
+<a id="list-regions"></a>
+##### --请求 ID {#request-id}
 
-Specify a request identifier to use for the asynchronous operation. If not specified, the server assigns a request identifier.
+指定用于异步操作的请求标识符。如果未指定，服务器会分配一个请求标识符。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca set --request-id <request_id> --ca-certificate <encoded_certificate>
 ```
 
-##### --resource-version
+<a id="metrics"></a>
+##### --资源版本 {#resource-version}
 
-Specify a resource version (ETag) to update from. If not specified, the latest version is used.
+将资源版本 (ETag) 指定为 Update。如果未指定，则使用最新版本。
 
-Alias: `-v`
+别名：`-v`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca set --resource-version <etag> --ca-certificate <encoded_certificate>
 ```
 
-##### --ca-certificate
+<a id="accepted-client-ca"></a>
+##### --ca 证书 {#ca-certificate}
 
-_Required modifier unless `--ca-certificate-file` is specified_
+_必需的修饰符，除非指定了 `--ca-certificate-file`_
 
-Specify a base64-encoded string of a CA certificate PEM file.
+指定 CA 证书 PEM 文件的 Base64 编码字符串。
 
-If both `--ca-certificate` and `--ca-certificate-file` are specified, only `--ca-certificate` is used.
+如果同时指定了 `--ca-certificate` 和 `--ca-certificate-file`，则仅使用 `--ca-certificate`。
 
-Alias: `-c`
+别名：`-c`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca set --ca-certificate <encoded_certificate>
 ```
 
-##### --ca-certificate-file
+<a id="add"></a>
+##### --ca 证书文件 {#ca-certificate-file}
 
-_Required modifier unless `--ca-certificate` is specified_
+_必需的修饰符，除非指定了 `--ca-certificate`_
 
-Specify a path to a CA certificate PEM file.
+指定 CA 证书 PEM 文件的路径。
 
-If both `--ca-certificate` and `--ca-certificate-file` are specified, only `--ca-certificate` is used.
+如果同时指定了 `--ca-certificate` 和 `--ca-certificate-file`，则仅使用 `--ca-certificate`。
 
-Alias: `-f`
+别名：`-f`
 
-**Example**
+**例子**
 
 ```bash
 tcld account metrics accepted-client-ca set --ca-certificate-file <path>
 ```
 
-### enable
+### 使能够 {#enable}
 
-The `tcld account metrics enable` command enables the metrics endpoint for the Temporal Cloud account that is currently logged in.
+`tcld account metrics enable` 命令为当前登录的 Temporal Cloud 帐户启用指标端点。
 
 :::info
 
-The end-entity for the metrics endpoint _must_ be configured before the endpoint can be enabled. See the [tcld account metrics accepted-client-ca](#accepted-client-ca) commands.
+在启用端点之前，必须配置指标端点的最终实体。请参阅 [tcld 帐户指标已接受-客户-ca](#accepted-client-ca) 命令。
 
 :::
 
 `tcld account metrics enable`
 
-The command has no modifiers.
+该命令没有修饰符。
 
-### disable
+<a id="request-id"></a>
+### 禁用 {#disable}
 
-The `tcld account metrics disable` command disables the metrics endpoint for the Temporal Cloud account that is currently logged in.
+`tcld account metrics disable` 命令禁用当前登录的 Temporal Cloud 帐户的指标端点。
 
 `tcld account metrics disable`
 
-The command has no modifiers.
+该命令没有修饰符。

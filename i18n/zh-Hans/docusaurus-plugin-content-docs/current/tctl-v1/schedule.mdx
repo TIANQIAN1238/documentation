@@ -1,0 +1,160 @@
+---
+id: schedule
+title: tctl 1.17 Schedule 命令参考
+sidebar_label: Schedule
+description: Temporal CLI 的公共预览版现已推出。探索实验性功能，例如在 tctl v1.17 及后续版本中调度 Workflow，包括创建、回填、更新等。
+toc_max_heading_level: 4
+keywords:
+  - cli reference
+  - tctl
+
+---
+
+:::info tctl is deprecated
+
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议转换到 [Temporal CLI](/cli) 以继续使用和访问新功能。
+
+感谢您成为 Temporal 社区的重要组成部分。
+
+:::
+
+[Schedule](/Schedule) 是“tctl 1.17”和“tctl next”中提供的实验性功能。
+
+- [使用 tctl 回填 Schedule](#backfill)
+- [使用 tctl 创建 Schedule](#create)
+- [使用 tctl 删除 Schedule](#delete)
+- [使用 tctl 描述 Schedule](#describe)
+- [使用 tctl 列出 Schedule](#list)
+- [使用 tctl 在 Schedule 上切换暂停](#toggle)
+- [使用 tctl 在 Schedule 上触发操作](#trigger)
+- [使用 tctl 的 Update 和 Schedule](#Update)
+
+## 回填
+
+回填 Schedule 意味着让它现在执行在指定时间范围内（通常是过去，尽管它不会阻止您给出未来时间范围）本应执行的操作。
+您可以使用它来填充 Schedule 由于现已解决的外部条件而暂停的时间段或创建 Schedule 之前的时间段的运行。
+
+```shell
+tctl schedule backfill --sid 'your-schedule-id' \
+  --overlap-policy 'BufferAll'                \
+  --start-time '2022-05-01T00:00:00Z'         \
+  --end-time   '2022-05-31T23:59:59Z'
+```
+
+请注意，与立即[tctl Schedule 触发](#trigger) 类似，您可能想要覆盖重叠策略。
+指定“AllowAll”一次运行所有回填的 Workflow； `BufferAll` 按顺序运行它们。
+其他政策在这种情况下没有多大意义。
+
+＃＃ 创造
+
+使用 tctl，创建一个 Schedule，如下所示：
+
+```shell
+$ tctl config set version next   # ensure you're using the new tctl
+$ tctl schedule create \
+    --schedule-id 'your-schedule-id' \
+    --interval '5h/15m' \
+    --calendar '{"dayOfWeek":"Fri","hour":"11","minute":"3"}' \
+    --overlap-policy 'BufferAll' \
+    --workflow-id 'your-workflow-id' \
+    --task-queue 'your-task-queue' \
+    --workflow-type 'YourWorkflowType'
+```
+
+Schedule 每 5 小时在整点 15 分钟以及周五的 11:03 执行一次操作。
+它在 Task Queue `your-task-queue` 上启动一个 Workflow `YourWorkflowType`，给它一个类似 `your-Workflow-id-2022-06-17T11:03:00Z` 的 Workflow Id。
+Workflow 不并行运行。
+如果它们重叠，它们将被缓冲以按顺序运行。
+
+您还可以使用传统的 cron 字符串，包括目前“CronSchedule”支持的所有功能，例如“@weekly”和其他简写、“@every”和“CRON_TZ”。
+
+```shell
+$ tctl schedule create \
+    --schedule-id 'your-schedule-id' \
+    --cron '3 11 * * Fri' \
+    --workflow-id 'your-workflow-id' \
+    --task-queue 'your-task-queue' \
+    --workflow-type 'YourWorkflowType'
+```
+
+<!-- 添加入站链接和旧部署的已弃用部分 -->
+
+Temporal Workflow Schedule Cron 字符串遵循以下格式：
+
+```
+┌───────────── minute (0 - 59)
+│ ┌───────────── hour (0 - 23)
+│ │ ┌───────────── day of the month (1 - 31)
+│ │ │ ┌───────────── month (1 - 12)
+│ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+│ │ │ │ │
+* * * * *
+```
+
+支持“--calendar”、“--interval”和“--cron”的任意组合，并且操作将在任何指定时间发生。
+如果您同时使用“--time-zone”和“CRON_TZ”，它们必须同意。
+
+请参阅“tctl Schedule create --help”以获取完整的可用选项。
+
+＃＃ 删除
+
+Schedule 可以删除。
+
+删除 Schedule **不会**影响由 Schedule 启动的任何 Workflow。
+由 Schedule 启动的 Workflow Execution 可以使用与其他任何启动相同的方法取消或终止。
+但是，由 Schedule 启动的 Workflow Execution 可以通过添加到其中的 Search Attribute 来识别，并且可以通过 [batch](/tctl-v1/batch/) 命令作为终止目标。
+
+```shell
+$ tctl schedule delete --schedule-id 'your-schedule-id'
+```
+
+＃＃ 描述
+
+显示当前的 Schedule 配置以及有关过去、当前和未来运行的额外信息。
+
+```shell
+tctl schedule describe --schedule-id 'your-schedule-id'
+```
+
+由于 Schedule 规范已转换为规范表示形式，因此输出的形式可能与输入的形式不同。
+
+＃＃ 列表
+
+```shell
+tctl schedule list
+```
+
+由于 Schedule 规范已转换为规范表示形式，因此输出的形式可能与输入的形式不同。
+
+## 切换
+
+```shell
+$ tctl schedule toggle --schedule-id 'your-schedule-id' --pause --reason "paused because the database is down"
+$ tctl schedule toggle --schedule-id 'your-schedule-id' --unpause --reason "the database is back up"
+```
+
+＃＃ 扳机
+
+立即使用 Schedule 启动 Workflow Run，无论其配置规格如何，都是常见用例。
+
+```shell
+$ tctl schedule trigger --schedule-id 'your-schedule-id'
+```
+
+请注意，默认情况下，它所采取的操作受 Schedule 的重叠策略的约束：如果重叠策略为“跳过”并且 Workflow 已经在运行，则将跳过启动下一个 Workflow 运行的触发操作！
+同样，如果重叠策略为“BufferAll”，则触发的运行将在一次或多次运行之后进行缓冲。
+
+如果您确实希望它立即运行，您可以覆盖此请求的重叠策略：
+
+```shell
+$ tctl schedule trigger --schedule-id 'your-schedule-id' --overlap-policy 'AllowAll'
+```
+
+## Update
+
+Schedule 配置的任何部分都可以随时成为 Updated。
+
+“tctl Schedule Update”采用与“tctl Schedule create”相同的选项，并用所提供的内容替换 Schedule 的整个配置。
+
+这意味着如果您只想更改一个值，则必须再次提供其他所有内容。

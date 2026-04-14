@@ -1,8 +1,8 @@
 ---
 id: export
-title: Workflow History Export
-sidebar_label: Workflow History Export
-description: Workflow History Export in Temporal Cloud lets users export Closed Workflow Histories to an object storage for compliance and analytics. Configure via Cloud UI or tcld.
+title: "Workflow 历史导出"
+sidebar_label: "Workflow 历史导出"
+description: "Temporal Cloud 中的 Workflow 历史记录导出允许用户将已关闭的 Workflow 历史记录导出到对象存储以进行合规性和分析。通过云 UI 或 tcld 配置。"
 slug: /cloud/export
 toc_max_heading_level: 4
 keywords:
@@ -17,100 +17,104 @@ tags:
   - Export Workflow History
 ---
 
-Workflow History Export allows users to export closed Workflow Histories from Temporal Cloud to cloud object storage (AWS S3 or GCP GCS), enabling:
+Workflow 历史记录导出允许用户将封闭的 Workflow 历史记录从 Temporal Cloud 导出到云对象存储（AWS S3 或 GCP GCS），从而实现：
 
-- Compliance and audit trails of complete Workflow History data in [proto format](https://github.com/temporalio/api/blob/master/temporal/api/export/v1/message.proto)
-- Analytics on Workflow History when ingested to the data platform of your choice
+- [原始格式](https://github.com/temporalio/api/blob/master/temporal/api/export/v1/message.proto) 中完整 Workflow 历史数据的合规性和审计跟踪
+- 当摄取到您选择的数据平台时，对 Workflow 历史记录进行分析
 
-Workflow History Export in Temporal Cloud provides similar functionality as [Archival](/self-hosted-guide/archival) in a Self-Hosted Temporal Server. 
-Archival is not supported in Temporal Cloud.
+Temporal Cloud 中的 Workflow 历史记录导出提供与自托管 Temporal Server 中的 [档案](/self-hosted-guide/archival) 类似的功能。 
+Temporal Cloud 不支持存档。
 
-Exports run hourly, beginning 10 minutes after the hour. 
-Allow up to 24 hours for a closed Workflow to appear in the exported file.
-Delivery is guaranteed at least once.
+导出每小时运行一次，在整点后 10 分钟开始。 
+关闭的 Workflow 最多需要 24 小时才会出现在导出的文件中。
+保证至少一次交货。
 
 
-## Prerequisites {#prerequisites}
+## 先决条件 {#prerequisites}
 
-To use Workflow History Export, you must have:
+要使用 Workflow 历史记录导出，您必须具有：
 
-1. A cloud account in the cloud provider where your Namespace is hosted.
-2. An object storage bucket available to receive the exported History.
+1. 托管 Namespace 的云提供商中的云帐户。
+2. 一个可用于接收导出的历史记录的对象存储桶。
 
-## Configure Workflow History Export {#configure}
+## 配置 Workflow 历史记录导出 {#configure}
 
 ### AWS
 
-[AWS S3 Export Configuration](/cloud/export/aws-export-s3)
+[AWS S3 导出配置](/cloud/export/aws-export-s3)
 
 ### GCP
 
-[GCP GCS Export Configuration](/cloud/export/gcp-export-gcs)
+[GCP GCS 导出配置](/cloud/export/gcp-export-gcs)
 
-## Verify export setup {#verify}
+## 验证导出设置 {#verify}
 
-From the Export configuration page, select **Verify**.
-This validates that Temporal can successfully write a test file to your object storage.
+从导出配置页面中，选择**验证**。
+这验证了 Temporal 可以成功地将测试文件写入对象存储。
 
-If everything is configured correctly, you will see a `Success` status indicating Temporal has written to the object store.
+如果一切配置正确，您将看到 `Success` 状态，指示 Temporal 已写入对象存储。
 
-## Monitor export progress {#monitor}
+## 监控导出进度 {#monitor}
 
-After Export has been configured, you can check that it's still working in several ways:
+配置导出后，您可以通过多种方式检查它是否仍在工作：
 
-1. **Object Storage**:
+1. **对象存储**：
 
-   - File Delivery: After the initial hour of setting up, inspect your object storage.
-     You should see the exported Workflow History files.
-   - Directory Structure: Your exported files will adhere to the following naming convention and path:
+- 文件传输：在设置的最初一个小时后，检查您的对象存储。
+     您应该会看到导出的 Workflow 历史文件。
+   - 目录结构：导出的文件将遵循以下命名约定和路径：
 
    ```bash
    //[bucket-name]/temporal-workflow-history/export/[Namespace]/[Year]/[Month]/[Day]/[Hour]/[Minute]/
    ```
-The exported file name will include a randomly generated ID. The time recorded in the directory structure
-is the time the export uploads to object storage, not the Workflow completion time.
+导出的文件名将包含随机生成的 ID。目录结构中记录的时间
+是导出上传到对象存储的时间，而不是 Workflow 完成时间。
 
-2. **Temporal Cloud Web UI**:
+2. **Temporal Cloud 网页用户界面**：
 
-   - Export UI:
+- 导出用户界面：
 
-      - Last Successful Export: This displays the timestamp of the most recent successful export.
-      - Last Status Check: This reflects the timestamp of the latest internal Workflow healthcheck.
+- 上次成功导出：显示最近一次成功导出的时间戳。
+      - 上次状态检查：这反映了最新内部 Workflow 运行状况检查的时间戳。
 
-   - Usage Dashboard:
-      - Actions from the Export Job are included in the [Usage Dashboard](/cloud/billing-and-cost).
+- 使用仪表板：
+      - 导出作业的操作包含在 [使用情况仪表板](/cloud/billing-and-cost) 中。
 
-3. **Metrics**:
-   - Export-related metrics are available from the [Cloud metrics endpoint](/cloud/metrics/), specifically the metric `temporal_cloud_v1_total_action_count` with the label `is_background="true"`.
+3. **指标**：
+   - 导出相关指标可从 [云指标端点](/cloud/metrics/) 获取，特别是带有标签 `is_background="true"` 的指标 `Temporal_cloud_v1_total_action_count`。
 
-4. **Email**:
-   - Emails are sent to `Namespace Administrator`, `Account Owner`, and `Global Administrator` roles when a Workflow History Export job fails due to a user related error (such as Object Store permissions issue).
+4. **电子邮件**：
+   - 当 Workflow 历史导出作业由于用户相关错误（例如对象存储权限问题）而失败时，电子邮件将发送到 `Namespace Administrator`、`Account Owner` 和 `Global Administrator` 角色。
 
-## Working with exported files
+<a id="working-with-exported-files"></a>
+## 使用导出的文件 {#working-with-exported-files}
 
-Use the proto schema defined [here](https://github.com/temporalio/api/blob/master/temporal/api/export/v1/message.proto) to deserialize exported files.
+使用原型架构定义的 [这里](https://github.com/temporalio/api/blob/master/temporal/api/export/v1/message.proto) 来反序列化导出的文件。
 
-### Using exported files in analytics
+<a id="using-exported-files-in-analytics"></a>
+### 在分析中使用导出的文件 {#using-exported-files-in-analytics}
 
-It can be useful to convert protos to another format to perform analytics on the data. To convert protos to parquet, follow 
-[the example Python Workflow](https://github.com/temporalio/samples-python/tree/main/cloud_export_to_parquet). Note that this example Workflow:
-* Transforms the nested proto structure into a flat, tabular format.
-* Each row in the table represents a single history event from a Workflow. To preserve their relationship post-conversion, the `workflowID` and `runID` is included in every row.
-* If you have enabled the codec server, the payload field is encrypted. This field may contain characters that are not recognized when loaded into a database so the payload field is excluded in this example.
+将原型转换为另一种格式以对数据进行分析非常有用。要将 protos 转换为 parquet，请按照 
+[示例 Python Workflow](https://github.com/temporalio/samples-python/tree/main/cloud_export_to_parquet)。请注意此示例 Workflow：
+* 将嵌套的原型结构转换为平面表格格式。
+* 表中的每一行代表来自 Workflow 的单个历史事件。为了保留转换后的关系，`WorkflowID` 和 `runID` 包含在每一行中。
+* 如果您启用了 Codec Server，则负载字段将被加密。该字段可能包含加载到数据库时无法识别的字符，因此本示例中不包括有效负载字段。
 
-## Export and High Availability Namespaces {#export-ha}
+## 导出和高可用性 Namespaces {#export-ha}
 
-### Export Region Persistence
+<a id="export-region-persistence"></a>
+### 出口区域持久性 {#export-region-persistence}
 
-When Export is configured for a [High Availability](/cloud/high-availability) Namespace, the export is tied to the specific region where it was initially set up. The export configuration does not automatically failover with the Namespace.
+当为 [高可用性](/cloud/high-availability) Namespace 配置导出时，导出将绑定到最初设置的特定区域。导出配置不会自动使用 Namespace 进行故障转移。
 
-- If Export is configured in Region A, it will continue to export from Region A's storage even after a Namespace failover to Region B
-- Exports always read from and write to the same region where they were originally configured
-- The export process is independent of Namespace failover events
-- Export does not fail over automatically because we prioritize data completeness and consistency over real-time availability for exports. HA data replication has inherent latency, which could result in incomplete or inconsistent exports during a failover.
+- 如果在区域 A 中配置了导出，则即使在 Namespace 故障转移到区域 B 后，它将继续从区域 A 的存储导出
+- 导出始终从最初配置的同一区域读取和写入
+- 导出过程独立于 Namespace 故障转移事件
+- 导出不会自动故障转移，因为我们优先考虑数据完整性和一致性，而不是导出的实时可用性。 HA 数据复制具有固有的延迟，这可能会导致故障转移期间导出不完整或不一致。
 
-### Failover Scenarios
+<a id="failover-scenarios"></a>
+### 故障转移场景 {#failover-scenarios}
 
-**Namespace Failover with Healthy Primary Region**: When a Namespace fails over to a secondary region but the primary region remains healthy (including its blob storage), the export job continues to operate from the primary region. It does not automatically switch to export data from the secondary region.
+**Namespace 故障转移与健康的主要区域**：当 Namespace 故障转移到辅助区域但主要区域保持健康（包括其 Blob 存储）时，导出作业将继续从主要区域运行。它不会自动切换到从次要区域导出数据。
 
-**Primary Region Outage**: If the primary region (where Export was configured) experiences a complete outage including S3/GCS storage: Exports will be unavailable until the primary region recovers. Once the primary region recovers, export will resume and include any Workflow histories that occurred during the outage. There may be delays in export processing, but the complete dataset will eventually be available. It does not automatically switch to export data from the secondary region.
+**主要区域中断**：如果主要区域（配置了导出的位置）经历完全中断（包括 S3/GCS 存储）：在主要区域恢复之前，导出将不可用。一旦主要区域恢复，导出将恢复并包含中断期间发生的所有 Workflow 历史记录。导出处理可能会出现延迟，但完整的数据集最终将可用。它不会自动切换到从次要区域导出数据。

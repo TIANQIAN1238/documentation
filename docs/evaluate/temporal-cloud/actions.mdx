@@ -1,10 +1,8 @@
 ---
 id: actions
-title: Temporal Cloud Actions
-sidebar_label: Actions
-description:
-  Temporal Cloud offers flexible, predictable pricing for Workflows, Activities, Workers, and Storage. Pay for what you
-  use with volume discounts and credit savings.
+title: "Temporal Cloud 行动"
+sidebar_label: "行动"
+description: "Temporal Cloud 为 Workflow、Activity、Worker 和存储提供灵活且可预测的定价，并支持按量折扣与预付额度优惠。"
 slug: /cloud/actions
 toc_max_heading_level: 4
 keywords:
@@ -21,142 +19,146 @@ tags:
   - Support
 ---
 
-Actions track both the progress of a workflow (such as Workflow Start, Schedule Started, Workflow reset) and broader
-capabilities enabled by Temporal Cloud.
+操作跟踪 Workflow 的进度（例如 Workflow 启动、Schedule 启动、Workflow 重置）和更广泛的进度
+由 Temporal Cloud 启用的功能。
 
-Temporal Cloud Actions are the primary unit of consumption-based pricing for Temporal Cloud. They track billable
-operations within the Temporal Cloud Service, such as starting Workflows, recording a Heartbeat, or sending messages.
+Temporal Cloud 操作是 Temporal Cloud 基于消耗的定价的主要单位。他们跟踪计费
+Temporal Cloud 服务中的操作，例如启动 Workflow、记录心跳或发送消息。
 
-The following result in an action on Temporal Cloud:
+以下结果导致对 Temporal Cloud 执行操作：
 
 ## Workflows
 
-- **Workflow started**. Occurs via client start, [Continue-As-New](/workflow-execution/continue-as-new),
-  [Child Workflow](/child-workflows) start. If a Workflow start fails, an Action is not recorded. De-duplicated Workflow
-  starts that share a Workflow ID do _not_ count as an Action.
-- **Workflow reset**. Occurs when a [Workflow](/workflows) is reset. (Actions that occur before a
-  [Reset](/workflow-execution/event#reset) are counted even if they are no longer visible in
-  [Event History](/workflow-execution/event#event-history).)
-- **Timer started**. Includes implicit Timers that are started by a Temporal SDK when timeouts are set, such as
-  `AwaitWithTimeout` in Go or `condition` in TypeScript.
-- **Search Attribute upsert requested**. Occurs for each invocation of `UpsertSearchAttributes` command. Multiple Search
-  Attributes updated in a single `UpsertSearchAttributes` command count as one Action. Search Attributes specified
-  during Workflow start are _excluded_ from Action counts. The `TemporalChangeVersion` Search Attribute, used for
-  Workflow versioning, is also exempt from Action counting.
-- **Signal sent**. An Action occurs for every [Signal](/sending-messages#sending-signals), whether sent from a Client or
-  from a Workflow. Also, one total action occurs for any [Signal-With-Start](/sending-messages#signal-with-start),
-  regardless of whether the Workflow starts.
-- **Query received by Worker**. An Action occurs for every [Query](/sending-messages#sending-queries), including viewing
-  the call stack in the Temporal Cloud UI, which results in a Query behind the scenes.
-- **Update received by Worker**. An Action occurs for every successful [Update](/sending-messages#sending-updates) and
-  every [rejected](/handling-messages#update-validators) Update. This includes
-  [Update-With-Start](/sending-messages#update-with-start), and is in addition to the start Action in the case when the
-  Workflow starts as well. De-duplicated Updates that share an Update ID do _not_ count as an Action.
-- **Side Effect recorded**. For a mutable [Side Effect](/workflow-execution/event#side-effect), an Action occurs only
-  when the value changes.
-- **Workflow Execution Options updated.** An Action occurs for every
-  [Workflow-Execution-Options-Updated](/references/events#workflowexecutionoptionsupdated) event. This includes
-  attaching a Workflow completion callback or modifying a Workflow versioning override.
+- **Workflow 开始**。通过客户端启动发生，[Continue-As-New](/workflow-execution/continue-as-new)，
+  [Child Workflow](/child-workflows)启动。如果 Workflow 启动失败，则不会记录操作。去重 Workflow
+  共享 Workflow ID 的启动_不_算作操作。
+- **Workflow 重置**。当 [Workflow](/workflows) 复位时发生。 （在 a 之前发生的动作
+  即使 [重置](/workflow-execution/event#reset) 在中不再可见，也会被计算在内
+  [Event History](/workflow-execution/event#event-history)。）
+- **Timer 开始**。包括设置超时时由 Temporal SDK 启动的隐式 Timer，例如
+  Go 中的 `AwaitWithTimeout` 或 TypeScript 中的 `condition`。
+- **Search Attribute 已请求更新插入**。每次调用 `UpsertSearchAttributes` 命令时都会发生。多重搜索
+  单个 `UpsertSearchAttributes` 命令中的属性 Updated 计为一个操作。 Search Attribute 指定
+  在 Workflow 启动期间，从操作计数中_排除_。 `TemporalChangeVersion` Search Attribute，用于
+  Workflow 版本控制也不受操作计数的影响。
+- **Signal 已发送**。每个 [Signal](/sending-messages#sending-signals) 都会发生一个操作，无论是从客户端发送还是从
+  来自 Workflow。此外，任何 [Signal-带启动](/sending-messages#signal-with-start) 都会发生一个总动作，
+  无论 Workflow 是否启动。
+- **Query 由 Worker 收到**。每个 [Query](/sending-messages#sending-queries) 都会发生一个操作，包括查看
+  Temporal Cloud UI 中的调用堆栈，这会在幕后生成 Query。
+- **Update 由 Worker 收到**。每个成功的 [Update](/sending-messages#sending-updates) 都会发生一个操作，并且
+  每个 [被拒绝](/handling-messages#update-validators) Update。这包括
+  [Update-带启动](/sending-messages#update-with-start)，并且是除了启动动作之外的情况下，当
+  Workflow 也启动。共享 Update ID 的重复数据删除 Update _不_算作操作。
+- **Side Effect 已记录**。对于可变的 [Side Effect](/workflow-execution/event#side-effect)，仅发生一个操作
+  当值改变时。
+- **Workflow Execution 选项 Updated。** 每个操作都会发生一个操作
+  [Workflow-执行-选项-Updated](/references/events#workflowexecutionoptionsupdated)事件。这包括
+  附加 Workflow 完成回调或修改 Workflow 版本控制覆盖。
 
 ## Child Workflows
 
-- **Start Child Workflow** and **Child Workflow Execution**. When the parent Workflow durably records the intent to
-  start a Child Workflow, it results in two Actions, one for starting the Workflow, and another for the attempted
-  Execution.
+- **启动 Child Workflow** 和 **子 Workflow Execution**。当父 Workflow 持久记录意图
+  启动 Child Workflow，它会产生两个操作，一个用于启动 Workflow，另一个用于尝试
+  执行。
 
-## Activities
+＃＃ 活动
 
-- **Activity started or retried**. Occurs each time an Activity is started or retried.
-- **Local Activity started**. All [Local Activities](/local-activity) associated with one Workflow Task count as a
-  single Action. That's because Temporal Cloud counts all [RecordMarkers](/references/commands#recordmarker) from each
-  Workflow Task as one action, and not _N_ actions. Please note:
-  - Each additional Workflow Task heartbeat after counts as an additional Action.
-  - Local Activities retried following a Workflow Task heartbeat count as one Action (capped at 100 Actions).
-- **Activity Heartbeat recorded**. A Heartbeat call from Activity code counts as an Action only if it reaches the
-  [Temporal Server](/temporal-service/temporal-server). Temporal SDKs throttle
-  [Activity Heartbeats](/encyclopedia/detecting-activity-failures#activity-heartbeat). The default throttle is 80% of
-  the [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout). Heartbeats don't apply to Local
-  Activities.
+- **Activity 已启动或重试**。每次启动或重试 Activity 时发生。
+- **本地 Activity 开始**。与一个 Workflow 任务关联的所有 [当地活动](/local-activity) 都算作一个
+  单一动作。这是因为 Temporal Cloud 计算了每个中的所有 [记录标记](/references/commands#recordmarker)
+  Workflow 任务作为一项操作，而不是 _N_ 个操作。请注意：
+  - 之后每个额外的 Workflow 任务心跳都算作一个额外的操作。
+  - Workflow 任务心跳后重试的本地活动计为一项操作（上限为 100 项操作）。
+- **Activity 心跳记录**。仅当来自 Activity 代码的 Heartbeat 调用到达
+  [Temporal Server](/temporal-service/temporal-server)。 Temporal SDK 节流阀
+  [Activity 心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat)。默认油门为 80%
+  [心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout)。心跳不适用于本地
+  活动。
 
-## Schedules
+<a id="activities"></a>
+## Schedules {#activities}
 
-[Schedules](/schedule) allows you to schedule a Workflow to start at a particular time. Each execution of a Schedule
-accrues three actions:
+[Schedules](/schedule) 允许您在特定时间启动 Schedule 和 Workflow。每次执行 Schedule
+累积三个行动：
 
-- **Schedule Start**. This accounts for two actions.
-- **Workflow started**. This is a single action to start the target Workflow. It includes initial Search Attributes as
-  part of the start request.
+- **Schedule 开始**。这说明了两个动作。
+- **Workflow 开始**。这是启动目标 Workflow 的单个操作。它包括初始 Search Attribute 作为
+  启动请求的一部分。
 
-## Export
+＃＃ 出口
 
-[Workflow History Export](/cloud/export) enables you to export closed Workflow Histories to a cloud storage sink of your
-choice.
+[Workflow 历史导出](/cloud/export) 使您能够将关闭的 Workflow 历史记录导出到您的云存储接收器
+选择。
 
-- **Workflow exported**. Each Workflow exported accrues a single action.
-- Excluded from APS calculations.
+- **Workflow 已导出**。导出的每个 Workflow 都会累积一个操作。
+- 不包括在 APS 计算中。
 
-## Temporal Nexus
+<a id="schedules"></a>
+## Temporal Nexus {#schedules}
 
-- For [Nexus Operation scheduled](/references/events#nexusoperationscheduled), the caller Workflow starting a Nexus
-  Operation results in one Action on the caller Namespace.
-- For [Nexus Operation canceled](/references/events#nexusoperationcanceled), the caller Workflow canceling a Nexus
-  Operation results in one Action on the caller Namespace.
-- The underlying Temporal primitives (such as Workflows, Activities, and Signals) created by a Nexus Operation handler
-  (directly or indirectly) result in the normal Actions for those primitives billed to the handler’s Namespace. This
-  includes retries for underlying Temporal primitives like Activities but _not_ for handling the Nexus Operation itself
-  or a retry of the Nexus Operation itself.
+- 对于 [Nexus 操作 Scheduled](/references/events#nexusoperationscheduled)，调用者 Workflow 启动 Nexus
+  操作结果是调用者 Namespace 上的一个操作。
+- 对于 [Nexus 操作已取消](/references/events#nexusoperationcanceled)，呼叫者 Workflow 取消 Nexus
+  操作结果是调用者 Namespace 上的一个操作。
+- 由 Nexus 操作处理程序创建的基础 Temporal 原语（例如 Workflow、活动和 Signal）
+  （直接或间接）导致这些原语的正常操作记入处理程序的 Namespace。这个
+  包括对底层 Temporal 原语（如“活动”）的重试，但_不_用于处理 Nexus 操作本身
+  或重试 Nexus 操作本身。
 
-## Fairness
+<a id="export"></a>
+## 公平性 {#export}
 
-For each hour a Namespace has the [Fairness](/develop/task-queue-priority-fairness#task-queue-fairness) feature enabled, an additional `0.1` Action will be charged per Action in the Namespace.
-See [Fairness pricing](/cloud/pricing#fairness-pricing) for detailed billing examples.
+对于 Namespace 启用 [公平性](/develop/task-queue-priority-fairness#task-queue-fairness) 功能的每一小时，将针对 Namespace 中的每个操作收取额外的 `0.1` 操作费用。
+详细计费示例请参见 [公平定价](/cloud/pricing#fairness-pricing)。
 
-## Capacity
+＃＃ 容量
 
-- For Namespace Capacity Temporal Resource Units (TRUs), Actions are generated up to the included hourly allocation for
-  TRUs in any hour where TRUs are set and actual usage falls beneath the included hourly Action allocation.
-- Excluded from APS calculations.
+- 对于 Namespace 容量 Temporal 资源单位 (TRU)，将生成最多包含的每小时分配的操作
+  在设置了 TRU 并且实际使用量低于所包含的每小时操作分配的任何小时内的 TRU。
+- 不包括在 APS 计算中。
 
-## Usage
+＃＃ 用法
 
-Actions usage is tracked across an account in the [usage dashboard](https://cloud.temporal.io/usage) and is visible to
-Account Owners, Finance Admin and Global Admin. For individual namespaces, usage can be seen in the
-[namespace summary](https://cloud.temporal.io/namespaces/) for a specific namespace.
+操作使用情况在 [使用仪表板](https://cloud.temporal.io/usage) 中的帐户中进行跟踪，并且对以下人员可见
+帐户所有者、财务管理员和全局管理员。对于单个Namespace，用法可以参见
+[Namespace 总结](https://cloud.temporal.io/namespaces/) 用于特定的 Namespace。
 
-![Temporal Cloud Usage dashboard](/img/cloud/billing/usage-dashboard.png)
+![Temporal Cloud 使用仪表板](/img/cloud/billing/usage-dashboard.png)
 
-## Actions in Workflows
+<a id="temporal-nexus"></a>
+## Workflow 中的操作 {#temporal-nexus}
 
-When viewing a Workflow history, events that represent a Billable Action are annotated with the number consumed by the
-event in the **Billable Actions** Column. These Actions are summarized at the top of the workflow.
+查看 Workflow 历史记录时，代表可计费操作的事件会用该操作所消耗的数量进行注释
+**可计费操作**列中的事件。这些操作总结在 Workflow 的顶部。
 
-![Temporal Cloud Usage dashboard showing aggregated Billable Actions](/img/cloud/billing/aggregate-billable-actions.png)
+![Temporal Cloud 显示聚合计费操作的使用情况仪表板](/img/cloud/billing/aggregate-billable-actions.png)
 
-![Temporal Cloud Usage dashboard showing individual Billable Actions associated with events](/img/cloud/billing/individual-billable-actions.png)
+![Temporal Cloud 使用情况仪表板显示与事件关联的各个可计费操作](/img/cloud/billing/individual-billable-actions.png)
 
-This Billable Action estimate is useful for projecting the cost of workflows. For example, if you ran a test workflow
-that generated 20 Billable Actions and projected that it would be run 100 times a day for a month, you could anticipate
-that workflow to generate 20 Actions x 100 runs/day x 30 days = 60,000 Billable Actions per month. You can also use the
-Billable Action estimate to help optimize workflows by better understanding your cost drivers.
+此计费操作估算对于预测 Workflow 的成本非常有用。例如，如果您运行测试 Workflow
+生成了 20 个可计费操作并预计一个月内每天运行 100 次，您可以预期
+Workflow 生成 20 个操作 x 100 次运行/天 x 30 天 = 每月 60,000 个计费操作。您还可以使用
+可计费操作估算可通过更好地了解您的成本驱动因素来帮助优化 Workflow。
 
 :::tip Excluded Billable Actions
 
-The Billable Action estimate is an experimental feature and only measures Billable Actions that exist within workflow
-event histories. Some billable concepts are not included in these calculations such as:
+可计费操作估算是一项实验性功能，仅测量 Workflow 中存在的可计费操作
+事件历史记录。一些计费概念不包含在这些计算中，例如：
 
 - Query
-- Activity Heartbeats
-- Rejected Update Workflow Executions
-- Export
+- Activity 心跳
+- 拒绝 Update Workflow Execution
+- 出口
 - Schedule
-- Replicated Actions that occur in a
-  [Namespace replication](../../cloud/high-availability/index.mdx#high-availability-features)
+- 发生在一个重复的动作
+  [Namespace复制](../../cloud/high-availability/index.mdx#high-availability-features)
 
-Additionally, Workflows with the `TemporalNamespaceDivision` Search Attribute set may not have accurate Billable Action
-Estimates. The estimated Billable Actions should only be treated as an estimate. If billable events exist outside of
-event history, the Actions count could be higher.
+此外，带有 `TemporalNamespaceDivision` Search Attribute 套装的 Workflow 可能没有准确的计费操作
+估计。估计的可计费操作数仅应被视为估计值。如果计费事件存在于
+Event History，操作计数可能会更高。
 
 :::
 
-[Reach out](https://pages.temporal.io/contact-us) to our team for more information or to help size your number of
-Actions.
+[伸出手](https://pages.temporal.io/contact-us) 联系我们的团队了解更多信息或帮助确定您的数量
+行动。

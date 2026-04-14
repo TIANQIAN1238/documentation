@@ -1,0 +1,34 @@
+---
+id: latency-availability
+slug: /cloud/nexus/latency-availability
+title: 延迟和可用性 - Temporal Nexus
+description: 了解 Nexus 延迟和可用性
+sidebar_label: 延迟和可用性
+tags:
+  - Temporal Cloud
+  - Nexus
+keywords:
+  - Temporal Nexus
+  - Nexus
+  - latency
+  - availability
+  - SLO
+  - SLA
+  - error rate
+  - service level
+  - service level objective
+  - service level agreement
+---
+
+:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+
+Temporal Nexus 现已[普遍可用](/evaluate/development-product-features/release-stages#general-availability)。
+了解为什么应在[评估指南](/evaluate/Nexus) 中使用 Nexus。
+
+:::
+
+Temporal Cloud 中的 Nexus 延迟和可用性：
+
+- **SLO 和 SLA** - Nexus Operation（例如，“RespondWorkflowTaskCompleted”、“PollNexusTaskQueue”、“RespondNexusTaskCompleted”和“RespondNexusTaskFailed”）具有相同的[延迟 SLO](/cloud/service-availability#latency) 和[可用性 SLA](/cloud/sla) 作为调用方和处理程序 Namespace 中的其他 Worker 请求。
+- **[Nexus 指标](/Nexus/metrics)** - 用于监控 Nexus 性能的 SDK 和云延迟指标。
+- **跨 Namespace 连接** - 流量通过受 mTLS 保护的全球 Envoy 网格进行路由。同区域Namespace低时延；跨区域延迟因提供商而异。请参阅[安全连接](/Nexus/security#secure-connectivity)。

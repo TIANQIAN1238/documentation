@@ -1,8 +1,8 @@
 ---
 id: local-activity
-title: Local Activity
-sidebar_label: Local Activity
-description: Learn about Local Activities in Temporal, their benefits, execution model, and when to use them.
+title: "本地 Activity"
+sidebar_label: "本地 Activity"
+description: "了解 Temporal 中的本地活动、其优点、执行模型以及何时使用它们。"
 slug: /local-activity
 toc_max_heading_level: 4
 keywords:
@@ -15,34 +15,35 @@ tags:
   - Durable Execution
 ---
 
-This page discusses [Local Activity](#local-activity).
+本页讨论 [本地 Activity](#local-activity)。
 
-## What is a Local Activity? {#local-activity}
+<a id="local-activity"></a>
+## 什么是本地 Activity？ {#local-activity}
 
-A Local Activity is an [Activity Execution](/activity-execution) that executes in the same process as the [Workflow Execution](/workflow-execution) that spawns it.
+本地 Activity 是一个 [Activity 执行](/activity-execution)，它与生成它的 [Workflow Execution](/workflow-execution) 在同一进程中执行。
 
-Some Activity Executions are very short-living and do not need the queuing semantic, flow control, rate limiting, and routing capabilities.
-For this case, Temporal supports the Local Activity feature.
+一些 Activity 执行的生命周期非常短，不需要排队语义、流控制、速率限制和路由功能。
+对于这种情况，Temporal 支持本地 Activity 功能。
 
-The main benefit of Local Activities is that they use less Temporal Service resources (for example, fewer History events) and have much lower latency overhead (because no need to roundtrip to the Temporal Service) compared to normal Activity Executions.
-However, Local Activities are subject to shorter durations and a lack of rate limiting.
+与正常的 Activity 执行相比，本地活动的主要好处是它们使用更少的 Temporal 服务资源（例如，更少的历史事件）并且延迟开销更低（因为不需要往返到 Temporal 服务）。
+然而，本地活动的持续时间较短且缺乏速率限制。
 
-Consider using Local Activities for functions that are the following:
+考虑将本地活动用于以下功能：
 
-- can be implemented in the same binary as the Workflow that calls them.
-- do not require global rate limiting.
-- do not require routing to a specific Worker or Worker pool.
-- no longer than a few seconds, inclusive of retries.
+- 可以在与调用它们的 Workflow 相同的二进制文件中实现。
+- 不需要全局速率限制。
+- 不需要路由到特定的 Worker 或 Worker 池。
+- 不超过几秒钟，包括重试。
 
-If it takes longer than 80% of the Workflow Task Timeout (which is 10 seconds by default), the Worker will ask the Temporal Service to create a new Workflow Task to extend the "lease" for processing the Local Activity.
-The Worker will continue doing so until the Local Activity has completed.
-This is called Workflow Task Heartbeating.
-The drawbacks of long-running Local Activities are:
+如果花费的时间超过 Workflow 任务超时的 80%（默认为 10 秒），Worker 将要求 Temporal 服务创建一个新的 Workflow 任务，以延长处理本地 Activity 的“租用”。
+Worker 将继续这样做，直到本地 Activity 完成。
+这称为 Workflow 任务检测信号。
+长期运行的本地活动的缺点是：
 
-- Each new Workflow Task results in 3 more Events in History.
-- The Workflow won't get notified of new events like Signals and completions until the next Workflow Task Heartbeat.
-- New Commands created by the Workflow concurrently with the Local Activity will not be sent to the Temporal Service until either the Local Activity completes or the next Workflow Task Heartbeat.
+- 每个新的 Workflow 任务都会导致历史上另外 3 个事件。
+- 在下一个 Workflow 任务心跳之前，Workflow 不会收到有关 Signal 等新事件和完成情况的通知。
+- Workflow 与本地 Activity 同时创建的新命令将不会发送到 Temporal 服务，直到本地 Activity 完成或下一个 Workflow 任务心跳为止。
 
-Using a Local Activity without understanding its limitations can cause various production issues.
-**We recommend using regular Activities unless your use case requires very high throughput and large Activity fan outs of very short-lived Activities.**
-More guidance in choosing between [Local Activity vs Activity](https://community.temporal.io/t/local-activity-vs-activity/290/3) is available in our forums.
+在不了解其局限性的情况下使用本地 Activity 可能会导致各种生产问题。
+**我们建议使用常规活动，除非您的用例需要非常高的吞吐量和非常短暂的活动的大 Activity 扇出。**
+我们的论坛提供了有关在 [本地 Activity 与 Activity](https://community.temporal.io/t/local-activity-vs-activity/290/3) 之间进行选择的更多指导。

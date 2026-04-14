@@ -1,8 +1,8 @@
 ---
 id: temporal
-title: What is Temporal?
+title: 什么是 Temporal？
 sidebar_label: Temporal
-description: Temporal is a scalable platform that ensures the Durable Execution of application code, allowing reliable and resilient Workflow Executions even in the face of failures like network outages or server crashes.
+description: Temporal 是一个可扩展的平台，通过保证应用代码的 Durable Execution，让 Workflow Execution 即使面对网络中断或服务器崩溃等故障也依然可靠且具备韧性。
 slug: /temporal
 toc_max_heading_level: 4
 keywords:
@@ -18,13 +18,13 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-Temporal is a scalable and reliable runtime for durable function executions called [Temporal Workflow Executions](/workflow-execution).
+Temporal 是一个可扩展且可靠的运行时，用于执行称为 [Temporal Workflow Execution](/workflow-execution) 的持久化函数。
 
-Said another way, it's a platform that guarantees the [Durable Execution](#durable-execution) of your application code.
+换句话说，它是一个能够保证应用代码 [Durable Execution](#durable-execution) 的平台。
 
-It enables you to develop as if failures don't even exist.
-Your application will run reliably even if it encounters problems, such as network outages or server crashes, which would be catastrophic for a typical application.
-The Temporal Platform handles these types of problems, allowing you to focus on the business logic, instead of writing application code to detect and recover from failures.
+有了 Temporal，你可以像“不会发生故障”一样去开发应用。
+即使应用遇到网络中断、服务器崩溃等问题——而这些问题对传统应用往往是灾难性的——你的应用依然可以可靠运行。
+Temporal 平台会接管这类故障处理，让你把精力集中在业务逻辑上，而不是自己编写检测故障与恢复执行的代码。
 
 <CaptionedImage
     src="/diagrams/temporal-system-simple.svg"
@@ -33,30 +33,33 @@ The Temporal Platform handles these types of problems, allowing you to focus on 
 
 ## Durable Execution {#durable-execution}
 
-Durable Execution in the context of Temporal refers to the ability of a Workflow Execution to maintain its state and progress even in the face of failures, crashes, or server outages.
-This is achieved through Temporal's use of an [Event History](/workflow-execution/event#event-history), which records the state of a Workflow Execution at each step.
-If a failure occurs, the Workflow Execution can resume from the last recorded event, ensuring that progress isn't lost.
-This durability is a key feature of Temporal Workflow Executions, making them reliable and resilient.
-It enables application code to execute effectively once and to completion, regardless of whether it takes seconds or years.
+在 Temporal 的语境里，Durable Execution 指的是 Workflow Execution 即使在故障、崩溃或服务器不可用的情况下，也依然能够保持自身状态并继续推进。
 
-## What is the Temporal Platform? {#temporal-platform}
+这一能力依赖于 Temporal 使用 [Event History](/workflow-execution/event#event-history) 记录 Workflow Execution 在每一步的状态。
+当故障发生时，Workflow Execution 可以从最近一次已记录的事件恢复，确保执行进度不会丢失。
 
-The Temporal Platform consists of a [Temporal Service](/temporal-service) and [Worker Processes](/workers#worker-process).
-Together these components create a runtime for Workflow Executions.
+这正是 Temporal Workflow Execution 可靠且具备韧性的关键特性。
+无论你的应用代码运行几秒、几天还是几年，它都能有效地、持续地执行直到完成。
 
-The Temporal Platform consists of a supervising software typically called the [Temporal Service](/temporal-service) and application code bundled as Worker Processes.
-Together these components create a runtime for your application.
+## 什么是 Temporal 平台？ {#temporal-platform}
+
+Temporal 平台由 [Temporal Service](/temporal-service) 和 [Worker 进程](/workers#worker-process) 组成。
+它们共同为 Workflow Execution 提供运行时。
+
+你也可以把 Temporal 平台理解为：一套通常称为 [Temporal Service](/temporal-service) 的调度与管理软件，加上以 Worker 进程形式运行的应用代码。
+两者协同，为你的应用提供可靠的执行环境。
 
 <CaptionedImage
     src="/diagrams/temporal-platform-simple.svg"
     title="The Temporal Platform"
     />
 
-A Temporal Service consists of the [Temporal Server](https://github.com/temporalio/temporal), written in Go, and a database.
+一个 Temporal Service 由用 Go 编写的 [Temporal Server](https://github.com/temporalio/temporal) 和数据库组成。
 
-Our software as a service (SaaS) offering, Temporal Cloud, offers an alternative to hosting the Temporal Service yourself.
+我们的 SaaS 产品 Temporal Cloud，则为“不自己托管 Temporal Service”提供了另一种选择。
 
-Worker Processes are hosted and operated by you and execute your code. Workers run using one of our SDKs.
+Worker 进程由你自己托管和运维，并负责执行你的代码。
+Workers 通过我们的某个 SDK 运行。
 
 <CaptionedImage
     src="/diagrams/temporal-platform-component-topology.svg"
@@ -64,32 +67,35 @@ Worker Processes are hosted and operated by you and execute your code. Workers r
     width="90%"
     />
 
-## What is a Temporal Application? {#temporal-application}
+## 什么是 Temporal Application？ {#temporal-application}
 
-A Temporal Application is a set of [Temporal Workflow Executions](/workflow-execution).
-Each Temporal Workflow Execution has exclusive access to its local state, executes concurrently to all other Workflow Executions, and communicates with other Workflow Executions and the environment via message passing.
+Temporal Application 是一组 [Temporal Workflow Execution](/workflow-execution) 的集合。
+每个 Temporal Workflow Execution 都拥有独占的本地状态，与其他 Workflow Execution 并发执行，并通过消息传递与其他 Workflow Execution 及外部环境通信。
 
-A Temporal Application can consist of millions to billions of Workflow Executions.
-Workflow Executions are lightweight
-A Workflow Execution consumes few compute resources; in fact, if a Workflow Execution is suspended, such as when it is in a waiting state, the Workflow Execution consumes no compute resources at all.
+一个 Temporal Application 可以包含数百万乃至数十亿个 Workflow Execution。
+Workflow Execution 是轻量级的。
+单个 Workflow Execution 占用的计算资源很少；实际上，当它处于等待状态而被挂起时，几乎不会消耗任何计算资源。
 
-**Reentrant Process**
+**可重入进程（Reentrant Process）**
 
-A Temporal Workflow Execution is a Reentrant Process. A Reentrant Process is resumable, recoverable, and reactive.
+Temporal Workflow Execution 本质上是一种可重入进程。可重入进程具备以下特征：可恢复、可继续、可响应。
 
-- Resumable: Ability of a process to continue execution after execution was suspended on an _awaitable_.
-- Recoverable: Ability of a process to continue execution after execution was suspended on a _failure_.
-- Reactive: Ability of a process to react to external events.
+- 可继续：当执行因某个 _awaitable_ 被挂起后，进程仍可继续执行。
+- 可恢复：当执行因某个 _failure_ 被中断后，进程仍可恢复继续执行。
+- 可响应：进程能够对外部事件作出反应。
 
-Therefore, a Temporal Workflow Execution executes a [Temporal Workflow Definition](/workflow-definition), also called a Temporal Workflow Function, your application code, exactly once and to completion—whether your code executes for seconds or years, in the presence of arbitrary load and arbitrary failures.
+因此，Temporal Workflow Execution 会执行一个 [Temporal Workflow Definition](/workflow-definition)（也叫 Temporal Workflow Function），也就是你的应用代码，并且做到**准确地执行并最终完成**——无论这段代码运行几秒还是几年，也无论它面对的是任意规模的负载还是任意类型的故障。
 
-## What is a Failure? {#failure}
+## 什么是 Failure？ {#failure}
 
-[Temporal Failures](/references/failures) are representations (in the SDKs and Event History) of various types of errors that occur in the system.
+[Temporal Failures](/references/failures) 是对系统中各种错误类型的统一表示形式（体现在各 SDK 和 Event History 中）。
 
-Failure handling is an essential part of development.
-For more information, including the difference between application-level and platform-level failures, see [Handling Failure From First Principles](https://dominik-tornow.medium.com/handling-failures-from-first-principles-1ed976b1b869).
-For the practical application of those concepts in Temporal, see [Failure Handling in Practice](https://temporal.io/blog/failure-handling-in-practice).
+Failure 处理是开发中的关键组成部分。
+如果你想进一步了解应用层故障与平台层故障的区别，可以阅读 [Handling Failure From First Principles](https://dominik-tornow.medium.com/handling-failures-from-first-principles-1ed976b1b869)。
+如果想了解这些概念在 Temporal 中如何落地实践，可以参考 [Failure Handling in Practice](https://temporal.io/blog/failure-handling-in-practice)。
 
-For languages that throw (or raise) errors (or exceptions), throwing an error that is not a Temporal Failure from a Workflow fails the Workflow Task (and the Task will be retried until it succeeds), whereas throwing a Temporal Failure (or letting a Temporal Failure propagate from Temporal calls, like an [Activity Failure](/references/failures#activity-failure) from an Activity call) fails the Workflow Execution.
-For more information, see [Application Failure](/references/failures#application-failure).
+对于会抛出错误（或异常）的语言来说：
+如果在 Workflow 中抛出的错误不是 Temporal Failure，那么失败的是 Workflow Task（并且该 Task 会不断重试直到成功）；
+而如果抛出的是 Temporal Failure（或者让某个来自 Temporal 调用的 Temporal Failure 向外传播，例如 Activity 调用返回的 [Activity Failure](/references/failures#activity-failure)），那么失败的就是整个 Workflow Execution。
+
+更多信息请参见 [Application Failure](/references/failures#application-failure)。

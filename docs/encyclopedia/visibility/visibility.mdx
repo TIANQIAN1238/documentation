@@ -1,8 +1,8 @@
 ---
 id: visibility
-title: Temporal Visibility
-sidebar_label: Visibility
-description: Temporal Visibility enables operators to view, filter, and search Workflow Executions using List Filters and Search Attributes. Learn about supported databases, Dual Visibility, and custom Search Attributes.
+title: "Temporal Visibility"
+sidebar_label: "Visibility"
+description: "Temporal Visibility 使操作员能够使用列表过滤器和 Search Attribute 查看、过滤和搜索 Workflow Execution。了解支持的数据库、双 Visibility 和自定义 Search Attribute。"
 slug: /visibility
 toc_max_heading_level: 4
 keywords:
@@ -16,46 +16,49 @@ tags:
   - Search Attributes
 ---
 
-This page provides an overview of Temporal Visibility.
+本页提供 Temporal Visibility 的概述。
 
-The term [Visibility](/visibility), within the Temporal Platform, refers to the subsystems and APIs that enable an operator to view, filter, and search for Workflow Executions that currently exist within a Temporal Service.
+Temporal 平台中的术语 [Visibility](/visibility) 是指使操作员能够查看、过滤和搜索当前存在于 Temporal 服务中的 Workflow Execution 的子系统和 API。
 
-The [Visibility store](/self-hosted-guide/visibility) in your Temporal Service stores persisted Workflow Execution Event History data and is set up as a part of your [Persistence store](/temporal-service/persistence) to enable listing and filtering details about Workflow Executions that exist on your Temporal Service.
+Temporal 服务中的 [Visibility 商店](/self-hosted-guide/visibility) 存储持久的 Workflow Execution Event History 数据，并设置为 [持久性存储](/temporal-service/persistence) 的一部分，以启用列出和过滤有关 Temporal 服务中存在的 Workflow Execution 的详细信息。
 
-- [How to set up a Visibility store](/self-hosted-guide/visibility)
+- [如何开设 Visibility 商店](/self-hosted-guide/visibility)
 
-With Temporal Server v1.21, you can set up [Dual Visibility](/dual-visibility) to migrate your Visibility store from one database to another.
+使用 Temporal Server v1.21，您可以设置 [双 Visibility](/dual-visibility) 将 Visibility 存储从一个数据库迁移到另一个数据库。
 
-## Visibility features {#advanced-visibility}
+<a id="advanced-visibility"></a>
+## Visibility 功能 {#advanced-visibility}
 
-Visibility enables the listing, filtering, and sorting of [Workflow Executions](/workflow-execution) through a custom SQL-like [List Filter](/list-filter).
+Visibility 可以通过类似 SQL 的自定义 [列表过滤器](/workflow-execution) 来列出、过滤和排序 [Workflow Executions](/list-filter)。
 
-Visibility supports [custom Search Attributes](/search-attribute#custom-search-attribute) for user-defined filtering beyond the default system attributes.
+Visibility 支持 [定制 Search Attribute](/search-attribute#custom-search-attribute) 进行默认系统属性之外的用户定义过滤。
 
-- On SQL databases (MySQL v8.0.17+, PostgreSQL v12+), Visibility is available with Temporal Server v1.20 and later.
-- On Elasticsearch (v7+ with Temporal Server v1.7+, v8 with Temporal Server v1.18+) and OpenSearch (2+ with Temporal Server v1.30.1+).
-- On Temporal Cloud, Visibility is enabled by default for [all users](/cloud/users#invite-users).
+- 在 SQL 数据库（MySQL v8.0.17+、PostgreSQL v12+）上，Visibility 可与 Temporal Server v1.20 及更高版本一起使用。
+- 在 Elasticsearch（v7+ 与 Temporal Server v1.7+、v8 与 Temporal Server v1.18+）和 OpenSearch（2+ 与 Temporal Server v1.30.1+）上。
+- 在 Temporal Cloud 上，默认情况下为 [所有用户](/cloud/users#invite-users) 启用 Visibility。
 
-For self-hosted setup and version compatibility details, see [Visibility store setup](/self-hosted-guide/visibility).
+有关自托管设置和版本兼容性的详细信息，请参阅 [Visibility 商店设置](/self-hosted-guide/visibility)。
 
-### Count Workflow by ExecutionStatus
+<a id="count-workflow-by-executionstatus"></a>
+### 按 ExecutionStatus 计数 Workflow {#count-workflow-by-executionstatus}
 
-The Count API feature lets you count the number of Workflows that match a given query. For example, the command `temporal workflow count -q "WorkflowType='foo'"` returns the number of Workflows that match `WorkflowType='foo'`.
+计数 API 功能可让您计算与给定 Query 匹配的 Workflow 的数量。例如，命令 `Temporal Workflow count -q "WorkflowType='foo'"` 返回与 `WorkflowType='foo'` 匹配的 Workflow 的数量。
 
-You can send queries to the Count API to group by a given search attribute. For example, `-q "WorkflowType='foo' GROUP BY ExecutionStatus` returns the number of Workflows that match `WorkflowType='foo'` grouped by `ExecutionStatus`.
+您可以将查询发送到 Count API 以按给定的 Search Attribute 进行分组。例如，`-q "WorkflowType='foo' GROUP BY ExecutionStatus` 返回与按 `ExecutionStatus` 分组的 `WorkflowType='foo'` 匹配的 Workflow 的数量。
 
-The `GROUP BY` clause is only supported in the Count API and currently only grouping by `ExecutionStatus` is supported.
+`GROUP BY` 子句仅在 Count API 中受支持，并且当前仅支持按 `ExecutionStatus` 进行分组。
 
 :::note
 
-The Count API returns approximate counts.
+计数 API 返回近似计数。
 
 :::
 
-## Legacy: standard Visibility {#standard-visibility}
+<a id="standard-visibility"></a>
+## 旧版：标准 Visibility {#standard-visibility}
 
-Prior to Temporal Server v1.20, Temporal had two Visibility modes: "standard" and "advanced." Standard Visibility supported only predefined filters such as Workflow Type, Workflow Id, Run Id, and Execution Status, without custom Search Attributes. Advanced Visibility required Elasticsearch.
+在 Temporal Server v1.20 之前，Temporal 有两种 Visibility 模式：“标准”和“高级”。标准 Visibility 仅支持预定义过滤器，例如 Workflow 类型、Workflow Id、运行 Id 和执行状态，而不支持自定义 Search Attribute。高级 Visibility 需要 Elasticsearch。
 
-Starting with Temporal Server v1.20, advanced Visibility became available on SQL databases. Standard Visibility was deprecated in v1.21 and removed in v1.24. All current deployments use what was formerly called advanced Visibility, now simply called Visibility.
+从 Temporal Server v1.20 开始，高级 Visibility 在 SQL 数据库上可用。标准 Visibility 在 v1.21 中已弃用，并在 v1.24 中删除。当前的所有部署都使用以前称为高级 Visibility 的内容，现在简称为 Visibility。
 
-If you are running a Temporal Server version older than v1.24, see the [legacy standard Visibility section](/self-hosted-guide/visibility#legacy-standard-visibility) in the self-hosted guide.
+如果您运行的 Temporal Server 版本早于 v1.24，请参阅自托管指南中的 [传统标准 Visibility 部分](/self-hosted-guide/visibility#legacy-standard-visibility)。

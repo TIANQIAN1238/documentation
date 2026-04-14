@@ -1,0 +1,53 @@
+---
+id: benign-exceptions
+title: 良性异常 - Go SDK
+sidebar_label: 良性异常
+description: 将预期或非严重的 Activity 错误标记为良性，以减少日志、指标和 OpenTelemetry 跟踪中的噪音。
+toc_max_heading_level: 2
+keywords:
+  - benign exceptions
+  - application failure
+  - error handling
+  - observability
+  - go
+tags:
+  - Activities
+  - Errors
+  - Failures
+  - Go SDK
+  - Temporal SDKs
+---
+
+当活动返回预期错误或不严重错误时，它们可能会在日志、指标和 OpenTelemetry 跟踪中产生噪音，从而使识别真正问题变得更加困难。
+通过将这些错误标记为良性，您可以将它们从可观测性数据中排除，同时仍然在 Workflow 逻辑中处理它们。
+
+要将错误标记为良性，请使用 [`Temporal.NewApplicationErrorWithOptions`](https://pkg.go.dev/go.Temporal.io/sdk/Temporal#NewApplicationErrorWithOptions) 并将“ApplicationErrorOptions”中的“Category”字段设置为“Temporal.ApplicationErrorCategoryBenign”。
+
+良性错误：
+- 将 Activity 故障日志降级至 DEBUG 级别
+- 不发出 Activity 故障指标
+- 不要将 OpenTelemetry 失败状态设置为 ERROR
+
+```go
+import (
+	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/temporal"
+)
+
+func MyActivity(ctx context.Context) (string, error) {
+	result, err := callExternalService()
+	if err != nil {
+		// Mark this error as benign since it's expected
+		return "", temporal.NewApplicationErrorWithOptions(
+			err.Error(),
+			"",
+			temporal.ApplicationErrorOptions{
+				Category: temporal.ApplicationErrorCategoryBenign,
+			},
+		)
+	}
+	return result, nil
+}
+```
+
+对正常操作中定期发生的 Activity 错误使用良性异常，例如轮询尚未准备就绪的外部服务，或处理将重试的预期瞬态故障。

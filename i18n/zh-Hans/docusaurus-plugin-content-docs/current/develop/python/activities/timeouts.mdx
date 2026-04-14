@@ -1,0 +1,174 @@
+---
+id: timeouts
+title: Activity 超时 - Python SDK
+sidebar_label: 超时
+description: 使用 Temporal 优化 Workflow Execution Python SDK - 有效设置 Activity 超时和重试策略。
+toc_max_heading_level: 4
+keywords:
+  - Python
+  - failure detection
+  - timeouts
+tags:
+  - Activities
+  - Workflows
+  - Errors
+  - Failures
+  - Python SDK
+  - Temporal SDKs
+---
+
+## 设置 Activity 超时 {#Activity-timeouts}
+
+每个 Activity 超时控制 Activity 执行不同方面的最大持续时间。
+
+Activity 选项中提供以下超时。
+
+- **[Schedule-To-Close Timeout](/encyclopedia/Detecting-Activity-failures#Schedule-to-close-timeout)：** 是整个 [Activity 执行](/Activity-执行) 允许的最长时间。
+- **[Start-To-Close Timeout](/encyclopedia/Detecting-Activity-failures#start-to-close-timeout):** 是单个 [Activity 任务执行](/tasks#Activity-task-execution) 允许的最长时间。
+- **[Schedule-To-Start Timeout](/encyclopedia/Detecting-Activity-failures#Schedule-to-start-timeout):** 是从 [Activity 任务](/tasks#Activity-task) 执行 Scheduled 到执行[Worker](/Workers#Worker) 启动 Activity 任务。
+
+Activity 执行必须设置“开始到关闭”或“Schedule 到关闭超时”。
+
+Activity 选项在 Activity 参数之后设置为关键字参数。
+
+可用的超时有：
+
+- Schedule_to_close_timeout
+- Schedule_to_start_timeout
+- 开始到关闭超时
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/Activity_timeouts_retires/your_Workflows_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+# ...
+        activity_timeout_result = await workflow.execute_activity(
+            your_activity,
+            YourParams(greeting, "Activity Timeout option"),
+            # Activity Execution Timeout
+            start_to_close_timeout=timedelta(seconds=10),
+            # schedule_to_start_timeout=timedelta(seconds=10),
+            # schedule_to_close_timeout=timedelta(seconds=10),
+        )
+```
+
+### 设置 Activity Retry Policy {#Activity-重试}
+
+**如何使用 Temporal Python SDK 设置 Activity Retry Policy**
+
+Retry Policy 与超时配合提供精细控制以优化执行体验。
+
+如果未提供自定义执行，Activity 执行将自动与默认 [Retry Policy](/encyclopedia/retry-policies) 关联。
+
+要在 Python 中创建 Activity Retry Policy，请在[`start_Activity()`](https://python.Temporal.io/Temporalio.Workflow.html#start_Activity) 或[`execute_Activity()`](https://python.Temporal.io/Temporalio.Workflow.html#execute_Activity) 函数。
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/documentation/blob/main/sample-apps/python/Activity_timeouts_retires/your_Workflows_dacx.py">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```python
+from temporalio.common import RetryPolicy
+# ...
+        activity_result = await workflow.execute_activity(
+            your_activity,
+            YourParams(greeting, "Retry Policy options"),
+            start_to_close_timeout=timedelta(seconds=10),
+            # Retry Policy
+            retry_policy=RetryPolicy(
+                backoff_coefficient=2.0,
+                maximum_attempts=5,
+                initial_interval=timedelta(seconds=1),
+                maximum_interval=timedelta(seconds=2),
+                # non_retryable_error_types=["ValueError"],
+            ),
+        )
+```
+
+### 使用 `next_retry_delay` 覆盖重试间隔 {#next-retry-delay}
+
+要覆盖当前策略设置的下一个重试间隔，请在 Activity 中引发 [ApplicationError](/references/failures#application-failure) 时传递“next_retry_delay”。
+该值替换并覆盖 Retry Policy 上通常的重试间隔。
+
+例如，您可以根据 Activity 的尝试次数设置延迟间隔。
+在以下示例中，重试延迟从第一次尝试后 3 秒开始。
+第二次尝试增加到 6 秒，第三次尝试增加到 9 秒，依此类推。
+与[退避系数](/encyclopedia/retry-policies#backoff-coefficient)使用的指数方法相比，这会创建一个稳定增加的退避：
+
+```python
+from temporalio.exceptions import ApplicationError
+from datetime import timedelta
+
+@activity.defn
+async def my_activity(input: MyActivityInput):
+    try:
+        # Your activity logic goes here
+    except Exception as e:
+        attempt = activity.info().attempt
+        raise ApplicationError(
+            f"Error encountered on attempt {attempt}",
+            next_retry_delay=timedelta(seconds=3 * attempt),
+        ) from e
+```
+
+## 心跳 Activity {#Activity-heartbeats}
+
+**如何使用 Temporal Python SDK 对 Activity 进行检测**
+
+[Activity 心跳](/encyclopedia/Detecting-Activity-failures#Activity-heartbeat) 是从正在执行 Activity 的 [Worker 进程](/Workers#Worker-process) 到 [Temporal] 的 ping服务](/Temporal-服务)。
+每个心跳都会通知 Temporal 服务 [Activity 执行](/Activity-执行) 正在取得进展，并且 Worker 尚未崩溃。
+如果 Temporal 服务在 [心跳超时](/encyclopedia/Detecting-Activity-failures#heartbeat-timeout) 时间内未收到心跳，则 Activity 将被视为失败，并且另一个 [Activity 任务执行](/tasks#Activity-task-execution) 可能会根据Retry Policy。
+
+心跳可能并不总是发送到 Temporal 服务 — 它们可能会被 Worker 限制。
+
+Activity 取消会在活动检测到时从 Temporal 服务传递到活动。没有心跳的活动无法收到取消。
+心跳限制可能会导致取消的发送时间晚于预期。
+
+心跳可以包含描述 Activity 当前进度的“详细信息”字段。
+如果 Activity 重试，Activity 可以访问发送到 Temporal 服务的最后一次心跳的“详细信息”。
+
+要在 Python 中对 Activity 执行进行检测，请使用 [`heartbeat()`](https://python.Temporal.io/Temporalio.Activity.html#heartbeat) API。
+
+```python
+@activity.defn
+async def your_activity_definition() -> str:
+    activity.heartbeat("heartbeat details!")
+```
+
+除了获取取消信息外，Heartbeats 还支持保留在服务器上的详细数据，以便在 Activity 重试期间检索。
+如果 Activity 调用“heartbeat(123, 456)”，然后失败并重试，则“heartbeat_details”会在下次运行时返回包含“123”和“456”的可迭代对象。
+
+#### 设置心跳超时 {#heartbeat-timeout}
+
+**如何使用 Temporal Python SDK 设置心跳超时**
+
+[心跳超时](/encyclopedia/Detecting-Activity-failures#heartbeat-timeout) 与 [Activity 心跳](/encyclopedia/Detecting-Activity-failures#Activity-heartbeat) 结合使用。
+
+[`heartbeat_timeout`](https://python.Temporal.io/Temporalio.Worker.StartActivityInput.html#heartbeat_timeout) 是一个类变量[`start_Activity()`](https://python.Temporal.io/Temporalio.Workflow.html#start_Activity)函数用于设置Activity心跳之间的最大时间。
+
+```python
+workflow.start_activity(
+    activity="your-activity",
+    schedule_to_close_timeout=timedelta(seconds=5),
+    heartbeat_timeout=timedelta(seconds=1),
+)
+```
+
+`execute_Activity()` 是 [`start_Activity()`](https://python.Temporal.io/Temporalio.Workflow.html#start_Activity) 的快捷方式，等待其结果。
+
+要分别获取等待和取消的句柄，请使用“start_Activity()”。除非需要高级任务功能，否则大多数情况下应使用“execute_Activity()”。
+
+```python
+workflow.execute_activity(
+    activity="your-activity",
+    name,
+    schedule_to_close_timeout=timedelta(seconds=5),
+    heartbeat_timeout=timedelta(seconds=1),
+)
+```

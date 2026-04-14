@@ -1,0 +1,157 @@
+---
+id: aws-export-s3
+title: 将 Workflow Event History 导出到 AWS S3
+sidebar_label: AWS 导出到 S3
+description: 将 Workflow 历史记录导出到 AWS S3
+slug: /cloud/export/aws-export-s3
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - how-to
+  - operations
+  - temporal cloud
+  - term
+  - verify
+  - workflow history export
+  - aws
+tags:
+  - AWS
+  - Export Workflow History
+  - Temporal Cloud
+---
+
+import * as Components from '@site/src/components';
+
+## 先决条件
+
+在配置导出接收器之前，请确保您具备以下条件：
+
+- AWS S3 存储桶。
+   - S3 存储桶必须与您的 Namespace 位于同一区域。
+- （可选）对上述 S3 存储桶具有写入权限的 IAM 角色。
+   - 您可以按照 UI 中的自动化操作来创建 IAM 角色。如果通过 terraform/tcld 设置导出，请预先创建角色。
+- （可选）与 S3 存储桶关联的 KMS ARN。
+
+## 配置Workflow历史记录导出
+
+配置导出的方法有多种：通过 [Temporal Cloud UI](#using-Temporal-cloud-ui)、[`tcld`](#using-tcld) 或 [`terraform`](#using-terraform)。
+
+### 使用 Temporal Cloud 用户界面
+
+您可以使用 Temporal Cloud UI 配置 Workflow 历史记录导出。
+
+Temporal Cloud UI 提供两种配置 Workflow 历史记录导出的方法：
+
+- [自动设置](#automated-setup)（推荐）：云 UI 启动 AWS CloudFormation 控制台以创建具有 S3 存储桶写入权限的堆栈。
+- [手动设置](#manual-setup)：Cloud UI 提供 CloudFormation 模板，供用户手动配置 CloudFormation 堆栈。
+
+:::info Why does Temporal Cloud provision multiple internal IAM roles to trust for Export?
+
+出于安全目的，Temporal Cloud 为导出操作创建多个中间 IAM 角色。 
+当写入存储接收器时，系统会随机选择这些角色，这提供了几个好处：
+
+- **安全隔离**：如果一个 IAM 角色受到威胁或需要停用，其他 IAM 角色仍然可用
+- **负载分配**：避免依赖单一 IAM 角色，降低安全风险
+- **热备用**：保持多个 IAM 角色处于活动状态，以避免在 IAM 角色之间切换时出现潜在的限制
+- **可靠性**：针对可能影响单个 IAM 角色的云提供商账户级问题提供弹性
+
+此方法优先考虑安全性和可用性，即使单个 IAM 角色遇到问题也能确保稳健的导出操作。
+:::
+
+
+以下步骤指导您使用 Temporal Cloud UI 设置 Workflow 历史记录导出。
+
+![](/img/cloud/gcp/export-sink-ui.png)
+
+:::tip
+
+不要忘记在设置结束时单击“**创建**”以确认导出。
+
+:::
+
+#### 自动设置
+
+您可以使用自动设置来创建具有 S3 存储桶写入权限的 CloudFormation 堆栈。
+确保在保存配置之前验证导出设置。
+
+1. 打开 Temporal Cloud UI 并导航到您要配置的 Namespace。
+2. 从 **导出** 卡中选择 **配置**。
+3. 提供以下信息来配置导出接收器，然后选择 **创建并启动堆栈**：
+   - 名称：导出接收器的名称。
+   - AWS S3 存储桶名称：要向其发送已关闭 Workflow 历史记录的已配置 AWS S3 存储桶的名称。
+   - AWS 账户 ID：AWS 账户 ID。
+   - 角色名称：用于对 S3 存储桶具有写入权限的 CloudFormation 堆栈的 AWS IAM 角色的名称。
+   - KMS ARN：（可选）用于加密导出的 Workflow 历史记录的 AWS KMS 密钥的 ARN。
+4. 您将进入 CloudFormation 控制台，使用预先填充的信息创建堆栈。
+   - 查看信息，然后选择 **创建堆栈**。
+
+#### 手动设置
+
+您可以使用提供的模板手动配置 CloudFormation 堆栈。
+
+1. 打开 Temporal Cloud UI 并导航到您要配置的 Namespace。
+2. 从 **导出** 卡中选择 **配置**。
+3. 从**访问方法**中选择**手动**。
+   - 在 Web 浏览器中输入模板 URL 以下载 CloudFormation 模板的副本。
+   - 为导出接收器配置 CloudFormation 模板。
+   - 按照 [AWS 文档](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-using-console-create-stack-template.html) 中的步骤将模板上传到 CloudFormation 控制台。
+
+### 使用`tcld`
+
+运行“tcld Namespace export s3 create”命令并提供以下信息：
+
+- `--Namespace`：要配置导出的 Namespace。
+- `--sink-name`：导出接收器的名称。
+- `--role-arn`：用于对 S3 存储桶具有写入权限的 CloudFormation 堆栈的 AWS IAM 角色的 ARN。
+- `--s3-bucket-name`：AWS S3 存储桶的名称。
+
+例如：
+
+```command
+tcld namespace export s3 create --namespace "your-namespace.your-account" --sink-name "your-sink-name" --role-arn "arn:aws:iam::123456789012:role/test-sink" --s3-bucket-name "your-aws-s3-bucket-name"
+```
+
+通过运行“tcld Namespace export s3 get”命令检索此命令的状态。
+
+例如：
+
+```command
+tcld namespace export s3 get --namespace "your-namespace.your-account" --sink-name "your-sink-name"
+```
+
+以下是输出示例：
+
+```json
+{
+  "name": "your-sink-name",
+  "resourceVersion": "a6442895-1c07-4da4-aaca-58d57d338345",
+  "state": "Active",
+  "spec": {
+    "name": "your-sink-name",
+    "enabled": true,
+    "destinationType": "S3",
+    "s3Sink": {
+      "roleName": "your-export-test",
+      "bucketName": "your-export-test",
+      "region": "us-east-1",
+      "kmsArn": "",
+      "awsAccountId": "123456789012"
+    }
+  },
+  "health": "Ok",
+  "errorMessage": "",
+  "latestDataExportTime": "0001-01-01T00:00:00Z",
+  "lastHealthCheckTime": "2023-08-14T21:30:02Z"
+}
+```
+
+### 使用 `terraform`
+
+有关设置说明，请参阅 [terraform 导出支持](https://registry.terraform.io/providers/Temporalio/Temporalcloud/latest/docs/resources/Namespace_export_sink)。
+
+
+### 后续步骤
+
+- [验证导出设置](/cloud/export#verify)
+- [监控导出进度](/cloud/export#monitor)
+- [使用导出的文件](/cloud/export#working-with-exported-files)

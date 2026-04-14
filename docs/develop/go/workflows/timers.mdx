@@ -1,7 +1,7 @@
 ---
 id: timers
-title: Timers - Go SDK
-sidebar_label: Timers
+title: "Timers - Go SDK"
+sidebar_label: "Timers"
 keywords:
   - timers
 tags:
@@ -9,28 +9,28 @@ tags:
   - Durable Timers
   - Go SDK
   - Temporal SDKs
-description: Set Durable Timers in a Workflow using the sleep() or NewTimer() functions in Go with Temporal. Timers persist through Worker and Temporal Service downtime.
+description: "使用 Go with Temporal 中的 sleep() 或 NewTimer() 函数在 Workflow 中设置持久 Timer。 Timer 在 Worker 和 Temporal 服务停机期间持续存在。"
 ---
 
-A Workflow can set a Durable Timer for a fixed time period.
-In some SDKs, the function is called `sleep()`, and in others, it's called `timer()`.
+Workflow 可以将耐用型 Timer 设置为固定时间段。
+在某些 SDK 中，该函数称为 `sleep()`，而在其他 SDK 中，该函数称为 `Timer()`。
 
-A Workflow can sleep for days, months, or even years.
-Timers are persisted, so even if your Worker or Temporal Service is down when the time period completes, as soon as your Worker and Temporal Service are back up, the `sleep()` call will resolve and your code will continue executing.
+Workflow 可以休眠数天、数月甚至数年。
+Timer 是持久的，因此即使您的 Worker 或 Temporal 服务在时间段结束时关闭，只要您的 Worker 和 Temporal 服务备份，`sleep()` 调用就会解析，并且您的代码将继续执行。
 
-Sleeping is a resource-light operation: it does not tie up the process, and you can run millions of Timers off a single Worker.
+睡眠是一种轻资源操作：它不会占用进程，并且您可以在单个 Worker 上运行数百万个 Timer。
 
-To set a Timer in Go, use the [`NewTimer()`](https://pkg.go.dev/go.temporal.io/sdk/workflow#NewTimer) function and pass the duration you want to wait before continuing.
+要在 Go 中设置 Timer，请使用 [`NewTimer()`](https://pkg.go.dev/go.temporal.io/sdk/workflow#NewTimer) 函数并传递您想要在继续​​之前等待的持续时间。
 
 ```go
 timer := workflow.NewTimer(timerCtx, duration)
 ```
 
-To set a sleep duration in Go, use the [`sleep()`](https://pkg.go.dev/go.temporal.io/sdk/workflow#Sleep) function and pass the duration you want to wait before continuing.
-A zero or negative sleep duration causes the function to return immediately.
+要在 Go 中设置睡眠持续时间，请使用 [`sleep()`](https://pkg.go.dev/go.temporal.io/sdk/workflow#Sleep) 函数并传递您想要在继续​​之前等待的持续时间。
+零或负睡眠持续时间会导致函数立即返回。
 
 ```go
 sleep = workflow.Sleep(ctx, 10*time.Second)
 ```
 
-For more information, see the [Timer](https://github.com/temporalio/samples-go/tree/main/timer) example in the [Go Samples repository](https://github.com/temporalio/samples-go).
+有关详细信息，请参阅 [Go 示例存储库](https://github.com/temporalio/samples-go/tree/main/timer) 中的 [Timer](https://github.com/temporalio/samples-go) 示例。

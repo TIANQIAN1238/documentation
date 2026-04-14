@@ -1,8 +1,8 @@
 ---
 id: interceptors
-title: Interceptors - Python SDK
-sidebar_label: Interceptors
-description:
+title: "拦截器 - Python SDK"
+sidebar_label: "拦截器"
+description: Implement Interceptors in the Temporal Python SDK to manage inbound and outbound SDK calls, enhance tracing, and add
   Implement Interceptors in the Temporal Python SDK to manage inbound and outbound SDK calls, enhance tracing, and add
   authorization to your Workflows and Activities.
 toc_max_heading_level: 2
@@ -14,49 +14,50 @@ tags:
   - Temporal SDKs
 ---
 
-Interceptors are SDK hooks that let you intercept inbound and outbound Temporal calls. You use them to add common
-behavior across many calls, such as tracing and context propagation. 
-This is similar to using middleware in web frameworks such as
-[Django](https://docs.djangoproject.com/en/5.2/topics/http/middleware/),
-[Starlette](https://www.starlette.io/middleware/), and
-[Flask](https://flask.palletsprojects.com/en/stable/lifecycle/#middleware).
+拦截器是 SDK 挂钩，可让您拦截入站和出站 Temporal 调用。您使用它们来添加常见的
+跨许多调用的行为，例如跟踪和上下文传播。 
+这类似于在 Web 框架中使用中间件，例如
+[姜戈](https://docs.djangoproject.com/en/5.2/topics/http/middleware/),
+[斯塔莱特](https://www.starlette.io/middleware/)，和
+[烧瓶](https://flask.palletsprojects.com/en/stable/lifecycle/#middleware)。
 
-There are two types of interceptors--inbound and outbound.
+有两种类型的拦截器——入站拦截器和出站拦截器。
 
-* Outbound interceptors wrap network calls, running before they reach the network and after they return.
-* Inbound interceptors run after the network hop, wrapping application code and running before it starts and after it returns.
+* 出站拦截器包装网络调用，在到达网络之前和返回之后运行。
+* 入站拦截器在网络跃点之后运行，包装应用程序代码并在启动之前和返回之后运行。
 
-Concretely, there are five categories of inbound and outbound calls that you can modify in this way:
+具体来说，您可以通过这种方式修改五类入站和出站呼叫：
 
-| | [Outbound Client](https://python.temporal.io/temporalio.client.OutboundInterceptor.html) | [Inbound Workflow](https://python.temporal.io/temporalio.worker.WorkflowInboundInterceptor.html) | [Outbound Workflow](https://python.temporal.io/temporalio.worker.WorkflowOutboundInterceptor.html) | [Inbound Activity](https://python.temporal.io/temporalio.worker.ActivityInboundInterceptor.html) | [Outbound Activity](https://python.temporal.io/temporalio.worker.ActivityOutboundInterceptor.html) |
+| | [出站客户](https://python.temporal.io/temporalio.client.OutboundInterceptor.html) | [入站 Workflow](https://python.temporal.io/temporalio.worker.WorkflowInboundInterceptor.html) | [出站 Workflow](https://python.temporal.io/temporalio.worker.WorkflowOutboundInterceptor.html) | [入站 Activity](https://python.temporal.io/temporalio.worker.ActivityInboundInterceptor.html) | [出站 Activity](https://python.temporal.io/temporalio.worker.ActivityOutboundInterceptor.html) |
 | --- | --- | --- | --- | --- | --- |
-| **Description** | Wraps calls from your application to the Temporal Client to start a Workflow or send [Messages](/encyclopedia/workflow-message-passing/) to it | Wraps calls arriving into a [Workflow Execution](/workflow-execution), such as executing the Workflow, handling [Messages](/encyclopedia/workflow-message-passing/) | Wraps calls a [Workflow](/workflow-definition) makes to the SDK, such as scheduling [Activities](/activities), starting [Child Workflows](/child-workflows), and invoking [Nexus Operations](/nexus) | Wraps calls arriving into an [Activity Execution](/activity-execution) | Wraps calls an [Activity](/activities) makes to the SDK, such as sending [Heartbeats](/encyclopedia/detecting-activity-failures#activity-heartbeat) and reading Activity info |
-| **Runs on** | Client | Worker (Workflow sandbox) | Worker (Workflow sandbox) | Worker (Activity context) | Worker (Activity context) |
-| **Example methods** | `start_workflow()`, `signal_workflow()`, `list_workflows()` | `execute_workflow()`, `handle_query()`, `handle_signal()`, `handle_update_handler()` | `start_activity()`, `start_child_workflow()`, `signal_child_workflow()`, `start_nexus_operation()` | `execute_activity()` | `info()`, `heartbeat()` |
+| **描述** | 将应用程序中的调用包装到 Temporal CLIent 以启动 Workflow 或向其发送 [留言](/encyclopedia/workflow-message-passing/) | 包装到达 [Workflow Execution](/workflow-execution) 的呼叫，例如执行 Workflow、处理 [留言](/encyclopedia/workflow-message-passing/) | 包裹对 SDK 进行的 [Workflow](/workflow-definition) 调用，例如调度 [活动](/activities)、启动 [Child Workflows](/child-workflows) 和调用 [Nexus 操作](/nexus) | 将到达 [Activity 执行](/activity-execution) 的呼叫包装起来 | 包装 [Activity](/activities) 对 SDK 进行的调用，例如发送 [心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 和读取 Activity 信息 |
+| **运行于** | 客户 | Worker（Workflow沙箱） | Worker（Workflow沙箱） | Worker（Activity 上下文） | Worker（Activity 上下文） |
+| **方法示例** | `start_Workflow()`、`Signal_Workflow()`、`list_Workflows()` | `execute_Workflow()`、`handle_Query()`、`handle_Signal()`、`handle_Update_handler()` | `start_Activity()`、`start_child_Workflow()`、`Signal_child_Workflow()`、`start_Nexus_operation()` | `execute_Activity()` | `info()`、`heartbeat()` |
 
-These are not exhaustive lists; refer to the linked API docs for each category.
+这些并不是详尽的清单；请参阅每个类别的链接 API 文档。
 
 :::warning Workflow interceptors and replay
 
-Workflow inbound and outbound interceptor methods also execute during [replay](/develop/python/best-practices/testing-suite#replay). Use replay-safe APIs for logging, randomness, and time in these interceptors.
-See [Develop Workflow logic](/develop/python/workflows/basics#workflow-logic-requirements) for details.
+Workflow 入站和出站拦截器方法也在 [重播](/develop/python/best-practices/testing-suite#replay) 期间执行。在这些拦截器中使用重放安全 API 来记录日志、随机性和时间。
+详细信息请参见 [开发Workflow逻辑](/develop/python/workflows/basics#workflow-logic-requirements)。
 
-If you want to write generic code shared by all inbound Workflow call handlers but want to skip read-only operations, check `workflow.unsafe.is_read_only()`.
+如果您想要编写由所有入站 Workflow 调用处理程序共享的通用代码，但想要跳过只读操作，请选中 `Workflow.unsafe.is_read_only()`。
 
-Activity and Client interceptors are not affected by replay.
+Activity 和客户端拦截器不受重播影响。
 
 :::
 
-## Register an Interceptor {#register}
+## 注册一个拦截器 {#register}
 
-Registering an interceptor means supplying an interceptor instance to the SDK so Temporal can invoke it when matching
-Client or Worker calls occur. Once registered, the interceptor runs as part of the call path and can observe or modify
-request and response data.
+注册拦截器意味着向 SDK 提供拦截器实例，以便 Temporal 在匹配时可以调用它
+发生客户端或 Worker 调用。一旦注册，拦截器将作为调用路径的一部分运行，并且可以观察或修改
+请求和响应数据。
 
-### Register on the Client 
+<a id="register-on-the-client"></a>
+### 在客户端注册 {#register-on-the-client}
 
-Pass interceptors in the `interceptors` argument of `Client.connect()`. Client interceptors modify outbound calls such
-as starting and signaling Workflows.
+在 `Client.connect()` 的 `interceptors` 参数中传递拦截器。客户端拦截器修改出站调用，例如
+作为起始和 Signaling Workflow。
 
 ```python
 client = await Client.connect(
@@ -65,17 +66,19 @@ client = await Client.connect(
 )
 ```
 
-The `interceptors` list can contain multiple interceptors.
-In this case they form a chain: a method implemented on an interceptor instance in the list can perform side effects, and modify the data, before passing it on to the corresponding method on the next interceptor in the list.
+`interceptors` 列表可以包含多个拦截器。
+在这种情况下，它们形成一条链：在列表中的拦截器实例上实现的方法可以执行 Side Effect，并修改数据，然后将其传递给列表中下一个拦截器上的相应方法。
 
-### Register via a Plugin
+<a id="register-via-a-plugin"></a>
+### 通过插件注册 {#register-via-a-plugin}
 
-If you're building a reusable library or want to bundle interceptors with other primitives, you can register them through a [Plugin](/develop/plugins-guide#interceptors).
+如果您正在构建可重用库或想要将拦截器与其他原语捆绑在一起，则可以通过 [插件](/develop/plugins-guide#interceptors) 注册它们。
 
-### Register on the Worker only 
+<a id="register-on-the-worker-only"></a>
+### 仅在 Worker 上注册 {#register-on-the-worker-only}
 
-If your interceptor doesn't affect the Client, you can pass interceptors in the `interceptors` argument of `Worker()`.
-Worker interceptors modify inbound and outbound Workflow and Activity calls.
+如果您的拦截器不影响客户端，您可以在 `Worker()` 的 `interceptors` 参数中传递拦截器。
+Worker 拦截器修改入站和出站 Workflow 和 Activity 调用。
 
 ```python
 worker = Worker(
@@ -88,22 +91,23 @@ worker = Worker(
 
 :::note
 
-If your interceptor class inherits from both `client.Interceptor` and `worker.Interceptor`, pass it to
-`Client.connect()` rather than the `Worker()` constructor. The Worker will use interceptors from its underlying Client
-automatically.
+如果您的拦截器类继承自 `client.Interceptor` 和 `Worker.Interceptor`，请将其传递给
+`Client.connect()` 而不是 `Worker()` 构造函数。 Worker 将使用来自其底层客户端的拦截器
+自动。
 
 :::
 
-## Register an Interceptor {#register}
+## 注册一个拦截器 {#register}
 
-Registering an interceptor means supplying an interceptor instance to the SDK so Temporal can invoke it when matching
-Client or Worker calls occur. Once registered, the interceptor runs as part of the call path and can observe or modify
-request and response data.
+注册拦截器意味着向 SDK 提供拦截器实例，以便 Temporal 在匹配时可以调用它
+发生客户端或 Worker 调用。一旦注册，拦截器将作为调用路径的一部分运行，并且可以观察或修改
+请求和响应数据。
 
-### Register on the Client
+<a id="register-on-the-client"></a>
+### 在客户端注册 {#register-on-the-client}
 
-Pass interceptors in the `interceptors` argument of `Client.connect()`. Client interceptors modify outbound calls such
-as starting and signaling Workflows.
+在 `Client.connect()` 的 `interceptors` 参数中传递拦截器。客户端拦截器修改出站调用，例如
+作为起始和 Signaling Workflow。
 
 ```python
 client = await Client.connect(
@@ -112,19 +116,21 @@ client = await Client.connect(
 )
 ```
 
-The `interceptors` list can contain multiple interceptors. In this case they form a chain: a method implemented on an
-interceptor instance in the list can perform side effects, and modify the data, before passing it on to the
-corresponding method on the next interceptor in the list.
+`interceptors` 列表可以包含多个拦截器。在这种情况下，它们形成了一条链：在
+列表中的拦截器实例可以执行 Side Effect，并修改数据，然后再将其传递给
+列表中下一个拦截器的相应方法。
 
-### Register via a Plugin
+<a id="register-via-a-plugin"></a>
+### 通过插件注册 {#register-via-a-plugin}
 
-If you're building a reusable library or want to bundle interceptors with other primitives, you can register them
-through a [Plugin](/develop/plugins-guide#interceptors).
+如果您正在构建可重用库或想要将拦截器与其他原语捆绑在一起，您可以注册它们
+通过 [插件](/develop/plugins-guide#interceptors)。
 
-### Register on the Worker only
+<a id="register-on-the-worker-only"></a>
+### 仅在 Worker 上注册 {#register-on-the-worker-only}
 
-If your interceptor doesn't affect the Client, you can pass interceptors in the `interceptors` argument of `Worker()`.
-Worker interceptors modify inbound and outbound Workflow and Activity calls.
+如果您的拦截器不影响客户端，您可以在 `Worker()` 的 `interceptors` 参数中传递拦截器。
+Worker 拦截器修改入站和出站 Workflow 和 Activity 调用。
 
 ```python
 worker = Worker(
@@ -137,27 +143,29 @@ worker = Worker(
 
 :::note
 
-If your interceptor class inherits from both `client.Interceptor` and `worker.Interceptor`, pass it to
-`Client.connect()` rather than the `Worker()` constructor. The Worker will use interceptors from its underlying Client
-automatically.
+如果您的拦截器类继承自 `client.Interceptor` 和 `Worker.Interceptor`，请将其传递给
+`Client.connect()` 而不是 `Worker()` 构造函数。 Worker 将使用来自其底层客户端的拦截器
+自动。
 
 :::
 
-## How to implement Interceptors in Python
+<a id="how-to-implement-interceptors-in-python"></a>
+## 如何在Python中实现拦截器 {#how-to-implement-interceptors-in-python}
 
-Interceptors run as a chain.  Each interceptor wraps the entire inner call: your code runs before the call, invokes `next` to execute the rest of the chain, and then runs after the call completes. This means you can inspect or modify both the `input` and the result, handle errors, and perform side effects at either stage.
+拦截器作为一条链运行。  每个拦截器都包装整个内部调用：您的代码在调用之前运行，调用 `next` 来执行链的其余部分，然后在调用完成后运行。这意味着您可以检查或修改 `input` 和结果、处理错误并在任一阶段执行 Side Effect。
 
 
-### Implementing Client call Interceptors
+<a id="implementing-client-call-interceptors"></a>
+### 实现客户端调用拦截器 {#implementing-client-call-interceptors}
 
-To modify outbound Client calls, define a class inheriting from
-[`client.Interceptor`](https://python.temporal.io/temporalio.client.Interceptor.html), and implement the method
-`intercept_client()` to return an instance of
-[`OutboundInterceptor`](https://python.temporal.io/temporalio.client.OutboundInterceptor.html) that implements the
-subset of outbound Client calls that you wish to modify.
+要修改出站客户端调用，请定义一个继承自的类
+[`client.Interceptor`](https://python.temporal.io/temporalio.client.Interceptor.html)，并实现该方法
+`intercept_client()` 返回一个实例
+[`OutboundInterceptor`](https://python.temporal.io/temporalio.client.OutboundInterceptor.html) 实现了
+您希望修改的出站客户端呼叫的子集。
 
-This example implements an Interceptor on outbound Client calls that sets a certain key in the outbound `headers` field.
-A User ID is context-propagated by being sent in a header field with outbound requests:
+此示例在出站客户端调用上实现拦截器，该拦截器在出站 `headers` 字段中设置特定键。
+用户 ID 通过在出站请求的标头字段中发送来进行上下文传播：
 
 ```python
 class ContextPropagationInterceptor(
@@ -204,26 +212,27 @@ class _ContextPropagationClientOutboundInterceptor(
         return await super().start_workflow(input)
 ```
 
-It often happens that your Worker and Client interceptors will share code because they implement closely related logic.
-In the Python SDK, you will typically want to create an interceptor class that inherits from _both_ `client.Interceptor`
-and `worker.Interceptor` as above, since their method sets do not overlap.
+您的 Worker 和客户端拦截器经常会共享代码，因为它们实现了密切相关的逻辑。
+在 Python SDK 中，您通常需要创建一个继承自 _both_ `client.Interceptor` 的拦截器类
+和 `Worker.Interceptor` 如上所述，因为它们的方法集不重叠。
 
-You can then [register](#register) this interceptor in your client/starter code.
+然后，您可以在客户端/起始代码中使用 [登记](#register) 这个拦截器。
 
-Your interceptor classes need not implement every method; the default implementation is always to pass the data on to the next method in the interceptor chain.
-During execution, when the SDK encounters an Inbound Activity call, it will look to the first Interceptor instance, get hold of the appropriate intercepted method, and call it.
-The intercepted method will perform its function then call the same method on the next Interceptor in the chain.
-At the end of the chain the SDK will call the "real" SDK method.
+您的拦截器类不需要实现每个方法；默认实现始终是将数据传递给拦截器链中的下一个方法。
+在执行过程中，当 SDK 遇到 Inbound Activity 调用时，它将查找第一个 Interceptor 实例，获取适当的拦截方法并调用它。
+被拦截的方法将执行其功能，然后在链中的下一个拦截器上调用相同的方法。
+在链的末端，SDK 将调用“真正的”SDK 方法。
 
-### Implementing Worker call Interceptors
+<a id="implementing-worker-call-interceptors"></a>
+### 实现 Worker 调用拦截器 {#implementing-worker-call-interceptors}
 
-To modify inbound and outbound Workflow and Activity calls, define a class inheriting from `worker.Interceptor`. This is
-an interface with two methods named `intercept_activity` and `workflow_interceptor_class`, which you can use to
-configure interceptions of Activity and Workflow calls, respectively. `intercept_activity` returns an
-`ActivityInboundInterceptor`.
+要修改入站和出站 Workflow 和 Activity 调用，请定义一个继承自 `Worker.Interceptor` 的类。这是
+具有两个名为 `intercept_Activity` 和 `Workflow_interceptor_class` 的方法的接口，您可以使用它们
+分别配置 Activity 和 Workflow 调用的拦截。 `intercept_Activity` 返回一个
+`ActivityInboundInterceptor`。
 
-This example demonstrates using an interceptor to measure [Schedule-To-Start](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout) and Schedule-To-Close latency.
-Notice how the interceptor wraps the call: it records Schedule-To-Start before `execute_activity`, then records Schedule-To-Close after it completes:
+此示例演示如何使用拦截器来测量 [Schedule-开始](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout) 和 Schedule-To-Close 延迟。
+请注意拦截器如何包装调用：它在 `execute_Activity` 之前记录 Schedule-To-Start，然后在完成后记录 Schedule-To-Close：
 
 ```python
 from datetime import datetime, timezone
@@ -279,5 +288,5 @@ worker = Worker(
 )
 ```
 
-The `workflow_interceptor_class` returns a `WorkflowInboundInterceptor` that works similarly to
-`ActivityInboundInterceptor`.
+`Workflow_interceptor_class` 返回一个 `WorkflowInboundInterceptor`，其工作原理类似于
+`ActivityInboundInterceptor`。

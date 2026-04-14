@@ -1,0 +1,50 @@
+---
+id: debugging
+title: 调试-Ruby SDK
+sidebar_label: 调试
+description: 使用 Temporal Ruby SDK 在开发和生产环境中调试 Workflow。使用日志记录、调试器、CLI、重放、跟踪等。
+toc_max_heading_level: 4
+keywords:
+  - sdk
+  - ruby
+  - debugging
+tags:
+  - Ruby SDK
+  - Temporal SDKs
+  - Debugging
+  - Errors
+---
+
+## 调试 {#debug}
+
+此页面显示如何执行以下操作：
+
+- [在开发环境中调试](#debug-in-a-development-environment)
+- [在开发生产中调试](#debug-in-a-development-environment)
+
+## 在开发环境中调试 {#debug-in-a-development-environment}
+
+在开发 Workflow 时，您可以使用常规开发工具（日志记录和调试器）来查看 Workflow 中发生的情况。
+
+除了日志记录和调试器等常规开发工具外，您还可以使用 [Web UI](/web-ui) 或 [Temporal CLI](/cli) 查看 Workflow 中发生的情况。
+Web UI 可让您深入了解 Workflow，从而更轻松地识别问题并实时监控 Workflow 的状态。
+
+## 在生产环境中调试 {#debug-in-a-product-environment}
+
+对于生产型 Workflow，调试选项包括：
+
+- [网页用户界面](/web-ui)
+- [Temporal CLI](/cli)
+- [重播](/develop/ruby/best-practices/testing-suite#replay-test)
+- [跟踪](/develop/ruby/platform/observability#tracing)
+- [日志记录](/develop/ruby/platform/observability#logging)
+
+您可以使用以下方法分析 Worker 性能：
+
+- [指标](/develop/ruby/platform/observability#metrics)
+- [Worker性能指南](/develop/Worker-性能)
+
+监控服务器性能：
+
+- 如果您使用的是 Temporal Cloud，请使用 [云指标](/cloud/metrics/)
+- 或者 [自托管服务器指标](/self-hosted-guide/product-checklist#scaling-and-metrics) 如果运行您自己的部署

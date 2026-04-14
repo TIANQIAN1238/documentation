@@ -1,8 +1,8 @@
 ---
 id: temporal-client
-title: Temporal Client - Go SDK
-sidebar_label: Temporal Client
-description:
+title: "Temporal CLIent - Go SDK"
+sidebar_label: "Temporal CLIent"
+description: Connect to Temporal Service or Cloud, start Workflow Executions, manage Workflow options, and retrieve Workflow
   Connect to Temporal Service or Cloud, start Workflow Executions, manage Workflow options, and retrieve Workflow
   results using the Go SDK. Follow detailed steps and code examples to effectively use Temporal’s capabilities.
 toc_max_heading_level: 4
@@ -32,68 +32,68 @@ tags:
   - Certificates
 ---
 
-A [Temporal Client](/encyclopedia/temporal-sdks#temporal-client) enables you to communicate with the
-[Temporal Service](/temporal-service). Communication with a Temporal Service lets you perform actions such as starting
-Workflow Executions, sending Signals to Workflow Executions, sending Queries to Workflow Executions, getting the results
-of a Workflow Execution, and providing Activity Task Tokens.
+[Temporal CLIent](/encyclopedia/temporal-sdks#temporal-client) 使您能够与
+[Temporal 服务](/temporal-service)。与 Temporal 服务的通信允许您执行启动等操作
+Workflow Executions，发送Signals到Workflow Executions，发送查询到Workflow Executions，得到结果
+Workflow Execution，并提供 Activity 任务令牌。
 
-This page shows you how to do the following using the Go SDK with the Temporal Client:
+本页向您展示如何使用 Go SDK 和 Temporal CLIent 执行以下操作：
 
-- [Connect to a local development Temporal Service](#connect-to-development-service)
-- [Connect to Temporal Cloud](#connect-to-temporal-cloud)
-- [Start a Workflow Execution](#start-workflow-execution)
-- [Get Workflow results](#get-workflow-results)
+- [连接到本地开发 Temporal 服务](#connect-to-development-service)
+- [连接到 Temporal Cloud](#connect-to-temporal-cloud)
+- [启动 Workflow Execution](#start-workflow-execution)
+- [获取 Workflow 结果](#get-workflow-results)
 
 :::caution
 
-A Temporal Client cannot be initialized and used inside a Workflow. However, it is acceptable and common to use a
-Temporal Client inside an Activity to communicate with a Temporal Service.
+Temporal CLIent 无法在 Workflow 内部初始化和使用。然而，使用
+Temporal CLIent 位于 Activity 内部，与 Temporal 服务进行通信。
 
 :::
 
-## Connect to development Temporal Service {#connect-to-development-service}
+## 连接到开发 Temporal 服务 {#connect-to-development-service}
 
-Use the [`Dial()`](https://pkg.go.dev/go.temporal.io/sdk/client#Dial) API available in the
-[`go.temporal.io/sdk/client`](https://pkg.go.dev/go.temporal.io/sdk/client) package to create a
-[`Client`](https://pkg.go.dev/go.temporal.io/sdk/client#Client). The `Dial()` API expects connection options such as the
-Temporal Server address, the Namespace to connect to, and Transport Layer Security (TLS) configuration. You can specify
-these options in the function call, or specify them using environment variables or a configuration file. We recommend
-you use environment variables or a configuration file to manage these connection options securely.
+使用 [`Dial()`](https://pkg.go.dev/go.temporal.io/sdk/client#Dial) API 中提供的
+[`go.Temporal.io/sdk/client`](https://pkg.go.dev/go.temporal.io/sdk/client) 包创建
+[`Client`](https://pkg.go.dev/go.temporal.io/sdk/client#Client)。 `Dial()` API 需要连接选项，例如
+Temporal Server 地址、要连接的 Namespace 以及传输层安全 (TLS) 配置。您可以指定
+这些选项可以在函数调用中使用，或者使用环境变量或配置文件来指定它们。我们推荐
+您可以使用环境变量或配置文件来安全地管理这些连接选项。
 
 :::info Versioning Requirements
 
-Environment variable and configuration file support were added in Go SDK v1.28.0.
+Go SDK v1.28.0 中添加了环境变量和配置文件支持。
 
 :::
 
-When you are running a Temporal Service locally, such as the
-[Temporal CLI](https://docs.temporal.io/cli/server#start-dev), the connection options you must provide are minimal.
+当您在本地运行 Temporal 服务时，例如
+[Temporal CLI](https://docs.temporal.io/cli/server#start-dev)，您必须提供的连接选项很少。
 
-If you don't provide [`HostPort`](https://pkg.go.dev/go.temporal.io/sdk/internal#ClientOptions), the Client defaults the
-address and port number to `127.0.0.1:7233`, which is the port of the development Temporal Service. If you don't set a
-custom Namespace name in the Namespace field, the client connects to the default Namespace.
+如果您不提供 [`HostPort`](https://pkg.go.dev/go.temporal.io/sdk/internal#ClientOptions)，则客户端默认
+地址和端口号为`127.0.0.1:7233`，这是开发Temporal服务的端口。如果你没有设置
+在 Namespace 字段中自定义 Namespace 名称，客户端连接到默认的 Namespace。
 
 <Tabs groupId="connect-options" defaultValue="env-vars" >
 
 <TabItem value="config-file" label="Configuration File">
 
-You can use a TOML configuration file to set connection options for the Temporal Client. The configuration file lets you
-configure multiple profiles, each with its own set of connection options. You can then specify which profile to use when
-creating the Temporal Client. You can use the environment variable `TEMPORAL_CONFIG_FILE` to specify the location of the
-TOML file or provide the path to the file directly in code. If you don't provide the configuration file path, the SDK
-looks for it at the path `~/.config/temporalio/temporal.toml`. For a list of all available configuration options, refer
-to [Environment Configuration](/references/client-environment-configuration)
+您可以使用 TOML 配置文件来设置 Temporal CLIent 的连接选项。配置文件可以让你
+配置多个配置文件，每个配置文件都有自己的一组连接选项。然后，您可以指定在以下情况下使用哪个配置文件：
+创建 Temporal CLIent。您可以使用环境变量 `Temporal_CONFIG_FILE` 来指定
+TOML 文件或直接在代码中提供文件的路径。如果不提供配置文件路径，SDK
+在路径 `~/.config/temporalio/temporal.toml` 中查找它。有关所有可用配置选项的列表，请参阅
+至 [环境配置](/references/client-environment-configuration)
 
 :::info
 
-The connection options set in configuration files have lower precedence than environment variables. This means that if
-you set the same option in both the configuration file and as an environment variable, the environment variable value
-overrides the option set in the configuration file.
+配置文件中设置的连接选项的优先级低于环境变量。这意味着如果
+您在配置文件和环境变量中设置相同的选项，即环境变量值
+覆盖配置文件中设置的选项。
 
 :::
 
-For example, the following TOML configuration file defines two profiles: `default` and `prod`. Each profile has its own
-set of connection options.
+例如，以下 TOML 配置文件定义了两个配置文件：`default` 和 `prod`。每个配置文件都有自己的
+连接选项集。
 
 ```toml
 # Default profile for local development
@@ -126,7 +126,7 @@ environment = "production"
 service-version = "v1.2.3"
 ```
 
-You can create a Temporal Client using a specific profile from the configuration file as follows:
+您可以使用配置文件中的特定配置文件创建 Temporal CLIent，如下所示：
 
 ```go
 package main
@@ -163,15 +163,15 @@ func main() {
 
 <TabItem value="env-vars" label="Environment Variables">
 
-Use the `envconfig` package to set connection options for the Temporal Client using environment variables. For a list of
-all available environment variables and their default values, refer to
-[Environment Configuration](/references/client-environment-configuration).
+使用 `envconfig` 包通过环境变量设置 Temporal CLIent 的连接选项。欲了解以下列表
+所有可用的环境变量及其默认值，请参阅
+[环境配置](/references/client-environment-configuration)。
 
-For example, the following code snippet loads all environment variables and creates a Temporal Client with the options
-specified in those variables. If you have defined a configuration file at either the default location
-(`~/.config/temporalio/temporal.toml`) or a custom location specified by the `TEMPORAL_CONFIG_FILE` environment
-variable, this will also load the default profile in the configuration file. However, any options set via environment
-variables will take precedence.
+例如，以下代码片段加载所有环境变量并使用选项创建 Temporal CLIent
+在这些变量中指定。如果您已在默认位置定义了配置文件
+(`~/.config/temporalio/temporal.toml`) 或 `Temporal_CONFIG_FILE` 环境指定的自定义位置
+变量，这也将加载配置文件中的默认配置文件。但是，通过环境设置的任何选项
+变量将优先。
 
 ```go
 package main
@@ -201,12 +201,12 @@ func main() {
 
 <TabItem value="code" label="Code">
 
-If you don't want to use environment variables or a configuration file, you can specify connection options directly in
-code. This is convenient for local development and testing. You can also load a base configuration from environment
-variables or a configuration file, and then override specific options in code.
+如果不想使用环境变量或配置文件，可以直接在中指定连接选项
+代码。这样方便本地开发和测试。您还可以从环境加载基本配置
+变量或配置文件，然后覆盖代码中的特定选项。
 
 {/* SNIPSTART samples-apps-go-yourapp-gateway {"selectedLines": ["1-23", "32"]} */}
-[sample-apps/go/yourapp/gateway/main.go](https://github.com/temporalio/documentation/blob/main/sample-apps/go/yourapp/gateway/main.go)
+[示例应用程序/go/yourapp/gateway/main.go](https://github.com/temporalio/documentation/blob/main/sample-apps/go/yourapp/gateway/main.go)
 ```go
 package main
 
@@ -240,52 +240,53 @@ func main() {
 
 </Tabs>
 
-## Connect to Temporal Cloud {#connect-to-temporal-cloud}
+<a id="connect-to-temporal-cloud"></a>
+## 连接到 Temporal Cloud {#connect-to-temporal-cloud}
 
-You can connect to Temporal Cloud using either an [API key](/cloud/api-keys) or through mTLS. Connection to Temporal
-Cloud or any secured Temporal Service requires additional connection options compared to connecting to an unsecured
-local development instance:
+您可以使用 [API密钥](/cloud/api-keys) 或通过 mTLS 连接到 Temporal Cloud。连接至 Temporal
+与连接到不安全的云或任何安全的 Temporal 服务相比，云或任何安全的 Temporal 服务需要额外的连接选项
+本地开发实例：
 
-- Your credentials for authentication.
-  - If you are using an API key, provide the API key value.
-  - If you are using mTLS, provide the mTLS CA certificate and mTLS private key.
-- Your _Namespace and Account ID_ combination, which follows the format `<namespace_id>.<account_id>`.
-- The recommended _endpoint_ is the gRPC Namespace endpoint: `<namespace>.<account>.tmprl.cloud:7233`.
-  This endpoint works for all Namespaces and automatically directs traffic to the active region for Namespaces with [High Availability](/cloud/high-availability).
-  See [accessing Namespaces](/cloud/namespaces#access-namespaces) for more information on endpoint options.
+- 您的身份验证凭据。
+  - 如果您使用 API 密钥，请提供 API 密钥值。
+  - 如果您使用 mTLS，请提供 mTLS CA 证书和 mTLS 私钥。
+- 您的 _Namespace 和帐户 ID_ 组合，格式为 `<Namespace_id>.<account_id>`。
+- 建议的_端点_是 gRPC Namespace 端点：`<Namespace>.<account>.tmprl.cloud:7233`。
+  此端点适用于所有 Namespace，并自动将流量定向到具有 [高可用性](/cloud/high-availability) 的 Namespace 的活动区域。
+  有关端点选项的更多信息，请参阅 [访问 Namespace](/cloud/namespaces#access-namespaces)。
 
-You can find the Namespace and Account ID, as well as the endpoint, on the Namespaces tab:
+您可以在 Namespaces 选项卡上找到 Namespace 和账户 ID 以及终端节点：
 
-![The Namespace and Account ID combination on the left, and the regional endpoint on the right](/img/cloud/apikeys/namespaces-and-regional-endpoints.png)
+![左侧为 Namespace 和账户 ID 组合，右侧为区域终端节点](/img/cloud/apikeys/namespaces-and-regional-endpoints.png)
 
-For more information about managing and generating client certificates for Temporal Cloud, see
-[How to manage certificates in Temporal Cloud](/cloud/certificates).
+有关管理和生成 Temporal Cloud 客户端证书的更多信息，请参阅
+[如何在Temporal Cloud中管理证书](/cloud/certificates)。
 
-You can provide these connection options using environment variables, a configuration file, or directly in code.
+您可以使用环境变量、配置文件或直接在代码中提供这些连接选项。
 
 <Tabs groupId="connect-api-key-options" defaultValue="config-file" >
 
 <TabItem value="config-file" label="Configuration File">
 
-You can use a TOML configuration file to set connection options for the Temporal Client. The configuration file lets you
-configure multiple profiles, each with its own set of connection options. You can then specify which profile to use when
-creating the Temporal Client. For a list of all available configuration options you can set in the TOML file, refer to
-[Environment Configuration](/references/client-environment-configuration).
+您可以使用 TOML 配置文件来设置 Temporal CLIent 的连接选项。配置文件可以让你
+配置多个配置文件，每个配置文件都有自己的一组连接选项。然后，您可以指定在以下情况下使用哪个配置文件：
+创建 Temporal CLIent。有关可在 TOML 文件中设置的所有可用配置选项的列表，请参阅
+[环境配置](/references/client-environment-configuration)。
 
-You can use the environment variable `TEMPORAL_CONFIG_FILE` to specify the location of the TOML file or provide the path
-to the file directly in code. If you don't provide the path to the configuration file, the SDK looks for it at the
-default path `~/.config/temporalio/temporal.toml`.
+您可以使用环境变量 `Temporal_CONFIG_FILE` 指定 TOML 文件的位置或提供路径
+直接在代码中写入文件。如果您不提供配置文件的路径，SDK 将在
+默认路径 `~/.config/temporalio/temporal.toml`。
 
 :::info
 
-The connection options set in configuration files have lower precedence than environment variables. This means that if
-you set the same option in both the configuration file and as an environment variable, the environment variable value
-overrides the option set in the configuration file.
+配置文件中设置的连接选项的优先级低于环境变量。这意味着如果
+您在配置文件和环境变量中设置相同的选项，即环境变量值
+覆盖配置文件中设置的选项。
 
 :::
 
-For example, the following TOML configuration file defines a `cloud` profile with the necessary connection options to
-connect to Temporal Cloud via an API key:
+例如，以下 TOML 配置文件定义了 `cloud` 配置文件，其中包含必要的连接选项
+通过 API 密钥连接到 Temporal Cloud：
 
 ```toml
 # Cloud profile for Temporal Cloud
@@ -295,8 +296,8 @@ namespace = "your-namespace"
 api_key = "your-api-key-here"
 ```
 
-If you want to use mTLS authentication instead of an API key, replace the `api_key` field with your mTLS certificate and
-private key:
+如果您想使用 mTLS 身份验证而不是 API 密钥，请将 `api_key` 字段替换为您的 mTLS 证书，然后
+私钥：
 
 ```toml
 # Cloud profile for Temporal Cloud
@@ -307,8 +308,8 @@ tls_client_cert_data = "your-tls-client-cert-data"
 tls_client_key_path = "your-tls-client-key-path"
 ```
 
-With the connections options defined in the configuration file, use the `LoadClientOptions` function in the `envconfig`
-package to create a Temporal Client using the `cloud` profile as follows:
+使用配置文件中定义的连接选项，使用 `envconfig` 中的 `LoadClientOptions` 函数
+使用 `cloud` 配置文件创建 Temporal CLIent 的软件包，如下所示：
 
 ```go {13-17}
 package main
@@ -346,27 +347,27 @@ func main() {
 </TabItem>
 
 <TabItem value="env-vars" label="Environment Variables">
-The following environment variables are required to connect to Temporal Cloud:
+连接到 Temporal Cloud 需要以下环境变量：
 
-- `TEMPORAL_NAMESPACE`: Your Namespace and Account ID combination in the format `<namespace_id>.<account_id>`.
-- `TEMPORAL_ADDRESS`: The gRPC endpoint for your Temporal Cloud Namespace.
-- `TEMPORAL_API_KEY`: Your API key value. Required if you are using API key authentication.
-- `TEMPORAL_TLS_CLIENT_CERT_DATA` or `TEMPORAL_TLS_CLIENT_CERT_PATH`: Your mTLS client certificate data or file path.
-  Required if you are using mTLS authentication.
-- `TEMPORAL_TLS_CLIENT_KEY_DATA` or `TEMPORAL_TLS_CLIENT_KEY_PATH`: Your mTLS client private key data or file path.
-  Required if you are using mTLS authentication.
+- `Temporal_Namespace`：您的 Namespace 和帐户 ID 组合，格式为 `<Namespace_id>.<account_id>`。
+- `Temporal_ADDRESS`：Temporal Cloud Namespace 的 gRPC 端点。
+- `Temporal_API_KEY`：您的 API 密钥值。如果您使用 API 密钥身份验证，则为必需。
+- `Temporal_TLS_CLIENT_CERT_DATA` 或 `Temporal_TLS_CLIENT_CERT_PATH`：您的 mTLS 客户端证书数据或文件路径。
+  如果您使用 mTLS 身份验证，则为必需。
+- `Temporal_TLS_CLIENT_KEY_DATA` 或 `Temporal_TLS_CLIENT_KEY_PATH`：您的 mTLS 客户端私钥数据或文件路径。
+  如果您使用 mTLS 身份验证，则为必需。
 
-Ensure these environment variables exist in your environment before running your Go application.
+在运行 Go 应用程序之前，请确保您的环境中存在这些环境变量。
 
-Import the `envconfig` package to set connection options for the Temporal Client using environment variables. The
-`MustLoadDefaultClientOptions` function will automatically load all environment variables. For a list of all available
-environment variables and their default values, refer to [Environment Configuration](/references/client-environment-configuration).
+导入 `envconfig` 包以使用环境变量设置 Temporal CLIent 的连接选项。的
+`MustLoadDefaultClientOptions`函数会自动加载所有环境变量。查看所有可用的列表
+环境变量及其默认值，请参阅[环境配置](/references/client-environment-configuration)。
 
-For example, the following code snippet loads all environment variables and creates a Temporal Client with the options
-specified in those variables. If you have defined a configuration file at either the default location
-(`~/.config/temporalio/temporal.toml`) or a custom location specified by the `TEMPORAL_CONFIG_FILE` environment
-variable, this will also load the default profile in the configuration file. However, any options set via environment
-variables will take precedence.
+例如，以下代码片段加载所有环境变量并使用选项创建 Temporal CLIent
+在这些变量中指定。如果您已在默认位置定义了配置文件
+(`~/.config/temporalio/temporal.toml`) 或 `Temporal_CONFIG_FILE` 环境指定的自定义位置
+变量，这也将加载配置文件中的默认配置文件。但是，通过环境设置的任何选项
+变量将优先。
 
 ```go {13}
 package main
@@ -395,8 +396,8 @@ func main() {
 
 <TabItem value="code" label="Code">
 
-You can also provide connections options in your Go code directly. When instantiating a Temporal `client` in your
-Temporal Go SDK code, provide the following `clientOptions`:
+您还可以直接在 Go 代码中提供连接选项。在实例化 Temporal `client` 时
+Temporal Go SDK代码，提供以下`clientOptions`：
 
 ```go
 clientOptions := client.Options{
@@ -408,7 +409,7 @@ clientOptions := client.Options{
 c, err := client.Dial(clientOptions)
 ```
 
-To update an API key, use the Go `context` object:
+要获得 Update API 密钥，请使用 Go `context` 对象：
 
 ```go
 // Assuming client Credentials created with
@@ -419,15 +420,15 @@ creds := client.NewAPIKeyDynamicCredentials(
 myKey = myKeyUpdated
 ```
 
-You can use a combination of environment variables, configuration files, and code to set connection options. For
-example, you can load a base configuration from environment variables or a configuration file, and then override
-specific options in code.
+您可以使用环境变量、配置文件和代码的组合来设置连接选项。对于
+例如，您可以从环境变量或配置文件加载基本配置，然后覆盖
+代码中的特定选项。
 
-For example, the following code snippet loads the base configuration from environment variables and the default profile
-with `envconfig.MustLoadDefaultClientOptions()`. It then overrides the `HostPort` and `Namespace` options
-programmatically. Refer to
-[Client Options type in the Go SDK](https://pkg.go.dev/go.temporal.io/sdk/internal#ClientOptions) for a list of all
-available connection options you can override.
+例如，以下代码片段从环境变量和默认配置文件加载基本配置
+与 `envconfig.MustLoadDefaultClientOptions()`。然后它会覆盖 `HostPort` 和 `Namespace` 选项
+以编程方式。参考
+[Go SDK 中的客户端选项类型](https://pkg.go.dev/go.temporal.io/sdk/internal#ClientOptions) 为所有列表
+您可以覆盖的可用连接选项。
 
 ```go
 package main
@@ -461,7 +462,7 @@ func main() {
 <details>
 <summary><strong>v1.26.0 to v1.32.x </strong></summary>
 
-Create an initial connection:
+创建初始连接：
 
 ```go
 clientOptions := client.Options{
@@ -492,7 +493,7 @@ if err != nil {
 }
 ```
 
-Update an API key:
+Update API 密钥：
 
 ```go
 // Assuming client Credentials created with
@@ -508,7 +509,7 @@ myKey = myKeyUpdated
 <details>
 <summary><strong>pre v1.26.0</strong></summary>
 
-Create an initial connection:
+创建初始连接：
 
 ```go
 // Create headers provider
@@ -532,7 +533,7 @@ c, err := client.Dial(client.Options{
 })
 ```
 
-Update an API key:
+Update API 密钥：
 
 ```go
 apiKeyProvider.APIKey = myKeyUpdated
@@ -544,33 +545,34 @@ apiKeyProvider.APIKey = myKeyUpdated
 
 </Tabs>
 
-## Start Workflow Execution {#start-workflow-execution}
+<a id="start-workflow-execution"></a>
+## 启动 Workflow Execution {#start-workflow-execution}
 
-**How to start a Workflow Execution using the Go SDK**
+**如何使用 Go SDK 启动 Workflow Execution**
 
-[Workflow Execution](/workflow-execution) semantics rely on several parameters—that is, to start a Workflow Execution
-you must supply a Task Queue that will be used for the Tasks (one that a Worker is polling), the Workflow Type,
-language-specific contextual data, and Workflow Function parameters.
+[Workflow Execution](/workflow-execution) 语义依赖于几个参数，即启动 Workflow Execution
+您必须提供将用于任务的 Task Queue（Worker 正在轮询的任务）、Workflow 类型、
+特定于语言的上下文数据和 Workflow 函数参数。
 
-In the examples below, all Workflow Executions are started using a Temporal Client. To spawn Workflow Executions from
-within another Workflow Execution, use either the [Child Workflow](/develop/go/workflows/child-workflows) or External Workflow
-APIs.
+在下面的示例中，所有 Workflow Execution 均使用 Temporal CLIent 启动。从中生成 Workflow Execution
+在另一个 Workflow Execution 中，使用 [Child Workflow](/develop/go/workflows/child-workflows) 或外部 Workflow
+API。
 
-See the [Customize Workflow Type](/develop/go/workflows/basics#customize-workflow-type) section to see how to customize
-the name of the Workflow Type.
+请参阅 [定制Workflow型](/develop/go/workflows/basics#customize-workflow-type) 部分以了解如何自定义
+Workflow 类型的名称。
 
-A request to spawn a Workflow Execution causes the Temporal Service to create the first Event
-([WorkflowExecutionStarted](/references/events#workflowexecutionstarted)) in the Workflow Execution Event History. The
-Temporal Service then creates the first Workflow Task, resulting in the first
-[WorkflowTaskScheduled](/references/events#workflowtaskscheduled) Event.
+生成 Workflow Execution 的请求会导致 Temporal 服务创建第一个事件
+([Workflow执行开始](/references/events#workflowexecutionstarted)) 在 Workflow Execution Event History 中。的
+然后，Temporal 服务创建第一个 Workflow 任务，从而产生第一个
+[Workflow任务Scheduled](/references/events#workflowtaskscheduled) 事件。
 
-To spawn a [Workflow Execution](/workflow-execution), use the `ExecuteWorkflow()` method on the Go SDK
-[`Client`](https://pkg.go.dev/go.temporal.io/sdk/client#Client).
+要生成 [Workflow Execution](/workflow-execution)，请在 Go SDK 上使用 `ExecuteWorkflow()` 方法
+[`Client`](https://pkg.go.dev/go.temporal.io/sdk/client#Client)。
 
-The `ExecuteWorkflow()` API call requires an instance of [`context.Context`](https://pkg.go.dev/context#Context), an
-instance of [`StartWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk/client#StartWorkflowOptions), a Workflow Type
-name, and all variables to be passed to the Workflow Execution. The `ExecuteWorkflow()` call returns a Future, which can
-be used to get the result of the Workflow Execution.
+`ExecuteWorkflow()` API 调用需要 [`context.Context`](https://pkg.go.dev/context#Context) 的实例，
+[`StartWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk/client#StartWorkflowOptions) 的实例，Workflow 类型
+名称以及要传递给 Workflow Execution 的所有变量。 `ExecuteWorkflow()` 调用返回一个 Future，它可以
+用于获取 Workflow Execution 的结果。
 
 ```go
 package main
@@ -603,36 +605,36 @@ func YourWorkflowDefinition(ctx workflow.Context, param YourWorkflowParam) (Your
 }
 ```
 
-If the invocation process has access to the function directly, then the Workflow Type name parameter can be passed as if
-the function name were a variable, without quotations.
+如果调用过程可以直接访问该函数，则可以传递 Workflow 类型名称参数，就好像
+函数名称是一个变量，不带引号。
 
 ```go
 workflowRun, err := temporalClient.ExecuteWorkflow(context.Background(), workflowOptions, YourWorkflowDefinition, param)
 ```
 
-If the invocation process does not have direct access to the statically defined Workflow Definition, for example, if the
-Workflow Definition is in an un-importable package, or it is written in a completely different language, then the
-Workflow Type can be provided as a `string`.
+如果调用进程无法直接访问静态定义的 Workflow Definition，例如，如果
+Workflow Definition 位于不可导入的包中，或者它是用完全不同的语言编写的，那么
+Workflow 类型可作为 `string` 提供。
 
 ```go
 workflowRun, err := c.ExecuteWorkflow(context.Background(), workflowOptions, "YourWorkflowDefinition", param)
 ```
 
-### Set Workflow Task Queue {#set-task-queue}
+### 设置 Workflow Task Queue {#set-task-queue}
 
-**How to set a Workflow's Task Queue using the Go SDK**
+**如何使用 Go SDK 设置 Workflow 的 Task Queue**
 
-In most SDKs, the only Workflow Option that must be set is the name of the [Task Queue](/task-queue).
+在大多数 SDK 中，唯一必须设置的 Workflow 选项是 [Task Queue](/task-queue) 的名称。
 
-For any code to execute, a Worker Process must be running that contains a Worker Entity that is polling the same Task
-Queue name.
+对于要执行的任何代码，必须运行包含正在轮询同一任务的 Worker 实体的 Worker 进程
+队列名称。
 
-Create an instance of
-[`StartWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk@v1.10.0/client#StartWorkflowOptions) from the
-`go.temporal.io/sdk/client` package, set the `TaskQueue` field, and pass the instance to the `ExecuteWorkflow` call.
+创建一个实例
+[`StartWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk@v1.10.0/client#StartWorkflowOptions) 来自
+`go.Temporal.io/sdk/client` 包，设置 `TaskQueue` 字段，并将实例传递给 `ExecuteWorkflow` 调用。
 
-- Type: `string`
-- Default: None, this is a required field to be set by the developer
+- 型号：`string`
+- 默认：无，这是开发人员设置的必填字段
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -646,25 +648,26 @@ if err != nil {
 }
 ```
 
-You can configure Task Queues that are host-specific, Worker-specific or Workflow-specific to distribute your
-application load. For more information, refer to
-[Task Queues Processing Tuning](/develop/worker-performance#task-queues-processing-tuning) and
-[Worker Versioning](https://docs.temporal.io/worker-versioning).
+您可以配置特定于主机、特定于 Worker 或特定于 Workflow 的 Task Queue 来分发您的
+应用程序负载。欲了解更多信息，请参阅
+[Task Queues 处理调整](/develop/worker-performance#task-queues-processing-tuning) 和
+[Worker 版本控制](https://docs.temporal.io/worker-versioning)。
 
-### Set custom Workflow Id {#workflow-id}
+<a id="workflow-id"></a>
+### 设置自定义 Workflow Id {#workflow-id}
 
-**How to set a custom Workflow Id using the Go SDK**
+**如何使用 Go SDK 设置自定义 Workflow Id**
 
-Although it is not required, we recommend providing your own
-[Workflow Id](/workflow-execution/workflowid-runid#workflow-id) that maps to a business process or business entity
-identifier, such as an order identifier or customer identifier.
+尽管不是必需的，但我们建议您提供自己的
+[Workflow ID](/workflow-execution/workflowid-runid#workflow-id) 映射到业务流程或业务实体
+标识符，例如订单标识符或客户标识符。
 
-Create an instance of
-[`StartWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk@v1.10.0/client#StartWorkflowOptions) from the
-`go.temporal.io/sdk/client` package, set the `ID` field, and pass the instance to the `ExecuteWorkflow` call.
+创建一个实例
+[`StartWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk@v1.10.0/client#StartWorkflowOptions) 来自
+`go.Temporal.io/sdk/client` 包，设置 `ID` 字段，并将实例传递给 `ExecuteWorkflow` 调用。
 
-- Type: `string`
-- Default: System generated UUID
+- 型号：`string`
+- 默认：系统生成的 UUID
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -678,39 +681,40 @@ if err != nil {
 }
 ```
 
-### Go StartWorkflowOptions reference {#workflow-options-reference}
+<a id="workflow-options-reference"></a>
+### Go StartWorkflowOptions 参考 {#workflow-options-reference}
 
-Create an instance of
-[`StartWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk@v1.10.0/client#StartWorkflowOptions) from the
-`go.temporal.io/sdk/client` package, and pass the instance to the `ExecuteWorkflow` call.
+创建一个实例
+[`StartWorkflowOptions`](https://pkg.go.dev/go.temporal.io/sdk@v1.10.0/client#StartWorkflowOptions) 来自
+`go.Temporal.io/sdk/client` 封装，并将实例传递给 `ExecuteWorkflow` 调用。
 
-The following fields are available:
+以下字段可用：
 
-| Field                                                                                   | Required | Type                                                                                            |
+| 场地                                                                                   | 必需的 | 类型                                                                                            |
 | --------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
-| [`ID`](#id)                                                                             | No       | `string`                                                                                        |
-| [`TaskQueue`](#taskqueue)                                                               | **Yes**  | `string`                                                                                        |
-| [`WorkflowExecutionTimeout`](#workflowexecutiontimeout)                                 | No       | `time.Duration`                                                                                 |
-| [`WorkflowRunTimeout`](#workflowruntimeout)                                             | No       | `time.Duration`                                                                                 |
-| [`WorkflowTaskTimeout`](#workflowtasktimeout)                                           | No       | `time.Duration`                                                                                 |
-| [`WorkflowIDReusePolicy`](#workflowidreusepolicy)                                       | No       | [`WorkflowIdReusePolicy`](https://pkg.go.dev/go.temporal.io/api/enums/v1#WorkflowIdReusePolicy) |
-| [`WorkflowExecutionErrorWhenAlreadyStarted`](#workflowexecutionerrorwhenalreadystarted) | No       | `bool`                                                                                          |
-| [`RetryPolicy`](#retrypolicy)                                                           | No       | [`RetryPolicy`](https://pkg.go.dev/go.temporal.io/sdk/temporal#RetryPolicy)                     |
-| [`CronSchedule`](#cronschedule)                                                         | No       | `string`                                                                                        |
-| [`Memo`](#memo)                                                                         | No       | `map[string]interface{}`                                                                        |
-| [`SearchAttributes`](#searchattributes)                                                 | No       | `map[string]interface{}`                                                                        |
+| [`ID`](#id)                                                                             | 不       | `string`                                                                                        |
+| [`TaskQueue`](#taskqueue)                                                               | **是的**  | `string`                                                                                        |
+| [`WorkflowExecutionTimeout`](#workflowexecutiontimeout)                                 | 不       | `time.Duration`                                                                                 |
+| [`WorkflowRunTimeout`](#workflowruntimeout)                                             | 不       | `time.Duration`                                                                                 |
+| [`WorkflowTaskTimeout`](#workflowtasktimeout)                                           | 不       | `time.Duration`                                                                                 |
+| [`WorkflowIDReusePolicy`](#workflowidreusepolicy)                                       | 不       | [`WorkflowIdReusePolicy`](https://pkg.go.dev/go.temporal.io/api/enums/v1#WorkflowIdReusePolicy) |
+| [`WorkflowExecutionErrorWhenAlreadyStarted`](#workflowexecutionerrorwhenalreadystarted) | 不       | `bool`                                                                                          |
+| [`RetryPolicy`](#retrypolicy)                                                           | 不       | [`RetryPolicy`](https://pkg.go.dev/go.temporal.io/sdk/temporal#RetryPolicy)                     |
+| [`CronSchedule`](#cronschedule)                                                         | 不       | `string`                                                                                        |
+| [`Memo`](#memo)                                                                         | 不       | `map[string]interface{}`                                                                        |
+| [`SearchAttributes`](#searchattributes)                                                 | 不       | `map[string]interface{}`                                                                        |
 
-#### ID
+＃＃＃＃ ID
 
-Although it is not required, we recommend providing your own
-[Workflow Id](/workflow-execution/workflowid-runid#workflow-id) that maps to a business process or business entity
-identifier, such as an order identifier or customer identifier.
+尽管不是必需的，但我们建议您提供自己的
+[Workflow ID](/workflow-execution/workflowid-runid#workflow-id) 映射到业务流程或业务实体
+标识符，例如订单标识符或客户标识符。
 
-Create an instance of [StartWorkflowOptions](https://pkg.go.dev/go.temporal.io/sdk@v1.10.0/client#StartWorkflowOptions)
-from the `go.temporal.io/sdk/client` package, set the `ID` field, and pass the instance to the `ExecuteWorkflow` call.
+创建 [开始Workflow选项](https://pkg.go.dev/go.temporal.io/sdk@v1.10.0/client#StartWorkflowOptions) 的实例
+从 `go.Temporal.io/sdk/client` 包中，设置 `ID` 字段，并将实例传递给 `ExecuteWorkflow` 调用。
 
-- Type: `string`
-- Default: System generated UUID
+- 型号：`string`
+- 默认：系统生成的 UUID
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -724,14 +728,15 @@ if err != nil {
 }
 ```
 
-#### TaskQueue
+<a id="id"></a>
+#### 任务队列 {#id}
 
-Create an instance of [StartWorkflowOptions](https://pkg.go.dev/go.temporal.io/sdk@v1.10.0/client#StartWorkflowOptions)
-from the `go.temporal.io/sdk/client` package, set the `TaskQueue` field, and pass the instance to the `ExecuteWorkflow`
-call.
+创建 [开始Workflow选项](https://pkg.go.dev/go.temporal.io/sdk@v1.10.0/client#StartWorkflowOptions) 的实例
+从 `go.Temporal.io/sdk/client` 包中，设置 `TaskQueue` 字段，并将实例传递给 `ExecuteWorkflow`
+打电话。
 
-- Type: `string`
-- Default: None; this is a required field to be set by the developer
+- 型号：`string`
+- 默认：无；这是开发者设置的必填字段
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -745,14 +750,15 @@ if err != nil {
 }
 ```
 
-#### WorkflowExecutionTimeout
+<a id="taskqueue"></a>
+#### Workflow执行超时 {#taskqueue}
 
-Create an instance of [StartWorkflowOptions](https://pkg.go.dev/go.temporal.io/sdk/client#StartWorkflowOptions) from the
-`go.temporal.io/sdk/client` package, set the `WorkflowExecutionTimeout` field, and pass the instance to the
-`ExecuteWorkflow` call.
+从以下位置创建 [开始Workflow选项](https://pkg.go.dev/go.temporal.io/sdk/client#StartWorkflowOptions) 的实例
+`go.Temporal.io/sdk/client` 包，设置 `WorkflowExecutionTimeout` 字段，并将实例传递给
+`ExecuteWorkflow` 呼叫。
 
-- Type: `time.Duration`
-- Default: Unlimited
+- 型号：`time.Duration`
+- 默认：无限制
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -766,14 +772,15 @@ if err != nil {
 }
 ```
 
-#### WorkflowRunTimeout
+<a id="workflowexecutiontimeout"></a>
+#### WorkflowRunTimeout {#workflowexecutiontimeout}
 
-Create an instance of [StartWorkflowOptions](https://pkg.go.dev/go.temporal.io/sdk/client#StartWorkflowOptions) from the
-`go.temporal.io/sdk/client` package, set the `WorkflowRunTimeout` field, and pass the instance to the `ExecuteWorkflow`
-call.
+从以下位置创建 [开始Workflow选项](https://pkg.go.dev/go.temporal.io/sdk/client#StartWorkflowOptions) 的实例
+`go.Temporal.io/sdk/client`包，设置`WorkflowRunTimeout`字段，并将实例传递给`ExecuteWorkflow`
+打电话。
 
-- Type: `time.Duration`
-- Default: Same as [`WorkflowExecutionTimeout`](#workflowexecutiontimeout)
+- 型号：`time.Duration`
+- 默认：与 [`WorkflowExecutionTimeout`](#workflowexecutiontimeout) 相同
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -786,14 +793,15 @@ if err != nil {
 }
 ```
 
-#### WorkflowTaskTimeout
+<a id="workflowruntimeout"></a>
+#### WorkflowTaskTimeout {#workflowruntimeout}
 
-Create an instance of [StartWorkflowOptions](https://pkg.go.dev/go.temporal.io/sdk/client#StartWorkflowOptions) from the
-`go.temporal.io/sdk/client` package, set the `WorkflowTaskTimeout` field, and pass the instance to the `ExecuteWorkflow`
-call.
+从以下位置创建 [开始Workflow选项](https://pkg.go.dev/go.temporal.io/sdk/client#StartWorkflowOptions) 的实例
+`go.Temporal.io/sdk/client`包，设置`WorkflowTaskTimeout`字段，并将实例传递给`ExecuteWorkflow`
+打电话。
 
-- Type: `time.Duration`
-- Default: `time.Seconds * 10`
+- 型号：`time.Duration`
+- 默认：`time.Seconds * 10`
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -806,12 +814,13 @@ if err != nil {
 }
 ```
 
-#### WorkflowIDReusePolicy
+<a id="workflowtasktimeout"></a>
+#### WorkflowID重用策略 {#workflowtasktimeout}
 
-- Type: [WorkflowIdReusePolicy](https://pkg.go.dev/go.temporal.io/api/enums/v1#WorkflowIdReusePolicy)
-- Default: `enums.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE`
+- 型号：[WorkflowId重用策略](https://pkg.go.dev/go.temporal.io/api/enums/v1#WorkflowIdReusePolicy)
+- 默认：`enums.Workflow_ID_REUSE_POLICY_ALLOW_DUPLICATE`
 
-Set a value from the `go.temporal.io/api/enums/v1` package.
+设置 `go.Temporal.io/api/enums/v1` 包中的值。
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -824,10 +833,11 @@ if err != nil {
 }
 ```
 
-#### WorkflowExecutionErrorWhenAlreadyStarted
+<a id="workflowidreusepolicy"></a>
+#### WorkflowExecutionErrorWhenAlreadyStarted {#workflowidreusepolicy}
 
-- Type: `bool`
-- Default: `false`
+- 型号：`bool`
+- 默认：`false`
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -840,14 +850,15 @@ if err != nil {
 }
 ```
 
-#### RetryPolicy
+<a id="workflowexecutionerrorwhenalreadystarted"></a>
+#### 重试策略 {#workflowexecutionerrorwhenalreadystarted}
 
-Create an instance of a [RetryPolicy](https://pkg.go.dev/go.temporal.io/sdk/temporal#RetryPolicy) from the
-`go.temporal.io/sdk/temporal` package and provide it as the value to the `RetryPolicy` field of the instance of
-`StartWorkflowOptions`.
+从以下位置创建 [重试策略](https://pkg.go.dev/go.temporal.io/sdk/temporal#RetryPolicy) 的实例
+`go.Temporal.io/sdk/temporal` 封装并将其作为值提供给实例的 `RetryPolicy` 字段
+`StartWorkflowOptions`。
 
-- Type: [RetryPolicy](https://pkg.go.dev/go.temporal.io/sdk/temporal#RetryPolicy)
-- Default: None
+- 型号：[重试策略](https://pkg.go.dev/go.temporal.io/sdk/temporal#RetryPolicy)
+- 默认：无
 
 ```go
 retrypolicy := &temporal.RetryPolicy{
@@ -865,10 +876,11 @@ if err != nil {
 }
 ```
 
-#### CronSchedule
+<a id="retrypolicy"></a>
+#### CronSchedule {#retrypolicy}
 
-- Type: `string`
-- Default: None
+- 型号：`string`
+- 默认：无
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -881,12 +893,13 @@ if err != nil {
 }
 ```
 
-[Sample](https://github.com/temporalio/samples-go/tree/master/cron)
+[样本](https://github.com/temporalio/samples-go/tree/master/cron)
 
-#### Memo
+<a id="cronschedule"></a>
+#### 备忘录 {#cronschedule}
 
-- Type: `map[string]interface{}`
-- Default: Empty
+- 型号：`map[string]interface{}`
+- 默认：空
 
 ```go
 workflowOptions := client.StartWorkflowOptions{
@@ -901,21 +914,22 @@ if err != nil {
 }
 ```
 
-#### SearchAttributes
+<a id="memo"></a>
+#### 搜索属性 {#memo}
 
-**How to set Workflow Execution Search Attributes in Go**
+**如何在 Go 中设置 Workflow Execution Search Attribute**
 
-- Type: `map[string]interface{}`
-- Default: Empty.
+- 型号：`map[string]interface{}`
+- 默认：空。
 
-These are the corresponding [Search Attribute value types](/search-attribute#supported-types) in Go:
+这些是 Go 中对应的 [Search Attribute 值类型](/search-attribute#supported-types)：
 
-- Keyword = string
-- Int = int64
-- Double = float64
-- Bool = bool
-- Datetime = time.Time
-- Text = string
+- 关键字=字符串
+- 整数 = int64
+- 双精度 = float64
+- 布尔=布尔
+- 日期时间 = 时间.时间
+- 文本=字符串
 
 ```go
 searchAttributes := map[string]interface{}{
@@ -932,24 +946,25 @@ if err != nil {
 }
 ```
 
-### Get Workflow results {#get-workflow-results}
+<a id="searchattributes"></a>
+### 获取 Workflow 结果 {#searchattributes}
 
-**How to get the results of a Workflow Execution using the Go SDK**
+**如何使用 Go SDK 获取 Workflow Execution 的结果**
 
-If the call to start a Workflow Execution is successful, you will gain access to the Workflow Execution's Run Id.
+如果启动 Workflow Execution 的调用成功，您将获得对 Workflow Execution 的运行 ID 的访问权限。
 
-The Workflow Id, Run Id, and Namespace may be used to uniquely identify a Workflow Execution in the system and get its
-result.
+Workflow Id、Run Id 和 Namespace 可用于唯一标识系统中的 Workflow Execution 并获取其
+结果。
 
-It's possible to both block progress on the result (synchronous execution) or get the result at some other point in time
-(asynchronous execution).
+可以阻止结果的进展（同步执行）或在其他时间点获取结果
+（异步执行）。
 
-In the Temporal Platform, it's also acceptable to use Queries as the preferred method for accessing the state and
-results of Workflow Executions.
+在 Temporal 平台中，也可以使用查询作为访问状态和数据的首选方法。
+Workflow Execution 的结果。
 
-The `ExecuteWorkflow` call returns an instance of
-[`WorkflowRun`](https://pkg.go.dev/go.temporal.io/sdk/client#WorkflowRun), which is the `workflowRun` variable in the
-following line.
+`ExecuteWorkflow` 调用返回一个实例
+[`WorkflowRun`](https://pkg.go.dev/go.temporal.io/sdk/client#WorkflowRun)，即 `WorkflowRun` 变量
+以下行。
 
 ```go
  workflowRun, err := c.ExecuteWorkflow(context.Background(), workflowOptions, app.YourWorkflowDefinition, param)
@@ -960,15 +975,15 @@ following line.
 }
 ```
 
-The instance of `WorkflowRun` has the following three methods:
+`WorkflowRun`的实例有以下三个方法：
 
-- `GetWorkflowID()`: Returns the Workflow Id of the invoked Workflow Execution.
-- `GetRunID()`: Always returns the Run Id of the initial Run (See [Continue As New](#)) in the series of Runs that make
-  up the full Workflow Execution.
-- `Get`: Takes a pointer as a parameter and populates the associated variable with the Workflow Execution result.
+- `GetWorkflowID()`：返回调用的 Workflow Execution 的 Workflow Id。
+- `GetRunID()`：始终返回一系列运行中的初始运行的运行 ID（请参阅 [继续作为新的](#)）
+  完整的 Workflow Execution。
+- `Get`：采用指针作为参数，并使用 Workflow Execution 结果填充关联变量。
 
-To wait on the result of Workflow Execution in the same process that invoked it, call `Get()` on the instance of
-`WorkflowRun` that is returned by the `ExecuteWorkflow()` call.
+要在调用 Workflow Execution 的同一进程中等待 Workflow Execution 的结果，请在实例上调用 `Get()`
+`ExecuteWorkflow()` 调用返回的 `WorkflowRun`。
 
 ```go
  workflowRun, err := c.ExecuteWorkflow(context.Background(), workflowOptions, YourWorkflowDefinition, param)
@@ -984,16 +999,16 @@ To wait on the result of Workflow Execution in the same process that invoked it,
 }
 ```
 
-However, the result of a Workflow Execution can be obtained from a completely different process. All that is needed is
-the [Workflow Id](#). (A [Run Id](#) is optional if more than one closed Workflow Execution has the same Workflow Id.)
-The result of the Workflow Execution is available for as long as the Workflow Execution Event History remains in the
-system.
+然而，Workflow Execution 的结果可以通过完全不同的过程获得。所需要的只是
+[Workflow ID](#)。 （如果多个封闭的 Workflow Execution 具有相同的 Workflow Id，则 [运行 ID](#) 是可选的。）
+只要 Workflow Execution Event History 保留在 Workflow Execution 中，Workflow Execution 的结果就可用。
+系统。
 
 {/* TODO (See [How long do Workflow Execution Histories persist](#)). */}
 
-Call the `GetWorkflow()` method on an instance of the Go SDK Client and pass it the Workflow Id used to spawn the
-Workflow Execution. Then call the `Get()` method on the instance of `WorkflowRun` that is returned, passing it a pointer
-to populate the result.
+在 Go SDK 客户端实例上调用 `GetWorkflow()` 方法，并向其传递用于生成
+Workflow Execution。然后在返回的 `WorkflowRun` 实例上调用 `Get()` 方法，并向其传递一个指针
+填充结果。
 
 ```go
  // ...
@@ -1008,15 +1023,15 @@ to populate the result.
  // ...
 ```
 
-**Get last completion result**
+**获取最后的完成结果**
 
-In the case of a [Temporal Cron Job](/cron-job), you might need to get the result of the previous Workflow Run and use
-it in the current Workflow Run.
+对于 [Temporal 计划任务](/cron-job)，您可能需要获取之前 Workflow 运行的结果并使用
+它在当前的 Workflow 中运行。
 
-To do this, use the [`HasLastCompletionResult`](https://pkg.go.dev/go.temporal.io/sdk/workflow#HasLastCompletionResult)
-and [`GetLastCompletionResult`](https://pkg.go.dev/go.temporal.io/sdk/workflow#GetLastCompletionResult) APIs, available
-from the [`go.temporal.io/sdk/workflow`](https://pkg.go.dev/go.temporal.io/sdk/workflow) package, directly in your
-Workflow code.
+为此，请使用 [`HasLastCompletionResult`](https://pkg.go.dev/go.temporal.io/sdk/workflow#HasLastCompletionResult)
+和 [`GetLastCompletionResult`](https://pkg.go.dev/go.temporal.io/sdk/workflow#GetLastCompletionResult) API，可用
+从 [`go.Temporal.io/sdk/Workflow`](https://pkg.go.dev/go.temporal.io/sdk/workflow) 包中，直接在您的
+Workflow 代码。
 
 ```go
 type CronResult struct {
@@ -1040,5 +1055,5 @@ func YourCronWorkflowDefinition(ctx workflow.Context) (CronResult, error) {
 }
 ```
 
-This will work even if one of the cron Workflow Runs fails. The next Workflow Run gets the result of the last
-successfully Completed Workflow Run.
+即使 cron Workflow 运行之一失败，这也将起作用。下一次 Workflow 运行将获取上一次的结果
+成功完成 Workflow 运行。

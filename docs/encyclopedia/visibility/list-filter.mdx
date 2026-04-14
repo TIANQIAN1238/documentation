@@ -1,8 +1,8 @@
 ---
 id: list-filter
-title: List Filter
-sidebar_label: List Filter
-description: This guide on Temporal List Filters explains how to set up, configure, and use the List Filter API in Temporal Server versions. Filter and retrieve Workflow Executions, apply supported operators, and optimize queries for efficiency.
+title: "列表过滤器"
+sidebar_label: "列表过滤器"
+description: "本 Temporal 列表过滤器指南介绍了如何在 Temporal Server 版本中设置、配置和使用列表过滤器 API。过滤和检索 Workflow Execution、应用支持的运算符并优化查询以提高效率。"
 slug: /list-filter
 toc_max_heading_level: 4
 keywords:
@@ -16,22 +16,24 @@ tags:
   - Visibility
 ---
 
-This page discusses [List Filter](#list-filter).
+本页讨论 [列表过滤器](#list-filter)。
 
-## What is a List Filter? {#list-filter}
+<a id="list-filter"></a>
+## 什么是列表过滤器？ {#list-filter}
 
-The [Visibility](/temporal-service/visibility) List API requires you to provide a List Filter as an SQL-like string parameter.
+[Visibility](/temporal-service/visibility) 列表 API 要求您提供列表过滤器作为类似 SQL 的字符串参数。
 
-A List Filter includes [Search Attribute](/search-attribute) names, Search Attribute values, and [operators](#supported-operators) so that it can retrieve a filtered list of Workflow Executions from the Visibility Store.
+列表过滤器包括 [Search Attribute](/search-attribute) 名称、Search Attribute 值和 [运营商](#supported-operators)，以便它可以从 Visibility 存储中检索 Workflow Execution 的过滤列表。
 
-List Filter [Search Attribute](/search-attribute) names are case sensitive.
-A single [Namespace](/namespaces) scopes each List Filter.
+列表过滤器 [Search Attribute](/search-attribute) 名称区分大小写。
+每个列表过滤器都有一个 [Namespace](/namespaces) 范围。
 
-A List Filter using a time range provides a resolution of 1 ns on [Elasticsearch](/self-hosted-guide/visibility#elasticsearch) and 1 µs for [SQL databases](/self-hosted-guide/visibility).
+使用时间范围的列表滤波器在 [弹性搜索](/self-hosted-guide/visibility#elasticsearch) 上提供 1 ns 的分辨率，在 [SQL数据库](/self-hosted-guide/visibility) 上提供 1 µs 的分辨率。
 
-### Supported operators
+<a id="supported-operators"></a>
+### 支持的运算符 {#supported-operators}
 
-List Filters support the following operators:
+列表过滤器支持以下运算符：
 
 - **`=, !=, >, >=, <, <=`**
 - **`AND, OR, ()`**
@@ -41,47 +43,49 @@ List Filters support the following operators:
 
 :::note
 
-The **ORDER BY** operator is currently not supported in Temporal Cloud.
+Temporal Cloud 目前不支持 **ORDER BY** 运算符。
 
-The default ordering is: `ClosedTime DESC NULL FIRST`, `StartTime DESC`. {/* `RunID DESC` depends on which visibility store is used. */}
+默认排序为：`ClosedTime DESC NULL FIRST`、`StartTime DESC`。 {/* `RunID DESC` 取决于使用哪个 Visibility 存储。 */}
 
-Custom Search Attributes of the `Text` type cannot be used in **ORDER BY** clauses.
+`Text` 类型的自定义 Search Attribute 不能在 **ORDER BY** 子句中使用。
 
 :::
 
-### Partial string match
+<a id="partial-string-match"></a>
+### 部分字符串匹配 {#partial-string-match}
 
-There are different options for partial string matching when the type of the Search Attribute is [Text](#text) versus [Keyword](#keyword).
+当 Search Attribute 的类型为 [文本](#text) 与 [关键词](#keyword) 时，部分字符串匹配有不同的选项。
 
-#### Text
+＃＃＃＃ 文本
 
-Search Attributes of type `Text` are [broken up into words](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-standard-tokenizer.html) that match with the `=` operator.
+`Text` 类型的 Search Attribute 是与 `=` 运算符匹配的 [分解成单词](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-standard-tokenizer.html)。
 
-For example, if you have a custom `Text` Search Attribute named `Description` with either of the following values—
+例如，如果您有一个名为 `Description` 的自定义 `Text` Search Attribute，且具有以下任一值 -
 
 ```
 my-business-id-foobar
 my business id foobar
 ```
 
-—then the following List Filter matches—
+—则以下列表过滤器匹配 —
 
 ```
 Description = 'foobar'
 ```
 
-—but a partial word does not:
+——但部分单词不会：
 
 ```
 // Doesn't match
 Description = 'foo'
 ```
 
-#### Keyword
+<a id="text"></a>
+#### 关键字 {#text}
 
-For Search Attributes of type `Keyword` like `WorkflowId`, perform partial string matching using STARTS_WITH for prefixes and BETWEEN for suffixes.
+对于 `Keyword` 类型的 Search Attribute（如 `WorkflowId`），使用 STARTS_WITH 作为前缀，使用 BETWEEN 作为后缀来执行部分字符串匹配。
 
-- `WorkflowId STARTS_WITH "order-"` matches Workflow Ids with the "order-" prefix, regardless of the following text.
+- `WorkflowId STARTS_WITH "order-"` 与带有“order-”前缀的 Workflow Id 匹配，无论以下文本如何。
 
   ```
   order-
@@ -90,7 +94,7 @@ For Search Attributes of type `Keyword` like `WorkflowId`, perform partial strin
   order-~~~abracadabra
   ```
 
-- `WorkflowId BETWEEN "order-" AND "order-~"` matches Workflow Ids that have characters after `order-` with ASCII values lower than `~` (126, the highest-value printable character), such as the following:
+- `WorkflowId BETWEEN "order-" AND "order-~"` 匹配 `order-` 之后字符且 ASCII 值低于 `~`（126，最高值可打印字符）的 Workflow Id，如下所示：
 
   ```
   order-
@@ -98,57 +102,59 @@ For Search Attributes of type `Keyword` like `WorkflowId`, perform partial strin
   order-abracadabra
   ```
 
-  It does not match `order-~~`.
+它与 `order-~~` 不匹配。
 
 :::note Filter Composition Quick Reference
 
-**Composition**
+**作品**
 
-- Data types:
-  - String literals with single or double quotes
-  - Numbers (Integer and Floating Point)
-  - Booleans
-- Comparison: `=`, `!=`, `>`, `>=`, `<`, `<=`
-- Expressions/Operators:
+- 数据类型：
+  - 带单引号或双引号的字符串文字
+  - 数字（整数和浮点）
+  - 布尔值
+- 比较：`=`、`!=`、`>`、`>=`、`<`、`<=`
+- 表达式/运算符：
   - `IN array`
   - `BETWEEN value AND value`
   - `STARTS_WITH string`
-  - `IS NULL`, `IS NOT NULL`
-  - `expr AND expr`, `expr OR expr`, `( expr )`
-- Array: `( comma-separated-values )`
+  - `IS NULL`、`IS NOT NULL`
+  - `expr AND expr`、`expr OR expr`、`( expr )`
+- 阵列：`( comma-separated-values )`
 
-**Please note**
+**请注意**
 
-- Wrap attributes with backticks if it contains characters not in
-  `[a-zA-Z0-9]`.
-- `STARTS_WITH` is only available for Keyword Search Attributes.
+- 如果属性包含不在其中的字符，则用反引号括起来
+  `[a-zA-Z0-9]`。
+- `STARTS_WITH` 仅适用于关键字 Search Attribute。
 
 :::
 
-### Efficient API usage
+<a id="keyword"></a>
+### 高效的 API 使用 {#keyword}
 
-If the Advanced List Filter API retrieves a substantial number of Workflow Executions (more than 10,000), the response time might be longer.
+如果高级列表筛选器 API 检索大量 Workflow Execution（超过 10,000 个），则响应时间可能会更长。
 
-Beginning with Temporal Server v1.20, you can employ the `CountWorkflow` API to efficiently count the number of [Workflow Executions](/workflow-execution).
+从 Temporal Server v1.20 开始，您可以使用 `CountWorkflow` API 来高效计算 [Workflow Executions](/workflow-execution) 的数量。
 
-To paginate the results using the `ListWorkflow` API, use the page token to retrieve the next page.
-Continue until the page token becomes `null`/`nil`.
+要使用 `ListWorkflow` API 对结果进行分页，请使用页面令牌检索下一页。
+继续，直到页面令牌变为 `null`/`nil`。
 
-#### List Filter examples
+<a id="efficient-api-usage"></a>
+#### 列表过滤器示例 {#efficient-api-usage}
 
-Here are examples of List Filters set with the [Temporal CLI](/cli/workflow#list):
+以下是使用 [Temporal CLI](/cli/workflow#list) 设置列表过滤器的示例：
 
 ```
 WorkflowType = "main.YourWorkflowDefinition" and ExecutionStatus != "Running" and (StartTime > "2021-06-07T16:46:34.236-08:00" or CloseTime > "2021-06-07T16:46:34-08:00")
 ```
 
-When you use the preceding example, you receive a list of Workflows fulfilling the following criteria:
+当您使用前面的示例时，您会收到满足以下条件的 Workflow 列表：
 
-- Workflow Type is `main.YourWorkflowDefinition`.
-- Workflow isn't in a running state.
-- Workflow either started after "2021-06-07T16:46:34.236-08:00" or closed after "2021-06-07T16:46:34-08:00".
+- Workflow 类型为 `main.YourWorkflowDefinition`。
+- Workflow 未处于运行状态。
+- Workflow 在“2021-06-07T16:46:34.236-08:00”之后启动或在“2021-06-07T16:46:34-08:00”之后关闭。
 
-The following are additional examples of List Filters.
+以下是列表过滤器的其他示例。
 
 ```sql
 WorkflowId = '<workflow-id>'
@@ -186,18 +192,19 @@ ExecutionTime < '2021-08-28T15:04:05+00:00' or ExecutionTime > '2021-08-22T15:04
 WorkflowType STARTS_WITH '<workflow-type-prefix>'
 ```
 
-### Search Attribute aliasing
+<a id="list-filter-examples"></a>
+### Search Attribute 别名 {#list-filter-examples}
 
-Temporal prefixes most [default Search Attributes](./search-attributes.mdx#default-search-attribute) with `Temporal` to avoid naming conflicts with custom Search Attributes.
-To make it easier to reference default Search Attributes in List Filters, Temporal supports aliasing, which lets you use the non-prefixed name of a default Search Attribute. However, if you choose to define a custom Search Attribute with the same name as the non-prefixed alias of a default Search Attribute, your custom Search Attribute overrides the alias.
+Temporal 在大多数 [默认 Search Attribute](./search-attributes.mdx#default-search-attribute) 上添加 `Temporal` 前缀，以避免与自定义 Search Attribute 发生命名冲突。
+为了更轻松地在列表过滤器中引用默认 Search Attribute，Temporal 支持别名，这样您就可以使用默认 Search Attribute 的无前缀名称。但是，如果您选择定义与默认 Search Attribute 的无前缀别名同名的自定义 Search Attribute，则您的自定义 Search Attribute 将覆盖该别名。
 
 :::info Server Version Requirement
 
-Search Attribute aliasing requires Temporal Server version 1.30 and greater.
+Search Attribute 别名需要 Temporal Server 版本 1.30 及更高版本。
 
 :::
 
-For example, the default Search Attribute `TemporalWorkflowVersioningBehavior` has the alias `WorkflowVersioningBehavior`. If you haven't defined a custom Search Attribute named `WorkflowVersioningBehavior`, you can use either name in a List Filter, and both refer to the same Search Attribute.
+例如，默认的 Search Attribute `TemporalWorkflowVersioningBehavior` 的别名为 `WorkflowVersioningBehavior`。如果您尚未定义名为 `WorkflowVersioningBehavior` 的自定义 Search Attribute，则可以在列表过滤器中使用任一名称，并且两者都引用相同的 Search Attribute。
 
 ```sql
 -- Using the original attribute name
@@ -207,17 +214,18 @@ WorkflowVersioningBehavior = 'pinned'
 TemporalWorkflowVersioningBehavior = 'pinned'
 ```
 
-#### Alias resolution with custom Search Attributes
+<a id="search-attribute-aliasing"></a>
+#### 使用自定义 Search Attribute 进行别名解析 {#search-attribute-aliasing}
 
-When resolving a Search Attribute in a List Filter, Temporal Server checks for matches in the following order:
+在列表过滤器中解析 Search Attribute 时，Temporal Server 按以下顺序检查匹配项：
 
-1. Custom Search Attributes defined in the current Namespace
+1.当前Namespace中定义的自定义Search Attribute
 
-2. Default Search Attributes
+2. 默认Search Attribute
 
-This means that if you define a custom Search Attribute with the same name as the alias of a default Search Attribute, the non `Temporal` prefixed name will refer to your custom attribute. You can still search with the default Search Attribute by using the `Temporal` prefix.
+这意味着，如果您定义与默认 Search Attribute 的别名同名的自定义 Search Attribute，则非 `Temporal` 前缀名称将引用您的自定义属性。您仍然可以使用 `Temporal` 前缀使用默认的 Search Attribute 进行搜索。
 
-For example, if you have a custom Search Attribute named `SchedulePaused`, List Filters using the following Search Attributes will return different results:
+例如，如果您有一个名为 `SchedulePaused` 的自定义 Search Attribute，则使用以下 Search Attribute 的列表过滤器将返回不同的结果：
 
 ```sql
 -- If you have a custom Search Attribute named 'SchedulePaused'
@@ -228,6 +236,6 @@ SchedulePaused = true
 TemporalSchedulePaused = true
 ```
 
-`SchedulePaused` will refer to your custom Search Attribute, while `TemporalSchedulePaused` will refer to the default Search Attribute.
+`SchedulePaused` 将引用您的自定义 Search Attribute，而 `TemporalSchedulePaused` 将引用默认的 Search Attribute。
 
 

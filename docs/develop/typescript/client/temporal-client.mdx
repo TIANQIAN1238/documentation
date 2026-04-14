@@ -1,9 +1,9 @@
 ---
 id: temporal-client
-title: Temporal Client - Typescript SDK
-sidebar_label: Temporal Client
+title: "Temporal CLIent - TypeScript SDK"
+sidebar_label: "Temporal CLIent"
 toc_max_heading_level: 4
-description:
+description: The Temporal Client SDK enables seamless communication with the Temporal Service, allowing applications to start
   The Temporal Client SDK enables seamless communication with the Temporal Service, allowing applications to start
   Workflow Executions, send Signals, and query Workflows efficiently.
 keywords:
@@ -28,33 +28,33 @@ tags:
   - Certificates
 ---
 
-A [Temporal Client](/encyclopedia/temporal-sdks#temporal-client) enables you to communicate with the Temporal Service.
-Communication with a Temporal Service lets you perform actions such as starting Workflow Executions, sending Signals and
-Queries to Workflow Executions, getting Workflow results, and more. You cannot initialize a Temporal Client inside a
-Workflow. However, they're commonly initialized inside an Activity to communicate with a Temporal Service.
+[Temporal CLIent](/encyclopedia/temporal-sdks#temporal-client) 使您能够与 Temporal 服务进行通信。
+与 Temporal 服务的通信使您可以执行诸如启动 Workflow Execution、发送 Signal 和
+查询 Workflow Execution、获取 Workflow 结果等。您无法在 A 中初始化 Temporal CLIent
+Workflow。但是，它们通常在 Activity 内部初始化以与 Temporal 服务进行通信。
 
-This page shows you how to do the following using the TypeScript SDK with the Temporal Client:
+本页向您展示如何使用 TypeScript SDK 和 Temporal CLIent 执行以下操作：
 
-- [Connect to a local development Temporal Service](#connect-to-development-service)
-- [Connect to Temporal Cloud](#connect-to-temporal-cloud)
-- [Connect to Temporal Service from a Worker](#connect-to-temporal-service-from-a-worker)
-- [Start a Workflow Execution](#start-workflow-execution)
-- [Get Workflow results](#get-workflow-results)
+- [连接到本地开发 Temporal 服务](#connect-to-development-service)
+- [连接到 Temporal Cloud](#connect-to-temporal-cloud)
+- [从 Worker 连接到 Temporal 服务](#connect-to-temporal-service-from-a-worker)
+- [启动 Workflow Execution](#start-workflow-execution)
+- [获取 Workflow 结果](#get-workflow-results)
 
-In the TypeScript SDK, connecting to Temporal Service from a Temporal Application and from within an Activity rely on a
-different type of connection than connecting from a Worker. The sections
-[Connect to a local development Temporal Service](#connect-to-development-service) and
-[Connect to Temporal Cloud](#connect-to-temporal-cloud) apply to connecting from a Temporal Application or from within
-an Activity. See [Connect to Temporal Service from a Worker](#connect-to-temporal-service-from-a-worker) for details on
-connecting from a Worker.
+在 TypeScript SDK 中，从 Temporal 应用程序和 Activity 内部连接到 Temporal 服务依赖于
+与 Worker 连接不同的连接类型。各部分
+[连接到本地开发 Temporal 服务](#connect-to-development-service) 和
+[连接到 Temporal Cloud](#connect-to-temporal-cloud) 适用于从 Temporal 应用程序或内部进行连接
+Activity。有关详细信息，请参阅 [从 Worker 连接到 Temporal 服务](#connect-to-temporal-service-from-a-worker)
+从 Worker 连接。
 
-## Connect to development Temporal Service {#connect-to-development-service}
+## 连接到开发 Temporal 服务 {#connect-to-development-service}
 
-To connect to a development Temporal service from a Temporal Application or from within an Activity, import the
-[`Connection` class](https://typescript.temporal.io/api/classes/client.Connection) from `@temporalio/client` and use
-[`Connection.connect`](https://typescript.temporal.io/api/classes/client.Connection#connect) to create a Connection
-object to connect to the Temporal Service. Then pass in that connection when you create a new `Client` instance. If you
-leave the connection options empty, the SDK defaults to connecting to `127.0.0.1:7233` in the `default` Namespace.
+要从 Temporal 应用程序或 Activity 中连接到开发 Temporal 服务，请导入
+[`Connection`级](https://typescript.temporal.io/api/classes/client.Connection) 和 `@Temporalio/client` 的使用
+[`Connection.connect`](https://typescript.temporal.io/api/classes/client.Connection#connect) 创建连接
+连接到 Temporal 服务的对象。然后在创建新的 `Client` 实例时传入该连接。如果你
+将连接选项留空，SDK 默认连接到 `default` Namespace 中的 `127.0.0.1:7233`。
 
 ```ts
 import { Connection, Client } from '@temporalio/client';
@@ -73,33 +73,33 @@ run().catch((err) => {
 });
 ```
 
-If you need to connect to a Temporal Service with custom options, you can provide connection options directly in code,
-load them from **environment variables**, or a **TOML configuration file** using the `@temporalio/envconfig` helpers. We
-recommend environment variables or a configuration file for secure, repeatable configuration.
+如果您需要使用自定义选项连接到 Temporal 服务，您可以直接在代码中提供连接选项，
+使用 `@Temporalio/envconfig` 帮助程序从 **环境变量** 或 **TOML 配置文件** 加载它们。我们
+建议环境变量或配置文件以进行安全、可重复的配置。
 
 <Tabs groupId="connect-options" defaultValue="config-file" >
 
 <TabItem value="config-file" label="Configuration File">
 
-You can use a TOML configuration file to set connection options for the Temporal Client. The configuration file lets you
-configure multiple profiles, each with its own set of connection options. You can then specify which profile to use when
-creating the Temporal Client.
+您可以使用 TOML 配置文件来设置 Temporal CLIent 的连接选项。配置文件可以让你
+配置多个配置文件，每个配置文件都有自己的一组连接选项。然后，您可以指定在以下情况下使用哪个配置文件：
+创建 Temporal CLIent。
 
-You can use the environment variable `TEMPORAL_CONFIG_FILE` to specify the location of the TOML file or provide the path
-to the file directly in code. If you don't provide the configuration file path, the SDK looks for it at the path
-`~/.config/temporalio/temporal.toml` or the equivalent on your OS. Refer to
-[Environment Configuration](/develop/environment-configuration) for more details about configuration files and profiles.
+您可以使用环境变量 `Temporal_CONFIG_FILE` 指定 TOML 文件的位置或提供路径
+直接在代码中写入文件。如果您不提供配置文件路径，SDK会在该路径中查找
+`~/.config/temporalio/temporal.toml` 或您操作系统上的同等版本。参考
+[环境配置](/develop/environment-configuration) 有关配置文件和配置文件的更多详细信息。
 
 :::info
 
-The connection options set in configuration files have lower precedence than environment variables. This means that if
-you set the same option in both the configuration file and as an environment variable, the environment variable value
-overrides the option set in the configuration file.
+配置文件中设置的连接选项的优先级低于环境变量。这意味着如果
+您在配置文件和环境变量中设置相同的选项，即环境变量值
+覆盖配置文件中设置的选项。
 
 :::
 
-For example, the following TOML configuration file defines two profiles: `default` and `prod`. Each profile has its own
-set of connection options.
+例如，以下 TOML 配置文件定义了两个配置文件：`default` 和 `prod`。每个配置文件都有自己的
+连接选项集。
 
 ```toml title="config.toml"
 # Default profile for local development
@@ -131,8 +131,8 @@ environment     = "production"
 service-version = "v1.2.3"
 ```
 
-You can create a Temporal Client using a profile from the configuration file as follows. In this example, you load the
-`default` profile for local development:
+您可以使用配置文件中的配置文件创建 Temporal CLIent，如下所示。在此示例中，您加载
+`default` 本地开发简介：
 
 {/* SNIPSTART typescript-env-config-load-default-profile {"highlightedLines": "17-19,28-29"} */}
 [env-config/src/load-from-file.ts](https://github.com/temporalio/samples-typescript/blob/main/env-config/src/load-from-file.ts)
@@ -184,28 +184,28 @@ main().catch((err) => {
 
 <TabItem value="env-vars" label="Environment Variables">
 
-Use the `@temporalio/envconfig` module to set connection options for the Temporal Client using environment variables.
-For a list of all available environment variables and their default values, refer to
-[Environment Configuration](/references/client-environment-configuration).
+使用 `@Temporalio/envconfig` 模块通过环境变量设置 Temporal CLIent 的连接选项。
+有关所有可用环境变量及其默认值的列表，请参阅
+[环境配置](/references/client-environment-configuration)。
 
-For example, the following code snippet loads all environment variables and creates a Temporal Client with the options
-specified in those variables. If you have defined a configuration file at either the default location
-(`~/.config/temporalio/temporal.toml`) or a custom location specified by the `TEMPORAL_CONFIG_FILE` environment
-variable, this will also load the default profile in the configuration file. However, any options set via environment
-variables will take precedence.
+例如，以下代码片段加载所有环境变量并使用选项创建 Temporal CLIent
+在这些变量中指定。如果您已在默认位置定义了配置文件
+(`~/.config/temporalio/temporal.toml`) 或 `Temporal_CONFIG_FILE` 环境指定的自定义位置
+变量，这也将加载配置文件中的默认配置文件。但是，通过环境设置的任何选项
+变量将优先。
 
-Set the following environment variables before running your application. Replace the placeholder values with your actual
-configuration. Since this is for a local development Temporal Service, the values connect to `localhost:7233` and the
-`default` Namespace. You may omit these variables entirely since they're the defaults.
+在运行应用程序之前设置以下环境变量。将占位符值替换为您的实际值
+配置。由于这是针对本地开发 Temporal 服务，因此这些值连接到 `localhost:7233` 和
+`default` Namespace。您可以完全忽略这些变量，因为它们是默认值。
 
 ```bash
 export TEMPORAL_NAMESPACE="default"
 export TEMPORAL_ADDRESS="localhost:7233"
 ```
 
-After setting the environment variables, use the following code to create the Temporal Client. Since the environment
-variables take precedence, they will override any values set in the configuration file. Therefore, you may leave
-`loadClientConnectConfig`'s arguments empty:
+设置环境变量后，使用以下代码创建Temporal CLIent。由于环境
+变量优先，它们将覆盖配置文件中设置的任何值。因此，你可以离开
+`loadClientConnectConfig` 的参数为空：
 
 {/* SNIPSTART typescript-env-config-load-default-profile {"highlightedLines": "7,17-18", "selectedLines": ["1-5","17","19","22-40"]} */}
 [env-config/src/load-from-file.ts](https://github.com/temporalio/samples-typescript/blob/main/env-config/src/load-from-file.ts)
@@ -246,9 +246,9 @@ main().catch((err) => {
 
 <TabItem value="code" label="Code">
 
-If you don't want to use environment variables or a configuration file, you can specify connection options directly in
-code. This is convenient for local development and testing. You can also load a base configuration from environment
-variables or a configuration file, and then override specific options in code.
+如果不想使用环境变量或配置文件，可以直接在中指定连接选项
+代码。这样方便本地开发和测试。您还可以从环境加载基本配置
+变量或配置文件，然后覆盖代码中的特定选项。
 
 ```ts
 const connection = await Connection.connect({
@@ -266,54 +266,55 @@ const client = new Client({
 
 </Tabs>
 
-## Connect to Temporal Cloud {#connect-to-temporal-cloud}
+<a id="connect-to-temporal-cloud"></a>
+## 连接到 Temporal Cloud {#connect-to-temporal-cloud}
 
-You can connect to Temporal Cloud using either an [API key](/cloud/api-keys) or through mTLS. Connection to Temporal
-Cloud or any secured Temporal Service requires additional connection options compared to connecting to an unsecured
-local development instance:
+您可以使用 [API密钥](/cloud/api-keys) 或通过 mTLS 连接到 Temporal Cloud。连接至 Temporal
+与连接到不安全的云或任何安全的 Temporal 服务相比，云或任何安全的 Temporal 服务需要额外的连接选项
+本地开发实例：
 
-- Your credentials for authentication.
-  - If you are using an API key, provide the API key value.
-  - If you are using mTLS, provide the mTLS CA certificate and mTLS private key.
-- Your [_Namespace Id_](/cloud/namespaces#temporal-cloud-namespace-id) and _Account Id_ combination, which follows the
-  format `<namespace_id>.<account_id>`.
-- The recommended _endpoint_ is the gRPC Namespace endpoint: `<namespace>.<account>.tmprl.cloud:7233`. This endpoint
-  works for all Namespaces and automatically directs traffic to the active region for Namespaces with
-  [High Availability](/cloud/high-availability). See [accessing Namespaces](/cloud/namespaces#access-namespaces) for
-  more information on endpoint options.
+- 您的身份验证凭据。
+  - 如果您使用 API 密钥，请提供 API 密钥值。
+  - 如果您使用 mTLS，请提供 mTLS CA 证书和 mTLS 私钥。
+- 您的 [_Namespace ID_](/cloud/namespaces#temporal-cloud-namespace-id) 和_帐户 ID_ 组合，遵循
+  格式 `<Namespace_id>.<account_id>`。
+- 建议的_端点_是 gRPC Namespace 端点：`<Namespace>.<account>.tmprl.cloud:7233`。这个端点
+  适用于所有 Namespace，并自动将流量引导至 Namespace 的活动区域
+  [高可用性](/cloud/high-availability)。参见 [访问 Namespace](/cloud/namespaces#access-namespaces)
+  有关端点选项的更多信息。
 
-You can find the Namespace and Account ID, as well as the endpoint, on the Namespaces tab:
+您可以在 Namespaces 选项卡上找到 Namespace 和账户 ID 以及终端节点：
 
-![The Namespace and Account ID combination on the left, and the regional endpoint on the right](/img/cloud/apikeys/namespaces-and-regional-endpoints.png)
+![左侧为 Namespace 和账户 ID 组合，右侧为区域终端节点](/img/cloud/apikeys/namespaces-and-regional-endpoints.png)
 
-For more information about managing and generating client certificates for Temporal Cloud, see
-[How to manage certificates in Temporal Cloud](/cloud/certificates).
+有关管理和生成 Temporal Cloud 客户端证书的更多信息，请参阅
+[如何在Temporal Cloud中管理证书](/cloud/certificates)。
 
-You can provide these connection options using environment variables, a configuration file, or directly in code.
+您可以使用环境变量、配置文件或直接在代码中提供这些连接选项。
 
 <Tabs groupId="connect-api-key-options" defaultValue="config-file" >
 
 <TabItem value="config-file" label="Configuration File">
 
-You can use a TOML configuration file to set connection options for the Temporal Client. The configuration file lets you
-configure multiple profiles, each with its own set of connection options. You can then specify which profile to use when
-creating the Temporal Client. For a list of all available configuration options you can set in the TOML file, refer to
-[Environment Configuration](/references/client-environment-configuration).
+您可以使用 TOML 配置文件来设置 Temporal CLIent 的连接选项。配置文件可以让你
+配置多个配置文件，每个配置文件都有自己的一组连接选项。然后，您可以指定在以下情况下使用哪个配置文件：
+创建 Temporal CLIent。有关可在 TOML 文件中设置的所有可用配置选项的列表，请参阅
+[环境配置](/references/client-environment-configuration)。
 
-You can use the environment variable `TEMPORAL_CONFIG_FILE` to specify the location of the TOML file or provide the path
-to the file directly in code. If you don't provide the path to the configuration file, the SDK looks for it at the
-default path `~/.config/temporalio/temporal.toml`.
+您可以使用环境变量 `Temporal_CONFIG_FILE` 指定 TOML 文件的位置或提供路径
+直接在代码中写入文件。如果您不提供配置文件的路径，SDK 将在
+默认路径 `~/.config/temporalio/temporal.toml`。
 
 :::info
 
-The connection options set in configuration files have lower precedence than environment variables. This means that if
-you set the same option in both the configuration file and as an environment variable, the environment variable value
-overrides the option set in the configuration file.
+配置文件中设置的连接选项的优先级低于环境变量。这意味着如果
+您在配置文件和环境变量中设置相同的选项，即环境变量值
+覆盖配置文件中设置的选项。
 
 :::
 
-For example, the following TOML configuration file defines a `staging` profile with the necessary connection options to
-connect to Temporal Cloud via an API key:
+例如，以下 TOML 配置文件定义了 `staging` 配置文件，其中包含必要的连接选项
+通过 API 密钥连接到 Temporal Cloud：
 
 ```toml
 # Cloud profile for Temporal Cloud
@@ -323,8 +324,8 @@ namespace = "your-namespace"
 api_key = "your-api-key-here"
 ```
 
-If you want to use mTLS authentication instead of an API key, replace the `api_key` field with your mTLS certificate and
-private key:
+如果您想使用 mTLS 身份验证而不是 API 密钥，请将 `api_key` 字段替换为您的 mTLS 证书，然后
+私钥：
 
 ```toml
 # Cloud profile for Temporal Cloud
@@ -335,11 +336,11 @@ tls_client_cert_data = "your-tls-client-cert-data"
 tls_client_key_path = "your-tls-client-key-path"
 ```
 
-With the connections options defined in the configuration file, use the `loadClientConnectConfig` helper from
-`@temporalio/envconfig` to load the `staging` profile from the configuration file. You can then pass the resulting
-configuration to the `Connection.connect` method. After that, you then pass the `connection` object and the Namespace to
-the `Client` constructor to create a Temporal Client using the `staging` profile as follows. After loading the profile,
-you can also programmatically override specific connection options before creating the client.
+使用配置文件中定义的连接选项，使用来自的 `loadClientConnectConfig` 帮助程序
+`@Temporalio/envconfig` 从配置文件加载 `staging` 配置文件。然后您可以将结果传递给
+配置为 `Connection.connect` 方法。之后，您将 `connection` 对象和 Namespace 传递给
+`Client` 构造函数使用 `staging` 配置文件创建 Temporal CLIent，如下所示。加载配置文件后，
+您还可以在创建客户端之前以编程方式覆盖特定的连接选项。
 
 {/* SNIPSTART typescript-env-config-load-profile-with-overrides {"highlightedLines": "15-18,30-31"} */}
 [env-config/src/load-profile.ts](https://github.com/temporalio/samples-typescript/blob/main/env-config/src/load-profile.ts)
@@ -393,28 +394,28 @@ main().catch((err) => {
 
 <TabItem value="env-vars" label="Environment Variables">
 
-The following environment variables are required to connect to Temporal Cloud:
+连接到 Temporal Cloud 需要以下环境变量：
 
-- `TEMPORAL_NAMESPACE`: Your Namespace and Account ID combination in the format `<namespace_id>.<account_id>`.
-- `TEMPORAL_ADDRESS`: The gRPC endpoint for your Temporal Cloud Namespace.
-- `TEMPORAL_API_KEY`: Your API key value. Required if you are using API key authentication.
-- `TEMPORAL_TLS_CLIENT_CERT_DATA` or `TEMPORAL_TLS_CLIENT_CERT_PATH`: Your mTLS client certificate data or file path.
-  Required if you are using mTLS authentication.
-- `TEMPORAL_TLS_CLIENT_KEY_DATA` or `TEMPORAL_TLS_CLIENT_KEY_PATH`: Your mTLS client private key data or file path.
-  Required if you are using mTLS authentication.
+- `Temporal_Namespace`：您的 Namespace 和帐户 ID 组合，格式为 `<Namespace_id>.<account_id>`。
+- `Temporal_ADDRESS`：Temporal Cloud Namespace 的 gRPC 端点。
+- `Temporal_API_KEY`：您的 API 密钥值。如果您使用 API 密钥身份验证，则为必需。
+- `Temporal_TLS_CLIENT_CERT_DATA` 或 `Temporal_TLS_CLIENT_CERT_PATH`：您的 mTLS 客户端证书数据或文件路径。
+  如果您使用 mTLS 身份验证，则为必需。
+- `Temporal_TLS_CLIENT_KEY_DATA` 或 `Temporal_TLS_CLIENT_KEY_PATH`：您的 mTLS 客户端私钥数据或文件路径。
+  如果您使用 mTLS 身份验证，则为必需。
 
-Ensure these environment variables exist in your environment before running your application.
+在运行应用程序之前，请确保您的环境中存在这些环境变量。
 
-Import the `@temporalio/envconfig` package to set connection options for the Temporal Client using environment
-variables. The `loadClientConnectConfig` function will automatically load all environment variables. For a list of all
-available environment variables and their default values, refer to
-[Environment Configuration](/references/client-environment-configuration).
+导入`@Temporalio/envconfig`包，设置Temporal CLIent使用环境的连接选项
+变量。 `loadClientConnectConfig`函数将自动加载所有环境变量。欲了解全部清单
+可用的环境变量及其默认值，请参阅
+[环境配置](/references/client-environment-configuration)。
 
-For example, the following code snippet loads all environment variables and creates a Temporal Client with the options
-specified in those variables. If you have defined a configuration file at either the default location
-(`~/.config/temporalio/temporal.toml`) or a custom location specified by the `TEMPORAL_CONFIG_FILE` environment
-variable, this will also load the default profile in the configuration file. However, any options set via environment
-variables will take precedence.
+例如，以下代码片段加载所有环境变量并使用选项创建 Temporal CLIent
+在这些变量中指定。如果您已在默认位置定义了配置文件
+(`~/.config/temporalio/temporal.toml`) 或 `Temporal_CONFIG_FILE` 环境指定的自定义位置
+变量，这也将加载配置文件中的默认配置文件。但是，通过环境设置的任何选项
+变量将优先。
 
 {/* SNIPSTART typescript-env-config-load-default-profile {"highlightedLines": "17-19,28-29", "selectedLines": ["1-5","17","19","22-40"]} */}
 [env-config/src/load-from-file.ts](https://github.com/temporalio/samples-typescript/blob/main/env-config/src/load-from-file.ts)
@@ -455,8 +456,8 @@ main().catch((err) => {
 
 <TabItem value="code" label="Code">
 
-You can also provide connections options in your code directly. To create an initial connection, provide the Namespace
-and API key values to the `Connection.connect` method.
+您还可以直接在代码中提供连接选项。要创建初始连接，请提供 Namespace
+以及 `Connection.connect` 方法的 API 密钥值。
 
 ```ts
 const connection = await Connection.connect({
@@ -470,7 +471,7 @@ const client = new Client({
 });
 ```
 
-To update an API key, use the `setApiKey` method on the Connection object:
+要获得 Update API 密钥，请在 Connection 对象上使用 `setApiKey` 方法：
 
 ```ts
 connection.setApiKey(<APIKey>);
@@ -480,28 +481,29 @@ connection.setApiKey(<APIKey>);
 
 </Tabs>
 
-## Connect to Temporal Service from a Worker {#connect-to-temporal-service-from-a-worker}
+<a id="connect-to-temporal-service-from-a-worker"></a>
+## 从 Worker 连接到 Temporal 服务 {#connect-to-temporal-service-from-a-worker}
 
-Connecting to Temporal Service from a Worker requires the same set of connections options as connecting from a Temporal
-Application or from within an Activity, but the connection type is different. When connecting from a Worker, you create
-a `NativeConnection` object instead of a `Connection` object. The
-[`NativeConnection` class](https://typescript.temporal.io/api/classes/worker.NativeConnection) is imported from
-`@temporalio/worker` instead of `@temporalio/client`. After you create the `NativeConnection` object, you pass it to
-`Worker.create()` when creating the Worker.
+从 Worker 连接到 Temporal 服务需要与从 Temporal 连接相同的连接选项集
+应用程序或来自 Activity 内部，但连接类型不同。从 Worker 连接时，您创建
+`NativeConnection` 对象而不是 `Connection` 对象。的
+[`NativeConnection`级](https://typescript.temporal.io/api/classes/worker.NativeConnection) 进口自
+`@Temporalio/Worker` 而不是 `@Temporalio/client`。创建 `NativeConnection` 对象后，将其传递给
+创建 Worker 时的 `Worker.create()`。
 
-To provide connection options to the `NativeConnection`, you can use environment variables, a configuration file, or
-directly in code. The following code snippets show how to create a `NativeConnection` object using each method. Refer to
-[Connect to a local development Temporal Service](#connect-to-development-service) and
-[Connect to Temporal Cloud](#connect-to-temporal-cloud) for details on how to provide connection options using each
-method.
+要为 `NativeConnection` 提供连接选项，您可以使用环境变量、配置文件或
+直接在代码中。以下代码片段展示了如何使用每种方法创建 `NativeConnection` 对象。参考
+[连接到本地开发 Temporal 服务](#connect-to-development-service) 和
+[连接到 Temporal Cloud](#connect-to-temporal-cloud) 有关如何使用每个选项提供连接选项的详细信息
+方法。
 
 <Tabs groupId="worker-connect-options" defaultValue="config-file" >
 
 <TabItem value="config-file" label="Configuration File">
 
-Ensure you have a TOML configuration file with the necessary connection options defined. For example, the following TOML
-configuration file defines a `staging` profile with the necessary connection options to connect to Temporal Cloud via an
-API key:
+确保您有一个 TOML 配置文件，其中定义了必要的连接选项。例如，以下 TOML
+配置文件定义了 `staging` 配置文件，其中包含通过连接到 Temporal Cloud 所需的连接选项
+API 密钥：
 
 ```toml
 # Cloud profile for Temporal Cloud
@@ -511,8 +513,8 @@ namespace = "your-namespace"
 api_key = "your-api-key-here"
 ```
 
-Use the `loadClientConnectConfig` helper from `@temporalio/envconfig` to load the `staging` profile from the
-configuration file and create a `NativeConnection` object as follows:
+使用 `@Temporalio/envconfig` 中的 `loadClientConnectConfig` 帮助程序从
+配置文件并创建一个 `NativeConnection` 对象，如下所示：
 
 ```ts {1,15,17}
 import { NativeConnection } from '@temporalio/worker';
@@ -543,7 +545,7 @@ async function main() {
 
 <TabItem value="env-vars" label="Environment Variables">
 
-Ensure you have set the necessary environment variables to connect to Temporal Cloud. For example:
+确保您已设置连接到 Temporal Cloud 所需的环境变量。例如：
 
 ```bash
 export TEMPORAL_NAMESPACE="your-namespace.your-account-id"
@@ -552,8 +554,8 @@ export TEMPORAL_TLS_CLIENT_CERT_PATH="/path/to/your/client/cert.pem"
 export TEMPORAL_TLS_CLIENT_KEY_PATH="/path/to/your/client/key.pem"
 ```
 
-After setting the environment variables, use the following code to create a `NativeConnection` object using the
-`loadClientConnectConfig` helper from `@temporalio/envconfig`:
+设置环境变量后，使用以下代码创建一个 `NativeConnection` 对象，使用
+`@Temporalio/envconfig` 的 `loadClientConnectConfig` 助手：
 
 ```ts {1,5}
 import { NativeConnection } from '@temporalio/worker';
@@ -576,9 +578,9 @@ async function main() {
 
 <TabItem value="code" label="Code">
 
-You can also provide connections options in your TypeScript code directly. To create an initial connection, provide the
-connections to the ` NativeConnection.connect` method, and then pass the resulting `NativeConnection` object to
-`Worker.create()` when creating the Worker:
+您还可以直接在 TypeScript 代码中提供连接选项。要创建初始连接，请提供
+连接到 ` NativeConnection.connect` 方法，然后将生成的 `NativeConnection` 对象传递给
+创建 Worker 时的 `Worker.create()`：
 
 ```ts {1,4,9}
 import { NativeConnection } from '@temporalio/worker';
@@ -600,57 +602,59 @@ const worker = await Worker.create({
 
 </Tabs>
 
-## NativeConnection, Connection, and Client
+<a id="nativeconnection-connection-and-client"></a>
+## NativeConnection、连接和客户端 {#nativeconnection-connection-and-client}
 
-`NativeConnection`, `Connection`, and `Client` are all classes provided by the TypeScript SDK to facilitate
-communication with the Temporal Service. This section explains the differences between these classes and their
-respective use cases. For detailed information about each class, refer to the
-[Temporal TypeScript API documentation](https://typescript.temporal.io/api/namespaces/client).
+`NativeConnection`、`Connection` 和 `Client` 都是 TypeScript SDK 提供的类，以方便
+与 Temporal 服务通信。本节解释这些类及其之间的差异
+各自的用例。有关每个类别的详细信息，请参阅
+[Temporal TypeScript API 文档](https://typescript.temporal.io/api/namespaces/client)。
 
-### NativeConnection vs. Connection {#native-connection-vs-connection}
+### NativeConnection 与连接 {#native-connection-vs-connection}
 
-The TypeScript SDK provides two types of connection classes to connect to the Temporal Service: `NativeConnection` and
-`Connection`. The `NativeConnection` class is used to connect from a Worker, while the `Connection` class is used to
-connect from a Temporal Application or from within an Activity, typically through a `Client` object. Both connection
-classes accept the same set of connection options.
+TypeScript SDK 提供两种类型的连接类来连接到 Temporal 服务：`NativeConnection` 和
+`Connection`。 `NativeConnection` 类用于从 Worker 连接，而 `Connection` 类用于从 Worker 连接
+从 Temporal 应用程序或从 Activity 内部连接，通常通过 `Client` 对象。两者连接
+类接受相同的连接选项集。
 
-### Connection vs. Client {#connection-vs-client}
+### 连接与客户端 {#connection-vs-client}
 
-A `Client` object is a high-level, lightweight abstraction that simplifies interaction with the Temporal Service. It
-internally manages a `Connection` object to handle the low-level communication details. The `Client` class provides
-convenient methods for common operations such as starting Workflow Executions, sending Signals and Queries, and
-retrieving Workflow results.
+`Client` 对象是高级轻量级抽象，可简化与 Temporal 服务的交互。它
+内部管理一个 `Connection` 对象来处理低级通信细节。 `Client` 类提供
+常见操作的便捷方法，例如启动 Workflow Execution、发送 Signal 和查询，以及
+正在检索 Workflow 结果。
 
-A `Connection` object is a lower-level and expensive object that represents a direct connection to the Temporal Service.
-You pass in a `Connection` object to the `Client` constructor to create a `Client` instance. Since a `Connection` is
-expensive to create, create a single `Connection` object and reuse it across your application whenever possible.
+`Connection` 对象是一个较低级别且昂贵的对象，表示与 Temporal 服务的直接连接。
+您将 `Connection` 对象传递给 `Client` 构造函数以创建 `Client` 实例。由于 `Connection` 是
+创建成本昂贵，创建单个 `Connection` 对象并尽可能在应用程序中重用它。
 
-When instantiating a `Connection`, you specify most connection options except for the Namespace, such as the Temporal
-Service endpoint, TLS settings, and authentication credentials. When instantiating a `Client`, you provide the
-`Connection` object and the Namespace you want to connect to, along with other client options.
+实例化 `Connection` 时，您可以指定除 Namespace 之外的大多数连接选项，例如 Temporal
+服务端点、TLS 设置和身份验证凭据。实例化 `Client` 时，您提供
+您想要连接的 `Connection` 对象和 Namespace 以及其他客户端选项。
 
-## Start Workflow Execution {#start-workflow-execution}
+<a id="start-workflow-execution"></a>
+## 启动 Workflow Execution {#start-workflow-execution}
 
-**How to start a Workflow Execution using the Typescript SDK**
+**如何使用 TypeScript SDK 启动 Workflow Execution**
 
-[Workflow Execution](/workflow-execution) semantics rely on several parameters—that is, to start a Workflow Execution
-you must supply a Task Queue that will be used for the Tasks (one that a Worker is polling), the Workflow Type,
-language-specific contextual data, and Workflow Function parameters.
+[Workflow Execution](/workflow-execution) 语义依赖于几个参数，即启动 Workflow Execution
+您必须提供将用于任务的 Task Queue（Worker 正在轮询的任务）、Workflow 类型、
+特定于语言的上下文数据和 Workflow 函数参数。
 
-In the examples below, all Workflow Executions are started using a Temporal Client. To spawn Workflow Executions from
-within another Workflow Execution, use either the Child Workflow or External Workflow APIs.
+在下面的示例中，所有 Workflow Execution 均使用 Temporal CLIent 启动。从中生成 Workflow Execution
+在另一个 Workflow Execution 中，使用 Child Workflow 或外部 Workflow API。
 
-See the [Customize Workflow Type](/develop/typescript/workflows/basics#workflow-type) section to see how to customize
-the name of the Workflow Type.
+请参阅 [定制Workflow型](/develop/typescript/workflows/basics#workflow-type) 部分以了解如何自定义
+Workflow 类型的名称。
 
-A request to spawn a Workflow Execution causes the Temporal Service to create the first Event
-([WorkflowExecutionStarted](/references/events#workflowexecutionstarted)) in the Workflow Execution Event History. The
-Temporal Service then creates the first Workflow Task, resulting in the first
-[WorkflowTaskScheduled](/references/events#workflowtaskscheduled) Event.
+生成 Workflow Execution 的请求会导致 Temporal 服务创建第一个事件
+([Workflow执行开始](/references/events#workflowexecutionstarted)) 在 Workflow Execution Event History 中。的
+然后，Temporal 服务创建第一个 Workflow 任务，从而产生第一个
+[Workflow任务Scheduled](/references/events#workflowtaskscheduled) 事件。
 
-When you have a Client, you can schedule the start of a Workflow with `client.workflow.start()`, specifying
-`workflowId`, `taskQueue`, and `args` and returning a Workflow handle immediately after the Server acknowledges the
-receipt.
+当您有客户端时，您可以使用 Schedule 以 `client.Workflow.start()` 开始 Workflow，指定
+`WorkflowId`、`taskQueue` 和 `args`，并在服务器确认后立即返回 Workflow 句柄
+收据。
 
 ```typescript
 const handle = await client.workflow.start(example, {
@@ -662,40 +666,40 @@ const handle = client.getHandle(workflowId);
 const result = await handle.result();
 ```
 
-Calling `client.workflow.start()` and `client.workflow.execute()` send a command to Temporal Server to schedule a new
-Workflow Execution on the specified Task Queue. It does not actually start until a Worker that has a matching Workflow
-Type, polling that Task Queue, picks it up.
+调用 `client.Workflow.start()` 和 `client.Workflow.execute()` 发送命令到 Temporal Server 到 Schedule 一个新的
+Workflow Execution 位于指定的 Task Queue 上。它实际上不会启动，直到 Worker 具有匹配的 Workflow
+键入，轮询 Task Queue，然后选择它。
 
-You can test this by executing a Client command without a matching Worker. Temporal Server records the command in Event
-History, but does not make progress with the Workflow Execution until a Worker starts polling with a matching Task Queue
-and Workflow Definition.
+您可以通过执行没有匹配的 Worker 的客户端命令来测试这一点。 Temporal Server 在事件中记录命令
+历史记录，但在 Worker 开始使用匹配的 Task Queue 进行轮询之前，Workflow Execution 不会取得进展
+和 Workflow Definition。
 
-Workflow Execution run in a separate V8 isolate context in order to provide a
-[deterministic runtime](/workflow-definition#deterministic-constraints).
+Workflow Execution 在单独的 V8 隔离上下文中运行，以便提供
+[确定性运行时间](/workflow-definition#deterministic-constraints)。
 
-### Set a Workflow's Task Queue {#set-task-queue}
+### 设置 Workflow 的 Task Queue {#set-task-queue}
 
-In most SDKs, the only Workflow Option that must be set is the name of the [Task Queue](/task-queue).
+在大多数 SDK 中，唯一必须设置的 Workflow 选项是 [Task Queue](/task-queue) 的名称。
 
-For any code to execute, a Worker Process must be running that contains a Worker Entity that is polling the same Task
-Queue name.
+对于要执行的任何代码，必须运行包含正在轮询同一任务的 Worker 实体的 Worker 进程
+队列名称。
 
-A Task Queue is a dynamic queue in Temporal polled by one or more Workers.
+Task Queue 是 Temporal 中的动态队列，由一个或多个 Worker 轮询。
 
-Workers bundle Workflow code and node modules using Webpack v5 and execute them inside V8 isolates. Activities are
-directly required and run by Workers in the Node.js environment.
+Worker 使用 Webpack v5 捆绑 Workflow 代码和节点模块，并在 V8 隔离内执行它们。活动有
+在 Node.js 环境中由 Workers 直接需要并运行。
 
-Workers are flexible. You can host any or all of your Workflows and Activities on a Worker, and you can host multiple
-Workers on a single machine.
+Worker 非常灵活。您可以在 Worker 上托管任何或所有 Workflow 和活动，并且可以托管多个
+Worker 在一台机器上。
 
-The Worker needs three main things:
+Worker 需要三个主要的东西：
 
-- `taskQueue`: The Task Queue to poll. This is the only required argument.
-- `activities`: Optional. Imported and supplied directly to the Worker.
-- Workflow bundle. Choose one of the following options:
-  - Specify `workflowsPath` pointing to your `workflows.ts` file to pass to Webpack; for example,
-    `require.resolve('./workflows')`. Workflows are bundled with their dependencies.
-  - If you prefer to handle the bundling yourself, pass a prebuilt bundle to `workflowBundle`.
+- `taskQueue`：要轮询的 Task Queue。这是唯一必需的参数。
+- `activities`：可选。直接进口并供应给 Worker。
+- Workflow 捆绑包。选择以下选项之一：
+  - 指定 `WorkflowsPath` 指向您的 `Workflows.ts` 文件以传递给 Webpack；例如，
+    `require.resolve('./workflows')`。 Workflow 与其依赖项捆绑在一起。
+  - 如果您喜欢自己处理捆绑，请将预构建的捆绑传递给 `WorkflowBundle`。
 
 ```ts
 import { Worker } from '@temporalio/worker';
@@ -725,10 +729,10 @@ run().catch((err) => {
 });
 ```
 
-`taskQueue` is the only required option; however, use `workflowsPath` and `activities` to register Workflows and
-Activities with the Worker.
+`taskQueue` 是唯一必需的选项；但是，使用 `WorkflowsPath` 和 `activities` 注册 Workflow 并
+与 Worker 的活动。
 
-When scheduling a Workflow, you must specify `taskQueue`.
+计划 Workflow 时，必须指定 `taskQueue`。
 
 ```ts
 import { Client, Connection } from '@temporalio/client';
@@ -743,7 +747,7 @@ const result = await client.workflow.execute(yourWorkflow, {
 });
 ```
 
-When creating a Worker, you must pass the `taskQueue` option to the `Worker.create()` function.
+创建 Worker 时，必须将 `taskQueue` 选项传递给 `Worker.create()` 函数。
 
 ```ts
 const worker = await Worker.create({
@@ -753,18 +757,19 @@ const worker = await Worker.create({
 });
 ```
 
-Optionally, in Workflow code, when calling an Activity, you can specify the Task Queue by passing the `taskQueue` option
-to `proxyActivities()`, `startChild()`, or `executeChild()`. If you do not specify `taskQueue`, the TypeScript SDK
-places Activity and Child Workflow Tasks in the same Task Queue as the Workflow Task Queue.
+（可选）在 Workflow 代码中，调用 Activity 时，您可以通过传递 `taskQueue` 选项来指定 Task Queue
+至 `proxyActivities()`、`startChild()` 或 `executeChild()`。如果不指定 `taskQueue`，则 TypeScript SDK
+将 Activity 和 Child Workflow 任务放置在与 Workflow Task Queue 相同的 Task Queue 中。
 
-### Set a Workflow Id {#workflow-id}
+<a id="workflow-id"></a>
+### 设置 Workflow Id {#workflow-id}
 
-Although it is not required, we recommend providing your own
-[Workflow Id](/workflow-execution/workflowid-runid#workflow-id) that maps to a business process or business entity
-identifier, such as an order identifier or customer identifier.
+尽管不是必需的，但我们建议您提供自己的
+[Workflow ID](/workflow-execution/workflowid-runid#workflow-id) 映射到业务流程或业务实体
+标识符，例如订单标识符或客户标识符。
 
-Connect to a Client with `client.workflow.start()` and any arguments. Then specify your `taskQueue` and set your
-`workflowId` to a meaningful business identifier.
+使用 `client.Workflow.start()` 和任何参数连接到客户端。然后指定您的 `taskQueue` 并设置您的
+`WorkflowId` 为有意义的业务标识符。
 
 ```typescript
 const handle = await client.workflow.start(example, {
@@ -774,48 +779,49 @@ const handle = await client.workflow.start(example, {
 });
 ```
 
-This starts a new Client with the given Workflow Id, Task Queue name, and an argument.
+这将使用给定的 Workflow Id、Task Queue 名称和参数启动一个新客户端。
 
-### Get the results of a Workflow Execution {#get-workflow-results}
+<a id="get-workflow-results"></a>
+### 获取 Workflow Execution 的结果 {#get-workflow-results}
 
-If the call to start a Workflow Execution is successful, you will gain access to the Workflow Execution's Run Id.
+如果启动 Workflow Execution 的调用成功，您将获得对 Workflow Execution 的运行 ID 的访问权限。
 
-The Workflow Id, Run Id, and Namespace may be used to uniquely identify a Workflow Execution in the system and get its
-result.
+Workflow Id、Run Id 和 Namespace 可用于唯一标识系统中的 Workflow Execution 并获取其
+结果。
 
-It's possible to both block progress on the result (synchronous execution) or get the result at some other point in time
-(asynchronous execution).
+可以阻止结果的进展（同步执行）或在其他时间点获取结果
+（异步执行）。
 
-In the Temporal Platform, it's also acceptable to use Queries as the preferred method for accessing the state and
-results of Workflow Executions.
+在 Temporal 平台中，也可以使用查询作为访问状态和数据的首选方法。
+Workflow Execution 的结果。
 
-To return the results of a Workflow Execution:
+要返回 Workflow Execution 的结果：
 
 ```typescript
 return 'Completed ' + wf.workflowInfo().workflowId + ', Total Charged: ' + totalCharged;
 ```
 
-`totalCharged` is just a function declared in your code. For a full example, see
-[subscription-workflow-project-template-typescript/src/workflows.ts](https://github.com/temporalio/subscription-workflow-project-template-typescript/blob/main/src/workflows.ts).
+`totalCharged` 只是代码中声明的函数。有关完整示例，请参阅
+[订阅-Workflow-project-template-typescript/src/workflows.ts](https://github.com/temporalio/subscription-workflow-project-template-typescript/blob/main/src/workflows.ts)。
 
-A Workflow function may return a result. If it doesn’t (in which case the return type is `Promise<void>`), the result
-will be `undefined`.
+Workflow 函数可能会返回结果。如果没有（在这种情况下返回类型为 `Promise<void>`），结果
+将是 `undefined`。
 
-If you started a Workflow with `client.workflow.start()`, you can choose to wait for the result anytime with
-`handle.result()`.
+如果您使用 `client.Workflow.start()` 启动了 Workflow，您可以选择随时等待结果
+`handle.result()`。
 
 ```typescript
 const handle = client.getHandle(workflowId);
 const result = await handle.result();
 ```
 
-Using a Workflow Handle isn't necessary with `client.workflow.execute()`.
+`client.Workflow.execute()` 无需使用 Workflow 手柄。
 
-Workflows that prematurely end will throw a `WorkflowFailedError` if you call `result()`.
+如果您调用 `result()`，提前结束的 Workflow 将抛出 `WorkflowFailedError`。
 
-If you call `result()` on a Workflow that prematurely ended for some reason, it throws a
-[`WorkflowFailedError` error](https://typescript.temporal.io/api/classes/client.WorkflowFailedError/) that reflects the
-reason. For that reason, it is recommended to catch that error.
+如果您在由于某种原因提前结束的 Workflow 上调用 `result()`，它会抛出
+[`WorkflowFailedError` 错误](https://typescript.temporal.io/api/classes/client.WorkflowFailedError/) 反映了
+原因。因此，建议捕获该错误。
 
 ```typescript
 const handle = client.getHandle(workflowId);

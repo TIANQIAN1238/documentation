@@ -1,0 +1,309 @@
+---
+id: testing-suite
+title: 测试 - .NET SDK
+sidebar_label: 测试
+description: .NET 测试套件指南涵盖 Workflow 和 Temporal 的集成测试。它包括端到端、集成和单元测试，强调使用测试服务器来优化测试执行。
+toc_max_heading_level: 4
+keywords:
+  - developer guide
+  - guide context
+  - how to
+  - dotnet
+  - sdk
+  - testing
+  - time-skipping
+tags:
+  - .Net SDK
+  - Temporal SDKs
+  - Testing
+---
+
+.NET 测试套件功能指南描述了促进 Workflow 和集成测试的框架。
+
+在 Temporal 的上下文中，您可以创建以下类型的自动化测试：
+
+- **端到端：** 运行 Temporal Server 和 Worker 及其所有 Workflow 和活动；从客户端启动 Workflow 并与之交互。
+- **集成：** 端到端和单元测试之间的任何内容。
+  - 使用模拟上下文和其他 SDK 导入（通常是网络请求）运行活动。
+  - 通过模拟活动运行 Worker，并使用客户端启动 Workflow。
+  - 使用模拟 SDK 导入运行 Workflow。
+- **单元：** 运行一段 Workflow 或 Activity 代码并模拟它调用的任何代码。
+
+我们通常建议将大部分测试编写为集成测试。
+
+由于测试服务器支持跳过时间，因此请使用测试服务器与 Worker 进行端到端测试和集成测试。
+
+## 测试框架 {#test-frameworks}
+
+**兼容的测试框架**
+
+.NET SDK 与任何测试框架兼容，没有特定的建议。
+大多数 .NET SDK 示例使用 [xUnit](https://xunit.net/)。
+
+## 测试 Workflows {#testing-Workflows}
+
+**如何使用 Temporal .NET SDK 测试 Workflow Definition**
+
+Workflow 测试可以针对真实服务器以集成测试方式完成，但是很难模拟超时和其他基于长时间的代码。
+使用跳时 Workflow 测试环境可以提供帮助。
+
+### 使用标准服务器测试 Workflow
+
+非时间跳跃的“Temporalio.Testing.WorkflowEnvironment”可以通过支持所有标准 Temporal 功能的“StartLocalAsync”启动。
+它实际上是打包在 Temporal CLI 中的真正的 Temporal 开发服务器，首次使用时会延迟下载，并在后台作为子进程运行。
+假设测试正确使用单独的 Task Queue，则可以而且应该在测试中重复使用同一服务器。
+
+这是 Workflow 的一个简单示例：
+
+```csharp
+[Workflow]
+public class SayHelloWorkflow
+{
+    [WorkflowRun]
+    public async Task<string> RunAsync(string name)
+    {
+        return $"Hello, {name}!";
+    }
+}
+```
+
+以下是 Workflow 的测试在 xUnit 中的显示方式：
+
+```csharp
+using Temporalio.Testing;
+using Temporalio.Worker;
+
+[Fact]
+public async Task SayHelloWorkflow_SimpleRun_Succeeds()
+{
+    // Start local dev server
+    await using var env = await WorkflowEnvironment.StartLocalAsync();
+
+    // Create a worker
+    using var worker = new TemporalWorker(
+      env.Client,
+      new TemporalWorkerOptions($"task-queue-{Guid.NewGuid()}").
+          AddWorkflow<SayHelloWorkflow>());
+
+    // Run the worker only for the life of the code within
+    await worker.ExecuteAsync(async () =>
+    {
+        // Execute the workflow and confirm the result
+        var result = await env.Client.ExecuteWorkflowAsync(
+            (SayHelloWorkflow wf) => wf.RunAsync("Temporal"),
+            new(id: $"wf-{Guid.NewGuid()}", taskQueue: worker.Options.TaskQueue!));
+        Assert.Equal("Hello, Temporal!", result);
+    });
+}
+```
+
+虽然这只是一个演示，但本地服务器通常用作许多测试的固定装置。
+
+### 通过时间跳跃测试 Workflow
+
+有时需要测试长时间运行的Workflow或测试是否发生超时。
+可以通过“StartTimeSkippingAsync”启动时间跳跃“Temporalio.Testing.WorkflowEnvironment”，这是具有特殊时间跳跃功能的 Temporal Server 的重新实现。
+与“StartLocalAsync”一样，这也会在第一次调用时延迟下载要运行的进程。
+请注意，与“StartLocalAsync”不同，此类不是线程安全的，也不能安全用于独立测试。
+从技术上讲，它可以重复使用，但一次只能用于一个测试，因为时间跳跃是在环境级别锁定/解锁的。
+鼓励开发人员根据需要的测试运行它。
+
+#### 自动时间跳跃
+
+这是等待一天的 Workflow 的简单示例：
+
+```csharp
+[Workflow]
+public class WaitADayWorkflow
+{
+    [WorkflowRun]
+    public async Task<string> RunAsync()
+    {
+        await Workflow.DelayAsync(TimeSpan.FromDays(1));
+        return "all done";
+    }
+}
+```
+
+在普通服务器上对此 Workflow 进行常规集成测试会太慢。
+然而，当我们等待结果时，跳时服务器会自动跳到下一个事件。
+以下是 xUnit 中 Workflow 的测试：
+
+```csharp
+using Temporalio.Testing;
+using Temporalio.Worker;
+
+[Fact]
+public async Task WaitADayWorkflow_SimpleRun_Succeeds()
+{
+    // Start time-skipping test server
+    await using var env = await WorkflowEnvironment.StartTimeSkippingAsync();
+
+    // Create a worker
+    using var worker = new TemporalWorker(
+      env.Client,
+      new TemporalWorkerOptions($"task-queue-{Guid.NewGuid()}").
+          AddWorkflow<WaitADayWorkflow>());
+
+    // Run the worker only for the life of the code within
+    await worker.ExecuteAsync(async () =>
+    {
+        // Execute the workflow and confirm the result
+        var result = await env.Client.ExecuteWorkflowAsync(
+            (WaitADayWorkflow wf) => wf.RunAsync(),
+            new(id: $"wf-{Guid.NewGuid()}", taskQueue: worker.Options.TaskQueue!));
+        Assert.Equal("all done", result);
+    });
+}
+```
+
+该测试几乎会立即运行。
+这是因为通过在客户端上调用“ExecuteWorkflowAsync”，我们实际上是在调用“StartWorkflowAsync”+“GetResultAsync”，并且“GetResultAsync”会自动尽可能地跳过时间（基本上直到 Workflow 结束或直到 Activity 运行）。
+
+要在等待 Workflow 结果时禁用自动时间跳跃，请将代码作为传递给“env.WithAutoTimeSkippingDisabled”或“env.WithAutoTimeSkippingDisabledAsync”的 lambda 运行。
+
+#### 手动时间跳跃
+
+在等待 Workflow 之前，时间跳跃环境中的所有时间跳跃都是通过“WorkflowEnvironment.DelayAsync”手动完成的。
+
+这是等待 Signal 或超时的 Workflow：
+
+```csharp
+[Workflow]
+public class SignalWorkflow
+{
+    private bool signalReceived = false;
+
+    [WorkflowRun]
+    public async Task<string> RunAsync()
+    {
+        // Wait for signal or timeout in 45 seconds
+        if (Workflow.WaitConditionAsync(() => signalReceived, TimeSpan.FromSeconds(45)))
+        {
+            return "got signal";
+        }
+        return "got timeout";
+    }
+
+    [WorkflowSignal]
+    public async Task SomeSignalAsync() => signalReceived = true;
+}
+```
+
+要在 xUnit 中测试正常的 Signal，您可以：
+
+```csharp
+using Temporalio.Testing;
+using Temporalio.Worker;
+
+[Fact]
+public async Task SignalWorkflow_SendSignal_HasExpectedResult()
+{
+    await using var env = await WorkflowEnvironment.StartTimeSkippingAsync();
+    using var worker = new TemporalWorker(
+        env.Client,
+        new TemporalWorkerOptions($"task-queue-{Guid.NewGuid()}").
+            AddWorkflow<SignalWorkflow>());
+    await worker.ExecuteAsync(async () =>
+    {
+        var handle = await env.Client.StartWorkflowAsync(
+            (SignalWorkflow wf) => wf.RunAsync(),
+            new(id: $"wf-{Guid.NewGuid()}", taskQueue: worker.Options.TaskQueue!));
+        await handle.SignalAsync(wf => wf.SomeSignalAsync());
+        Assert.Equal("got signal", await handle.GetResultAsync());
+    });
+}
+```
+
+但如何测试超时部分呢？就像这样：
+
+```csharp
+using Temporalio.Testing;
+using Temporalio.Worker;
+
+[Fact]
+public async Task SignalWorkflow_SignalTimeout_HasExpectedResult()
+{
+    await using var env = await WorkflowEnvironment.StartTimeSkippingAsync();
+    using var worker = new TemporalWorker(
+        env.Client,
+        new TemporalWorkerOptions($"task-queue-{Guid.NewGuid()}").
+            AddWorkflow<SignalWorkflow>());
+    await worker.ExecuteAsync(async () =>
+    {
+        var handle = await env.Client.StartWorkflowAsync(
+            (SignalWorkflow wf) => wf.RunAsync(),
+            new(id: $"wf-{Guid.NewGuid()}", taskQueue: worker.Options.TaskQueue!));
+        await env.DelayAsync(TimeSpan.FromSeconds(50));
+        Assert.Equal("got timeout", await handle.GetResultAsync());
+    });
+}
+```
+
+### 嘲笑活动
+
+测试 Workflow 时，您通常不想实际运行活动。
+活动只是带有“[Activity]”属性的方法。
+只需编写不同的/空的/假的/断言的，并将它们传递给 Worker，以便在测试期间调用不同的活动。
+
+## 测试活动 {#test-activities}
+
+**如何使用 Temporal .NET SDK 测试 Activity Definition**
+
+Activity 或任何可以在 Activity 中运行的代码的单元测试是通过“Temporalio.Testing.ActivityEnvironment”类完成的。
+只需实例化该类，“RunAsync”中的任何代码都将在 Activity 上下文中调用。
+环境中可以使用以下重要成员来影响 Activity 上下文：
+
+- `Info` - Activity 信息，默认为一组基本值。
+- `Logger` - Activity 记录器，默认为空记录器。
+- `Cancel(CancelReason)` - 设置原因并取消源的帮助程序。
+- `CancelReason` - 取消原因。
+- `CancellationTokenSource` - 用于发出取消的令牌源。
+- `Heartbeater` - 回调调用每个心跳。
+- `WorkerShutdownTokenSource` - 用于发出 Worker 关闭的令牌源。
+- `PayloadConverter` - 默认为默认有效负载转换器。
+
+## 重播测试 {#replay}
+
+**如何使用 Temporal .NET SDK 进行重放测试**
+
+鉴于 Workflow 的历史记录，可以在本地重播它以检查诸如非确定性错误之类的情况。
+例如，假设下面的“history”参数给出了从 CLI 或 Web UI 导出的历史记录的 JSON 字符串，则以下方法将重播它：
+
+```csharp
+using Temporalio;
+using Temporalio.Worker;
+
+public static async Task ReplayFromJsonAsync(string historyJson)
+{
+    var replayer = new WorkflowReplayer(
+        new WorkflowReplayerOptions().AddWorkflow<MyWorkflow>());
+    await replayer.ReplayWorkflowAsync(WorkflowHistory.FromJson("my-workflow-id", historyJson));
+}
+```
+
+如果存在非确定性，则会抛出异常。
+
+Workflow 历史记录不仅仅可以从 JSON 加载。
+它可以从 Workflow 句柄中单独获取，甚至可以在列表中获取。
+例如，以下代码将检查特定 Workflow Type（即 Workflow 类）的所有 Workflow 历史记录对于当前 Workflow 代码是否安全。
+
+```csharp
+using Temporalio;
+using Temporalio.Client;
+using Temporalio.Worker;
+
+public static async Task CheckPastHistoriesAsync(ITemporalClient client)
+{
+    var replayer = new WorkflowReplayer(
+        new WorkflowReplayerOptions().AddWorkflow<MyWorkflow>());
+    var listIter = client.ListWorkflowHistoriesAsync("WorkflowType = 'SayHello'");
+    await foreach (var result in replayer.ReplayWorkflowsAsync(listIter))
+    {
+        if (result.ReplayFailure != null)
+        {
+            ExceptionDispatchInfo.Throw(result.ReplayFailure);
+        }
+    }
+}
+```

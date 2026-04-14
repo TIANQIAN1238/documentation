@@ -1,8 +1,8 @@
 ---
 id: user-groups
-title: Manage user groups
-sidebar_label: Manage user groups
-description: Learn how to manage user groups, members, and roles
+title: "管理用户组"
+sidebar_label: "管理用户组"
+description: "了解如何管理用户组、成员和角色"
 slug: /cloud/user-groups
 toc_max_heading_level: 4
 keywords:
@@ -18,155 +18,157 @@ tags:
   - Temporal Cloud
 ---
 
-## What are user groups?
+<a id="what-are-user-groups"></a>
+## 什么是用户组？ {#what-are-user-groups}
 
-User groups can be used to help manage sets of users that should have the same
-access. Instead of separately assigning the same role to individual users, a user group can be
-created, assigned the desired roles, and then users added to the user group. This
-eases the toil of managing individual user permissions and can simplify access management. When
-a new role is needed, it can be added to the group once and all users' access will reflect the
-new role.
+用户组可用于帮助管理应具有相同权限的用户组
+访问。用户组可以不是单独为各个用户分配相同的角色
+创建，分配所需的角色，然后将用户添加到用户组。这个
+减轻了管理个人用户权限的麻烦，并可以简化访问管理。当
+需要一个新角色，可以将其添加到组中一次，所有用户的访问权限都会反映该角色
+新角色。
 
-User groups can be assigned both [account-level roles](/cloud/manage-access/roles-and-permissions#account-level-roles) and [namespace-level permissions](/cloud/manage-access/roles-and-permissions#namespace-level-permissions).
+可以为用户组分配 [账户级角色](/cloud/manage-access/roles-and-permissions#account-level-roles) 和 [Namespace级权限](/cloud/manage-access/roles-and-permissions#namespace-level-permissions)。
 
-One user can be assigned to many groups. In the event that a user's group memberships have multiple roles for the same resource, the user will have an effective role of the most permissive of the permissions. For example if `Group A` grants a read-only role to a namespace, but `Group B` grants a write role to a namespace then a user that belongs to both `Group A` and `Group B` would have the write role to the namespace.
+一个用户可以分配到多个组。如果用户的组成员身份对同一资源具有多个角色，则该用户将拥有最许可的有效角色。例如，如果 `Group A` 向 Namespace 授予只读角色，但 `Group B` 向 Namespace 授予写入角色，则同时属于 `Group A` 和 `Group B` 的用户将具有 Namespace 的写入角色。
 
-[Service accounts](/cloud/service-accounts) cannot be assigned to user groups.
+[服务账户](/cloud/service-accounts) 不能分配给用户组。
 
-Only users with the Account Owner or Global Admin account-level [role](/cloud/manage-access/roles-and-permissions#account-level-roles) can manage user groups.
+只有具有帐户所有者或全局管理员帐户级别 [角色](/cloud/manage-access/roles-and-permissions#account-level-roles) 的用户才能管理用户组。
 
-## How SCIM groups work with user groups {#scim-groups}
+## SCIM 组如何与用户组一起使用 {#scim-groups}
 
-[SCIM groups](/cloud/scim) work similarly to user groups with respect to role assignment. Unlike a user group, the lifecycle of a SCIM group is fully managed by the SCIM integration which means:
+在角色分配方面，[SCIM组](/cloud/scim) 的工作方式与用户组类似。与用户组不同，SCIM 组的生命周期完全由 SCIM 集成管理，这意味着：
 
-1. SCIM groups cannot be created except through the SCIM integration
-1. SCIM groups cannot be deleted except through the SCIM integration
-1. SCIM group membership is managed through the SCIM integration
+1. SCIM 组只能通过 SCIM 集成创建
+1. SCIM 组无法删除，除非通过 SCIM 集成
+1. SCIM 组成员资格通过 SCIM 集成进行管理
 
-User groups and SCIM groups can be used simultaneously in a single Temporal Cloud account. One user may belong to multiple SCIM groups and to multiple user groups.
+用户组和 SCIM 组可以在单个 Temporal Cloud 帐户中同时使用。一个用户可以属于多个 SCIM 组和多个用户组。
 
-Using user group and SCIM groups together can be useful when the groups defined in the identity provider (IDP) don't map cleanly to the access you need to grant in Temporal Cloud. Instead of having to update the IDP (which is often sensitive and time-consuming), you can use Temporal Cloud user groups to manage access.
+当身份提供者 (IDP) 中定义的组未明确映射到您需要在 Temporal Cloud 中授予的访问权限时，同时使用用户组和 SCIM 组会很有用。您可以使用 Temporal Cloud 用户组来管理访问，而不必使用 Update IDP（这通常是敏感且耗时的）。
 
 :::info
 
-All user group administration requires an Account Owner or Global Admin account-level [role](/cloud/manage-access/roles-and-permissions#account-level-roles).
+所有用户组管理都需要帐户所有者或全局管理员帐户级别 [角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。
 
 :::
 
-## How to create a user group in your Temporal Cloud account {#create-group}
+## 如何在您的 Temporal Cloud 帐户中创建用户组 {#create-group}
 
-User group names must be 3-64 characters long and can only contain lowercase letters, numbers, hyphens, and underscores.
+用户组名称的长度必须为 3-64 个字符，并且只能包含小写字母、数字、连字符和下划线。
 
 <Tabs>
 
 <TabItem value="create-group-webui" label="Web UI">
 
-1. Navigate to the [identities page](https://cloud.temporal.io/settings/identities)
-1. Click the Create Group button
-1. Name the group
-1. Assign an account-level role to the group (you can assign namespace-level permissions after the group is created)
-1. Click Save
+1. 导航至 [身份页面](https://cloud.temporal.io/settings/identities)
+1. 单击创建组按钮
+1. 为组命名
+1.为群组分配账户级角色（创建群组后可以分配Namespace级权限）
+1. 单击“保存”
 
 </TabItem>
 
 <TabItem value="create-group-tcld" label="tcld">
-See the [`tcld` user-group create](/cloud/tcld/user-group/#create) command reference for details.
+有关详细信息，请参阅 [`tcld` 用户组创建](/cloud/tcld/user-group/#create) 命令参考。
 </TabItem>
 
 <TabItem value="create-group-tf" label="Terraform">
-See the [Terraform provider documentation](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs/resources/group) for details.
+有关详细信息，请参阅 [Terraform 提供者文档](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs/resources/group)。
 </TabItem>
 
 </Tabs>
 
-## How to assign roles to a user group {#assign-group-roles}
+## 如何为用户组分配角色 {#assign-group-roles}
 
 <Tabs>
 <TabItem value="assign-roles-webui" label="Web UI">
 
-To edit the account role of a group:
-  1. Navigate to the [identities page](https://cloud.temporal.io/settings/identities)
-  1. Find the group to edit (You can filter the list of identities to only show groups to find the relevant group by clicking the Groups tab on the table)
-  1. Click Edit Group
-  1. Click the Account Role dropdown
-  1. Select a new account role
-  1. Click Save
+编辑组的帐户角色：
+  1. 导航至 [身份页面](https://cloud.temporal.io/settings/identities)
+  1. 找到要编辑的组（您可以通过单击表格上的“组”选项卡过滤身份列表以仅显示组以查找相关组）
+  1. 单击编辑组
+  1. 单击帐户角色下拉列表
+  1. 选择新账户角色
+  1. 单击“保存”
 
-To add namespace permissions to a group:
-  1. Navigate to the [identities page](https://cloud.temporal.io/settings/identities)
-  1. Find the group to edit (You can filter the list of identities to only show groups to find the relevant group by clicking the Groups tab on the table)
-  1. Click Edit Group
-  1. Click Add Namespaces
-  1. Under Grant Access to a Namespace, search for the namespace you’d like to add permissions for
-  1. Select the namespace
-  1. Click the pencil to edit the permissions for the selected namespace
-  1. Click Save
+要将 Namespace 权限添加到组：
+  1. 导航至 [身份页面](https://cloud.temporal.io/settings/identities)
+  1. 找到要编辑的组（您可以通过单击表格上的“组”选项卡过滤身份列表以仅显示组以查找相关组）
+  1. 单击编辑组
+  1. 单击添加 Namespace
+  1. 在“授予对 Namespace 的访问权限”下，搜索您要为其添加权限的 Namespace
+  1. 选择Namespace
+  1. 单击铅笔编辑所选 Namespace 的权限
+  1. 单击“保存”
 
-To edit or remove namespace permissions from a group:
-  1. Click Edit Group
-  1. Click the pencil on a permission to edit it, or the trash can to delete it
-  1. Click Save
+要编辑或删除组中的 Namespace 权限：
+  1. 单击编辑组
+  1. 单击权限上的铅笔进行编辑，或单击垃圾桶进行删除
+  1. 单击“保存”
 
 </TabItem>
 
 <TabItem value="assign-roles-tcld" label="tcld">
-See the [`tcld` user-group set-access](/cloud/tcld/user-group/#set-access) command reference for details.
+有关详细信息，请参阅 [`tcld` 用户组设置访问](/cloud/tcld/user-group/#set-access) 命令参考。
 </TabItem>
 
 <TabItem value="assign-roles-tf" label="Terraform">
-See the [Terraform provider documentation](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs/resources/group) for details.
+有关详细信息，请参阅 [Terraform 提供者文档](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs/resources/group)。
 </TabItem>
 
 </Tabs>
 
-## How to manage users in a group {#assign-group-members}
+## 如何管理群组中的用户 {#assign-group-members}
 
 <Tabs>
 <TabItem value="assign-group-members-webui" label="Web UI">
 
-To add users to the group:
-  1. Navigate to the [identities page](https://cloud.temporal.io/settings/identities)
-  1. Find the group to edit (You can filter the list of identities to only show groups to find the relevant group by clicking the Groups tab on the table)
-  1. Click Edit Group
-  1. Under Members, search for the user you’d like to add 
-  1. Select the user
-  1. Click Save
-To remove a user from the group:
-  1. Click Edit Group
-  1. Under Members, click the X next to the user you’d like to remove
-  1. Click Save
+要将用户添加到组中：
+  1. 导航至 [身份页面](https://cloud.temporal.io/settings/identities)
+  1. 找到要编辑的组（您可以通过单击表格上的“组”选项卡过滤身份列表以仅显示组以查找相关组）
+  1. 单击编辑组
+  1. 在“成员”下，搜索您要添加的用户 
+  1. 选择用户
+  1. 单击“保存”
+要从组中删除用户：
+  1. 单击编辑组
+  1. 在“成员”下，单击您要删除的用户旁边的 X
+  1. 单击“保存”
 
 </TabItem>
 
 <TabItem value="assign-group-members-tcld" label="tcld">
-See the [`tcld` user-group add-users](/cloud/tcld/user-group/#add-users) and the [`tcld` user-group remove-users](/cloud/tcld/user-group/#remove-users) command reference for details.
+有关详细信息，请参阅 [`tcld` 用户组添加用户](/cloud/tcld/user-group/#add-users) 和 [`tcld` 用户组删除用户](/cloud/tcld/user-group/#remove-users) 命令参考。
 </TabItem>
 
 <TabItem value="assign-group-members-tf" label="Terraform">
-See the [Terraform provider documentation](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs/resources/group) for details.
+有关详细信息，请参阅 [Terraform 提供者文档](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs/resources/group)。
 </TabItem>
 
 </Tabs>
 
-## Delete a user group
+<a id="delete-a-user-group"></a>
+## 删除用户组 {#delete-a-user-group}
 
 <Tabs>
 <TabItem value="delete-group-webui" label="Web UI">
 
-  1. Navigate to the [identities page](https://cloud.temporal.io/settings/identities)
-  1. Find the group to edit (You can filter the list of identities to only show groups to find the relevant group by clicking the Groups tab on the table)
-  1. Click the dropdown next to the edit button
-  1. Click Delete
-  1. Confirm by clicking Delete
+1. 导航至 [身份页面](https://cloud.temporal.io/settings/identities)
+  1. 找到要编辑的组（您可以通过单击表格上的“组”选项卡过滤身份列表以仅显示组以查找相关组）
+  1. 单击编辑按钮旁边的下拉菜单
+  1. 单击“删除”
+  1. 单击“删除”确认
 
 </TabItem>
 
 <TabItem value="delete-group-tcld" label="tcld">
-See the [`tcld` user-group delete](/cloud/tcld/user-group/#delete) command reference for details.
+有关详细信息，请参阅 [`tcld` 用户组删除](/cloud/tcld/user-group/#delete) 命令参考。
 </TabItem>
 
 <TabItem value="delete-group-tf" label="Terraform">
-See the [Terraform provider documentation](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs/resources/group) for details.
+有关详细信息，请参阅 [Terraform 提供者文档](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs/resources/group)。
 </TabItem>
 
 </Tabs>

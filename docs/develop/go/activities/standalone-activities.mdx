@@ -1,7 +1,7 @@
 ---
 id: standalone-activities
-title: Standalone Activities - Go SDK
-sidebar_label: Standalone Activities
+title: "独立活动 - Go SDK"
+sidebar_label: "独立活动"
 toc_max_heading_level: 4
 keywords:
   - standalone activity
@@ -16,90 +16,90 @@ tags:
   - Temporal Client
   - Go SDK
   - Temporal SDKs
-description: Execute Activities independently without a Workflow using the Temporal Go SDK.
+description: "使用 Temporal Go SDK 独立执行活动，无需 Workflow。"
 ---
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal Go SDK support for [Standalone Activities](/standalone-activity) is at
-[Pre-release](/evaluate/development-production-features/release-stages#pre-release).
+Temporal Go SDK 对 [独立活动](/standalone-activity) 的支持位于
+[预发布](/evaluate/development-production-features/release-stages#pre-release)。
 
-All APIs are experimental and may be subject to backwards-incompatible changes.
+所有 API 都是实验性的，可能会发生向后不兼容的更改。
 
 :::
 
-Standalone Activities are Activity Executions that run independently, without being orchestrated by a Workflow. Instead
-of starting an Activity from within a Workflow Definition using `workflow.ExecuteActivity()`, you start a Standalone
-Activity directly from a Temporal Client using `client.ExecuteActivity()`.
+独立活动是独立运行的 Activity 执行，无需由 Workflow 编排。相反
+使用 `Workflow.ExecuteActivity()` 从 Workflow Definition 中启动 Activity 时，您可以启动一个独立的
+Activity 直接来自使用 `client.ExecuteActivity()` 的 Temporal CLIent。
 
-The Activity definition and Worker registration are identical to regular Activities, and only the execution path
-differs.
+Activity Definition和Worker注册与常规活动相同，只有执行路径
+不同。
 
-This page covers the following:
+此页面涵盖以下内容：
 
-- [Get Started with Standalone Activities](#get-started)
-- [Define your Activity](#define-activity)
-- [Run a Worker with the Activity registered](#run-worker)
-- [Execute a Standalone Activity](#execute-activity)
-- [Get the result of a Standalone Activity](#get-activity-result)
-- [Get a handle to an existing Standalone Activity](#get-activity-handle)
-- [List Standalone Activities](#list-activities)
-- [Count Standalone Activities](#count-activities)
-- [Run Standalone Activities with Temporal Cloud](#run-standalone-activities-temporal-cloud)
+- [开始独立活动](#get-started)
+- [定义您的 Activity](#define-activity)
+- [运行注册了 Activity 的 Worker](#run-worker)
+- [执行独立的 Activity](#execute-activity)
+- [获取独立 Activity 的结果](#get-activity-result)
+- [获取现有独立 Activity 的句柄](#get-activity-handle)
+- [列出独立活动](#list-activities)
+- [计算独立活动](#count-activities)
+- [使用 Temporal Cloud 运行独立活动](#run-standalone-activities-temporal-cloud)
 
 :::note
 
-This documentation uses source code from the
-[standalone-activity/helloworld](https://github.com/temporalio/samples-go/tree/main/standalone-activity/helloworld).
+本文档使用的源代码来自
+[独立-Activity/helloworld](https://github.com/temporalio/samples-go/tree/main/standalone-activity/helloworld)。
 
 :::
 
-## Get Started with Standalone Activities {#get-started}
+## 开始独立活动 {#get-started}
 
 
-Prerequisites:
+先决条件：
 
-- Install the [Temporal CLI](https://github.com/temporalio/cli/releases/tag/v1.6.2-standalone-activity) (Standalone Activity Prerelease version)
+- 安装 [Temporal CLI](https://github.com/temporalio/cli/releases/tag/v1.6.2-standalone-activity)（独立 Activity 预发行版本）
 
-- Install the [Temporal Go SDK](https://docs.temporal.io/develop/go/core-application#install-a-temporal-sdk) (v1.41.0 or higher)
+- 安装 [Temporal Go SDK](https://docs.temporal.io/develop/go/core-application#install-a-temporal-sdk)（v1.41.0 或更高版本）
 
 
-The first step in running a Standalone Activity involves starting a Temporal server:
+运行独立 Activity 的第一步涉及启动 Temporal Server：
 
 ```
 temporal server start-dev
 ```
 
-This command automatically starts the Temporal development server with the Web UI, and creates the `default` Namespace.
-It uses an in-memory database, so do not use it for real use cases.
+此命令自动使用 Web UI 启动 Temporal 开发服务器，并创建 `default` Namespace。
+它使用内存数据库，因此不要将其用于实际用例。
 
 :::info Temporal Cloud
 
-All code samples on this page use
+此页面上的所有代码示例都使用
 [`envconfig.MustLoadDefaultClientOptions()`](https://pkg.go.dev/go.temporal.io/sdk/contrib/envconfig)
-to configure the Temporal Client connection. It responds to [environment
-variables](/references/client-environment-configuration) and [TOML configuration
-files](/references/client-environment-configuration), so the same code works against a local dev
-server and Temporal Cloud without changes. See [Run Standalone Activities with Temporal
-Cloud](#run-standalone-activities-temporal-cloud) below.
+配置 Temporal CLIent 连接。它响应 [环境
+变量](/references/client-environment-configuration) 和 [TOML配置
+文件](/references/client-environment-configuration)，因此相同的代码适用于本地开发
+服务器和 Temporal Cloud 没有变化。请参阅下面的 [使用 Temporal 运行独立活动
+云](#run-standalone-activities-temporal-cloud)。
 
 :::
 
 
-The Temporal Server should now be available for client connections on `localhost:7233`, and the
-Temporal Web UI should now be accessible at [http://localhost:8233](http://localhost:8233). Standalone
-Activities are available from the nav bar item located towards the top left of the page:
+Temporal Server 现在应该可用于 `localhost:7233` 上的客户端连接，并且
+Temporal Web UI 现在应该可以通过 [http://localhost:8233](http://localhost:8233) 访问。独立式
+可以通过页面左上角的导航栏项目进行活动：
 
 <img src="/img/standalone-activities-ui-nav.png" alt="Standalone Activities Web UI nav bar item" height="336" />
 
-Clone the [samples-go](https://github.com/temporalio/samples-go) repository to follow along:
+克隆 [样品去](https://github.com/temporalio/samples-go) 存储库以继续操作：
 
 ```
 git clone https://github.com/temporalio/samples-go.git
 cd samples-go
 ```
 
-The sample project is structured as follows:
+示例项目的结构如下：
 
 ```
 standalone-activity/helloworld/
@@ -110,11 +110,12 @@ standalone-activity/helloworld/
     └── main.go
 ```
 
-## Define your Activity {#define-activity}
+<a id="define-activity"></a>
+## 定义你的 Activity {#define-activity}
 
-Define your Activity in a shared file so that both the Worker and starter can reference it.
+在共享文件中定义 Activity，以便 Worker 和启动器都可以引用它。
 
-[standalone-activity/helloworld/activity.go](https://github.com/temporalio/samples-go/blob/main/standalone-activity/helloworld/activity.go)
+[独立-Activity/helloworld/Activity.go](https://github.com/temporalio/samples-go/blob/main/standalone-activity/helloworld/activity.go)
 
 ```go
 package helloworld
@@ -131,16 +132,17 @@ func Activity(ctx context.Context, name string) (string, error) {
 }
 ```
 
-## Run a Worker with the Activity registered {#run-worker}
+<a id="run-worker"></a>
+## 使用注册的 Activity 运行 Worker {#run-worker}
 
-Running a Worker for Standalone Activities is the same as running a Worker for Workflow-driven Activities — you create a
-Worker, register the Activity, and call `Run()`. The Worker doesn't need to know whether the Activity will be invoked
-from a Workflow or as a Standalone Activity.
+为独立活动运行 Worker 与为 Workflow 驱动的活动运行 Worker 相同 - 您创建一个
+Worker，注册Activity，并调用`Run()`。 Worker不需要知道Activity是否会被调用
+来自 Workflow 或作为独立的 Activity。
 
-See [How to develop a Worker in Go](/develop/go/workers/run-worker-process#develop-worker) for more details on Worker setup and
-configuration options.
+有关 Worker 设置和的更多详细信息，请参阅 [如何在 Go 中开发 Worker](/develop/go/workers/run-worker-process#develop-worker)
+配置选项。
 
-[standalone-activity/helloworld/worker/main.go](https://github.com/temporalio/samples-go/blob/main/standalone-activity/helloworld/worker/main.go)
+[独立-Activity/helloworld/Worker/main.go](https://github.com/temporalio/samples-go/blob/main/standalone-activity/helloworld/worker/main.go)
 
 ```go
 package main
@@ -171,24 +173,25 @@ func main() {
 }
 ```
 
-To run the Worker:
+运行 Worker：
 
 ```
 go run standalone-activity/helloworld/worker/main.go
 ```
 
-## Execute a Standalone Activity {#execute-activity}
+<a id="execute-activity"></a>
+## 执行独立的 Activity {#execute-activity}
 
-Use [`client.ExecuteActivity()`](https://pkg.go.dev/go.temporal.io/sdk/client#Client) to start a Standalone Activity
-Execution. This is called from application code (for example, a starter program), not from inside a Workflow Definition.
+使用 [`client.ExecuteActivity()`](https://pkg.go.dev/go.temporal.io/sdk/client#Client) 启动独立的 Activity
+执行。这是从应用程序代码（例如启动程序）调用的，而不是从 Workflow Definition 内部调用的。
 
-`ExecuteActivity` returns an [`ActivityHandle`](https://pkg.go.dev/go.temporal.io/sdk/client#ActivityHandle) that you
-can use to get the result, describe, cancel, or terminate the Activity.
+`ExecuteActivity` 返回您指定的 [`ActivityHandle`](https://pkg.go.dev/go.temporal.io/sdk/client#ActivityHandle)
+可用于获取结果、描述、取消或终止 Activity。
 
-The following starter program demonstrates how to execute a Standalone Activity, get its result, list activities, and
-count activities:
+以下入门程序演示了如何执行独立 Activity、获取其结果、列出活动以及
+计数活动：
 
-[standalone-activity/helloworld/starter/main.go](https://github.com/temporalio/samples-go/blob/main/standalone-activity/helloworld/starter/main.go)
+[独立-Activity/helloworld/starter/main.go](https://github.com/temporalio/samples-go/blob/main/standalone-activity/helloworld/starter/main.go)
 
 ```go
 package main
@@ -256,7 +259,7 @@ func main() {
 }
 ```
 
-You can pass the Activity as either a function reference or a string Activity type name:
+您可以将 Activity 作为函数引用或字符串 Activity 类型名称传递：
 
 ```go
 handle, err := c.ExecuteActivity(ctx, options, helloworld.Activity, "arg1")
@@ -265,17 +268,17 @@ handle, err := c.ExecuteActivity(ctx, options, helloworld.Activity, "arg1")
 handle, err := c.ExecuteActivity(ctx, options, "Activity", "arg1")
 ```
 
-`client.StartActivityOptions` requires `ID`, `TaskQueue`, and at least one of `ScheduleToCloseTimeout` or
-`StartToCloseTimeout`. See [`StartActivityOptions`](https://pkg.go.dev/go.temporal.io/sdk/client#StartActivityOptions)
-in the API reference for the full set of options.
+`client.StartActivityOptions` 需要 `ID`、`TaskQueue` 以及 `ScheduleToCloseTimeout` 或 `ScheduleToCloseTimeout` 中的至少一项
+`StartToCloseTimeout`。参见 [`StartActivityOptions`](https://pkg.go.dev/go.temporal.io/sdk/client#StartActivityOptions)
+在 API 参考中获取完整的选项集。
 
-To run the starter (in a separate terminal from the Worker):
+要运行启动器（在与 Worker 不同的终端中）：
 
 ```
 go run standalone-activity/helloworld/starter/main.go
 ```
 
-Or use the Temporal CLI to execute a Standalone Activity:
+或者使用 Temporal CLI 执行独立 Activity：
 
 ```bash
 temporal activity execute \
@@ -286,10 +289,11 @@ temporal activity execute \
   --input '"Temporal"'
 ```
 
-## Get the result of a Standalone Activity {#get-activity-result}
+<a id="get-activity-result"></a>
+## 获取独立 Activity 的结果 {#get-activity-result}
 
-Use `ActivityHandle.Get()` to block until the Activity completes and retrieve its result. This is analogous to calling
-`Get()` on a `WorkflowRun`.
+使用 `ActivityHandle.Get()` 进行阻止，直到 Activity 完成并检索其结果。这类似于调用
+`Get()` 上的 `WorkflowRun`。
 
 ```go
 var result string
@@ -300,15 +304,16 @@ if err != nil {
 log.Println("Activity result:", result)
 ```
 
-If the Activity completed successfully, the result is deserialized into the provided pointer. If the Activity failed,
-the failure is returned as an error.
+如果 Activity 成功完成，结果将反序列化到提供的指针中。如果 Activity 失败，
+失败作为错误返回。
 
-## Get a handle to an existing Standalone Activity {#get-activity-handle}
+<a id="get-activity-handle"></a>
+## 获取现有独立 Activity 的句柄 {#get-activity-handle}
 
-Use `client.GetActivityHandle()` to create a handle to a previously started Standalone Activity. This is analogous to
-`client.GetWorkflow()` for Workflow Executions.
+使用 `client.GetActivityHandle()` 创建先前启动的独立 Activity 的句柄。这类似于
+`client.GetWorkflow()` 适用于 Workflow Execution。
 
-Both `ActivityID` and `RunID` are required.
+`ActivityID` 和 `RunID` 都是必需的。
 
 ```go
 handle := c.GetActivityHandle(client.GetActivityHandleOptions{
@@ -324,11 +329,11 @@ if err != nil {
 }
 ```
 
-## List Standalone Activities {#list-activities}
+## 列出独立活动 {#list-activities}
 
-Use [`client.ListActivities()`](https://pkg.go.dev/go.temporal.io/sdk/client#Client) to list Standalone Activity
-Executions that match a [List Filter](/list-filter) query. The result contains an iterator that yields
-[`ActivityExecutionInfo`](https://pkg.go.dev/go.temporal.io/sdk/client#ActivityExecutionInfo) entries.
+使用 [`client.ListActivities()`](https://pkg.go.dev/go.temporal.io/sdk/client#Client) 列出独立 Activity
+与 [列表过滤器](/list-filter) Query 匹配的执行。结果包含一个迭代器，它产生
+[`ActivityExecutionInfo`](https://pkg.go.dev/go.temporal.io/sdk/client#ActivityExecutionInfo) 条目。
 
 ```go
 resp, err := c.ListActivities(context.Background(), client.ListActivitiesOptions{
@@ -347,20 +352,20 @@ for info, err := range resp.Results {
 }
 ```
 
-Or use the Temporal CLI:
+或者使用 Temporal CLI：
 
 ```bash
 temporal activity list
 ```
 
-The `Query` field accepts the same [List Filter](/list-filter) syntax used for Workflow Visibility. For example,
-`"ActivityType = 'Activity' AND Status = 'Running'"`.
+`Query` 字段接受与 Workflow Visibility 相同的 [列表过滤器](/list-filter) 语法。例如，
+`"ActivityType = 'Activity' AND Status = 'Running'"`。
 
 
-## Count Standalone Activities {#count-activities}
+## 计算独立活动 {#count-activities}
 
-Use [`client.CountActivities()`](https://pkg.go.dev/go.temporal.io/sdk/client#Client) to count Standalone Activity
-Executions that match a [List Filter](/list-filter) query.
+使用[`client.CountActivities()`](https://pkg.go.dev/go.temporal.io/sdk/client#Client)来计数独立式Activity
+与 [列表过滤器](/list-filter) Query 匹配的执行。
 
 ```go
 resp, err := c.CountActivities(context.Background(), client.CountActivitiesOptions{
@@ -373,23 +378,25 @@ if err != nil {
 log.Println("Total activities:", resp.Count)
 ```
 
-Or use the Temporal CLI:
+或者使用 Temporal CLI：
 
 ```bash
 temporal activity count
 ```
 
-## Run Standalone Activities with Temporal Cloud {#run-standalone-activities-temporal-cloud}
+<a id="run-standalone-activities-temporal-cloud"></a>
+## 使用 Temporal Cloud 运行独立活动 {#run-standalone-activities-temporal-cloud}
 
-The code samples on this page use `envconfig.MustLoadDefaultClientOptions()`, so the same code
-works against Temporal Cloud — just configure the connection via environment variables or a TOML
-profile. No code changes are needed.
+本页的代码示例使用`envconfig.MustLoadDefaultClientOptions()`，因此相同的代码
+适用于 Temporal Cloud — 只需通过环境变量或 TOML 配置连接
+简介。无需更改代码。
 
-For full details on connecting to Temporal Cloud, including Namespace creation, certificate
-generation, and authentication options, see
-[Connect to Temporal Cloud](/develop/go/client/temporal-client#connect-to-temporal-cloud).
+有关连接到 Temporal Cloud 的完整详细信息，包括 Namespace 创建、证书
+生成和身份验证选项，请参阅
+[连接到 Temporal Cloud](/develop/go/client/temporal-client#connect-to-temporal-cloud)。
 
-### Connect with mTLS
+<a id="connect-with-mtls"></a>
+### 连接 mTLS {#connect-with-mtls}
 
 ```
 export TEMPORAL_ADDRESS=<your-namespace>.<your-account-id>.tmprl.cloud:7233
@@ -398,7 +405,8 @@ export TEMPORAL_TLS_CLIENT_CERT_PATH='path/to/your/client.pem'
 export TEMPORAL_TLS_CLIENT_KEY_PATH='path/to/your/client.key'
 ```
 
-### Connect with an API key
+<a id="connect-with-an-api-key"></a>
+### 使用 API 密钥连接 {#connect-with-an-api-key}
 
 ```
 export TEMPORAL_ADDRESS=<region>.<cloud_provider>.api.temporal.io:7233
@@ -406,4 +414,4 @@ export TEMPORAL_NAMESPACE=<your-namespace>.<your-account-id>
 export TEMPORAL_API_KEY=<your-api-key>
 ```
 
-Then run the Worker and starter code as shown in the earlier sections.
+然后运行 ​​Worker 和起始代码，如前面部分所示。

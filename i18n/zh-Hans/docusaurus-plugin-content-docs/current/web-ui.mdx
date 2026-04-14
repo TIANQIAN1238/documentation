@@ -1,0 +1,297 @@
+---
+id: web-ui
+title: Temporal Web UI
+sidebar_label: 网页用户界面
+description: Temporal Web UI 提供全面的 Workflow 管理、调试工具和元数据访问。
+toc_max_heading_level: 4
+keywords:
+  - web-ui
+tags:
+  - Temporal Web UI
+---
+
+import { RelatedReadContainer, RelatedReadItem } from '@site/src/components';
+
+Temporal Web UI 为用户提供 Workflow Execution 状态和元数据以用于调试目的。它附带
+每个 [Temporal CLI](/cli) 版本均适用于 [Temporal Cloud](/cloud)。
+
+您可以将 Temporal Web UI 配置为在您自己的环境中工作。请参阅
+[UI配置参考](/references/web-ui-configuration)。
+
+Web UI 开源存储库：
+
+- [Temporalio/ui](https://github.com/Temporalio/ui)
+- [Temporalio/ui-server](https://github.com/Temporalio/ui-server)
+
+## Namespaces
+
+您自托管 Temporal 服务或 Temporal Cloud 帐户中的所有 Namespace 都列在 **Namespaces** 下
+窗口的左侧部分。您还可以通过选择 Namespace 从 Workflow 视图切换 Namespace
+切换器位于窗口的右上角。选择 Namespace 后，Web UI 将显示最近使用的 Workflow 页面
+对于 Namespace。在 Temporal Cloud 中，用户只能访问他们已被授予访问权限的 Namespace。对于
+详细信息，请参阅 [Namespace 级别权限](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions)。
+
+## Workflows
+
+Workflows 主页面显示保留期内所有 Workflow Execution 的表格。
+
+用户可以通过以下任一方式列出 Workflow Execution：
+
+- [状态](/Workflow-执行#Workflow-执行状态)
+- [Workflow Id](/Workflow-执行/Workflowid-runid#Workflow-id)
+- [Workflow Type](/Workflow-定义#Workflow-类型)
+- 开始时间
+- 结束时间
+- 使用 [列表过滤器](/list-filter) 的任何其他默认或自定义 [Search Attribute](/search-attribute)
+
+对于开始时间和结束时间，用户可以将其首选日期和时间格式设置为以下之一：
+
+- 世界标准时间
+- 本地
+- 相对
+
+选择 Workflow Execution 以查看 Workflow Execution 的历史记录、Worker、关系、待处理的活动和
+Nexus Operation、查询和元数据。
+
+### 保存的视图 {#saved-views}
+
+保存的视图允许您在 Temporal Web UI 中保存和重复使用常用的 Visibility 查询。而不是重新创造
+每次复杂的过滤器，您都可以保存一次并单击即可应用它们。
+
+保存的视图本地存储在您的浏览器中，每当您在此使用 Temporal Web UI 时都可以使用
+浏览器。每个用户都会有自己的私人收藏。
+
+#### 应用保存的视图
+
+默认情况下，Workflows 页面有几个默认的已保存视图。您还可以创建自己的保存视图。
+
+单击列表中已保存视图的名称可显示与 Query 匹配的相应 Workflow。
+
+Workflow 列表页面将刷新并显示已保存视图的结果。
+
+#### 创建保存的视图
+
+您可以从 Workflows 页面创建新的已保存视图。
+
+1. 通过使用过滤器 UI 创建保存的视图来构建您的条件，或者您可以使用原始 Query 编辑器来编写
+   定制 Query 字符串。
+1. 您的新视图将作为新视图出现在自定义视图列表中。单击另存为新按钮以显示另存为
+   查看窗口。为您保存的视图命名。每个用户的名称必须是唯一的，并且最多可以包含 255 个字符。
+1. 单击“保存”。您的新视图将出现在自定义视图列表中
+
+您最多可以创建 20 个保存的视图。当达到此限制时，您需要先删除一些已保存的视图，然后才能
+保存新的。
+
+#### 对保存的视图进行临时更改 Query
+
+您可以临时修改已保存的视图，而不更改已保存的条件。
+
+1. 选择要更改的已保存视图。
+1. 根据需要调整 UI 过滤器。
+1. Workflows 页面将刷新新 Query 的结果，而不更改已保存的视图。
+1. 如果您想保留临时更改，您可以：
+   - 单击“保存”，这将用您的修改替换原始的“保存的视图”。
+   - 单击“编辑”，修改名称，然后单击“保存”，这将用您的修改替换原来的“保存的视图”
+     更改名称。
+   - 单击“编辑”，修改名称，然后单击“新建”，这将使用您的新设置和
+     新名字。
+
+#### 重命名已保存的视图 Query
+
+您可以从 Workflows 页面重命名现有的已保存视图。
+
+1. 选择要更改的已保存视图。
+1. 单击编辑。
+1. 在编辑视图对话框中，为保存的视图输入新名称。
+1. 单击“保存”应用更改并重命名现有的“已保存视图”，或单击“创建副本”创建新的“已保存视图”
+   与新名称。
+
+#### 删除保存的视图
+
+您可以从 Workflows 页面删除已保存的视图，因为它不再有用，或者为新的已保存视图创建空间
+意见。
+
+1. 选择要删除的已保存视图。您只能删除您创建的查询；你不能删除系统
+   默认值。
+1. 单击“编辑”，然后单击“删除此已保存的视图”。
+
+:::note Deleting Saved Views is permanent
+
+删除的查询无法恢复，因此请确保您不再需要它们。如果您不小心删除了已保存的列表，
+您将需要重新创建它。
+
+:::
+
+#### 分享已保存的视图
+
+您可以将保存的视图作为 URL 进行共享。
+
+1. 选择您要共享的已保存视图。
+1. 单击“共享”按钮将此已保存视图的 URL 复制到剪贴板。也可以直接复制网址
+   从浏览器。
+
+:::note Saved Views and time
+
+使用相对时间的已保存视图将与绝对时间共享。
+
+:::
+
+## 任务失败视图 {#task-failures-view}
+
+任务失败视图是预定义的已保存视图，显示出现 Workflow Task 故障的 Workflow。
+这些 Workflow 仍在运行，但其中一项任务已失败或超时。
+
+任务失败视图的详细信息显示 Workflow 的 ID、运行 ID 和 Workflow Type。 
+单击详细信息中的任何链接都会打开该 Workflow 的 Workflow 页面。 
+在此页面上，您将找到有关失败的任务和剩余待处理任务的更多信息。
+您还可以通过单击此页面上的请求取消按钮来取消 Workflow。
+
+我们的系统实时监控 Workflow Task 执行模式。当 Workflow 连续五次遇到任务失败或超时时，它会被自动标记。一旦 Workflow 成功完成任务，该标志就会清除。这个智能阈值可以过滤掉小故障，同时让 Workflow 出现真正的问题。
+
+### 激活任务失败视图 {#activate-task-failures-view}
+
+Temporal Cloud 用户默认启用此功能。如果您自托管 Temporal，则需要 Update `system.numConsecutiveWorkflowTaskProblemsToTriggerSearchAttribute` [动态配置](/references/dynamic-configuration)。
+
+以下是如何为开发服务器进行配置 Update 的示例：
+
+```command
+temporal server start-dev \
+ --dynamic-config-value system.numConsecutiveWorkflowTaskProblemsToTriggerSearchAttribute=5
+```
+
+“numConsecutiveWorkflowTaskProblemsToTriggerSearchAttribute”是触发“TemporalReportedProblems”Search Attribute 所需的连续 Workflow Task 故障的数量。默认值为 5。如果添加此 Search Attribute 会对 Visibility 系统造成压力，请考虑增加此数字。
+
+要关闭 Namespace 的功能，请将“numConsecutiveWorkflowTaskProblemsToTriggerSearchAttribute”设置为 0。
+
+＃＃ 历史
+
+Workflow Execution 历史记录是 [Events](/Workflow-execution/event#event) 和事件字段内的视图
+Workflow Execution。 Workflow Execution 的事件中大约可以出现 [40 个不同的事件](/references/events)
+历史。
+
+页面顶部列出了以下执行元数据：
+
+- 开始时间、结束时间和持续时间
+- [运行 ID](/Workflow-执行/Workflowid-runid#run-id)
+- [Workflow Type](/Workflow-定义#Workflow-类型)
+- [Task Queue](/任务队列)
+- 家长和家长 ID
+- SDK
+- [状态转换](/Workflow-execution#state-transition)
+- [计费操作计数](/cloud/actions#actions-in-Workflows)（仅限 Temporal Cloud）
+
+输入和结果部分显示函数参数和返回值以用于调试目的。结果不是
+直到 Workflow 完成为止。
+
+“历史记录”选项卡具有以下视图：
+
+- 时间轴：按时间顺序或逆时间顺序排列的事件并附有摘要。单击进入事件会显示所有事件
+  该活动的详细信息。
+- 全部：查看所有历史事件。
+- 紧凑：活动、Signal 和 Timer 的逻辑分组。
+- JSON：Workflow 的完整 JSON 代码。
+
+### 下载Event History
+
+整个 Workflow Execution Event History（JSON 格式）可以从此部分下载。
+
+### Workflow 行动
+
+Workflow Execution 可以请求取消、发送 Signal 或 Update，或者直接从 UI 重置和终止。
+使用 Start Workflow Like This One 按钮启动一个预填充值的新 Workflow Execution。
+
+### 关系
+
+显示 Workflow Execution 的完整层次结构，其中所有父节点和子节点都显示在树中。
+
+### Workers
+
+显示当前在 Workflow Task 队列上轮询的 Worker 及其计数。如果没有 Worker 进行轮询，则会出现错误
+显示。
+
+### 待定活动
+
+显示最近活动和/或待处理的 Activity 执行的摘要。单击待处理的 Activity 会引导用户
+到待处理活动选项卡以查看详细信息。
+
+### 调用堆栈
+
+屏幕显示从 [\_\_stack_trace](/sending-messages#stack-trace-Query) Query 捕获的结果。 Query 是
+选择选项卡时执行。仅当 Worker 正在运行且可返回调用堆栈时，它才有效。的
+调用堆栈显示 Workflow 代码等待的每个位置。
+
+### 查询
+
+列出发送到 Workflow Execution 的所有查询。
+
+### 元数据
+
+显示用户元数据，包括静态 Workflow 摘要和详细信息以及动态当前详细信息。列出所有事件
+用户元数据为您提供 Workflow 中发生的情况的人类可读日志。
+
+## Schedules
+
+在 Temporal Cloud 和自托管 Temporal 服务 Web UI 上，Schedules 页面列出了所有 [Schedules](/Schedule)
+在选定的 Namespace 上创建。
+
+单击 Schedule 可查看详细信息，例如配置的频率、开始和结束时间以及最近和即将进行的运行。
+
+:::tip Setting Schedules with Strings
+
+Temporal Workflow Schedule Cron 字符串遵循以下格式：
+
+```
+┌───────────── minute (0 - 59)
+│ ┌───────────── hour (0 - 23)
+│ │ ┌───────────── day of the month (1 - 31)
+│ │ │ ┌───────────── month (1 - 12)
+│ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+│ │ │ │ │
+* * * * *
+```
+
+:::
+
+要了解有关 Schedule 的更多信息，请浏览以下链接：
+
+<RelatedReadContainer>
+  <RelatedReadItem path="/develop/go/workflows/schedules" text="Schedules using the Go SDK" archetype="feature-guide" />
+  <RelatedReadItem path="/develop/java/workflows/schedules" text="Schedules using the Java SDK" archetype="feature-guide" />
+  <RelatedReadItem path="/develop/php/workflows/schedules" text="Schedules using the PHP SDK" archetype="feature-guide" />
+  <RelatedReadItem path="/develop/python/workflows/schedules" text="Schedules using the Python SDK" archetype="feature-guide" />
+  <RelatedReadItem
+路径 =“/develop/typescript/Workflows/Schedules”
+    text="使用 TypeScript SDK 的 Schedule"
+    原型=“功能指南”
+  />
+  <RelatedReadItem path="/develop/dotnet/workflows/schedules" text="Schedules using the .NET SDK" archetype="feature-guide" />
+</RelatedReadContainer>
+
+＃＃＃ 设置
+
+在 Temporal Cloud 上，**设置** 仅对帐户所有者和全局管理员可见
+[角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。
+
+单击 **设置** 查看和管理您帐户中的用户列表并设置集成，例如
+[可观察性](/cloud/metrics) 和[审核日志记录](/cloud/audit-logs)。
+
+在自托管 Temporal 服务上，管理您的用户、指标和登录
+[服务器配置](/references/configuration)。
+
+＃＃＃ 档案
+
+在自托管 Temporal 服务上，存档显示 Workflow Execution 的[已存档](/Temporal-service/archival) 数据
+在 Namespace 上。
+
+要查看自托管 Temporal 服务中的数据，您必须具有
+[存档设置和配置](/self-hosted-guide/archival)。
+
+有关 Temporal Cloud 中存档功能的信息和详细信息，请联系您的 Temporal 代表。
+
+### Codec Server
+
+Web UI 可以使用 [Codec Server](/codec-server) 和自定义 Data Converter 来解码输入和返回值。对于
+详细信息，请参阅[保护您的数据](/生产部署/数据加密)。
+
+UI 支持 [Codec Server 端点](/生产部署/数据加密#web-ui)。有关设置的详细信息
+Codec Server 端点，请参阅 [Codec Server 设置](/生产部署/数据加密#codec-server-setup)。

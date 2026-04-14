@@ -1,8 +1,8 @@
 ---
 id: run-worker-process
-title: Worker processes - TypeScript SDK
-description: Shows how to run Worker processes with the TypeScript SDK
-sidebar_label: Worker processes
+title: "Worker 流程 - TypeScript SDK"
+description: "演示如何使用 TypeScript SDK 运行 Worker 进程"
+sidebar_label: "Worker 流程"
 slug: /develop/typescript/workers/run-worker-process
 toc_max_heading_level: 3
 tags:
@@ -11,39 +11,41 @@ tags:
   - Worker
 ---
 
-## How to run Worker Processes {#run-a-dev-worker}
+<a id="run-a-dev-worker"></a>
+## 如何运行 Worker 进程 {#run-a-dev-worker}
 
-The [Worker Process](/workers#worker-process) is where Workflow Functions and Activity Functions are executed.
+[Worker 流程](/workers#worker-process) 是执行 Workflow 函数和 Activity 函数的地方。
 
-- Each [Worker Entity](/workers#worker-entity) in the Worker Process must register the exact Workflow Types and Activity
-  Types it may execute.
-- Each Worker Entity must also associate itself with exactly one [Task Queue](/task-queue).
-- Each Worker Entity polling the same Task Queue must be registered with the same Workflow Types and Activity Types.
+- Worker 进程中的每个 [Worker 实体](/workers#worker-entity) 必须注册准确的 Workflow 类型和 Activity
+  它可以执行的类型。
+- 每个 Worker 实体还必须将其自身与一个 [Task Queue](/task-queue) 关联起来。
+- 轮询相同 Task Queue 的每个 Worker 实体必须使用相同的 Workflow 类型和 Activity 类型进行注册。
 
-A [Worker Entity](/workers#worker-entity) is the component within a Worker Process that listens to a specific Task
-Queue.
+[Worker 实体](/workers#worker-entity) 是 Worker 进程中侦听特定任务的组件
+队列。
 
-Although multiple Worker Entities can be in a single Worker Process, a single Worker Entity Worker Process may be
-perfectly sufficient. For more information, see the [Worker tuning guide](/develop/worker-performance).
+虽然多个 Worker 实体可以位于单个 Worker 进程中，但单个 Worker 实体 Worker 进程可以是
+完全足够了。有关详细信息，请参阅 [Worker 调音指南](/develop/worker-performance)。
 
-A Worker Entity contains a Workflow Worker and/or an Activity Worker, which makes progress on Workflow Executions and
-Activity Executions, respectively.
+Worker 实体包含 Workflow Worker 和/或 Activity Worker，这在 Workflow Execution 上取得了进展，并且
+Activity 分别执行。
 
-## How to run a Worker on Docker in TypeScript {#run-a-worker-on-docker}
+<a id="run-a-worker-on-docker"></a>
+## 如何使用 TypeScript 在 Docker 上运行 Worker {#run-a-worker-on-docker}
 
 :::note
 
-To improve worker startup time, we recommend preparing workflow bundles ahead-of-time. See our
-[productionsample](https://github.com/temporalio/samples-typescript/tree/main/production) for details.
+为了缩短 Worker 启动时间，我们建议提前准备 Workflow 捆绑包。看看我们的
+[生产样品](https://github.com/temporalio/samples-typescript/tree/main/production) 了解详情。
 
 :::
 
-Workers based on the TypeScript SDK can be deployed and run as Docker containers.
+基于 TypeScript SDK 的 Worker 可以作为 Docker 容器部署和运行。
 
-We recommend an LTS Node.js release such as 18, 20, 22, or 24. Both `amd64` and `arm64` architectures are supported. A
-glibc-based image is required; musl-based images are _not_ supported (see below).
+我们建议使用 LTS Node.js 版本，例如 18、20、22 或 24。`amd64` 和 `arm64` 架构均受支持。一个
+需要基于 glibc 的镜像；不支持基于 musl 的图像（见下文）。
 
-The easiest way to deploy a TypeScript SDK Worker on Docker is to start with the `node:20-bullseye` image. For example:
+在 Docker 上部署 TypeScript SDK Worker 的最简单方法是从 `node:20-bullseye` 映像开始。例如：
 
 ```dockerfile
 FROM node:20-bullseye
@@ -60,21 +62,21 @@ RUN npm install --only=production \
 CMD ["npm", "start"]
 ```
 
-For smaller images and/or more secure deployments, it is also possible to use `-slim` Docker image variants (like
-`node:20-bullseye-slim`) or `distroless/nodejs` Docker images (like `gcr.io/distroless/nodejs20-debian11`) with the
-following caveats.
+对于较小的映像和/或更安全的部署，还可以使用 `-slim` Docker 映像变体（例如
+`node:20-bullseye-slim`) 或 `distroless/nodejs` Docker 镜像（如 `gcr.io/distroless/nodejs20-debian11`）
+以下警告。
 
-### Using `node:slim` images
+<a id="using-nodeslim-images"></a>
+### 使用 `node:slim` 图像 {#using-nodeslim-images}
 
-`node:slim` images do not contain some of the common packages found in regular images. This results in significantly
-smaller images.
+`node:slim` 映像不包含常规映像中的一些常见包。这导致显着
+较小的图像。
 
-However, TypeScript SDK requires the presence of root TLS certificates (the `ca-certificates` package), which are not
-included in `slim` images. The `ca-certificates` package is required even when connecting to a local Temporal Server or
-when using a server connection config that doesn't explicitly use TLS.
+但是，TypeScript SDK 需要存在根 TLS 证书（`ca-certificates` 包），而该证书不存在
+包含在 `slim` 图像中。即使连接到本地 Temporal Server 或 `ca-certificates` 包也是必需的
+当使用未明确使用 TLS 的服务器连接配置时。
 
-For this reason, the `ca-certificates` package must be installed during the construction of the Docker image. For
-example:
+因此，在构建 Docker 镜像时必须安装 `ca-certificates` 包。例如：
 
 ```dockerfile
 FROM node:20-bullseye-slim
@@ -86,22 +88,23 @@ RUN apt-get update \
 # ... same as with regular image
 ```
 
-Failure to install this dependency results in a `[TransportError: transport error]` runtime error, because the
-certificates cannot be verified.
+未能安装此依赖项会导致 `[TransportError: transport error]` 运行时错误，因为
+无法验证证书。
 
-### Using `distroless/nodejs` images
+<a id="using-distrolessnodejs-images"></a>
+### 使用 `distroless/nodejs` 图像 {#using-distrolessnodejs-images}
 
-`distroless/nodejs` images include only the files that are strictly required to execute `node`. This results in even
-smaller images (approximately half the size of `node:slim` images). It also significantly reduces the surface of
-potential security issues that could be exploited by a hacker in the resulting Docker images.
+`distroless/nodejs` 映像仅包含执行 `node` 严格所需的文件。这导致甚至
+较小的图像（大约是 `node:slim` 图像大小的一半）。它还显着减少了表面
+黑客可能会在生成的 Docker 镜像中利用潜在的安全问题。
 
-It is generally possible and safe to execute TypeScript SDK Workers using `distroless/nodejs` images (unless your code
-itself requires dependencies that are not included in `distroless/nodejs`).
+使用 `distroless/nodejs` 图像执行 TypeScript SDK Worker 通常是可能且安全的（除非您的代码
+本身需要 `distroless/nodejs` 中未包含的依赖项）。
 
-However, some tools required for the build process (notably the `npm` command) are _not_ included in the
-`distroless/nodejs` image. This might result in various error messages during the Docker build.
+但是，构建过程所需的一些工具（特别是 `npm` 命令）并未包含在
+`distroless/nodejs` 图像。这可能会导致 Docker 构建期间出现各种错误消息。
 
-The recommended solution is to use a multi-step Dockerfile. For example:
+推荐的解决方案是使用多步骤 Dockerfile。例如：
 
 ```dockerfile
 # -- BUILD STEP --
@@ -124,65 +127,68 @@ WORKDIR /app
 CMD ["node", "build/worker.js"]
 ```
 
-### Properly configure Node.js memory in Docker
+<a id="properly-configure-nodejs-memory-in-docker"></a>
+### 在 Docker 中正确配置 Node.js 内存 {#properly-configure-nodejs-memory-in-docker}
 
-By default, `node` configures its maximum old-gen memory to 25% of the _physical memory_ of the machine on which it is
-executing, with a maximum of 4 GB. This is likely inappropriate when running Node.js in a Docker environment and can
-result in either underusage of available memory (`node` only uses a fraction of the memory allocated to the container)
-or overusage (`node` tries to use more memory than what is allocated to the container, which will eventually lead to the
-process being killed by the operating system).
+默认情况下，`node` 将其最大旧代内存配置为其所在计算机的_物理内存_的 25%
+执行，最大 4 GB。当在 Docker 环境中运行 Node.js 时，这可能不合适，并且可以
+导致可用内存使用不足（`node` 仅使用分配给容器的内存的一小部分）
+或过度使用（`node` 尝试使用比分配给容器的内存更多的内存，这最终会导致
+进程被操作系统杀死）。
 
-Therefore we recommended that you always explicitly set the `--max-old-space-size` `node` argument to approximately 80%
-of the maximum size (in megabytes) that you want to allocate the `node` process. You might need some experimentation and
-adjustment to find the most appropriate value based on your specific application.
+因此，我们建议您始终将 `--max-old-space-size` `node` 参数显式设置为大约 80%
+您要分配给 `node` 进程的最大大小（以兆字节为单位）。您可能需要一些实验
+根据您的具体应用进行调整以找到最合适的值。
 
-In practice, it is generally easier to provide this argument through the
-[`NODE_OPTIONS` environment variable](https://nodejs.org/api/cli.html#node_optionsoptions).
+在实践中，通常更容易通过
+[`NODE_OPTIONS` 环境变量](https://nodejs.org/api/cli.html#node_optionsoptions)。
 
-### Do not use Alpine
+<a id="do-not-use-alpine"></a>
+### 不要使用 Alpine {#do-not-use-alpine}
 
-Alpine replaces glibc with musl, which is incompatible with the Rust core of the TypeScript SDK. If you receive errors
-like the following, it's probably because you are using Alpine.
+Alpine 用 musl 替换了 glibc，这与 TypeScript SDK 的 Rust 核心不兼容。如果您收到错误
+如下所示，可能是因为您使用的是 Alpine。
 
 ```sh
 Error: Error loading shared library ld-linux-x86-64.so.2: No such file or directory (needed by /opt/app/node_modules/@temporalio/core-bridge/index.node)
 ```
 
-Or like this:
+或者像这样：
 
 ```sh
 Error: Error relocating /opt/app/node_modules/@temporalio/core-bridge/index.node: __register_atfork: symbol not found
 ```
 
-## How to run a Temporal Cloud Worker {#run-a-temporal-cloud-worker}
+<a id="run-a-temporal-cloud-worker"></a>
+## 如何运行 Temporal Cloud Worker {#run-a-temporal-cloud-worker}
 
-To run a Worker that uses [Temporal Cloud](/cloud), you need to provide additional connection and client options that
-include the following:
+要运行使用 [Temporal Cloud](/cloud) 的 Worker，您需要提供额外的连接和客户端选项
+包括以下内容：
 
-- An address that includes your [Cloud Namespace Name](/namespaces) and a port number:
-  `<Namespace>.<ID>.tmprl.cloud:<port>`.
-- mTLS CA certificate.
-- mTLS private key.
+- 包含您的 [云 Namespace 名称](/namespaces) 和端口号的地址：
+  `<Namespace>.<ID>.tmprl.cloud:<port>`。
+- mTLS CA 证书。
+- mTLS 私钥。
 
-For more information about managing and generating client certificates for Temporal Cloud, see
-[How to manage certificates in Temporal Cloud](/cloud/certificates).
+有关管理和生成 Temporal Cloud 客户端证书的更多信息，请参阅
+[如何在Temporal Cloud中管理证书](/cloud/certificates)。
 
-For more information about configuring TLS to secure inter- and intra-network communication for a Temporal Service, see
-[Temporal Customization Samples](https://github.com/temporalio/samples-server).
+有关配置 TLS 以保护 Temporal 服务的网络间和网络内通信的更多信息，请参阅
+[Temporal 定制样品](https://github.com/temporalio/samples-server)。
 
-### How to register types {#register-types}
+### 如何注册类型 {#register-types}
 
-All Workers listening to the same Task Queue name must be registered to handle the exact same Workflows Types and
-Activity Types.
+必须注册所有监听相同 Task Queue 名称的 Worker 才能处理完全相同的 Workflow 类型和
+Activity 类型。
 
-If a Worker polls a Task for a Workflow Type or Activity Type it does not know about, it fails that Task. However, the
-failure of the Task does not cause the associated Workflow Execution to fail.
+如果 Worker 轮询任务以查找它不知道的 Workflow 类型或 Activity 类型，则该任务将失败。然而，
+任务失败不会导致关联的 Workflow Execution 失败。
 
-In development, use
-[`workflowsPath`](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions/#workflowspath):
+在开发中，使用
+[`WorkflowsPath`](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions/#workflowspath)：
 
-<!--SNIPSTART typescript-worker-create -->
-[snippets/src/worker.ts](https://github.com/temporalio/samples-typescript/blob/main/snippets/src/worker.ts)
+<!--SNIPSTART typescript-Worker-create -->
+[片段/src/Worker.ts](https://github.com/temporalio/samples-typescript/blob/main/snippets/src/worker.ts)
 ```ts
 import { Worker } from '@temporalio/worker';
 import * as activities from './activities';
@@ -199,13 +205,13 @@ async function run() {
 ```
 <!--SNIPEND-->
 
-In this snippet, the Worker bundles the Workflow code at runtime.
+在此代码片段中，Worker 在运行时捆绑 Workflow 代码。
 
-In production, you can improve your Worker's startup time by bundling in advance: as part of your production build, call
-`bundleWorkflowCode`:
+在生产中，您可以通过提前捆绑来缩短 Worker 的启动时间：作为生产构建的一部分，调用
+`bundleWorkflowCode`：
 
-<!--SNIPSTART typescript-bundle-workflow -->
-[production/src/scripts/build-workflow-bundle.ts](https://github.com/temporalio/samples-typescript/blob/main/production/src/scripts/build-workflow-bundle.ts)
+<!--SNIPSTART typescript-bundle-Workflow -->
+[生产/src/scripts/build-Workflow-bundle.ts](https://github.com/temporalio/samples-typescript/blob/main/production/src/scripts/build-workflow-bundle.ts)
 ```ts
 import { bundleWorkflowCode } from '@temporalio/worker';
 import { writeFile } from 'fs/promises';
@@ -223,10 +229,10 @@ async function bundle() {
 ```
 <!--SNIPEND-->
 
-Then the bundle can be passed to the Worker:
+然后可以将包传递给 Worker：
 
-<!--SNIPSTART typescript-production-worker-->
-[production/src/worker.ts](https://github.com/temporalio/samples-typescript/blob/main/production/src/worker.ts)
+<!--SNIPSTART typescript-production-Worker-->
+[生产/src/Worker.ts](https://github.com/temporalio/samples-typescript/blob/main/production/src/worker.ts)
 ```ts
 const workflowOption = () =>
   process.env.NODE_ENV === 'production'
@@ -249,46 +255,48 @@ async function run() {
 ```
 <!--SNIPEND-->
 
-## How to shut down a Worker and track its state {#shut-down-a-worker}
+<a id="shut-down-a-worker"></a>
+## 如何关闭 Worker 并跟踪其状态 {#shut-down-a-worker}
 
-Workers shut down if they receive any of the Signals enumerated in
-[shutdownSignals](https://typescript.temporal.io/api/interfaces/worker.RuntimeOptions#shutdownsignals): `'SIGINT'`,
-`'SIGTERM'`, `'SIGQUIT'`, and `'SIGUSR2'`.
+如果 Worker 收到中列出的任何 Signal，则 Worker 将关闭
+[关闭Signals](https://typescript.temporal.io/api/interfaces/worker.RuntimeOptions#shutdownsignals): `'SIGINT'`,
+`'SIGTERM'`、`'SIGQUIT'` 和 `'SIGUSR2'`。
 
-In development, we shut down Workers with `Ctrl+C` (`SIGINT`) or
-[nodemon](https://github.com/temporalio/samples-typescript/blob/c37bae3ea235d1b6956fcbe805478aa46af973ce/hello-world/package.json#L10)
-(`SIGUSR2`). In production, you usually want to give Workers time to finish any in-progress Activities by setting
-[shutdownGraceTime](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions#shutdowngracetime).
+在开发过程中，我们用 `Ctrl+C` (`SIGINT`) 关闭 Worker 或
+[节点监控器](https://github.com/temporalio/samples-typescript/blob/c37bae3ea235d1b6956fcbe805478aa46af973ce/hello-world/package.json#L10)
+（`SIGUSR2`）。在生产中，您通常希望通过设置给 Worker 时间来完成任何正在进行的活动
+[关机宽限时间](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions#shutdowngracetime)。
 
-As soon as a Worker receives a shutdown Signal or request, the Worker stops polling for new Tasks and allows in-flight
-Tasks to complete until `shutdownGraceTime` is reached. Any Activities that are still running at that time will stop
-running and will be rescheduled by Temporal Server when an Activity timeout occurs.
+一旦 Worker 收到关闭 Signal 或请求，Worker 就会停止轮询新任务并允许运行中的任务
+达到 `shutdownGraceTime` 之前要完成的任务。此时仍在运行的任何 Activity 将停止
+正在运行，并且当 Activity 超时发生时，将由 Temporal Server 重新 Scheduled。
 
-If you must guarantee that the Worker eventually shuts down, you can set
-[shutdownForceTime](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions#shutdownforcetime).
+如果必须保证Worker最终关闭，可以设置
+[关闭强制时间](https://typescript.temporal.io/api/interfaces/worker.WorkerOptions#shutdownforcetime)。
 
-You might want to programmatically shut down Workers (with
-[Worker.shutdown()](https://typescript.temporal.io/api/classes/worker.Worker#shutdown)) in integration tests or when
-automating a fleet of Workers.
+您可能想要以编程方式关闭 Worker（使用
+[Worker.shutdown()](https://typescript.temporal.io/api/classes/worker.Worker#shutdown)）在集成测试中或当
+自动化 Worker 车队。
 
-### Worker states
+<a id="worker-states"></a>
+### Worker 状态 {#worker-states}
 
-At any time, you can Query Worker state with
-[Worker.getState()](https://typescript.temporal.io/api/classes/worker.Worker#getstate). A Worker is always in one of
-seven states:
+您可以随时使用 Query Worker 状态
+[Worker.getState()](https://typescript.temporal.io/api/classes/worker.Worker#getstate)。 Worker 始终位于其中之一
+七个州：
 
-- `INITIALIZED`: The initial state of the Worker after calling
-  [Worker.create()](https://typescript.temporal.io/api/classes/worker.Worker#create) and successfully connecting to the
-  server.
-- `RUNNING`: [Worker.run()](https://typescript.temporal.io/api/classes/worker.Worker#run) was called and the Worker is
-  polling Task Queues.
-- `FAILED`: The Worker encountered an unrecoverable error; `Worker.run()` should reject with the error.
-- The last four states are related to the Worker shutdown process:
-  - `STOPPING`: The Worker received a shutdown Signal or `Worker.shutdown()` was called. The Worker will forcefully shut
-    down after `shutdownGraceTime` expires.
-  - `DRAINING`: All Workflow Tasks have been drained; waiting for Activities and cached Workflows eviction.
-  - `DRAINED`: All Activities and Workflows have completed; ready to shut down.
-  - `STOPPED`: Shutdown complete; `worker.run()` resolves.
+- `INITIALIZED`：调用后Worker的初始状态
+  [Worker.create()](https://typescript.temporal.io/api/classes/worker.Worker#create)并成功连接到
+  服务器。
+- `RUNNING`：调用了 [Worker.run()](https://typescript.temporal.io/api/classes/worker.Worker#run)，并且调用了 Worker
+  轮询 Task Queue。
+- `FAILED`：Worker遇到不可恢复的错误； `Worker.run()` 应拒绝并显示错误。
+- 最后四种状态与Worker关闭过程相关：
+  - `STOPPING`：Worker 收到关闭 Signal 或调用 `Worker.shutdown()` 的消息。 Worker将强制关闭
+    `shutdownGraceTime` 到期后下降。
+  - `DRAINING`：所有Workflow任务已被耗尽；等待活动和缓存的 Workflow 驱逐。
+  - `DRAINED`：所有活动和 Workflow 均已完成；准备关闭。
+  - `STOPPED`：关机完成； `Worker.run()` 解决。
 
-If you need more visibility into internal Worker state, see the
-[Worker class](https://typescript.temporal.io/api/classes/worker.Worker) in the API reference.
+如果您需要更多 Visibility 进入内部 Worker 状态，请参阅
+API 参考中的 [Worker类](https://typescript.temporal.io/api/classes/worker.Worker)。

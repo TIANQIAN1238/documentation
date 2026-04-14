@@ -1,0 +1,70 @@
+---
+id: defaults
+title: Self-hosted Temporal Service defaults
+sidebar_label: Configurable defaults
+description: Explore the Temporal Platform defaults, limits, and configurations, including Workflow Execution, Activity, Worker, and Payload size constraints. Learn about error and warning thresholds.
+slug: /self-hosted-guide/defaults
+toc_max_heading_level: 4
+keywords:
+  - defaults
+  - limits
+  - self-hosting
+tags:
+  - Temporal Service
+  - Self-hosting
+---
+
+:::info Looking for Temporal Cloud defaults?
+
+See the [Temporal Cloud defaults and limits page](/cloud/limits)
+
+:::
+
+本页详细介绍了编码到 Temporal Platform 中的许多默认值，这些默认值可能会产生错误和警告。
+错误是硬限制，一旦达到就会失败。
+警告是在服务器端生成警告日志的软限制。
+
+:::info
+
+这些限制可能专门适用于每个 Workflow Execution，并不适用于整个 Temporal Platform 或单个 Namespace。
+
+:::
+
+- **标识符：** 默认情况下，标识符（例如 Workflow Id、Workflow Type 和 Task Queue 名称）的最大长度为 1000 个字符。
+  - 这可以使用“limit.maxIDLength”动态配置变量进行配置，在[此 SQL 示例](https://github.com/Temporalio/samples-server/blob/main/compose/dynamicconfig/development-sql.yaml)中设置为 255。
+  - 字符格式为UTF-8。
+- **gRPC：** gRPC [收到的每条消息] 的大小限制为 4 MB(https://github.com/gRPC/gRPC/blob/v1.36.2/include/gRPC/impl/codegen/gRPC_types.h#L466)。
+- **事件批量大小：** `DefaultTransactionSizeLimit` 限制为 [4 MB](https://github.com/Temporalio/Temporal/pull/1363)。
+  这是事件历史记录持久化所允许的最大事务大小。
+- **有效负载的 Blob 大小限制**（包括 Workflow 上下文以及每个 Workflow 和 Activity 参数和返回值；_[来源](https://github.com/Temporalio/Temporal/blob/v1.7.0/service/frontend/service.go#L133-L134)_)：
+  - Temporal 在 256 KB 时发出警告：“Blob 大小超出限制。”
+  - 2 MB 处的 Temporal 错误：“ErrBlobSizeExceedsLimit：Blob 数据大小超出限制。”
+  - 请参阅[解决 blob 大小限制错误](/troubleshooting/blob-size-limit-error)。
+- **Workflow Execution Update 限制**：
+  - 单个 Workflow Execution 最多可拥有 10 个飞行中的 Update，历史上总共 2000 个 Update。
+- **历史总大小限制**（导致终止 Workflow Execution）：
+  - Temporal 在 10 MB 时发出警告：[历史记录大小超过警告限制](https://github.com/Temporalio/Temporal/blob/v1.7.0/service/history/WorkflowExecutionContext.go#L1238)。
+  - 50 MB 时的 Temporal 错误：[历史记录大小超出错误限制](https://github.com/Temporalio/Temporal/blob/v1.7.0/service/history/WorkflowExecutionContext.go#L1204)。
+  - 这可以使用 [HistorySizeLimitError 和 HistorySizeLimitWarn](https://github.com/Temporalio/Temporal/blob/v1.7.0/service/history/configs/config.go#L380-L381) 进行配置。
+- **历史总计数限制**（导致终止 Workflow Execution）：
+  - Temporal 在 10,240 个事件后发出警告：[历史记录大小超出警告限制](https://github.com/Temporalio/Temporal/blob/v1.7.0/service/history/WorkflowExecutionContext.go#L1238)。
+  - 51,200 个事件后 Temporal 错误：[历史记录大小超出错误限制](https://github.com/Temporalio/Temporal/blob/v1.7.0/service/history/WorkflowExecutionContext.go#L1204)。
+  - 这可以使用 [HistoryCountLimitError 和 HistoryCountLimitWarn](https://github.com/Temporalio/Temporal/blob/v1.7.0/service/history/configs/config.go#L382-L383) 进行配置。
+- **并发限制**
+  - 以下命令受到限制：
+    - `ScheduleActivityTask`
+    - `Signal外部Workflow执行`
+    - `请求取消ExternalWorkflowExecution`
+    - `启动ChildWorkflowExecution`
+  - 如果并发挂起计数超过 2,000，这些操作将会失败。
+    为了获得最佳性能，请将并发操作限制为 500 或更少。
+    这减少了 Workflow 的 Event History 大小并减少了 Web UI 中的加载时间。
+  - 自 v1.21 起，开源 Temporal 服务的默认限制为 2,000 个待处理活动、Child Workflow、Signal 或 Workflow 取消请求，但您可以使用以下变量覆盖动态配置中的限制：
+    - `limit.numPendingActivities.error`
+    - `limit.numPendingSignals.error`
+    - `limit.numPendingCancelRequests.error`
+    - `limit.numPendingChildExecutions.error`
+  - 默认情况下，[批处理作业](/cli/batch) 一次仅限于一项作业。
+- [自定义 Search Attributes 限制](/search-attribute#custom-search-attribute-limits)
+
+有关动态配置键的详细信息，请参阅[动态配置参考](/references/dynamic-configuration)。

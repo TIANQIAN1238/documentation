@@ -1,8 +1,8 @@
 ---
 id: promql
-title: PromQL Metrics
-sidebar_label: PromQL Metrics
-description: Get detailed insights into your Temporal Cloud Namespace metrics using your own observability tool. Access data with a CA certificate and retain raw metrics for seven days.
+title: "PromQL 指标"
+sidebar_label: "PromQL 指标"
+description: "使用您自己的可观测性工具详细了解您的 Temporal Cloud Namespace 指标。使用 CA 证书访问数据并保留原始指标 7 天。"
 slug: /cloud/metrics/promql
 toc_max_heading_level: 4
 keywords:
@@ -23,22 +23,22 @@ tags:
 
 :::danger PromQL endpoint deprecated
 
-The PromQL endpoint and its `temporal_cloud_v0_*` metrics were deprecated on April 2, 2026 and are no longer accepting new users.
-The PromQL endpoint will be disabled for all users on **October 5, 2026**.
+PromQL 端点及其 `Temporal_cloud_v0_*` 指标已于 2026 年 4 月 2 日弃用，并且不再接受新用户。
+将于 **2026 年 10 月 5 日**对所有用户禁用 PromQL 端点。
 
-Migrate to the [OpenMetrics endpoint](/cloud/metrics/openmetrics).
-See the [migration guide](/cloud/metrics/openmetrics/migration-guide) for a complete v0-to-v1 metric mapping.
+迁移到 [OpenMetrics 端点](/cloud/metrics/openmetrics)。
+有关完整的 v0 到 v1 指标映射，请参阅 [迁移指南](/cloud/metrics/openmetrics/migration-guide)。
 
 :::
 
-Metrics for all Namespaces in your account are available from your metrics endpoint. Keep in mind that your Temporal Cloud metrics lag real-time performance by about one minute. Temporal Cloud also only retains raw metrics for seven days.
+您帐户中所有 Namespace 的指标均可从您的指标端点获取。请记住，您的 Temporal Cloud 指标滞后实时性能大约一分钟。 Temporal Cloud 也仅保留 7 天的原始指标。
 
 
 
-To ensure security of your metrics, a CA certificate dedicated to observability is required.
-Only clients that use certificates signed by that CA, or that chain up to the CA, can query the metrics endpoint.
-For more information about CA certificates in Temporal Cloud, see [Certificate requirements](/cloud/certificates#certificate-requirements).
+为了确保指标的安全性，需要专用于可观察性的 CA 证书。
+只有使用该 CA 签名的证书或链接到该 CA 的证书的客户端才可以 Query 指标端点。
+有关 Temporal Cloud 中 CA 证书的更多信息，请参阅 [证书要求](/cloud/certificates#certificate-requirements)。
 
-- [General setup](/cloud/metrics/general-setup)
-- [Available metrics](/cloud/metrics/reference)
-- [Prometheus & Grafana setup](/cloud/metrics/prometheus-grafana)
+- [一般设置](/cloud/metrics/general-setup)
+- [可用指标](/cloud/metrics/reference)
+- [Prometheus 和 Grafana 设置](/cloud/metrics/prometheus-grafana)

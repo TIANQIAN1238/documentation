@@ -1,8 +1,8 @@
 ---
 id: execution
-title: Activity execution - TypeScript SDK
-description: Shows how to perform Activity execution with the TypeScript SDK
-sidebar_label: Activity execution
+title: "Activity 执行 - TypeScript SDK"
+description: "展示如何使用 TypeScript SDK 执行 Activity"
+sidebar_label: "Activity 执行"
 slug: /develop/typescript/activities/execution
 toc_max_heading_level: 3
 tags:
@@ -11,13 +11,14 @@ tags:
   - Activity
 ---
 
-## How to start an Activity Execution {#activity-execution}
+<a id="activity-execution"></a>
+## 如何启动 Activity 执行 {#activity-execution}
 
-Calls to spawn [Activity Executions](/activity-execution) are written within a
-[Workflow Definition](/workflow-definition). In TypeScript, you never call an Activity function directly. Instead, you
-pass in the _types_ of your Activities and Activity options to the `proxyActivities` function. This will give you an
-_Activity Handle_, a type-safe proxy object with the same function names and signatures as your real activities. From
-the Activity Handle, you can call your Activities as if they were normal async functions.
+对生成 [Activity 执行](/activity-execution) 的调用写在
+[Workflow Definition](/workflow-definition)。在 TypeScript 中，您永远不会直接调用 Activity 函数。相反，你
+将活动的 _types_ 和 Activity 选项传递给 `proxyActivities` 函数。这会给你一个
+_Activity Handle_，一个类型安全的代理对象，其函数名称和签名与您的实际活动相同。来自
+Activity 句柄，您可以调用您的活动，就像它们是普通的异步函数一样。
 
 ```typescript
 import { proxyActivities } from '@temporalio/workflow';
@@ -38,39 +39,40 @@ export async function example(name: string): Promise<string> {
 }
 ```
 
-When you call a proxied function, the Workflow does not execute the Activity code directly. Instead, it schedules an
-Activity Task. After the Activity Task is scheduled, it becomes available for a Worker to pick up and execute. This
-results in the set of three [Activity Task](/tasks#activity-task) related Events:
-[ActivityTaskScheduled](/references/events#activitytaskscheduled),
-[ActivityTaskStarted](/references/events#activitytaskstarted), and
-[ActivityTaskCompleted](/references/events#activitytaskcompleted) in your Workflow Execution Event History.
+当您调用代理函数时，Workflow 不会直接执行 Activity 代码。相反，它 Schedule 是
+Activity 任务。当 Activity 任务为 Scheduled 后，它就可供 Worker 拾取并执行。这个
+结果为三个 [Activity 任务](/tasks#activity-task) 相关事件：
+[Activity任务Scheduled](/references/events#activitytaskscheduled),
+[Activity任务已开始](/references/events#activitytaskstarted)，和
+[Activity任务已完成](/references/events#activitytaskcompleted) 在您的 Workflow Execution Event History 中。
 
-The Worker may run many Activity executions at the same time, all using the same Activity function code. Temporal can
-also retry an Activity if it fails or times out. For this reason, you should write Activities to be
-[idempotent](/encyclopedia/activities/activity-definition.mdx#idempotency): calling them multiple times with the
-same input should have the same effect as calling them once.
+Worker 可以同时运行多个 Activity 执行，所有执行都使用相同的 Activity 函数代码。 Temporal 可以
+如果失败或超时，还可以重试 Activity。因此，您应该将“活动”编写为
+[幂等的](/encyclopedia/activities/activity-definition.mdx#idempotency)：使用以下命令多次调用它们
+相同的输入应该与调用它们一次具有相同的效果。
 
 :::tip Every Activity call you make is recorded in the Workflow’s execution history, including the parameters you pass
-in and the value that comes back. This history is what allows Temporal to recover a Workflow after a failure. Because
-the entire history must be stored and replayed, avoid passing large objects as Activity inputs or return values. Keeping
-payloads small will help your Workflows replay and recover efficiently. :::
+和返回的值。此历史记录允许 Temporal 在发生故障后恢复 Workflow。因为
+必须存储和重播整个历史记录，避免将大型对象作为 Activity 输入或返回值传递。保管
+小有效负载将帮助您的 Workflow 有效重放和恢复。 :::
 
-## How to set the required Activity Timeouts {#required-timeout}
+## 如何设置所需的 Activity 超时 {#required-timeout}
 
-Activity Execution semantics rely on several parameters. The only required value that needs to be set is either a
-[Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) or a
-[Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout). These values are set in the
-Activity Options.
+Activity 执行语义依赖于多个参数。唯一需要设置的值是
+[Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout) 或
+[开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。这些值设置在
+Activity 选项。
 
-## How to get the results of an Activity Execution {#get-activity-results}
+<a id="get-activity-results"></a>
+## 如何获取 Activity 执行的结果 {#get-activity-results}
 
-The call to spawn an [Activity Execution](/activity-execution) generates the
-[ScheduleActivityTask](/references/commands#scheduleactivitytask) Command and provides the Workflow with an Awaitable.
-Workflow Executions can either block progress until the result is available through the Awaitable or continue
-progressing, making use of the result when it becomes available.
+调用生成 [Activity 执行](/activity-execution) 会生成
+[ScheduleActivity任务](/references/commands#scheduleactivitytask) 命令并为 Workflow 提供等待。
+Workflow Executions 可以阻止进度，直到通过 Awaitable 获得结果为止，或者继续
+取得进展，并在结果可用时加以利用。
 
-Since Activities are referenced by their string name, you can reference them dynamically to get the result of an
-Activity Execution.
+由于活动是通过其字符串名称引用的，因此您可以动态引用它们来获取活动的结果
+Activity 执行。
 
 ```typescript
 export async function DynamicWorkflow(activityName, ...args) {
@@ -85,5 +87,5 @@ export async function DynamicWorkflow(activityName, ...args) {
 }
 ```
 
-The `proxyActivities()` returns an object that calls the Activities in the function. `acts[activityName]()` references
-the Activity using the Activity name, then it returns the results.
+`proxyActivities()` 返回一个调用函数中活动的对象。 `acts[ActivityName]()` 参考文献
+Activity 使用 Activity 名称，然后返回结果。

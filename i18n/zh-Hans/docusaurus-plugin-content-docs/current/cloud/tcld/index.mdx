@@ -1,0 +1,82 @@
+---
+id: index
+title: tcld 命令参考
+sidebar_label: CLI (tcld)
+description: Temporal Cloud CLI (tcld) 是一个用于与 Temporal Cloud 交互的命令行工具，提供用于帐户管理、登录、Namespace 等的命令。通过 Homebrew 安装或从源代码构建。
+slug: /cloud/tcld
+toc_max_heading_level: 4
+keywords:
+  - operation-guide
+  - tcld
+tags:
+  - Temporal Cloud
+  - tcld
+---
+
+Temporal Cloud CLI (tcld) 是一个命令行工具，可用于与 Temporal Cloud 交互。
+
+- [如何安装tcld](#install-tcld)
+
+### tcld 命令
+
+- [tcld账户](/cloud/tcld/账户)
+- [tcld apikey](/cloud/tcld/apikey)
+- [tcld 连接规则](/cloud/tcld/连接规则)
+- [tcld 功能](/cloud/tcld/feature)
+- [tcld 生成证书](/cloud/tcld/生成证书)
+- [tcld登录](/cloud/tcld/login)
+- [tcld 注销](/cloud/tcld/logout/)
+- [tcld Namespace](/云/tcld/Namespace)
+- [tcld Nexus](/云/tcld/Nexus)
+- [tcld 请求](/cloud/tcld/request)
+- [tcld 用户](/cloud/tcld/user)
+- [tcld版本](/cloud/tcld/version/)
+
+### 全局修饰符
+
+#### --自动确认
+
+自动确认所有提示。
+
+您可以通过设置 AUTO_CONFIRM 环境变量来指定此修饰符的值。
+默认值为“假”。
+
+## 如何安装 tcld {#install-tcld}
+
+您可以通过两种方式安装[tcld](/cloud/tcld)。
+
+### 使用 Homebrew 安装 tcld
+
+```bash
+brew install temporalio/brew/tcld
+```
+
+### 从源代码构建 tcld
+
+1. 确认您已安装 Go 1.18 或更高版本。
+
+   ```bash
+   go version
+   ```
+
+如果未安装 Go 1.18 或更高版本，请按照 Go 网站上的[下载并安装](https://go.dev/doc/install) 说明进行操作。
+
+1. 克隆 tcld 存储库并运行 make。
+
+   ```bash
+   git clone https://github.com/temporalio/tcld.git
+   cd tcld
+   make
+   ```
+
+1. 将 tcld 可执行文件复制到 PATH 环境变量中出现的任何目录，例如“/usr/local/bin”。
+
+   ```bash
+   cp tcld /usr/local/bin/tcld
+   ```
+
+1. 验证 tcld 是否已安装。
+
+   ```bash
+   tcld version
+   ```

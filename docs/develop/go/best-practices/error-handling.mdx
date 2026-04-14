@@ -1,7 +1,7 @@
 ---
 id: error-handling
-title: Error handling - Go SDK
-sidebar_label: Error handling
+title: "错误处理 - Go SDK"
+sidebar_label: "错误处理"
 toc_max_heading_level: 4
 keywords:
   - Error handling
@@ -10,22 +10,22 @@ tags:
   - Error handling
   - Go SDK
   - Temporal SDKs
-description: How to handle errors using the Temporal Go SDK.
+description: "如何使用 Temporal Go SDK 处理错误。"
 ---
 
-## Error handling {#error-handling}
+## 错误处理 {#error-handling}
 
-Within a Workflow, an Activity or Child Workflow execution might fail. You can
-handle errors differently based on the error type.
+在 Workflow 中，Activity 或子 Workflow Execution 可能会失败。你可以
+根据错误类型以不同方式处理错误。
 
-If the Activity returns an error as `errors.New()` or `fmt.Errorf()`, that error is converted into `*temporal.ApplicationError`.
+如果 Activity 返回错误为 `errors.New()` 或 `fmt.Errorf()`，则该错误将转换为 `*Temporal.ApplicationError`。
 
-If the Activity returns an error as `temporal.NewNonRetryableApplicationError("error message", details)`, that error is returned as `*temporal.ApplicationError`.
+如果 Activity 返回错误为 `Temporal.NewNonRetryableApplicationError("error message", details)`，则该错误将返回为 `*Temporal.ApplicationError`。
 
-There are other types of errors such as `*temporal.TimeoutError`, `*temporal.CanceledError` and
-`*temporal.PanicError`.
+还有其他类型的错误，例如 `*Temporal.TimeoutError`、`*Temporal.CanceledError` 和
+`*Temporal.PanicError`。
 
-Here's an example of handling Activity errors within Workflow code that differentiates between different error types.
+下面是在 Workflow 代码中处理 Activity 错误的示例，该代码区分不同的错误类型。
 
 ```go
 err := workflow.ExecuteActivity(ctx, YourActivity, ...).Get(ctx, nil)
@@ -76,11 +76,12 @@ if err != nil {
 }
 ```
 
-### Panics and deferred functions
+<a id="panics-and-deferred-functions"></a>
+### 恐慌和延迟函数 {#panics-and-deferred-functions}
 
-In Go, [`defer` schedules cleanup functions and `recover()` catches panics](https://go.dev/blog/defer-panic-and-recover) to prevent them from crashing the program.
-This doesn't work the same way in Temporal Workflow code — you cannot `recover()` from a panic inside a `defer`.
-Deferred functions that try to interact with the Temporal SDK during panic unwinding will re-panic immediately.
+在 Go 中，[`defer` Schedule 清理功能和 `recover()` 捕获恐慌](https://go.dev/blog/defer-panic-and-recover) 可以防止它们使程序崩溃。
+这在 Temporal Workflow 代码中的工作方式不同 - 您不能从 `defer` 内的恐慌中恢复 `recover()`。
+在紧急情况解除期间尝试与 Temporal SDK 交互的延迟函数将立即重新发生紧急情况。
 
-Use `defer` only for local cleanup.
-Handle Temporal API cleanup through explicit error checks instead.
+仅使用 `defer` 进行本地清理。
+通过显式错误检查来处理 Temporal API 清理。

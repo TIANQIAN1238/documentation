@@ -1,0 +1,528 @@
+---
+id: namespaces
+title: Namespaces
+sidebar_label: Namespaces
+description: A Namespace is a unit of isolation within Temporal Cloud, providing security boundaries, Workflow management, unique
+  A Namespace is a unit of isolation within Temporal Cloud, providing security boundaries, Workflow management, unique
+  identifiers, and gRPC endpoints in Temporal Cloud.
+slug: /cloud/namespaces
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - how-to
+  - introduction
+  - namespaces
+  - temporal cloud
+tags:
+  - Concepts
+  - Namespaces
+  - Temporal Cloud
+---
+
+import { CaptionedImage, ZoomingImage } from '@site/src/components';
+
+:::info Temporal Cloud
+本页介绍 **Temporal Cloud** 中的 Namespace 操作。
+有关 Namespace 的核心概念，请参阅 [Temporal Namespace](/Namespaces)。
+对于开源 Temporal，请参阅[管理 Namespaces](/self-hosted-guide/Namespaces)。
+:::
+
+Namespace 是 Temporal Cloud 内的一个隔离单元，提供安全边界、Workflow 管理、独特的
+标识符，以及 Temporal Cloud 中的 gRPC 端点。
+
+- [创建 Namespace](#create-a-Namespace)
+- [访问 Namespace](#access-Namespaces)
+- [管理 Namespaces](#manage-Namespaces)
+- [删除 Namespace](#delete-a-Namespace)
+- [标记 Namespace](#tag-a-Namespace)
+
+## 云 Namespace 名称是什么？ {#Temporal-云-Namespace-名称}
+
+云 Namespace 名称是客户为 Temporal Cloud 中的 [Namespace](/Namespaces) 提供的名称。每个 Namespace
+名称（例如“accounting-product”）在客户帐户范围内是唯一的。之后就无法更改
+Namespace 已配置。
+
+每个 Namespace 名称必须符合以下规则：
+
+- Namespace 名称必须包含至少 2 个字符且不超过 39 个字符。
+- Namespace 名称必须以字母开头，以字母或数字结尾，并且仅包含字母、数字和
+  连字符 (-) 字符。
+- 每个连字符 (-) 必须紧接在 _and_ 之前，后跟字母或数字；连续的连字符是
+  不允许。
+- Namespace 名称中的所有字母必须为小写。
+
+## Temporal Cloud 帐户 ID 是什么？ {#Temporal-云帐户-id}
+
+Temporal Cloud 帐户 ID 是 Temporal Technologies 分配的唯一客户标识符。每个Id都是一个短字符串
+数字和字母，如“f45a2”，至少五个字符长。该帐户标识符将在整个过程中保留
+每个客户使用 Temporal Cloud 的时间。
+
+有时您可能需要知道您的客户帐户 ID。访问帐户的 Namespaces 提供了一种简单的方法
+捕获此信息。每个 Temporal Namespace 使用帐户 ID 后缀。这是字母数字字符串
+可以在任何 Temporal Cloud Namespace 名称中的句点之后找到。
+
+您可以从 [Temporal Cloud](https://cloud.Temporal.io) Web UI 或使用“tcld”检索帐户 ID
+命令行界面 (CLI) 上的实用程序。请按照以下步骤操作。
+
+<Tabs>
+
+    <TabItem value="webui" label="Web UI">
+请按照以下步骤检索您的帐户 ID：
+
+1. 登录Temporal Cloud。
+    1. 在页面右上角选择您的帐户头像。
+       将出现一个配置文件下拉菜单。
+    1. 从菜单复制云帐户 ID。
+       <ZoomingImage
+src="/img/cloud/cloud-guide/cloud-account-id.png"
+           alt="Temporal Cloud 用户个人资料下拉菜单。下拉菜单包括云帐户 ID 和复制按钮，其中包含角色、个人资料和注销选项，以及社区资源的链接。"
+       />
+
+在此示例中，帐户 ID 为“123de”。
+
+    </TabItem>
+
+    <TabItem value="tcldcli" label="tcld">
+1. 使用“tcld”实用程序登录帐户。
+
+       ```
+       tcld login
+       ```
+
+“tcld”输出显示一个 URL，末尾带有激活码。请记下此代码。该实用程序将阻塞，直到登录/激活过程完成。
+
+       ```
+       Login via this url: https://login.tmprl.cloud/activate?user_code=KTGC-ZPWQ
+       ```
+
+将自动打开一个网页以在您的默认浏览器中进行身份验证。
+
+1.访问浏览器。
+       确保 CLI 实用程序显示的用户代码与 Web 浏览器中显示的代码匹配。
+       然后，在浏览器中单击“确认”继续。
+       确认后，Web 反馈会让您知道 CLI“设备”现已连接。
+
+1. 返回命令行。
+       发出以下命令。
+
+       ```
+       tcld namespace list
+       ```
+
+CLI 工具返回一个简短的 JSON 数据包，其中包含您的 Namespace 信息。
+       这与 Temporal Cloud Web UI Namespaces 列表中的列表相同。
+       与浏览器版本一样，每个 Namespace 使用帐户 ID 后缀。
+
+       ```
+       {
+         "namespaces": [
+           "your-namespace.123de",
+           "another-namespace.123de"
+         ],
+         "nextPageToken": ""
+       }
+       ```
+
+每个 Namespace 都会自动将帐户 ID 后缀附加到其客户提供的标识符中。
+    这个五个字符或更长的字符串出现在名称后面，以句点分隔。
+    在此 Namespace 列表示例中，帐户 ID 为 123de。
+
+    </TabItem>
+
+</Tabs>
+
+## 什么是云 Namespace Id？ {#Temporal-cloud-Namespace-id}
+
+Cloud Namespace Id 是 Temporal Cloud 中 [Namespace](/Namespaces) 的全局唯一标识符。 Namespace ID 是
+由以下内容连接而成：
+
+1. [Namespace名称](#Temporal-cloud-Namespace-name)
+1. 句号 (.)
+1. Namespace所属的【账户ID】(#Temporal-cloud-account-id)
+
+例如，对于账户 ID“123de”和 Namespace 名称“accounting-product”，Namespace ID 为
+`会计生产.123de`。
+
+## 什么是云 gRPC 端点？ {#Temporal-云-gRPC-端点}
+
+Temporal CLIents 通过通过发送和接收消息在应用程序代码和 Temporal Server 之间进行通信
+gRPC 协议。 gRPC是一个远程过程调用框架，具有低延迟和高性能的特点。 gRPC 提供
+Temporal 具有高效、与语言无关的通信框架。
+
+每个 Temporal Namespace 使用 gRPC 端点进行通信。迁移到 Temporal Cloud 时，您需要切换
+代码中的 gRPC 端点从当前托管（无论是自托管还是本地托管）到 Temporal Cloud。
+
+gRPC 端点显示在每个 Cloud Namespace 的详细信息页面上。请按照以下步骤查找它：
+
+1. 登录您在 [cloud.Temporal.io](https://cloud.Temporal.io/Namespaces) 上的帐户。
+2. 从左侧垂直导航导航至Namespace列表页面。
+3. 点击或单击 Namespace 名称以选择并打开要检索其端点的 Namespace 的页面。
+4. 在Namespace详情页面，点击页面右上角的“连接”按钮。
+5. 单击 gRPC 地址旁边的复制图标将其复制到剪贴板。
+
+有关详细信息，请参阅[如何在 Temporal Cloud 中访问 Namespace](/cloud/Namespaces/#access-Namespaces)
+不同的 gRPC 端点类型以及如何访问它们。
+
+## 如何在 Temporal Cloud 中创建 Namespace {#create-a-Namespace}
+
+:::info
+
+创建 [Namespace](/Namespaces) 的用户将被自动授予
+该 Namespace 的 [Namespace 管理员](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions) 权限。
+
+要创建 Namespace，用户必须具有开发人员、帐户所有者或全局管理员帐户级别
+[角色](/cloud/manage-access/roles-and-permissions#account-level-roles)。
+
+:::
+
+:::tip
+
+默认情况下，每个帐户以 10 个 Namespace 开头。当您开始创建 Namespace 时，该值会自动增加。对于大规模需求，请开立[支持票证](/cloud/support#support-ticket)。
+
+:::
+
+### 创建 Namespace 所需的信息
+
+要在 Temporal Cloud 中创建 Namespace，请收集以下信息：
+
+- [Namespace 名称](/cloud/Namespaces#Temporal-cloud-Namespace-name)、区域和云提供商
+- [保留期](/Temporal-service/Temporal-server#retention-period)
+  已关闭的 [Workflow Executions](/Workflow-execution) 的 [Event History](/Workflow-execution/event#event-history)。
+- Namespace 的 [CA 证书](/cloud/certificates#certificate-requirements)（如果您使用的是 mTLS）
+  认证。
+- [Codec Server 端点](/生产部署/数据加密#set-your-codec-server-endpoints-with-web-ui-and-cli) 到
+  在 Event History 中向 Namespace 中的 Workflow Execution 中的用户显示解码后的有效负载。详细信息请参见
+  [保护您的数据](/生产部署/数据加密)。
+- 每个用户的[权限](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions)。
+
+<Tabs>
+
+<TabItem value="namespace-webui" label="Web UI">
+
+### 使用 Temporal Cloud UI 创建 Namespace
+
+1. 收集前面列出的信息
+   [创建 Namespace 所需的信息](#information-needed-to-create-a-Namespace)。
+1. 进入Temporal Cloud UI并登录。
+1. 在窗口左侧，单击 **Namespaces**。
+1. 在**Namespaces**页面，单击窗口右上方的**创建Namespace**。
+1. 在**创建Namespace**页面的**名称**中，输入Namespace名称。
+1. 在**云提供商**中，选择托管此 Namespace 的云提供商。
+1. 在**区域**中，选择托管此 Namespace 的区域。
+1. 在**保留期**中，指定 1 到 90 天的值。选择此值时，请考虑您对事件的需求
+   历史与维护 Event History 的成本。通常，开发 Namespace 的保留时间较短
+   生产版 Namespace 的保留期更长。 （如果您稍后需要更改此值，请联系
+   [Temporal 支持](/cloud/support#support-ticket)。）
+1. 选择您的身份验证方法：[API 密钥](/cloud/api-keys) 或 [mTLS](/cloud/certificates)。
+1. 如果使用 mTLS 身份验证，请粘贴此 Namespace 的 CA 证书。
+1. 可选：在 **Codec Server** 中，输入 Codec Server 终端节点的 HTTPS URL（包括端口号）。你可以
+   还启用“通过端点传递用户访问令牌”和“包括跨域凭据”。详细信息请参见
+   [托管您的 Codec Server](/生产部署/数据加密#set-your-codec-server-endpoints-with-web-ui-and-cli)。
+1. 单击**创建Namespace**。
+
+</TabItem>
+
+<TabItem value="namespace-tcld" label="tcld">
+
+有关详细信息，请参阅 [`tcld` Namespace create](/cloud/tcld/Namespace/#create) 命令参考。
+
+</TabItem>
+
+</Tabs>
+
+## Namespace 最佳实践有哪些？ {#最佳实践}
+
+本节提供跨用例、服务、组织 [Namespaces](/Namespaces) 的一般指南
+应用程序或域。 Temporal Cloud 提供 Namespace 即服务，因此 Namespace 是端点。客户
+不仅应考虑 Namespace 命名约定，还应考虑如何使用 Namespace 来分组或隔离工作负载
+一个边界。
+
+每个团队都可以拥有自己的 Namespace，以改进模块化、安全性、调试和故障隔离。 Namespaces
+包含可能耗尽速率限制的行为不当 Worker 的爆炸半径。敏感的Workflow状态（PCI数据）可
+使用每个 Namespace 权限进行保护，并使用单独的加密密钥进行加密。
+
+Temporal 不同 Namespace 中的应用程序可以通过公开干净的服务与 [Nexus](/cloud/Nexus) 连接
+供其他人与内置 [Nexus 访问控制](/cloud/Nexus/security) 一起使用的合同。 Nexus支持跨团队，
+跨域、多区域和多云用例。
+
+### 约束和限制
+
+在考虑适当的 Namespace 配置之前，您应该了解以下限制 
+在 [Temporal Cloud 限制](/cloud/limits) 页面上列出。
+
+有关在限制范围内管理 Namespace 的建议，请参阅 [Namespace 最佳实践](/best-practices/managing-Namespace) 页面。
+
+### 一般指导
+
+Namespace 配置需要一些考虑。以下是一些需要考虑的一般准则。
+
+- Namespace 通常根据用例进行定义。一个用例可以涵盖广泛的 Workflow Type 和几乎
+  并发 [Workflow Executions](/Workflow-执行) 的无限规模。 
+- Namespace 可以沿着其他边界进行分割，例如服务、应用程序、域甚至子域。
+- Namespace 应用于减少关键任务应用的“爆炸半径”。
+- 生产、开发等环境通常有隔离的要求。我们建议每个
+  环境有自己的Namespace。
+- Namespace 应用于减少关键任务应用的“爆炸半径”。
+- 使用 [Nexus](/Nexus) 通过干净的服务契约跨团队、域和 Namespace 边界进行通信，而不是直接共享 Temporal 原语。
+  Nexus 使每个团队都可以拥有自己的 Namespace，以提高安全性、故障排除和故障隔离，同时通过 Nexus 端点共享功能。
+
+### 示例
+
+以下是有关如何组织 Namespace 的一些想法。
+
+#### 示例 1：每个用例和环境的 Namespace
+
+我们建议为每个用例和环境组合使用一个 Namespace，以进行简单配置，其中
+多个服务以及团队或域边界不存在。
+
+命名约定示例：
+
+<pre><用例>_<环境></pre>
+
+#### 示例 2：每个用例、服务和环境的 Namespace
+
+当多个服务同时存在时，我们建议为每个用例、服务和环境组合使用一个 Namespace。
+同一用例的一部分通过 API (HTTP/gRPC) 与 Temporal 进行外部通信。
+
+命名约定示例：
+
+<pre><用例>_<服务>_<环境></pre>
+
+#### 示例 3：每个用例、域和环境的 Namespace
+
+当多个服务同时存在时，我们建议每个用例、域和环境组合使用一个 Namespace
+相同用例的需要通过 [Signals](/sending-messages#sending-Signals) 或通过
+启动 [Child Workflows](/child-Workflows)。但在这种情况下，您必须注意 Workflow Id 的独特性
+在每个 Workflow Id 上添加特定于服务的字符串作为前缀。每个 Task Queue 的名称也必须是唯一的。如果有多个
+涉及团队，域也可以代表团队边界。
+
+命名约定示例：
+
+<pre><用例>_<域>_<环境></pre>
+
+WorkflowId 约定示例：
+
+|能力|阅读 |写 | XPROT025X 管理员 |
+| ------------------------------------------------------------------------ | :--: | :---: | :-------------: |
+|查看扩展的 XPROT025X 详细信息和使用指标 |  ✔ |   ✔ |        ✔ |
+|查看导出接收器配置 |  ✔ |   ✔ |        ✔ |
+|查看 XPROT025X 用户访问分配 |  ✔ |   ✔ |        ✔ |
+|查看复制状态、副本运行状况和故障转移历史记录 |  ✔ |   ✔ |        ✔ |
+|管理导出接收器 — 创建、XPROT037X、验证和删除 |      |       |        ✔ |
+|批量 XPROT037X 定制 XPROT004Xs |      |       |        ✔ |
+|管理用户和身份 XPROT025X 访问 |      |       |        ✔ |
+|启动 XPROT025X 故障转移 |      |       |        ✔ |
+|将单区域 XPROT025X 转换为多区域 |      |       |        ✔ | */}
+
+## 如何访问 Temporal Cloud 中的 Namespace {#access-Namespaces}
+
+{/* 如何在 Temporal Cloud 中访问 Namespace */}
+
+Temporal Cloud 支持使用 [API 密钥](/cloud/api-keys) 对 Namespace 进行身份验证_或_
+[mTLS](/云/证书)。将 Namespace 从一种身份验证方法迁移到另一种身份验证方法，或使用两种 API
+密钥和mTLS认证在同一个Namespace上，请联系
+[支持](https://docs.Temporal.io/cloud/support#support-ticket)。
+
+:::info
+
+在**相同** Namespace 上使用 **同时** API 密钥和 mTLS 身份验证
+[预发布](/evaluate/development-product-features/release-stages) 并且不支持
+[高可用性功能](/cloud/high-availability) 或使用 API 密钥对 Namespace 端点进行身份验证。
+
+:::
+
+连接到 Namespace 需要适用于给定 Namespace 的特定端点。
+有两种类型的 gRPC 端点用于访问 Temporal Cloud 中的 Namespace：Namespace 端点和区域端点。
+
+- **Namespace 端点** (`<Namespace>.<account>.tmprl.cloud:7233`) — **推荐**
+    - 该端点对于每个 Namespace 都是唯一的。无论 Namespace 使用哪个区域，它始终连接到 Namespace。
+    - 使用 Namespace 端点的 Temporal CLIent 不必知道 Namespace 位于哪个区域。
+    - 对于具有[高可用性](/cloud/high-availability) 的 Namespace，Namespace 端点会自动将流量定向到活动区域，因此 Worker 和客户端无需在故障转移期间更改端点。
+- 区域端点（`<region>.<cloud_provider>.api.Temporal.io:7233`）
+    - Temporal Cloud 对于每个云区域只有一个区域端点。同一区域端点可以访问该区域中活动的任何 Namespace（或在该区域具有[副本](/cloud/high-availability)）。
+    - Temporal CLIent 可以使用区域端点来确保与 Namespace 的连接始终发生在该区域内。这在您想要明确控制哪个区域处理请求的高级[高可用性](/cloud/high-availability) 设置中非常有用。
+    - 使用 mTLS 进行身份验证时，Temporal CLIent 必须在其对 Namespace 端点值的请求中将“server_name”属性设置为“<Namespace 端点值>”。这告诉客户端在 TLS 握手期间期望不同的 SNI 标头，因为对区域端点的请求被重定向到特定的 Namespace。
+
+### 使用 API 密钥或 mTLS 配置 Temporal CLIent
+
+要使用 API 密钥连接 [Temporal CLI](/cli)、[Client SDK](/develop)、[tcld](/cloud/tcld)，
+  [Cloud Ops API](/ops) 和 [Terraform](/cloud/terraform-provider)，请参阅
+  [使用 API 密钥进行身份验证](/cloud/api-keys#using-apikeys)。
+
+要使用 mTLS 连接 [Temporal CLI](/cli) 和 [Client SDK](/develop)，请参阅
+  [配置客户端以使用客户端证书](/cloud/certificates#configure-clients-to-use-client-certificates)。
+
+### 访问 Temporal Web UI
+
+要访问 Temporal Web UI，请使用以下形式的 HTTPS 端点：
+`https://cloud.Temporal.io/Namespaces/<Namespace>.<帐户>`。例如：
+`https://cloud.Temporal.io/Namespaces/accounting-product.f45a2`。
+
+### 通过加密和专用连接访问 Namespace
+
+无论您是自托管 XPROT026X 还是使用 XPROT009X，您都可以管理代码的运行时。
+要将 XPROT027X 迁移到 XPROT009X，您需要更改客户端连接代码中的一些参数，例如更新 Namespace 和 XPROT042X 端点。
+
+为了增强保护：
+- 设置到 Namespace 的[专用连接](/cloud/connectivity#private-network-connectivity-for-Namespaces)。
+- 在您自己的网络架构中，为来自您的客户端和 Worker 的传出网络请求设置允许列表，其中包含 IP 地址范围
+  您的 Namespace 所在的云提供商区域：
+  - [AWS IP 地址范围](https://docs.aws.amazon.com/vpc/latest/userguide/aws-ip-ranges.html)
+  - [GCP IP 地址范围](https://cloud.google.com/compute/docs/faq#find_ip_range)
+
+## 如何在 Temporal Cloud 中管理 Namespace {#manage-Namespaces}
+
+{/* 如何使用 Temporal Cloud UI 管理 Temporal Cloud 中的 Namespace */}
+
+### 使用 Temporal Cloud UI 管理 Temporal Cloud 中的 Namespace
+
+列出 Namespace：
+
+- 在窗口左侧，选择 **Namespaces**。
+
+编辑 Namespace（包括自定义 Search Attribute、证书、证书过滤器、Codec Server 端点、
+权限和用户），找到 Namespace 并执行以下操作之一：
+
+- 在 Namespace 行的右端，选择三个垂直点 (⋮)。单击**编辑**。
+- 选择 Namespace 名称。在页面的右上角，选择“**编辑**”。
+
+在**编辑**页面上，您可以执行以下操作：
+
+- 添加[自定义 Search Attribute](/search-attribute#custom-search-attribute)。
+- [管理 CA 证书](/cloud/certificates)。
+- [管理证书过滤器](/cloud/certificates#manage-certificate-filters-using-Temporal-cloud-ui)。
+- 设置
+  [Codec Server 端点](/生产部署/数据加密#set-your-codec-server-endpoints-with-web-ui-and-cli)
+  适用于 Namespace 上的所有用户。 Namespace 上的每个用户都可以选择
+  在浏览器中[覆盖此设置](/生产部署/数据加密#web-ui)。
+- 管理[Namespace级别权限](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions)。
+- 添加用户。
+
+要将用户添加到 Namespace，请滚动到页面底部并选择 **添加用户**。
+
+进行更改后，选择页面右上角或左下角的“**保存**”。
+
+{/* 如何使用 tcld 管理 Temporal Cloud 中的 Namespace */}
+
+### 使用 tcld 管理 Temporal Cloud 中的 Namespace
+
+要列出 Namespace 并获取有关它们的信息，请使用以下 [tcld](/cloud/tcld/) 命令：
+
+- [tcld Namespace 列表](/cloud/tcld/Namespace/#list)
+- [tcld Namespace 获取](/cloud/tcld/Namespace/#get)
+
+要管理证书，请使用 [tcld Namespaceaccepted-client-ca](/cloud/tcld/Namespace/#accepted-client-ca) 命令。
+有关更多信息，请参阅[如何管理 Temporal Cloud 中的证书](/cloud/certificates)。
+
+要管理证书过滤器，请使用 [tcld Namespace 证书过滤器](/cloud/tcld/Namespace/#certificate-filters)
+命令。有关更多信息，请参阅
+[如何在 Temporal Cloud 中管理证书过滤器](/cloud/certificates#manage-certificate-filters)。
+
+## 如何删除 Temporal Cloud 中的 Namespace {#delete-a-Namespace}
+
+:::info
+
+要删除 Namespace，用户必须拥有 Namespace 管理员 [权限](/cloud/manage-access/roles-and-permissions#Namespace-level-permissions)
+Namespace。
+
+:::
+
+### 使用 Temporal Cloud UI 删除 Namespace
+
+1. 进入Temporal Cloud UI并登录。
+1. 在窗口左侧，选择 **Namespaces**。
+1. 在 **Namespaces** 页面上，选择 Namespace 名称。
+1. 在Namespace页面上，选择窗口右上方的“**编辑**”。
+1. 在 **编辑** Namespace 页面上，选择窗口右上角的 **删除 Namespace**。
+1. 在 **删除 Namespace** 对话框中，键入“DELETE”以确认删除该 Namespace。
+1. 选择**删除**。
+
+删除 Temporal Cloud Namespace 后，Temporal 服务会立即删除 Namespace 的 Workflow Execution
+和 Task Queue。在移除 Namespace 之前，请确保所有 Workflow 均已完成、取消或终止。的
+Namespace 的移除是永久性的。
+
+关闭的 Workflow 历史记录保留在 Temporal 存储中，直到用户定义的保留期到期。这个时期
+反映 Workflow Execution 关闭时生效的策略。
+
+如有其他问题或疑虑，请联系[支持](https://docs.Temporal.io/cloud/support#support-ticket)。
+
+### 使用 tcld 删除 Namespace
+
+有关详细信息，请参阅 [tcld Namespace 删除](/cloud/tcld/Namespace/#delete) 命令参考。
+
+### Namespace 删除保护{#delete-protection}
+
+为了防止意外删除 Namespace，Temporal Cloud 提供了保护功能。当您启用删除时
+Namespace 保护您的生产环境，确保关键数据不会被无意删除。
+
+请按照下列步骤操作：
+
+- 访问 Temporal Cloud 上的 [Namespaces 页面](https://cloud.Temporal.io/Namespaces)。
+- 打开您的 Namespace 详细信息页面。
+- 选择编辑按钮。
+- 向下滚动到安全性并单击披露按钮（向下的插入符号）。
+- 启用**删除保护**
+
+<CaptionedImage
+src="/img/cloud/Namespace/deletion-protection.png"
+  title="通过切换开关启用删除保护"
+/>
+
+要使用 [`tcld`](/cloud/tcld) 启用或禁用此功能，请使用以下命令。将值设置为“true”即可
+启用或“false”禁用：
+
+```
+tcld namespace lifecycle set \
+    --namespace <namespace_id.account_id> \
+    --enable-delete-protection <Boolean>
+```
+
+## 如何在 Temporal Cloud 中标记 Namespace {#tag-a-Namespace}
+
+标签是键值元数据对，可以附加到 Temporal Cloud 中的 Namespace，以帮助操作员组织、
+更轻松地跟踪和管理 Namespace。
+
+### 标签结构和限制
+
+- 每个Namespace最多可以有10个标签
+- 对于给定的 Namespace，每个密钥必须是唯一的（例如，Namespace 不能同时具有 `team:foo` 和 `team:bar` 标签）
+- 键和值的长度必须为 1-63 个字符
+- 允许的字符：小写字母 (`a-z`)、数字 (`0-9`)、句点 (`.`)、下划线 (`_`)、连字符 (`-`) 和
+  在符号 (`@`) 处
+- 标签不是安全存储机制，不应存储 PII 或 PHI
+- 标签不会改变标记资源的行为
+- 每个帐户有 1000 个唯一标签键的软限制
+
+### 权限
+
+- 只有[**账户管理员**和**账户所有者**](/cloud/manage-access/roles-and-permissions#account-level-roles)可以创建和编辑标签
+- 所有有权访问 Namespace 的用户都可以查看其标签
+
+### tcld
+
+有关详细信息，请参阅 [tcld Namespace 标签](/cloud/tcld/Namespace/#tags) 命令参考。
+
+### 地形
+
+请参阅
+[Terraform 提供程序](https://github.com/Temporalio/terraform-provider-Temporalcloud/blob/main/docs/resources/Namespace_tags.md)
+了解详情。
+
+### 网页用户界面
+
+可以通过 Temporal Cloud Web 界面查看和管理标签。查看 Namespace 时，您会看到标签
+显示，并且如果您有适当的权限，可以添加、编辑或删除它们。
+
+<CaptionedImage src="/img/cloud/tags/Namespace-DetailsWithTags.png" title="Tags appear in namespace details" />
+
+<CaptionedImage src="/img/cloud/tags/Namespaces-IndexWithTags.png" title="Tags appear on the list of namespaces" />
+
+<CaptionedImage
+src="/img/cloud/tags/CreateNamespace-AddNewTag.png"
+  title="Namespace 创建期间在何处添加标签"
+/>
+
+<CaptionedImage
+src="/img/cloud/tags/CreateNamespace-AddedTag.png"
+  title="在 Namespace 创建过程中添加标签后"
+/>

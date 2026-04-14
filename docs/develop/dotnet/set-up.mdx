@@ -1,8 +1,8 @@
 ---
 id: set-up-your-local-dotnet
-title: Set up your local with the .NET SDK
-sidebar_label: Quickstart
-description: Configure your local development environment to get started developing with Temporal
+title: "使用 .NET SDK 设置本地"
+sidebar_label: "快速入门"
+description: "配置本地开发环境以开始使用 Temporal 进行开发"
 keywords:
   - set up
   - getting started
@@ -21,9 +21,10 @@ import { CallToAction } from "@site/src/components/elements/CallToAction";
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Quickstart
+<a id="quickstart"></a>
+# 快速入门 {#quickstart}
 
-Configure your local development environment to get started developing with Temporal.
+配置本地开发环境以开始使用 Temporal 进行开发。
 
 <SetupSteps>
   <SetupStep code={
@@ -32,10 +33,11 @@ Configure your local development environment to get started developing with Temp
       <p>Install the latest version of .NET by following the <a href="https://dotnet.microsoft.com/download">official .NET instructions</a>.</p>
     </>
   }>
-    ## Install .NET
+<a id="add-projects-to-the-solution"></a>
+## 安装.NET {#add-projects-to-the-solution}
 
-    The .NET SDK requires .NET 6.0 or later.
-    Install the latest version of .NET by following the [official .NET instructions](https://dotnet.microsoft.com/download).
+.NET SDK 需要 .NET 6.0 或更高版本。
+    按照 [官方 .NET 说明](https://dotnet.microsoft.com/download) 安装最新版本的 .NET。
   </SetupStep>
 
   <SetupStep code={
@@ -51,14 +53,17 @@ dotnet new classlib -o Workflow
 dotnet new console -o Worker
 dotnet new console -o Client
 
-# Add projects to the solution
+<a id="add-project-references"></a>
+# Add projects to the solution {#add-project-references}
 dotnet sln TemporalioHelloWorld.sln add Workflow/Workflow.csproj Worker/Worker.csproj Client/Client.csproj
 
-# Add project references
+<a id="install-temporal-sdk-in-each-project"></a>
+# Add project references {#install-temporal-sdk-in-each-project}
 dotnet add Worker/Worker.csproj reference Workflow/Workflow.csproj
 dotnet add Client/Client.csproj reference Workflow/Workflow.csproj
 
-# Install Temporal SDK in each project
+<a id="run-hello-world-test-your-installation"></a>
+# Install Temporal SDK in each project {#run-hello-world-test-your-installation}
 dotnet add Workflow/Workflow.csproj package Temporalio
 dotnet add Worker/Worker.csproj package Temporalio
 dotnet add Client/Client.csproj package Temporalio`
@@ -70,11 +75,12 @@ Build the solution:
       <CodeSnippet language="bash">{`dotnet build`}</CodeSnippet>
     </>
   }>
-    ## Install the Temporal .NET SDK
+<a id="1-create-the-activity-and-workflow"></a>
+## 安装 Temporal .NET SDK {#1-create-the-activity-and-workflow}
 
-    Create a solution and the three projects used in this guide: `Workflow` (class library), `Worker` (console), and `Client` (console). Add them to the solution.
+创建一个解决方案以及本指南中使用的三个项目：`Workflow`（类库）、`Worker`（控制台）和 `Client`（控制台）。将它们添加到解决方案中。
 
-    Tip: You can also centralize the `Temporalio` package for all projects using `Directory.Packages.props` and `Directory.Build.props` at the solution root.
+提示：您还可以在解决方案根目录中使用 `Directory.Packages.props` 和 `Directory.Build.props` 集中所有项目的 `Temporalio` 包。
   </SetupStep>
 
   <SetupStep code={
@@ -104,11 +110,12 @@ Build the solution:
       </Tabs>
     </>
   }>
-    ## Install Temporal CLI and start the development server
+<a id="create-an-activity-file-myactivitiescs-in-the-workflow-project"></a>
+## 安装Temporal CLI并启动开发服务器 {#create-an-activity-file-myactivitiescs-in-the-workflow-project}
 
-    The fastest way to get a development version of the Temporal Service running on your local machine is to use [Temporal CLI](https://docs.temporal.io/cli).
+在本地计算机上运行 Temporal 服务的开发版本的最快方法是使用 [Temporal CLI](https://docs.temporal.io/cli)。
 
-    Choose your operating system to install Temporal CLI:
+选择您的操作系统来安装 Temporal CLI：
   </SetupStep>
 
   <SetupStep code={
@@ -129,31 +136,33 @@ Build the solution:
       </div>
     </>
   }>
-    ## Start the development server
+<a id="create-a-workflow-file-sayhelloworkflowcs-in-the-workflow-project"></a>
+## 启动开发服务器 {#create-a-workflow-file-sayhelloworkflowcs-in-the-workflow-project}
 
-    Once you've installed Temporal CLI and added it to your PATH, open a new Terminal window and run the following command.
+安装 Temporal CLI 并将其添加到 PATH 后，打开一个新的终端窗口并运行以下命令。
 
-    This command starts a local Temporal Service. It starts the Web UI, creates the default Namespace, and uses an in-memory database.
+此命令启动本地 Temporal 服务。它启动 Web UI，创建默认的 Namespace，并使用内存数据库。
 
-    The Temporal Service will be available on localhost:7233.
-    The Temporal Web UI will be available at http://localhost:8233.
+Temporal 服务将在 localhost:7233 上可用。
+    Temporal Web UI 将在 http://localhost:8233. 上提供
 
-    Leave the local Temporal Service running as you work through tutorials and other projects. You can stop the Temporal Service at any time by pressing CTRL+C.
+当您完成教程和其他项目时，让本地 Temporal 服务保持运行。您可以随时按 CTRL+C 停止 Temporal 服务。
 
-    Once you have everything installed, you're ready to build apps with Temporal on your local machine.
+安装完所有内容后，您就可以在本地计算机上使用 Temporal 构建应用程序了。
   </SetupStep>
 </SetupSteps>
 
-## Run Hello World: Test Your Installation
+<a id="2-create-the-worker"></a>
+## 运行 Hello World：测试您的安装 {#2-create-the-worker}
 
-Now let's verify your setup is working by creating and running a complete Temporal application with both a Workflow and Activity.
+现在，我们通过使用 Workflow 和 Activity 创建并运行完整的 Temporal 应用程序来验证您的设置是否正常工作。
 
-This test will confirm that:
+该测试将确认：
 
-- Your .NET SDK installation is working
-- Your local Temporal Service is running
-- You can successfully create and execute Workflows and Activities
-- The communication between components is functioning correctly
+- 您的 .NET SDK 安装正在运行
+- 您本地的 Temporal 服务正在运行
+- 您可以成功创建并执行 Workflow 和活动
+- 组件之间的通信功能正常
 
 
 
@@ -177,9 +186,11 @@ TemporalioHelloWorld/
 
 </details>
 
-### 1. Create the Activity and Workflow 
+<a id="create-a-worker-file-programcs-in-the-worker-project"></a>
+### 1. 创建 Activity 和 Workflow {#create-a-worker-file-programcs-in-the-worker-project}
 
-#### Create an Activity file (MyActivities.cs) in the Workflow project:
+<a id="3-execute-the-workflow"></a>
+#### 在 Workflow 项目中创建 Activity 文件（MyActivities.cs）： {#3-execute-the-workflow}
 
 ```csharp
 namespace MyNamespace;
@@ -195,10 +206,11 @@ public class MyActivities
 }
 ```
 
-An Activity is a normal function or method that executes a single, well-defined action (either short or long running), which often involve interacting with the outside world, such as sending emails, making network requests, writing to a database, or calling an API, which are prone to failure.
-If an Activity fails, Temporal automatically retries it based on your configuration.
+Activity 是执行单个、明确定义的操作（短期或长期运行）的普通函数或方法，通常涉及与外界交互，例如发送电子邮件、发出网络请求、写入数据库或调用 API，这些都容易失败。
+如果 Activity 失败，Temporal 会根据您的配置自动重试。
 
-#### Create a Workflow file (SayHelloWorkflow.cs) in the Workflow project: 
+<a id="create-a-client-file-programcs-in-the-client-project"></a>
+#### 在 Workflow 项目中创建一个 Workflow 文件（SayHelloWorkflow.cs）： {#create-a-client-file-programcs-in-the-client-project}
 
 ```csharp
 namespace MyNamespace;
@@ -224,16 +236,17 @@ public class SayHelloWorkflow
 }
 ```
 
-Workflows orchestrate Activities and contain the application logic.
-Temporal Workflows are resilient.
-They can run and keep running for years, even if the underlying infrastructure fails.
-If the application itself crashes, Temporal will automatically recreate its pre-failure state so it can continue right where it left off.
+Workflow 编排活动并包含应用程序逻辑。
+Temporal Workflow 具有弹性。
+即使底层基础设施出现故障，它们也可以运行并持续运行数年。
+如果应用程序本身崩溃，Temporal 将自动重新创建其失败前的状态，以便它可以从中断处继续。
 
-### 2. Create the Worker 
+<a id="verify-success"></a>
+### 2.创建Worker {#verify-success}
 
-With your Activity and Workflow defined, you need a Worker to execute them.
+定义了 Activity 和 Workflow 后，您需要 Worker 来执行它们。
 
-#### Create a Worker file (Program.cs) in the Worker project:
+#### 在 Worker 项目中创建 Worker 文件（Program.cs）：
 
 ```csharp
 using MyNamespace;
@@ -275,25 +288,25 @@ catch (OperationCanceledException)
 }
 ```
 
-Run the Worker:
+运行 Worker：
 
 ```bash
 dotnet run --project Worker/Worker.csproj
 ```
-Keep this terminal running - you should see `Running worker` displayed.
+保持此终端运行 - 您应该看到显示 `Running Worker`。
 
-A Worker polls a Task Queue, that you configure it to poll, looking for work to do. 
-Once the Worker dequeues the Workflow or Activity task from the Task Queue, it then executes that task.
+Worker 轮询 Task Queue，您将其配置为轮询，寻找要做的工作。 
+一旦 Worker 将 Workflow 或 Activity 任务从 Task Queue 中出列，它就会执行该任务。
 
-Workers are a crucial part of your Temporal application as they're what actually execute the tasks defined in your Workflows and Activities.
-For more information on Workers, see [Understanding Temporal](/evaluate/understanding-temporal#workers) and a [deep dive into Workers](/workers).
+Worker 是 Temporal 应用程序的重要组成部分，因为它们实际执行 Workflow 和活动中定义的任务。
+有关 Worker 的更多信息，请参阅 [了解 Temporal](/evaluate/understanding-temporal#workers) 和 [深入研究 Worker](/workers)。
 
-### 3. Execute the Workflow 
+### 3.执行Workflow
 
-Now that your Worker is running, it's time to start a Workflow Execution.
-This final step will validate that everything is working correctly. 
+现在您的 Worker 正在运行，是时候启动 Workflow Execution 了。
+最后一步将验证一切是否正常工作。
 
-#### Create a Client file (Program.cs) in the Client project: 
+#### 在Client项目中创建一个Client文件（Program.cs）：
 
 ```csharp
 using MyNamespace;
@@ -311,19 +324,19 @@ var result = await client.ExecuteWorkflowAsync(
 Console.WriteLine("Workflow result: {0}", result);
 ```
 
-While the Worker is still running, run the Workflow:
+当 Worker 仍在运行时，运行 Workflow：
 
 ```bash
 dotnet run --project Client/Client.csproj
 ```
 
-### Verify Success
+### 验证成功
 
-If everything is working correctly, you should see:
+如果一切正常，您应该看到：
 
-- Worker processing the workflow and activity
-- Output: `Workflow result: Hello Temporal`
-- Workflow Execution details in the [Temporal Web UI](http://localhost:8233)
+- Worker 处理 Workflow 和 Activity
+- 输出：`Workflow result: Hello Temporal`
+- [Temporal 网页用户界面](http://localhost:8233) 中的 Workflow Execution 详细信息
 
 
 <CallToAction href="https://learn.temporal.io/getting_started/dotnet/first_program_in_dotnet/">

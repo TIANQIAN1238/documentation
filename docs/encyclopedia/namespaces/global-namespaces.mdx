@@ -1,8 +1,8 @@
 ---
 id: global-namespaces
-title: Global Namespace
-sidebar_label: Global Namespace
-description: This guide covers everything about Global Namespaces within the Temporal Platform.
+title: "全球 Namespace"
+sidebar_label: "全球 Namespace"
+description: "本指南涵盖了 Temporal 平台中有关 Global Namespace 的所有内容。"
 slug: /global-namespace
 toc_max_heading_level: 4
 keywords:
@@ -12,27 +12,28 @@ tags:
   - Namespaces
 ---
 
-This page provides an overview of Global Namespace.
+本页提供全局 Namespace 的概述。
 
-## What is a Global Namespace? {#global-namespace}
+<a id="global-namespace"></a>
+## 什么是全局 Namespace？ {#global-namespace}
 
-A Global Namespace is a [Namespace](/namespaces) that exists across Clusters when [Multi-Cluster Replication](/temporal-service/multi-cluster-replication) is set up.
+全局 Namespace 是设置 [多集群复制](/namespaces) 时跨集群存在的 [Namespace](/temporal-service/multi-cluster-replication)。
 
-- [How to register a Global Namespace](/cli/operator#create)
-- [How to change the active Cluster for a Global Namespace](/cli/operator#update)
+- [如何注册全球 Namespace](/cli/operator#create)
+- [如何更改全局 Namespace 的活动集群](/cli/operator#update)
 
-The Global Namespace feature enables Workflow Executions to progress through another Cluster in the event of a failover.
+全局 Namespace 功能使 Workflow Execution 在发生故障转移时能够继续通过另一个集群。
 
-A Global Namespace may be replicated to any number of Clusters, but is active in only one Cluster at any given time.
+全局 Namespace 可以复制到任意数量的集群，但在任何给定时间仅在一个集群中处于活动状态。
 
-For a failover to be successful, Worker Processes must be polling for Tasks for the Global Namespace on all Clusters.
+为了使故障转移成功，Worker 进程必须轮询所有集群上全局 Namespace 的任务。
 
-A Global Namespace has a failover version.
-Because a failover can be triggered from any Cluster, the failover version prevents certain conflicts from occurring if a failover is mistakenly triggered simultaneously on two Clusters.
+Global Namespace 有故障转移版本。
+由于可以从任何集群触发故障转移，因此故障转移版本可以防止在两个集群上同时错误地触发故障转移时发生某些冲突。
 
-Only the active Cluster dispatches [Tasks](/tasks#task); however, certain conflicts are possible.
-Unlike regular Namespaces, which provide at-most-once semantics for an Activity Execution, Global Namespaces can support only at-least-once semantics (see [Conflict resolution](/temporal-service/multi-cluster-replication#conflict-resolution)).
-Worker Processes on the standby Clusters are idle until a failover occurs and their Cluster becomes active.
+仅活动集群调度 [任务](/tasks#task)；然而，某些冲突是可能的。
+与为 Activity 执行提供最多一次语义的常规 Namespace 不同，全局 Namespace 只能支持至少一次语义（请参阅 [冲突解决](/temporal-service/multi-cluster-replication#conflict-resolution)）。
+Worker 备用集群上的进程处于空闲状态，直到发生故障转移并且其集群变为活动状态。
 
-Temporal Application API calls made to a non-active Cluster are rejected with a **NamespaceNotActiveError** which contains the name of the current active Cluster.
-It is the responsibility of the Temporal Application to call the Cluster that is currently active.
+对非活动集群进行的 Temporal 应用程序 API 调用将被拒绝，并出现 **NamespaceNotActiveError**，其中包含当前活动集群的名称。
+Temporal 应用程序负责调用当前活动的集群。

@@ -1,0 +1,39 @@
+---
+id: ip-addresses
+title: Temporal Cloud IP 地址
+sidebar_label: IP地址
+slug: /cloud/connectivity/ip-addresses
+description: Temporal Cloud IP 地址
+tags:
+  - Connectivity
+  - Production
+  - Temporal Cloud
+keywords:
+  - address
+  - allowlist
+  - cidr
+  - explanation
+  - failover
+  - ip
+  - namespaces
+  - private services connect
+  - privatelink
+  - psc
+  - whitelist
+---
+
+Temporal Cloud 资源的具体 IP 地址可能随时更改。 Temporal Cloud 资源可以使用相关云提供商发布的 IP 范围内的任何 IP。
+
+如果您需要限制来自客户端网络的出站访问，我们建议使用 [AWS PrivateLink 或 GCP Private Services Connect](/cloud/connectivity#private-network-connectivity-for-Namespaces) 而不是 IP 白名单。
+
+:::warning Do not allowlist specific IP addresses
+
+**Temporal Cloud IP 不是静态的，可能会发生变化，恕不另行通知。**
+
+不要将您看到的 Temporal Cloud 服务在某个时间点使用的特定 IP 地址列入白名单，因为当这些 IP 发生更改时，**将导致中断**。您的客户端将无法连接到 Temporal Cloud。
+
+如果您必须将 IP 范围列入白名单，则必须将整个云提供商 IP 范围列入白名单：
+- [AWS IP 地址范围](https://ip-ranges.amazonaws.com/ip-ranges.json)
+- [GCP IP 地址范围](https://www.gstatic.com/ipranges/cloud.json)
+
+:::

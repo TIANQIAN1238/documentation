@@ -1,0 +1,51 @@
+---
+id: index
+slug: /cloud/nexus
+title: Nexus
+description: Temporal Cloud 在核心 Nexus 之上添加了全局 Nexus 注册表、内置访问控制、审核日志记录和多区域连接。
+sidebar_label: Temporal Nexus
+keywords:
+  - Temporal Nexus
+  - cross namespace workflows
+  - cross team
+  - multi team
+  - cross domain
+  - multi region
+  - multi cloud
+  - modular workflow design
+  - workflow orchestration
+  - Temporal Cloud security
+  - Temporal Cloud services
+  - distributed workflows
+  - workflow API management
+tags:
+  - Nexus
+  - Temporal Cloud
+---
+
+import { CaptionedImage } from '@site/src/components';
+
+:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+
+Temporal Nexus 现已[普遍可用](/evaluate/development-product-features/release-stages#general-availability)。
+了解为什么应在[评估指南](/evaluate/Nexus) 中使用 Nexus。
+
+:::
+
+Temporal Cloud 建立在[核心 Nexus 体验](/Nexus) 的基础上，具有：
+
+- **全局 [Nexus 注册表](/Nexus/registry)** - 范围涵盖所有 Namespace 的整个帐户。任何 Namespace 中的 Worker 都可以托管 Nexus Service 供其他人使用。
+- **内置[访问控制](/Nexus/registry#configure-runtime-access-controls)** - 限制哪个调用方 Namespace 可以在运行时使用 Nexus 端点。
+- **[审核日志记录](/cloud/audit-logs)** - 将 Nexus 注册表操作（创建、Update、删除端点）流式传输到审核日志集成。
+- **多区域连接** - Nexus 请求使用受全球 mTLS 保护的 Envoy 网格在 AWS 和 GCP 内部以及之间的 Namespace 之间进行路由。与以 [高可用性](/cloud/high-availability) 作为端点目标的 Namespace 兼容。
+- **[Terraform 支持](/cloud/terraform-provider#manage-Temporal-cloud-Nexus-endpoints-with-terraform)** - 使用 Temporal Cloud Terraform 提供程序管理 Nexus 端点。
+
+<CaptionedImage
+src="/img/cloud/Nexus/Nexus-overview-short.png"
+    title="Nexus 概述"
+/>
+
+＃＃ 了解更多
+
+- [评估 Nexus](/评估/Nexus) | [主题演讲和演示](https://youtu.be/qqc2vsv1mrU?feature=shared&t=2082)
+- [Nexus 的工作原理](/Nexus) | [深入探讨](https://www.youtube.com/watch?v=izR9dQ_eIe4&t=934s)

@@ -1,9 +1,9 @@
 ---
 id: debugging
-title: Debugging - TypeScript SDK
-sidebar_label: Debugging
+title: 调试 - TypeScript SDK
+sidebar_label: 调试
 slug: /develop/typescript/best-practices/debugging
-description: The Temporal TypeScript SDK Debugging guide provides tools and tips for debugging Workflows and Workers in development and production environments. Troubleshoot common issues using the Web UI, Temporal CLI, and more.
+description: Temporal TypeScript SDK 调试指南提供了用于在开发和生产环境中调试 Workflow 和 Worker 的工具和技巧。使用 Web UI、Temporal CLI 等排查常见问题。
 toc_max_heading_level: 4
 keywords:
   - debugging
@@ -15,15 +15,15 @@ tags:
 
 import { CaptionedImage } from '@site/src/components';
 
-The Debugging section of the Temporal TypeScript SDK developer's guide covers tools for debugging and how to troubleshoot common issues.
+Temporal TypeScript SDK 开发者指南的调试部分介绍了调试工具以及如何排查常见问题。
 
-## How to debug in a development environment {#debug-in-a-development-environment}
+## 如何在开发环境中调试 {#debug-in-a-development-environment}
 
-In addition to the normal development tools of logging and a debugger, you can also see what's happening in your Workflow by using the [Web UI](/web-ui) or [Temporal CLI](/cli).
+除了日志记录和调试器等常规开发工具外，还可以使用 [Web UI](/web-ui) 或 [Temporal CLI](/cli) 查看 Workflow 中发生的情况。
 
-## How to debug in a production environment {#debug-in-a-production-environment}
+## 如何在生产环境中调试 {#debug-in-a-production-environment}
 
-You can debug production Workflows using:
+可以使用以下工具调试生产环境中的 Workflow：
 
 - [Web UI](/web-ui)
 - [Temporal CLI](/cli)
@@ -31,57 +31,54 @@ You can debug production Workflows using:
 - [Tracing](/develop/typescript/platform/observability#tracing)
 - [Logging](/develop/typescript/platform/observability#logging)
 
-You can debug and tune Worker performance with metrics and the [Worker performance guide](/develop/worker-performance).
-For information on setting up SDK metrics, see [Metrics](/develop/typescript/platform/observability#metrics) in the Observability section of the TypeScript SDK developer's guide.
+可以使用指标和 [Worker 性能指南](/develop/worker-performance)来调试和调优 Worker 性能。有关设置 SDK 指标的信息，请参阅 TypeScript SDK 开发者指南可观测性部分的[指标](/develop/typescript/platform/observability#metrics)。
 
-Debug Server performance with [Cloud metrics](/cloud/metrics/) or [self-hosted Server metrics](/self-hosted-guide/production-checklist#scaling-and-metrics).
+使用 [Cloud 指标](/cloud/metrics/)或[自托管 Server 指标](/self-hosted-guide/production-checklist#scaling-and-metrics)调试 Server 性能。
 
-## How to troubleshoot common issues in the TypeScript SDK {#troubleshoot-common-issues}
+## 如何排查 TypeScript SDK 中的常见问题 {#troubleshoot-common-issues}
 
 {/* The following was ported from \docs-src\typescript\troubleshooting.md */}
 
-### Two locations to watch
+### 需要关注的两个地方
 
-- Workflow Errors are reflected in Temporal Web.
-- Worker errors and logs are reflected in the terminal.
+- Workflow 错误会反映在 Temporal Web 中。
+- Worker 错误和日志会反映在终端中。
 
-If something isn't behaving the way you expect, make sure to check both locations for helpful error messages.
+如果某些行为不符合预期，请务必检查这两个地方的错误消息。
 
-### Stale Workflows
+### 过时的 Workflow
 
-If you are developing Workflows and finding that code isn't executing as expected, the first place to look is whether old Workflows are still running.
+如果你在开发 Workflow 时发现代码没有按预期执行，首先要检查是否有旧的 Workflow 仍在运行。
 
-If those old Workflows have the same name and are on the same task queue, Temporal will try to continue executing them on your new code by design.
-You may get errors that make no sense to you because
+如果那些旧的 Workflow 具有相同的名称且在相同的 Task Queue 上，Temporal 默认会尝试在新代码上继续执行它们。你可能会遇到莫名其妙的错误，原因可能是：
 
-- Temporal is trying to execute old Workflow code that no longer exists in your codebase, or
-- your new Client code is expecting Temporal to execute old Workflow/Activity code it doesn't yet know about.
+- Temporal 正在尝试执行已不存在于代码库中的旧 Workflow 代码，或者
+- 新的 Client 代码期望 Temporal 执行尚不知晓的旧 Workflow/Activity 代码。
 
-The biggest sign that this is happening is if you notice Temporal is acting non-deterministically: running the same Workflow twice gets different results.
+最明显的迹象是如果你发现 Temporal 的行为具有非确定性：运行同一 Workflow 两次得到不同的结果。
 
-Stale workflows are usually a non-issue because the errors generated are just noise from code you no longer want to run.
-If you need to terminate old stale Workflows, you can do so with Temporal Web or the Temporal CLI.
+过时的 Workflow 通常不是大问题，因为产生的错误只是来自你不再想运行的代码的干扰。如果需要终止旧的过时 Workflow，可以通过 Temporal Web 或 Temporal CLI 来完成。
 
-### Workflow/Activity registration errors
+### Workflow/Activity 注册错误
 
-**If your Workflows or Activities are not imported or spelled correctly**, here are some errors we've seen:
+**如果你的 Workflow 或 Activity 未正确导入或拼写错误**，以下是一些常见错误：
 
 - `ApplicationFailure: 'MyFunction' is not a function`
 - `Workflow did not register a handler for MyQuery`
 
-Double check that your Workers are registering the right Workflow and Activity Definitions (function names) on the right Task Queues.
+请仔细检查 Worker 是否在正确的 Task Queue 上注册了正确的 Workflow 和 Activity 定义（函数名称）。
 
-**If you are running Temporal in a monorepo**, then your `node_modules` may be in a different location than where Temporal expects to find it by default, which results in errors like:
+**如果你在 monorepo 中运行 Temporal**，则 `node_modules` 可能位于 Temporal 默认预期的位置之外，这会导致如下错误：
 
 ```bash
 [ERROR] Module not found: Error: Can't resolve '@temporalio/workflow/lib/worker-interface.js' in '/src'
 ```
 
-Our [Next.js tutorial](https://learn.temporal.io/tutorials/typescript/nextjs) is written for people setting up Temporal **within an existing monorepo**, which may be of use here.
+我们的 [Next.js 教程](https://learn.temporal.io/tutorials/typescript/nextjs)是为**在现有 monorepo 中**设置 Temporal 的人编写的，可能对此有所帮助。
 
-When you pass a `workflowsPath`, our Webpack config expects to find `node_modules` in the same or a parent/ancestor directory.
+当你传入 `workflowsPath` 时，Webpack 配置期望在相同或父/祖先目录中找到 `node_modules`。
 
-**If you are custom bundling your own Workflows** you may get errors like these:
+**如果你自定义打包 Workflow**，可能会遇到如下错误：
 
 ```bash
 [ERROR] Failed to activate workflow {
@@ -91,25 +88,23 @@ When you pass a `workflowsPath`, our Webpack config expects to find `node_module
 }
 ```
 
-Temporal Workflow Bundles need to [export a set of methods that fit the compiled `worker-interface.ts` from `@temporalio/workflow`](https://github.com/temporalio/sdk-typescript/blob/eaa2d205c9bc5ff4a3b17c0b34f2dcf6b1e0264a/packages/worker/src/workflow/bundler.ts#L81) as an entry point.
-We do offer a `bundleWorkflowCode` method to assist you with this, though it uses our Webpack settings.
-For more information, see the [Register types](/develop/typescript/workers/run-worker-process#register-types) section.
+Temporal Workflow Bundle 需要[导出一组符合 `@temporalio/workflow` 编译后 `worker-interface.ts` 的方法](https://github.com/temporalio/sdk-typescript/blob/eaa2d205c9bc5ff4a3b17c0b34f2dcf6b1e0264a/packages/worker/src/workflow/bundler.ts#L81)作为入口点。我们提供了 `bundleWorkflowCode` 方法来协助完成这项工作，尽管它使用了我们的 Webpack 设置。更多信息请参阅[注册类型](/develop/typescript/workers/run-worker-process#register-types)部分。
 
-### Webpack errors
+### Webpack 错误
 
-The TypeScript SDK's Worker bundles Workflows based on `workflowsPath` with [Webpack](https://webpack.js.org/) and run them inside v8 isolates.
+TypeScript SDK 的 Worker 基于 `workflowsPath` 使用 [Webpack](https://webpack.js.org/) 打包 Workflow，并在 v8 隔离环境中运行。
 
-If Webpack fails to create the bundle, the SDK will throw an error and emit webpack logs using the SDK's [logger](/develop/typescript/platform/observability#logging).
+如果 Webpack 未能创建 bundle，SDK 将抛出错误并使用 SDK 的[日志记录器](/develop/typescript/platform/observability#logging)输出 Webpack 日志。
 
-If you do not see Webpack output in your terminal make sure that you have not disabled SDK logging (see reference to `Runtime.install()` in the link above).
+如果终端中没有 Webpack 输出，请确认你没有禁用 SDK 日志记录（参见上面链接中关于 `Runtime.install()` 的说明）。
 
-**A common mistake for newcomers to the TypeScript SDK is trying to use Node.js built-ins and modules in their Workflow code.** Usually, the best thing to do is move that code to an Activity.
+**TypeScript SDK 新手的一个常见错误是在 Workflow 代码中尝试使用 Node.js 内置模块和库。** 通常，最好的做法是将这些代码移到 Activity 中。
 
-Some common examples that will **not** work in the Workflow isolate:
+在 Workflow 隔离环境中**不起作用**的一些常见示例：
 
 <details>
     <summary>
-    Importing node built-in modules
+    导入 Node 内置模块
     </summary>
 
 :::danger Antipattern
@@ -122,9 +117,9 @@ const config = fs.readFileSync('config.json', 'utf8');
 
 :::
 
-This is invalid because reading from the filesystem is a non-deterministic operation: the file may change from the time of the original Workflow Execution to when the Workflow is replayed.
+这是无效的，因为从文件系统读取是非确定性操作：文件可能在原始 Workflow Execution 时与 Workflow 重放时之间发生变化。
 
-You'll typically see an error in this form in the Webpack output:
+通常会在 Webpack 输出中看到如下形式的错误：
 
 ```
 2021-10-14T19:22:00.606Z [INFO] Module not found: Error: Can't resolve 'fs' in '/Users/you/your-project/src'
@@ -138,7 +133,7 @@ You'll typically see an error in this form in the Webpack output:
 
 <details>
     <summary>
-    Importing and calling Activities directly from Workflow code
+    在 Workflow 代码中直接导入并调用 Activity
     </summary>
 
 :::danger Antipattern
@@ -153,11 +148,9 @@ export async function yourWorkflow(): Promise<string> {
 
 :::
 
-This is invalid because activity implementations should not be directly referenced by Workflow code.
-Activities are used by Workflows in order to make network calls and read from the filesystem, operations which are non-deterministic by nature because they rely on external state.
-Temporal records Activity results in the Workflow history and in case your Workflow is replayed, completed Activities will not be rerun, instead their recorded result will be delivered to the Workflow.
+这是无效的，因为 Activity 实现不应被 Workflow 代码直接引用。Activity 被 Workflow 使用以进行网络调用和从文件系统读取，这些操作本质上是非确定性的，因为它们依赖外部状态。Temporal 将 Activity 结果记录在 Workflow 历史中，如果 Workflow 需要重放，已完成的 Activity 不会重新运行，而是将记录的结果传递给 Workflow。
 
-You'll typically see an error in this form in the Webpack output:
+通常会在 Webpack 输出中看到如下形式的错误：
 
 ```
 2021-10-14T19:46:52.731Z [INFO] ERROR in ./src/activities.ts 8:31-46
@@ -173,7 +166,7 @@ You'll typically see an error in this form in the Webpack output:
 2021-10-14T19:46:52.731Z [INFO]         resolve.fallback: { "http": false }
 ```
 
-To properly call your Activities from Workflow code use `proxyActivities` and make sure to only import the Activity types.
+要从 Workflow 代码中正确调用 Activity，请使用 `proxyActivities` 并确保只导入 Activity 类型。
 
 ```ts
 import { proxyActivities } from '@temporalio/workflow';
@@ -188,33 +181,28 @@ export async function yourWorkflow(): Promise<string> {
 
 </details>
 
-### Works in Dev but not in Prod
+### 开发环境正常但生产环境不正常
 
-The two main sources of dev-prod discrepancies are in bundling and connecting.
+开发环境和生产环境差异的两个主要来源是打包和连接。
 
-#### Production bundling
+#### 生产环境打包
 
-You may experience your Client sending stripped names as the Workflow "Type" when scheduling a Workflow.
-Webpack can change the Workflow's function name to something shorter.
-Temporal won't know how to handle the mismatch between the shorter name and the expected Workflow type.
+当调度 Workflow 时，你的 Client 可能会将被截断的名称作为 Workflow "Type" 发送。Webpack 可能会将 Workflow 的函数名称缩短。Temporal 无法处理缩短后的名称与预期的 Workflow 类型之间的不匹配。
 
-You may experience errors like this:
+你可能会遇到如下错误：
 
 ```
 Error: 3 INVALID_ARGUMENT: WorkflowType is not set on request.
 ```
 
-Or you may see shorter names in the Temporal Service's Web UI when Webpack changed the Workflow's function name to something shorter, in this case the single letter 's':
+或者当 Webpack 将 Workflow 函数名称缩短（在本例中为单字母 `s`）时，你可能会在 Temporal Service 的 Web UI 中看到缩短后的名称：
 
 <CaptionedImage
     src="/img/webui/stripped_workflow_types_in_webui.png"
     title="Temporal Web UI showing stripped 'Workflow Type' entries, in this case the single letter 's'"
 />
 
-This issue can happen when your bundler strips out Workflow function names.
-Temporal relies on those names to set the "Workflow Type" in the Service Web UI.
-To prevent the build process from shortening Workflow function names, modify the webpack configuration file ( `webpack.config.js`) to set the Boolean that retains the original names in the `TerserPlugin` configuration section.
-Setting the option (`keep_fnames`) to `true` prevents name stripping.
+当打包工具截断 Workflow 函数名称时会出现此问题。Temporal 依赖这些名称在 Service Web UI 中设置"Workflow Type"。要防止构建过程缩短 Workflow 函数名称，请修改 Webpack 配置文件（`webpack.config.js`），在 `TerserPlugin` 配置部分设置保留原始名称的布尔值。将选项（`keep_fnames`）设置为 `true` 可防止名称被截断。
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -257,35 +245,34 @@ require('esbuild').buildSync({
 });
 ```
 
-See the [esbuild docs](https://esbuild.github.io/api/#keep-names) for more information.
+更多信息请参阅 [esbuild 文档](https://esbuild.github.io/api/#keep-names)。
 </TabItem>
 </Tabs>
 
-#### Connecting to Temporal Server
+#### 连接到 Temporal Server
 
-If you are trying to connect in production and getting this:
+如果你在生产环境中尝试连接时遇到以下错误：
 
 ```bash
 [TransportError: transport error]
 ```
 
-It is a sign that something is wrong with your Cert/Key pair.
-Log it out and make sure it is an exact match with what is expected (often, the issue can be whitespace when injecting from your production secrets management environment).
+这表明你的证书/密钥对出现了问题。将其打印出来并确认与预期完全匹配（通常，从生产密钥管理环境注入时，问题可能出在空白字符上）。
 
-### Resetting Workflows to deal with logical bugs
+### 重置 Workflow 以处理逻辑错误
 
-You can "rewind time" using the Temporal CLI, resetting Workflow History to some previous point in time. You can read the Temporal CLI docs on:
+可以使用 Temporal CLI "回拨时间"，将 Workflow 历史重置到某个之前的时间点。可以阅读 Temporal CLI 文档：
 
-- [Restarting and resetting Workflows by ID](/cli)
-- [Resetting all Workflows by binary checksum identifier](/cli)
+- [按 ID 重启和重置 Workflow](/cli)
+- [按二进制校验和标识符重置所有 Workflow](/cli)
 
-If you need to reset programmatically, the TS SDK does not have any high level APIs for this, but you can make raw gRPC calls to [resetWorkflowExecution](https://typescript.temporal.io/api/classes/proto.temporal.api.workflowservice.v1.WorkflowService-1/#resetworkflowexecution).
+如果需要以编程方式重置，TypeScript SDK 没有为此提供高级 API，但可以通过原始 gRPC 调用 [resetWorkflowExecution](https://typescript.temporal.io/api/classes/proto.temporal.api.workflowservice.v1.WorkflowService-1/#resetworkflowexecution) 来实现。
 
-Resetting should only be used to deal with serious logical bugs in your code: it's not for handling transient failures, like a downstream service being unreachable. It should not be used in the course of normal application flows.
+重置应仅用于处理代码中的严重逻辑错误：它不是用于处理瞬时失败（如下游服务不可达）的工具，也不应在正常应用流程中使用。
 
-### gRPC call timeouts (context deadline exceeded)
+### gRPC 调用超时（context deadline exceeded）
 
-The opaque `context deadline exceeded` error comes from `gRPC`:
+不透明的 `context deadline exceeded` 错误来自 `gRPC`：
 
 ```
 Error: 4 DEADLINE_EXCEEDED: context deadline exceeded
@@ -305,13 +292,12 @@ Error: 4 DEADLINE_EXCEEDED: context deadline exceeded
 }
 ```
 
-Several conditions can cause this error, including network hiccups, timeouts that are too short, and an overloaded server.
-Querying a Workflow Execution whose query handler causes an error can result in the query call timing out.
+多种情况可能导致此错误，包括网络抖动、超时时间设置过短以及服务器过载。查询一个查询处理器导致错误的 Workflow Execution 可能导致查询调用超时。
 
-Some troubleshooting actions you can take:
+可以采取以下一些排查措施：
 
-- Verify the connection from your Worker to the Temporal Server is working and doesn't have unusually high latency.
-- If you are running Temporal Server yourself, check your [server metrics](/self-hosted-guide/production-checklist#scaling-and-metrics) to ensure it's not overloaded.
-- If what's timing out is a query, check the logs of your Workers to see if they are having issues handling the query.
+- 验证 Worker 与 Temporal Server 的连接是否正常，且延迟不异常高。
+- 如果自己运行 Temporal Server，请检查[服务器指标](/self-hosted-guide/production-checklist#scaling-and-metrics)以确保其未过载。
+- 如果超时的是查询，请检查 Worker 的日志，看它们是否在处理查询时遇到问题。
 
-If none of the preceding actions help you discover why timeouts are occurring, please try to produce a minimal repro and we'll be glad to help.
+如果上述措施都无法帮助你找到超时原因，请尝试构造一个最小复现示例，我们很乐意为你提供帮助。

@@ -1,7 +1,7 @@
 ---
 id: observability
-title: Observability - Go SDK
-sidebar_label: Observability
+title: "可观察性 - Go SDK"
+sidebar_label: "可观察性"
 toc_max_heading_level: 4
 keywords:
   - go sdk
@@ -24,30 +24,30 @@ tags:
   - Workflows
   - Go SDK
   - Temporal SDKs
-description: Monitor your Temporal Application state using Metrics, Tracing, Logging, and Visibility features. Emit metrics, configure tracing, customize logging, and use Search Attributes with the Temporal Go SDK for enhanced Workflow Execution insights.
+description: "使用指标、跟踪、日志记录和 Visibility 功能监视您的 Temporal 应用程序状态。发出指标、配置跟踪、自定义日志记录以及将 Search Attribute 与 Temporal Go SDK 结合使用以增强 Workflow Execution 见解。"
 ---
 
-This page covers the many ways to view the current state of your [Temporal Application](/temporal#temporal-application)—that is, ways to view which [Workflow Executions](/workflow-execution) are tracked by the [Temporal Platform](/temporal#temporal-platform) and the state of any specified Workflow Execution, either currently or at points of an execution.
+本页介绍了查看 [Temporal 应用](/temporal#temporal-application) 当前状态的多种方法，即查看 [Temporal平台](/workflow-execution) 跟踪的 [Workflow Executions](/temporal#temporal-platform) 以及任何指定 Workflow Execution 当前或执行点的状态的方法。
 
-This section covers features related to viewing the state of the application, including:
+本节介绍与查看应用程序状态相关的功能，包括：
 
-- [Metrics](#metrics)
-- [Tracing](#tracing)
-- [Logging](#logging)
+- [指标](#metrics)
+- [追踪](#tracing)
+- [记录](#logging)
 - [Visibility](#visibility)
 
-## How to emit metrics {#metrics}
+<a id="metrics"></a>
+## 如何发出指标 {#metrics}
+**如何使用 Temporal Go SDK 发出应用程序指标。**
 
-**How to emit application metrics using the Temporal Go SDK.**
+每个 Temporal SDK 都能够从客户端或 Worker 进程发出一组可选的指标。
+有关能够发出的指标的完整列表，请参阅 [SDK指标参考](/references/sdk-metrics)。
 
-Each Temporal SDK is capable of emitting an optional set of metrics from either the Client or the Worker process.
-For a complete list of metrics capable of being emitted, see the [SDK metrics reference](/references/sdk-metrics).
+- 有关 Prometheus 和 Grafana 集成的概述，请参阅 [监控](/self-hosted-guide/monitoring) 指南。
+- 有关指标列表，请参阅 [SDK指标参考](/references/sdk-metrics)。
+- 有关使用 Go SDK 公开指标的端到端示例，请参阅 [样品去](https://github.com/temporalio/samples-go/tree/main/metrics) 存储库。
 
-- For an overview of Prometheus and Grafana integration, refer to the [Monitoring](/self-hosted-guide/monitoring) guide.
-- For a list of metrics, see the [SDK metrics reference](/references/sdk-metrics).
-- For an end-to-end example that exposes metrics with the Go SDK, refer to the [samples-go](https://github.com/temporalio/samples-go/tree/main/metrics) repo.
-
-To emit metrics from the Temporal Client in Go, create a [metrics handler](https://pkg.go.dev/go.temporal.io/sdk/internal/common/metrics#Handler) from the [Client Options](https://pkg.go.dev/go.temporal.io/sdk@v1.15.0/internal#ClientOptions) and specify a listener address to be used by Prometheus.
+要从 Go 中的 Temporal CLIent 发出指标，请从 [客户选项](https://pkg.go.dev/go.temporal.io/sdk/internal/common/metrics#Handler) 创建 [指标处理程序](https://pkg.go.dev/go.temporal.io/sdk@v1.15.0/internal#ClientOptions) 并指定 Prometheus 使用的侦听器地址。
 
 ```go
 client.Options{
@@ -57,17 +57,17 @@ client.Options{
 		}
 ```
 
-The Go SDK currently supports the [Tally](https://pkg.go.dev/go.temporal.io/sdk/contrib/tally) library; however, Tally offers [extensible custom metrics reporting](https://github.com/uber-go/tally#report-your-metrics), which is exposed through the [`WithCustomMetricsReporter`](/references/server-options#withcustommetricsreporter) API.
+Go SDK 目前支持 [相符](https://pkg.go.dev/go.temporal.io/sdk/contrib/tally) 库；但是，Tally 提供 [可扩展的自定义指标报告](https://github.com/uber-go/tally#report-your-metrics)，它通过 [`WithCustomMetricsReporter`](/references/server-options#withcustommetricsreporter) API 公开。
 
-For more information, see the [Go sample for metrics](https://github.com/temporalio/samples-go/tree/main/metrics).
+有关详细信息，请参阅 [获取指标样本](https://github.com/temporalio/samples-go/tree/main/metrics)。
 
-## Tracing {#tracing}
+<a id="tracing"></a>
+## 追踪 {#tracing}
+跟踪允许您查看 Workflow 的调用图及其活动、Nexus 操作和 Child Workflow。
 
-Tracing allows you to view the call graph of a Workflow along with its Activities, Nexus Operations, and Child Workflows.
+Go SDK 为 [开放式遥测](https://pkg.go.dev/go.temporal.io/sdk/contrib/opentelemetry)、[开放式追踪](https://pkg.go.dev/go.temporal.io/sdk/contrib/opentracing) 和 [数据狗](https://pkg.go.dev/go.temporal.io/sdk/contrib/datadog/tracing) 提供跟踪拦截器。
 
-The Go SDK provides tracing interceptors for [OpenTelemetry](https://pkg.go.dev/go.temporal.io/sdk/contrib/opentelemetry), [OpenTracing](https://pkg.go.dev/go.temporal.io/sdk/contrib/opentracing), and [Datadog](https://pkg.go.dev/go.temporal.io/sdk/contrib/datadog/tracing). 
-
-First, create a tracing interceptor for Client instantiation.
+首先，为客户端实例化创建一个跟踪拦截器。
 
 ```go
 // OpenTelemetry
@@ -80,7 +80,7 @@ tracingInterceptor, err := opentracing.NewInterceptor(opentracing.TracerOptions{
 tracingInterceptor, err := tracing.NewTracingInterceptor(tracing.TracerOptions{})
 ```
 
- and register it by passing it to [ClientOptions](https://pkg.go.dev/go.temporal.io/sdk/internal#ClientOptions):
+并将其传递给 [客户选项](https://pkg.go.dev/go.temporal.io/sdk/internal#ClientOptions) 进行注册：
 
 ```go
 c, err := client.Dial(client.Options{
@@ -88,37 +88,37 @@ c, err := client.Dial(client.Options{
 })
 ```
 
-You can also register interceptors through a [Plugin](/develop/plugins-guide#interceptors) if you’re building a reusable library.
+如果您正在构建可重用的库，您还可以通过 [插件](/develop/plugins-guide#interceptors) 注册拦截器。
 
-Each tracing interceptor uses its library's native propagation mechanism to serialize trace spans into Temporal headers. For example, OpenTelemetry uses its `TextMapPropagator` with the W3C TraceContext format. The SDK carries these headers across Workflow, Activity, and Child Workflow boundaries, so the tracing library can reconstruct the call graph.
-For more information, see the documentation for [OpenTelemetry](https://opentelemetry.io/), [OpenTracing](https://opentracing.io), and [Datadog](https://docs.datadoghq.com/tracing/).
+每个跟踪拦截器都使用其库的本机传播机制将跟踪跨度序列化为 Temporal 标头。例如，OpenTelemetry 使用其 `TextMapPropagator` 和 W3C TraceContext 格式。 SDK 跨越 Workflow、Activity 和 Child Workflow 边界携带这些标头，因此跟踪库可以重建调用图。
+有关更多信息，请参阅 [开放式遥测](https://opentelemetry.io/)、[开放式追踪](https://opentracing.io) 和 [数据狗](https://docs.datadoghq.com/tracing/) 的文档。
 
-To build custom context propagation (e.g., tenant IDs, auth tokens), see [Context Propagation](/develop/go/best-practices/context-propagation).
+要构建自定义上下文传播（例如，租户 ID、身份验证令牌），请参阅 [上下文传播](/develop/go/best-practices/context-propagation)。
 
-## Log from a Workflow {#logging}
+<a id="logging"></a>
+## 从 Workflow {#logging} 记录
+**如何使用 Go SDK 从 Workflow 登录。**
 
-**How to log from a Workflow using the Go SDK.**
+将日志和错误发送到日志记录服务，以便当出现问题时，您可以看到发生了什么。
 
-Send logs and errors to a logging service, so that when things go wrong, you can see what happened.
+记录器创建审计跟踪并捕获有关 Workflow 操作的信息。
+适当的日志记录级别取决于您的具体需求。
+在开发或故障排除期间，您可能会使用调试甚至跟踪。
+在生产中，您可以使用 info 或 warn 来避免日志量过多。
 
-Loggers create an audit trail and capture information about your Workflow's operation.
-An appropriate logging level depends on your specific needs.
-During development or troubleshooting, you might use debug or even trace.
-In production, you might use info or warn to avoid excessive log volume.
+记录器支持以下日志记录级别：
 
-The logger supports the following logging levels:
-
-| Level   | Use                                                                                                       |
+| 等级   | 使用                                                                                                       |
 | ------- | --------------------------------------------------------------------------------------------------------- |
-| `TRACE` | The most detailed level of logging, used for very fine-grained information.                               |
-| `DEBUG` | Detailed information, typically useful for debugging purposes.                                            |
-| `INFO`  | General information about the application's operation.                                                    |
-| `WARN`  | Indicates potentially harmful situations or minor issues that don't prevent the application from working. |
-| `ERROR` | Indicates error conditions that might still allow the application to continue running.                    |
+| `TRACE` | 最详细的日志记录级别，用于非常细粒度的信息。                               |
+| `DEBUG` | 详细信息，通常可用于调试目的。                                            |
+| `INFO`  | 有关应用程序操作的一般信息。                                                    |
+| `WARN`  | 指示不会阻止应用程序运行的潜在有害情况或小问题。 |
+| `ERROR` | 指示可能仍允许应用程序继续运行的错误情况。                    |
 
-The Temporal SDK core normally uses `WARN` as its default logging level.
+Temporal SDK 核心通常使用 `WARN` 作为其默认日志记录级别。
 
-In Workflow Definitions you can use [`workflow.GetLogger(ctx)`](https://pkg.go.dev/go.temporal.io/sdk/workflow#GetLogger) to write logs.
+在Workflow Definitions中，您可以使用[`Workflow.GetLogger(ctx)`](https://pkg.go.dev/go.temporal.io/sdk/workflow#GetLogger)写入日志。
 
 ```go
 import (
@@ -152,16 +152,16 @@ workflow.WithActivityOptions(ctx, ao)
 }
 ```
 
-### Provide a custom logger {#custom-logger}
+<a id="custom-logger"></a>
+### 提供自定义记录器 {#custom-logger}
+**如何使用 Go SDK 向 Temporal CLIent 提供自定义记录器。**
 
-**How to provide a custom logger to the Temporal Client using the Go SDK.**
+此字段设置用于 Temporal CLIent 实例的所有日志记录操作的自定义记录器。
 
-This field sets a custom Logger that is used for all logging actions of the instance of the Temporal Client.
+尽管 Go SDK 本身不支持大多数第三方日志记录解决方案，但 [我们万岁云的朋友](https://github.com/sagikazarmark) 构建了适配器包 [洛古尔](https://github.com/logur/logur)，这使得以最小的开销使用第三方日志记录器成为可能。
+大多数流行的日志记录解决方案在 Logur 中都有现有适配器，但您可以找到完整列表 [在 Logur GitHub 项目中](https://github.com/logur?q=adapter-)。
 
-Although the Go SDK does not support most third-party logging solutions natively, [our friends at Banzai Cloud](https://github.com/sagikazarmark) built the adapter package [logur](https://github.com/logur/logur) which makes it possible to use third party loggers with minimal overhead.
-Most of the popular logging solutions have existing adapters in Logur, but you can find a full list [in the Logur GitHub project](https://github.com/logur?q=adapter-).
-
-Here is an example of using Logur to support [Logrus](https://github.com/sirupsen/logrus):
+下面是使用 Logur 支持 [洛鲁斯](https://github.com/sirupsen/logrus) 的示例：
 
 ```go
 package main
@@ -184,49 +184,48 @@ func main() {
 }
 ```
 
-## Visibility APIs {#visibility}
+<a id="visibility"></a>
+## Visibility API {#visibility}
+Temporal 平台中的术语 Visibility 是指使操作员能够查看当前存在于 Temporal 服务中的 Workflow Execution 的子系统和 API。
 
-The term Visibility, within the Temporal Platform, refers to the subsystems and APIs that enable an operator to view Workflow Executions that currently exist within a Temporal Service.
+### Search Attributes
+**如何通过 Go SDK 来使用 Search Attribute。**
 
-### Search Attributes {#search-attributes}
+检索 Workflow Execution 的典型方法是通过其 Workflow Id。
 
-**How to use Search Attributes using the Go SDK.**
+但是，有时您需要根据另一属性检索一个或多个 Workflow Execution。例如，假设您想要获取某个时间范围内失败的某种类型的所有 Workflow Execution，以便您可以使用相同的参数启动新的 Workflow Execution。
 
-The typical method of retrieving a Workflow Execution is by its Workflow Id.
+您可以使用 [Search Attributes](/search-attribute) 来完成此操作。
 
-However, sometimes you'll want to retrieve one or more Workflow Executions based on another property. For example, imagine you want to get all Workflow Executions of a certain type that have failed within a time range, so that you can start new ones with the same arguments.
+- [默认 Search Attribute](/search-attribute#default-search-attribute) 与 `WorkflowType`、`StartTime` 和 `ExecutionStatus` 一样，会自动添加到 Workflow Execution。
+- [定制 Search Attribute](/search-attribute#custom-search-attribute) 可以包含其自己的特定于域的数据（如 `customerId` 或 `numItems`）。
 
-You can do this with [Search Attributes](/search-attribute).
+使用自定义 Search Attribute 的步骤是：
 
-- [Default Search Attributes](/search-attribute#default-search-attribute) like `WorkflowType`, `StartTime` and `ExecutionStatus` are automatically added to Workflow Executions.
-- [Custom Search Attributes](/search-attribute#custom-search-attribute) can contain their own domain-specific data (like `customerId` or `numItems`).
+- 使用 `Temporal operator search-attribute create` 或云 UI 在 Temporal 服务中创建新的 Search Attribute。
+- 设置 Workflow Execution 的 Search Attribute 值：
+  - 在客户端上，在启动执行时将其作为选项包含在内。
+  - 在 Workflow 中通过调用 `UpsertSearchAttributes`。
+- 读取Search Attribute的值：
+  - 在客户端上通过调用 `DescribeWorkflow`。
+  - 在 Workflow 中查看 `WorkflowInfo`。
+- Query Workflow Execution 由 Search Attribute 使用 [列表过滤器](/list-filter) 实现：
+  - [在Temporal CLI中](/cli/workflow#list)。
+  - 在代码中调用 `ListWorkflowExecutions`。
 
-The steps to using custom Search Attributes are:
+以下是 Query Workflow Execution 的操作方法：
 
-- Create a new Search Attribute in your Temporal Service using `temporal operator search-attribute create` or the Cloud UI.
-- Set the value of the Search Attribute for a Workflow Execution:
-  - On the Client by including it as an option when starting the Execution.
-  - In the Workflow by calling `UpsertSearchAttributes`.
-- Read the value of the Search Attribute:
-  - On the Client by calling `DescribeWorkflow`.
-  - In the Workflow by looking at `WorkflowInfo`.
-- Query Workflow Executions by the Search Attribute using a [List Filter](/list-filter):
-  - [In the Temporal CLI](/cli/workflow#list).
-  - In code by calling `ListWorkflowExecutions`.
+[列表Workflow()](https://pkg.go.dev/go.temporal.io/sdk/client#Client.ListWorkflow) 函数检索与给定 [列表过滤器](/workflow-execution) 的 [Search Attributes](/search-attribute) 匹配的 [Workflow Executions](/list-filter) 列表。
+从 [Visibility](/temporal-service/visibility) 存储返回的元数据可用于从 [坚持](/temporal-service/persistence) 存储获取 Workflow Execution 的历史记录和详细信息。
 
-Here is how to query Workflow Executions:
-
-The [ListWorkflow()](https://pkg.go.dev/go.temporal.io/sdk/client#Client.ListWorkflow) function retrieves a list of [Workflow Executions](/workflow-execution) that match the [Search Attributes](/search-attribute) of a given [List Filter](/list-filter).
-The metadata returned from the [Visibility](/temporal-service/visibility) store can be used to get a Workflow Execution's history and details from the [Persistence](/temporal-service/persistence) store.
-
-Use a List Filter to define a `request` to pass into `ListWorkflow()`.
+使用列表过滤器定义要传递到 `ListWorkflow()` 的 `request`。
 
 ```go
 request := &workflowservice.ListWorkflowExecutionsRequest{ Query: "CloseTime = missing" }
 ```
 
-This `request` value returns only open Workflows.
-For more List Filter examples, see the [examples provided for List Filters in the Temporal Visibility guide.](/list-filter#list-filter-examples)
+此 `request` 值仅返回打开的 Workflow。
+有关更多列表过滤器示例，请参阅 [Temporal Visibility 指南中提供了列表过滤器的示例。](/list-filter#list-filter-examples)
 
 ```go
 resp, err := temporalClient.ListWorkflow(ctx.Background(), request)
@@ -240,25 +239,25 @@ for _, exec := range resp.Executions {
 }
 ```
 
-### Set custom Search Attributes {#custom-search-attributes}
+<a id="custom-search-attributes"></a>
+### 设置自定义 Search Attribute {#custom-search-attributes}
+**如何使用 Go SDK 设置自定义 Search Attribute。**
 
-**How to set custom Search Attributes using the Go SDK.**
+在 Temporal 服务中创建自定义 Search Attribute 后（使用 `Temporal operator search-attribute create` 命令或云 UI），您可以在启动 Workflow 时设置自定义 Search Attribute 的值。
 
-After you've created custom Search Attributes in your Temporal Service (using the `temporal operator search-attribute create` command or the Cloud UI), you can set the values of the custom Search Attributes when starting a Workflow.
+在 [`StartWorkflowOptions.SearchAttributes`](https://pkg.go.dev/go.temporal.io/sdk/internal#StartWorkflowOptions) 中提供键值对。
 
-Provide key-value pairs in [`StartWorkflowOptions.SearchAttributes`](https://pkg.go.dev/go.temporal.io/sdk/internal#StartWorkflowOptions).
+Search Attribute 表示为 `map[string]interface{}`。
+地图中的值必须对应于 [Search Attribute 的值类型](/search-attribute#supported-types)：
 
-Search Attributes are represented as `map[string]interface{}`.
-The values in the map must correspond to the [Search Attribute's value type](/search-attribute#supported-types):
+- 布尔 = `bool`
+- 日期时间 = `time.Time`
+- 双 = `float64`
+- 整数 = `int64`
+- 关键字 = `string`
+- 文本 = `string`
 
-- Bool = `bool`
-- Datetime = `time.Time`
-- Double = `float64`
-- Int = `int64`
-- Keyword = `string`
-- Text = `string`
-
-If you had custom Search Attributes `CustomerId` of type Keyword and `MiscData` of type Text, you would provide `string` values:
+如果您有关键字类型的自定义 Search Attribute `CustomerId` 和文本类型的 `MiscData`，您将提供 `string` 值：
 
 ```go
 func (c *Client) CallYourWorkflow(ctx context.Context, workflowID string, payload map[string]interface{}) error {
@@ -276,17 +275,17 @@ func (c *Client) CallYourWorkflow(ctx context.Context, workflowID string, payloa
 }
 ```
 
-### Upsert Search Attributes {#upsert-search-attributes}
+<a id="upsert-search-attributes"></a>
+### 更新插入 Search Attributes {#upsert-search-attributes}
+**如何使用 Go SDK 更新插入 Search Attribute。**
 
-**How to upsert Search Attributes using the Go SDK.**
+您可以更新插入 Search Attribute 以在 Workflow 代码中添加 Update Search Attribute。
 
-You can upsert Search Attributes to add or update Search Attributes from within Workflow code.
+在高级情况下，您可能希望随着 Workflow 的进展动态地 Update 这些属性。
+[更新插入搜索属性](https://pkg.go.dev/go.temporal.io/sdk/workflow#UpsertSearchAttributes) 用于在 Workflow 代码中添加或添加 Update Search Attribute。
 
-In advanced cases, you may want to dynamically update these attributes as the Workflow progresses.
-[UpsertSearchAttributes](https://pkg.go.dev/go.temporal.io/sdk/workflow#UpsertSearchAttributes) is used to add or update Search Attributes from within Workflow code.
-
-`UpsertSearchAttributes` will merge attributes to the existing map in the Workflow.
-Consider this example Workflow code:
+`UpsertSearchAttributes` 会将属性合并到 Workflow 中的现有地图。
+考虑这个示例 Workflow 代码：
 
 ```go
 func YourWorkflow(ctx workflow.Context, input string) error {
@@ -305,7 +304,7 @@ func YourWorkflow(ctx workflow.Context, input string) error {
 }
 ```
 
-After the second call to `UpsertSearchAttributes`, the map will contain:
+第二次调用 `UpsertSearchAttributes` 后，地图将包含：
 
 ```go
 map[string]interface{}{
@@ -315,14 +314,14 @@ map[string]interface{}{
 }
 ```
 
-### Remove a Search Attribute from a Workflow {#remove-search-attribute}
+<a id="remove-search-attribute"></a>
+### 从 Workflow 中删除 Search Attribute {#remove-search-attribute}
+**如何使用 Go SDK 从 Workflow 中删除 Search Attribute。**
 
-**How to remove a Search Attribute from a Workflow using the Go SDK.**
+要删除之前设置的 Search Attribute，请将其设置为空数组：`[]`。
 
-To remove a Search Attribute that was previously set, set it to an empty array: `[]`.
+**不支持删除字段。**
 
-**There is no support for removing a field.**
-
-However, to achieve a similar effect, set the field to some placeholder value.
-For example, you could set `CustomKeywordField` to `impossibleVal`.
-Then searching `CustomKeywordField != 'impossibleVal'` will match Workflows with `CustomKeywordField` not equal to `impossibleVal`, which includes Workflows without the `CustomKeywordField` set.
+但是，要实现类似的效果，请将该字段设置为某个占位符值。
+例如，您可以将 `CustomKeywordField` 设置为 `impossibleVal`。
+然后搜索 `CustomKeywordField != 'impossibleVal'` 将匹配 `CustomKeywordField` 不等于 `impossibleVal` 的 Workflow，其中包括未设置 `CustomKeywordField` 的 Workflow。

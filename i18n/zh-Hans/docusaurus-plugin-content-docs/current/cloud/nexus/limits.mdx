@@ -1,0 +1,35 @@
+---
+id: limits
+slug: /cloud/nexus/limits
+title: 限制 - Temporal Nexus
+description: 了解 Nexus 限制，包括速率限制、端点最大数量和处理程序请求超时。
+sidebar_label: 限制
+tags:
+  - Temporal Cloud
+  - Nexus
+keywords:
+  - Temporal Nexus
+  - Nexus
+  - limits
+  - rate limits
+  - max endpoints
+  - max operations
+  - request handler timeout
+  - max operation duration
+---
+
+:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+
+Temporal Nexus 现已[普遍可用](/evaluate/development-product-features/release-stages#general-availability)。
+了解为什么应在[评估指南](/evaluate/Nexus) 中使用 Nexus。
+
+:::
+
+Nexus 限制记录在 [Temporal Cloud 限制](/cloud/limits) 中：
+
+- [Nexus 速率限制](/cloud/limits#Nexus-rate-limits) - Nexus 请求计入 Namespace RPS 限制。
+- [Nexus 端点限制](/cloud/limits#Nexus-endpoints-limits) - 每个帐户 100 个端点（默认）。
+- [每个 Workflow Nexus Operation 限制](/cloud/limits#per-Workflow-Nexus-operation-limits) - 每个 Workflow 30 次飞行中操作。
+- [Nexus Operation 请求超时](/cloud/limits#Nexus-operation-request-timeout) - 处理程序处理启动或取消请求的时间少于 10 秒。
+- [Nexus Operation 持续时间限制](/cloud/limits#Nexus-operation-duration-limits) - 60 天的最大 ScheduleToClose 持续时间。
+- [每个 Workflow 回调限制](/cloud/limits#per-Workflow-callback-limits) - 每个 Workflow 2000 次回调。控制可以将多少个 Nexus 调用者附加到处理程序 Workflow。

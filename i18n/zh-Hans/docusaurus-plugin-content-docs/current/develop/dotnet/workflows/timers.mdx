@@ -1,0 +1,38 @@
+---
+id: timers
+title: Timers - .NET SDK
+description: 使用 Temporal .NET SDK 设置耐用的 Timer。暂停 Workflow Execution 数天或数月。使用 Workflow.DelayAsync，Timer 得以持久保存并实现高度资源效率。
+sidebar_label: Timers
+keywords:
+  - sdk
+  - dotnet
+  - durable timers
+  - sleep
+  - time-skipping
+tags:
+  - Workflows
+  - Durable Timers
+  - .Net SDK
+  - Temporal SDKs
+---
+
+本页介绍如何使用 Temporal .NET SDK 设置耐用 Timer。
+
+[Durable Timer](/Workflow-execution/Timers-delays) 用于将 Workflow 的执行暂停指定的持续时间。
+Workflow 可以休眠数天甚至数月。
+Timer 是持久的，因此即使您的 Worker 或 Temporal 服务在时间段结束时关闭，只要您的 Worker 和 Temporal 服务备份，持久 Timer 调用就会解决，并且您的代码将继续执行。
+
+睡眠是一种轻资源操作：它不会占用进程，并且您可以在单个 Worker 上运行数百万个 Timer。
+
+要在 Workflow 中添加 Timer，请使用“Workflow.DelayAsync”。这就像“Task.Delay”的确定性形式。
+
+```csharp
+// Sleep for 3 days
+await Workflow.DelayAsync(TimeSpan.FromDays(3));
+```
+
+<!-- ## 测试中跳过时间 {#testing-skip-time}
+
+**如何在使用 .NET SDK 测试 Workflow 时跳过时间**
+
+TODO(cretz)：这不应该位于耐用的 Timers 部分下 -->

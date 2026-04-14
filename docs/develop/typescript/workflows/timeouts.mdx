@@ -1,8 +1,8 @@
 ---
 id: timeouts
-title: Workflow Timeouts - TypeScript SDK
-sidebar_label: Timeouts
-description: Optimize Workflow Execution with Temporal TypeScript SDK - Set Workflow Timeouts and Retry Policies efficiently.
+title: "Workflow 超时 - TypeScript SDK"
+sidebar_label: "超时"
+description: "使用 Temporal 优化 Workflow Execution TypeScript SDK - 有效设置 Workflow 超时和重试策略。"
 toc_max_heading_level: 4
 keywords:
   - typescript
@@ -17,24 +17,24 @@ tags:
   - Temporal SDKs
 ---
 
-This page shows how to do the following:
+此页面显示如何执行以下操作：
 
-- [Raise and Handle Exceptions](#exception-handling)
-- [Deliberately Fail Workflows](#workflow-failure)
-- [Workflow Timeouts](#workflow-timeouts)
-- [Workflow retries](#workflow-retries)
+- [引发和处理异常](#exception-handling)
+- [故意失败 Workflows](#workflow-failure)
+- [Workflow 超时](#workflow-timeouts)
+- [Workflow 重试](#workflow-retries)
 
-## Raise and Handle Exceptions {#exception-handling}
+## 引发和处理异常 {#exception-handling}
 
-In each Temporal SDK, error handling is implemented idiomatically, following the conventions of the language.
-Temporal uses several different error classes internally — for example, [`CancelledFailure`](https://typescript.temporal.io/api/classes/common.CancelledFailure) in the Typescript SDK, to handle a Workflow cancellation. 
-You should not raise or otherwise implement these manually, as they are tied to Temporal platform logic.
+在每个 Temporal SDK 中，错误处理都是按照语言约定惯用地实现的。
+Temporal 在内部使用多个不同的错误类 - 例如，TypeScript SDK 中的 [`CancelledFailure`](https://typescript.temporal.io/api/classes/common.CancelledFailure) 来处理 Workflow 取消。 
+您不应手动提出或以其他方式实现这些，因为它们与 Temporal 平台逻辑相关。
 
-The one Temporal error class that you will typically raise deliberately is [`ApplicationFailure`](https://typescript.temporal.io/api/classes/common.ApplicationFailure).
-In fact, *any* other exceptions that are raised from your Typescript code in a Temporal Activity will be converted to an `ApplicationError` internally.
-This way, an error's type, severity, and any additional details can be sent to the Temporal Service, indexed by the Web UI, and even serialized across language boundaries.
+您通常会故意提出的一个 Temporal 错误类别是 [`ApplicationFailure`](https://typescript.temporal.io/api/classes/common.ApplicationFailure)。
+事实上，Temporal Activity 中的 Typescript 代码引发的“任何”其他异常都将在内部转换为 `ApplicationError`。
+这样，错误的类型、严重性和任何其他详细信息都可以发送到 Temporal 服务，由 Web UI 进行索引，甚至可以跨语言边界进行序列化。
 
-In other words, these two code samples do the same thing:
+换句话说，这两个代码示例执行相同的操作：
 
 ```typescript 
 class InvalidChargeError extends Error {
@@ -59,10 +59,10 @@ if (chargeAmount < 0) {
 }
 ```
 
-Depending on your implementation, you may decide to use either method.
-One reason to use the Temporal `ApplicationFailure` class is because it allows you to set an additional `non_retryable` parameter.
-This way, you can decide whether an error should not be retried automatically by Temporal.
-This can be useful for deliberately failing a Workflow due to bad input data, rather than waiting for a timeout to elapse:
+根据您的实施情况，您可以决定使用任一方法。
+使用 Temporal `ApplicationFailure` 类的原因之一是它允许您设置附加的 `non_retryable` 参数。
+这样，您可以决定 Temporal 是否不应自动重试错误。
+这对于由于输入数据错误而故意使 Workflow 失败非常有用，而不是等待超时结束：
 
 ```typescript
 if (chargeAmount < 0) {
@@ -73,18 +73,19 @@ if (chargeAmount < 0) {
 }
 ```
 
-You can alternately specify a list of errors that are non-retryable in your Activity [Retry Policy](/develop/typescript/activities/timeouts#activity-retries).
+您也可以在 Activity [Retry Policy](/develop/typescript/activities/timeouts#activity-retries) 中指定不可重试的错误列表。
 
-## Failing Workflows {#workflow-failure}
+<a id="workflow-failure"></a>
+## Workflow 失败 {#workflow-failure}
 
-One of the core design principles of Temporal is that an Activity Failure will never directly cause a Workflow Failure — a Workflow should never return as Failed unless deliberately.
-The default retry policy associated with Temporal Activities is to retry them until reaching a certain timeout threshold.
-Activities will not actually *return* a failure to your Workflow until this condition or another non-retryable condition is met.
-At this point, you can decide how to handle an error returned by your Activity the way you would in any other program.
-For example, you could implement a [Saga Pattern](https://github.com/temporalio/samples-typescript/tree/main/saga) that uses `try` and `catch` blocks to "unwind" some of the steps your Workflow has performed up to the point of Activity Failure.
+Temporal 的核心设计原则之一是 Activity 故障永远不会直接导致 Workflow 故障 — Workflow 永远不应该返回 Failed，除非故意。
+与 Temporal 活动关联的默认 Retry Policy 是重试它们，直到达到某个超时阈值。
+在满足此条件或另一个不可重试的条件之前，活动实际上不会向您的 Workflow“返回”失败。
+此时，您可以决定如何处理 Activity 返回的错误，就像在任何其他程序中一样。
+例如，您可以实现一个 [传奇模式](https://github.com/temporalio/samples-typescript/tree/main/saga)，它使用 `try` 和 `catch` 块来“展开”Workflow 在 Activity 故障点之前执行的一些步骤。
 
-**You will only fail a Workflow by manually raising an `ApplicationFailure` from the Workflow code.**
-You could do this in response to an Activity Failure, if the failure of that Activity means that your Workflow should not continue:
+**您只能通过从 Workflow 代码手动引发 `ApplicationFailure` 来使 Workflow 失败。**
+如果 Activity 的失败意味着您的 Workflow 不应继续，您可以执行此操作以响应 Activity 失败：
 
 ```typescript
 try {
@@ -97,33 +98,34 @@ try {
 }
 ```
 
-This works differently in a Workflow than raising exceptions from Activities.
-In an Activity, any Typescript exceptions or custom exceptions are converted to a Temporal `ApplicationFailure`.
-In a Workflow, any exceptions that are raised other than an explicit Temporal `ApplicationFailure` will only fail that particular [Workflow Task](https://docs.temporal.io/tasks#workflow-task-execution) and be retried.
-This includes any typical Typescript runtime errors like an `undefined` error that are raised automatically.
-These errors are treated as bugs that can be corrected with a fixed deployment, rather than a reason for a Temporal Workflow Execution to return unexpectedly.
+这在 Workflow 中的工作方式与从活动中引发异常不同。
+在 Activity 中，任何 Typescript 异常或自定义异常都会转换为 Temporal `ApplicationFailure`。
+在 Workflow 中，除显式 Temporal `ApplicationFailure` 之外引发的任何异常都只会使该特定 [Workflow 任务](https://docs.temporal.io/tasks#workflow-task-execution) 失败并重试。
+这包括任何典型的 Typescript 运行时错误，例如自动引发的 `undefined` 错误。
+这些错误被视为可以通过固定部署纠正的错误，而不是 Temporal Workflow Execution 意外返回的原因。
 
-## Workflow Timeouts {#workflow-timeouts}
+<a id="workflow-timeouts"></a>
+## Workflow 超时 {#workflow-timeouts}
 
-**How to set Workflow Timeouts using the Temporal TypeScript SDK**
+**如何使用 Temporal TypeScript SDK 设置 Workflow 超时**
 
-Each Workflow timeout controls the maximum duration of a different aspect of a Workflow Execution.
+每个 Workflow 超时控制 Workflow Execution 不同方面的最大持续时间。
 
-Before we continue, we want to note that we generally do not recommend setting Workflow Timeouts, because Workflows are designed to be long-running and resilient.
-Instead, setting a Timeout can limit its ability to handle unexpected delays or long-running processes.
-If you need to perform an action inside your Workflow after a specific period of time, we recommend using a Timer.
+在继续之前，我们要注意，我们通常不建议设置 Workflow 超时，因为 Workflow 被设计为长期运行且具有弹性。
+相反，设置超时可能会限制其处理意外延迟或长时间运行的进程的能力。
+如果您需要在特定时间段后在 Workflow 内执行操作，我们建议使用 Timer。
 
-Workflow Timeouts are set when starting a Workflow using either the Client or Workflow API.
+Workflow 超时是在使用客户端或 Workflow API 启动 Workflow 时设置的。
 
-- **[Workflow Execution Timeout](/encyclopedia/detecting-workflow-failures#workflow-execution-timeout)** - restricts the maximum amount of time that a single Workflow Execution can be executed
-- **[Workflow Run Timeout](/encyclopedia/detecting-workflow-failures#workflow-run-timeout):** restricts the maximum amount of time that a single Workflow Run can last
-- **[Workflow Task Timeout](/encyclopedia/detecting-workflow-failures#workflow-task-timeout):** restricts the maximum amount of time that a Worker can execute a Workflow Task
+- **[Workflow Execution 超时](/encyclopedia/detecting-workflow-failures#workflow-execution-timeout)** - 限制单个 Workflow Execution 可以执行的最长时间
+- **[Workflow 运行超时](/encyclopedia/detecting-workflow-failures#workflow-run-timeout):** 限制单个 Workflow 运行可以持续的最长时间
+- **[Workflow 任务超时](/encyclopedia/detecting-workflow-failures#workflow-task-timeout)：**限制 Worker 可以执行 Workflow 任务的最长时间
 
-The following properties can be set on the [`WorkflowOptions`](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions/) when starting a Workflow using either the Client or Workflow API:
+使用客户端或 Workflow API 启动 Workflow 时，可以在 [`WorkflowOptions`](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions/) 上设置以下属性：
 
-- [`workflowExecutionTimeout​`](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions/#workflowexecutiontimeout)
-- [`workflowRunTimeout`](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions/#workflowruntimeout)
-- [`workflowTaskTimeout`](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions/#workflowtasktimeout)
+- [`WorkflowExecutionTimeout​`](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions/#workflowexecutiontimeout)
+- [`WorkflowRunTimeout`](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions/#workflowruntimeout)
+- [`WorkflowTaskTimeout`](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions/#workflowtasktimeout)
 
 ```typescript
 await client.workflow.start(example, {
@@ -136,17 +138,18 @@ await client.workflow.start(example, {
 });
 ```
 
-## Workflow retries {#workflow-retries}
+<a id="workflow-retries"></a>
+## Workflow 重试 {#workflow-retries}
 
-**How to set Workflow retries using the Temporal TypeScript SDK**
+**如何使用 Temporal TypeScript SDK 设置 Workflow 重试**
 
-A Retry Policy can work in cooperation with the timeouts to provide fine controls to optimize the execution experience.
+Retry Policy 可以与超时配合，提供精细控制以优化执行体验。
 
-Use a [Retry Policy](/encyclopedia/retry-policies) to retry a Workflow Execution in the event of a failure.
+如果发生故障，请使用 [Retry Policy](/encyclopedia/retry-policies) 重试 Workflow Execution。
 
-Workflow Executions do not retry by default, and Retry Policies should be used with Workflow Executions only in certain situations.
+默认情况下，Workflow Execution 不会重试，并且仅在某些情况下才应将重试策略与 Workflow Execution 一起使用。
 
-The Retry Policy can be set through the [`WorkflowOptions.retry`](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions/#retry) property when starting a Workflow using either the Client or Workflow API.
+使用客户端或 Workflow API 启动 Workflow 时，可以通过 [`WorkflowOptions.retry`](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions/#retry) 属性设置 Retry Policy。
 
 ```typescript
 const handle = await client.workflow.start(example, {

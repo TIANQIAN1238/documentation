@@ -1,0 +1,142 @@
+---
+id: commands
+title: Temporal 命令参考
+sidebar_label: 命令
+description: 了解 Workflow Task 执行后 Worker 可以向 Temporal 服务发出的命令范围，从完成 Workflow Execution 到启动 Timer 和 Signal 外部 Workflow Execution。
+toc_max_heading_level: 4
+keywords:
+  - reference
+tags:
+  - Reference
+---
+
+[命令](/Workflow-execution#command) 是 [Workflow Task 执行](/tasks#Workflow-task-execution) 完成后，由 [Worker](/Workers#Worker) 向 [Temporal 服务](/Temporal-service) 发出的请求操作。
+
+以下是可能命令的完整列表。
+
+### 完成Workflow执行
+
+该命令在 Workflow 函数执行返回时触发。
+它向 Temporal 服务指示 [Workflow Execution](/Workflow-执行) 已完成。
+此命令对应的 [事件](/Workflow-execution/event#event) 是 Workflow Execution [Event History](/Workflow-execution/event#event-history) 中最后一个事件之一。
+
+- 可等待：不，Workflow Execution 无法等待此命令产生的操作。
+- 对应事件：[WorkflowExecutionCompleted](/references/events#Workflowexecutioncompleted)
+
+### ContinueAsNewWorkflowExecution
+
+当从 [Workflow](/Workflows) 内调用 [Continue-As-New](/Workflow-execution/Continue-As-New) 时，会触发此命令。
+该命令的相应事件是 Workflow Execution Event History 中最后的少数事件之一。
+
+- 可等待：不，Workflow Execution 无法等待此命令产生的操作。
+- 对应事件：[WorkflowExecutionContinuedAsNew](/references/events#Workflowexecutioncontinuedasnew)
+
+### 失败Workflow执行
+
+当 Workflow Execution 返回错误或抛出异常时，会触发此命令。
+
+- 可等待：不，Workflow Execution 无法等待此命令产生的操作。
+- 对应事件：[WorkflowExecutionFailed](/references/events#Workflowexecutionfailed)
+
+### 取消Workflow执行
+
+当 Workflow 在收到取消请求（该请求将在 Event History 中显示为 [WorkflowExecutionCancelRequestedEvent](/references/events#Workflowexecutioncancelrequested)）后成功清理时，将触发此命令。
+此命令的相应事件是 Workflow Execution Event History 中最后一个事件的少数事件之一。
+
+- 可等待：不，Workflow Execution 无法等待此命令产生的操作。
+- 对应事件：[WorkflowExecutionCanceled](/references/events#Workflowexecutioncanceled)
+
+### StartChildWorkflowExecution
+
+此命令由调用生成 [Child Workflow Execution](/child-Workflows) 触发。
+
+- 可等待：是的，Workflow Execution 可以等待此命令产生的操作。
+- 对应事件：[ChildWorkflowExecutionStarted](/references/events#childWorkflowexecutionstarted)
+
+默认情况下，待处理的 Child Workflow 不能超过 2,000 个。
+
+### Signal外部Workflow执行
+
+此命令由调用另一个 Workflow Execution 的 [Signal](/sending-messages#sending-Signals) 触发。
+
+- 可等待：是的，Workflow Execution 可以等待此命令产生的操作。
+- 对应事件：[SignalExternalWorkflowExecutionInitiated](/references/events#SignalexternalWorkflowexecutioninitied)
+
+默认情况下，与其他 Workflow 的待处理 Signal 不能超过 2,000 个。
+
+### 请求取消ExternalWorkflowExecution
+
+该命令由请求取消另一个 Workflow Execution 的调用触发。
+
+- 可等待：是的，Workflow Execution 可以等待此命令产生的操作。
+- 对应事件：[RequestCancelExternalWorkflowExecutionInitiated](/references/events#requestcancelexternalWorkflowexecutioninitied)
+
+默认情况下，与其他 Workflow 的待处理 Signal 不能超过 2,000 个。
+
+### ScheduleActivity任务
+
+该命令由调用执行 [Activity](/activities) 触发。
+
+- 可等待：是的，Workflow Execution 可以等待此命令产生的操作。
+- 对应事件：[ActivityTaskScheduled](/references/events#ActivitytaskScheduled)
+
+默认情况下，Schedule 不能同时运行超过 2,000 个活动。
+
+### 请求取消ActivityTask
+
+此命令由请求取消 [Activity 任务](/tasks#Activity-task) 的调用触发。
+
+- 可等待：不，Workflow Execution 无法等待此命令产生的操作。
+- 对应事件：[ActivityTaskCancelRequested](/references/events#Activitytaskcancelrequested)
+
+### 开始Timer
+
+该命令由启动 Timer 的调用触发。
+
+- 可等待：是的，Workflow Execution 可以等待此命令产生的操作。
+- 对应事件：[TimerStarted](/references/events#Timerstarted)
+
+### 取消Timer
+
+根据每个任务流程请求发出。
+示例：`sum(rate(task_requests{operation=~"TransferActive.*"}[1m]))`
+
+- 可等待：不，Workflow Execution 无法等待此命令产生的操作。
+- 对应事件：[TimerCanceled](/references/events#Timercanceled)
+
+### 记录标记
+
+该命令由SDK触发。
+
+- 可等待：不，Workflow Execution 无法等待此命令产生的操作。
+- 对应事件：[MarkerRecorded](/references/events#markerrecorded)
+
+### UpsertWorkflowSearchAttributes
+
+此命令由调用“upsert”Workflow [Search Attributes](/search-attribute) 触发。
+
+- 可等待：不，Workflow Execution 无法等待此命令产生的操作。
+- 对应事件：[UpsertWorkflowSearchAttributes](/references/events#upsertWorkflowsearchattributes)
+
+### 协议消息命令
+
+此命令有助于保证 Update 等功能的订购限制。
+
+该命令指向创建事件的消息。
+因此，仅从命令中，您无法预测生成的事件类型。
+
+### ScheduleNexus操作
+
+该命令由调用者 Workflow 中执行 Nexus Operation 的调用触发。
+
+- 可等待：是的，Workflow Execution 可以等待此命令产生的操作。
+- 对应事件：[NexusOperationScheduled](/references/events#NexusoperationScheduled)
+
+默认情况下，您不能同时运行超过 30 个 Nexus Operation 的 Schedule，有关详细信息，请参阅[限制](/Workflow-execution/limits#Workflow-execution-Nexus-operation-limits)。
+
+### 取消Nexus操作
+
+该命令由请求取消 Nexus Operation 的调用触发。
+
+- 可等待：不，Workflow Execution 无法等待此命令产生的操作。
+- 对应事件：[NexusOperationCancelRequested](/references/events#Nexusoperationcancelrequested)

@@ -1,10 +1,10 @@
 ---
 id: versioning
-title: Versioning - Java SDK
-sidebar_label: Versioning
+title: "版本控制 - Java SDK"
+sidebar_label: "版本控制"
 slug: /develop/java/workflows/versioning
 toc_max_heading_level: 2
-description: The Temporal Platform ensures deterministic Workflow code, offering versioning features in the Java SDK with Workflow Patching APIs and Worker Build Ids for efficient updates.
+description: "Temporal 平台确保 Workflow 代码的确定性，通过 Workflow 修补 API 和 Worker 构建 ID 在 Java SDK 中提供版本控制功能，以实现高效的 Update。"
 keywords:
   - determinism
   - java sdk
@@ -19,33 +19,35 @@ tags:
   - Temporal SDKs
 ---
 
-Since Workflow Executions in Temporal can run for long periods — sometimes months or even years — it's common to need to make changes to a Workflow Definition, even while a particular Workflow Execution is in progress.
+由于 Temporal 中的 Workflow Execution 可以运行很长时间（有时是几个月甚至几年），因此通常需要对 Workflow Definition 进行更改，即使特定的 Workflow Execution 正在进行中也是如此。
 
-The Temporal Platform requires that Workflow code is [deterministic](/workflow-definition#deterministic-constraints).
-If you make a change to your Workflow code that would cause non-deterministic behavior on Replay, you'll need to use one of our Versioning methods to gracefully update your running Workflows.
-With Versioning, you can modify your Workflow Definition so that new executions use the updated code, while existing ones continue running the original version.
-There are two primary Versioning methods that you can use:
+Temporal 平台要求 Workflow 代码为 [确定性的](/workflow-definition#deterministic-constraints)。
+如果您对 Workflow 代码进行的更改会导致重播时出现不确定行为，则您需要使用我们的版本控制方法之一来优雅地 Update 您正在运行的 Workflow。
+通过版本控制，您可以修改 Workflow Definition，以便新执行使用 Updated 代码，而现有执行继续运行原始版本。
+您可以使用两种主要的版本控制方法：
 
-- [Worker Versioning](/production-deployment/worker-deployments/worker-versioning). The Worker Versioning feature allows you to tag your Workers and programmatically roll them out in versioned deployments, so that old Workers can run old code paths and new Workers can run new code paths.
-- [Versioning with Patching](#patching). This method works by adding branches to your code tied to specific revisions. It applies a code change to new Workflow Executions while avoiding disruptive changes to in-progress Workflow Executions.
+- [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning)。 Worker 版本控制功能允许您标记 Worker 并以编程方式在版本化部署中推出它们，以便旧的 Worker 可以运行旧的代码路径，而新的 Worker 可以运行新的代码路径。
+- [通过补丁进行版本控制](#patching)。此方法的工作原理是向与特定修订版相关的代码添加分支。它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
 
 :::danger
-Support for the experimental Worker Versioning method before 2025 will be removed from Temporal Server in March 2026. Refer to the [latest Worker Versioning docs](/worker-versioning) for guidance. You can still refer to the [Worker Versioning Legacy](/develop/java/worker-versioning-legacy) docs if needed. 
+2025 年之前对实验性 Worker 版本控制方法的支持将于 2026 年 3 月从 Temporal Server 中删除。请参阅 [最新的 Worker 版本控制文档](/worker-versioning) 获取指导。如果需要，您仍然可以参考 [Worker 版本控制旧版](/develop/java/worker-versioning-legacy) 文档。
 :::
 
-## Worker Versioning
+<a id="worker-versioning"></a>
+## Worker 版本控制 {#worker-versioning}
 
-Temporal's [Worker Versioning](/production-deployment/worker-deployments/worker-versioning) feature allows you to tag your Workers and programmatically roll them out in Deployment Versions, so that old Workers can run old code paths and new Workers can run new code paths. This way, you can pin your Workflows to specific revisions, avoiding the need for patching.
+Temporal 的 [Worker 版本控制](/production-deployment/worker-deployments/worker-versioning) 功能允许您标记 Worker 并以编程方式在部署版本中推出它们，以便旧的 Worker 可以运行旧的代码路径，而新的 Worker 可以运行新的代码路径。这样，您就可以将 Workflow 固定到特定版本，从而无需修补。
 
-## Versioning with Patching {#patching}
+## 使用补丁进行版本控制 {#patching}
 
-### Patching with GetVersion
+<a id="patching-with-getversion"></a>
+### 使用 GetVersion 进行修补 {#patching-with-getversion}
 
-A Patch defines a logical branch in a Workflow for a specific change, similar to a feature flag.
-It applies a code change to new Workflow Executions while avoiding disruptive changes to in-progress Workflow Executions.
-When you want to make substantive code changes that may affect existing Workflow Executions, create a patch. Note that there's no need to patch [Pinned Workflows](/worker-versioning).
+补丁在 Workflow 中为特定更改定义逻辑分支，类似于功能标志。
+它将代码更改应用于新的 Workflow Execution，同时避免对正在进行的 Workflow Execution 进行破坏性更改。
+当您想要进行可能影响现有 Workflow Execution 的实质性代码更改时，请创建补丁。请注意，无需修补 [固定 Workflow](/worker-versioning)。
 
-Consider the following Workflow Definition:
+考虑以下 Workflow Definition：
 
 ```java
 public void processFile(Arguments args) {
@@ -66,11 +68,11 @@ public void processFile(Arguments args) {
 }
 ```
 
-Imagine you want to revise this Workflow by adding another Activity to calculate a file checksum.
-If an existing Workflow Execution was started by the original version of the Workflow code, where there was no `calculateChecksum()` Activity, and then resumed running on a new Worker where this Activity had been added, the server side Event History would be out of sync.
-This would cause the Workflow to fail with a nondeterminism error.
+想象一下，您想要通过添加另一个 Activity 来计算文件校验和来修改此 Workflow。
+如果现有的 Workflow Execution 由 Workflow 代码的原始版本启动，其中没有 `calculateChecksum()` Activity，然后在添加了此 Activity 的新 Worker 上恢复运行，则服务器端 Event History 将不同步。
+这将导致 Workflow 失败并出现不确定性错误。
 
-To resolve this, you can use `workflow.GetVersion()` to patch to your Workflow:
+要解决此问题，您可以使用 `Workflow.GetVersion()` 修补 Workflow：
 
 ```java
 public void processFile(Arguments args) {
@@ -98,9 +100,9 @@ public void processFile(Arguments args) {
 }
 ```
 
-When `workflow.GetVersion()` is run for the new Workflow Execution, it records a marker in the Event History so that all future calls to `GetVersion` for this change id — `checksumAdded` in the example — on this Workflow Execution will always return the given version number, which is `1` in the example.
+当为新的 Workflow Execution 运行 `Workflow.GetVersion()` 时，它会在 Event History 中记录一个标记，以便将来针对此 Workflow Execution 上的此更改 id（示例中为 `checksumAdded`）对 `GetVersion` 的所有调用将始终返回给定的版本号，在示例中为 `1`。
 
-After all the Workflow Executions prior to version 1 have left retention, you can remove the code for that version.
+在版本 1 之前的所有 Workflow Execution 都保留后，您可以删除该版本的代码。
 
 ```java
 public void processFile(Arguments args) {
@@ -127,14 +129,16 @@ public void processFile(Arguments args) {
 }
 ```
 
-### Adding support for versioned Workflow visibility in the Event History
+<a id="adding-support-for-versioned-workflow-visibility-in-the-event-history"></a>
+### 在 Event History 中添加对版本化 Workflow Visibility 的支持 {#adding-support-for-versioned-workflow-visibility-in-the-event-history}
 
-When you invoke `getVersion`, the SDK can record an `UpsertWorkflowSearchAttribute` Event in the history.
-This adds a [Search Attribute](/search-attribute#default-search-attribute) named `TemporalChangeVersion` that allows you to filter Workflows based on their version.
+当您调用`getVersion`时，SDK可以在历史记录中记录一个`UpsertWorkflowSearchAttribute`事件。
+这会添加一个名为 `TemporalChangeVersion` 的 [Search Attribute](/search-attribute#default-search-attribute)，允许您根据 Workflow 的版本进行过滤。
 
-#### Enable automatic upsert (Java SDK v1.30.0+)
+<a id="enable-automatic-upsert-java-sdk-v1300"></a>
+#### 启用自动更新插入 (Java SDK v1.30.0+) {#enable-automatic-upsert-java-sdk-v1300}
 
-Starting with Java SDK v1.30.0, you can enable automatic `TemporalChangeVersion` upserts by setting `enableUpsertVersionSearchAttributes` in `WorkflowImplementationOptions`:
+从 Java SDK v1.30.0 开始，您可以通过在 `WorkflowImplementationOptions` 中设置 `enableUpsertVersionSearchAttributes` 来启用自动 `TemporalChangeVersion` 更新插入：
 
 ```java
 WorkflowImplementationOptions options = WorkflowImplementationOptions.newBuilder()
@@ -144,18 +148,19 @@ WorkflowImplementationOptions options = WorkflowImplementationOptions.newBuilder
 worker.registerWorkflowImplementationTypes(options, YourWorkflowImpl.class);
 ```
 
-When enabled, each call to `Workflow.getVersion` automatically upserts the `TemporalChangeVersion` Search Attribute with a keyword list of `"<Change ID>-<Version>"` entries.
+启用后，每次调用 `Workflow.getVersion` 都会自动更新插入 `TemporalChangeVersion` Search Attribute 以及 `"<Change ID>-<Version>"` 条目的关键字列表。
 
 :::note
 
-This option is backwards compatible and safe to enable on running Workflows.
-However, once enabled, you cannot roll back to a version of the SDK that does not support this option.
+此选项向后兼容，并且可以在运行的 Workflow 上安全启用。
+但是，一旦启用，您将无法回滚到不支持此选项的 SDK 版本。
 
 :::
 
-#### Upsert manually
+<a id="upsert-manually"></a>
+#### 手动更新插入 {#upsert-manually}
 
-If you are using a version of the Java SDK earlier than v1.30.0, or prefer to control the upsert yourself, you can set the attribute manually.
+如果您使用的是 v1.30.0 之前的 Java SDK 版本，或者更喜欢自己控制 upsert，则可以手动设置该属性。
 
 ```java
 import io.temporal.common.SearchAttributeKey;
@@ -164,7 +169,7 @@ public static final SearchAttributeKey<List<String>> TEMPORAL_CHANGE_VERSION =
     SearchAttributeKey.forKeywordList("TemporalChangeVersion");
 ```
 
-Set this attribute when you call `getVersion`:
+当您调用 `getVersion` 时设置此属性：
 
 ```java
 int version = Workflow.getVersion("MovedThankYouAfterLoop", Workflow.DEFAULT_VERSION, 1);
@@ -175,7 +180,7 @@ if (version != Workflow.DEFAULT_VERSION) {
 }
 ```
 
-For multiple `getVersion` calls, collect all version changes and set the attribute once:
+对于多个 `getVersion` 调用，收集所有版本更改并设置一次属性：
 
 ```java
 List<String> list = new ArrayList<String>();
@@ -190,17 +195,18 @@ if (versionTwo != Workflow.DEFAULT_VERSION) {
 Workflow.upsertTypedSearchAttributes(TEMPORAL_CHANGE_VERSION.valueSet(list));
 ```
 
-Patching allows you to make changes to currently running Workflows.
-It is a powerful method for introducing compatible changes without introducing non-determinism errors.
+修补允许您对当前运行的 Workflow 进行更改。
+它是一种引入兼容更改而不引入非确定性错误的强大方法。
 
-### Workflow cutovers
+<a id="workflow-cutovers"></a>
+### Workflow 切换 {#workflow-cutovers}
 
-To understand why Patching is useful, it's helpful to demonstrate cutting over an entire Workflow.
+要了解修补为何有用，演示剪切整个 Workflow 会很有帮助。
 
-Since incompatible changes only affect open Workflow Executions of the same type, you can avoid determinism errors by creating a whole new Workflow when making changes.
-To do this, you can copy the Workflow Definition function, giving it a different name, and register both names with your Workers.
+由于不兼容的更改仅影响相同类型的打开的 Workflow Execution，因此您可以在进行更改时通过创建全新的 Workflow 来避免确定性错误。
+为此，您可以复制 Workflow Definition 函数，为其指定一个不同的名称，然后将这两个名称注册到您的 Worker 中。
 
-For example, you would duplicate `PizzaWorkflow` as `PizzaWorkflowV2`:
+例如，您可以将 `PizzaWorkflow` 复制为 `PizzaWorkflowV2`：
 
 ```java
 import io.temporal.workflow.WorkflowInterface;
@@ -237,19 +243,20 @@ public class PizzaWorkflowImplV2 implements PizzaWorkflowV2{
 }
 ```
 
-It is necessary to create a separate interface because a Workflow Interface can only have one Workflow Method.
+有必要创建一个单独的接口，因为一个 Workflow 接口只能有一个 Workflow 方法。
 
-You would then need to update the Worker configuration, and any other identifier strings, to register both Workflow Types:
+然后，您需要 Update、Worker 配置以及任何其他标识符字符串来注册这两种 Workflow 类型：
 
 ```java
 worker.registerWorkflowImplementationTypes(PizzaWorkflowImpl.class);
 worker.registerWorkflowImplementationTypes(PizzaWorkflowImplV2.class);
 ```
 
-The downside of this method is that it requires you to duplicate code and to update any commands used to start the Workflow.
-This can become impractical over time.
-This method also does not provide a way to version any still-running Workflows -- it is essentially just a cutover, unlike Patching.
+此方法的缺点是它需要您复制代码以及用于启动 Workflow 的任何命令到 Update。
+随着时间的推移，这可能变得不切实际。
+此方法也不提供对任何仍在运行的 Workflow 进行版本控制的方法——它本质上只是一个转换，与修补不同。
 
-### Testing a Workflow for replay safety
+<a id="testing-a-workflow-for-replay-safety"></a>
+### 测试 Workflow 的重放安全性 {#testing-a-workflow-for-replay-safety}
 
-To determine whether your Workflow your needs a patch, or that you've patched it successfully, you should incorporate [Replay Testing](/develop/java/best-practices/testing-suite#replay).
+要确定您的 Workflow 是否需要修补程序，或者您已成功修补它，您应该合并 [重播测试](/develop/java/best-practices/testing-suite#replay)。

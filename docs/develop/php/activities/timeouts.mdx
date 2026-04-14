@@ -1,8 +1,8 @@
 ---
 id: timeouts
-title: Activity Timeouts - PHP SDK
-sidebar_label: Timeouts
-description: Optimize Workflow Execution with Temporal PHP SDK - Set Activity Timeouts and Retry Policies efficiently.
+title: "Activity 超时 - PHP SDK"
+sidebar_label: "超时"
+description: "使用 Temporal PHP SDK 优化 Workflow Execution - 有效设置 Activity 超时和重试策略。"
 toc_max_heading_level: 4
 keywords:
   - PHP
@@ -17,21 +17,22 @@ tags:
   - Temporal SDKs
 ---
 
-## How to set Activity timeouts {#activity-timeouts}
+<a id="activity-timeouts"></a>
+## 如何设置 Activity 超时 {#activity-timeouts}
 
-Each Activity timeout controls the maximum duration of a different aspect of an Activity Execution.
+每个 Activity 超时控制 Activity 执行不同方面的最大持续时间。
 
-The following timeouts are available in the Activity Options.
+Activity 选项中提供以下超时。
 
-- **[Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout):** is the maximum amount of time allowed for the overall [Activity Execution](/activity-execution).
-- **[Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout):** is the maximum time allowed for a single [Activity Task Execution](/tasks#activity-task-execution).
-- **[Schedule-To-Start Timeout](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout):** is the maximum amount of time that is allowed from when an [Activity Task](/tasks#activity-task) is scheduled to when a [Worker](/workers#worker) starts that Activity Task.
+- **[Schedule-关闭超时](/encyclopedia/detecting-activity-failures#schedule-to-close-timeout)：** 是整个 [Activity 执行](/activity-execution) 允许的最大时间量。
+- **[开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)：** 是单个 [Activity 任务执行](/tasks#activity-task-execution) 允许的最长时间。
+- **[Schedule-启动超时](/encyclopedia/detecting-activity-failures#schedule-to-start-timeout)：** 是从 [Activity 任务](/tasks#activity-task) 为 Scheduled 到 [Worker](/workers#worker) 启动该 Activity 任务所允许的最长时间。
 
-An Activity Execution must have either the Start-To-Close or the Schedule-To-Close Timeout set.
+Activity 执行必须设置“开始到关闭”或“Schedule 到关闭超时”。
 
-Because Activities are reentrant, only a single stub can be used for multiple Activity invocations.
+由于活动是可重入的，因此只有一个存根可用于多个 Activity 调用。
 
-Available timeouts are:
+可用的超时有：
 
 - withScheduleToCloseTimeout()
 - withStartToCloseTimeout()
@@ -48,14 +49,15 @@ $this->greetingActivity = Workflow::newActivityStub(
 );
 ```
 
-### How to set an Activity Retry Policy {#activity-retries}
+<a id="activity-retries"></a>
+### 如何设置 Activity Retry Policy {#activity-retries}
 
-A Retry Policy works in cooperation with the timeouts to provide fine controls to optimize the execution experience.
+Retry Policy 与超时配合提供精细控制以优化执行体验。
 
-Activity Executions are automatically associated with a default [Retry Policy](/encyclopedia/retry-policies) if a custom one is not provided.
+Activity 如果未提供自定义执行，则执行会自动与默认 [Retry Policy](/encyclopedia/retry-policies) 关联。
 
-To set an Activity Retry, set `{@link RetryOptions}` on `{@link ActivityOptions}`.
-The follow example creates a new Activity with the given options.
+要设置 Activity 重试，请在 `{@link ActivityOptions}` 上设置 `{@link RetryOptions}`。
+以下示例使用给定选项创建一个新的 Activity。
 
 ```php
 $this->greetingActivity = Workflow::newActivityStub(
@@ -72,22 +74,23 @@ $this->greetingActivity = Workflow::newActivityStub(
 }
 ```
 
-For an executable code sample, see [ActivityRetry sample](https://github.com/temporalio/samples-php/tree/master/app/src/ActivityRetry) in the PHP samples repository.
+有关可执行代码示例，请参阅 PHP 示例存储库中的 [Activity重试示例](https://github.com/temporalio/samples-php/tree/master/app/src/ActivityRetry)。
 
-### How to set the required Activity Timeouts {#required-timeout}
+### 如何设置所需的 Activity 超时 {#required-timeout}
 
-Activity Execution semantics rely on several parameters.
-The only required value that needs to be set is either a [Schedule-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout) or a [Start-To-Close Timeout](/encyclopedia/detecting-activity-failures#start-to-close-timeout).
-These values are set in the Activity Options.
+Activity 执行语义依赖于多个参数。
+唯一需要设置的值是 [Schedule-关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout) 或 [开始到关闭超时](/encyclopedia/detecting-activity-failures#start-to-close-timeout)。
+这些值在 Activity 选项中设置。
 
-## Activity next Retry delay {#activity-next-retry-delay}
+<a id="activity-next-retry-delay"></a>
+## Activity 下一次重试延迟 {#activity-next-retry-delay}
 
-**How to override the next Retry delay following an Activity failure using the Temporal PHP SDK**
+**如何使用 Temporal PHP SDK 覆盖 Activity 失败后的下一次重试延迟**
 
-You may throw an [`ApplicationFailure`](/references/failures#application-failure) with the `nextRetryDelay` field set.
-This value will replace and override whatever the retry interval would be on the retry policy.
+您可以投掷 [`ApplicationFailure`](/references/failures#application-failure) 并设置 `nextRetryDelay` 字段。
+该值将替换并覆盖 Retry Policy 上的任何重试间隔。
 
-For example, if in an Activity, you want to base the interval on the number of attempts, you might do:
+例如，如果在 Activity 中，您希望间隔基于尝试次数，您可以执行以下操作：
 
 ```php
 $attempt = \Temporal\Activity::getInfo()->attempt;
@@ -100,29 +103,30 @@ throw new \Temporal\Exception\Failure\ApplicationFailure(
 );
 ```
 
-## How to Heartbeat an Activity {#activity-heartbeats}
+<a id="activity-heartbeats"></a>
+## 如何对 Activity 进行心跳检测 {#activity-heartbeats}
 
-An [Activity Heartbeat](/encyclopedia/detecting-activity-failures#activity-heartbeat) is a ping from the [Worker Process](/workers#worker-process) that is executing the Activity to the [Temporal Service](/temporal-service).
-Each Heartbeat informs the Temporal Service that the [Activity Execution](/activity-execution) is making progress and the Worker has not crashed.
-If the Temporal Service does not receive a Heartbeat within a [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout) time period, the Activity will be considered failed and another [Activity Task Execution](/tasks#activity-task-execution) may be scheduled according to the Retry Policy.
+[Activity 心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 是从正在执行 Activity 的 [Worker 流程](/workers#worker-process) 到 [Temporal 服务](/temporal-service) 的 ping。
+每个心跳都会通知 Temporal 服务 [Activity 执行](/activity-execution) 正在取得进展并且 Worker 尚未崩溃。
+如果Temporal服务在[心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout)时间段内没有收到Heartbeat，则Activity将被视为失败，并且根据Retry Policy，另一个[Activity 任务执行](/tasks#activity-task-execution)可能是Scheduled。
 
-Heartbeats may not always be sent to the Temporal Service—they may be [throttled](/encyclopedia/detecting-activity-failures#throttling) by the Worker.
+心跳可能并不总是发送到 Temporal 服务 — 它们可能是由 Worker 发送的 [节流](/encyclopedia/detecting-activity-failures#throttling)。
 
-Activity Cancellations are delivered to Activities from the Temporal Service when they Heartbeat. Activities that don't Heartbeat can't receive a Cancellation.
-Heartbeat throttling may lead to Cancellation getting delivered later than expected.
+Activity 取消会在活动检测到时从 Temporal 服务传递到活动。没有心跳的活动无法收到取消。
+心跳限制可能会导致取消的发送时间晚于预期。
 
-Heartbeats can contain a `details` field describing the Activity's current progress.
-If an Activity gets retried, the Activity can access the `details` from the last Heartbeat that was sent to the Temporal Service.
+心跳可以包含描述 Activity 当前进度的 `details` 字段。
+如果重试 Activity，则 Activity 可以从发送到 Temporal 服务的最后一个心跳访问 `details`。
 
-Some Activities are long-running.
-To react to a crash quickly, use the Heartbeat mechanism, `Activity::heartbeat()`, which lets the Temporal Server know that the Activity is still alive.
-This acts as a periodic checkpoint mechanism for the progress of an Activity.
+有些活动是长期运行的。
+要快速对崩溃做出反应，请使用心跳机制 `Activity::heartbeat()`，它可以让 Temporal Server 知道 Activity 仍然存在。
+这充当 Activity 进度的定期检查点机制。
 
-You can piggyback `details` on an Activity Heartbeat.
-If an Activity times out, the last value of `details` is included in the `TimeoutFailure` delivered to a Workflow.
-Then the Workflow can pass the details to the next Activity invocation.
-Additionally, you can access the details from within an Activity via `Activity::getHeartbeatDetails`.
-When an Activity is retried after a failure `getHeartbeatDetails` enables you to get the value from the last successful Heartbeat.
+您可以在 Activity 心跳上搭载 `details`。
+如果Activity超时，则`details`的最后一个值将包含在传递给Workflow的`TimeoutFailure`中。
+然后 Workflow 可以将详细信息传递给下一个 Activity 调用。
+此外，您可以通过 `Activity::getHeartbeatDetails` 从 Activity 中访问详细信息。
+当 Activity 失败后重试时，`getHeartbeatDetails` 使您能够从上次成功的心跳中获取值。
 
 ```php
 use Temporal\Activity;
@@ -155,19 +159,19 @@ class FileProcessingActivitiesImpl implements FileProcessingActivities
 }
 ```
 
-#### How to set a Heartbeat Timeout {#heartbeat-timeout}
+#### 如何设置心跳超时 {#heartbeat-timeout}
 
-A [Heartbeat Timeout](/encyclopedia/detecting-activity-failures#heartbeat-timeout) works in conjunction with [Activity Heartbeats](/encyclopedia/detecting-activity-failures#activity-heartbeat).
+[心跳超时](/encyclopedia/detecting-activity-failures#heartbeat-timeout) 与 [Activity 心跳](/encyclopedia/detecting-activity-failures#activity-heartbeat) 配合使用。
 
-Some Activities are long-running.
-To react to a crash quickly, use the Heartbeat mechanism, `Activity::heartbeat()`, which lets the Temporal Server know that the Activity is still alive.
-This acts as a periodic checkpoint mechanism for the progress of an Activity.
+有些活动是长期运行的。
+要快速对崩溃做出反应，请使用心跳机制 `Activity::heartbeat()`，它可以让 Temporal Server 知道 Activity 仍然存在。
+这充当 Activity 进度的定期检查点机制。
 
-You can piggyback `details` on an Activity Heartbeat.
-If an Activity times out, the last value of `details` is included in the `TimeoutFailure` delivered to a Workflow.
-Then the Workflow can pass the details to the next Activity invocation.
-Additionally, you can access the details from within an Activity via `Activity::getHeartbeatDetails`.
-When an Activity is retried after a failure `getHeartbeatDetails` enables you to get the value from the last successful Heartbeat.
+您可以在 Activity 心跳上搭载 `details`。
+如果Activity超时，则`details`的最后一个值将包含在传递给Workflow的`TimeoutFailure`中。
+然后 Workflow 可以将详细信息传递给下一个 Activity 调用。
+此外，您可以通过 `Activity::getHeartbeatDetails` 从 Activity 中访问详细信息。
+当 Activity 失败后重试时，`getHeartbeatDetails` 使您能够从上次成功的心跳中获取值。
 
 ```php
 use Temporal\Activity;

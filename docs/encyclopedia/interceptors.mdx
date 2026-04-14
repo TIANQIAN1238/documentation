@@ -1,8 +1,8 @@
 ---
 id: interceptors
-title: Interceptors
-sidebar_label: Interceptors
-description: Add cross-cutting behavior like observability, authorization, and header manipulation before and after SDK operations.
+title: "拦截器"
+sidebar_label: "拦截器"
+description: "在 SDK 操作之前和之后添加横切行为，例如可观察性、授权和标头操作。"
 toc_max_heading_level: 4
 keywords:
   - interceptors
@@ -13,18 +13,19 @@ tags:
   - Concepts
 ---
 
-Interceptors let you add cross-cutting behavior before and after SDK operations such as starting a Workflow, executing an Activity, or handling a Signal. They work like middleware: each interceptor wraps the next, forming a chain that executes around the underlying operation.
+拦截器允许您在 SDK 操作之前和之后添加横切行为，例如启动 Workflow、执行 Activity 或处理 Signal。它们的工作方式类似于中间件：每个拦截器都包装下一个拦截器，形成围绕底层操作执行的链。
 
-Common use cases:
+常见用例：
 
-- Observability (logging, metrics, tracing)
-- Authorization and authentication checks
-- Header manipulation (propagating metadata)
-- Input/output validation
+- 可观察性（日志记录、指标、跟踪）
+- 授权和身份验证检查
+- 标头操作（传播元数据）
+- 输入/输出验证
 
-## Implementing Interceptors
+<a id="implementing-interceptors"></a>
+## 实现拦截器 {#implementing-interceptors}
 
-Here are SDK-specific guides:
+以下是 SDK 特定指南：
 
 - [Python](/develop/python/workers/interceptors)
-- [TypeScript](/develop/typescript/workers/interceptors)
+- [打字稿](/develop/typescript/workers/interceptors)

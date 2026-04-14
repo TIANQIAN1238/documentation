@@ -1,8 +1,8 @@
 ---
 id: schedules
-title: Schedules - Python SDK
-sidebar_label: Schedules
-description: Schedule, Create, Backfill, Delete, Describe, List, Pause, Trigger, and Update a Scheduled Workflow, along with Temporal Cron Jobs and Start Delay options.
+title: "Schedules - Python SDK"
+sidebar_label: "Schedules"
+description: "Schedule、创建、回填、删除、描述、列出、暂停、触发和 Update a Scheduled Workflow，以及 Temporal Cron 作业和启动延迟选项。"
 slug: /develop/python/workflows/schedules
 toc_max_heading_level: 2
 keywords:
@@ -24,46 +24,47 @@ tags:
   - Temporal SDKs
 ---
 
-This page shows how to do the following:
+此页面显示如何执行以下操作：
 
-- [Schedule a Workflow](#schedule-a-workflow)
-  - [Create a Scheduled Workflow](#create)
-  - [Backfill a Scheduled Workflow](#backfill)
-  - [Delete a Scheduled Workflow](#delete)
-  - [Describe a Scheduled Workflow](#describe)
-  - [List a Scheduled Workflow](#list)
-  - [Pause a Scheduled Workflow](#pause)
-  - [Trigger a Scheduled Workflow](#trigger)
-  - [Update a Scheduled Workflow](#update)
-- [Temporal Cron Jobs](#temporal-cron-jobs)
-- [Start Delay](#start-delay)
+- [Schedule 和 Workflow](#schedule-a-workflow)
+  - [创建 Scheduled Workflow](#create)
+  - [回填 Scheduled Workflow](#backfill)
+  - [删除 Scheduled Workflow](#delete)
+  - [描述 Scheduled Workflow](#describe)
+  - [列出 Scheduled Workflow](#list)
+  - [暂停 Scheduled Workflow](#pause)
+  - [触发 Scheduled Workflow](#trigger)
+  - [Update Scheduled Workflow](#update)
+- [Temporal 计划任务](#temporal-cron-jobs)
+- [启动延迟](#start-delay)
 
-## Schedule a Workflow {#schedule-a-workflow}
+<a id="schedule-a-workflow"></a>
+## Schedule 一个 Workflow {#schedule-a-workflow}
 
-**How to Schedule a Workflow Execution**
+**如何将 Schedule 转换为 Workflow Execution**
 
-Scheduling Workflows is a crucial aspect of any automation process, especially when dealing with time-sensitive tasks. By scheduling a Workflow, you can automate repetitive tasks, reduce the need for manual intervention, and ensure timely execution of your business processes.
+调度 Workflow 是任何自动化流程的一个重要方面，尤其是在处理时间敏感的任务时。通过调度 Workflow，您可以自动执行重复性任务，减少手动干预的需要，并确保及时执行业务流程。
 
-Use any of the following actions to help Schedule a Workflow Execution and take control over your automation process.
+使用以下任一操作来帮助 Schedule 和 Workflow Execution 并控制您的自动化流程。
 
-### Create a Scheduled Workflow {#create}
+### 创建一个 Scheduled Workflow {#create}
 
-**How to create a Scheduled Workflow**
+**如何创建 Scheduled Workflow**
 
-The create action enables you to create a new Schedule. When you create a new Schedule, a unique Schedule ID is generated, which you can use to reference the Schedule in other Schedule commands.
+创建操作使您能够创建新的 Schedule。创建新的 Schedule 时，会生成唯一的 Schedule ID，您可以使用该 ID 在其他 Schedule 命令中引用 Schedule。
 
-To create a Scheduled Workflow Execution in Python, use the [create_schedule()](https://python.temporal.io/temporalio.client.Client.html#create_schedule)
-asynchronous method on the Client.
-Then pass the Schedule ID and the Schedule object to the method to create a Scheduled Workflow Execution.
-Set the `action` parameter to `ScheduleActionStartWorkflow` to start a Workflow Execution.
-Optionally, you can set the `spec` parameter to `ScheduleSpec` to specify the schedule or set the `intervals` parameter to `ScheduleIntervalSpec` to specify the interval.
-Other options include: `cron_expressions`, `skip`, `start_at`, and `jitter`.
+要在 Python 中创建 Scheduled Workflow Execution，请使用 [创建_Schedule()](https://python.temporal.io/temporalio.client.Client.html#create_schedule)
+客户端上的异步方法。
+然后将 Schedule ID 和 Schedule 对象传递给该方法以创建 Scheduled Workflow Execution。
+将 `action` 参数设置为 `ScheduleActionStartWorkflow` 以启动 Workflow Execution。
+或者，您可以将 `spec` 参数设置为 `ScheduleSpec` 以指定 Schedule，或将 `intervals` 参数设置为 `ScheduleIntervalSpec` 以指定间隔。
+其他选项包括：`cron_expressions`、`skip`、`start_at` 和 `jitter`。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/schedule_your_workflow/start_schedule_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -90,25 +91,25 @@ async def main():
 
 :::tip Schedule Auto-Deletion
 
-Once a Schedule has completed creating all its Workflow Executions, the Temporal Service deletes it since it won’t fire again.
-The Temporal Service doesn't guarantee when this removal will happen.
+一旦 Schedule 完成创建其所有 Workflow Execution，Temporal 服务就会将其删除，因为它不会再次触发。
+Temporal 服务不保证何时会发生此删除。
 
 :::
 
-### Backfill a Scheduled Workflow {#backfill}
+### 回填 Scheduled Workflow {#backfill}
 
-**How to backfill a Scheduled Workflow**
+**如何回填 Scheduled Workflow**
 
-The backfill action executes Actions ahead of their specified time range. This command is useful when you need to execute a missed or delayed Action, or when you want to test the Workflow before its scheduled time.
+回填操作会在指定时间范围之前执行操作。当您需要执行错过或延迟的操作时，或者当您想要在 Scheduled 时间之前测试 Workflow 时，此命令非常有用。
 
-To Backfill a Scheduled Workflow Execution in Python, use the [backfill()](https://python.temporal.io/temporalio.client.ScheduleHandle.html#backfill) asynchronous
-method on the Schedule Handle.
+要在 Python 中回填 Scheduled Workflow Execution，请使用 [回填()](https://python.temporal.io/temporalio.client.ScheduleHandle.html#backfill) 异步
+Schedule 手柄上的方法。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/schedule_your_workflow/backfill_schedule_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -136,19 +137,19 @@ async def main():
     )
 ```
 
-### Delete a Scheduled Workflow {#delete}
+### 删除 Scheduled Workflow {#delete}
 
-**How to delete a Scheduled Workflow**
+**如何删除 Scheduled Workflow**
 
-The delete action enables you to delete a Schedule. When you delete a Schedule, it does not affect any Workflows that were started by the Schedule.
+删除操作使您能够删除 Schedule。删除 Schedule 时，不会影响由 Schedule 启动的任何 Workflow。
 
-To delete a Scheduled Workflow Execution in Python, use the [delete()](https://python.temporal.io/temporalio.client.ScheduleHandle.html#delete) asynchronous method on the Schedule Handle.
+要在 Python 中删除 Scheduled Workflow Execution，请在 Schedule 句柄上使用 [删除（）](https://python.temporal.io/temporalio.client.ScheduleHandle.html#delete) 异步方法。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/schedule_your_workflow/delete_schedule_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -161,20 +162,20 @@ async def main():
     await handle.delete()
 ```
 
-### Describe a Scheduled Workflow {#describe}
+### 描述 Scheduled Workflow {#describe}
 
-**How to describe a Scheduled Workflow**
+**如何描述 Scheduled Workflow**
 
-The describe action shows the current Schedule configuration, including information about past, current, and future Workflow Runs. This command is helpful when you want to get a detailed view of the Schedule and its associated Workflow Runs.
+描述操作显示当前的 Schedule 配置，包括有关过去、当前和未来 Workflow 运行的信息。当您想要获取 Schedule 及其关联的 Workflow 运行的详细视图时，此命令非常有用。
 
-To describe a Scheduled Workflow Execution in Python, use the [describe()](https://python.temporal.io/temporalio.client.ScheduleHandle.html#delete) asynchronous method on the Schedule Handle.
-You can get a complete list of the attributes of the Scheduled Workflow Execution from the [ScheduleDescription](https://python.temporal.io/temporalio.client.ScheduleDescription.html) class.
+要在 Python 中描述 Scheduled Workflow Execution，请在 Schedule 句柄上使用 [描述（）](https://python.temporal.io/temporalio.client.ScheduleHandle.html#delete) 异步方法。
+您可以从 [Schedule描述](https://python.temporal.io/temporalio.client.ScheduleDescription.html) 类获取 Scheduled Workflow Execution 的属性的完整列表。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/schedule_your_workflow/describe_schedule_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -190,20 +191,20 @@ async def main():
     print(f"Returns the note: {desc.schedule.state.note}")
 ```
 
-### List a Scheduled Workflow {#list}
+### 列出 Scheduled Workflow {#list}
 
-**How to list a Scheduled Workflow**
+**如何列出 Scheduled Workflow**
 
-The list action lists all the available Schedules. This command is useful when you want to view a list of all the Schedules and their respective Schedule IDs.
+列表操作列出了所有可用的 Schedule。当您想要查看所有 Schedule 及其各自的 Schedule ID 的列表时，此命令非常有用。
 
-To list all schedules, use the [list_schedules()](https://python.temporal.io/temporalio.client.Client.html#list_schedules) asynchronous method on the Client.
-If a schedule is added or deleted, it may not be available in the list immediately.
+要列出所有 Schedule，请在客户端上使用 [list_Schedules()](https://python.temporal.io/temporalio.client.Client.html#list_schedules) 异步方法。
+如果添加或删除 Schedule，它可能不会立即在列表中可用。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/schedule_your_workflow/list_schedule_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -214,20 +215,20 @@ async def main() -> None:
         print(f"List Schedule Info: {schedule.info}.")
 ```
 
-### Pause a Scheduled Workflow {#pause}
+### 暂停 Scheduled Workflow {#pause}
 
-**How to pause a Scheduled Workflow**
+**如何暂停 Scheduled Workflow**
 
-The pause action enables you to pause and unpause a Schedule. When you pause a Schedule, all the future Workflow Runs associated with the Schedule are temporarily stopped. This command is useful when you want to temporarily halt a Workflow due to maintenance or any other reason.
+暂停操作使您能够暂停和取消暂停 Schedule。当您暂停 Schedule 时，与 Schedule 关联的所有未来 Workflow 运行都会暂时停止。当您由于维护或任何其他原因想要暂时停止 Workflow 时，此命令非常有用。
 
-To pause a Scheduled Workflow Execution in Python, use the [pause()](https://python.temporal.io/temporalio.client.ScheduleHandle.html#pause) asynchronous method on the Schedule Handle.
-You can pass a `note` to the `pause()` method to provide a reason for pausing the schedule.
+要在 Python 中暂停 Scheduled Workflow Execution，请在 Schedule 句柄上使用 [暂停（）](https://python.temporal.io/temporalio.client.ScheduleHandle.html#pause) 异步方法。
+您可以将 `note` 传递给 `pause()` 方法以提供暂停 Schedule 的原因。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/schedule_your_workflow/pause_schedule_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -241,19 +242,19 @@ async def main():
     await handle.pause(note="Pausing the schedule for now")
 ```
 
-### Trigger a Scheduled Workflow {#trigger}
+### 触发 Scheduled Workflow {#trigger}
 
-**How to trigger a Scheduled Workflow**
+**如何触发 Scheduled Workflow**
 
-The trigger action triggers an immediate action with a given Schedule. By default, this action is subject to the Overlap Policy of the Schedule. This command is helpful when you want to execute a Workflow outside of its scheduled time.
+触发操作会使用给定的 Schedule 触发立即操作。默认情况下，此操作受 Schedule 的重叠策略的约束。当您想要在 Scheduled 时间之外执行 Workflow 时，此命令很有用。
 
-To trigger a Scheduled Workflow Execution in Python, use the [trigger()](https://python.temporal.io/temporalio.client.ScheduleHandle.html#trigger) asynchronous method on the Schedule Handle.
+要在 Python 中触发 Scheduled Workflow Execution，请在 Schedule 句柄上使用 [扳机（）](https://python.temporal.io/temporalio.client.ScheduleHandle.html#trigger) 异步方法。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/schedule_your_workflow/trigger_schedule_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -267,21 +268,22 @@ async def main():
     await handle.trigger()
 ```
 
+<a id="update"></a>
 ### Update a Scheduled Workflow {#update}
 
-**How to update a Scheduled Workflow**
+**如何 Update 和 Scheduled Workflow**
 
-The update action enables you to update an existing Schedule. This command is useful when you need to modify the Schedule's configuration, such as changing the start time, end time, or interval.
+Update 操作使您能够 Update 现有的 Schedule。当您需要修改 Schedule 的配置（例如更改开始时间、结束时间或间隔）时，此命令非常有用。
 
-Create a function that takes `ScheduleUpdateInput` and returns `ScheduleUpdate`.
-To update a Schedule, use a callback to build the update from the description.
-The following example updates the Schedule to use a new argument.
+创建一个接受 `ScheduleUpdateInput` 并返回 `ScheduleUpdate` 的函数。
+对于 Update 和 Schedule，请使用回调根据描述构建 Update。
+以下示例 Update 使 Schedule 使用新参数。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/schedule_your_workflow/update_schedule_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -294,28 +296,29 @@ The following example updates the Schedule to use a new argument.
         return ScheduleUpdate(schedule=input.description.schedule)
 ```
 
-## Temporal Cron Jobs {#temporal-cron-jobs}
+<a id="temporal-cron-jobs"></a>
+## Temporal Cron 作业 {#temporal-cron-jobs}
 
-**How to use Temporal Cron Jobs**
+**如何使用 Temporal Cron 作业**
 
 :::caution Cron support is not recommended
 
-We recommend using [Schedules](https://docs.temporal.io/schedule) instead of Cron Jobs.
-Schedules were built to provide a better developer experience, including more configuration options and the ability to update or pause running Schedules.
+我们建议使用 [Schedules](https://docs.temporal.io/schedule) 而不是 Cron 作业。
+Schedule 旨在提供更好的开发人员体验，包括更多配置选项以及 Update 或暂停运行 Schedule 的能力。
 
 :::
 
-A [Temporal Cron Job](/cron-job) is the series of Workflow Executions that occur when a Cron Schedule is provided in the call to spawn a Workflow Execution.
+[Temporal 计划任务](/cron-job) 是在调用中提供 Cron Schedule 来生成 Workflow Execution 时发生的一系列 Workflow Execution。
 
-A Cron Schedule is provided as an option when the call to spawn a Workflow Execution is made.
+当调用生成 Workflow Execution 时，会提供 Cron Schedule 作为选项。
 
-You can set each Workflow to repeat on a schedule with the `cron_schedule` option from either the [`start_workflow()`](https://python.temporal.io/temporalio.client.Client.html#start_workflow) or [`execute_workflow()`](https://python.temporal.io/temporalio.client.Client.html#execute_workflow) asynchronous methods.
+您可以使用 [`start_Workflow()`](https://python.temporal.io/temporalio.client.Client.html#start_workflow) 或 [`execute_Workflow()`](https://python.temporal.io/temporalio.client.Client.html#execute_workflow) 异步方法中的 `cron_Schedule` 选项将每个 Workflow 设置为在 Schedule 上重复。
 
 <div className="copycode-notice-container">
   <a href="https://github.com/temporalio/documentation/blob/main/sample-apps/python/your_cron_job/your_cron_dacx.py">
-    View the source code
+查看源代码
   </a>{' '}
-  in the context of the rest of the application code.
+在应用程序代码的其余部分的上下文中。
 </div>
 
 ```python
@@ -329,7 +332,7 @@ You can set each Workflow to repeat on a schedule with the `cron_schedule` optio
     print(f"Results: {result}")
 ```
 
-Temporal Workflow Schedule Cron strings follow this format:
+Temporal Workflow Schedule Cron 字符串遵循以下格式：
 
 ```
 ┌───────────── minute (0 - 59)
@@ -341,13 +344,13 @@ Temporal Workflow Schedule Cron strings follow this format:
 * * * * *
 ```
 
-## Start Delay {#start-delay}
+## 启动延迟 {#start-delay}
 
-**How to use Start Delay**
+**如何使用启动延迟**
 
-Use the `start_delay` to schedule a Workflow Execution at a specific one-time future point rather than on a recurring schedule.
+在特定的一次性未来点而不是重复出现的 Schedule 上使用 `start_delay` 至 Schedule 和 Workflow Execution。
 
-Use the `start_delay` option in either the [`start_workflow()`](https://python.temporal.io/temporalio.client.Client.html#start_workflow) or [`execute_workflow()`](https://python.temporal.io/temporalio.client.Client.html#execute_workflow) asynchronous methods in the Client.
+在客户端的 [`start_Workflow()`](https://python.temporal.io/temporalio.client.Client.html#start_workflow) 或 [`execute_Workflow()`](https://python.temporal.io/temporalio.client.Client.html#execute_workflow) 异步方法中使用 `start_delay` 选项。
 
 ```python
 async def main():

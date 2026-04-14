@@ -1,8 +1,8 @@
 ---
 id: observability
-title: Observability - Java SDK
-sidebar_label: Observability
-description: Explore the observability features of Temporal, including Metrics, Tracing, Logging, and Visibility. Emit Metrics with the Java SDK, set up Tracing, and use Search Attributes.
+title: "可观察性 - Java SDK"
+sidebar_label: "可观察性"
+description: "探索 Temporal 的可观察性功能，包括指标、跟踪、日志记录和 Visibility。使用 Java SDK 发出指标、设置跟踪并使用 Search Attribute。"
 toc_max_heading_level: 4
 keywords:
   - context propagators
@@ -28,28 +28,28 @@ tags:
   - Temporal SDKs
 ---
 
-The observability section of the Temporal Developer's guide covers the many ways to view the current state of your [Temporal Application](/temporal#temporal-application)—that is, ways to view which [Workflow Executions](/workflow-execution) are tracked by the [Temporal Platform](/temporal#temporal-platform) and the state of any specified Workflow Execution, either currently or at points of an execution.
+Temporal 开发人员指南的可观察性部分涵盖了查看 [Temporal 应用](/temporal#temporal-application) 当前状态的多种方法，即查看 [Temporal平台](/workflow-execution) 跟踪哪些 [Workflow Executions](/temporal#temporal-platform) 以及任何指定 Workflow Execution 当前或执行点的状态的方法。
 
-This section covers features related to viewing the state of the application, including:
+本节介绍与查看应用程序状态相关的功能，包括：
 
-- [Emit metrics](#metrics)
-- [Set up tracing](#tracing)
-- [Log from a Workflow](#logging)
-- [Visibility APIs](#visibility)
+- [发出指标](#metrics)
+- [设置追踪](#tracing)
+- [从 Workflow 登录](#logging)
+- [Visibility API](#visibility)
 
-## Emit metrics {#metrics}
+<a id="metrics"></a>
+## 发出指标 {#metrics}
+每个 Temporal SDK 都能够从客户端或 Worker 进程发出一组可选的指标。
+有关能够发出的指标的完整列表，请参阅 [SDK指标参考](/references/sdk-metrics)。
 
-Each Temporal SDK is capable of emitting an optional set of metrics from either the Client or the Worker process.
-For a complete list of metrics capable of being emitted, see the [SDK metrics reference](/references/sdk-metrics).
+- 有关 Prometheus 和 Grafana 集成的概述，请参阅 [监控](/self-hosted-guide/monitoring) 指南。
+- 有关指标列表，请参阅 [SDK指标参考](/references/sdk-metrics)。
+- 有关使用 Java SDK 公开指标的端到端示例，请参阅 [样本-java](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/metrics) 存储库。
 
-- For an overview of Prometheus and Grafana integration, refer to the [Monitoring](/self-hosted-guide/monitoring) guide.
-- For a list of metrics, see the [SDK metrics reference](/references/sdk-metrics).
-- For an end-to-end example that exposes metrics with the Java SDK, refer to the [samples-java](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/metrics) repo.
+要使用 Java SDK 发出指标，请使用 [`MicrometerClientStatsReporter`](https://github.com/temporalio/sdk-java/blob/55ee7894aec427d7e384c3519732bdd61119961a/src/main/java/io/temporal/common/reporter/MicrometerClientStatsReporter.java#L34) 类与为指标后端配置的 Micrometer MeterRegistry 集成。
+[千分尺](https://micrometer.io/docs) 是一个流行的 Java 框架，提供与 Prometheus 和其他后端的集成。
 
-To emit metrics with the Java SDK, use the [`MicrometerClientStatsReporter`](https://github.com/temporalio/sdk-java/blob/55ee7894aec427d7e384c3519732bdd61119961a/src/main/java/io/temporal/common/reporter/MicrometerClientStatsReporter.java#L34) class to integrate with Micrometer MeterRegistry configured for your metrics backend.
-[Micrometer](https://micrometer.io/docs) is a popular Java framework that provides integration with Prometheus and other backends.
-
-The following example shows how to use `MicrometerClientStatsReporter` to define the metrics scope and set it with the `WorkflowServiceStubsOptions`.
+以下示例演示如何使用 `MicrometerClientStatsReporter` 定义指标范围并使用 `WorkflowServiceStubsOptions` 进行设置。
 
 ```java
 //...
@@ -69,19 +69,19 @@ The following example shows how to use `MicrometerClientStatsReporter` to define
 //...
 ```
 
-For more details, see the [Java SDK Samples](https://github.com/temporalio/samples-java/tree/637c2e66fd2dab43d9f3f39e5fd9c55e4f3884f0/core/src/main/java/io/temporal/samples/metrics).
-For details on configuring a Prometheus scrape endpoint with Micrometer, see the [Micrometer Prometheus Configuring](https://docs.micrometer.io/micrometer/reference/implementations/prometheus.html#_configuring) documentation.
+有关更多详细信息，请参阅 [Java SDK 样品](https://github.com/temporalio/samples-java/tree/637c2e66fd2dab43d9f3f39e5fd9c55e4f3884f0/core/src/main/java/io/temporal/samples/metrics)。
+有关使用 Micrometer 配置 Prometheus 抓取端点的详细信息，请参阅 [千分尺普罗米修斯配置](https://docs.micrometer.io/micrometer/reference/implementations/prometheus.html#_configuring) 文档。
 
-## Set up tracing {#tracing}
+<a id="tracing"></a>
+## 设置跟踪 {#tracing}
+跟踪允许您查看 Workflow 的调用图及其活动、Nexus 操作和任何 Child Workflow。
 
-Tracing allows you to view the call graph of a Workflow along with its Activities, Nexus Operations, and any Child Workflows.
+Temporal Web 的跟踪功能主要跟踪 Temporal 上下文中的 Activity 执行。如果您需要特定于您的用例的自定义跟踪，您应该利用上下文传播来相应地添加跟踪逻辑。
 
-Temporal Web's tracing capabilities mainly track Activity Execution within a Temporal context. If you need custom tracing specific for your use case, you should make use of context propagation to add tracing logic accordingly.
+要在 Java 中配置跟踪，请注册 `OpenTracingClientInterceptor()` 拦截器。
+您可以在 Temporal CLIent 端和 Worker 端注册拦截器，或者如果您正在构建可重用库，则可以通过 [插件](/develop/plugins-guide#interceptors) 注册拦截器。
 
-To configure tracing in Java, register the `OpenTracingClientInterceptor()` interceptor.
-You can register the interceptors on both the Temporal Client side and the Worker side, or through a [Plugin](/develop/plugins-guide#interceptors) if you're building a reusable library.
-
-The following code examples demonstrate the `OpenTracingClientInterceptor()` on the Temporal Client.
+以下代码示例演示了 Temporal CLIent 上的 `OpenTracingClientInterceptor()`。
 
 ```java
 WorkflowClientOptions.newBuilder()
@@ -98,7 +98,7 @@ WorkflowClientOptions clientOptions =
 WorkflowClient client = WorkflowClient.newInstance(service, clientOptions);
 ```
 
-The following code examples demonstrate the `OpenTracingClientInterceptor()` on the Worker.
+以下代码示例演示了 Worker 上的 `OpenTracingClientInterceptor()`。
 
 ```java
 WorkerFactoryOptions.newBuilder()
@@ -116,85 +116,86 @@ WorkerFactoryOptions factoryOptions =
 WorkerFactory factory = WorkerFactory.newInstance(client, factoryOptions);
 ```
 
-For more information, see the Temporal [OpenTracing module](https://github.com/temporalio/sdk-java/blob/master/temporal-opentracing/README.md).
+有关详细信息，请参阅 Temporal [开放跟踪模块](https://github.com/temporalio/sdk-java/blob/master/temporal-opentracing/README.md)。
 
-### Context Propagation Over Nexus Operation Calls
+<a id="context-propagation-over-nexus-operation-calls"></a>
+### 通过 Nexus 操作调用进行上下文传播 {#context-propagation-over-nexus-operation-calls}
 
-Nexus does not use the standard context propagator header structure.
-Instead, it relies on a Temporal-agnostic protocol designed to connect arbitrary systems.
-To propagate context over Nexus Operation calls, the context is serialized into a `Map<String, String>`.
-This map is special as it will normalize all keys to lowercase.
+Nexus 不使用标准上下文传播器标头结构。
+相反，它依赖于与 Temporal 无关的协议，旨在连接任意系统。
+为了通过 Nexus 操作调用传播上下文，上下文被序列化为 `Map<String, String>`。
+该映射很特殊，因为它将所有键标准化为小写。
 
-Because Nexus uses this custom format, and because Nexus calls may involve external systems, the `ContextPropagator` interface doesn’t apply to Nexus headers.
-Context must be explicitly propagated through interceptors, as shown in the [Nexus Context Propagation sample](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/nexuscontextpropagation).
+由于 Nexus 使用此自定义格式，并且 Nexus 调用可能涉及外部系统，因此 `ContextPropagator` 接口不适用于 Nexus 标头。
+上下文必须通过拦截器显式传播，如 [Nexus 上下文传播示例](https://github.com/temporalio/samples-java/tree/main/core/src/main/java/io/temporal/samples/nexuscontextpropagation) 中所示。
 
-## Log from a Workflow {#logging}
+<a id="logging"></a>
+## 从 Workflow {#logging} 记录
+日志记录使您能够在代码执行期间记录关键信息。
+记录器创建审计跟踪并捕获有关 Workflow 操作的信息。
+适当的日志记录级别取决于您的具体需求。
+在开发或故障排除期间，您可能会使用调试甚至跟踪。
+在生产中，您可以使用 info 或 warn 来避免日志量过多。
 
-Logging enables you to record critical information during code execution.
-Loggers create an audit trail and capture information about your Workflow's operation.
-An appropriate logging level depends on your specific needs.
-During development or troubleshooting, you might use debug or even trace.
-In production, you might use info or warn to avoid excessive log volume.
+记录器支持以下日志记录级别：
 
-The logger supports the following logging levels:
-
-| Level   | Use                                                                                                       |
+| 等级   | 使用                                                                                                       |
 | ------- | --------------------------------------------------------------------------------------------------------- |
-| `TRACE` | The most detailed level of logging, used for very fine-grained information.                               |
-| `DEBUG` | Detailed information, typically useful for debugging purposes.                                            |
-| `INFO`  | General information about the application's operation.                                                    |
-| `WARN`  | Indicates potentially harmful situations or minor issues that don't prevent the application from working. |
-| `ERROR` | Indicates error conditions that might still allow the application to continue running.                    |
+| `TRACE` | 最详细的日志记录级别，用于非常细粒度的信息。                               |
+| `DEBUG` | 详细信息，通常可用于调试目的。                                            |
+| `INFO`  | 有关应用程序操作的一般信息。                                                    |
+| `WARN`  | 指示不会阻止应用程序运行的潜在有害情况或小问题。 |
+| `ERROR` | 指示可能仍允许应用程序继续运行的错误情况。                    |
 
-The Temporal SDK core normally uses `WARN` as its default logging level.
+Temporal SDK 核心通常使用 `WARN` 作为其默认日志记录级别。
 
-To get a standard `slf4j` logger in your Workflow code, use the [`Workflow.getLogger`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html) method.
+要在 Workflow 代码中获取标准 `slf4j` 记录器，请使用 [`Workflow.getLogger`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html) 方法。
 
 ```java
 private static final Logger logger = Workflow.getLogger(DynamicDslWorkflow.class);
 ```
 
-Logs in replay mode are omitted unless the [`WorkerFactoryOptions.Builder.setEnableLoggingInReplay(boolean)`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/WorkerFactoryOptions.Builder.html#setEnableLoggingInReplay(boolean)) method is set to true.
+除非 [`WorkerFactoryOptions.Builder.setEnableLoggingInReplay(boolean)`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/worker/WorkerFactoryOptions.Builder.html#setEnableLoggingInReplay(boolean)) 方法设置为 true，否则重播模式下的日志将被忽略。
 
-### How to provide a custom logger {#custom-logger}
+<a id="custom-logger"></a>
+### 如何提供自定义记录器 {#custom-logger}
+使用自定义记录器进行记录。
 
-Use a custom logger for logging.
+要设置自定义记录器，请提供您自己的日志记录实现和配置详细信息，就像在任何其他 Java 应用程序中一样。
 
-To set a custom logger, supply your own logging implementation and configuration details the same way you would in any other Java application.
+<a id="visibility"></a>
+## Visibility API {#visibility}
+Temporal 平台中的术语 Visibility 是指使操作员能够查看当前存在于 Temporal 服务中的 Workflow Execution 的子系统和 API。
 
-## Visibility APIs {#visibility}
+<a id="search-attributes"></a>
+### 如何使用 Search Attribute {#search-attributes}
+检索 Workflow Execution 的典型方法是通过其 Workflow Id。
 
-The term Visibility, within the Temporal Platform, refers to the subsystems and APIs that enable an operator to view Workflow Executions that currently exist within a Temporal Service.
+但是，有时您需要根据另一属性检索一个或多个 Workflow Execution。例如，假设您想要获取某个时间范围内失败的某种类型的所有 Workflow Execution，以便您可以使用相同的参数启动新的 Workflow Execution。
 
-### How to use Search Attributes {#search-attributes}
+您可以使用 [Search Attributes](/search-attribute) 来完成此操作。
 
-The typical method of retrieving a Workflow Execution is by its Workflow Id.
+- [默认 Search Attribute](/search-attribute#default-search-attribute) 与 `WorkflowType`、`StartTime` 和 `ExecutionStatus` 一样，会自动添加到 Workflow Execution。
+- [定制 Search Attribute](/search-attribute#custom-search-attribute) 可以包含其自己的特定于域的数据（如 `customerId` 或 `numItems`）。
 
-However, sometimes you'll want to retrieve one or more Workflow Executions based on another property. For example, imagine you want to get all Workflow Executions of a certain type that have failed within a time range, so that you can start new ones with the same arguments.
+使用自定义 Search Attribute 的步骤是：
 
-You can do this with [Search Attributes](/search-attribute).
+- 使用 `Temporal operator search-attribute create` 或云 UI 在 Temporal 服务中创建新的 Search Attribute。
+- 设置 Workflow Execution 的 Search Attribute 值：
+  - 在客户端上，在启动执行时将其作为选项包含在内。
+  - 在 Workflow 中通过调用 `upsertTypedSearchAttributes`。
+- 读取Search Attribute的值：
+  - 在客户端上通过调用 `DescribeWorkflow`。
+  - 在 Workflow 中查看 `WorkflowInfo`。
+- Query Workflow Execution 由 Search Attribute 使用 [列表过滤器](/list-filter) 实现：
+  - [在Temporal CLI中](/cli/workflow#list)。
+  - 在代码中调用 `ListWorkflowExecutions`。
 
-- [Default Search Attributes](/search-attribute#default-search-attribute) like `WorkflowType`, `StartTime` and `ExecutionStatus` are automatically added to Workflow Executions.
-- [Custom Search Attributes](/search-attribute#custom-search-attribute) can contain their own domain-specific data (like `customerId` or `numItems`).
+<a id="custom-search-attributes"></a>
+### 如何设置自定义 Search Attribute {#custom-search-attributes}
+在 Temporal 服务（使用 `Temporal operator search-attribute create` 或云 UI）中创建自定义 Search Attribute 后，您可以在启动 Workflow 时设置自定义 Search Attribute 的值。
 
-The steps to using custom Search Attributes are:
-
-- Create a new Search Attribute in your Temporal Service using `temporal operator search-attribute create` or the Cloud UI.
-- Set the value of the Search Attribute for a Workflow Execution:
-  - On the Client by including it as an option when starting the Execution.
-  - In the Workflow by calling `upsertTypedSearchAttributes`.
-- Read the value of the Search Attribute:
-  - On the Client by calling `DescribeWorkflow`.
-  - In the Workflow by looking at `WorkflowInfo`.
-- Query Workflow Executions by the Search Attribute using a [List Filter](/list-filter):
-  - [In the Temporal CLI](/cli/workflow#list).
-  - In code by calling `ListWorkflowExecutions`.
-
-### How to set custom Search Attributes {#custom-search-attributes}
-
-After you've created custom Search Attributes in your Temporal Service (using `temporal operator search-attribute create` or the Cloud UI), you can set the values of the custom Search Attributes when starting a Workflow.
-
-When starting a Workflow Execution with your Client, include the Custom Search Attribute in the options using `WorkflowOptions.newBuilder().setTypedSearchAttributes()`:
+当您的客户端启动 Workflow Execution 时，请在使用 `WorkflowOptions.newBuilder().setTypedSearchAttributes()` 的选项中包含自定义 Search Attribute：
 
 ```java
     // In a shared constants file, so all files have access
@@ -217,22 +218,22 @@ When starting a Workflow Execution with your Client, include the Custom Search A
     }
 ```
 
-Each `SearchAttribute` object represents a custom attribute name, and the value is a [`SearchAttributeKey`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/SearchAttributeKey.html#forBoolean(java.lang.String)) representing a specific type. Currently the following types are supported:
+每个`SearchAttribute`对象代表一个自定义属性名称，其值为代表特定类型的[`SearchAttributeKey`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/common/SearchAttributeKey.html#forBoolean(java.lang.String)）。目前支持以下类型：
 
-- Boolean
-- Double
-- Long
-- KeyWord
-- KeyWordList
-- Text
+- 布尔值
+- 双人间
+- 长
+- 关键词
+- 关键词列表
+- 文字
 
-In this example `isOrderFailed` is set as a Search Attribute. This attribute is
-useful for querying Workflows based on the success/failure of customer orders.
+在此示例中，`isOrderFailed` 设置为 Search Attribute。这个属性是
+对于基于客户订单的成功/失败的 Querying Workflow 非常有用。
 
-### How to upsert Search Attributes {#upsert-search-attributes}
-
-Within the Workflow code, you can dynamically add or update Search Attributes using [`upsertTypedSearchAttributes`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#upsertTypedSearchAttributes(io.temporal.common.SearchAttributeUpdate...)).
-This method is particularly useful for Workflows whose attributes need to change based on internal logic or external events.
+<a id="upsert-search-attributes"></a>
+### 如何更新插入 Search Attributes {#upsert-search-attributes}
+在 Workflow 代码中，您可以使用 [`upsertTypedSearchAttributes`](https://www.javadoc.io/doc/io.temporal/temporal-sdk/latest/io/temporal/workflow/Workflow.html#upsertTypedSearchAttributes(io.temporal.common.SearchAttributeUpdate...) 动态添加 Update 或 Search Attribute。
+此方法对于属性需要根据内部逻辑或外部事件更改的 Workflow 特别有用。
 
 ```java
   import io.temporal.workflow.Workflow;
@@ -255,9 +256,9 @@ This method is particularly useful for Workflows whose attributes need to change
   }
 ```
 
-### How to remove a Search Attribute from a Workflow {#remove-search-attribute}
-
-To remove a Search Attribute that was previously set, set it to an empty Map.
+<a id="remove-search-attribute"></a>
+### 如何从 Workflow 中删除 Search Attribute {#remove-search-attribute}
+要删除之前设置的 Search Attribute，请将其设置为空地图。
 
 ```java
     // In a shared constants file, so all files have access

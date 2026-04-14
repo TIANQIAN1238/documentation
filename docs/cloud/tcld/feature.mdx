@@ -1,8 +1,8 @@
 ---
 id: feature
-title: tcld feature command reference
-sidebar_label: feature
-description: Manage features in Temporal Cloud with the tcld feature commands. Use tcld feature get for details and tcld feature toggle to enable or disable specific features.
+title: "tcld 功能命令参考"
+sidebar_label: "特征"
+description: "使用 tcld 功能命令管理 Temporal Cloud 中的功能。使用 tcld 功能获取详细信息，使用 tcld 功能切换来启用或禁用特定功能。"
 toc_max_heading_level: 4
 keywords:
   - cli reference
@@ -15,28 +15,28 @@ tags:
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-The `tcld feature` commands manage features in Temporal Cloud.
+`tcld feature` 命令管理 Temporal Cloud 中的功能。
 
-Alias: `f`
+别名：`f`
 
-- [tcld feature get](#get)
-- [tcld feature toggle](#toggle)
+- [tcld 功能获取](#get)
+- [tcld 功能切换](#toggle)
 
-## get
+## 得到 {#get}
 
-The `tcld feature get` command gets information about the Temporal Cloud features you've enabled.
+`tcld feature get` 命令获取有关您已启用的 Temporal Cloud 功能的信息。
 
-Alias: `g`
-
-`tcld feature get`
-
-The command has no modifiers.
-
-**Example**
+别名：`g`
 
 `tcld feature get`
 
-The following is an example output:
+该命令没有修饰符。
+
+**例子**
+
+`tcld feature get`
+
+以下是示例输出：
 
 ```json
 [
@@ -47,28 +47,29 @@ The following is an example output:
 ]
 ```
 
-## toggle
+<a id="get"></a>
+## 切换 {#toggle}
 
-The `tcld feature toggle-*` command turns on or off the `*` feature in Temporal Cloud.
+`tcld feature toggle-*` 命令打开或关闭 Temporal Cloud 中的 `*` 功能。
 
 :::note
 
-The `*` symbol represents the name of the feature.
-Replace `*` with the name of the available feature to toggle.
+`*` 符号代表功能的名称。
+将 `*` 替换为要切换的可用功能的名称。
 
 :::
 
-Alias: `tak`
+别名：`tak`
 
 `tcld feature toggle-*`
 
-The command has no modifiers.
+该命令没有修饰符。
 
-**Example**
+**例子**
 
 `tcld feature toggle-apikey`
 
-The following is an example output:
+以下是示例输出：
 
 ```json
 Feature flag enable-apikey is now true
@@ -76,7 +77,7 @@ Feature flag enable-apikey is now true
 
 :::note
 
-The feature `apikey` is an example.
-Update the feature name to toggle a different feature.
+功能 `apikey` 就是一个示例。
+Update 用于切换不同功能的功能名称。
 
 :::

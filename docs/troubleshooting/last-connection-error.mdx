@@ -1,8 +1,8 @@
 ---
 id: last-connection-error
-title: Troubleshoot the failed reaching server error
-sidebar_label: Failed reaching server error
-description: Troubleshoot server connection errors often caused by expired TLS certificates. Verify, renew, and update server configurations to resolve temporal client request issues effectively.
+title: "解决无法到达服务器错误"
+sidebar_label: "无法到达服务器错误"
+description: "解决通常由过期 TLS 证书引起的服务器连接错误。验证、更新和 Update 服务器配置，以有效解决 Temporal CLIent 请求问题。"
 toc_max_heading_level: 4
 keywords:
   - cloud
@@ -12,24 +12,25 @@ tags:
   - Namespaces
 ---
 
-The message `Failed reaching server: last connection error` can often result from an expired TLS certificate or during the Server startup process, in which the Client requests reach the Server before the roles are fully initialized.
+消息 `Failed reaching server: last connection error` 通常可能是由于 TLS 证书过期或在服务器启动过程中产生的，其中客户端请求在角色完全初始化之前到达服务器。
 
-This troubleshooting guide shows you how to do the following:
+本故障排除指南向您展示如何执行以下操作：
 
-- Verify the certification expiration date
-- Renew the certification
-- Update the server configuration
+- 验证认证有效期
+- 更新认证
+- Update 服务器配置
 
-### Verify TLS certification expiration date
+<a id="verify-tls-certification-expiration-date"></a>
+### 验证 TLS 认证到期日期 {#verify-tls-certification-expiration-date}
 
-The first step in troubleshooting this error is to verify the expiration date of the TLS certification.
-Then you can renew the certification and update the server configuration.
+解决此错误的第一步是验证 TLS 认证的到期日期。
+然后您可以更新认证和 Update 服务器配置。
 
-Choose one of the following methods to verify the expiration date of the TLS certification:
+选择以下方法之一来验证 TLS 认证的到期日期：
 
-**Verify the expiration date of the TLS certification**
+**验证 TLS 认证的到期日期**
 
-List the expiration date with the following command:
+使用以下命令列出到期日期：
 
 ```command
 tcld namespace accepted-client-ca list \
@@ -37,20 +38,20 @@ tcld namespace accepted-client-ca list \
     jq -r '.[0].notAfter'
 ```
 
-If the returned date is in the past, the certificate has expired.
+如果返回的日期是过去的日期，则证书已过期。
 
-**Existing certificate management infrastructure**
+**现有证书管理基础设施**
 
-If you are using an existing certificate management infrastructure, use it to verify the TLS connection.
-For example, if you are using OpenSSL, run the following command:
+如果您使用现有的证书管理基础设施，请使用它来验证 TLS 连接。
+例如，如果您使用 OpenSSL，请运行以下命令：
 
 ```command
 openssl s_client -connect <namespace_grpc_endpoint> -showcerts -cert ~/certs/path.pem -key .~/certs/path.key -tls1_2
 ```
 
-**Self-signed certificate**
+**自签名证书**
 
-If you are using a self-signed certificate, run the following Temporal CLI command:
+如果您使用自签名证书，请运行以下 Temporal CLI 命令：
 
 ```command
 temporal namespace describe \
@@ -60,43 +61,47 @@ temporal namespace describe \
     --tls-key-path <path-to-mTLS-key-file>
 ```
 
-Your Namespace gRPC endpoint is available on the details page for your [Temporal Cloud Namespace](https://cloud.temporal.io/namespaces).
+您的 Namespace gRPC 端点可在 [Temporal Cloud Namespace](https://cloud.temporal.io/namespaces) 的详细信息页面上找到。
 
-### Renew TLS certification
+<a id="renew-tls-certification"></a>
+### 更新 TLS 认证 {#renew-tls-certification}
 
-If the certificate has expired or is about to expire, the next step is to renew it.
+如果证书已过期或即将过期，下一步是续订。
 
-You can do this by contacting the certificate authority (CA) that issued the certificate and requesting a renewal.
+您可以通过联系颁发证书的证书颁发机构 (CA) 并请求续订来执行此操作。
 
-**Existing certificate management infrastructure**
+**现有证书管理基础设施**
 
-If you are using an existing certificate management infrastructure, contact the administrator of the infrastructure to renew the certificate.
+如果您使用现有的证书管理基础设施，请联系基础设施的管理员来续订证书。
 
-**Self-signed certificate**
+**自签名证书**
 
-If you are using a self-signed certificate or don't have an existing infrastructure, you can generate a new certificate using OpenSSL, [step CLI](https://github.com/smallstep/cli), or similar tools.
+如果您使用自签名证书或没有现有基础设施，则可以使用 OpenSSL、[步骤CLI](https://github.com/smallstep/cli) 或类似工具生成新证书。
 
-For information on generating a self-signed certificate, see [Control authorization](/cloud/certificates#control-authorization).
+有关生成自签名证书的信息，请参阅 [控制授权](/cloud/certificates#control-authorization)。
 
-### Update the CA certification in the server configuration
+<a id="update-the-ca-certification-in-the-server-configuration"></a>
+### Update 服务器配置中的CA认证 {#update-the-ca-certification-in-the-server-configuration}
 
-Update the new CA certificate in the Temporal Cloud server configuration.
+Update Temporal Cloud 服务器配置中的新 CA 证书。
 
-You can update certificates using any of the following methods:
+您可以使用以下任一方法获取 Update 证书：
 
-- [Update certificates using Temporal Cloud UI](/cloud/certificates#update-certificates-using-temporal-cloud-ui)
-- [Update certificates using tcld](/cloud/certificates#update-certificates-using-tcld)
+- [使用 Temporal Cloud UI 的 Update 证书](/cloud/certificates#update-certificates-using-temporal-cloud-ui)
+- [使用 tcld 的 Update 证书](/cloud/certificates#update-certificates-using-tcld)
 
-After you update the TLS certification in the server configuration, retry your connection.
+在服务器配置中进行 Update TLS 认证后，重试连接。
 
-### Set reminders
+<a id="set-reminders"></a>
+### 设置提醒 {#set-reminders}
 
-Don't let your certificates expire.
-Add reminders to your calendar to issue new CA certificates well before the expiration dates of the existing ones.
+不要让您的证书过期。
+在您的日历中添加提醒，以便在现有证书到期之前尽早颁发新的 CA 证书。
 
-### Additional resources
+<a id="additional-resources"></a>
+### 其他资源 {#additional-resources}
 
-The preceding steps should help you troubleshoot the `failed reaching server: last connection error` error caused by an expired TLS certificate.
+前面的步骤应该可以帮助您解决由过期的 TLS 证书引起的 `failed reaching server: last connection error` 错误。
 
-If this issue persists, verify that the Client you are using to connect to the server is using the correct TLS certification and that the Client requests reach the server after the roles are fully initialized.
-If you still need help, [create a support ticket](/cloud/support#support-ticket).
+如果此问题仍然存在，请验证用于连接到服务器的客户端是否使用正确的 TLS 认证，以及客户端请求是否在角色完全初始化后到达服务器。
+如果您仍然需要帮助，[创建支持票](/cloud/support#support-ticket)。

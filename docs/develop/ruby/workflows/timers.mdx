@@ -1,10 +1,10 @@
 ---
 id: timers
-title: Timers - Ruby SDK
-description:
+title: "Timers - Ruby SDK"
+description: Set a Durable Timer using the Temporal Ruby SDK. Pause Workflow execution for days or months. Timers are persisted and
   Set a Durable Timer using the Temporal Ruby SDK. Pause Workflow execution for days or months. Timers are persisted and
   efficient.
-sidebar_label: Durable Timers
+sidebar_label: "耐用的 Timer"
 keywords:
   - sdk
   - ruby
@@ -18,23 +18,23 @@ tags:
   - Temporal SDKs
 ---
 
-This page describes how to set a Durable Timer using the Temporal Ruby SDK.
+本页介绍如何使用 Temporal Ruby SDK 设置耐用 Timer。
 
-A [Durable Timer](/workflow-execution/timers-delays) is used to pause the execution of a Workflow for a specified
-duration. A Workflow can sleep for days or even months. Timers are persisted, so even if your Worker or Temporal Service
-is down when the time period completes, as soon as your Worker and Temporal Service are back up, the Durable Timer call
-will resolve and your code will continue executing.
+[耐用 Timer](/workflow-execution/timers-delays) 用于暂停指定的 Workflow 的执行
+持续时间。 Workflow 可以休眠数天甚至数月。 Timer 是持久的，因此即使您的 Worker 或 Temporal 服务
+当时间段结束时，一旦您的 Worker 和 Temporal 服务恢复，持久 Timer 呼叫
+将解决并且您的代码将继续执行。
 
-Sleeping is a resource-light operation: it does not tie up the process, and you can run millions of Timers off a single
-Worker.
+睡眠是一种资源消耗较少的操作：它不会占用进程，并且您可以在单个进程上运行数百万个 Timer
+Worker。
 
-To add a Timer in a Workflow, use `Temporalio::Workflow.sleep`. _Technically_ `Kernel#sleep` works, but the workflow
-form allows one to set a summary to view in the UI.
+要在 Workflow 中添加 Timer，请使用 `Temporalio::Workflow.sleep`。 _技术上_`Kernel#sleep` 可以工作，但 Workflow
+表单允许设置要在 UI 中查看的摘要。
 
 ```ruby
 # Sleep for 72 hours
 Temporalio::Workflow.sleep(72 * 60 * 60, summary: 'my timer')
 ```
 
-There is also a `Temporalio::Workflow.timeout` method that accepts a block and works like standard Ruby
-`Timeout.timeout` if needing the ability to timeout a set of code.
+还有一个 `Temporalio::Workflow.timeout` 方法，它接受一个块并且像标准 Ruby 一样工作
+`Timeout.timeout` 如果需要使一组代码超时的能力。

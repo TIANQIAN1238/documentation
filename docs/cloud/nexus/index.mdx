@@ -2,7 +2,7 @@
 id: index
 slug: /cloud/nexus
 title: Nexus
-description: Temporal Cloud adds global Nexus Registry, built-in access controls, audit logging, and multi-region connectivity on top of core Nexus.
+description: Temporal Cloud 在核心 Nexus 之上增加了全局 Nexus Registry、内置访问控制、审计日志和多区域连接能力。
 sidebar_label: Temporal Nexus
 keywords:
   - Temporal Nexus
@@ -27,25 +27,24 @@ import { CaptionedImage } from '@site/src/components';
 
 :::tip SUPPORT, STABILITY, and DEPENDENCY INFO
 
-Temporal Nexus is now [Generally Available](/evaluate/development-production-features/release-stages#general-availability).
-Learn why you should use Nexus in the [evaluation guide](/evaluate/nexus).
+Temporal Nexus 现已[正式发布](/evaluate/development-production-features/release-stages#general-availability)。在[评估指南](/evaluate/nexus)中了解为何应使用 Nexus。
 
 :::
 
-Temporal Cloud builds on the [core Nexus experience](/nexus) with:
+Temporal Cloud 在[核心 Nexus 体验](/nexus)之上构建了以下能力：
 
-- **Global [Nexus Registry](/nexus/registry)** - Scoped to your entire Account across all Namespaces. Workers in any Namespace can host Nexus Services for others to use.
-- **Built-in [access controls](/nexus/registry#configure-runtime-access-controls)** - Restrict which caller Namespaces can use a Nexus Endpoint at runtime.
-- **[Audit logging](/cloud/audit-logs)** - Stream Nexus Registry actions (create, update, delete Endpoints) to your audit log integration.
-- **Multi-region connectivity** - Nexus requests route across Namespaces within and across AWS and GCP using a global mTLS-secured Envoy mesh. Compatible with Namespaces that have [High Availability](/cloud/high-availability) as Endpoint targets.
-- **[Terraform support](/cloud/terraform-provider#manage-temporal-cloud-nexus-endpoints-with-terraform)** - Manage Nexus Endpoints with the Temporal Cloud Terraform provider.
+- **全局 [Nexus Registry](/nexus/registry)** - 跨账户下所有 Namespace 的统一注册表。任何 Namespace 中的 Worker 均可托管 Nexus Service 供其他人使用。
+- **内置[访问控制](/nexus/registry#configure-runtime-access-controls)** - 在运行时限制哪些 caller Namespace 可以使用 Nexus Endpoint。
+- **[审计日志](/cloud/audit-logs)** - 将 Nexus Registry 操作（创建、更新、删除 Endpoint）流式传输到你的审计日志集成。
+- **多区域连接** - Nexus 请求通过全局 mTLS 加密的 Envoy 网格在 AWS 和 GCP 内及跨云的 Namespace 之间路由。兼容将[高可用](/cloud/high-availability) Namespace 作为 Endpoint 目标。
+- **[Terraform 支持](/cloud/terraform-provider#manage-temporal-cloud-nexus-endpoints-with-terraform)** - 使用 Temporal Cloud Terraform provider 管理 Nexus Endpoint。
 
 <CaptionedImage
     src="/img/cloud/nexus/nexus-overview-short.png"
     title="Nexus Overview"
 />
 
-## Learn more
+## 了解更多
 
-- [Evaluate Nexus](/evaluate/nexus) | [Keynote and demo](https://youtu.be/qqc2vsv1mrU?feature=shared&t=2082)
-- [How Nexus works](/nexus) | [Deep dive talk](https://www.youtube.com/watch?v=izR9dQ_eIe4&t=934s)
+- [评估 Nexus](/evaluate/nexus) | [主题演讲与演示](https://youtu.be/qqc2vsv1mrU?feature=shared&t=2082)
+- [Nexus 工作原理](/nexus) | [深度解析讲座](https://www.youtube.com/watch?v=izR9dQ_eIe4&t=934s)

@@ -1,8 +1,8 @@
 ---
 id: scim
-title: SCIM user management
-sidebar_label: SCIM user management
-description: Link your IdP with your Temporal Cloud account to securely automate user and group management.
+title: "SCIM 用户管理"
+sidebar_label: "SCIM 用户管理"
+description: "将您的 IdP 与 Temporal Cloud 帐户关联，以安全地自动化用户和组管理。"
 slug: /cloud/scim
 toc_max_heading_level: 3
 keywords:
@@ -21,61 +21,63 @@ tags:
   - Users
 ---
 
-[SCIM](https://scim.cloud/) lets you integrate your identity provider (IdP) with Temporal Cloud to automate user provisioning and access. Once SCIM is configured, changes in your IdP are automatically reflected in Temporal Cloud, including:
+[SCIM](https://scim.cloud/) 允许您将身份提供商 (IdP) 与 Temporal Cloud 集成，以自动执行用户配置和访问。配置 SCIM 后，IdP 中的更改将自动反映在 Temporal Cloud 中，包括：
 
-- User creation / onboarding
-- User deletion / offboarding
-- User membership in groups
+- 用户创建/入职
+- 用户删除/下线
+- 组中的用户成员资格
 
-You can map SCIM groups to Temporal Cloud [roles and permissions](/cloud/manage-access/roles-and-permissions), so users automatically get the Temporal Cloud access they need based on the groups they belong to.
+您可以将 SCIM 组映射到 Temporal Cloud [角色和权限](/cloud/manage-access/roles-and-permissions)，以便用户根据所属组自动获得所需的 Temporal Cloud 访问权限。
 
 :::info
 
-SCIM is a paid feature. See the [pricing page](/cloud/pricing) for details.
+SCIM 是一项付费功能。有关详细信息，请参阅 [定价页面](/cloud/pricing)。
 
 :::
 
-## Supported IdP Vendors
+<a id="supported-idp-vendors"></a>
+## 支持的 IdP 供应商 {#supported-idp-vendors}
 
-Supported upstream IdP vendors include:
-* [Okta](#configure-scim-with-okta)
-* Microsoft Entra ID (Azure AD)
-* Google Workspace
-* OneLogin
-* CyberArk
-* JumpCloud
+支持的上游 IdP 供应商包括：
+* [奥克塔](#configure-scim-with-okta)
+* 微软 Entra ID (Azure AD)
+* 谷歌工作区
+* 一次登录
+* 赛博方舟
+* 跳云
 * PingFederate
-* Any SCIM 2.0-compliant provider
+* 任何符合 SCIM 2.0 的提供商
 
-## Preparing for SCIM
+<a id="preparing-for-scim"></a>
+## SCIM 准备 {#preparing-for-scim}
 
-Before starting your work with SCIM, you'll need to complete this checklist:
+在开始使用 SCIM 之前，您需要完成此清单：
 
-1. Configure [SAML](/cloud/saml) SSO.
-1. Identify your organization's **IdP administrator**, who is responsible for configuring and managing your SCIM integration.
-   Specify their contact details when you reach out to support in the next stage of this process.
+1. 配置 [SAML](/cloud/saml) 单点登录。
+1. 确定您组织的 **IdP 管理员**，他负责配置和管理您的 SCIM 集成。
+   当您在此过程的下一阶段寻求支持时，请指定他们的联系方式。
 
-After completing these steps, you're ready to submit your [support ticket](/cloud/support#support-ticket) to enable SCIM.
+完成这些步骤后，您就可以提交 [支持票](/cloud/support#support-ticket) 以启用 SCIM。
 
 :::tip Adding and removing users
 
-When SCIM is enabled for user management, you can still add and remove users outside of SCIM using the Temporal Cloud interface, until you disable user lifecycle management.
-You can always change a user's or group's Account Role from the Temporal Cloud interface.
+启用 SCIM 进行用户管理后，您仍然可以使用 Temporal Cloud 界面在 SCIM 之外添加和删除用户，直到禁用用户生命周期管理。
+您始终可以从 Temporal Cloud 界面更改用户或组的帐户角色。
 
 :::
 
-## Onboarding with SCIM and Okta {#configure-scim-with-okta}
+## 使用 SCIM 和 Okta {#configure-scim-with-okta}
 
-1. Temporal Support enables the SCIM integration on your account.
-   Enabling integration automatically emails a configuration link to your Okta administrator.
-   This authorizes them to set up the integration.
-1. Your Okta administrator opens the supplied link.
-   The link leads to step-by-step instructions for configuring the integration.
-1. Once configured in Okta, Temporal Cloud will begin to receive SCIM messages and automatically onboard and offboard the users and groups configured in Okta.
+1. Temporal 支持在您的帐户上启用 SCIM 集成。
+   启用集成会自动通过电子邮件将配置链接发送给您的 Okta 管理员。
+   这授权他们设置集成。
+1. 您的 Okta 管理员打开提供的链接。
+   该链接提供了配置集成的分步说明。
+1. 在 Okta 中配置后，Temporal Cloud 将开始接收 SCIM 消息并自动加入和退出 Okta 中配置的用户和组。
 
-Some points to note:
+需要注意的几点：
 
-- User and group change events are applied within 10 minutes of them being made in Okta.
-- User lifecycle management with SCIM also allows user roles to be derived from group membership.
-- Once a group has been synced in Temporal Cloud, you can use `tcld` to assign roles to the group.
-  For instructions, see the [User Group Management](https://github.com/temporalio/tcld?tab=readme-ov-file#user-group-management) page.
+- 用户和组更改事件在 Okta 中发生后 10 分钟内应用。
+- SCIM 的用户生命周期管理还允许从组成员身份派生用户角色。
+- 在 Temporal Cloud 中同步群组后，您可以使用 `tcld` 为该群组分配角色。
+  有关说明，请参阅 [用户组管理](https://github.com/temporalio/tcld?tab=readme-ov-file#user-group-management) 页面。

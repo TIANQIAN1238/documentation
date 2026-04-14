@@ -1,8 +1,8 @@
 ---
 id: batch
-title: tctl v1.17 batch command reference
-sidebar_label: batch
-description: Discover the new Temporal CLI, now in public preview. Use it for efficient management of multiple Workflow Executions with batch commands, signaling, cancellation, and termination tasks. Try it today!
+title: "tctl v1.17 批量命令参考"
+sidebar_label: "批"
+description: "探索新的 Temporal CLI，现已公开预览。使用它可以通过批处理命令、Signaling、取消和终止任务来高效管理多个 Workflow Execution。今天就试试吧！"
 toc_max_heading_level: 4
 keywords:
   - cli
@@ -15,221 +15,234 @@ keywords:
 
 :::info tctl is deprecated
 
-The tctl command line utility has been deprecated and is no longer actively supported.
-We recommend transitioning to [Temporal CLI](/cli) for continued use and access to new features.
+tctl 命令行实用程序已被弃用，并且不再主动支持。
+我们建议过渡到 [Temporal CLI](/cli) 以继续使用和访问新功能。
 
-Thank you for being a valued part of the Temporal community.
+感谢您成为 Temporal 社区的重要组成部分。
 
 :::
 
-**How to run a tctl batch command.**
+**如何运行 tctl 批处理命令。**
 
-A `tctl batch` command enables you to affect multiple existing [Workflow Executions](/workflow-execution) with a single command.
-A batch job runs in the background and affects Workflow Executions one at a time.
+`tctl batch` 命令使您能够使用单个命令影响多个现有的 [Workflow Executions](/workflow-execution)。
+批处理作业在后台运行，一次影响一个 Workflow Execution。
 
-Use [tctl batch start](#start) to start a batch job.
+使用 [tctl批量启动](#start) 启动批处理作业。
 
 :::note
 
-`tctl-v1` can run `batch` and `batch-v2` commands.
+`tctl-v1` 可以运行 `batch` 和 `batch-v2` 命令。
 
 :::
 
-When starting a batch job, you must provide a [List Filter](/list-filter) and the type of batch job that should occur.
-Batch jobs run in the background and affect Workflow Executions one at a time.
+启动批处理作业时，您必须提供 [列表过滤器](/list-filter) 以及应发生的批处理作业的类型。
+批处理作业在后台运行，一次影响一个 Workflow Execution。
 
-The List Filter identifies the set of Workflow Executions to be affected by the batch job.
-The `tctl batch start` command shows you how many Workflow Executions will be affected by the batch job and asks you to confirm before proceeding.
+列表过滤器标识受批处理作业影响的 Workflow Execution 集合。
+`tctl batch start` 命令显示有多少个 Workflow Execution 将受到批处理作业的影响，并要求您在继续之前进行确认。
 
-The batch type determines what other parameters you must provide and what is being affected.
-There are three types of batch jobs:
+批次类型决定了您必须提供的其他参数以及受影响的参数。
+批处理作业分为三种类型：
 
-- Signal: Send a Signal to the set of Workflow Executions that the List Filter specifies.
-- Cancel: Cancel the set of Workflow Executions that the List Filter specifies.
-- Terminate: Terminate the set of Workflow Executions that the List Filter specifies.
+- Signal：将 Signal 发送到列表过滤器指定的 Workflow Execution 集合。
+- 取消：取消列表过滤器指定的Workflow Execution 集合。
+- 终止：终止列表过滤器指定的 Workflow Execution 集合。
 
-A successfully started batch job returns a Job ID.
-You can use this Job ID in the `tctl batch describe` command, which describes the progress of a specific batch job.
+成功启动的批处理作业会返回作业 ID。
+您可以在 `tctl batch describe` 命令中使用此作业 ID，它描述了特定批处理作业的进度。
 
-You can also use the Job ID to terminate the batch job itself.
-Terminating a batch job does not roll back the operations already performed by the batch job.
+您还可以使用作业 ID 来终止批处理作业本身。
+终止批处理作业不会回滚批处理作业已执行的操作。
 
-### tctl batch commands
+<a id="tctl-batch-commands"></a>
+### tctl 批处理命令 {#tctl-batch-commands}
 
-- [tctl batch describe](#describe)
-- [tctl batch list](#list)
-- [tctl batch start](#start)
-- [tctl batch terminate](#terminate)
+- [tctl批次描述](#describe)
+- [tctl批次清单](#list)
+- [tctl批量启动](#start)
+- [tctl 批量终止](#terminate)
 
-## start
+## 开始 {#start}
 
-The `tctl batch start` command starts a batch job.
+`tctl batch start` 命令启动批处理作业。
 
-`tctl batch start --query <value> <modifiers>`
+`tctl batch start --Query <value> <modifiers>`
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### `--query`
+<a id="start"></a>
+### `--Query` {#query}
 
-_Required modifier_
+_所需修饰符_
 
-Specify the [Workflow Executions](/workflow-execution) that this batch job should operate.
+指定该批处理作业应运行的 [Workflow Executions](/workflow-execution)。
 
-The SQL-like query of [Search Attributes](/search-attribute) is the same as used by the `tctl workflow list --query` command.
+[Search Attributes](/search-attribute) 的类似 SQL 的 Query 与 `tctl Workflow list --Query` 命令使用的相同。
 
-Alias: `-q`
+别名：`-q`
 
-**Example**
+**例子**
 
 ```bash
 tctl batch start --query <value>
 ```
 
-### `--reason`
+<a id="query"></a>
+### `--reason` {#reason}
 
-Specify a reason for running this batch job.
+指定运行此批处理作业的原因。
 
-**Example**
+**例子**
 
 ```bash
 tctl batch start --query <value> --reason <string>
 ```
 
-### `--batch_type`
+<a id="reason"></a>
+### `--batch_type` {#batchtype}
 
-Specify the operation that this batch job performs. The supported operations are `signal`, `cancel`, and `terminate`.
+指定该批处理作业执行的操作。支持的操作有 `Signal`、`cancel` 和 `terminate`。
 
-**Example**
+**例子**
 
 ```bash
 tctl batch start --query <value> --batch_type <operation>
 ```
 
-### `--signal_name`
+<a id="batchtype"></a>
+### `--Signal_name` {#signalname}
 
-Specify the name of a [Signal](/sending-messages#sending-signals). This modifier is required when `--batch_type` is `signal`.
+指定 [Signal](/sending-messages#sending-signals) 的名称。当 `--batch_type` 为 `Signal` 时需要此修饰符。
 
-**Example**
+**例子**
 
 ```bash
 tctl batch start --query <value> --batch_type signal --signal_name <name>
 ```
 
-### `--input`
+<a id="signalname"></a>
+### `--input` {#input}
 
-Pass input for the [Signal](/sending-messages#sending-signals). Input must be in JSON format.
+传递 [Signal](/sending-messages#sending-signals) 的输入。输入必须为 JSON 格式。
 
-Alias: `-i`
+别名：`-i`
 
-**Example**
+**例子**
 
 ```bash
 tctl batch start --query <value> --input <json>
 ```
 
-### `--rps`
+<a id="input"></a>
+### `--rps` {#rps}
 
-Specify RPS of processing. The default value is 50.
+指定处理的RPS。默认值为 50。
 
-**Example**
+**例子**
 
 ```bash
 tctl batch start --query <value> --rps <value>
 ```
 
-### `--yes`
+<a id="rps"></a>
+### `--yes` {#yes}
 
-Disable the confirmation prompt.
+禁用确认提示。
 
-Alias: `y`
+别名：`y`
 
-**Example**
+**例子**
 
 ```bash
 tctl batch start --query <value> --yes
 ```
 
-## list
+## 列表 {#list}
 
-The `tctl batch list` command lists all batch jobs.
+`tctl batch list` 命令列出所有批处理作业。
 
 `tctl batch list <modifiers>`
 
 :::note
 
-`tctl-v1` can run `batch` and `batch-v2` commands.
+`tctl-v1` 可以运行 `batch` 和 `batch-v2` 命令。
 
 :::
 
-The following modifier controls the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --pagesize
+<a id="yes"></a>
+### --页面大小 {#pagesize}
 
-Specify the maximum number of batch jobs to list on a page. The default value is 30.
+指定要在页面上列出的批处理作业的最大数量。默认值为 30。
 
-**Example**
+**例子**
 
 ```bash
 tctl batch list --pagesize <value>
 ```
 
-## describe
+## 描述 {#describe}
 
-The `tctl batch describe` command describes the progress of a batch job.
+`tctl batch describe` 命令描述批处理作业的进度。
 
 `tctl batch describe --job_id <id>`
 
 :::note
 
-`tctl` can run `batch` and `batch-v2` commands.
+`tctl` 可以运行 `batch` 和 `batch-v2` 命令。
 
 :::
 
-The following modifier controls the behavior of the command.
+以下修饰符控制命令的行为。
 
-### --job_id
+<a id="list"></a>
+### --job_id {#jobid}
 
-_Required modifier_
+_所需修饰符_
 
-Specify the job ID of a batch job.
+指定批处理作业的作业 ID。
 
-**Example**
+**例子**
 
 ```bash
 tctl batch describe --job_id <id>
 ```
 
-## terminate
+<a id="pagesize"></a>
+## 终止 {#terminate}
 
-The `tctl batch terminate` command terminates a batch job.
+`tctl batch terminate` 命令终止批处理作业。
 
 `tctl batch terminate --job_id <id> <modifiers>`
 
 :::note
 
-`tctl-v1` can run `batch` and `batch-v2` commands.
+`tctl-v1` 可以运行 `batch` 和 `batch-v2` 命令。
 
 :::
 
-The following modifiers control the behavior of the command.
+以下修饰符控制命令的行为。
 
-### `--job_id`
+<a id="describe"></a>
+### `--job_id` {#jobid}
 
-_Required modifier_
+_所需修饰符_
 
-Specify the job ID of a batch job.
+指定批处理作业的作业 ID。
 
-**Example**
+**例子**
 
 ```bash
 tctl batch terminate --job_id <id>
 ```
 
-### `--reason`
+<a id="jobid"></a>
+### `--reason` {#reason}
 
-Specify a reason for terminating this batch job.
+指定终止该批处理作业的原因。
 
-**Example**
+**例子**
 
 ```bash
 tctl batch terminate --job_id <id> --reason <string>

@@ -1,10 +1,9 @@
 ---
 id: retry-policies
-title: What is a Temporal Retry Policy?
+title: 什么是 Temporal Retry Policy？
 sidebar_label: Retry Policies
-description:
-  Optimize your Workflow and Activity Task Executions with a custom Retry Policy on Temporal. Understand default
-  retries, intervals, backoff, and maximum attempts for error handling.
+description: Optimize your Workflow and Activity Task Executions with a custom Retry Policy on Temporal. Understand default
+  使用 Temporal 上的自定义 Retry Policy 优化 Workflow 和 Activity Task Execution。了解默认重试、间隔、退避和最大尝试次数的错误处理方式。
 toc_max_heading_level: 4
 keywords:
   - activities
@@ -18,57 +17,46 @@ import { CaptionedImage, RelatedReadContainer, RelatedReadItem } from '@site/src
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-A Retry Policy is a collection of settings that tells Temporal how and when to try again after something fails in a
-Workflow Execution or Activity Task Execution.
+Retry Policy 是一组设置，用于告知 Temporal 在 Workflow Execution 或 Activity Task Execution 中发生失败后如何以及何时进行重试。
 
-## Overview
+## 概述
 
-Temporal's default behavior is to automatically retry an Activity that fails, so transient or intermittent failures
-require no action on your part. This behavior is defined by the Retry Policy.
+Temporal 的默认行为是自动重试失败的 Activity，因此瞬时或间歇性故障无需你采取任何措施。此行为由 Retry Policy 定义。
 
-A Retry Policy is declarative. You do not need to implement your own logic for handling the retries; you only need to
-specify the desired behavior and Temporal will provide it.
+Retry Policy 是声明式的。你不需要实现自己的重试处理逻辑；只需指定所需的行为，Temporal 就会提供相应功能。
 
-In contrast to the Activities it contains, a Workflow Execution itself is not associated with a Retry Policy by default.
-This may seem counterintuitive, but Workflows and Activities perform different roles. Activities are intended for
-operations that may fail, so having a default Retry Policy increases the likelihood that they will ultimately complete
-successfully, even if the initial attempt failed. On the other hand, Workflows must be deterministic and are not
-intended to perform failure-prone operations. While it is possible to assign a Retry Policy to a Workflow Execution,
-this is not the default and it is uncommon to do so.
+与其包含的 Activity 不同，Workflow Execution 本身默认不关联 Retry Policy。这看起来可能有些违反直觉，但 Workflow 和 Activity 扮演不同的角色。Activity 旨在执行可能失败的操作，因此拥有默认的 Retry Policy 可以提高它们最终成功完成的可能性，即使初始尝试失败了。另一方面，Workflow 必须是确定性的，不应执行容易失败的操作。虽然可以为 Workflow Execution 指定 Retry Policy，但这不是默认设置，且通常不常见。
 
-Retry Policies do not apply to Workflow Task Executions, which retry until the Workflow Execution Timeout (which is
-unlimited by default) with an exponential backoff and a max interval of 10 minutes. A Retry Policy instructs the
-Temporal Service how to retry a failure of either a [Workflow Execution](/workflow-execution) or an
-[Activity Task Execution](/tasks#activity-task-execution).
+Retry Policy 不适用于 Workflow Task Execution，后者会以指数退避方式重试，直到 Workflow Execution Timeout（默认无限制），最大间隔为 10 分钟。Retry Policy 指导 Temporal Service 如何重试 [Workflow Execution](/workflow-execution) 或 [Activity Task Execution](/tasks#activity-task-execution) 的失败。
 
-Try out the [Activity retry simulator](/develop/activity-retry-simulator) to visualize how a Retry Policy works.
+尝试使用 [Activity 重试模拟器](/develop/activity-retry-simulator)来直观展示 Retry Policy 的工作原理。
 
 ---
 
 <RelatedReadContainer>
   <RelatedReadItem
     path="/develop/go/activities/timeouts#activity-retries"
-    text="Set a custom Retry Policy for an Activity in Go"
+    text="在 Go 中为 Activity 设置自定义 Retry Policy"
     archetype="feature-guide"
   />
   <RelatedReadItem
     path="/develop/java/activities/timeouts#activity-retries"
-    text="Set a custom Retry Policy for an Activity in Java"
+    text="在 Java 中为 Activity 设置自定义 Retry Policy"
     archetype="feature-guide"
   />
   <RelatedReadItem
     path="/develop/php/activities/timeouts#activity-retries"
-    text="Set a custom Retry Policy for an Activity in PHP"
+    text="在 PHP 中为 Activity 设置自定义 Retry Policy"
     archetype="feature-guide"
   />
   <RelatedReadItem
     path="/develop/python/activities/timeouts#activity-retries"
-    text="Set a custom Retry Policy for an Activity in Python"
+    text="在 Python 中为 Activity 设置自定义 Retry Policy"
     archetype="feature-guide"
   />
   <RelatedReadItem
     path="/develop/typescript/activities/timeouts#activity-retries"
-    text="Set a custom Retry Policy for an Activity in TypeScript"
+    text="在 TypeScript 中为 Activity 设置自定义 Retry Policy"
     archetype="feature-guide"
   />
 </RelatedReadContainer>
@@ -78,85 +66,63 @@ Try out the [Activity retry simulator](/develop/activity-retry-simulator) to vis
 <RelatedReadContainer>
   <RelatedReadItem
     path="/develop/go/workflows/timeouts#workflow-retries"
-    text="Set a Retry Policy for a Workflow in Go"
+    text="在 Go 中为 Workflow 设置 Retry Policy"
     archetype="feature-guide"
   />
   <RelatedReadItem
     path="/develop/java/workflows/timeouts#workflow-retries"
-    text="Set a Retry Policy for a Workflow in Java"
+    text="在 Java 中为 Workflow 设置 Retry Policy"
     archetype="feature-guide"
   />
   <RelatedReadItem
     path="/develop/php/workflows/timeouts#workflow-retries"
-    text="Set a Retry Policy for a Workflow in PHP"
+    text="在 PHP 中为 Workflow 设置 Retry Policy"
     archetype="feature-guide"
   />
   <RelatedReadItem
     path="/develop/python/workflows/timeouts#workflow-retries"
-    text="Set a Retry Policy for a Workflow in Python"
+    text="在 Python 中为 Workflow 设置 Retry Policy"
     archetype="feature-guide"
   />
   <RelatedReadItem
     path="/develop/typescript/workflows/timeouts#workflow-retries"
-    text="Set a Retry Policy for a Workflow in TypeScript"
+    text="在 TypeScript 中为 Workflow 设置 Retry Policy"
     archetype="feature-guide"
   />
 </RelatedReadContainer>
 
-## Default behavior
+## 默认行为
 
-Activities in Temporal are associated with a Retry Policy by default, while Workflows are not. The Temporal SDK provides
-a Retry Policy instance with default behavior. While this object is not specific to either a Workflow or Activity,
-you'll use different methods to apply it to the execution of each.
+Temporal 中的 Activity 默认关联 Retry Policy，而 Workflow 则没有。Temporal SDK 提供了一个具有默认行为的 Retry Policy 实例。虽然此对象并非专属于 Workflow 或 Activity，但你需要使用不同的方法将其应用于各自的执行。
 
-This section details the default retry behavior for both Activities and Workflows to provide context for any further
-customization.
+本节详细介绍 Activity 和 Workflow 的默认重试行为，为进一步自定义提供背景信息。
 
 ### Activity Execution
 
-Temporal's default behavior is to automatically retry an Activity, with a short delay between each attempt that
-increases exponentially, until it either succeeds or is canceled. When a subsequent request succeeds, your Workflow code
-will resume as if the failure never occurred.
+Temporal 的默认行为是自动重试 Activity，每次尝试之间有短暂延迟且呈指数增长，直到 Activity 成功或被取消。当后续请求成功时，Workflow 代码将继续执行，就好像之前的失败从未发生过一样。
 
-When an Activity Task Execution is retried, the Temporal Service places a new [Activity Task](/tasks#activity-task) into
-its respective [Activity Task Queue](/task-queue), which results in a new Activity Task Execution.
+当 Activity Task Execution 被重试时，Temporal Service 将一个新的 [Activity Task](/tasks#activity-task) 放入其对应的 [Activity Task Queue](/task-queue)，从而产生新的 Activity Task Execution。
 
-The default Retry Policy uses exponential backoff with a 2.0 backoff coefficient, starting with a 1-second initial
-interval and capping at a maximum interval of 100 seconds. By default, the maximum attempt of retries are set to zero
-which is evaluated as unlimited and non-retryable errors default to none. For detailed information about all Retry
-Policy attributes and their default values, see the [Properties](#properties) section.
+默认 Retry Policy 使用指数退避，退避系数为 2.0，初始间隔为 1 秒，最大间隔上限为 100 秒。默认情况下，最大重试次数设置为零（即无限制），不可重试错误默认为空。有关所有 Retry Policy 属性及其默认值的详细信息，请参阅[属性](#properties)部分。
 
 ### Workflow Execution
 
-Unlike Activities, Workflow Executions do not retry by default. When a Workflow Execution is spawned, it is not
-associated with a default Retry Policy and thus does not retry by default.
+与 Activity 不同，Workflow Execution 默认不进行重试。当 Workflow Execution 被触发时，它不关联默认的 Retry Policy，因此默认不重试。
 
-Temporal provides guidance around idempotence of Activity code with the expectation that Activities will need to
-re-execute upon failure; this is not typically true of Workflows. In most use cases, a Workflow failure would indicate
-an issue with the design or deployment of your application; for example, a permanent failure that may require different
-input data.
+Temporal 为 Activity 代码的幂等性提供指导，预期 Activity 在失败后需要重新执行；这通常对 Workflow 不适用。在大多数使用场景中，Workflow 失败表明应用的设计或部署存在问题，例如可能需要不同输入数据的永久性故障。
 
-Retrying an entire Workflow Execution is not recommended due to Temporal's deterministic design. Since Workflows replay
-the same sequence of events to reach the same state, retrying the whole workflow would repeat the same logic without
-resolving the underlying issue that caused the failure. This repetition does not address problems related to external
-dependencies or unchanged conditions and can lead to unnecessary resource consumption and higher costs. Instead, it's
-more efficient to retry only the failed Activities. This approach targets specific points of failure, allowing the
-workflow to progress without redundant operations, thereby saving on resources and ensuring a more focused and effective
-error recovery process. If you need to retry parts of your Workflow Definition, we recommend you implement this in your
-Workflow code.
+由于 Temporal 的确定性设计，不建议重试整个 Workflow Execution。由于 Workflow 会重放相同的事件序列以达到相同的状态，重试整个 Workflow 将重复相同的逻辑而不解决导致失败的根本问题。这种重复不能解决与外部依赖或未改变条件相关的问题，还会导致不必要的资源消耗和更高的成本。相反，更有效的做法是仅重试失败的 Activity。这种方法针对特定的故障点，让 Workflow 能够在不做冗余操作的情况下继续执行，从而节省资源并确保更有针对性和有效的错误恢复过程。如果需要重试 Workflow Definition 的某些部分，建议在 Workflow 代码中实现此逻辑。
 
-## Custom Retry Policy
+## 自定义 Retry Policy
 
-To use a custom Retry Policy, provide it as an options parameter when starting a Workflow Execution or Activity
-Execution. Only certain scenarios merit starting a Workflow Execution with a custom Retry Policy, such as the following:
+要使用自定义 Retry Policy，在启动 Workflow Execution 或 Activity Execution 时将其作为选项参数提供。只有某些特定场景才适合使用自定义 Retry Policy 启动 Workflow Execution，例如：
 
-- A [Temporal Cron Job](/cron-job) or some other stateless, always-running Workflow Execution that can benefit from
-  retries.
-- A file-processing or media-encoding Workflow Execution that downloads files to a host.
+- [Temporal Cron Job](/cron-job) 或其他无状态、持续运行的 Workflow Execution，可以从重试中获益。
+- 将文件下载到主机的文件处理或媒体编码 Workflow Execution。
 
-## Properties
+## 属性
 
-### Default values for Retry Policy
+### Retry Policy 的默认值
 
 ```
 Initial Interval     = 1 second
@@ -166,62 +132,49 @@ Maximum Attempts     = ∞
 Non-Retryable Errors = []
 ```
 
-### Initial Interval
+### 初始间隔（Initial Interval）
 
-- **Description:** Amount of time that must elapse before the first retry occurs.
-  - **The default value is 1 second.**
-- **Use case:** This is used as the base interval time for the [Backoff Coefficient](#backoff-coefficient) to multiply
-  against.
+- **描述：** 第一次重试发生前必须经过的时间量。
+  - **默认值为 1 秒。**
+- **使用场景：** 用作[退避系数](#backoff-coefficient)的基础间隔时间。
 
-### Backoff Coefficient
+### 退避系数（Backoff Coefficient）
 
-- **Description:** The value dictates how much the _retry interval_ increases.
-  - **The default value is 2.0.**
-  - A backoff coefficient of 1.0 means that the retry interval always equals the [Initial Interval](#initial-interval).
-- **Use case:** Use this attribute to increase the interval between retries. By having a backoff coefficient greater
-  than 1.0, the first few retries happen relatively quickly to overcome intermittent failures, but subsequent retries
-  happen farther and farther apart to account for longer outages. Use the [Maximum Interval](#maximum-interval)
-  attribute to prevent the coefficient from increasing the retry interval too much.
+- **描述：** 该值决定_重试间隔_增加的幅度。
+  - **默认值为 2.0。**
+  - 退避系数为 1.0 意味着重试间隔始终等于[初始间隔](#initial-interval)。
+- **使用场景：** 使用此属性增加重试间隔。退避系数大于 1.0 时，前几次重试发生得相对较快以克服间歇性故障，而后续重试间隔越来越长以应对持续时间较长的故障。使用[最大间隔](#maximum-interval)属性防止系数将重试间隔增加过多。
 
-### Maximum Interval
+### 最大间隔（Maximum Interval）
 
-- **Description:** Specifies the maximum interval between retries.
-  - **The default value is 100 times the [Initial Interval](#initial-interval).**
-- **Use case:** This attribute is useful for [Backoff Coefficients](#backoff-coefficient) that are greater than 1.0
-  because it prevents the retry interval from growing infinitely.
+- **描述：** 指定重试之间的最大间隔。
+  - **默认值为[初始间隔](#initial-interval)的 100 倍。**
+- **使用场景：** 此属性对于大于 1.0 的[退避系数](#backoff-coefficient)非常有用，因为它可以防止重试间隔无限增长。
 
-### Maximum Attempts
+### 最大尝试次数（Maximum Attempts）
 
-- **Description:** Specifies the maximum number of execution attempts that can be made in the presence of failures.
-  - **The default is unlimited.**
-  - If this limit is exceeded, the execution fails without retrying again. When this happens an error is returned.
-  - Setting the value to 0 also means unlimited.
-  - Setting the value to 1 means a single execution attempt and no retries.
-  - Setting the value to a negative integer results in an error when the execution is invoked.
-- **Use case:** Use this attribute to ensure that retries do not continue indefinitely. In most cases, we recommend
-  using the Workflow Execution Timeout for [Workflows](/workflows) or the Schedule-To-Close Timeout for Activities to
-  limit the total duration of retries, rather than using this attribute.
+- **描述：** 指定在存在失败的情况下可以进行的最大执行尝试次数。
+  - **默认为无限制。**
+  - 如果超过此限制，执行将失败且不再重试。发生这种情况时，会返回一个错误。
+  - 将值设置为 0 也表示无限制。
+  - 将值设置为 1 表示单次执行尝试，不进行重试。
+  - 将值设置为负整数会在调用执行时导致错误。
+- **使用场景：** 使用此属性确保重试不会无限期继续。在大多数情况下，我们建议使用 Workflow Execution Timeout（针对 [Workflow](/workflows)）或 Schedule-To-Close Timeout（针对 Activity）来限制重试总时长，而不是使用此属性。
 
-### Non-Retryable Errors {#non-retryable-errors}
+### 不可重试错误（Non-Retryable Errors） {#non-retryable-errors}
 
-Non-Retryable Errors specify errors that shouldn't be retried. By default, none are specified. Errors are matched
-against the `type` field of the [Application Failure](/references/failures#application-failure). If one of those errors
-occurs, a retry does not occur. If you know of errors that should not trigger a retry, you can specify that and if they
-occur, the execution is not retried.
+不可重试错误指定不应重试的错误类型。默认情况下，未指定任何错误。错误将与 [Application Failure](/references/failures#application-failure) 的 `type` 字段进行匹配。如果出现这些错误之一，则不会进行重试。如果你知道某些错误不应触发重试，可以指定这些错误，这样一旦发生，就不会重试执行。
 
-#### Non-Retryable Errors for Activities
+#### Activity 的不可重试错误
 
-When writing software applications, you will encounter three types of failures: transient, intermittent, and permanent.
-While transient and intermittent failures may resolve themselves upon retrying without further intervention, permanent
-failures will not. Permanent failures, by definition, require you to make some change to your logic or your input.
-Therefore, it is better to surface them than to retry them.
+在编写软件应用程序时，你会遇到三种类型的故障：瞬时、间歇性和永久性。瞬时和间歇性故障可能在重试后自行解决，而永久性故障则不会。永久性故障根据定义需要你对逻辑或输入进行更改。因此，最好是将其暴露出来而不是重试。
 
-Non-Retryable Errors are errors that will not be retried, regardless of a Retry Policy.
+不可重试错误是指无论 Retry Policy 如何都不会重试的错误。
 
 <Tabs groupId="sdk-language" queryString>
 <TabItem value="ruby" label="Ruby">
 
-To raise a non-retryable error, specify the `non_retryable` flag when raising an `ApplicationError`:
+要抛出不可重试错误，请在引发 `ApplicationError` 时指定 `non_retryable` 标志：
 
 ```ruby
 raise Temporalio::Error::ApplicationError.new(
@@ -231,12 +184,12 @@ raise Temporalio::Error::ApplicationError.new(
 )
 ```
 
-This will designate the `ApplicationError` as non-retryable.
+这会将 `ApplicationError` 标记为不可重试。
 
 </TabItem>
 <TabItem value="python" label="Python">
 
-To raise a non-retryable error, specify the `non_retryable` flag when raising an `ApplicationError`:
+要抛出不可重试错误，请在引发 `ApplicationError` 时指定 `non_retryable` 标志：
 
 ```python
 raise ApplicationError(
@@ -246,12 +199,12 @@ raise ApplicationError(
 )
 ```
 
-This will designate the `ApplicationError` as non-retryable.
+这会将 `ApplicationError` 标记为不可重试。
 
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
-To throw a non-retryable error, add `nonRetryable: true` to `ApplicationFailure.create({})`:
+要抛出不可重试错误，请在 `ApplicationFailure.create({})` 中添加 `nonRetryable: true`：
 
 ```typescript
 throw ApplicationFailure.create({
@@ -261,12 +214,12 @@ throw ApplicationFailure.create({
 });
 ```
 
-This will designate the Error as non-retryable.
+这会将该错误标记为不可重试。
 
 </TabItem>
 <TabItem value="java" label="Java">
 
-To throw a non-retryable error, use the `newNonRetryableFailure` method:
+要抛出不可重试错误，请使用 `newNonRetryableFailure` 方法：
 
 ```java
 throw ApplicationFailure.newNonRetryableFailure(
@@ -275,23 +228,23 @@ throw ApplicationFailure.newNonRetryableFailure(
 );
 ```
 
-This will designate the `ApplicationFailure` as non-retryable.
+这会将 `ApplicationFailure` 标记为不可重试。
 
 </TabItem>
 <TabItem value="go" label="Go">
 
-To return a non-retryable error, replace your call to `NewApplicationError()` with `NewNonRetryableApplicationError()`:
+要返回不可重试错误，请将调用 `NewApplicationError()` 替换为 `NewNonRetryableApplicationError()`：
 
 ```go
 temporal.NewNonRetryableApplicationError("Credit Card Charge Error", "CreditCardError", nil, nil)
 ```
 
-This will designate the Error as non-retryable.
+这会将该错误标记为不可重试。
 
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
-To throw a non-retryable error, specify the `nonRetryable` flag when throwing an `ApplicationFailureException`:
+要抛出不可重试错误，请在抛出 `ApplicationFailureException` 时指定 `nonRetryable` 标志：
 
 ```csharp
 var attempt = ActivityExecutionContext.Current.Info.Attempt;
@@ -303,109 +256,83 @@ throw new ApplicationFailureException(
 );
 ```
 
-This will designate the `ApplicationFailureException` as non-retryable.
+这会将 `ApplicationFailureException` 标记为不可重试。
 
 </TabItem>
 </Tabs>
 
-Use non-retryable errors in your code sparingly.
+谨慎使用代码中的不可重试错误。
 
 <Tabs groupId="sdk-language" queryString>
 <TabItem value="ruby" label="Ruby">
 
-If you do not specify the failure as non-retryable within the definition, you can always mark that error type as
-non-retryable in your Activity's Retry Policy, but an `ApplicationError` with the `non_retryable` keyword argument set
-to `true` will always be non-retryable.
+如果在定义中未将失败指定为不可重试，可以在 Activity 的 Retry Policy 中将该错误类型标记为不可重试，但将 `non_retryable` 关键字参数设置为 `true` 的 `ApplicationError` 将始终是不可重试的。
 
 </TabItem>
 <TabItem value="python" label="Python">
 
-If you do not specify the failure as non-retryable within the definition, you can always mark that error type as
-non-retryable in your Activity's Retry Policy, but an `ApplicationError` with the `non_retryable` keyword argument set
-to `True` will always be non-retryable.
+如果在定义中未将失败指定为不可重试，可以在 Activity 的 Retry Policy 中将该错误类型标记为不可重试，但将 `non_retryable` 关键字参数设置为 `True` 的 `ApplicationError` 将始终是不可重试的。
 
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
-If you do not specify the failure as non-retryable within the definition, you can always mark that error type as
-non-retryable in your Activity's Retry Policy, but an error with `nonRetryable: true` set will always be non-retryable.
+如果在定义中未将失败指定为不可重试，可以在 Activity 的 Retry Policy 中将该错误类型标记为不可重试，但设置了 `nonRetryable: true` 的错误将始终是不可重试的。
 
 </TabItem>
 <TabItem value="java" label="Java">
 
-If you throw a regular `newFailure()`, you can always mark that error _type_ as non-retryable in your Activity's Retry
-Policy, but a `newNonRetryableFailure()` will always be non-retryable.
+如果抛出普通的 `newFailure()`，可以在 Activity 的 Retry Policy 中将该错误_类型_标记为不可重试，但 `newNonRetryableFailure()` 将始终是不可重试的。
 
 </TabItem>
 <TabItem value="go" label="Go">
 
-If you return a regular `NewApplicationError()`, you can always mark that error _type_ as non-retryable in your
-Activity's Retry Policy, but a `NewNonRetryableApplicationError()` will always be non-retryable.
+如果返回普通的 `NewApplicationError()`，可以在 Activity 的 Retry Policy 中将该错误_类型_标记为不可重试，但 `NewNonRetryableApplicationError()` 将始终是不可重试的。
 
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
-If you do not specify the failure as non-retryable within the definition, you can always mark that error type as
-non-retryable in your Activity's Retry Policy, but an `ApplicationFailureException` with the `nonRetryable` parameter
-set to `true` will always be non-retryable.
+如果在定义中未将失败指定为不可重试，可以在 Activity 的 Retry Policy 中将该错误类型标记为不可重试，但将 `nonRetryable` 参数设置为 `true` 的 `ApplicationFailureException` 将始终是不可重试的。
 
 </TabItem>
 </Tabs>
 
-For example, checking for bad input data is a reasonable time to use a non-retryable error. If the Activity cannot
-proceed with the input it has, that error should be surfaced immediately so that the input can be corrected on the next
-attempt.
+例如，检查错误的输入数据是使用不可重试错误的合理场景。如果 Activity 无法使用所提供的输入继续执行，则应立即暴露该错误，以便在下一次尝试时更正输入。
 
-If responsibility for your application is distributed across multiple maintainers, or if you are developing a library to
-integrate into somebody else's application, you can think of the decision to hardcode non-retryable errors as following
-a "caller vs. implementer" dichotomy. Anyone who is calling your Activity would be able to make decisions about their
-Retry Policy, but only the implementer can decide whether an error should never be retryable out of the box.
+如果应用程序的维护责任分散在多个维护者之间，或者你正在开发一个要集成到别人应用程序中的库，则可以将硬编码不可重试错误的决定视为遵循"调用者与实现者"二分法。任何调用你的 Activity 的人都可以决定他们的 Retry Policy，但只有实现者才能决定某个错误是否默认不可重试。
 
-## Retry interval
+## 重试间隔
 
-The wait time before a retry is the _retry interval_. A retry interval is the smaller of two values:
+重试前的等待时间即为_重试间隔_。重试间隔是以下两个值中较小的一个：
 
-- The [Initial Interval](#initial-interval) multiplied by the [Backoff Coefficient](#backoff-coefficient) raised to the
-  power of the number of retries.
-- The [Maximum Interval](#maximum-interval).
+- [初始间隔](#initial-interval)乘以[退避系数](#backoff-coefficient)的重试次数次幂。
+- [最大间隔](#maximum-interval)。
 
 <CaptionedImage
   src="/img/info/retry-interval-diagram.png"
   title="Diagram that shows the retry interval and its formula"
 />
 
-### Per-error next Retry delay
+### 按错误设置下次重试延迟
 
-Sometimes, your Activity or Workflow raises a special exception that needs a different retry interval from the Retry
-Policy. To accomplish this, you may throw an [Application Failure](/references/failures#application-failure) with the
-next Retry delay field set. This value will replace and override whatever the retry interval would be on the Retry
-Policy. Note that your retries will still cap out under the Retry Policy's Maximum Attempts, as well as overall
-timeouts. For an Activity, its Schedule-to-Close Timeout applies. For a Workflow, the Execution Timeout applies.
+有时，你的 Activity 或 Workflow 会引发一个需要与 Retry Policy 中不同重试间隔的特殊异常。为此，可以抛出一个设置了下次重试延迟字段的 [Application Failure](/references/failures#application-failure)。此值将替换并覆盖 Retry Policy 中原本的重试间隔。请注意，重试仍然受 Retry Policy 的最大尝试次数限制，以及整体超时约束。对于 Activity，适用 Schedule-to-Close Timeout；对于 Workflow，适用 Execution Timeout。
 
 <RelatedReadContainer>
   <RelatedReadItem
     path="/develop/java/activities/timeouts#activity-next-retry-delay"
-    text="Customize retry delays per error in the Java SDK."
+    text="在 Java SDK 中按错误自定义重试延迟。"
     archetype="feature-guide"
   />
   <RelatedReadItem
     path="/develop/typescript/activities/timeouts#activity-next-retry-delay"
-    text="Customize retry delays per error in the TypeScript SDK"
+    text="在 TypeScript SDK 中按错误自定义重试延迟"
     archetype="feature-guide"
   />
 </RelatedReadContainer>
 
 ## Event History
 
-There are some subtle nuances to how Events are recorded to an Event History when a Retry Policy comes into play.
+当 Retry Policy 起作用时，事件记录到 Event History 的方式存在一些细微差别。
 
-- For an Activity Execution, the [ActivityTaskStarted](/references/events#activitytaskstarted) Event will not show up in
-  the Workflow Execution Event History until the Activity Execution has completed or failed (having exhausted all
-  retries). This is to avoid filling the Event History with noise. Use the Describe API to get a pending Activity
-  Execution's attempt count.
+- 对于 Activity Execution，[ActivityTaskStarted](/references/events#activitytaskstarted) 事件在 Activity Execution 完成或失败（已耗尽所有重试次数）之前不会出现在 Workflow Execution Event History 中。这是为了避免用噪音填满 Event History。使用 Describe API 获取待处理 Activity Execution 的尝试次数。
 
-- When a Workflow fails and has a Retry Policy, the failed run ends with `WorkflowExecutionFailed`, with
-  `retryState=IN_PROGRESS` and `newExecutionRunId` set, and the Temporal Service starts a new Workflow Execution. The
-  new Workflow Execution is created immediately, but the first Workflow Task won’t be scheduled until the backoff
-  duration is exhausted. That duration is recorded as the `first_workflow_task_backoff` field on the new run’s
-  `WorkflowExecutionStartedEventAttributes`.
+- 当 Workflow 失败且有 Retry Policy 时，失败的运行以 `WorkflowExecutionFailed`（`retryState=IN_PROGRESS` 且设置了 `newExecutionRunId`）结束，Temporal Service 会启动新的 Workflow Execution。新的 Workflow Execution 会立即创建，但直到退避时长耗尽后才会调度第一个 Workflow Task。该时长记录在新运行的 `WorkflowExecutionStartedEventAttributes` 的 `first_workflow_task_backoff` 字段中。

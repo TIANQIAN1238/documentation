@@ -1,0 +1,1008 @@
+---
+id: visibility
+title: 自托管 Visibility 功能设置
+sidebar_label: Visibility
+description: A Visibility store is essential for your Temporal Service, supporting features like batch operations and Search
+  A Visibility store is essential for your Temporal Service, supporting features like batch operations and Search
+  Attribute-based filtering for Workflow Executions. For current self-hosted deployments, use advanced Visibility on
+  PostgreSQL 12+, MySQL 8.0.17+, SQLite 3.31.0+, Elasticsearch, or OpenSearch.
+slug: /self-hosted-guide/visibility
+toc_max_heading_level: 4
+keywords:
+  - filtered-lists
+  - guide-context
+  - operation-guide
+  - visibility
+tags:
+  - Temporal Service
+  - Self-hosting
+  - Visibility
+---
+
+[Visibility](/Temporal-service/Visibility) 商店被设置为您的一部分
+[持久性存储](/Temporal-service/persistence) 用于启用列出和过滤有关 Workflow Execution 的详细信息
+存在于您的 Temporal 服务上。
+
+Temporal 服务设置中需要 Visibility 存储，因为它由 [Temporal Web UI](/web-ui) 使用，并且
+[Temporal CLI](/cli) 用于提取 [Workflow Execution](/Workflow-execution) 数据并启用批处理操作等功能
+在一组 Workflow Execution 上。
+
+通过 Visibility 商店，您可以使用 [列表过滤器](/list-filter) 和 [Search Attributes](/search-attribute) 来列出
+并筛选您想要查看或采取行动的 Workflow Execution。
+
+支持的 Visibility 商店包括：
+
+- Elasticsearch v7 与 Temporal Server v1.7 及更高版本
+- Elasticsearch v8 与 Temporal Server v1.18 及更高版本
+- OpenSearch 2+ 与 Temporal Server v1.30.1 及更高版本
+- MySQL v8.0.17 及更高版本以及 Temporal Server v1.20 及更高版本
+- PostgreSQL v12 及更高版本以及 Temporal Server v1.20 及更高版本
+- SQLite v3.31.0 及更高版本以及 Temporal Server v1.20 及更高版本
+
+## 当前和旧版 Visibility 支持 {#supported-databases}
+
+[高级 Visibility](/Visibility#advanced-Visibility) 是最新一代的 Temporal Visibility。它支持
+现代 Query 型号，包括 [自定义 Search Attributes](/search-attribute#custom-search-attribute)。
+
+此页面还包括旧版指南（在 Temporal Server v1.21 中弃用并在 v1.24 中删除）
+适用于旧部署和迁移工作的 [标准 Visibility](#legacy-standard-Visibility) 模型。在此背景下，
+“高级”和“标准（旧版）”分别指当前一代和旧版 Temporal Visibility。
+
+以下兼容性矩阵总结了每个商店支持哪一代 Visibility 和 Temporal Server
+所需版本：
+
+|商店 |高级 Visibility（当前）|标准 Visibility（传统）|
+| :---------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
+| [Elasticsearch](#elasticsearch) <br/><br/>推荐用于生成多个 Workflow Execution 的任何设置 | Temporal Server v1.7+ 上的 v7、Temporal Server v1.18+ 上的 v8 |不支持 |
+| [开放搜索](#elasticsearch) | Temporal Server v1.30.1+ 2+ |不支持 |
+| [MySQL](#mysql) | Temporal Server v1.20+ 上的 v8.0.17+ | Temporal Server v1.24 之前的旧部署上的 v5.7+ |
+| [PostgreSQL](#postgresql) | Temporal Server v1.20+ 上的 v12+ | Temporal Server v1.24 之前的旧部署上的 v9.6+ |
+| [SQLite](#sqlite) | Temporal Server v1.20+ 上的 v3.31.0+ |不支持 |
+| [卡桑德拉](#cassandra) |不支持。<br/><br/>要从 Cassandra 迁移到受支持的高级 Visibility 存储，请参阅[迁移 Visibility 数据库](#migration-Visibility-database)。 |在 Temporal Server v1.21 中弃用，在 Temporal Server v1.24 中删除 |
+
+您可以将支持的数据库的任意组合用于持久性和 Visibility 存储。对于 Update，请检查
+[服务器发行说明](https://github.com/Temporalio/Temporal/releases)。
+
+Temporal Server v1.21 引入了对 Temporal 服务中辅助 Visibility 存储的支持，以启用
+[双Visibility](/双-Visibility)。这对于迁移 Visibility 存储数据库非常有用。
+
+## 如何设置 MySQL Visibility 存储 {#mysql}
+
+:::tip Support, stability, and dependency info
+
+- MySQL v5.7 及更高版本。
+- 高级 Visibility 可在 MySQL v8.0.17 及更高版本以及 Temporal Server v1.20 及更高版本上使用。
+- MySQL v5.7 支持适用于 Temporal Server v1.24 之前的旧标准 Visibility 部署。
+
+:::
+
+您可以将 MySQL 设置为您的 [Visibility 存储](/Temporal-service/Visibility)。验证
+[支持的版本](/self-hosted-guide/Visibility)，然后再继续。
+
+如果使用 MySQL v8.0.17 或更高版本作为 Visibility 存储以及 Temporal Server v1.20 和更高版本，则任何
+您创建的 [custom Search Attributes](/search-attribute#custom-search-attribute) 必须与
+该 Temporal 服务中的 Namespace。
+
+### 持久化配置
+
+在持久性配置中的“VisibilityStore”参数中设置 MySQL Visibility 存储名称，然后
+在“datastores”下定义 Visibility 存储配置。
+
+以下示例显示如何设置 Visibility 存储“mysql-Visibility”并在中定义数据存储配置
+您的 Temporal 服务配置 YAML。
+
+```yaml
+#...
+persistence:
+  #...
+  visibilityStore: mysql-visibility
+  #...
+  datastores:
+    default:
+      #...
+    mysql-visibility:
+      sql:
+        pluginName: 'mysql8' # For MySQL v8.0.17 and later. For earlier versions, use "mysql" plugin.
+        databaseName: 'temporal_visibility'
+        connectAddr: ' ' # Remote address of this database; for example, 127.0.0.0:3306
+        connectProtocol: ' ' # Protocol example: tcp
+        user: 'username_for_auth'
+        password: 'password_for_auth'
+        maxConns: 2
+        maxIdleConns: 2
+        maxConnLifetime: '1h'
+#...
+```
+
+有关配置参数和值的详细信息，请参见
+[Temporal 服务配置](/references/configuration#sql)。
+
+要在 MySQL Visibility 存储上启用高级 Visibility 功能，请使用 Temporal 升级到 MySQL v8.0.17 或更高版本
+服务器 v1.20 或更高版本。请参阅[升级服务器](/self-hosted-guide/upgrade-server#upgrade-server)了解如何升级您的服务器
+Temporal Server 和数据库架构。
+
+例如配置模板，请参见
+[MySQL Visibility 存储配置](https://github.com/Temporalio/Temporal/blob/main/config/development-mysql8.yaml)。
+
+### 数据库架构和设置
+
+Visibility 数据存储在名为“executions_Visibility”的数据库表中，并且必须使用以下模式创建：
+[MySQL v8.0.17 及更高版本](https://github.com/Temporalio/Temporal/tree/main/schema/mysql/v8/Visibility)。
+
+以下示例展示了如何使用以下命令将 MySQL 设置为持久性存储和 Visibility 存储：
+`Temporal-sql-工具`。请参阅
+[samples-server 存储库](https://github.com/Temporalio/samples-server/tree/main/compose/scripts) 了解更多示例
+与不同的数据库。
+
+{/* SNIPSTART compose-mysql-setup */}
+[compose/scripts/setup-mysql.sh](https://github.com/Temporalio/samples-server/blob/main/compose/scripts/setup-mysql.sh)
+```sh
+set -eu
+
+# Validate required environment variables
+: "${MYSQL_SEEDS:?ERROR: MYSQL_SEEDS environment variable is required}"
+: "${MYSQL_USER:?ERROR: MYSQL_USER environment variable is required}"
+
+echo 'Starting MySQL schema setup...'
+echo 'Waiting for MySQL port to be available...'
+nc -z -w 10 ${MYSQL_SEEDS} ${DB_PORT:-3306}
+echo 'MySQL port is available'
+
+# Create and setup temporal database
+temporal-sql-tool --plugin mysql8 --ep ${MYSQL_SEEDS} -u ${MYSQL_USER} -p ${DB_PORT:-3306} --db temporal create
+temporal-sql-tool --plugin mysql8 --ep ${MYSQL_SEEDS} -u ${MYSQL_USER} -p ${DB_PORT:-3306} --db temporal setup-schema -v 0.0
+temporal-sql-tool --plugin mysql8 --ep ${MYSQL_SEEDS} -u ${MYSQL_USER} -p ${DB_PORT:-3306} --db temporal update-schema -d /etc/temporal/schema/mysql/v8/temporal/versioned
+
+# Create and setup visibility database
+temporal-sql-tool --plugin mysql8 --ep ${MYSQL_SEEDS} -u ${MYSQL_USER} -p ${DB_PORT:-3306} --db temporal_visibility create
+temporal-sql-tool --plugin mysql8 --ep ${MYSQL_SEEDS} -u ${MYSQL_USER} -p ${DB_PORT:-3306} --db temporal_visibility setup-schema -v 0.0
+temporal-sql-tool --plugin mysql8 --ep ${MYSQL_SEEDS} -u ${MYSQL_USER} -p ${DB_PORT:-3306} --db temporal_visibility update-schema -d /etc/temporal/schema/mysql/v8/visibility/versioned
+
+echo 'MySQL schema setup complete'
+```
+{/* 截图 */}
+
+请注意，该脚本使用
+[Temporal-sql-tool](https://github.com/Temporalio/Temporal/blob/3b982585bf0124839e697952df4bba01fe4d9543/tools/sql/main.go)
+运行安装程序。
+
+## 如何设置 PostgreSQL Visibility 存储 {#postgresql}
+
+:::tip Support, stability, and dependency info
+
+- PostgreSQL v9.6 及更高版本。
+- 高级 Visibility 可在 PostgreSQL v12 及更高版本以及 Temporal Server v1.20 及更高版本上使用。
+- PostgreSQL v9.6 到 v11 支持适用于 Temporal Server v1.24 之前的旧标准 Visibility 部署。我们
+  建议升级到 PostgreSQL 12 或更高版本。
+
+:::
+
+您可以将 PostgreSQL 设置为您的 [Visibility 存储](/Temporal-service/Visibility)。验证
+[支持的版本](/self-hosted-guide/Visibility)，然后再继续。
+
+如果使用 PostgreSQL v12 或更高版本作为 Visibility 存储以及 Temporal Server v1.20 和更高版本，则任何
+您创建的 [custom Search Attributes](/search-attribute#custom-search-attribute) 必须与
+该 Temporal 服务中的 Namespace。
+
+如果您的 XPROT019X 端点未全局设置，请为每个命令提供“--codec-endpoint”选项。
+例如，要查看 XPROT025X“yourXPROT025X”中 XPROT002X“yourXPROT027X”的解码输出，请运行：
+
+在持久性配置中的“VisibilityStore”参数中设置 PostgreSQL Visibility 存储名称，然后
+在“datastores”下定义 Visibility 存储配置。
+
+以下示例显示如何设置 Visibility 存储“postgres-Visibility”并定义数据存储配置
+在您的 Temporal 服务配置 YAML 中。
+
+```yaml
+#...
+persistence:
+  #...
+  visibilityStore: postgres-visibility
+  #...
+  datastores:
+    default:
+    #...
+    postgres-visibility:
+      sql:
+        pluginName: 'postgres12' # For PostgreSQL v12 and later. For earlier versions, use "postgres" plugin.
+        databaseName: 'temporal_visibility'
+        connectAddr: ' ' # remote address of this database; for example, 127.0.0.0:5432
+        connectProtocol: ' ' # protocol example: tcp
+        user: 'username_for_auth'
+        password: 'password_for_auth'
+        maxConns: 2
+        maxIdleConns: 2
+        maxConnLifetime: '1h'
+#...
+```
+
+要在 PostgreSQL Visibility 存储上启用高级 Visibility 功能，请升级到 PostgreSQL v12 或更高版本：
+Temporal Server v1.20 或更高版本。有关详细信息，请参阅[升级服务器](/self-hosted-guide/upgrade-server#upgrade-server)
+如何升级 Temporal Server 和数据库架构。
+
+### 数据库架构和设置
+
+Visibility 数据存储在名为“executions_Visibility”的数据库表中，并且必须使用以下模式创建：
+[PostgreSQL v12 及更高版本](https://github.com/Temporalio/Temporal/tree/main/schema/postgresql/v12/Visibility)
+
+以下示例展示了如何使用以下命令将 PostgreSQL 设置为持久性存储和 Visibility 存储：
+`Temporal-sql-工具`。请参阅
+[samples-server 存储库](https://github.com/Temporalio/samples-server/tree/main/compose/scripts) 了解更多示例
+与不同的数据库。
+
+{/* SNIPSTART compose-postgres-setup */}
+[compose/scripts/setup-postgres.sh](https://github.com/Temporalio/samples-server/blob/main/compose/scripts/setup-postgres.sh)
+```sh
+set -eu
+
+# Validate required environment variables
+: "${POSTGRES_SEEDS:?ERROR: POSTGRES_SEEDS environment variable is required}"
+: "${POSTGRES_USER:?ERROR: POSTGRES_USER environment variable is required}"
+
+echo 'Starting PostgreSQL schema setup...'
+echo 'Waiting for PostgreSQL port to be available...'
+nc -z -w 10 ${POSTGRES_SEEDS} ${DB_PORT:-5432}
+echo 'PostgreSQL port is available'
+
+# Create and setup temporal database
+temporal-sql-tool --plugin postgres12 --ep ${POSTGRES_SEEDS} -u ${POSTGRES_USER} -p ${DB_PORT:-5432} --db temporal create
+temporal-sql-tool --plugin postgres12 --ep ${POSTGRES_SEEDS} -u ${POSTGRES_USER} -p ${DB_PORT:-5432} --db temporal setup-schema -v 0.0
+temporal-sql-tool --plugin postgres12 --ep ${POSTGRES_SEEDS} -u ${POSTGRES_USER} -p ${DB_PORT:-5432} --db temporal update-schema -d /etc/temporal/schema/postgresql/v12/temporal/versioned
+
+# Create and setup visibility database
+temporal-sql-tool --plugin postgres12 --ep ${POSTGRES_SEEDS} -u ${POSTGRES_USER} -p ${DB_PORT:-5432} --db temporal_visibility create
+temporal-sql-tool --plugin postgres12 --ep ${POSTGRES_SEEDS} -u ${POSTGRES_USER} -p ${DB_PORT:-5432} --db temporal_visibility setup-schema -v 0.0
+temporal-sql-tool --plugin postgres12 --ep ${POSTGRES_SEEDS} -u ${POSTGRES_USER} -p ${DB_PORT:-5432} --db temporal_visibility update-schema -d /etc/temporal/schema/postgresql/v12/visibility/versioned
+
+echo 'PostgreSQL schema setup complete'
+```
+{/* 截图 */}
+
+请注意，该脚本使用
+[Temporal-sql-tool](https://github.com/Temporalio/Temporal/blob/3b982585bf0124839e697952df4bba01fe4d9543/tools/sql/main.go)
+运行安装程序。
+
+## 如何设置 SQLite Visibility 存储 {#sqlite}
+
+:::tip Support, stability, and dependency info
+
+- SQLite v3.31.0 及更高版本。
+
+:::
+
+您可以将 SQLite 设置为您的 [Visibility 存储](/Temporal-service/Visibility)。验证
+[支持的版本](/self-hosted-guide/Visibility)，然后再继续。
+
+Temporal仅支持带有SQLite的内存数据库；这意味着数据库会在以下情况下自动创建：
+Temporal Server 启动并在 Temporal Server 停止时被破坏。
+
+您可以更改配置以使用基于文件的数据库，以便在 Temporal Server 停止时保留它。
+但是，如果您使用基于文件的 SQLite 数据库，请升级数据库架构以启用高级 Visibility 功能
+不支持；在这种情况下，您必须删除数据库并重新创建才能升级。
+
+如果使用 SQLite v3.31.0 及更高版本作为 Visibility 存储以及 Temporal Server v1.20 及更高版本，则任何
+您创建的 [custom Search Attributes](/search-attribute#custom-search-attribute) 必须与
+该 Temporal 服务中的 Namespace。
+
+### 持久化配置
+
+在持久性配置的“VisibilityStore”参数中设置 SQLite Visibility 存储名称，然后
+在“datastores”下定义 Visibility 存储配置。
+
+以下示例显示如何设置 Visibility 存储“sqlite-Visibility”并在中定义数据存储配置
+您的 Temporal 服务配置 YAML。
+
+```yaml
+persistence:
+  # ...
+  visibilityStore: sqlite-visibility
+  # ...
+  datastores:
+    # ...
+    sqlite-visibility:
+      sql:
+        user: 'username_for_auth'
+        password: 'password_for_auth'
+        pluginName: 'sqlite'
+        databaseName: 'default'
+        connectAddr: 'localhost'
+        connectProtocol: 'tcp'
+        connectAttributes:
+          mode: 'memory'
+          cache: 'private'
+        maxConns: 1
+        maxIdleConns: 1
+        maxConnLifetime: '1h'
+        tls:
+          enabled: false
+          caFile: ''
+          certFile: ''
+          keyFile: ''
+          enableHostVerification: false
+          serverName: ''
+```
+
+SQLite（v3.31.0 及更高版本）默认启用高级 Visibility。
+
+### 数据库架构和设置
+
+Visibility 数据存储在名为“executions_Visibility”的数据库表中，该表必须根据
+定义的模式（由支持的版本）
+https://github.com/Temporalio/Temporal/blob/main/schema/sqlite/v3/Visibility/schema.sql。
+
+有关设置 SQLite 架构的示例，请参阅
+[Temporalite](https://github.com/Temporalio/Temporalite/blob/main/server.go) 设置。
+
+## 旧版标准 Visibility 配置 {#legacy-standard-Visibility}
+
+以下部分适用于仍使用标准 Visibility 的较旧的自托管部署。对于新部署，
+使用本页前面描述的高级 Visibility 后端之一。
+
+### 如何设置 Cassandra Visibility 商店 {#cassandra}
+
+:::tip Support, stability, and dependency info
+
+- Cassandra 仅支持标准 Visibility。标准 Visibility 在 Temporal Server v1.21 中已弃用并删除
+  在 v1.24 中。对于 Update，请查看 [Temporal Server 发行说明](https://github.com/Temporalio/Temporal/releases)。
+- 我们建议从 Cassandra 迁移到 Visibility 的任何其他支持的数据库。
+
+:::
+
+Cassandra 不支持高级 Visibility。
+
+要启用当前的 Visibility 功能，请使用 MySQL、PostgreSQL、SQLite、Elasticsearch 或 OpenSearch 作为 Visibility
+商店。我们建议对任何处理多个 Workflow 的 Temporal 服务设置使用 Elasticsearch 或 OpenSearch
+执行，因为这些后端支持 Visibility 请求加载并有助于优化性能。
+
+要从 Cassandra 迁移到支持的 SQL 数据库，请参阅
+[迁移 Visibility 数据库](#migration-Visibility-database)。
+
+### 持久化配置
+
+在持久性配置的“VisibilityStore”参数中设置 Cassandra Visibility 存储名称，然后
+在“datastores”下定义 Visibility 存储配置。
+
+以下示例显示如何设置 Visibility 存储 `cass-Visibility` 并在中定义数据存储配置
+您的 Temporal 服务配置 YAML。
+
+```yaml
+#...
+persistence:
+  #...
+  visibilityStore: cass-visibility
+  #...
+  datastores:
+    default:
+    #...
+    cass-visibility:
+      cassandra:
+        hosts: '127.0.0.1'
+        keyspace: 'temporal_visibility'
+#...
+```
+
+### 数据库架构和设置
+
+Visibility 数据存储在名为“executions_Visibility”的数据库表中，该表必须根据
+https://github.com/Temporalio/Temporal/tree/main/schema/cassandra/Visibility 中定义的模式（由支持的版本）。
+
+以下示例演示如何使用“Temporal-cassandra-tool”设置 Cassandra Visibility 存储。了解更多
+不同数据库的示例，请参阅
+[samples-server 存储库](https://github.com/Temporalio/samples-server/tree/main/compose/scripts)。
+
+```bash
+#...
+# set your Cassandra environment variables
+: "${KEYSPACE:=temporal}"
+: "${VISIBILITY_KEYSPACE:=temporal_visibility}"
+
+: "${CASSANDRA_SEEDS:=}"
+: "${CASSANDRA_PORT:=9042}"
+: "${CASSANDRA_USER:=}"
+: "${CASSANDRA_PASSWORD:=}"
+: "${CASSANDRA_TLS_ENABLED:=}"
+: "${CASSANDRA_CERT:=}"
+: "${CASSANDRA_CERT_KEY:=}"
+: "${CASSANDRA_CA:=}"
+: "${CASSANDRA_REPLICATION_FACTOR:=1}"
+#...
+# set connection details
+#...
+# set up Cassandra schema
+setup_cassandra_schema() {
+  #...
+  # use valid schema for the version of the database you want to set up for Visibility
+    VISIBILITY_SCHEMA_DIR=${TEMPORAL_HOME}/schema/cassandra/visibility/versioned
+    if [[ ${SKIP_DB_CREATE} != true ]]; then
+        temporal-cassandra-tool --ep "${CASSANDRA_SEEDS}" create -k "${VISIBILITY_KEYSPACE}" --rf "${CASSANDRA_REPLICATION_FACTOR}"
+    fi
+    temporal-cassandra-tool --ep "${CASSANDRA_SEEDS}" -k "${VISIBILITY_KEYSPACE}" setup-schema -v 0.0
+    temporal-cassandra-tool --ep "${CASSANDRA_SEEDS}" -k "${VISIBILITY_KEYSPACE}" update-schema -d "${VISIBILITY_SCHEMA_DIR}"
+  #...
+}
+```
+
+## 如何将 Elasticsearch 或 OpenSearch 集成到 Temporal 服务 {#elasticsearch}
+
+您可以将 Elasticsearch 或 OpenSearch 与 Temporal 服务集成为 Visibility 商店。我们建议使用
+用于 Temporal 服务大规模操作的后端之一。
+
+要将 Elasticsearch 或 OpenSearch 与您的 Temporal 服务集成，请编辑您的 Temporal 服务的“persistence”部分
+“development.yaml”配置文件，将搜索后端添加为“VisibilityStore”，并运行索引架构设置
+命令。
+
+使用以下版本指南：
+
+- Temporal Server v1.7 及更高版本支持 Elasticsearch v7。
+- Temporal Server v1.18 及更高版本支持 Elasticsearch v8。
+- Temporal Server v1.30.1 及更高版本支持 OpenSearch 2+。
+
+本节中的示例使用 Elasticsearch。对于 OpenSearch，请使用相同的数据存储配置形状并
+操作流程，除非您的目标 Temporal Server 版本的发行说明另有说明。
+
+### 持久化配置
+
+在持久性配置的“VisibilityStore”参数中设置 Visibility 存储名称，然后定义
+在“datastores”下搜索后端配置。
+
+以下示例显示如何设置名为“es-Visibility”的 Visibility 存储并定义 Elasticsearch 数据存储
+Temporal 服务配置 YAML 中的配置。
+
+```yaml
+persistence:
+  ...
+  visibilityStore: es-visibility
+  datastores:
+    ...
+    es-visibility: # Define the Elasticsearch datastore connection information under the `es-visibility` key
+      elasticsearch:
+        version: "v7"
+        url:
+          scheme: "http"
+          host: "127.0.0.1:9200"
+        indices:
+          visibility: temporal_visibility_v1_dev
+```
+
+### 索引架构和索引
+
+要将 Elasticsearch 设置为您的 Visibility 商店，请使用“Temporal-elasticsearch-tool”
+`Temporalio/admin-tools` 图像。
+
+以下示例展示了如何使用 MySQL 持久性存储设置 Elasticsearch Visibility 存储
+`Temporal-elasticsearch-工具`。有关不同数据库的更多示例，请参阅
+[samples-server 存储库](https://github.com/Temporalio/samples-server/tree/main/compose/scripts)。
+
+{/* SNIPSTART compose-mysql-es-setup */}
+[compose/scripts/setup-mysql-es.sh](https://github.com/Temporalio/samples-server/blob/main/compose/scripts/setup-mysql-es.sh)
+```sh
+set -eu
+
+# Validate required environment variables
+: "${ES_SCHEME:?ERROR: ES_SCHEME environment variable is required}"
+: "${ES_HOST:?ERROR: ES_HOST environment variable is required}"
+: "${ES_PORT:?ERROR: ES_PORT environment variable is required}"
+: "${ES_VISIBILITY_INDEX:?ERROR: ES_VISIBILITY_INDEX environment variable is required}"
+: "${ES_VERSION:?ERROR: ES_VERSION environment variable is required}"
+
+: "${MYSQL_SEEDS:?ERROR: MYSQL_SEEDS environment variable is required}"
+: "${MYSQL_USER:?ERROR: MYSQL_USER environment variable is required}"
+
+echo 'Starting MySQL and Elasticsearch schema setup...'
+echo 'Waiting for MySQL port to be available...'
+nc -z -w 10 ${MYSQL_SEEDS} ${DB_PORT:-3306}
+echo 'MySQL port is available'
+
+# Create and setup temporal database
+temporal-sql-tool --plugin mysql8 --ep ${MYSQL_SEEDS} -u ${MYSQL_USER} -p ${DB_PORT:-3306} --db temporal create
+temporal-sql-tool --plugin mysql8 --ep ${MYSQL_SEEDS} -u ${MYSQL_USER} -p ${DB_PORT:-3306} --db temporal setup-schema -v 0.0
+temporal-sql-tool --plugin mysql8 --ep ${MYSQL_SEEDS} -u ${MYSQL_USER} -p ${DB_PORT:-3306} --db temporal update-schema -d /etc/temporal/schema/mysql/v8/temporal/versioned
+
+# Setup Elasticsearch index
+# temporal-elasticsearch-tool is available in v1.30+ server releases
+if [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
+  echo 'Using temporal-elasticsearch-tool for Elasticsearch setup'
+  temporal-elasticsearch-tool --ep "$ES_SCHEME://$ES_HOST:$ES_PORT" setup-schema
+  temporal-elasticsearch-tool --ep "$ES_SCHEME://$ES_HOST:$ES_PORT" create-index --index $ES_VISIBILITY_INDEX
+else
+  echo 'Using curl for Elasticsearch setup'
+  echo 'WARNING: curl will be removed from admin-tools in v1.30.'
+  echo 'Waiting for Elasticsearch to be ready...'
+  max_attempts=30
+  attempt=0
+  until curl -s -f "$ES_SCHEME://$ES_HOST:$ES_PORT/_cluster/health?wait_for_status=yellow&timeout=1s"; do
+    attempt=$((attempt + 1))
+    if [ $attempt -ge $max_attempts ]; then
+      echo "ERROR: Elasticsearch did not become ready after $max_attempts attempts"
+      echo "Last error from curl:"
+      curl "$ES_SCHEME://$ES_HOST:$ES_PORT/_cluster/health?wait_for_status=yellow&timeout=1s" 2>&1 || true
+      exit 1
+    fi
+    echo "Elasticsearch not ready yet, waiting... (attempt $attempt/$max_attempts)"
+    sleep 2
+  done
+  echo ''
+  echo 'Elasticsearch is ready'
+  echo 'Creating index template...'
+  curl -X PUT --fail "$ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template" -H 'Content-Type: application/json' --data-binary "@/etc/temporal/schema/elasticsearch/visibility/index_template_$ES_VERSION.json"
+  echo ''
+  echo 'Creating index...'
+  curl --head --fail "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX" 2>/dev/null || curl -X PUT --fail "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX"
+  echo ''
+fi
+
+echo 'MySQL and Elasticsearch setup complete'
+```
+{/* 截图 */}
+
+### Elasticsearch 权限
+
+确保为 Elasticsearch Temporal 索引授予以下权限：
+
+- **阅读**
+  - [索引权限](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-privileges.html#privileges-list-indices):
+    `创建`、`索引`、`删除`、`读取`
+- **写**
+  - [索引权限](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-privileges.html#privileges-list-indices):
+    `写`
+- **定制 Search Attributes**
+  - [索引权限](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-privileges.html#privileges-list-indices):
+    `管理`
+  - [集群权限](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-privileges.html#privileges-list-cluster)：
+    “监控”或“管理”。
+
+## 如何设置双 Visibility {#dual-Visibility}
+
+要启用 [Dual Visibility](/dual-Visibility)，请与主 Visibility 存储一起设置辅助 Visibility 存储，
+并配置您的 Temporal 服务以启用辅助 Visibility 存储上的读取和/或写入操作。
+
+使用 Dual Visibility，您一次只能从一个 Visibility 存储中读取数据，但可以将您的 Temporal 服务配置为
+仅写入主要存储、仅写入辅助存储或同时写入主要存储和辅助存储。
+
+#### 设置辅助 Visibility 存储
+
+在持久性配置中使用“ secondaryVisibilityStore”配置键设置辅助存储，并且
+然后在“datastores”下定义辅助 Visibility 存储配置。
+
+您可以将任何[支持的数据库](/self-hosted-guide/Visibility) 配置为辅助存储。
+
+示例：
+
+要将 MySQL 配置为辅助存储，而 Cassandra 作为主存储，请执行以下操作。
+
+```yaml
+persistence:
+  visibilityStore: cass-visibility # This is your primary Visibility store
+  secondaryVisibilityStore: mysql-visibility # This is your secondary Visibility store
+  datastores:
+    cass-visibility:
+      cassandra:
+        hosts: '127.0.0.1'
+        keyspace: 'temporal_primary_visibility'
+    mysql-visibility:
+      sql:
+        pluginName: 'mysql8' # Verify supported versions. Use a version of SQL that supports advanced Visibility.
+        databaseName: 'temporal_secondary_visibility'
+        connectAddr: '127.0.0.1:3306'
+        connectProtocol: 'tcp'
+        user: 'temporal'
+        password: 'temporal'
+```
+
+要将 Elasticsearch 配置为主存储和辅助存储，请使用配置密钥
+`elasticsearch.indices.secondary_Visibility`，如下例所示。
+
+```yaml
+persistence:
+  visibilityStore: es-visibility
+  datastores:
+    es-visibility:
+      elasticsearch:
+        version: 'v7'
+        logLevel: 'error'
+        url:
+          scheme: 'http'
+          host: '127.0.0.1:9200'
+        indices:
+          visibility: temporal_visibility_v1
+          secondary_visibility: temporal_visibility_v1_new
+        closeIdleConnectionsInterval: 15s
+```
+
+#### 数据库架构和设置
+
+辅助存储的数据库架构和设置取决于您计划使用的数据库。
+
+- [MySQL](#mysql)
+- [PostgreSQL](#postgresql)
+- [SQLite](#sqlite)
+- [Elasticsearch](#elasticsearch)
+
+对于前面示例中的 Cassandra 和 MySQL 配置，示例设置脚本如下。
+
+```bash
+#...
+# set your Cassandra environment variables
+: "${KEYSPACE:=temporal}"
+: "${VISIBILITY_KEYSPACE:=temporal_primary_visibility}"
+
+: "${CASSANDRA_SEEDS:=}"
+: "${CASSANDRA_PORT:=9042}"
+: "${CASSANDRA_USER:=}"
+: "${CASSANDRA_PASSWORD:=}"
+: "${CASSANDRA_TLS_ENABLED:=}"
+: "${CASSANDRA_CERT:=}"
+: "${CASSANDRA_CERT_KEY:=}"
+: "${CASSANDRA_CA:=}"
+: "${CASSANDRA_REPLICATION_FACTOR:=1}"
+#...
+# set connection details
+#...
+# set up Cassandra schema
+setup_cassandra_schema() {
+  #...
+  # use valid schema for the version of the database you want to set up for Visibility
+    VISIBILITY_SCHEMA_DIR=${TEMPORAL_HOME}/schema/cassandra/visibility/versioned
+    if [[ ${SKIP_DB_CREATE} != true ]]; then
+        temporal-cassandra-tool --ep "${CASSANDRA_SEEDS}" create -k "${VISIBILITY_KEYSPACE}" --rf "${CASSANDRA_REPLICATION_FACTOR}"
+    fi
+    temporal-cassandra-tool --ep "${CASSANDRA_SEEDS}" -k "${VISIBILITY_KEYSPACE}" setup-schema -v 0.0
+    temporal-cassandra-tool --ep "${CASSANDRA_SEEDS}" -k "${VISIBILITY_KEYSPACE}" update-schema -d "${VISIBILITY_SCHEMA_DIR}"
+  #...
+}
+#...
+# set your MySQL environment variables
+: "${DBNAME:=temporal}"
+: "${VISIBILITY_DBNAME:=temporal_secondary_visibility}"
+: "${DB_PORT:=}"
+: "${MYSQL_SEEDS:=}"
+: "${MYSQL_USER:=}"
+: "${MYSQL_PWD:=}"
+: "${MYSQL_TX_ISOLATION_COMPAT:=false}"
+
+#...
+# set connection details
+#...
+# set up MySQL schema
+setup_mysql_schema() {
+    #...
+    # use valid schema for the version of the database you want to set up for Visibility
+    VISIBILITY_SCHEMA_DIR=${TEMPORAL_HOME}/schema/mysql/${MYSQL_VERSION_DIR}/visibility/versioned
+    if [[ ${SKIP_DB_CREATE} != true ]]; then
+        temporal-sql-tool --ep "${MYSQL_SEEDS}" -u "${MYSQL_USER}" -p "${DB_PORT}" "${MYSQL_CONNECT_ATTR[@]}" --db "${VISIBILITY_DBNAME}" create
+    fi
+    temporal-sql-tool --ep "${MYSQL_SEEDS}" -u "${MYSQL_USER}" -p "${DB_PORT}" "${MYSQL_CONNECT_ATTR[@]}" --db "${VISIBILITY_DBNAME}" setup-schema -v 0.0
+    temporal-sql-tool --ep "${MYSQL_SEEDS}" -u "${MYSQL_USER}" -p "${DB_PORT}" "${MYSQL_CONNECT_ATTR[@]}" --db "${VISIBILITY_DBNAME}" update-schema -d "${VISIBILITY_SCHEMA_DIR}"
+#...
+}
+```
+
+对于上一个示例中的 Elasticsearch 作为主要和辅助 Visibility 存储配置，示例设置
+脚本如下。
+
+```bash
+#...
+# Elasticsearch
+: "${ENABLE_ES:=false}"
+: "${ES_SCHEME:=http}"
+: "${ES_SEEDS:=}"
+: "${ES_PORT:=9200}"
+: "${ES_USER:=}"
+: "${ES_PWD:=}"
+: "${ES_VERSION:=v7}"
+: "${ES_VIS_INDEX:=temporal_visibility_v1_dev}"
+: "${ES_SEC_VIS_INDEX:=temporal_visibility_v1_new}"
+: "${ES_SCHEMA_SETUP_TIMEOUT_IN_SECONDS:=0}"
+
+#...
+
+# Validate your ES environment
+#...
+# Wait for ES to start
+#...
+# Set up Elasticsearch index
+setup_es_index() {
+    ES_SERVER="${ES_SCHEME}://${ES_SEEDS%%,*}:${ES_PORT}"
+    # ES_SERVER is the URL of Elasticsearch server i.e. "http://localhost:9200".
+    SETTINGS_URL="${ES_SERVER}/_cluster/settings"
+    SETTINGS_FILE=${TEMPORAL_HOME}/schema/elasticsearch/visibility/cluster_settings_${ES_VERSION}.json
+    TEMPLATE_URL="${ES_SERVER}/_template/temporal_visibility_v1_template"
+    SCHEMA_FILE=${TEMPORAL_HOME}/schema/elasticsearch/visibility/index_template_${ES_VERSION}.json
+    INDEX_URL="${ES_SERVER}/${ES_VIS_INDEX}"
+    curl --fail --user "${ES_USER}":"${ES_PWD}" -X PUT "${SETTINGS_URL}" -H "Content-Type: application/json" --data-binary "@${SETTINGS_FILE}" --write-out "\n"
+    curl --fail --user "${ES_USER}":"${ES_PWD}" -X PUT "${TEMPLATE_URL}" -H 'Content-Type: application/json' --data-binary "@${SCHEMA_FILE}" --write-out "\n"
+    curl --user "${ES_USER}":"${ES_PWD}" -X PUT "${INDEX_URL}" --write-out "\n"
+
+    # Checks for and sets up Elasticsearch as a secondary Visibility store
+    if [[ ! -z "${ES_SEC_VIS_INDEX}" ]]; then
+      SEC_INDEX_URL="${ES_SERVER}/${ES_SEC_VIS_INDEX}"
+      curl --user "${ES_USER}":"${ES_PWD}" -X PUT "${SEC_INDEX_URL}" --write-out "\n"
+    fi
+}
+```
+
+#### Update Temporal 服务配置
+
+设置主存储和辅助存储后，Update 的“system.secondaryVisibilityWritingMode”和
+自托管 Temporal 服务动态中的 `system.enableReadFromSecondaryVisibility` 配置键
+配置 YAML 文件以启用对辅助 Visibility 存储的读取和/或写入操作。
+
+例如，启用对主存储和辅助存储的写入操作，但禁用从辅助存储的读取操作
+存储，使用以下内容。
+
+```yaml
+system.secondaryVisibilityWritingMode:
+  - value: 'dual'
+    constraints: {}
+system.enableReadFromSecondaryVisibility:
+  - value: false
+    constraints: {}
+```
+
+有关配置选项的详细信息，请参阅：
+
+- [辅助Visibility动态配置参考](/references/dynamic-configuration#secondary-Visibility-settings)
+- [迁移 Visibility 数据库](#migration-Visibility-database)
+
+## 如何迁移 Visibility 数据库 {#migration-Visibility-database}
+
+要迁移 Visibility 数据库，[设置辅助 Visibility 存储](#dual-Visibility) 以启用
+[Dual Visibility](/dual-Visibility) 和 Update 将 Temporal 服务中的动态配置读取到 Update
+以及 Visibility 存储的写入操作。
+
+双 Visibility 设置是可选的，但对于逐步将 Visibility 数据迁移到另一个数据库非常有用。
+
+在开始之前，请验证 Visibility 存储的[支持的数据库和版本](/self-hosted-guide/Visibility)。
+
+以下步骤描述了如何迁移 Visibility 数据库。
+
+对 [Temporal 服务配置](/Temporal-service/configuration) 进行任何更改后，请确保
+重新启动您的服务。
+
+#### 设置辅助 Visibility 存储
+
+1. 在您的 Temporal 服务配置中，
+   [添加辅助 Visibility 存储](/references/configuration#secondaryVisibilitystore) 到您的 Visibility 设置中
+   持久性配置。
+
+示例：要从 Cassandra 迁移到 Elasticsearch，请将 Elasticsearch 添加为辅助数据库并进行设置。对于
+   详细信息，请参阅[辅助 Visibility 数据库架构和设置](#dual-Visibility)。
+
+   ```yaml
+   persistence:
+   visibilityStore: cass-visibility
+   secondaryVisibilityStore: es-visibility
+   datastores:
+     cass-visibility:
+     cassandra:
+       hosts: '127.0.0.1'
+       keyspace: 'temporal_visibility'
+     es-visibility:
+     elasticsearch:
+       version: 'v7'
+       logLevel: 'error'
+       url:
+       scheme: 'http'
+       host: '127.0.0.1:9200'
+       indices:
+       visibility: temporal_visibility_v1_dev
+       closeIdleConnectionsInterval: 15s
+   ```
+
+1. Update 自托管上的 [动态配置](/Temporal-service/configuration#dynamic-configuration) 键
+   Temporal 服务启用对辅助存储的写入操作并禁用读取操作。例子：
+
+   ```yaml
+   system.secondaryVisibilityWritingMode:
+   - value: "dual"
+   constraints: {}
+   system.enableReadFromSecondaryVisibility:
+   - value: false
+   constraints: {}
+   ```
+
+此时，Visibility 数据从主存储中读取，所有 Visibility 数据都写入到主存储中。
+和二级商店。此设置仅适用于启用 Dual Visibility 后生成的新 Visibility 数据。它
+不会将主存储中的任何现有数据迁移到辅助存储。
+
+有关向辅助存储写入选项的详细信息，请参阅
+[辅助 Visibility 动态配置参考](/references/dynamic-configuration#secondary-Visibility-settings)。
+
+#### 在双模式下运行
+
+当您启用辅助存储时，只有新的 Visibility 数据才会写入主存储和辅助存储中。初级
+存储仍保留设置辅助存储之前的 Workflow Execution 数据。
+
+在双模式下运行可让您在设置辅助存储之前规划关闭和打开的 Workflow Executions 数据
+在您的自托管 Temporal 服务中。
+
+例子：
+
+- 要管理关闭的 Workflow Execution 数据，请在双模式下运行，直到 Namespace
+  已达到[保留期](/Temporal-service/Temporal-server#retention-period)。保留期结束后，
+  Workflow Execution 数据已从持久性和 Visibility 存储中删除。如果您想保留关闭的Workflow
+  在设置的保留期限后执行数据，您必须设置[存档](/self-hosted-guide/archival)。
+- 要管理所有打开的 Workflow Execution 的数据，请在双模式下运行，直到所有 Workflow Execution 之前启动
+  启用双 Visibility 模式已关闭。 Workflow Execution 关闭后，验证保留期并
+  如果您需要在保留期限后保留数据，请设置存档。
+
+您可以无限期地以双模式运行 Visibility 设置，或者直到您准备好弃用主模式
+完全存储并移动到二级存储，而不会丢失数据。
+
+#### 弃用主要 Visibility 存储
+
+当您准备好弃用主商店时，请按照以下步骤操作。
+
+1. Update 动态配置 YAML 以启用从辅助存储的读取操作。例子：
+
+   ```yaml
+   system.secondaryVisibilityWritingMode:
+   - value: "dual"
+   constraints: {}
+   system.enableReadFromSecondaryVisibility:
+   - value: true
+   constraints: {}
+   ```
+
+此时，Visibility 数据仅从辅助存储中读取。验证二级存储上的数据是否存在
+   正确。
+
+1. 当二级商店经过审查并准备好取代您当前的主要商店时，更改您的 Temporal 服务
+   配置将辅助存储设置为主存储，并删除前面设置的动态配置
+   步骤。例子：
+
+   ```yaml
+   persistence:
+   visibilityStore: es-visibility
+   datastores:
+     es-visibility:
+     elasticsearch:
+       version: 'v7'
+       logLevel: 'error'
+       url:
+       scheme: 'http'
+       host: '127.0.0.1:9200'
+       indices:
+       visibility: temporal_visibility_v1_dev
+       closeIdleConnectionsInterval: 15s
+   ```
+
+## 管理自定义 Search Attribute {#custom-search-attributes}
+
+要管理 Temporal Cloud 上的自定义 Search Attribute，请使用 [`tcld`](/cloud/tcld/Namespace#search-attributes) CLI 工具。
+使用 Temporal Cloud，您可以创建和重命名自定义 Search Attribute。如果您需要删除自定义 Search Attribute，请通过 [support.Temporal.io](https://support.Temporal.io) 联系支持人员。
+要管理自托管 Temporal 服务上的自定义 Search Attribute，请使用 [Temporal CLI](/cli/operator#search-attribute)。
+通过自托管 Temporal 服务，您可以创建和删除自定义 Search Attribute。
+
+如果您是自托管，请先验证您的 [Visibility 数据库](/self-hosted-guide/Visibility#supported-databases) 版本是否支持自定义 Search Attribute，然后再继续。
+
+:::caution Do not use sensitive data or PII in Search Attributes
+
+请勿在 Search Attribute **名称或值**中包含敏感数据、秘密或个人身份信息 (PII)。
+Search Attribute 值未加密地存储在 Visibility 存储中，并且不由自定义 [Payload Codec](/payload-codec#payload-codec) 处理。
+Temporal Server 必须能够以纯文本形式读取这些值以支持过滤和排序，因此在不破坏搜索功能的情况下不可能进行加密。
+
+属性名称在 Namespace 配置、Query 表达式和 Temporal UI 中也可见。
+在名称或值中使用敏感数据可能会导致任何具有 Namespace 访问权限的人面临暴露风险，并且可能违反 GDPR、HIPAA 或 SOC 2 等数据保护法规。
+
+:::
+
+### 如何创建自定义 Search Attribute {#create-custom-search-attributes}
+
+在 Visibility 商店中创建自定义 Search Attribute 使其可在 Workflow 元数据中使用，并且
+[列表过滤器](/list-filter)。
+
+**在 Temporal Cloud 上**
+
+要在 Temporal Cloud 上创建自定义 Search Attribute，请使用
+[`tcld Namespace 搜索属性添加`](/cloud/tcld/Namespace/#search-attributes)。例如，添加自定义搜索
+将“CustomSA”归属于您的 Temporal Cloud Namespace “YourNamespace”，运行以下命令。
+`tcld Namespace 搜索属性添加 --Namespace YourNamespace --搜索属性“CustomSA”`
+
+**在自托管 Temporal 服务上**
+
+要在自托管 Temporal 服务 Visibility 存储中创建自定义 Search Attribute，请使用
+“Temporal 运算符搜索属性创建”，带有“--name”和“--type”命令选项。
+
+例如，要创建名为“CustomSA”且类型为“Keyword”的 Search Attribute，请运行以下命令：
+
+```
+temporal operator search-attribute create --name="CustomSA" --type="Keyword"
+```
+
+请注意，如果您使用具有高级 Visibility 功能的 SQL 数据库，则需要在以下情况下指定 Namespace：
+创建自定义 Search Attribute。例如：
+
+```
+temporal operator search-attribute create --name="CustomSA" --type="Keyword" --namespace="yournamespace"
+```
+
+您还可以在设置 Visibility 商店时创建多个自定义 Search Attribute。
+
+以下示例显示如何在 SQL 数据库的 Visibility 存储设置期间创建自定义 Search Attribute。
+有关设置示例，请参阅[samples-server存储库](https://github.com/Temporalio/samples-server)
+
+```bash
+add_custom_search_attributes() {
+    until temporal operator search-attribute list --namespace "${DEFAULT_NAMESPACE}"; do
+      echo "Waiting for namespace cache to refresh..."
+      sleep 1
+    done
+    echo "Namespace cache refreshed."
+
+    echo "Adding Custom*Field search attributes."
+
+    temporal operator search-attribute create --namespace "${DEFAULT_NAMESPACE}" --yes \
+        --name="CustomKeywordField" --type="Keyword" \
+        --name="CustomStringField" --type="Text" \
+        --name="CustomTextField" --type="Text" \
+        --name="CustomIntField" --type="Int" \
+        --name="CustomDatetimeField" --type="Datetime" \
+        --name="CustomDoubleField" --type="Double" \
+        --name="CustomBoolField" --type="Bool"
+}
+```
+
+对于 Temporal Server v1.19 及更早版本，或者如果使用 Elasticsearch 进行高级 Visibility，您可以创建自定义搜索
+没有 Namespace 关联的属性，如下例所示。
+
+{/* 检查准确性 */}
+
+```bash
+add_custom_search_attributes() {
+       echo "Adding Custom*Field search attributes."
+       temporal operator search-attribute create \
+        --name="CustomKeywordField" --type="Keyword" \
+        --name="CustomStringField" --type="Text" \
+        --name="CustomTextField" --type="Text" \
+        --name="CustomIntField" --type="Int" \
+        --name="CustomDatetimeField" --type="Datetime" \
+        --name="CustomDoubleField" --type="Double" \
+        --name="CustomBoolField" --type="Bool"
+}
+```
+
+当您的 Visibility 商店设置并运行时，这些自定义 Search Attribute 可在您的 Workflow 中使用
+代码。
+
+### 如何删除自定义 Search Attribute {#remove-custom-search-attributes}
+
+要从自托管 Temporal 服务 Visibility 存储中删除 Search Attribute 密钥，请使用以下命令
+`Temporal 运算符搜索属性删除`。 Temporal Cloud 不支持删除 Search Attribute。
+
+## `XPROT026X_CODEC_ENDPOINT`
+
+```
+temporal operator search-attribute remove \
+    --name="your_custom_attribute"
+```
+
+如果您在 Temporal Server v1.20 及更高版本上使用 SQL 数据库进行高级 Visibility，则需要指定 Namespace
+在您的命令中，如以下命令所示：
+
+```
+temporal operator search-attribute remove \
+    --name="your_custom_attribute" \
+    --namespace="your_namespace"
+```
+
+要检查 Search Attribute 是否已删除，请运行
+
+```
+temporal operator search-attribute list
+```
+
+并检查清单。
+
+如果您使用的是 Temporal Server v1.20 及更高版本，请指定从中删除 Search Attribute 的 Namespace。例如，
+
+```
+temporal search-attribute list --namespace="yournamespace"
+```
+
+请注意，如果您将 [SQL 数据库](/self-hosted-guide/Visibility) 与 Temporal Server v1.20 及更高版本一起使用，则新的自定义
+Search Attribute 映射到 Visibility 存储“custom_search_attributes”表中的数据库字段名称。去除
+此自定义 Search Attribute 删除与数据库字段名称的映射，但不删除数据。如果你
+删除自定义 Search Attribute 并添加新的，新的自定义 Search Attribute 可能会映射到数据库
+最近被删除的字段。当您使用 List API 检索时，这可能会导致意外结果
+使用新的定制 Search Attribute 的结果。如果您使用 Elasticsearch，这些限制不适用。

@@ -1,0 +1,111 @@
+---
+id: continue-as-new
+title: Continue-As-New - Java SDK
+sidebar_label: Continue-As-New
+description: Use Temporal's Continue-As-New in Java to manage large Event Histories by atomically creating new Workflow Executions with the same Workflow Id and fresh parameters.
+toc_max_heading_level: 2
+keywords:
+  - continue-as-new workflow
+  - restart workflow
+  - fresh event history
+  - avoid large event histories
+  - temporal java continue-as-new
+tags:
+  - Workflows
+  - continue-as-new
+  - Java SDK
+  - Temporal SDKs
+---
+
+This page answers the following questions for Java developers:
+
+- [What is Continue-As-New?](#what)
+- [How to Continue-As-New?](#how)
+- [When is it right to Continue-As-New?](#when)
+- [How to test Continue-As-New?](#how-to-test)
+
+## What is Continue-As-New? {#what}
+
+[Continue-As-New](/Workflow-execution/Continue-As-New) lets a Workflow Execution close successfully and creates a new Workflow Execution.
+You can think of it as a checkpoint when your Workflow gets too long or approaches certain scaling limits.
+
+The new Workflow Execution is in the same [chain](/Workflow-execution#Workflow-execution-chain); it keeps the same Workflow Id but gets a new Run Id and a fresh Event History.
+It also receives your Workflow's usual parameters.
+
+## How to Continue-As-New using the Java SDK {#how}
+
+First, design your Workflow parameters so that you can pass in the "current state" when you Continue-As-New into the next Workflow run.
+This state is typically set to `None` for the original caller of the Workflow.
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/samples-java/blob/main/core/src/main/java/io/Temporal/samples/safemessagepassing/ClusterManagerWorkflow.java">
+    View the source code
+  </a>{' '}
+  in the context of the rest of the application code.
+</div>
+```java
+class ClusterManagerInput {
+  private final Optional<ClusterManagerState> state;
+  private final boolean testContinueAsNew;
+}
+
+@WorkflowMethod
+ClusterManagerResult run(ClusterManagerInput input);
+
+````
+The test hook in the above snippet is covered [below](#how-to-test).
+
+Inside your Workflow, call the [`continueAsNew()`](https://javadoc.io/doc/io.Temporal/Temporal-sdk/latest/io/Temporal/Workflow/Workflow.html#continueAsNew(io.Temporal.Workflow.ContinueAsNewOptions,java.lang.Object...)) function with the same type.
+This stops the Workflow right away and starts a new one.
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/samples-java/blob/main/core/src/main/java/io/Temporal/samples/safemessagepassing/ClusterManagerWorkflowImpl.java">
+    View the source code
+  </a>{' '}
+  in the context of the rest of the application code.
+</div>
+```java
+Workflow.continueAsNew(
+  new ClusterManagerInput(Optional.of(state), input.isTestContinueAsNew()));
+````
+
+### Considerations for Workflows with Message Handlers {#with-message-handlers}
+
+If you use Updates or Signals, don't call Continue-As-New from the handlers.
+Instead, wait for your handlers to finish in your main Workflow before you run `continueAsNew`.
+
+## When is it right to Continue-As-New using the Java SDK? {#when}
+
+Use Continue-As-New when your Workflow might hit [Event History Limits](/Workflow-execution/event#event-history).
+
+Temporal tracks your Workflow's progress against these limits to let you know when you should Continue-As-New.
+Call `Workflow.getInfo().isContinueAsNewSuggested()` to check if it's time.
+
+## How to test Continue-As-New using the Java SDK {#how-to-test}
+
+测试 Workflow 自然是 Continue-As-New 可能非常耗时且占用资源。
+相反，添加一个测试挂钩以在自动化测试中更快地检查 Workflow 的 Continue-As-New 行为。
+
+例如，当“testContinueAsNew == true”时，此示例将创建一个名为“maxHistoryLength”的仅测试变量，并将其设置为一个较小的值。
+Workflow 中的辅助方法在每次考虑使用 Continue-As-New 时都会对其进行检查：
+
+<div className="copycode-notice-container">
+  <a href="https://github.com/Temporalio/samples-java/blob/main/core/src/main/java/io/Temporal/samples/safemessagepassing/ClusterManagerWorkflowImpl.java">
+    查看源代码
+  </a>{' '}
+在应用程序代码的其余部分的上下文中。
+</div>
+
+```java
+private boolean shouldContinueAsNew() {
+  if (Workflow.getInfo().isContinueAsNewSuggested()) {
+    return true;
+  }
+  // This is just for ease-of-testing.  In production, we trust temporal to tell us when to
+  // continue as new.
+  if (maxHistoryLength > 0 && Workflow.getInfo().getHistoryLength() > maxHistoryLength) {
+    return true;
+  }
+  return false;
+}
+```

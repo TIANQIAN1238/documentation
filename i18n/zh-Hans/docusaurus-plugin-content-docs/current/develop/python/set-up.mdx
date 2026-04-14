@@ -1,0 +1,284 @@
+---
+id: set-up-your-local-python
+title: 使用 Python SDK 设置本地环境
+sidebar_label: 快速开始
+description: 配置本地开发环境以开始使用 Temporal 进行开发
+keywords:
+  - set up
+  - getting started
+  - python sdk
+tags:
+  - Python SDK
+  - setup
+  - getting started
+hide_table_of_contents: true
+---
+
+import { SetupSteps, SetupStep, CodeSnippet } from '@site/src/components/elements/SetupSteps';
+import { CallToAction } from '@site/src/components/elements/CallToAction';
+
+# 快速入门
+
+配置您的本地开发环境以开始使用 Temporal 进行开发。
+
+<SetupSteps>
+<SetupStep code={
+  <>
+    <CodeSnippet language="bash">
+    python3 -V
+    </CodeSnippet>
+    <CodeSnippet language="bash">
+    python 3.13.3
+    </CodeSnippet>
+  </>
+}>
+## 安装 Python
+
+确保您已安装 Python。使用以下命令检查您的 Python 版本。
+
+</SetupStep>
+
+<SetupStep code={
+<>
+<CodeSnippet language="bash">
+mkdir temporal-project
+</CodeSnippet>
+<CodeSnippet language="bash">
+cd temporal-project
+</CodeSnippet>
+<CodeSnippet language="bash">
+python3 -m venv env
+</CodeSnippet>
+<CodeSnippet language="bash">
+source env/bin/activate
+</CodeSnippet>
+<CodeSnippet language="bash">
+pip install temporalio
+</CodeSnippet>
+</>
+}>
+
+## 安装 Temporal Python SDK
+
+您应该在项目中使用虚拟环境安装 Temporal Python SDK。创建一个用于您 Temporal 项目的目录，切换到新目录，创建一个 Python 虚拟环境，激活它，然后安装 Temporal SDK。
+
+接下来，您将配置用于开发的本地 Temporal Service。
+
+</SetupStep>
+
+<SetupStep code={
+<>
+<Tabs>
+<TabItem value="macos" label="macOS" default>
+
+        <p>使用 Homebrew 安装 Temporal CLI：</p>
+        <CodeSnippet language="bash">
+        brew install temporal
+        </CodeSnippet>
+      </TabItem>
+
+      <TabItem value="windows" label="Windows">
+        <p>下载适用于您架构的 Temporal CLI 归档包：</p>
+        <ul>
+          <li><a href="https://temporal.download/cli/archive/latest?platform=windows&arch=amd64">Windows amd64</a></li>
+          <li><a href="https://temporal.download/cli/archive/latest?platform=windows&arch=arm64">Windows arm64</a></li>
+        </ul>
+        <p>解压并将 <code>temporal.exe</code> 添加到您的 PATH 中。</p>
+      </TabItem>
+
+      <TabItem value="linux" label="Linux">
+        <p>下载适用于您架构的 Temporal CLI：</p>
+        <ul>
+          <li><a href="https://temporal.download/cli/archive/latest?platform=linux&arch=amd64">Linux amd64</a></li>
+          <li><a href="https://temporal.download/cli/archive/latest?platform=linux&arch=arm64">Linux arm64</a></li>
+        </ul>
+        <p>解压归档包并��� <code>temporal</code> 二进制文件移动到您的 PATH 中，例如：</p>
+        <CodeSnippet language="bash">
+        sudo mv temporal /usr/local/bin
+        </CodeSnippet>
+      </TabItem>
+    </Tabs>
+
+</>
+}>
+
+## 安装 Temporal CLI
+
+在本地机器上运行开发版 Temporal Service 的最快方法是使用 [Temporal CLI](https://docs.temporal.io/cli)。
+
+选择您的操作系统来安装 Temporal CLI。
+
+</SetupStep>
+
+<SetupStep code={
+<>
+
+<p>安装完成后，打开新的终端窗口并启动开发服务器：</p>
+
+<CodeSnippet language="bash">temporal server start-dev</CodeSnippet>
+
+<div className="port-info">
+<h4>更改 Web UI 端口</h4>
+<p>在某些示例或教程中，Temporal Web UI 可能使用不同的端口。要更改 Web UI 的端口，请在启动服务器时使用 <code>--ui-port</code> 选项：</p>
+<CodeSnippet language="bash">
+temporal server start-dev --ui-port 8080
+</CodeSnippet>
+<p>Temporal Web UI 现在将在 http://localhost:8080 可用。</p>
+</div>
+</>
+}>
+
+## 启动开发服务器
+
+安��完 Temporal CLI 并将其添加到 PATH 后，打开新的终端窗口并运行以下命令。
+
+此命令启动本地 Temporal Service。它启动 Web UI，创建默认 Namespace，并使用内存数据库。
+
+Temporal Service 将在 localhost:7233 可用。Temporal Web UI 将在 http://localhost:8233 可用。
+
+让本地 Temporal Service 在您完成教程和其他项目时保持运行状态。您可以随时通过按 CTRL+C 来停止 Temporal Service。
+
+一旦您完成了所有安装，就可以在本地机器上使用 Temporal 构建应用程序了。
+
+</SetupStep>
+</SetupSteps>
+
+## 运行 Hello World：测试您的安装
+
+现在让我们通过创建和运���一个包含 Workflow 和 Activity 的完整 Temporal 应用程序来验证您的设置是否正常工作。
+
+此测试将确认：
+
+- Temporal Python SDK 已正确安装
+- 您的本地 Temporal Service 正在运行
+- 您可以成功创建和执行 Workflow 和 Activity
+- 组件之间的通信正常运行
+
+### 1. 创建 Activity
+
+创建一个 Activity 文件 (activities.py)：
+
+```python
+from temporalio import activity
+
+@activity.defn
+async def greet(name: str) -> str:
+    return f"Hello {name}"
+```
+
+Activity 是一个普通的函数或方法，用于执行单个、明确定义的操作（短期或长期运行），通常涉及与外部世界的交互，比如发送电子邮件、发出网络请求、写入数据库或调用 API，这些操作容易失败。如果 Activity 失败，Temporal 会根据您的配置自动重试。
+
+### 2. 创建 Workflow
+
+创建一个 Workflow 文件 (workflows.py)：
+
+```python
+from datetime import timedelta
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    from activities import greet
+
+@workflow.defn
+class SayHelloWorkflow:
+    @workflow.run
+    async def run(self, name: str) -> str:
+        return await workflow.execute_activity(
+            greet,
+            name,
+            schedule_to_close_timeout=timedelta(seconds=10),
+        )
+```
+
+Workflow 编排 Activity 并包含应用程序逻辑。Temporal Workflow 具有弹性。它们可以运行数年，即使底层基础设施发生故障也是如此。如果应用程序本身崩溃，Temporal 会自动重建故障前的状态，以便它可以从中断的地方继续执行。
+
+### 3. 创建 Worker
+
+创建一个 Worker 文件 (worker.py)：
+
+```python
+import asyncio
+from temporalio.client import Client
+from temporalio.worker import Worker
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    from workflows import SayHelloWorkflow
+    from activities import greet
+
+async def main():
+    client = await Client.connect("localhost:7233")
+    worker = Worker(
+        client,
+        task_queue="my-task-queue",
+        workflows=[SayHelloWorkflow],
+        activities=[greet],
+    )
+    print("Worker started.")
+    await worker.run()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+通过打开新终端运行 Worker：
+
+```bash
+source env/bin/activate
+python3 worker.py
+```
+
+保持此终端运行 - 您应该看到显示 "Worker started"。
+
+在定义了 Activity 和 Workflow 之后，您需要一个 Worker 来执行它们。Worker 轮询您配置它轮询的 Task Queue，寻找要执行的工作。一旦 Worker 从 Task Queue 中取出 Workflow 或 Activity 任务，它就会执行该任务。
+
+Worker 是 Temporal 应用程序的关键部分，因为它们实际执行 Workflow 和 Activity 中定义的任务。有关 Worker 的更多信息，请参见[理解 Temporal](/evaluate/understanding-temporal#workers) 和 [Worker 深度解析](/workers)。
+
+### 4. 执行 Workflow
+
+现在您的 Worker 正在运行，是时候启动一个 Workflow 执行了。
+
+这最后一步将验证您标记为 `starter.py` 的文件中的一切是否正常工作。
+
+创建一个单独的文件名为 `starter.py`：
+
+```python
+import asyncio
+import uuid
+from temporalio.client import Client
+
+async def main():
+    client = await Client.connect("localhost:7233")
+    result = await client.execute_workflow(
+        "SayHelloWorkflow",
+        "Temporal",
+
+```python
+        id=f"say-hello-workflow-{uuid.uuid4()}",
+        task_queue="my-task-queue",
+    )
+    print("Workflow result:", result)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+当 Worker 仍在运行时，在新终端中运行以下命令：
+
+```bash
+source env/bin/activate
+python3 starter.py
+```
+
+### 验证成功
+
+如果一切正常工作，��应该看到：
+
+- Worker 正在处理 Workflow 和 Activity
+- 输出：`Workflow result: Hello Temporal`
+- 在 [Temporal Web UI](http://localhost:8233) 中查看 Workflow 执行详情
+
+<CallToAction href="https://learn.temporal.io/getting_started/python/first_program_in_python/">
+  <h3>下一步：运行你的第一个 Temporal 应用程序</h3>
+  <p>创建一个基本的 Workflow 并使用 Temporal Python SDK 运行它</p>
+</CallToAction>

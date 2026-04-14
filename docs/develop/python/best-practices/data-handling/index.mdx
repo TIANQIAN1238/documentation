@@ -1,11 +1,10 @@
 ---
 id: data-handling
-title: Data handling - Python SDK
-sidebar_label: Data handling
+title: 数据处理 - Python SDK
+sidebar_label: 数据处理
 slug: /develop/python/data-handling
-description:
-  Learn how Temporal handles data through the Data Converter, including payload conversion, encryption, and large
-  payload storage.
+description: Learn how Temporal handles data through the Data Converter, including payload conversion, encryption, and large
+  了解 Temporal 如何通过 Data Converter 处理数据，包括 payload 转换、加密和大型 payload 存储。
 toc_max_heading_level: 3
 tags:
   - Python SDK
@@ -15,8 +14,8 @@ tags:
 
 import ThemedImage from '@theme/ThemedImage';
 
-All data sent to and from the Temporal Service passes through the **Data Converter**. The Data Converter has three
-layers that handle different concerns:
+所有发送到 Temporal Service 以及从 Temporal Service 接收的数据都会经过 **Data Converter**。Data Converter 包含三个
+处理不同关注点的层：
 
 <figure>
   <ThemedImage
@@ -26,16 +25,14 @@ layers that handle different concerns:
       dark: '/diagrams/data-converter-flow-dark.svg',
     }}
   />
-  <figcaption>The Flow of Data through a Data Converter</figcaption>
+  <figcaption>数据流经 Data Converter 的过程</figcaption>
 </figure>
 
-Of these three layers, only the PayloadConverter is required. Temporal uses a default PayloadConverter that handles JSON
-serialization. The PayloadCodec and ExternalStorage layers are optional. You only need to customize these layers when
-your application requires non-JSON types, encryption, or payload offloading.
+在这三层中，只有 PayloadConverter 是必需的。Temporal 使用默认的 PayloadConverter 处理 JSON 序列化。PayloadCodec 和 ExternalStorage 层是可选的。只有当你的应用程序需要非 JSON 类型、加密或 payload 卸载时，才需要自定义这些层。
 
 |                           | [PayloadConverter](/develop/python/data-handling/data-conversion) | [PayloadCodec](/develop/python/data-handling/data-encryption) | [ExternalStorage](/develop/python/data-handling/external-storage) |
 | ------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| **Purpose**               | Serialize application data to bytes                               | Transform encoded payloads (encrypt, compress)                | Offload large payloads to external store                               |
-| **Default**               | JSON serialization                                                | None (passthrough)                                            | None (all payloads are stored in Workflow History)                      |
+| **用途**                  | 将应用程序数据序列化为字节                                         | 转换已编码的 payload（加密、压缩）                             | 将大型 payload 卸载到外部存储                                          |
+| **默认值**                | JSON 序列化                                                       | 无（直接透传）                                                 | 无（所有 payload 均存储在 Workflow History 中）                        |
 
-For a deeper conceptual explanation, see the [Data Conversion encyclopedia](/dataconversion) and [External Storage](/external-storage).
+如需更深入的概念解释，请参阅 [Data Conversion 百科全书](/dataconversion) 和[外部存储](/external-storage)。

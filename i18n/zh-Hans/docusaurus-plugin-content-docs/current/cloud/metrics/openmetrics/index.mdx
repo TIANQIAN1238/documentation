@@ -1,0 +1,57 @@
+---
+id: index
+title: Temporal Cloud 开放指标
+sidebar_label: 开放指标
+description: 使用 OpenMetrics 标准和第三方集成从 Temporal Cloud 导出指标。
+slug: /cloud/metrics/openmetrics/
+toc_max_heading_level: 4
+keywords:
+  - explanation
+  - how-to
+  - introduction
+  - metrics
+  - observability
+  - prometheus
+  - reference
+  - tcld cli
+  - temporal cloud
+  - grafana
+tags:
+  - Metrics
+  - Observability
+  - Temporal Cloud
+---
+
+
+:::tip PRICING
+
+未来的定价可能适用于超过标准[限制](/cloud/metrics/openmetrics/api-reference#api-limits)的大批量使用。
+
+:::
+
+Temporal Cloud 的 [OpenMetrics](https://openmetrics.io/) 端点以行业标准 Prometheus 格式提供 Temporal Cloud 工作负载的操作指标，从而可以使用现有的可观测性堆栈对 Namespace、Workflow 和 Task Queue 进行全面监控。
+
+## 快速链接
+* [Integrations](/cloud/metrics/openmetrics/metrics-integrations) - 开始使用常见集成导出指标
+* [API文档](/cloud/metrics/openmetrics/api-reference) - 端点规范和高级配置
+* [指标参考](/cloud/metrics/openmetrics/metrics-reference) - 所有指标的完整目录以及描述和标签
+* [迁移指南](/cloud/metrics/openmetrics/migration-guide) - 有关如何从 Prometheus Query 端点进行迁移的指南
+
+## 概述
+Temporal Cloud OpenMetrics 公开了 50 多个指标，涵盖 Workflow 生命周期、Task Queue 操作、服务性能和系统限制。所有指标均在一分钟窗口内聚合，并可在三分钟内进行抓取。
+
+* 使用 API 文档[设置身份验证和抓取](/cloud/metrics/openmetrics/api-reference#authentication)。 
+* 浏览[完整指标目录](/cloud/metrics/openmetrics/metrics-reference) 以获取描述和标签。 
+* 使用 Query 端点的团队应查看[迁移指南](/cloud/metrics/openmetrics/migration-guide)。
+
+## API密钥认证
+创建具有“Metrics Read-Only”角色的 [服务帐户](/cloud/metrics/openmetrics/migration-guide#create-an-api-key)，生成 API 密钥，并立即开始抓取 - 无需证书轮换或分发。
+
+## 全局端点
+这是“metrics.Temporal.io”的单个端点，它通过 API 密钥身份验证和标准 HTTPS 为您的整个帐户中的所有指标提供服务。
+
+## Namespace 和指标过滤
+您可以使用 Query 参数启用选择性抓取来管理数据量和成本，支持通配符以实现灵活的 Namespace 选择和特定指标过滤。
+
+## 仪表板模板
+生产就绪的 [Grafana 仪表板](https://github.com/grafana/jsonnet-libs/blob/master/Temporal-mixin/dashboards/Temporal-overview.json) 为 Visibility 提供即时的预构建查询和可视化。

@@ -1,0 +1,36 @@
+---
+id: dynamic-activity
+title: 动态 Activity - .NET SDK
+sidebar_label: 动态Activity
+description: 本节介绍 .NET SDK 的动态活动
+toc_max_heading_level: 4
+keywords:
+  - .NET SDK
+tags:
+  - .NET SDK
+  - Temporal SDKs
+---
+
+## 设置动态 Activity {#set-a-dynamic-Activity}
+
+**如何使用 Temporal .NET SDK 设置动态 Activity**
+
+Temporal 中的动态 Activity 是一个 Activity，如果没有注册其他同名的 Activity，则在运行时动态调用该 Activity。
+通过将“[Activity]”属性上的“Dynamic”设置为“true”，可以使 Activity 成为动态的。
+您必须先向 Worker 注册 Activity，然后才能调用它。
+Worker 上只能存在一个 Dynamic Activity。
+
+然后，Activity Definition 必须接受“Temporalio.Converters.IRawValue[]”类型的单个参数。
+`ActivityExecutionContext` 上的 [PayloadConverter](https://dotnet.Temporal.io/api/Temporalio.Activities.ActivityExecutionContext.html#Temporalio_Activities_ActivityExecutionContext_PayloadConverter) 属性用于使用扩展方法将 `IRawValue` 对象转换为所需类型。 “Temporalio.转换器”Namespace。
+
+```csharp
+public class MyActivities
+{
+    [Activity(Dynamic = true)]
+    public string DynamicActivity(IRawValue[] args)
+    {
+        var input = ActivityExecutionContext.Current.PayloadConverter.ToValue<MyActivityParams>(args.Single());
+        return $"{input.Greeting}, {input.Name}!";
+    }
+}
+```

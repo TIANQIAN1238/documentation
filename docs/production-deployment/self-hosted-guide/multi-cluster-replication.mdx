@@ -1,8 +1,8 @@
 ---
 id: multi-cluster-replication
-title: Self-hosted Multi-Cluster Replication
-sidebar_label: Multi-Cluster Replication
-description: Multi-Cluster Replication in Temporal ensures asynchronous replication of Workflow Executions from active to passive Clusters for backup and state reconstruction, enabling seamless failovers.
+title: "自托管多集群复制"
+sidebar_label: "多集群复制"
+description: "Temporal 中的多集群复制可确保 Workflow Execution 从主动集群异步复制到被动集群，以进行备份和状态重建，从而实现无缝故障转移。"
 slug: /self-hosted-guide/multi-cluster-replication
 toc_max_heading_level: 4
 keywords:
@@ -15,81 +15,82 @@ tags:
   - Self-hosting
 ---
 
-Multi-Cluster Replication is a feature which asynchronously replicates Workflow Executions from active Clusters to other passive Clusters, for backup and state reconstruction.
-When necessary, for higher availability, Cluster operators can failover to any of the backup Clusters.
+多集群复制是一种将 Workflow Execution 从主动集群异步复制到其他被动集群的功能，用于备份和状态重建。
+必要时，为了获得更高的可用性，集群操作员可以故障转移到任何备份集群。
 
-Temporal's Multi-Cluster Replication feature is considered **experimental** and not subject to normal [versioning and support policy](/temporal-service/temporal-server#versions-and-support).
+Temporal 的多集群复制功能被认为是**实验性**，不受正常 [版本控制和支持政策](/temporal-service/temporal-server#versions-and-support) 的约束。
 
-Temporal automatically forwards Start, Signal, and Query requests to the active Cluster.
-This feature must be enabled through a Dynamic Config flag per [Global Namespace](/global-namespace).
+Temporal 自动将 Start、Signal 和 Query 请求转发到活动集群。
+此功能必须通过每个 [全球 Namespace](/global-namespace) 的动态配置标志来启用。
 
-When the feature is enabled, Tasks are sent to the Parent Task Queue partition that matches that Namespace, if it exists.
+启用该功能后，任务将发送到与 Namespace 匹配的父 Task Queue 分区（如果存在）。
 
-All Visibility APIs can be used against active and standby Clusters.
-This enables [Temporal UI](https://docs.temporal.io/web-ui) to work seamlessly for Global Namespaces.
-Applications making API calls directly to the Temporal Visibility API continue to work even if a Global Namespace is in standby mode.
-However, they might see a lag due to replication delay when querying the Workflow Execution state from a standby Cluster.
+所有 Visibility API 均可用于活动和备用集群。
+这使得 [Temporal 用户界面](https://docs.temporal.io/web-ui) 能够与 Global Namespace 无缝工作。
+即使全局 Namespace 处于待机模式，直接对 Temporal Visibility API 进行 API 调用的应用程序也可以继续工作。
+但是，当从备用集群 Query 调整 Workflow Execution 状态时，他们可能会因复制延迟而出现滞后。
 
-#### Namespace Versions
+<a id="namespace-versions"></a>
+#### Namespace 版本 {#namespace-versions}
 
-A _version_ is a concept in Multi-Cluster Replication that describes the chronological order of events per Namespace.
+_version_ 是多集群复制中的一个概念，描述每个 Namespace 事件的时间顺序。
 
-With Multi-Cluster Replication, all Namespace change events and Workflow Execution History events are replicated asynchronously for high throughput.
-This means that data across clusters is **not** strongly consistent.
-To guarantee that Namespace data and Workflow Execution data will achieve eventual consistency (especially when there is a data conflict during a failover), a **version** is introduced and attached to Namespaces.
-All Workflow Execution History entries generated in a Namespace will also come with the version attached to that Namespace.
+通过多集群复制，所有 Namespace 更改事件和 Workflow Execution 历史事件都会异步复制，以实现高吞吐量。
+这意味着跨集群的数据**不**强一致。
+为了保证Namespace数据和Workflow Execution数据达到最终一致性（特别是在故障转移期间存在数据冲突时），引入了**版本**并附加到Namespace。
+在 Namespace 中生成的所有 Workflow Execution 历史记录条目也将附带附加到该 Namespace 的版本。
 
-All participating Clusters are pre-configured with a unique initial version and a shared version increment:
+所有参与的集群都预先配置了唯一的初始版本和共享版本增量：
 
 - `initial version < shared version increment`
 
-When performing failover for a Namespace from one Cluster to another Cluster, the version attached to the Namespace will be changed by the following rule:
+当对 Namespace 从一个集群执行故障转移到另一个集群时，附加到 Namespace 的版本将按以下规则更改：
 
-- for all versions which follow `version % (shared version increment) == (active cluster's initial version)`, find the smallest version which has `version >= old version in namespace`
+- 对于 `version % (shared version increment) == (active cluster's initial version)` 之后的所有版本，找到具有 `version >= old version in Namespace` 的最小版本
 
-When there is a data conflict, a comparison will be made and Workflow Execution History entries with the highest version will be considered the source of truth.
+当存在数据冲突时，将进行比较，并且具有最高版本的Workflow Execution历史记录条目将被认为是事实来源。
 
-When a cluster is trying to mutate a Workflow Execution History, the version will be checked.
-A cluster can mutate a Workflow Execution History only if the following is true:
+当集群尝试更改 Workflow Execution 历史记录时，将检查版本。
+仅当满足以下条件时，集群才能改变 Workflow Execution 历史记录：
 
-- The version in the Namespace belongs to this cluster, i.e.
-  `(version in namespace) % (shared version increment) == (this cluster's initial version)`
-- The version of this Workflow Execution History's last entry (event) is equal or less than the version in the Namespace, i.e.
-  `(last event's version) <= (version in namespace)`
+- Namespace 中的版本属于该集群，即
+  `(version in Namespace) % (shared version increment) == (this cluster's initial version)`
+- 此 Workflow Execution 历史记录的最后一个条目（事件）的版本等于或小于 Namespace 中的版本，即
+  `(last event's version) <= (version in Namespace)`
 
 <details>
     <summary>
-    Namespace version change example
+Namespace 版本变更示例
     </summary>
 
-Assuming the following scenario:
+假设以下场景：
 
-- Cluster A comes with initial version: 1
-- Cluster B comes with initial version: 2
-- Shared version increment: 10
+- 集群 A 附带初始版本：1
+- Cluster B 附带初始版本：2
+- 共享版本增量：10
 
-T = 0: Namespace α is registered, with active Cluster set to Cluster A
+T = 0：Namespace α 已注册，活动集群设置为集群 A
 
 ```
 namespace α's version is 1
 all workflows events generated within this namespace, will come with version 1
 ```
 
-T = 1: namespace β is registered, with active Cluster set to Cluster B
+T = 1：Namespace β 已注册，活动集群设置为集群 B
 
 ```
 namespace β's version is 2
 all workflows events generated within this namespace, will come with version 2
 ```
 
-T = 2: Namespace α is updated to with active Cluster set to Cluster B
+T = 2：Namespace α 为 Updated，活动集群设置为集群 B
 
 ```
 namespace α's version is 2
 all workflows events generated within this namespace, will come with version 2
 ```
 
-T = 3: Namespace β is updated to with active Cluster set to Cluster A
+T = 3：Namespace β 为 Updated，活动集群设置为集群 A
 
 ```
 namespace β's version is 11
@@ -98,25 +99,26 @@ all workflows events generated within this namespace, will come with version 11
 
 </details>
 
-#### Version history
+<a id="version-history"></a>
+#### 版本历史 {#version-history}
 
-Version history is a concept which provides a high level summary of version information in regards to Workflow Execution History.
+版本历史记录是一个提供有关 Workflow Execution 历史记录的版本信息的高级摘要的概念。
 
-Whenever there is a new Workflow Execution History entry generated, the version from Namespace will be attached.
-The Workflow Execution's mutable state will keep track of all history entries (events) and the corresponding version.
+每当生成新的 Workflow Execution 历史记录条目时，都会附加 Namespace 的版本。
+Workflow Execution 的可变状态将跟踪所有历史条目（事件）和相应的版本。
 
 <details>
     <summary>
-        Version history example (without data conflict)
+版本历史示例（无数据冲突）
     </summary>
 
-- Cluster A comes with initial version: 1
-- Cluster B comes with initial version: 2
-- Shared version increment: 10
+- 集群 A 附带初始版本：1
+- Cluster B 附带初始版本：2
+- 共享版本增量：10
 
-T = 0: adding event with event ID == 1 & version == 1
+T = 0：添加事件 ID == 1 且版本 == 1 的事件
 
-View in both Cluster A & B
+在集群 A 和 B 中查看
 
 ```
 | -------- | --------------- | --------------- | ------- |
@@ -128,9 +130,9 @@ View in both Cluster A & B
 | -------- | -------------   | --------------- | ------- |
 ```
 
-T = 1: adding event with event ID == 2 & version == 1
+T = 1：添加事件 ID == 2 且版本 == 1 的事件
 
-View in both Cluster A & B
+在集群 A 和 B 中查看
 
 ```
 | -------- | --------------- | --------------- | ------- |
@@ -143,9 +145,9 @@ View in both Cluster A & B
 | -------- | -------------   | --------------- | ------- |
 ```
 
-T = 2: adding event with event ID == 3 & version == 1
+T = 2：添加事件 ID == 3 且版本 == 1 的事件
 
-View in both Cluster A & B
+在集群 A 和 B 中查看
 
 ```
 | -------- | --------------- | --------------- | ------- |
@@ -159,10 +161,10 @@ View in both Cluster A & B
 | -------- | -------------   | --------------- | ------- |
 ```
 
-T = 3: Namespace failover triggered, Namespace version is now 2
-adding event with event ID == 4 & version == 2
+T = 3：Namespace 故障转移已触发，Namespace 版本现在为 2
+添加事件 ID == 4 且版本 == 2 的事件
 
-View in both Cluster A & B
+在集群 A 和 B 中查看
 
 ```
 | -------- | --------------- | --------------- | ------- |
@@ -177,9 +179,9 @@ View in both Cluster A & B
 | -------- | -------------   | --------------- | ------- |
 ```
 
-T = 4: adding event with event ID == 5 & version == 2
+T = 4：添加事件 ID == 5 且版本 == 2 的事件
 
-View in both Cluster A & B
+在集群 A 和 B 中查看
 
 ```
 | -------- | --------------- | --------------- | ------- |
@@ -197,23 +199,23 @@ View in both Cluster A & B
 
 </details>
 
-Since Temporal is AP, during failover (change of active Temporal Cluster Namespace), there can exist cases where more than one Cluster can modify a Workflow Execution, causing divergence of Workflow Execution History. Below shows how the version history will look like under such conditions.
+由于 Temporal 是 AP，在故障转移期间（活动 Temporal 集群 Namespace 的更改），可能存在多个集群可以修改 Workflow Execution 的情况，从而导致 Workflow Execution 历史记录出现分歧。下面显示了在这种情况下版本历史记录的样子。
 
 <details>
     <summary>
-    Version history example (with data conflict)
+版本历史示例（有数据冲突）
     </summary>
 
-Below, shows version history of the same Workflow Execution in 2 different Clusters.
+下面显示了 2 个不同集群中相同 Workflow Execution 的版本历史记录。
 
-- Cluster A comes with initial version: 1
-- Cluster B comes with initial version: 2
-- Cluster C comes with initial version: 3
-- Shared version increment: 10
+- 集群 A 附带初始版本：1
+- Cluster B 附带初始版本：2
+- Cluster C 附带初始版本：3
+- 共享版本增量：10
 
-T = 0:
+T = 0：
 
-View in both Cluster B & C
+在集群 B 和 C 中查看
 
 ```
 | -------- | --------------- | --------------- | ------- |
@@ -227,7 +229,7 @@ View in both Cluster B & C
 | -------- | -------------   | --------------- | ------- |
 ```
 
-T = 1: adding event with event ID == 4 & version == 2 in Cluster B
+T = 1：在集群 B 中添加事件 ID == 4 且版本 == 2 的事件
 
 ```
 | -------- | --------------- | --------------- | ------- |
@@ -242,7 +244,7 @@ T = 1: adding event with event ID == 4 & version == 2 in Cluster B
 | -------- | -------------   | --------------- | ------- |
 ```
 
-T = 1: namespace failover to Cluster C, adding event with event ID == 4 & version == 3 in Cluster C
+T = 1：Namespace 故障转移到集群 C，在集群 C 中添加事件 ID == 4 且版本 == 3 的事件
 
 ```
 | -------- | --------------- | --------------- | ------- |
@@ -257,9 +259,9 @@ T = 1: namespace failover to Cluster C, adding event with event ID == 4 & versio
 | -------- | -------------   | --------------- | ------- |
 ```
 
-T = 2: replication task from Cluster C arrives in Cluster B
+T = 2：来自集群 C 的复制任务到达集群 B
 
-Note: below is a tree structure
+注：下面是树形结构
 
 ```
 | -------------- | ------------- |
@@ -296,38 +298,40 @@ Note: below is a tree structure
 | -------- | ------- |  | -------- | ------- |
 ```
 
-T = 2: replication task from Cluster B arrives in Cluster C, same as above
+T = 2：来自 Cluster B 的复制任务到达 Cluster C，同上
 
 </details>
 
-#### Conflict resolution
+<a id="conflict-resolution"></a>
+#### 冲突解决 {#conflict-resolution}
 
-When a Workflow Execution History diverges, proper conflict resolution is applied.
+当 Workflow Execution 历史出现分歧时，将应用适当的冲突解决方案。
 
-In Multi-cluster Replication, Workflow Execution History Events are modeled as a tree, as shown in the second example in [Version History](#version-history).
+在多集群复制中，Workflow Execution 历史事件被建模为树，如 [版本历史](#version-history) 中的第二个示例所示。
 
-Workflow Execution Histories that diverge will have more than one history branch.
-Among all history branches, the history branch with the highest version is considered the `current branch` and the Workflow Execution's mutable state is a summary of the current branch.
-Whenever there is a switch between Workflow Execution History branches, a complete rebuild of the Workflow Execution's mutable state will occur.
+Workflow Execution 分歧的历史将有多个历史分支。
+在所有历史分支中，版本最高的历史分支被认为是 `current branch`，而 Workflow Execution 的可变状态是当前分支的摘要。
+每当 Workflow Execution 历史分支之间发生切换时，就会发生 Workflow Execution 可变状态的完全重建。
 
-Temporal Multi-Cluster Replication relies on asynchronous replication of Events across Clusters, so in the case of a failover it is possible to have an Activity Task dispatched again to the newly active Cluster due to a replication task lag.
-This also means that whenever a Workflow Execution is updated after a failover by the new Cluster, any previous replication tasks for that Execution cannot be applied.
-This results in loss of some progress made by the Workflow Execution in the previous active Cluster.
-During such conflict resolution, Temporal re-injects any external Events like Signals in the new Event History before discarding replication tasks.
-Even though some progress could roll back during failovers, Temporal provides the guarantee that Workflow Executions won't get stuck and will continue to make forward progress.
+Temporal 多集群复制依赖于跨集群的事件异步复制，因此在故障转移的情况下，由于复制任务滞后，可能会将 Activity 任务再次分派到新​​的活动集群。
+这也意味着每当新集群进行故障转移后 Workflow Execution 变为 Updated 时，该执行的任何先前的复制任务都无法应用。
+这会导致 Workflow Execution 在先前活动集群中取得的一些进度丢失。
+在此类冲突解决期间，Temporal 会在丢弃复制任务之前将任何外部事件（如 Signal）重新注入到新的 Event History 中。
+尽管某些进度可能会在故障转移期间回滚，但 Temporal 可以保证 Workflow Execution 不会陷入困境，并将继续取得进展。
 
-Activity Execution completions are not forwarded across Clusters.
-Any outstanding Activities will eventually time out based on the configuration.
-Your application should have retry logic in place so that the Activity gets retried and dispatched again to a Worker after the failover to the new Cluster.
-Handling this is similar to handling an Activity Task timeout caused by a Worker restarting.
+Activity 执行完成不会跨集群转发。
+根据配置，任何未完成的活动最终都会超时。
+您的应用程序应该具有重试逻辑，以便在故障转移到新集群后重试 Activity 并再次分派到 Worker。
+处理此问题类似于处理由 Worker 重新启动导致的 Activity 任务超时。
 
-#### Zombie Workflows
+<a id="zombie-workflows"></a>
+#### 僵尸 Workflow {#zombie-workflows}
 
-There is an existing contract that for any Namespace and Workflow Id combination, there can be at most one run (Namespace + Workflow Id + Run Id) open / executing.
+有一个现有合约，对于任何 Namespace 和 Workflow Id 组合，最多可以有一个运行 (Namespace + Workflow Id + Run Id) 打开/执行。
 
-Multi-cluster Replication aims to keep the Workflow Execution History as up-to-date as possible among all participating Clusters.
+多集群复制旨在使所有参与集群中的 Workflow Execution 历史记录尽可能保持最新。
 
-Due to the nature of Multi-cluster Replication (for example, Workflow Execution History events are replicated asynchronously) different Runs (same Namespace and Workflow Id) can arrive at the target Cluster at different times, sometimes out of order, as shown below:
+由于多集群复制的性质（例如，Workflow Execution 历史事件是异步复制的），不同的运行（相同的 Namespace 和 Workflow Id）可能会在不同时间到达目标集群，有时是无序的，如下所示：
 
 ```
 +-----------+        +----------------+        +-----------+
@@ -348,22 +352,23 @@ Due to the nature of Multi-cluster Replication (for example, Workflow Execution 
       |                       |                        |
 ```
 
-Because Run 2 appears in Cluster B first, Run 1 cannot be replicated as "runnable" due to the rule `at most one Run open` (see above), thus the "zombie" Workflow Execution state is introduced.
-A "zombie" state is one in which a Workflow Execution which cannot be actively mutated by a Cluster (assuming the corresponding Namespace is active in this Cluster). A zombie Workflow Execution can only be changed by a replication Task.
+由于 Run 2 首先出现在 Cluster B 中，因此由于规则 `at most one Run open`（见上文），Run 1 无法复制为“可运行”，因此引入了“僵尸”Workflow Execution 状态。
+“僵尸”状态是指 Workflow Execution 不能被集群主动突变的状态（假设相应的 Namespace 在该集群中处于活动状态）。僵尸 Workflow Execution 只能由复制任务更改。
 
-Run 1 will be replicated similar to Run 2, except when Run 1's execution will become a "zombie" before Run 1 reaches completion.
+运行 1 的复制方式与运行 2 类似，但运行 1 的执行在运行 1 完成之前将变成“僵尸”。
 
-#### Workflow Task processing
+<a id="workflow-task-processing"></a>
+#### Workflow 任务处理 {#workflow-task-processing}
 
-In the context of Multi-cluster Replication, a Workflow Execution's mutable state is an entity which tracks all pending tasks.
-Prior to the introduction of Multi-cluster Replication, Workflow Execution History entries (events) are from a single branch, and the Temporal Server will only append new entries (events) to the Workflow Execution History.
+在多集群复制的上下文中，Workflow Execution 的可变状态是跟踪所有待处理任务的实体。
+在引入多集群复制之前，Workflow Execution 历史条目（事件）来自单个分支，并且 Temporal Server 只会将新条目（事件）追加到 Workflow Execution 历史记录中。
 
-After the introduction of Multi-cluster Replication, it is possible that a Workflow Execution can have multiple Workflow Execution History branches.
-Tasks generated according to one history branch may become invalidated by switching history branches during conflict resolution.
+引入多集群复制后，一个Workflow Execution可能可以有多个Workflow Execution历史分支。
+根据一个历史分支生成的任务可能会因在冲突解决期间切换历史分支而变得无效。
 
-Example:
+例子：
 
-T = 0: task A is generated according to Event Id: 4, version: 2
+T = 0：根据Event Id：4，版本：2生成任务A
 
 ```
 | -------- | ------------- |
@@ -384,7 +389,7 @@ T = 0: task A is generated according to Event Id: 4, version: 2
 | -------- | ------------- |
 ```
 
-T = 1: conflict resolution happens, Workflow Execution's mutable state is rebuilt and history Event Id: 4, version: 3 is written down to persistence
+T = 1：冲突解决发生，Workflow Execution 的可变状态被重建，历史事件 ID：4，版本：3 被写入持久化
 
 ```
 | --------- | ------------- |
@@ -406,37 +411,38 @@ T = 1: conflict resolution happens, Workflow Execution's mutable state is rebuil
 | --------  | ------------- |                                  | -------- | ------------- |
 ```
 
-T = 2: task A is loaded.
+T = 2：任务 A 已加载。
 
-At this time, due to the rebuild of a Workflow Execution's mutable state (conflict resolution), Task A is no longer relevant (Task A's corresponding Event belongs to non-current branch).
-Task processing logic will verify both the Event Id and version of the Task against a corresponding Workflow Execution's mutable state, then discard task A.
+此时，由于重建了Workflow Execution的可变状态（冲突解决），任务A不再相关（任务A对应的Event属于非当前分支）。
+任务处理逻辑将根据相应的 Workflow Execution 的可变状态验证任务的事件 ID 和版本，然后丢弃任务 A。
 
-## How to set up Multi-Cluster Replication {#set-up-multi-cluster-replication}
+## 如何设置多集群复制 {#set-up-multi-cluster-replication}
 
-The [Multi-Cluster Replication](/self-hosted-guide/multi-cluster-replication) feature asynchronously replicates Workflow Execution Event Histories from active Clusters to other passive Clusters, and can be enabled by setting the appropriate values in the `clusterMetadata` section of your configuration file.
+[多集群复制](/self-hosted-guide/multi-cluster-replication) 功能将 Workflow Execution 事件历史记录从主动集群异步复制到其他被动集群，并且可以通过在配置文件的 `clusterMetadata` 部分中设置适当的值来启用。
 
-1. `enableGlobalNamespace` must be set to `true`.
-2. `failoverVersionIncrement` has to be equal across connected Clusters.
-3. `initialFailoverVersion` in each Cluster has to assign a different value.
-   No equal value is allowed across connected Clusters.
+1. `enableGlobalNamespace` 必须设置为 `true`。
+2. `failoverVersionIncrement` 在连接的集群之间必须相等。
+3. 每个Cluster中的`initialFailoverVersion`必须分配不同的值。
+   连接的集群之间不允许有相同的值。
 
-After the above conditions are satisfied, you can start to configure a multi-cluster setup.
+满足上述条件后，您就可以开始配置多集群设置了。
 
-#### Set up Multi-Cluster Replication prior to v1.14
+<a id="set-up-multi-cluster-replication-prior-to-v114"></a>
+#### v1.14 之前设置多集群复制 {#set-up-multi-cluster-replication-prior-to-v114}
 
-You can set this up with [`clusterMetadata` configuration](/references/configuration#clustermetadata); however, this is meant to be only a conceptual guide rather than a detailed tutorial.
+您可以使用 [`clusterMetadata`配置](/references/configuration#clustermetadata) 进行设置；然而，这只是一个概念指南，而不是一个详细的教程。
 
 :::tip
 
-If you need help when setting up, please reach out to our [community Slack](https://temporalio.slack.com).
-Good places to start include the **\#support-community** channel, searching through previous conversations, and asking our unusually excellent Temporal-trained large language model (visit **\#ask-ai**).
+如果您在设置时需要帮助，请联系我们的 [社区松弛](https://temporalio.slack.com)。
+好的起点包括 **\#support-community** 频道，搜索以前的对话，并询问我们异常优秀的 Temporal 训练的大型语言模型（访问 **\#ask-ai**）。
 
-Need a Slack invitation?
-Here's an [invitation link](https://temporal.io/slack).
+需要 Slack 邀请吗？
+这是 [邀请链接](https://temporal.io/slack)。
 
 :::
 
-For example:
+例如：
 
 ```yaml
 # cluster A
@@ -472,11 +478,12 @@ clusterMetadata:
       rpcAddress: "127.0.0.1:8233"
 ```
 
-#### Set up Multi-Cluster Replication in v1.14 and later
+<a id="set-up-multi-cluster-replication-in-v114-and-later"></a>
+#### 在 v1.14 及更高版本中设置多集群复制 {#set-up-multi-cluster-replication-in-v114-and-later}
 
-You still need to set up local cluster [`clusterMetadata` configuration](/references/configuration#clustermetadata)
+您仍然需要设置本地集群 [`clusterMetadata`配置](/references/configuration#clustermetadata)
 
-For example:
+例如：
 
 ```yaml
 # cluster A
@@ -504,17 +511,17 @@ clusterMetadata:
       rpcAddress: "127.0.0.1:8233"
 ```
 
-Then you can use the Temporal CLI tool to add cluster connections. All operations should be executed in both Clusters.
+然后您可以使用Temporal CLI工具添加集群连接。所有操作都应在两个集群中执行。
 
 {/* tctl -address 127.0.0.1:7233 admin cluster upsert-remote-cluster --frontend_address "localhost:8233" */}
 
 {/* tctl -address 127.0.0.1:8233 admin cluster upsert-remote-cluster --frontend_address "localhost:7233" */}
 
 {/* tctl -address 127.0.0.1:7233 admin cluster upsert-remote-cluster --frontend_address "localhost:8233" --enable_connection false
-tctl -address 127.0.0.1:8233 admin cluster upsert-remote-cluster --frontend_address "localhost:7233" --enable_connection false */}
+tctl -address 127.0.0.1:8233 管理集群 upsert-remote-cluster --frontend_address "localhost:7233" --enable_connection false */}
 
 {/* tctl -address 127.0.0.1:7233 admin cluster remove-remote-cluster --cluster "clusterB"
-tctl -address 127.0.0.1:8233 admin cluster remove-remote-cluster --cluster "clusterA" */}
+tctl -地址 127.0.0.1:8233 管理员集群删除远程集群 --cluster "clusterA" */}
 
 {/* THIS MUST BE CHECKED FOR ACCURACY */}
 

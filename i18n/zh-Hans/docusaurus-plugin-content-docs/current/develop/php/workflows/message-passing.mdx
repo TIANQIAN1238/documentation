@@ -1,0 +1,927 @@
+---
+id: message-passing
+title: Workflow 消息传递 - PHP SDK
+sidebar_label: 留言
+toc_max_heading_level: 3
+keywords:
+  - message passing
+  - signals
+  - queries
+  - updates
+  - dynamic signals
+  - dynamic queries
+  - dynamic updates
+tags:
+  - Workflows
+  - Messages
+  - Signals
+  - Queries
+  - Updates
+  - PHP SDK
+  - Temporal SDKs
+description: 在 Temporal Workflow 中使用 Signal、查询和 Update 进行开发。定义、处理和发送 Signal 或查询，并从 Temporal CLIent 验证 Update。
+---
+
+## 如何使用 Signals 进行开发 {#Signals}
+
+[Signal](/sending-messages#sending-Signals) 是发送到正在运行的 Workflow Execution 的消息。
+
+Signal 在您的代码中定义并在 Workflow Definition 中处理。
+Signal 可以从 Temporal CLIent 或另一个 Workflow Execution 发送到 Workflow Execution。
+
+### 如何定义 Signal {#define-Signal}
+
+Signal 有一个名称并且可以有参数。
+
+- 名称也称为 Signal 类型，是一个字符串。
+- 参数必须是[可序列化](/dataconversion)。
+
+Workflows 可以应答同步[查询](/sending-messages#sending-queries) 并接收[Signals](/sending-messages#sending-Signals)。
+
+所有接口方法必须具有以下属性之一：
+
+- **#[WorkflowMethod]** 表示 Workflow 的入口点。
+  它包含指定超时和 Task Queue 名称的参数。
+  未通过属性指定的必需参数（例如“executionStartToCloseTimeoutSeconds”）必须在运行时提供。
+- **#[SignalMethod]** 表示对外部 Signal 做出反应的方法。它必须有一个“void”返回类型。
+- **#[QueryMethod]** 表示对同步 Query 请求做出反应的方法。它必须具有非“void”返回类型。
+
+> 可以（尽管出于可用性原因不推荐）注释具体的类实现。
+
+您可以拥有多个具有相同属性的方法（#[WorkflowMethod] 除外）。
+
+例如：
+
+```php
+use Temporal\Workflow\WorkflowInterface;
+use Temporal\Workflow\WorkflowMethod;
+use Temporal\Workflow\SignalMethod;
+use Temporal\Workflow\QueryMethod;
+
+#[WorkflowInterface]
+interface FileProcessingWorkflow
+{
+    #[WorkflowMethod]
+    public function processFile(Argument $args);
+
+    #[QueryMethod("history")]
+    public function getHistory(): array;
+
+    #[QueryMethod("status")]
+    public function getStatus(): string;
+
+    #[SignalMethod]
+    public function retryNow(): void;
+
+    #[SignalMethod]
+    public function abandon(): void;
+}
+```
+
+请注意，Workflow 方法属性的名称参数可用于指定 Workflow、Signal 和 Query 类型的名称。
+如果未指定名称，则使用 Workflow 接口的短名称。
+
+在前面的代码中，未指定“#[WorkflowMethod(name)]”，因此 Workflow Type 默认为“FileProcessingWorkflow”。
+
+### 如何处理 Signal {#handle-Signal}
+
+Workflow 通过 Signal 的名称侦听 Signal。
+
+使用“#[SignalMethod]”属性来处理 Workflow 接口中的 Signal：
+
+```php
+use Temporal\Workflow;
+
+#[Workflow\WorkflowInterface]
+class YourWorkflow
+{
+    private bool $value;
+
+    #[Workflow\WorkflowMethod]
+    public function run()
+    {
+        yield Workflow::await(fn()=> $this->value);
+        return 'OK';
+    }
+
+    #[Workflow\SignalMethod]
+    public function setValue(bool $value)
+    {
+        $this->value = $value;
+    }
+}
+```
+
+在前面的示例中，Workflow Update 是受保护的值。
+主 Workflow 协程使用“Workflow::await()”函数等待值更改。
+
+### 如何从 Temporal CLIent {#send-Signal-from-client} 发送 Signal
+
+当从 Temporal CLIent 成功发送 Signal 时，[WorkflowExecutionSignaled](/references/events#WorkflowexecutionSignaled) 事件将出现在接收 Signal 的 Workflow 的 Event History 中。
+
+要从客户端将 Signal 发送到 Workflow Execution，请从客户端代码调用 Signal 方法，该方法在 Workflow 接口中用“#[SignalMethod]”注释。
+
+要将 Signal 发送到 Workflow，请使用“WorkflowClient->newWorkflowStub”或“WorkflowClient->newUntypedWorkflowStub”：
+
+```php
+$workflow = $workflowClient->newWorkflowStub(YourWorkflow::class);
+
+$run = $workflowClient->start($workflow);
+
+// do something
+
+$workflow->setValue(true);
+
+assert($run->getValue() === true);
+```
+
+将“WorkflowClient->newRunningWorkflowStub”或“WorkflowClient->newUntypedRunningWorkflowStub”与 Workflow Id 一起使用，将 Signal 发送到已运行的 Workflow。
+
+```php
+$workflow = $workflowClient->newRunningWorkflowStub(YourWorkflow::class, 'workflowID');
+$workflow->setValue(true);
+```
+
+有关如何处理 Workflow 中的 Signal 的详细信息，请参阅[处理 Signal](#handle-Signal)。
+
+### 如何从 Workflow 发送 Signal {#send-Signal-from-Workflow}
+
+Workflow 可以将 Signal 发送到另一个 Workflow，在这种情况下，它被称为_外部 Signal_。
+
+外部存储处于[预发布](/evaluate/development-product-features/release-stages#pre-release)。 API 和
+在稳定版本发布之前配置可能会发生变化。加入
+[#large-payloads Slack 频道](https://XPROT026Xio.slack.com/archives/C09VA2DE15Y) 提供反馈或寻求帮助。
+
+- [SignalExternalWorkflowExecutionInitiated](/references/events#SignalexternalWorkflowexecutioninitied) 事件出现在发送者的 Event History 中。
+- [WorkflowExecutionSignaled](/references/events#WorkflowexecutionSignaled) 事件出现在收件人的 Event History 中。
+
+要将 Signal 发送到 Workflow，请使用 `WorkflowClient`->`newWorkflowStub` 或 `WorkflowClient`->`newUntypedWorkflowStub`：
+
+```php
+$workflow = $workflowClient->newWorkflowStub(YourWorkflow::class);
+
+$run = $workflowClient->start($workflow);
+
+// do something
+
+$workflow->setValue(true);
+
+assert($run->getValue() === true);
+```
+
+使用 `WorkflowClient`->`newRunningWorkflowStub` 或 `WorkflowClient->newUntypedRunningWorkflowStub` 与 Workflow Id 一起发送
+Signal 转换为正在运行的 Workflow。
+
+```php
+$workflow = $workflowClient->newRunningWorkflowStub(YourWorkflow::class, 'workflowID');
+$workflow->setValue(true);
+```
+
+### 如何 Signal-With-Start {#Signal-with-start}
+
+Signal-With-Start 从客户端使用。
+它需要 Workflow Id、Workflow 参数、Signal 名称和 Signal 参数。
+
+如果 Workflow 与给定的 Workflow Id 一起运行，则它将是 Signaled。如果没有，将启动新的 Workflow，并立即启动 Signal。
+
+如果您可能不知道 Workflow 是否正在运行，并且想要向其发送 Signal，请使用“startwithSignal”。
+如果存在正在运行的 Workflow，则“startwithSignal”API 会发送 Signal。
+如果没有正在运行的 Workflow，则 API 会启动新的 Workflow 运行并向其传送 Signal。
+
+```php
+$workflow = $workflowClient->newWorkflowStub(YourWorkflow::class);
+
+$run = $workflowClient->startWithSignal(
+    $workflow,
+    'setValue',
+    [true], // signal arguments
+    [] // start arguments
+);
+```
+
+## 如何使用查询进行开发 {#queries}
+
+[Query](/sending-messages#sending-queries) 是一个同步操作，用于获取 Workflow Execution 的状态。
+
+### 如何定义 Query {#define-Query}
+
+Query 有一个名称并且可以有参数。
+
+- 名称也称为 Query 类型，是一个字符串。
+- 参数必须是[可序列化](/dataconversion)。
+
+Workflows 可以应答同步[查询](/sending-messages#sending-queries) 并接收[Signals](/sending-messages#sending-Signals)。
+
+所有接口方法必须具有以下属性之一：
+
+- **#[WorkflowMethod]** 表示 Workflow 的入口点。
+  它包含指定超时和 Task Queue 名称的参数。
+  未通过属性指定的必需参数（例如“executionStartToCloseTimeoutSeconds”）必须在运行时提供。
+- **#[SignalMethod]** 表示对外部 Signal 做出反应的方法。它必须有一个“void”返回类型。
+- **#[QueryMethod]** 表示对同步 Query 请求做出反应的方法。它必须具有非“void”返回类型。
+
+> 可以（尽管出于可用性原因不推荐）注释具体的类实现。
+
+您可以拥有多个具有相同属性的方法（#[WorkflowMethod] 除外）。
+
+例如：
+
+```php
+use Temporal\Workflow\WorkflowInterface;
+use Temporal\Workflow\WorkflowMethod;
+use Temporal\Workflow\SignalMethod;
+use Temporal\Workflow\QueryMethod;
+
+#[WorkflowInterface]
+interface FileProcessingWorkflow
+{
+    #[WorkflowMethod]
+    public function processFile(Argument $args);
+
+    #[QueryMethod("history")]
+    public function getHistory(): array;
+
+    #[QueryMethod("status")]
+    public function getStatus(): string;
+
+    #[SignalMethod]
+    public function retryNow(): void;
+
+    #[SignalMethod]
+    public function abandon(): void;
+}
+```
+
+请注意，Workflow 方法属性的名称参数可用于指定 Workflow、Signal 和 Query 类型的名称。
+如果未指定名称，则使用 Workflow 接口的短名称。
+
+在前面的代码中，未指定“#[WorkflowMethod(name)]”，因此 Workflow Type 默认为“FileProcessingWorkflow”。
+
+### 如何处理 Query {#handle-Query}
+
+查询由 Workflow 处理。
+
+请勿在 Query 处理程序中包含任何导致生成 [Command](/Workflow-execution#command) 的逻辑（例如执行活动）。
+包含这样的逻辑会导致意外的行为。
+
+您的用户可能希望在部署 XPROT035X 代码时保持 Workflow 运行。如果他们的部署
+包含新版本的插件，对插件的更改可能会破坏在新版本之前启动的 Workflow 代码
+版本已部署。这可能是由于
+插件中的[代码更改导致的非确定性行为](/Workflow-definition#non-definition-change)。
+
+```php
+#[Workflow\WorkflowInterface]
+class YourWorkflow
+{
+    #[Workflow\QueryMethod]
+    public function getValue()
+    {
+        return 42;
+    }
+
+    #[Workflow\WorkflowMethod]
+    public function run()
+    {
+        // workflow code
+    }
+}
+```
+
+处理函数可以接收任意数量的输入参数，但所有输入参数都必须是
+可序列化。以下示例代码设置了一个 Query 处理程序，用于处理 Query 类型
+`当前状态`:
+
+```php
+#[Workflow\WorkflowInterface]
+class YourWorkflow
+{
+    private string $currentState;
+
+    #[Workflow\QueryMethod('current_state')]
+    public function getCurrentState(): string
+    {
+        return $this->currentState;
+    }
+
+    #[Workflow\WorkflowMethod]
+    public function run()
+    {
+        // Your normal Workflow code begins here, and you update the currentState
+        // as the code makes progress.
+        $this->currentState = 'waiting timer';
+        try{
+            yield Workflow::timer(DateInterval::createFromDateString('1 hour'));
+        } catch (\Throwable $e) {
+            $this->currentState = 'timer failed';
+            throw $e;
+        }
+
+        $yourActivity = Workflow::newActivityStub(
+            YourActivityInterface::class,
+            ActivityOptions::new()->withScheduleToStartTimeout(60)
+        );
+
+        $this->currentState = 'waiting activity';
+        try{
+            yield $yourActivity->doSomething('some input');
+        } catch (\Throwable $e) {
+            $this->currentState = 'activity failed';
+            throw $e;
+        }
+
+        $this->currentState = 'done';
+
+        return null;
+    }
+}
+```
+
+您还可以使用 Temporal CLIent 对象上的“QueryWorkflow()” API 从代码发出 Query。
+
+从您的客户端代码中使用“WorkflowStub”到 Query Workflow 实例（可应用于正在运行和关闭的 Workflow）：
+
+```php
+$workflow = $workflowClient->newWorkflowStub(
+    YourWorkflow::class,
+    WorkflowOptions::new()
+);
+
+$workflowClient->start($workflow);
+
+var_dump($workflow->getCurrentState());
+sleep(60);
+var_dump($workflow->getCurrentState());
+```
+
+### 如何发送 Query {#send-Query}
+
+查询从 Temporal CLIent 发送。
+
+## 如何使用 Updates 进行开发 {#Updates}
+
+[Update](/sending-messages#sending-Updates) 是一种可以改变 Workflow Execution 状态并返回响应的操作。
+
+### 定义 Update {#define-Update}
+
+**如何使用 PHP SDK 定义 Update。**
+
+Workflow Updates 处理程序是 Workflow Definition 中设计用于处理 Updates 的方法。
+这些 Update 可以在 Workflow Execution 的生命周期内触发。
+
+Update 处理程序具有名称、参数、响应和可选验证器。
+
+- 名称也称为 Update 类型，是一个字符串。
+- 参数和响应必须是[可序列化](/dataconversion)。
+
+[`#[UpdateMethod]`](https://php.Temporal.io/classes/Temporal-Workflow-UpdateMethod.html) 属性指示该方法用于处理和响应 Update 请求。
+
+```php
+#[UpdateMethod]
+public function myUpdate(string $value);
+```
+
+### 手柄 Update {#handle-Updates}
+
+**如何使用 PHP SDK 处理 Workflow 中的 Update。**
+
+5. 运行XPROT035X。确保 XPROT035X 进程可以通过“BRAINTRUST_API_KEY”访问您的 Braintrust API 密钥
+   环境变量。
+
+使用“#[UpdateMethod]”属性来处理 Workflow 接口中的 Update。
+处理程序方法可以接受多个可序列化的输入参数，但建议仅使用单个参数。
+该函数可以返回一个[serialized](/dataconversion)值或“void”。
+
+```php
+#[WorkflowInterface]
+interface FileProcessingWorkflow {
+    #[WorkflowMethod]
+    #[ReturnType(ProcessResult::class)]
+    public function processFile(File $file);
+
+    #[UpdateMethod]
+    public function pauseProcessing(): void;
+}
+```
+
+与 Query 处理程序不同，Update 处理程序可以更改 Workflow 状态。
+
+### 连接 XPROT043X
+
+```php
+#[WorkflowInterface]
+interface FileProcessingWorkflow {
+    #[WorkflowMethod]
+    public function processFiles(FileList $files);
+
+    #[UpdateMethod(name: 'pause')]
+    public function pauseProcessing(): void;
+}
+```
+
+**动态注册Update Handler**
+
+您可以使用“Workflow::registerUpdate()”方法动态注册 Update 处理程序。
+第三个参数是可选的 Update 验证器。验证器函数必须具有与处理程序相同的参数，并且如果验证失败则抛出异常。
+
+```php
+Workflow::registerUpdate(
+    name: 'pause',
+    handler: fn() => $this->paused = true,
+    validator: fn() => $this->paused === false or throw new \Exception('Workflow is already paused'),
+);
+```
+
+### 验证 Update {#validate-an-Update}
+
+**如何使用 PHP SDK 验证 Workflow 中的 Update。**
+
+使用 Update 验证器方法验证发送到 Workflow 的数据的某些方面。例如，计数器 Workflow 可能永远不想接受非正数。使用 [`#[UpdateValidatorMethod]`](https://php.Temporal.io/classes/Temporal-Workflow-UpdateValidatorMethod.html) 属性并将 `forUpdate` 参数设置为 Update 处理程序的名称。您的 Update 验证器应接受与 Update 处理程序相同的输入参数并返回“void”。
+
+```php
+#[WorkflowInterface]
+interface GreetingWorkflow {
+    #[WorkflowMethod]
+    public function getGreetings(): array;
+
+    #[UpdateMethod]
+    public function addGreeting(string $name): int;
+
+    #[UpdateValidatorMethod(forUpdate: 'addGreeting')]
+    public function addGreetingValidator(string $name): void;
+}
+```
+
+### 从客户端发送 Update {#send-Update-from-client}
+
+**如何使用 PHP SDK 将 Update 从 Temporal CLIent 发送到 Workflow Execution。**
+
+要从客户端将 Update 发送到 Workflow Execution，请从客户端代码调用 Update 方法，该方法在 Workflow 接口中用“#[UpdateMethod]”进行注释。
+
+在以下客户端代码示例中，启动 Workflow `getGreetings` 并调用在 Workflow 中处理的 Update 方法 `addGreeting`。
+
+```php
+// Create a typed Workflow stub for GreetingsWorkflow
+$workflow = $workflowClient->newWorkflowStub(GreetingWorkflow::class, $workflowOptions);
+
+// Start the Workflow
+$run = $workflowClient->start($workflow);
+
+// Send an update to the Workflow. addGreeting returns
+// the number of greetings our workflow has received.
+$count = $workflow->addGreeting("World");
+```
+
+**异步接受**
+
+在 Workflow Update 方法中，所有 Workflow 功能均可用，例如执行活动和 Child Workflow，以及等待 Timer/条件。
+如果已知 Update 将需要很长时间才能执行，或者您对其执行结果不感兴趣，则可以使用存根方法 [`startUpdate`](https://php.Temporal.io/classes/Temporal-Client-WorkflowStubInterface.html#method_startUpdate) 并在收到验证后立即继续结果。
+请注意，处理 Workflow Worker 必须可用。
+否则，请求可能会无限期阻塞或因超时而失败。
+
+```php
+use Ramsey\Uuid\UuidInterface;
+use Temporal\Client\Update\UpdateOptions;
+use Temporal\Client\Update\WaitPolicy;
+use Temporal\Client\Update\LifecycleStage;
+
+// Create an untyped Workflow stub for GreetingsWorkflow
+$stub = $client->newUntypedWorkflowStub('GreetingWorkflow', $workflowOptions);
+
+// Start the Workflow
+$run = $client->start($stub);
+
+// Send an Update to the Workflow. UpdateHandle returns
+$handle = $stub->startUpdate('addGreeting', 'World');
+
+// Use the UpdateHandle to get the Update result with timeout 2.5 seconds
+$result = $handle->getResult(timeout: 2.5);
+
+// You can get more control using UpdateOptions
+$resultUuid = $stub->startUpdate(
+    UpdateOptions::new('storeGreetings', LifecycleStage::StageCompleted)
+        ->withResultType(UuidInterface::class)
+ )->getResult();
+```
+
+#### Update-带启动 {#Update-带启动}
+
+[Update-with-Start](/sending-messages#Update-with-start) 允许您[发送 Update](#send-Update-from-client) 以检查是否存在具有该 ID 的已运行 Workflow：
+
+- 如果 Workflow 存在，则处理 Update。
+- 如果 Workflow 不存在，则使用给定 ID 启动新的 Workflow Execution，并在主 Workflow 方法开始执行之前处理 Update。
+
+你可以：
+
+- 使用 [`UpdateWithStart`](https://php.Temporal.io/classes/Temporal-Client-WorkflowClientInterface.html#method_UpdateWithStart) WorkflowClient API。
+  一旦到达所请求的 Update 等待阶段，它就会返回；或者当请求超时时。
+- 使用 [`UpdateHandle`](https://php.Temporal.io/classes/Temporal-Client-Update-UpdateHandle.html) 从 Update 检索结果。
+
+您提供：
+
+- 从 [`WorkflowOptions`](https://php.Temporal.io/classes/Temporal-Client-WorkflowOptions.html) 创建的 WorkflowStub。
+  - `WorkflowOptions` 需要指定 [Workflow Id 冲突策略](/Workflow-execution/Workflowid-runid#Workflow-id-conflict-policy)。
+  - 选择 ["Use Existing"](https://php.Temporal.io/classes/Temporal-Common-WorkflowIdConflictPolicy.html#enumcase_UseExisting) 并使用幂等 Update 处理程序来确保在客户端发生故障时可以再次执行您的代码。
+    并非所有“WorkflowOptions”都是允许的。
+    例如，指定 Cron Schedule 将导致错误。
+
+- Update 名称或 [`UpdateOptions`](https://php.Temporal.io/classes/Temporal-Client-Update-UpdateOptions.html)。
+  这反映了 [Update Workflow](#send-Update-from-client) 使用的方法。
+  - 对于 Update-with-Start，Workflow Id 是可选的。
+  - 指定时，Id 必须与“WorkflowOptions”中使用的 ID 匹配。
+  - 由于正在运行的 Workflow Execution 可能尚不存在，因此您无法设置运行 ID。
+
+例如：
+
+```php
+$stub = $workflowClient->newUntypedWorkflowStub(
+    ShoppingCartWorkflow::class,
+    WorkflowOptions::new()
+        ->withTaskQueue('service-queue')
+        ->withWorkflowId($cartId)
+        ->withWorkflowIdConflictPolicy(WorkflowIdConflictPolicy::UseExisting),
+);
+$handle = $workflowClient->updateWithStart(
+    workflow: $stub,
+    update: 'addItem',
+    updateArgs: [$itemId, $quantity],
+);
+
+$price = $handle->getResult();
+```
+
+要等待 Update 结果，请运行 Update，并将等待阶段设置为 [`LifecycleStage::StageCompleted`](https://php.Temporal.io/classes/Temporal-Client-Update-LifecycleStage.html#enumcase_StageCompleted)。
+一旦 Update 结果可用，就会返回；或者当 API 调用超时时。
+
+例如：
+
+```php
+$handle = $workflowClient->updateWithStart(
+    workflow: $stub,
+    update: UpdateOptions::new('addItem', LifecycleStage::StageCompleted),
+    updateArgs: [$itemId, $quantity],
+);
+
+assert($handle->hasResult() === true);
+$price = $handle->getResult();
+```
+
+## 消息处理程序模式 {#message-handler-patterns}
+
+本节介绍常见的写入操作，例如 Signal 和 Update 处理程序。
+它不适用于纯读取操作，例如查询或 Update 验证器。
+
+:::tip
+
+有关其他信息，请参阅[将工作注入主 Workflow](/handling-messages#injecting-work-into-main-Workflow)、[确保消息仅处理一次](/handling-messages#exactly-once-message-processing) 和 [this示例](https://github.com/Temporalio/samples-php/tree/master/app/src/SafeMessageHandlers) 演示安全的“异步”消息处理。
+:::
+
+### 添加阻塞等待条件
+
+有时，异步 Signal 或 Update 处理程序需要满足某些条件才能继续。
+您可以使用等待条件 ([`Workflow::await()`](https://php.Temporal.io/classes/Temporal-Workflow.html#method_await)) 来设置一个函数，该函数阻止代码继续执行，直到条件返回“true”。
+这是一个重要的功能，可以帮助您控制处理程序逻辑。
+
+以下是“Workflow::await()”的两个重要用例：
+
+- 在处理程序中等待，直到适合继续。
+- 在主 Workflow 中等待，直到所有活动处理程序完成。
+
+您正在等待的条件状态可以是 Updated，并反映 Workflow 代码的任何部分。
+这包括主 Workflow 方法、其他处理程序或由主 Workflow 方法生成的子协程（请参阅 [`Workflow::async()`](https://php.Temporal.io/classes/Temporal-Workflow.html#method_async)。
+
+### 在处理程序中使用等待条件
+
+通常使用 Workflow 等待条件来等待处理程序启动。
+您还可以在处理程序中的任何其他位置使用等待条件来等待特定条件变为“true”。
+这允许您编写在多个点暂停的处理程序，每次都等待所需的条件变为“true”。
+
+考虑在 Update 处理程序执行之前运行的“readyForUpdateToExecute”方法。
+`Workflow::await` 方法会等待，直到满足您的条件：
+
+```php
+    #[UpdateMethod]
+    public function myUpdate(UpdateInput $input)
+    {
+        yield Workflow::await(
+            fn() => $this->readyForUpdateToExecute($input),
+        );
+
+        // ...
+    }
+```
+
+请记住：处理程序可以在主 Workflow 方法启动之前执行。
+
+### 确保您的处理程序在 Workflow 完成之前完成 {#wait-for-message-handlers}
+
+Workflow 等待条件可以确保您的处理程序在 Workflow 完成之前完成。
+当您的 Workflow 使用异步 Signal 或 Update 处理程序时，您的主 Workflow 方法可以在处理程序仍在等待异步任务（例如 Activity 结果）时返回 或 Continue-As-New。
+Workflow 完成可能会在处理程序完成关键工作之前中断处理程序，并在尝试检索 Update 结果时导致客户端错误。
+使用 [`Workflow::await()`](https://php.Temporal.io/classes/Temporal-Workflow.html#method_await) 和[`Workflow::allHandlersFinished()`](https://php.Temporal.io/classes/Temporal-Workflow.html#method_allHandlersFinished) 来解决这个问题并让你的 Workflow 顺利结束：
+
+```php
+#[WorkflowInterface]
+class MyWorkflow
+{
+    #[WorkflowMethod]
+    public function run()
+    {
+        // ...
+        yield Workflow::await(fn() => Workflow::allHandlersFinished());
+        return "workflow-result";
+    }
+}
+```
+
+默认情况下，当您允许 Workflow Execution 完成未完成的处理程序执行时，您的 Worker 将记录一条警告。
+您可以通过将 `unfinishedPolicy` 参数传递给 [`UpdateMethod`](https://php.Temporal.io/classes/Temporal-Workflow-UpdateMethod.html) / [`SignalMethod`](https://php.Temporal.io/classes/Temporal-Workflow-SignalMethod.html) 属性：
+
+```php
+#[UpdateMethod(unfinishedPolicy: HandlerUnfinishedPolicy::Abandon)]
+public function myUpdate()
+{
+    // ...
+}
+```
+
+有关详细信息，请参阅[Workflow 完成之前的完成处理程序](/handling-messages#finishing-message-handlers)。
+
+### 在执行任何处理程序之前使用 `#[WorkflowInit]` 对 Workflow 输入进行操作
+
+通常，您的 Workflows 构造函数不会有任何参数。
+但是，如果您在构造函数上使用“#[WorkflowInit]”属性，则可以为其提供与“#[WorkflowMethod]”相同的[Workflow参数](/develop/php/Workflows/basics#Workflow-parameters)。
+然后，SDK 将确保您的构造函数接收[客户端发送](/develop/php/client/Temporal-client#start-Workflow-execution) 的 Workflow 输入参数。
+Workflow 输入参数也会传递到您的“#[WorkflowMethod]”方法——无论您是否使用“#[WorkflowInit]”属性，这种情况总是会发生。
+如果您有需要访问 Workflow 输入的消息处理程序，这非常有用：请参阅[首先初始化 Workflow](/sending-messages)。
+
+这是一个例子。
+请注意，构造函数和 getGreeting 必须具有相同的参数：
+
+```php
+use Temporal\Workflow;
+
+#[Workflow\WorkflowInterface]
+class GreetingExample
+{
+    private readonly string $nameWithTitle;
+    private bool $titleHasBeenChecked;
+
+    // Note the attribute is on a public constructor
+    #[Workflow\WorkflowInit]
+    public function __construct(string $input)
+    {
+        $this->nameWithTitle = 'Sir ' . $input;
+        $this->titleHasBeenChecked = false;
+    }
+
+    #[Workflow\WorkflowMethod]
+    public function getGreeting(string $input)
+    {
+        yield Workflow::await(fn() => $this->titleHasBeenChecked);
+        return "Hello " . $this->nameWithTitle;
+    }
+
+    #[Workflow\UpdateMethod]
+    public function checkTitleValidity()
+    {
+        // 👉 The handler is now guaranteed to see the workflow input
+        // after it has been processed by the constructor.
+        $isValid = yield Workflow::executeActivity('activity.checkTitleValidity', [$this->nameWithTitle]);
+        $this->titleHasBeenChecked = true;
+        return $isValid;
+    }
+}
+```
+
+:::note
+
+默认情况下，Workflow 处理程序在 PHP SDK v2 中的 Signal 和 Update 之前运行。这种行为是不正确的。
+为了避免破坏已经编写的 Workflow，从 PHP SDK v2.11.0 开始，添加了一个[功能标志](https://php.Temporal.io/classes/Temporal-Worker-FeatureFlags.html#property_WorkflowDeferredHandlerStart)来增强 Workflow 处理程序的行为。
+确保将此标志设置为“true”以启用正确的行为。
+
+:::
+
+### 使用 `Mutex` 来防止并发处理程序执行 {#control-handler-concurrency}
+
+并发进程可以以不可预测的方式交互。
+当多个处理程序实例同时运行时，编写不正确的[并发消息传递](/handling-messages#message-handler-concurrency)代码可能无法正常工作。
+这是一个病态病例的例子：
+
+```php
+use Temporal\Workflow;
+
+#[Workflow\WorkflowInterface]
+class MyWorkflow
+{
+    // ...
+
+    #[Workflow\SignalMethod]
+    public function badAsyncHandler()
+    {
+        $data = yield Workflow::executeActivity(
+            type: 'fetch_data',
+            args: ['url' => 'http://example.com'],
+            options: ActivityOptions::new()->withStartToCloseTimeout('10 seconds'),
+        );
+        $this->x = $data->x;
+        # 🐛🐛 Bug!! If multiple instances of this handler are executing concurrently, then
+        # there may be times when the Workflow has $this->x from one Activity execution and $this->y from another.
+        yield Workflow::timer(1);  # or await anything else
+        $this->y = $data->y;
+    }
+}
+```
+
+使用“Mutex”协调访问可以更正此代码。
+锁定可确保在任何给定时间只有一个处理程序实例可以执行特定的代码部分：
+
+```php
+use Temporal\Workflow;
+
+#[Workflow\WorkflowInterface]
+class MyWorkflow
+{
+    // ...
+
+    private Workflow\Mutex $mutex;
+
+    public function __construct()
+    {
+        $this->mutex = new Workflow\Mutex();
+    }
+
+    #[Workflow\SignalMethod]
+    public function safeAsyncHandler()
+    {
+        $data = yield Workflow::executeActivity(
+            type: 'fetch_data',
+            args: ['url' => 'http://example.com'],
+            options: ActivityOptions::new()->withStartToCloseTimeout('10 seconds'),
+        );
+        yield Workflow::runLocked($this->mutex, function () use ($data) {
+            $this->x = $data->x;
+            # ✅ OK: the scheduler may switch now to a different handler execution, or to the main workflow
+            # method, but no other execution of this handler can run until this execution finishes.
+            yield Workflow::timer(1);  # or await anything else
+            $this->y = $data->y;
+        });
+    }
+```
+
+## 消息处理程序故障排除 {#message-handler-troubleshooting}
+
+将 Signal、Update 或 Query 发送到 Workflow 时，您的客户端可能会遇到以下错误：
+
+- **客户端无法联系服务器**：
+  如果服务器连接错误，您将收到 [`ServiceClientException`](https://php.Temporal.io/classes/Temporal-Exception-Client-ServiceClientException.html)。
+  [如何配置RPC Retry Policy](/develop/php/client/Temporal-client#configure-rpc-retry-policy)
+
+- **RPC超时**：
+  如果 RPC 超时，您将收到 [`TimeoutException`](https://php.Temporal.io/classes/Temporal-Exception-Client-TimeoutException.html)。
+  [如何配置RPC超时](/develop/php/client/Temporal-client#configure-rpc-timeout)
+
+- **Workflow 不存在**：
+  您将收到 [`WorkflowNotFoundException`](https://php.Temporal.io/classes/Temporal-Exception-Client-WorkflowNotFoundException.html) 异常。
+
+有关此主题的非特定于 PHP 的讨论，请参阅[消息处理程序中的异常](/handling-messages#exceptions)。
+
+### 发送 Signal 时出现的问题 {#Signal-问题}
+
+使用 Signal 时，您的请求在执行期间产生的唯一异常是“ServiceClientException”。
+所有处理程序在处理程序请求生命周期的初始（Worker 之前）部分都可能会遇到其他异常。
+
+对于查询和 Update，客户端等待来自 Worker 的响应。
+如果 Worker 执行处理程序期间出现问题，客户端可能会收到异常。
+
+### 发送 Update 时出现的问题 {#Update-问题}
+
+使用 Updates 时，您可能会遇到以下错误：
+
+- **没有 Workflow Worker 正在轮询 Task Queue**：
+  SDK 客户端将无限期地重试您的请求。
+  您可以[配置RPC超时](/develop/php/client/Temporal-client#configure-rpc-timeout)来强制超时。
+  这会引发 [`WorkflowUpdateRPCTimeoutOrCanceledException`](https://php.Temporal.io/classes/Temporal-Exception-Client-WorkflowUpdateRPCTimeoutOrCanceledException.html)。
+
+- **Update 失败**：您将收到 [`WorkflowUpdateException`](https://php.Temporal.io/classes/Temporal-Exception-Client-WorkflowUpdateException.html) 异常。
+  有两种方式可以发生这种情况：
+
+- Update 被 Workflow 中与 Update 处理程序一起定义的 Update 验证器拒绝。
+
+- Update 被接受后失败。
+
+Update 故障类似于 [Workflow 故障](/references/failures#errors-in-Workflows)。
+导致 main 方法中的 Workflow 失败的问题也会导致 Update 处理程序中的 Update 失败。
+这些可能包括：
+
+- 失败的 Child Workflow
+    - Activity 失败（如果 Activity 重试已设置为有限次数）
+    - Workflow 作者提出 `ApplicationFailure`
+
+- **处理程序导致 Workflow Task 失败**：
+  [Workflow Task 故障](/references/failures#errors-in-Workflows) 会导致服务器无限期地重试 Workflow Tasks。您的 Update 请求会发生什么情况取决于其阶段：
+  - 如果服务器尚未接受请求，您会收到 [`WorkflowUpdateException`](https://php.Temporal.io/classes/Temporal-Exception-Client-WorkflowUpdateException.html)。
+  - 如果请求已被接受，则该请求是持久的。
+    一旦 Workflow 在代码部署后再次恢复正常，请使用 [`UpdateHandle`](https://php.Temporal.io/classes/Temporal-Client-Update-UpdateHandle.html) 获取 Update 结果。
+
+- **Workflow 完成，而 Update 处理程序执行正在进行**：
+  您将收到 [`WorkflowUpdateException`](https://php.Temporal.io/classes/Temporal-Exception-Client-WorkflowUpdateException.html)。
+  如果 Workflow 在 Update 处理程序执行正在进行时完成，则会发生这种情况，例如因为
+
+- Workflow 被取消或失败。
+
+- Workflow 正常完成或继续如新，并且 Workflow 作者没有[等待处理程序完成](/handling-messages#finishing-message-handlers)。
+
+### 发送 Query 时出现的问题 {#Query-问题}
+
+使用查询时，您可能会遇到以下错误：
+
+- **没有 Workflow Worker 轮询 Task Queue**：
+  您将收到 [`WorkflowNotFoundException`](https://php.Temporal.io/classes/Temporal-Exception-Client-WorkflowNotFoundException.html)。
+
+- **Query 失败**：
+  如果 Query 期间出现问题，您将收到 [`WorkflowQueryException`](https://php.Temporal.io/classes/Temporal-Exception-Client-WorkflowQueryException.html)。
+  Query 处理程序中的任何异常都会触发此错误。
+  这与 Signal 和 Update 请求不同，其中异常可能会导致 Workflow Task 失败。
+
+- **处理程序导致 Workflow Task 失败。**
+  例如，如果 Query 处理程序阻塞线程太长时间而没有屈服，就会发生这种情况。
+
+## 动态组件 {#dynamic-handler}
+
+Temporal 支持动态查询、Signal 和 Update。
+这些是未命名的处理程序，如果不存在具有给定名称的其他静态定义的处理程序，则会调用这些处理程序。
+
+动态处理程序可以灵活地处理运行时未知的查询、Signal 或 Update 名称的情况。
+
+:::caution
+
+应明智地使用动态处理程序作为后备机制而不是主要方法。
+过度使用它们可能会导致可维护性和调试问题。
+
+相反，Signal 或查询应尽可能静态定义，并使用明确的名称来表明其用途。
+使用静态定义作为构建 Workflow 的主要方式。
+
+保留动态处理程序，用于处理程序名称在开发时未知且需要在运行时动态查找的情况。
+它们旨在处理边缘情况并充当包罗万象的角色，而不是作为调用逻辑的主要方式。
+
+:::
+
+### 如何设置动态 Query {#set-a-dynamic-Query}
+
+Temporal 中的动态 Query 是一种 Query 方法，如果没有注册其他同名的 Query，则在运行时动态调用该方法。
+使用 [`Workflow::registerDynamicQuery()`](https://php.Temporal.io/classes/Temporal-Workflow.html#method_registerDynamicQuery) 设置动态 Query 处理程序。
+
+Query 处理程序参数必须接受“string”名称和 [`ValuesInterface`](https://php.Temporal.io/classes/Temporal-DataConverter-ValuesInterface.html) 作为参数。
+
+```php
+Workflow::registerDynamicQuery(function (string $name, ValuesInterface $arguments): string {
+    return \sprintf(
+        'Got query `%s` with %d arguments',
+        $name,
+        $arguments->count(),
+    );
+});
+```
+
+### 如何设置动态 Signal {#set-a-dynamic-Signal}
+
+Temporal 中的动态 Signal 是在运行时动态调用的 Signal，如果没有注册具有相同输入的其他 Signal。
+使用 [`Workflow::registerDynamicSignal()`](https://php.Temporal.io/classes/Temporal-Workflow.html#method_registerDynamicSignal) 设置动态 Signal 处理程序。
+
+Signal 处理程序参数必须接受“string”名称和 [`ValuesInterface`](https://php.Temporal.io/classes/Temporal-DataConverter-ValuesInterface.html) 作为参数。
+
+```php
+Workflow::registerDynamicSignal(function (string $name, ValuesInterface $arguments): void {
+     Workflow::getLogger()->info(\sprintf(
+         'Executed signal `%s` with %d arguments',
+         $name,
+         $arguments->count(),
+     ));
+ });
+```
+
+### 如何设置动态 Update {#set-a-dynamic-Update}
+
+Temporal 中的动态 Update 是在运行时动态调用的 Update，如果没有注册具有相同输入的其他 Update。
+使用 [`Workflow::registerDynamicUpdate()`](https://php.Temporal.io/classes/Temporal-Workflow.html#method_registerDynamicUpdate) 设置动态 Update 处理程序。
+
+该方法接受两个参数：
+
+- Update 处理器
+- Update 验证器（可选），如果验证失败，应抛出异常
+
+处理程序和验证器都必须接受“string”名称和 [`ValuesInterface`](https://php.Temporal.io/classes/Temporal-DataConverter-ValuesInterface.html) 作为参数。
+
+```php
+Workflow::registerDynamicUpdate(
+    static fn(string $name, ValuesInterface $arguments): string => \sprintf(
+        'Got update `%s` with %d arguments',
+        $name,
+        $arguments->count(),
+    ),
+    static fn(string $name, ValuesInterface $arguments) => \str_starts_with(
+        $name,
+        'update_',
+    ) or throw new \InvalidArgumentException('Invalid update name'),
+);
+```

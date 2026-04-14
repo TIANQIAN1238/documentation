@@ -1,8 +1,8 @@
 ---
 id: apikey
-title: tcld apikey command reference
-sidebar_label: apikey
-description: Manage your API Keys in Temporal Cloud with tcld commands. Create, retrieve, list, delete, disable, and enable API Keys effortlessly using tcld apikey commands.
+title: "tcld apikey 命令参考"
+sidebar_label: "apikey"
+description: "使用 tcld 命令管理 Temporal Cloud 中的 API 密钥。使用 tcld apikey 命令轻松创建、检索、列出、删除、禁用和启用 API 密钥。"
 slug: /cloud/tcld/apikey
 toc_max_heading_level: 4
 keywords:
@@ -14,268 +14,277 @@ tags:
   - API Keys
 ---
 
-The `tcld apikey` commands manage API Keys in Temporal Cloud.
+`tcld apikey` 命令管理 Temporal Cloud 中的 API 密钥。
 
-Alias: `ak`
+别名：`ak`
 
-- [tcld apikey create](#create)
-- [tcld apikey get](#get)
-- [tcld apikey list](#list)
-- [tcld apikey delete](#delete)
-- [tcld apikey disable](#disable)
-- [tcld apikey enable](#enable)
+- [tcld apikey 创建](#create)
+- [tcld apikey 获取](#get)
+- [tcld apikey 列表](#list)
+- [tcld apikey 删除](#delete)
+- [tcld apikey 禁用](#disable)
+- [tcld apikey 启用](#enable)
 
-## create
+## 创造 {#create}
 
-The `tcld apikey create` command creates an API Key in Temporal Cloud.
+`tcld apikey create` 命令在 Temporal Cloud 中创建 API 密钥。
 
 `tcld apikey create --name <name> --description <description> --duration <duration> --expiry <expiry> --request-id <request_id>`
 
-The following options control the behavior of the command.
+以下选项控制命令的行为。
 
-#### --name
+#### - 姓名 {#name}
 
-_Required modifier_
+_所需修饰符_
 
-Specify the display name of the API Key.
+指定 API 密钥的显示名称。
 
-Alias: `-n`
+别名：`-n`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey create --name <name>
 ```
 
-#### --description
+#### - 描述 {#description}
 
-Specify a description for the API Key.
+指定 API 密钥的描述。
 
-Alias: `-desc`
+别名：`-desc`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey create --name <name> --description "Your API Key"
 ```
 
-#### --duration
+#### - 期间 {#duration}
 
-Specify the duration from now when the API Key will expire.
-This will be ignored if the expiry flag is set.
+指定 API 密钥从现在开始过期的持续时间。
+如果设置了过期标志，这将被忽略。
 
-Example format: `24h` (default: 0s).
+示例格式：`24h`（默认值：0s）。
 
-Alias: `-d`
+别名：`-d`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey create --name <name> --duration 24h
 ```
 
-#### --expiry
+<a id="create"></a>
+#### --过期 {#expiry}
 
-Specify the absolute timestamp (RFC3339) when the API Key will expire.
+指定 API 密钥到期时的绝对时间戳 (RFC3339)。
 
-Example: `2023-11-28T09:23:24-08:00`.
+示例：`2023-11-28T09:23:24-08:00`。
 
-Alias: `-e`
+别名：`-e`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey create --name <name> --expiry '2023-11-28T09:23:24-08:00'
 ```
 
-#### --request-id
+<a id="name"></a>
+#### --请求 ID {#request-id}
 
-Specify a request-id for the asynchronous operation.
-If not set, the server will assign one.
+指定异步操作的 request-id。
+如果没有设置，服务器会分配一个。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey create --name <name> --request-id <request_id>
 ```
 
-## get
+## 得到 {#get}
 
-The `tcld apikey get` command retrieves the details of a specified API Key in Temporal Cloud.
+`tcld apikey get` 命令检索 Temporal Cloud 中指定 API 密钥的详细信息。
 
 `tcld apikey get --id <id>`
 
-The following option controls the behavior of the command.
+以下选项控制命令的行为。
 
-#### --id
+#### - ID {#id}
 
-_Required modifier_
+_所需修饰符_
 
-Specify the ID of the API Key to retrieve.
+指定要检索的 API 密钥的 ID。
 
-Alias: `-i`
+别名：`-i`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey get --id <apikey_id>
 ```
 
-## list
+## 列表 {#list}
 
-The `tcld apikey list` command lists all API Keys in Temporal Cloud.
+`tcld apikey list` 命令列出了 Temporal Cloud 中的所有 API 密钥。
 
 `tcld apikey list`
 
-This command does not require any specific options.
+该命令不需要任何特定选项。
 
-Alias: `l`
+别名：`l`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey list
 ```
 
-## delete
+## 删除 {#delete}
 
-The `tcld apikey delete` command deletes an API Key in Temporal Cloud.
+`tcld apikey delete` 命令删除 Temporal Cloud 中的 API 密钥。
 
 `tcld apikey delete --id <id> [--resource-version <version>] [--request-id <request_id>]`
 
-The following options control the behavior of the command.
+以下选项控制命令的行为。
 
-#### --id
+#### - ID {#id}
 
-_Required modifier_
+_所需修饰符_
 
-Specify the ID of the API Key to delete.
+指定要删除的 API 密钥的 ID。
 
-Alias: `-i`
+别名：`-i`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey delete --id <apikey_id>
 ```
 
-#### --resource-version
+<a id="description"></a>
+#### --资源版本 {#resource-version}
 
-Specify the resource-version (etag) to update from.
-If not set, the CLI will use the latest.
+将资源版本 (etag) 指定为 Update。
+如果未设置，CLI 将使用最新的。
 
-Alias: `-v`
+别名：`-v`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey delete --id <apikey_id> --resource-version <version>
 ```
 
-#### --request-id
+<a id="duration"></a>
+#### --请求 ID {#request-id}
 
-Specify a request-id for the asynchronous operation.
-If not set, the server will assign one.
+指定异步操作的 request-id。
+如果没有设置，服务器会分配一个。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey delete --id <apikey_id> --request-id <request_id>
 ```
 
-## disable
+<a id="expiry"></a>
+## 禁用 {#disable}
 
-The `tcld apikey disable` command disables an API Key in Temporal Cloud.
+`tcld apikey disable` 命令禁用 Temporal Cloud 中的 API 密钥。
 
 `tcld apikey disable --id <id> [--resource-version <version>] [--request-id <request_id>]`
 
-The following options control the behavior of the command.
+以下选项控制命令的行为。
 
-#### --id
+#### - ID {#id}
 
-_Required modifier_
+_所需修饰符_
 
-Specify the ID of the API Key to disable.
+指定要禁用的 API 密钥的 ID。
 
-Alias: `-i`
+别名：`-i`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey disable --id <apikey_id>
 ```
 
-#### --resource-version
+<a id="request-id"></a>
+#### --资源版本 {#resource-version}
 
-Specify the resource-version (etag) to update from. If not set, the CLI will use the latest.
+将资源版本 (etag) 指定为 Update。如果未设置，CLI 将使用最新的。
 
-Alias: `-v`
+别名：`-v`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey disable --id <apikey_id> --resource-version <version>
 ```
 
-#### --request-id
+<a id="get"></a>
+#### --请求 ID {#request-id}
 
-Specify a request-id for the asynchronous operation. If not set, the server will assign one.
+指定异步操作的 request-id。如果没有设置，服务器会分配一个。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey disable --id <apikey_id> --request-id <request_id>
 ```
 
-## enable
+## 使能够 {#enable}
 
-The `tcld apikey enable` command enables a disabled API Key in Temporal Cloud.
+`tcld apikey enable` 命令启用 Temporal Cloud 中禁用的 API 密钥。
 
 `tcld apikey enable --id <id> [--resource-version <version>] [--request-id <request_id>]`
 
-The following options control the behavior of the command.
+以下选项控制命令的行为。
 
-#### --id
+#### - ID {#id}
 
-_Required modifier_
+_所需修饰符_
 
-Specify the ID of the API Key to enable.
+指定要启用的 API 密钥的 ID。
 
-Alias: `-i`
+别名：`-i`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey enable --id <apikey_id>
 ```
 
-#### --resource-version
+<a id="id"></a>
+#### --资源版本 {#resource-version}
 
-Specify the resource-version (etag) to update from.
-If not set, the CLI will use the latest.
+将资源版本 (etag) 指定为 Update。
+如果未设置，CLI 将使用最新的。
 
-Alias: `-v`
+别名：`-v`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey enable --id <apikey_id> --resource-version <version>
 ```
 
-#### --request-id
+<a id="list"></a>
+#### --请求 ID {#request-id}
 
-Specify a request-id for the asynchronous operation.
-If not set, the server will assign one.
+指定异步操作的 request-id。
+如果没有设置，服务器会分配一个。
 
-Alias: `-r`
+别名：`-r`
 
-**Example**
+**例子**
 
 ```bash
 tcld apikey enable --id <apikey_id> --request-id <request_id>

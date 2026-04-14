@@ -1,8 +1,8 @@
 ---
 id: sticky-execution
-title: Sticky Execution
-sidebar_label: Sticky Execution
-description: Learn about Sticky Execution and how it optimizes Task processing in Temporal by caching Workflow state locally.
+title: "粘性执行"
+sidebar_label: "粘性执行"
+description: "了解粘性执行以及它如何通过在本地缓存 Workflow 状态来优化 Temporal 中的任务处理。"
 slug: /sticky-execution
 toc_max_heading_level: 4
 keywords:
@@ -11,38 +11,41 @@ tags:
   - Workers
 ---
 
-This page discusses [Sticky Execution](#sticky-execution).
+本页讨论 [粘性执行](#sticky-execution)。
 
-## What is a Sticky Execution? {#sticky-execution}
+<a id="sticky-execution"></a>
+## 什么是粘性执行？ {#sticky-execution}
 
-Workers cache the state of the Workflow they execute.
-To make this caching more effective, Temporal employs a performance optimization known as "Sticky Execution", which directs Workflow Tasks to the same Worker that previously processed tasks for a specific Workflow Execution.
+Worker 缓存它们执行的 Workflow 的状态。
+为了使缓存更加有效，Temporal 采用了一种称为“粘性执行”的性能优化，它将 Workflow 任务定向到先前处理特定 Workflow Execution 任务的同一 Worker。
 
-### How Sticky Execution Works
+<a id="how-sticky-execution-works"></a>
+### 粘性执行的工作原理 {#how-sticky-execution-works}
 
-Once Workflow Execution begins, the Temporal Service schedules a Workflow Task and puts it into a Task Queue with the name you specify.
-Any Worker that polls that Task Queue is eligible to accept the Task and begin executing the Workflow.
+Workflow Execution 开始后，Temporal 服务 Schedule 会创建一个 Workflow 任务，并将其放入具有您指定名称的 Task Queue 中。
+任何轮询 Task Queue 的 Worker 都有资格接受任务并开始执行 Workflow。
 
-The Worker that picks up this Workflow Task will continue polling the original Task Queue, but will also begin polling an additional Task Queue, which the Temporal Service shares exclusively with that specific Worker.
-This queue, which has an automatically-generated name, is known as a **Sticky Queue**.
+获取此 Workflow 任务的 Worker 将继续轮询原始 Task Queue，但也将开始轮询其他 Task Queue，Temporal 服务与该特定 Worker 独家共享该 Task Queue。
+该队列具有自动生成的名称，称为“粘性队列”。
 
-The Worker caches the Workflow state in memory, which improves performance by reducing the need to reconstruct the Workflow from its Event History for every Task.
-As the Workflow Execution progresses, the Temporal Service schedules additional Workflow Tasks into this Worker-specific Sticky Queue.
+Worker 将 Workflow 状态缓存在内存中，从而减少了为每个任务从 Event History 重建 Workflow 的需要，从而提高了性能。
+随着 Workflow Execution 的进展，Temporal 服务 Schedule 将附加 Workflow 任务放入此 Worker 特定的粘性队列中。
 
-If the Worker fails to start a Workflow Task in the Sticky Queue shortly after it's scheduled (within five seconds by default), the Temporal Service disables stickiness for that Workflow Execution.
-When stickiness is disabled, the Temporal Service reschedules the Workflow Task in the original queue, allowing any Worker to pick it up and continue the Workflow Execution.
+如果 Worker 在 Scheduled 后不久（默认情况下五秒内）无法启动粘性队列中的 Workflow 任务，则 Temporal 服务会禁用该 Workflow Execution 的粘性。
+禁用粘性后，Temporal 服务将重新 Schedule 原始队列中的 Workflow 任务，允许任何 Worker 拾取该任务并继续执行 Workflow Execution。
 
-If a Workflow Task fails, the Worker removes that Workflow Execution from its cache (as it's now in an unknown state), which invalidates the Sticky Execution.
-The Workflow Task is then put back into the original Task Queue.
+如果 Workflow 任务失败，Worker 会从其缓存中删除该 Workflow Execution（因为它现在处于未知状态），这会使粘性执行无效。
+然后将 Workflow 任务放回原始 Task Queue 中。
 
-### Why Sticky Execution?
+<a id="why-sticky-execution"></a>
+### 为什么要粘性执行？ {#why-sticky-execution}
 
-The main benefit of Sticky Execution is improved performance.
-By caching the Workflow state in memory and directing tasks to the same Worker, it reduces the need to reconstruct the Workflow from its Event History for every Task, which is particularly useful for latency-sensitive Workflows.
+粘性执行的主要好处是提高性能。
+通过将 Workflow 状态缓存在内存中并将任务定向到相同的 Worker，它减少了为每个任务从 Event History 重建 Workflow 的需要，这对于延迟敏感的 Workflow 特别有用。
 
-Sticky Execution is the default behavior of the Temporal Platform and only applies to Workflow Tasks.
-Since Event History is associated with a Workflow, the concept of Sticky Execution is not relevant to Activity Tasks.
+粘性执行是 Temporal 平台的默认行为，仅适用于 Workflow 任务。
+由于 Event History 与 Workflow 关联，因此粘性执行的概念与 Activity 任务无关。
 
-- [How to set a `StickyScheduleToStartTimeout` on a individual Worker in Go](/develop/go/workers/run-worker-process#stickyscheduletostarttimeout)
+- [如何在 Go 中对单个 Worker 设置 `StickyScheduleToStartTimeout`](/develop/go/workers/run-worker-process#stickyscheduletostarttimeout)
 
-Sticky Executions are the default behavior of the Temporal Platform.
+粘性执行是 Temporal 平台的默认行为。

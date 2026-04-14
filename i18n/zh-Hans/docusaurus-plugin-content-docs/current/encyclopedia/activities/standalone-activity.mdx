@@ -1,0 +1,97 @@
+---
+id: standalone-activity
+title: 独立式Activity
+sidebar_label: 独立式Activity
+description: 了解 Temporal 中的独立活动、其优点、执行模型以及何时使用它们。
+slug: /standalone-activity
+toc_max_heading_level: 4
+keywords:
+  - standalone activity
+  - explanation
+  - term
+  - timeouts
+tags:
+  - Concepts
+  - Activities
+  - Durable Execution
+---
+
+:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+
+独立活动可作为 Temporal CLI 的 [Temporal Cloud](#Temporal-cloud-support) 和 [特别版本](#Temporal-cli-support) 中的[预发布](/evaluate/development-product-features/release-stages#pre-release) 功能提供。
+
+:::
+
+子 XPROT002X 是从同一 XPROT025X 中的另一个 XPROT027X 中生成的 [XPROT002X](/XPROT027X-执行)。
+
+## 什么是独立 Activity？ {#standalone-Activity}
+
+由直接启动的顶级 [Activity 执行](/Activity-执行)
+[Client](/encyclopedia/Temporal-sdks#Temporal-client)，不使用Workflow，称为
+独立 Activity。
+
+考虑笔记本电脑上的电源按钮。当您按下它时，机器从一种状态更改为另一种状态，从打开变为关闭，反之亦然。这不是幂等操作。每次调用都会导致不同的状态。但是，想象一下您将笔记本电脑修改为具有单独的打开和关闭按钮。由于笔记本电脑已经打开，因此多次按“打开”按钮不会产生超出初始调用的效果。此操作被认为是幂等的。
+
+如果您需要编排多个活动，那么您应该使用 Workflow。但如果你只需要
+要执行单个 Activity，那么您可以使用独立的 Activity。这将导致更少
+Temporal Cloud 中的[可计费操作](/cloud/actions#actions-in-Workflows) 比使用 Workflow
+运行单个 Activity。如果您的 Activity 执行是短暂的，那么您还会注意到较低
+延迟，因为与在 Workflow 中执行 Activity 相比，Worker 往返次数更少。
+
+独立活动支持与 Workflow 活动相同的重试策略和超时，并且您
+以相同的方式为两者编写 Activity 函数。事实上，Activity 功能可以是
+既可作为独立 Activity 又可作为 Workflow Activity 执行。
+
+## 用例
+
+独立活动可用于[持久作业处理用途
+案例](/evaluate/development-product-features/job-queue) 例如发送电子邮件、处理
+webhook、同步数据或通过内置重试和超时可靠地执行单个函数。
+
+## 主要特点
+- 将任何 Temporal Activity 作为顶级原语执行，无需 Workflow 的开销
+- 本机异步作业处理模型：Schedule -> 调度 -> 处理 -> 结果
+- 无队头阻塞 - 缓慢的作业不会阻塞其他任务的调度
+- 任意长度的作业，带有心跳以确保活动和检查点进度
+- 默认情况下使用本机 Retry Policy 和超时执行至少一次
+- 如果重试最大尝试次数为 1，则最多执行一次
+- 可寻址 - 获取 Activity ID / 运行 ID 并获取结果、取消和终止
+- 重复数据删除 - 具有冲突策略：(USE_EXISTING, …)，重用策略：(REJECT_DUPLICATES, …)
+- 与 Workflow 分开的 ID 空间 - 独立活动是一种不同类型的顶级执行
+- 优先级和公平性 - 多租户公平性、加权优先级以及防止低权重任务匮乏的保障
+- Visibility - 列出 Activity 执行并查看状态、重试计数和最后一个错误
+- 通过ID（或令牌）手动完成：忽略Activity返回并等待外部完成
+- Activity 指标 - 包括成功、失败、超时和取消的计数
+- 双重用途 - 在 Workflow 内执行活动或独立执行活动，无需更改 Worker 代码
+
+## 预发布限制
+
+建议仅将预发布的独立活动用于实验用途，并具有一些已知的限制。
+
+在某些情况下，某些东西是否幂等并不影响应用程序的正确性。
+例如，如果您有一个单调递增的计数器，您可能不关心重试是否会递增计数器，因为您不关心实际值，只关心当前值是否大于先前的值。
+
+Temporal Cloud 限制：
+- 预发布期间，独立活动可免费用于评估目的，因此，如果超出合理数量，我们保留限制使用的权利
+- 独立活动最多保留 1 天
+- 我们建议在新的 Namespace 上启用独立活动，仅供开发/测试实验使用
+
+## Temporal CLI 支持
+
+[Temporal CLI 的特别版本](https://github.com/Temporalio/cli/releases/tag/v1.6.2-standalone-Activity) 支持预发布期间的独立活动：
+- “Temporal Activity”子命令支持独立活动，命令包括：“start”、“result”和“list”
+- Temporal 开发服务器在此特殊 CLI 版本中默认启用独立活动以进行本地测试
+
+## Temporal Cloud 支持
+
+请联系您的客户团队以在 Temporal Cloud 中启用独立活动作为预发布功能。
+
+## 开始吧
+
+:::tip RESOURCES
+
+- [Go SDK - 独立活动快速入门和代码示例](/develop/go/activities/standalone-activities)
+- [Python SDK - 独立活动快速入门和代码示例](/develop/python/activities/standalone-activities)
+- [.NET SDK - 独立活动快速入门和代码示例](/develop/dotnet/activities/standalone-activities)
+
+  :::

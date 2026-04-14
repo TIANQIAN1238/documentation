@@ -1,0 +1,31 @@
+---
+id: pricing
+slug: /cloud/nexus/pricing
+title: Temporal Nexus 的定价
+description: 了解使用 Nexus 的定价结构。
+sidebar_label: 定价
+tags:
+  - Temporal Cloud
+  - Nexus
+  - Pricing
+keywords:
+  - Temporal Nexus pricing
+  - Temporal Cloud pricing
+---
+
+:::tip SUPPORT, STABILITY, and DEPENDENCY INFO
+
+Temporal Nexus 现已[普遍可用](/evaluate/development-product-features/release-stages#general-availability)。
+了解为什么应在[评估指南](/evaluate/Nexus) 中使用 Nexus。
+
+:::
+
+Nexus 定价：
+
+- **在调用者 Namespace 中启动或取消 Nexus Operation** 的一个操作。
+  底层原语（Workflow、活动、Signal）及其由处理程序创建的重试会产生正常的操作。
+- **没有处理或重试 Nexus Operation 本身的操作**。
+  但是，处理程序发起的计费操作（例如活动）如果失败并重试，则会收取费用。
+
+详情请参阅[定价](/cloud/pricing)。
+

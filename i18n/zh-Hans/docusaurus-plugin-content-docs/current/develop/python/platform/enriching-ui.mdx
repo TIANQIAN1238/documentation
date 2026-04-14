@@ -1,0 +1,131 @@
+---
+id: enriching-ui
+title: 丰富用户界面 - Python SDK
+sidebar_label: 丰富用户界面
+description: 使用 Python SDK 将上下文信息添加到 Workflow 和 Temporal UI 中的事件。
+toc_max_heading_level: 3
+keywords:
+  - ui enrichment
+  - workflow context
+  - static summary
+  - static details
+  - activity summary
+  - timer summary
+tags:
+  - UI Enrichment
+  - Python SDK
+  - Temporal SDKs
+---
+
+
+Temporal 支持使用元数据向 Workflow 和事件添加上下文。 
+这有助于用户识别和了解 Workflow 及其操作。
+
+## 添加摘要和详细信息到 Workflows
+
+### 启动 Workflow
+
+启动 Workflow 时，您可以提供静态摘要和详细信息，以帮助在 UI 中识别 Workflow：
+
+```python
+# Start a Workflow with static summary and details
+handle = await client.start_workflow(
+    YourWorkflow.run,
+    "workflow input",
+    id="your-workflow-id",
+    task_queue="your-task-queue",
+    static_summary="Order processing for customer #12345",
+    static_details="Processing premium order with expedited shipping"
+)
+```
+
+`static_summary` 是出现在 Workflow 列表视图中的单行描述，限制为 200 字节。
+`static_details` 可以是多行的，并提供 Workflow 详细信息视图中显示的更全面的信息，最大限制为 20K 字节。
+
+输入格式是标准 Markdown，不包括图像、HTML 和脚本。
+
+您还可以使用具有相同参数的“execute_Workflow”方法：
+
+```python
+result = await client.execute_workflow(
+    YourWorkflow.run,
+    "workflow input",
+    id="your-workflow-id",
+    task_queue="your-task-queue",
+    static_summary="Order processing for customer #12345",
+    static_details="Processing premium order with expedited shipping"
+)
+```
+
+### Workflow 内部
+
+在 Workflow 中，您可以获取并设置_当前 Workflow 详细信息_。 
+与 Workflow 启动时设置的静态摘要/详细信息不同，该值在 Workflow 的整个生命周期中可以是 Updated。 
+当前的 Workflow 详细信息也采用 Markdown 格式（不包括图像、HTML 和脚本），并且可以跨多行。
+
+```python
+@workflow.defn
+class YourWorkflow:
+    @workflow.run
+    async def run(self, input: str) -> str:
+        # Get the current details
+        current_details = workflow.get_current_details()
+        print(f"Current details: {current_details}")
+        
+        # Set/update the current details
+        workflow.set_current_details("Updated workflow details with new status")
+        
+        return "Workflow completed"
+```
+
+### 添加摘要到活动和 Timer
+
+当从 Workflow 中启动活动时，您可以将元数据参数“summary”附加到活动：
+
+```python
+@workflow.defn
+class YourWorkflow:
+    @workflow.run
+    async def run(self, input: str) -> str:
+        # Start an activity with a summary
+        result = await workflow.execute_activity(
+            your_activity,
+            input,
+            start_to_close_timeout=timedelta(seconds=10),
+            summary="Processing user data"
+        )
+        return result
+```
+
+同样，您可以将“摘要”附加到 Workflow 内的 Timer：
+
+```python
+@workflow.defn
+class YourWorkflow:
+    @workflow.run
+    async def run(self, input: str) -> str:
+        # Create a timer with a summary
+        await workflow.sleep(timedelta(minutes=5), summary="Waiting for payment confirmation")
+        return "Timer completed"
+```
+“summary”的输入格式是字符串，且限制为 200 个字节。
+
+## 在 UI 中查看摘要和详细信息
+
+将摘要和详细信息添加到 Workflow、活动和 Timer 后，您可以在 Temporal Web UI 中查看这些丰富的信息。 
+导航到 Workflow 的详细信息页面，查看两个关键位置显示的元数据：
+
+### Workflow 概述部分
+
+在 Workflow 详细信息页面的顶部，您将找到 Workflow 级别的元数据：
+
+- **摘要和详细信息** - 显示启动 Workflow 时设置的静态摘要和静态详细信息
+- **当前详细信息** - 显示 Workflow Execution 期间可进行 Updated 的动态详细信息
+
+Workflow 的所有详细信息都支持标准 Markdown 格式（不包括图像、HTML 和脚本），允许您创建丰富的结构化信息显示。
+
+### Event History
+
+Workflow 和 Event History 中的各个事件会显示其关联的摘要（如果有）。
+
+#### --搜索属性

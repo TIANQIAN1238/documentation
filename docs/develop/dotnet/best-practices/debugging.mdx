@@ -1,8 +1,8 @@
 ---
 id: debugging
-title: Debugging - .NET SDK
-sidebar_label: Debugging
-description: Debug Workflows in development and production environments using Temporal .NET SDK. Use logging, debugger, Web UI, CLI, replay, tracing, and more for efficient troubleshooting.
+title: "调试 - .NET SDK"
+sidebar_label: "调试"
+description: "使用 Temporal .NET SDK 在开发和生产环境中调试 Workflow。使用日志记录、调试器、Web UI、CLI、重放、跟踪等进行高效故障排除。"
 toc_max_heading_level: 4
 keywords:
   - sdk
@@ -15,32 +15,33 @@ tags:
   - Errors
 ---
 
-## Debugging {#debug}
+## 调试 {#debug}
 
-This page shows how to do the following:
+此页面显示如何执行以下操作：
 
-- [Debug in a development environment](#debug-in-a-development-environment)
-- [Debug in a production environment](#debug-in-a-development-production)
+- [在开发环境中调试](#debug-in-a-development-environment)
+- [在生产环境中调试](#debug-in-a-development-production)
 
-### Debug in a development environment {#debug-in-a-development-environment}
+### 在开发环境中调试 {#debug-in-a-development-environment}
 
-In developing Workflows, you can use the normal development tools of logging and a debugger to see what’s happening in your Workflow.
-In addition to the normal development tools of logging and a debugger, you can also see what’s happening in your Workflow by using the [Web UI](/web-ui) or [Temporal CLI](/cli).
-The Web UI provides insight into your Workflows, making it easier to identify issues and monitor the state of your Workflows in real time.
+在开发 Workflow 时，您可以使用常规开发工具日志记录和调试器来查看 Workflow 中发生了什么。
+除了日志记录和调试器等常规开发工具之外，您还可以使用 [网页用户界面](/web-ui) 或 [Temporal CLI](/cli) 查看 Workflow 中发生的情况。
+Web UI 可让您深入了解 Workflow，从而更轻松地识别问题并实时监控 Workflow 的状态。
 
-### Debug in a production environment {#debug-in-a-development-production}
+<a id="debug-in-a-development-production"></a>
+### 在生产环境中调试 {#debug-in-a-development-production}
 
-**How to debug in a production environment using the Temporal .NET SDK**
+**如何使用 Temporal .NET SDK 在生产环境中进行调试**
 
-You can debug production Workflows using:
+您可以使用以下方法调试生产 Workflow：
 
-- [Web UI](/web-ui)
+- [网页用户界面](/web-ui)
 - [Temporal CLI](/cli)
-- [Replay](/develop/dotnet/best-practices/testing-suite#replay)
-- [Tracing](/develop/dotnet/platform/observability#tracing)
-- [Logging](/develop/dotnet/platform/observability#logging)
+- [重播](/develop/dotnet/best-practices/testing-suite#replay)
+- [追踪](/develop/dotnet/platform/observability#tracing)
+- [记录](/develop/dotnet/platform/observability#logging)
 
-You can debug and tune Worker performance with metrics and the [Worker performance guide](/develop/worker-performance).
-For more information, see [Observability ▶️ Metrics](/develop/dotnet/platform/observability#metrics) for setting up SDK metrics.
+您可以使用指标和 [Worker 性能指南](/develop/worker-performance) 来调试和调整 Worker 性能。
+有关更多信息，请参阅 [可观察性 ▶️ 指标](/develop/dotnet/platform/observability#metrics) 设置 SDK 指标。
 
-Debug Server performance with [Cloud metrics](/cloud/metrics/) or [self-hosted Server metrics](/self-hosted-guide/production-checklist#scaling-and-metrics).
+使用 [云指标](/cloud/metrics/) 或 [自托管服务器指标](/self-hosted-guide/production-checklist#scaling-and-metrics) 调试服务器性能。

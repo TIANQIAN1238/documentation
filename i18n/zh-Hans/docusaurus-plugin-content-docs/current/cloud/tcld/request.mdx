@@ -1,0 +1,44 @@
+---
+id: request
+title: tcld请求命令参考
+sidebar_label: 要求
+description: 使用 tcld 请求命令管理 Temporal Cloud 中的异步请求。使用“get”通过 Namespace 的修饰符检查请求状态或定制控制的请求 ID。
+slug: /cloud/tcld/request/
+toc_max_heading_level: 4
+keywords:
+  - cli reference
+  - tcld
+tags:
+  - Temporal Cloud
+  - tcld
+---
+
+“tcld request”命令管理 Temporal Cloud 中的异步请求。
+
+别名：`r`
+
+- [tcld 请求获取](#get)
+
+＃＃ 得到
+
+`tcld request get` 命令获取 Temporal Cloud 中指定请求的状态。
+
+`tcld 请求获取 --request-id <request_id>`
+
+别名：`g`
+
+以下修饰符控制命令的行为。
+
+＃＃＃＃  - 要求
+
+_所需修饰符_
+
+指定请求标识符。
+
+别名：`-r`
+
+**例子**
+
+```bash
+tcld request get --request-id <request_id>
+```

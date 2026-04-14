@@ -1,0 +1,63 @@
+---
+id: futures
+title: Workflow 期货 - Ruby SDK
+sidebar_label: Workflow 期货
+description: 本节介绍 Workflow 与 Ruby SDK 的未来
+toc_max_heading_level: 4
+keywords:
+  - Ruby SDK
+tags:
+  - Ruby SDK
+  - Temporal SDKs
+---
+
+## Workflow 期货 {#Workflow-期货}
+
+`Temporalio::Workflow::Future` 可用于在后台或同时运行。
+在此类情况下，Temporal 围绕某些核心语言功能提供 Workflow 安全包装器。
+“Temporalio::Workflow::Future”是“Fiber.Schedule”的安全包装，用于一次运行多个活动。
+Ruby SDK 还提供“Workflow.wait_condition”用于等待结果。
+
+期货从不隐式使用，但它们适用于所有 Workflow 代码和构造。
+例如，要运行 3 个活动并等待它们全部完成，可以编写如下内容：
+
+```ruby
+# Start 3 activities in background
+fut1 = Temporalio::Workflow::Future.new do
+  Temporalio::Workflow.execute_activity(MyActivity1, schedule_to_close_timeout: 300)
+end
+fut2 = Temporalio::Workflow::Future.new do
+  Temporalio::Workflow.execute_activity(MyActivity2, schedule_to_close_timeout: 300)
+end
+fut3 = Temporalio::Workflow::Future.new do
+  Temporalio::Workflow.execute_activity(MyActivity3, schedule_to_close_timeout: 300)
+end
+
+# Wait for them all to complete
+Temporalio::Workflow::Future.all_of(fut1, fut2, fut3).wait
+
+Temporalio::Workflow.logger.info("Got: #{fut1.result}, #{fut2.result}, #{fut3.result}")
+```
+
+或者，比如说，等待 5 个活动中的第一个或超时完成：
+
+```ruby
+# Start 5 activities
+act_futs = 5.times.map do |i|
+  Temporalio::Workflow::Future.new do
+    Temporalio::Workflow.execute_activity(MyActivity, "my-arg-#{i}", schedule_to_close_timeout: 300)
+  end
+end
+# Start a timer
+sleep_fut = Temporalio::Workflow::Future.new { Temporalio::Workflow.sleep(30) }
+
+# Wait for first act result or sleep fut
+act_result = Temporalio::Workflow::Future.any_of(sleep_fut, *act_futs).wait
+# Fail if timer done first
+raise Temporalio::Error::ApplicationError, 'Timer expired' if sleep_fut.done?
+# Print act result otherwise
+Temporalio::Workflow.logger.info("Act result: #{act_result}")
+```
+
+关于 future，还有其他几个细节没有在这里讨论，比如如何处理异常、如何使用 setter
+proc而不是块等。有关详细信息，请参阅[API文档](https://ruby.Temporal.io/Temporalio/Workflow/Future.html)。
