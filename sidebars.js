@@ -4,7 +4,7 @@ module.exports = {
     'quickstarts',
     {
       type: 'category',
-      label: 'Evaluate',
+      label: '评估',
       collapsed: true,
       link: {
         type: 'doc',
@@ -15,7 +15,7 @@ module.exports = {
         'evaluate/understanding-temporal',
         {
           type: 'category',
-          label: 'Features',
+          label: '功能特性',
           collapsed: true,
           link: {
             type: 'doc',
@@ -39,7 +39,7 @@ module.exports = {
             'evaluate/development-production-features/job-queue',
             {
               type: 'category',
-              label: 'Product release stages',
+              label: '产品发布阶段',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -48,7 +48,7 @@ module.exports = {
               items: [
                 {
                   type: 'link',
-                  label: 'Changelog',
+                  label: '更新日志',
                   href: 'https://temporal.io/change-log',
                 },
               ],
@@ -57,7 +57,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Temporal Cloud',
+          label: '云服务',
           collapsed: true,
           link: {
             type: 'doc',
@@ -80,7 +80,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Develop',
+      label: '开发',
       collapsed: true,
       link: {
         type: 'doc',
@@ -99,7 +99,7 @@ module.exports = {
             'develop/go/set-up-your-local-go',
             {
               type: 'category',
-              label: 'Workflows',
+              label: 'Workflow',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -122,7 +122,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Activities',
+              label: 'Activity',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -140,7 +140,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Workers',
+              label: 'Worker',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -180,7 +180,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Platform',
+              label: '平台',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -193,7 +193,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Best practices',
+              label: '最佳实践',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -207,7 +207,7 @@ module.exports = {
                 'develop/go/best-practices/testing-suite',
                 {
                   type: 'category',
-                  label: 'Data handling',
+                  label: '数据处理',
                   collapsed: true,
                   link: {
                     type: 'doc',
@@ -235,7 +235,7 @@ module.exports = {
             'develop/java/set-up-your-local-java',
             {
               type: 'category',
-              label: 'Workflows',
+              label: 'Workflow',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -256,7 +256,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Activities',
+              label: 'Activity',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -272,7 +272,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Workers',
+              label: 'Worker',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -310,7 +310,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Platform',
+              label: '平台',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -323,7 +323,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Best practices',
+              label: '最佳实践',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -337,7 +337,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Integrations',
+              label: '集成',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -361,7 +361,7 @@ module.exports = {
             'develop/php/set-up-your-local-php',
             {
               type: 'category',
-              label: 'Workflows',
+              label: 'Workflow',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -382,7 +382,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Activities',
+              label: 'Activity',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -397,7 +397,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Workers',
+              label: 'Worker',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -421,7 +421,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Platform',
+              label: '平台',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -434,7 +434,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Best practices',
+              label: '最佳实践',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -459,7 +459,7 @@ module.exports = {
             'develop/python/set-up-your-local-python',
             {
               type: 'category',
-              label: 'Workflows',
+              label: 'Workflow',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -479,7 +479,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Activities',
+              label: 'Activity',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -496,7 +496,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Workers',
+              label: 'Worker',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -534,7 +534,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Platform',
+              label: '平台',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -547,7 +547,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Best practices',
+              label: '最佳实践',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -560,7 +560,7 @@ module.exports = {
                 'develop/python/best-practices/debugging',
                 {
                   type: 'category',
-                  label: 'Data handling',
+                  label: '数据处理',
                   collapsed: true,
                   link: {
                     type: 'doc',
@@ -577,7 +577,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Integrations',
+              label: '集成',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -599,7 +599,7 @@ module.exports = {
             'develop/typescript/set-up-your-local-typescript',
             {
               type: 'category',
-              label: 'Workflows',
+              label: 'Workflow',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -620,7 +620,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Activities',
+              label: 'Activity',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -636,7 +636,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Workers',
+              label: 'Worker',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -675,7 +675,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Platform',
+              label: '平台',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -688,7 +688,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Best practices',
+              label: '最佳实践',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -703,7 +703,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Integrations',
+              label: '集成',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -725,7 +725,7 @@ module.exports = {
             'develop/dotnet/set-up-your-local-dotnet',
             {
               type: 'category',
-              label: 'Workflows',
+              label: 'Workflow',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -746,7 +746,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Activities',
+              label: 'Activity',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -764,7 +764,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Workers',
+              label: 'Worker',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -801,7 +801,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Platform',
+              label: '平台',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -814,7 +814,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Best practices',
+              label: '最佳实践',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -841,7 +841,7 @@ module.exports = {
             'develop/ruby/set-up-local-ruby',
             {
               type: 'category',
-              label: 'Workflows',
+              label: 'Workflow',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -863,7 +863,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Activities',
+              label: 'Activity',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -880,7 +880,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Workers',
+              label: 'Worker',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -904,7 +904,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Platform',
+              label: '平台',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -917,7 +917,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Integrations',
+              label: '集成',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -929,7 +929,7 @@ module.exports = {
             },
             {
               type: 'category',
-              label: 'Best practices',
+              label: '最佳实践',
               collapsed: true,
               link: {
                 type: 'doc',
@@ -957,7 +957,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Temporal Cloud',
+      label: '云服务',
       collapsed: true,
       link: {
         type: 'doc',
@@ -966,7 +966,7 @@ module.exports = {
       items: [
         {
           type: 'category',
-          label: 'Get started with Cloud',
+          label: '云服务入门',
           collapsed: false,
           link: {
             type: 'doc',
@@ -981,7 +981,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Account access',
+          label: '账户访问',
           collapsed: false,
           link: {
             type: 'doc',
@@ -999,7 +999,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Metrics',
+          label: '监控指标',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1036,7 +1036,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Connectivity',
+          label: '网络连接',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1050,7 +1050,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'High Availability',
+          label: '高可用',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1082,7 +1082,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Migrate',
+          label: '迁移',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1099,7 +1099,7 @@ module.exports = {
         'cloud/terraform-provider',
         {
           type: 'category',
-          label: 'Export',
+          label: '数据导出',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1109,7 +1109,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Audit Logging',
+          label: '审计日志',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1147,7 +1147,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Deploy to production',
+      label: '生产部署',
       collapsed: true,
       link: {
         type: 'doc',
@@ -1156,7 +1156,7 @@ module.exports = {
       items: [
         {
           type: 'category',
-          label: 'Self-host',
+          label: '自托管',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1180,7 +1180,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Worker deployments',
+          label: 'Worker 部署',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1219,7 +1219,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'References',
+      label: '参考',
       collapsed: true,
       link: {
         type: 'doc',
@@ -1243,7 +1243,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Troubleshooting',
+      label: '故障排查',
       collapsed: true,
       link: {
         type: 'doc',
@@ -1258,7 +1258,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Best practices',
+      label: '最佳实践',
       collapsed: true,
       link: {
         type: 'doc',
@@ -1278,7 +1278,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Encyclopedia',
+      label: '百科',
       collapsed: true,
       link: {
         type: 'doc',
@@ -1289,7 +1289,7 @@ module.exports = {
         'encyclopedia/temporal-sdks',
         {
           type: 'category',
-          label: 'Workflows',
+          label: 'Workflow',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1321,7 +1321,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Activities',
+          label: 'Activity',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1337,7 +1337,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Detecting application failures',
+          label: '应用故障检测',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1351,7 +1351,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Workers',
+          label: 'Worker',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1385,7 +1385,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Workflow Message Passing',
+          label: 'Workflow 消息传递',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1398,7 +1398,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Child Workflows',
+          label: 'Child Workflow',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1439,7 +1439,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Namespaces',
+          label: 'Namespace',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1469,7 +1469,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Extensibility',
+          label: '扩展能力',
           collapsed: true,
           link: {
             type: 'doc',
@@ -1478,7 +1478,7 @@ module.exports = {
           items: [
             {
               type: 'category',
-              label: 'Data Conversion',
+              label: '数据转换',
               collapsed: true,
               link: {
                 type: 'doc',
